@@ -1,0 +1,81 @@
+/*
+ * Copyright 2021 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.google.appengine.api.datastore;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+/**
+ * Policy for reads.
+ *
+ */
+public final class ReadPolicy {
+
+  /**
+   * Setting the {@code Consistency} for reads allows you to decide whether freshness or
+   * availability is more important.
+   */
+  public enum Consistency {
+
+    /**
+     * Selects freshness over availability. Strongly consistent reads are guaranteed to return the
+     * most up-to-date data but will timeout more often than eventually consistent reads.
+     */
+    STRONG,
+
+    /**
+     * Selects availability over freshness. Eventually consistent reads will timeout less often than
+     * Strong reads but will occasionally return stale results.
+     */
+    EVENTUAL
+  }
+
+  private final Consistency consistency;
+
+  public ReadPolicy(Consistency consistency) {
+    if (consistency == null) {
+      throw new NullPointerException("consistency must not be null");
+    }
+    this.consistency = consistency;
+  }
+
+  public Consistency getConsistency() {
+    return consistency;
+  }
+
+  @Override
+  public boolean equals(@Nullable Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+
+    ReadPolicy that = (ReadPolicy) o;
+
+    if (consistency != that.consistency) {
+      return false;
+    }
+
+    return true;
+  }
+
+  @Override
+  public int hashCode() {
+    return consistency.hashCode();
+  }
+}

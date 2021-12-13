@@ -1,0 +1,152 @@
+/*
+ * Copyright 2021 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+// Copyright 2008 Google Inc.
+// All Rights Reserved.
+//
+
+syntax = "proto2";
+
+package java.apphosting;
+
+option java_package = "com.google.appengine.api.blobstore";
+option java_outer_classname = "BlobstoreServicePb";
+
+// Blobstore service error codes.  Returned via
+// RPC::set_application_error when RPC status is set to
+// RPC::APPLICATION_ERROR.
+message BlobstoreServiceError {
+  enum ErrorCode {
+    OK = 0;
+
+    // General error creating the upload URL.  These will normally be
+    // caused by configuration or other errors that we do not want to
+    // expose to the application.
+    INTERNAL_ERROR = 1;
+
+    // Requested upload URL results are too long for an HTTP request.
+    URL_TOO_LONG = 2;
+
+    // Application does not have permission to do operation, such as
+    // deletion.
+    PERMISSION_DENIED = 3;
+
+    // Not such blob for application when attempting programmatic access.
+    BLOB_NOT_FOUND = 4;
+
+    // Requested data index is out of range.
+    DATA_INDEX_OUT_OF_RANGE = 5;
+
+    // Requested data size is too large.
+    BLOB_FETCH_SIZE_TOO_LARGE = 6;
+
+    // Value of an argument is outside the allowable range of values
+    ARGUMENT_OUT_OF_RANGE = 8;
+
+    // The blob key could not be decrypted or is not a supported type.
+    INVALID_BLOB_KEY = 9;
+  }
+}
+
+// Request for upload URL.  The success URL must be a
+// URL paths that refers to the requesting application.
+message CreateUploadURLRequest {
+  required string success_path = 1;
+
+  // Specifies the maximum cumulative size that will be accepted of
+  // all blobs in this upload in bytes.
+  optional int64 max_upload_size_bytes = 2;
+
+  // Specifies the maximum size that will be allowed for any single blob in
+  // the upload in bytes.
+  optional int64 max_upload_size_per_blob_bytes = 3;
+
+  // Specifies the Google Storage bucket that should be used for all of the
+  // blobs in this upload. The applications service account must have the
+  // correct permissions to write to the bucket. If not specified, then the blob
+  // will be written to blobstore.
+  optional string gs_bucket_name = 4;
+
+  // Allow users to specify the timeout period for the upload URL from the
+  // default timeout. The timeout on the URL is used for DOS protection, and
+  // the user accepts that extending the timeout increases the risk of the URL
+  // being abused.
+  optional int32 url_expiry_time_seconds = 5;
+}
+
+// Contains URL to be inserted directly in to a POST form.
+message CreateUploadURLResponse {
+  required string url = 1;
+}
+
+// Contains blob-key of blob to be deleted.
+message DeleteBlobRequest {
+  repeated string blob_key = 1;
+
+  // When deleting from GCS, we need an authorized refresh token. (Internal
+  // only.)
+  optional string token = 2;
+}
+
+// Fetch a fragment from a blob.
+//   blob_key: Blob from which to fetch fragement.
+//   start_index: Start index of data to fetch.  Must be >= 0.
+//   end_index: End index of data to fetch.  Is inclusive, so the byte at this
+//     index is fetched.  Must be >= start_index.
+//
+// TODO: Support negative indexes for "from blob end" fetches.
+message FetchDataRequest {
+  required string blob_key = 1;
+  required int64 start_index = 2;
+  required int64 end_index = 3;
+}
+
+message FetchDataResponse {
+  // Do not assign any tags above 1000.
+  required bytes data = 1000 [ctype = CORD];
+}
+
+message CloneBlobRequest {
+  // Contains an encrypted external BlobKey.
+  required bytes blob_key = 1;
+  // mime type of the blob
+  required bytes mime_type = 2;
+  // the target app_id for the cloned blob.
+  required bytes target_app_id = 3;
+}
+
+message CloneBlobResponse {
+  // Contains an encrypted external BlobKey.
+  required bytes blob_key = 1;
+}
+
+// Contains an encrypted external BlobKey.
+message DecodeBlobKeyRequest {
+  repeated string blob_key = 1;
+}
+
+// Returns serialized apphosting/base/blobkey.proto:BlobKey.
+message DecodeBlobKeyResponse {
+  repeated string decoded = 1;
+}
+
+message CreateEncodedGoogleStorageKeyRequest {
+  required string filename = 1;
+}
+
+message CreateEncodedGoogleStorageKeyResponse {
+  required string blob_key = 1;
+}

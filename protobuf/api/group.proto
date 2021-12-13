@@ -1,0 +1,79 @@
+/*
+ * Copyright 2021 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+// Copyright 2009 Google Inc. All Rights Reserved.
+//
+// The definition of an executor group.
+//
+// http://g3doc/apphosting/g3doc/wiki-carryover/executor.md#Definition_of_a_Task
+
+syntax = "proto2";
+
+package java.apphosting;
+
+option java_package = "com.google.apphosting.executor";
+
+message GroupRef {
+  // Customer to which the group belongs.
+  // Note characters not allowed: , + : " <space> and all control characters.
+  //
+  // The customer has either of the following two values:
+  //  1.  `apphosting/task-queue-api` used by App Engine Task Queue, App Engine
+  //      Cron, Cloud Tasks, and Cloud Scheduler.
+  //  2.  `cloud/cloud-storage` used by a cloud-storage in a direct integration
+  //      with Executor (which we would like to deprecate).
+  required bytes customer = 1;
+
+  // Name of the group.
+  required bytes name = 2;
+}
+
+message GroupThrottlingParameters {
+  // Override user-specified per-queue throttling parameters. Queue
+  // overrides take precedence over group overrides--i.e. if the
+  // individual queue has override parameters, prefer those. 0 is
+  // functionally equivalent to paused. Ignore if unset or < 0.
+  //
+  // TODO: Check the claim about being
+  // functionally equivalent to paused. Will the queue show as
+  // "paused" in the admin console? How will the queue appear in the
+  // admin console? In general, will the overrides be visible in the
+  // admin console?
+  optional double override_bucket_refill_per_second = 1 [default = -1];
+  optional double override_bucket_capacity = 2 [default = -1];
+  optional int32 override_max_concurrent_requests = 3 [default = -1];
+  optional int32 override_max_pull_requests_per_second = 4 [default = -1];
+}
+
+message GroupDefinition {
+  // NOTE: The proto compiler used by the python2.7 runtime is very old,
+  // and thus does not understand the 'reserved' keyword.
+  // TODO: Once the compiler has been updated, convert this into a
+  // reserved tag number.
+  optional bool OBSOLETE_disabled = 2;
+
+  required GroupRef group_ref = 1;
+
+  optional GroupThrottlingParameters group_throttling_parameters = 6;
+
+  optional ProjectInfo project_info = 7;
+}
+
+// Information about the project associated with this group.
+message ProjectInfo {
+  // The GCP project number for the project associated with this group.
+  optional int64 project_number = 1;
+}

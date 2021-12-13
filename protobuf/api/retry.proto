@@ -1,0 +1,75 @@
+/*
+ * Copyright 2021 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+// Copyright 2010 Google Inc. All Rights Reserved.
+//
+// The definition of a retry strategy for an executor task.
+//
+// http:<internal>
+//   User Configurable Task Retries
+
+syntax = "proto2";
+
+package java.apphosting;
+
+option java_package = "com.google.apphosting.executor";
+
+message RetryParameters {
+  // The maxiumum number of times this operation can be retried before failing
+  // permanently. For example, if 0 is specified and the task fails, the task is
+  // not retried at all. If 1 is specified and the task fails, the task is
+  // retried once. If this parameter is unspecified, the task is retried
+  // indefinitely.
+  //
+  // Note: if both retry_limit and age_limit_sec are present, then we fail
+  // permanently only when both limits have been reached.
+  optional int32 retry_limit = 1;
+
+  // The maximum time since the first try of this operation that can pass before
+  // failing permanently. Note: if both retry_limit and age_limit_sec are
+  // present, then we fail permanently only when both limits have been reached.
+  optional int64 age_limit_sec = 2;
+
+  // The following three parameters affect the retry backoff interval, i.e. the
+  // time after a failure at which we schedule a retry of the failed operation.
+
+  // The minimum time interval after a failure of an operation at which we can
+  // schedule a retry of that operation.
+  optional double min_backoff_sec = 3 [default = 0.1];
+
+  // The maximum time interval after a failure of an operation at which we can
+  // schedule a retry of that operation.
+  optional double max_backoff_sec = 4 [default = 3600];
+
+  // The maximum number of times the current retry interval will be
+  // doubled before the interval increases linearly.
+  //
+  // A task's retry interval starts at min_backoff_sec, then doubles
+  // max_doublings times, then increases linearly, and finally retries
+  // are made at intervals of max_backoff_sec until the retry_limit is
+  // reached. Thus after max_doublings intervals, the retry interval
+  // will be 2^(max_doublings - 1) * min_backoff_sec, and then the
+  // retry interval will be linearly increased by 2^max_doublings *
+  // min_backoff_sec, until max_backoff_sec is reached.
+  //
+  // For example, if min_backoff_sec is 10s, max_backoff_sec is 300s,
+  // and max_doublings is 3, then the a task will first be retried in
+  // 10s. The retry interval will double three times, and then
+  // increase linearly by 2^3 * 10s, and then stay constant at
+  // 300s. Thus, the requests will retry at 10s, 20s, 40s, 80s, 160s,
+  // 240s, 300s, 300s, ....
+  optional int32 max_doublings = 5 [default = 16];
+}

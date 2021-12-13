@@ -1,0 +1,220 @@
+/*
+ * Copyright 2021 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+// NOTE: All of the message definitions below should be considered
+// strawman proposals. As our design is refined, many of these messages will
+// be fleshed out. At this time, do not take any of them to be finalized.
+// As the formal message type (linked below) is finalized, ideally we remove
+// this file in favor of that interface.
+//
+// see:
+// <internal>
+//
+// We may discover that the use of protocol buffers to represent events is too
+// heavyweight for the throughput we require. In that case, all of these
+// messages may be thrown out in favor of a custom encoding.
+//
+// For now, these messages have been defined in favor of readability and
+// debuggability. Even if we use protocol messages to represent our events,
+// it's likely that some of these definitions will change to reduce time and
+// space overhead.
+//
+// To optimize the binary encoding for these messages, fields that will be
+// present in all message instances should use tags from 1 to 15 (one byte to
+// encode). Fields that are not present in every message should use tags from
+// 16 to 2047 (two bytes to encode).
+
+syntax = "proto2";
+
+package cloud_trace;
+
+import "labels.proto";
+import "span_details.proto";
+import "span_id.proto";
+import "span_kind.proto";
+import "trace_id.proto";
+
+option java_package = "com.google.apphosting.base.protos";
+
+// This message holds the data for one or more discrete events for a single
+// trace.
+// Next id: 7.
+message TraceEventsProto {
+  // Deleted.
+  reserved 5;
+
+  // The project id this event is associated with.
+  optional int64 project_id = 1;
+
+  // The id of the trace with which this event is associated.
+  optional TraceIdProto trace_id = 2;
+
+  // A map from integer keys to label values. This is used for dictionary based
+  // compression of span annotations. Per span annotations can store just
+  // the hash IDs. The corresponding values are stored in this dictionary.
+  // In this way, a unique value appear only once per trace instead of
+  // repeatedly in multiple span events.
+  //
+  // This field is populated by both Java and Python (NaCl based) runtime.
+  // NaCl proto compiler does not support map and oneof. So we have to use
+  // the repeated [dictionary_entries] field instead of a map field to store
+  // the dictionary.
+  repeated EventDictionaryEntry dictionary_entries = 6;
+
+  // The events for one or more spans associated with the trace identified by
+  // the [project_id] and [trace_id] fields of this message.
+  repeated SpanEventsProto span_events = 4;
+}
+
+// This message defines the value type for a dictionary used to compress
+// duplicate values.
+message EventDictionaryValue {
+  // Only one of the following should be set. When more than one are set, the
+  // behavior is undefined.
+  optional StackTraceDetails stack_trace_value = 1;
+  optional string str_value = 2;
+}
+
+// This message defines the key and value type for a dictionary used to compress
+// duplicate values.
+message EventDictionaryEntry {
+  optional uint64 key = 1;
+  // Only one of the following should be set. When more than one are set, the
+  // behavior is undefined.
+  optional StackTraceDetails stack_trace_value = 2;
+  optional string str_value = 3;
+}
+
+// This message is nothing more than a collection of trace events messages.
+// Among other things, it is used for batching the events for different
+// traces, where it is expected that two (or more) instances of this message
+// serialized into a buffer can be deserialized as a single instance that
+// contains all of child messages of the original messages.
+message TraceEventsListProto {
+  repeated TraceEventsProto events = 1;
+}
+
+// This message holds the details for one or more events associated with a
+// single span. The span's trace id and project id must be derived from this
+// messsage's context (e.g. its parent TraceEventsProto message).
+message SpanEventsProto {
+  // The span id for the events in this message.
+  optional SpanIdProto span_id = 1;
+
+  // The span events for the span identified by the [span_id] field of this
+  // message.
+  repeated SpanEventProto event = 2;
+
+  // True if this message contains all trace events for this Span.
+  optional bool full_span = 3;
+}
+
+// Thie message holds the detail for a single event associated with a span.
+// Its span id, trace id, and project id must be derived from this message's
+// context (e.g. its parent SpanEventsProto and grandparent TraceEventsProto).
+message SpanEventProto {
+  enum EventType {
+    // This value represents an invalid span event. This is slightly different
+    // than an event with an unknown type; see below.
+    INVALID_EVENT = 0;
+
+    // This value represents an event whose "start_span" field is present.
+    START_SPAN = 1;
+
+    // This value represents an event whose "end_span" field is present.
+    END_SPAN = 2;
+
+    // This value represents an event whose "annotate_span" field is present.
+    ANNOTATE_SPAN = 3;
+
+    // This value represents an event whose "log_message" field is present.
+    LOG_MESSAGE = 4;
+
+    // This value represents an event whose type cannot be determined.
+    UNKNOWN_EVENT_TYPE = 6;
+  }
+
+  // The timestamp for this event, in nanoseconds since the epoch.
+  optional int64 timestamp = 1;
+
+  // Present only if this event represents the start of a span.
+  optional StartSpanProto start_span = 2;
+
+  // Present only if this event represents the end of a span.
+  optional EndSpanProto end_span = 3;
+
+  // Present only if this event represents the end of a span.
+  optional AnnotateSpanProto annotate_span = 4;
+
+  // Present for events representing textual log messages.
+  optional LogMessageProto log_message = 5;
+}
+
+message StartSpanProto {
+  // Deleted.
+  reserved 2;
+
+  // The id of this span's parent. The parent span is assumed to be part of
+  // the same trace as this span and thus have the same trace id.
+  optional SpanIdProto parent_span_id = 1;
+
+  // The name of the span.
+  optional string name = 3;
+
+  // The kind of the span.
+  optional SpanKind kind = 4;
+
+  // Whether this span is a primary span.  We only search and return the primary
+  // spans of a trace when a ROOTSPAN view is requested.  In most cases, primary
+  // spans are also root spans.
+  optional bool is_primary = 5;
+}
+
+message EndSpanProto {
+  // Deleted.
+  reserved 1, 2;
+}
+
+message AnnotateSpanProto {
+  // Deleted.
+  reserved 1;
+
+  // A set of labels containing the annotations for the span.
+  optional LabelsProto labels = 2;
+
+  // A message containing additional annotations for the span.
+  optional SpanDetailsProto span_details = 3;
+}
+
+// This message represents a single, textual log message associated with a
+// span.
+//
+// NOTE: Yes, this looks like it could hold messages from our C++
+// and/or Java text logging systems. However, that isn't really its intended
+// goal (for now). This message should be used for testing/debugging the
+// Tapper tracing system.
+message LogMessageProto {
+  enum Level {
+    INVALID_LEVEL = 0;
+    DEBUG = 1;
+    INFO = 2;
+    WARNING = 3;
+    ERROR = 4;
+  }
+
+  optional Level level = 2;
+  optional string message = 3;
+}

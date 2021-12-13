@@ -1,0 +1,581 @@
+/*
+ * Copyright 2021 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+// Copyright 2009 Google Inc. All Rights Reserved.
+//
+// The definition of an executor task.
+//
+// http://g3doc/apphosting/g3doc/wiki-carryover/executor.md#Definition_of_a_Task
+
+// LINT: ALLOW_GROUPS
+
+syntax = "proto2";
+
+package java.apphosting;
+
+import "queue.proto";
+import "retry.proto";
+import "target.proto";
+
+option java_package = "com.google.apphosting.executor";
+
+// http://g3doc/apphosting/g3doc/wiki-carryover/executor.md#Definition_of_a_Task
+message TaskRef {
+  // Queue to which the task belongs.
+  required java.apphosting.QueueRef queue_ref = 1;
+
+  // Unique identifier for the task within the queue.
+  required bytes name = 2;
+}
+
+message TaskIndexRef {
+  // The shard of the sharded index to which this index ref belongs. During the
+  // transition period of the key reshard project we will maintain both
+  // sharded and non-sharded indexes. A minus one in this field indicates
+  // that this is an older-type non-sharded index ref.
+  optional int32 shard_num = 1 [default = -1];
+
+  // Queue to which the task belongs.
+  required java.apphosting.QueueRef queue_ref = 2;
+
+  // Time to execute task, in microseconds since the unix epoch.
+  required int64 eta_usec = 3;
+
+  // Unique identifier for the task within the queue.
+  required bytes name = 4;
+
+  // Optional user defined task tag.
+  optional bytes tag = 5;
+}
+
+// Generic task range (used for the scanning).
+// All ranges are defined within a single queue.
+// If start is unset, means the start of the queue (minus infinity).
+// If limit is unset, means the end of the queue (positive infinity).
+message TaskRange {
+  option message_set_wire_format = true;  // required for wire compatibility
+}
+
+// Defines a border for paging over the tasks' eta index.
+message TaskEtaBorder {
+  required int64 eta_usec = 1;
+  optional bytes name = 2;
+}
+
+// Defines a border for paging over the tasks' tag index.
+message TaskTagBorder {
+  required bytes tag = 1;
+  optional int64 eta_usec = 2;
+  optional bytes name = 3;
+}
+
+// Range of tasks defined by tasks etas, defined within a single queue.
+// If both ends are specified, start should be strictly less than limit.
+//
+// Note that a TaskRangeByEta is an abstraction that ignores the fact that
+// the ETA index is sharded. When converting a TaskRangeByEta into concrete
+// Bigtable row names, a single TaskRangeByEta will possibly generate multiple
+// row ranges if the queue has multiple index shards.
+message TaskRangeByEta {
+  optional TaskEtaBorder start = 1;
+  optional TaskEtaBorder limit = 2;
+}
+
+// Range of tasks defined by tasks names, defined within a single queue.
+// If both ends are specified, start should be strictly less than limit.
+message TaskRangeByName {
+  optional bytes start = 1;
+  optional bytes limit = 2;
+}
+
+// Range of tasks defined by tasks tags, defined within a single queue.
+// If both ends are specified, start should be strictly less than limit.
+//
+// Note that a TaskRangeByTag is an abstraction that ignores the fact that
+// the Tag index is sharded. When converting a TaskRangeByTag into concrete
+// Bigtable row names, a single TaskRangeByTag will possibly generate multiple
+// row ranges if the queue has multiple index shards.
+message TaskRangeByTag {
+  optional TaskTagBorder start = 1;
+  optional TaskTagBorder limit = 2;
+}
+
+// Generic task execution tracking information.
+// The purpose is to help us/users with debugging of failing tasks,
+// so we save the relevant info in bigtable.
+message TaskRunnerInfo {
+  option message_set_wire_format = true;  // required for wire compatibility
+}
+
+// Statistics for HttpTaskRunner.
+message HttpTaskRunnerInfo {
+  // Http response code received from the task acceptor.
+  required int64 response_code = 1;
+
+  // Reason for retrying the task
+  optional string retry_reason = 2;
+}
+
+// Statistics for PubsubTaskRunner.
+message PubsubTaskRunnerInfo {
+  // RPC status.
+  optional int32 status = 1;
+}
+
+// Statistics for ExternalHttpTaskRunner.
+message ExternalHttpTaskRunnerInfo {
+  // Required. Canonical status code corresponding to HTTP response code
+  // received from the target or status received from internal intermediate.
+  optional int32 status = 1;
+
+  // HTTP response code received from the target.
+  optional int32 http_response_code = 2;
+}
+
+// Information about an invocation of a task. Used for tracking task's progress.
+message TaskRunnerStats {
+  // When this run was started, in microseconds, and relative to
+  // midnight January 1, 1970 UTC.
+  required int64 dispatched_usec = 1;
+
+  // The latency in microseconds between the task schedule and
+  // actual dispatch time.
+  required int64 lag_usec = 2;
+
+  // The time this run took, in microseconds.
+  required int64 elapsed_usec = 3;
+
+  // Last run details, specific for the task's runner.
+  optional TaskRunnerInfo info = 4;
+}
+
+// Generic payload type.
+message TaskRunnerPayload {
+  option message_set_wire_format = true;  // required for wire compatibility
+}
+
+// Payload type for HttpTaskRunner. This runner pushes to GAE.
+message HttpTaskRunnerPayload {
+  enum RequestMethod {
+    GET = 1;
+    POST = 2;
+    HEAD = 3;
+    PUT = 4;
+    DELETE = 5;
+    PATCH = 6;
+    OPTIONS = 7;
+  }
+  optional RequestMethod method = 1 [default = POST];
+
+  // Note that this stores the relative url. The host is derived from the app.
+  required bytes url = 2;
+
+  repeated group Header = 3 {
+    required bytes key = 4;
+    required bytes value = 5;
+  }
+
+  // Body of the HTTP request (may contain binary data). Ignored unless method
+  // is POST or PUT.
+  optional bytes body = 6 [ctype = CORD];
+
+  // The dispatch_deadline is the time that Executor waits for the target,Adding
+  // with as few internal hops as possible.
+  //
+  // Note that when the request is cancelled, Cloud Tasks will stop listing for
+  // the response and will schedule the task to be retried, but whether the
+  // worker stops processing depends on how App Engine handles cancelled HTTP
+  // requests. Currently App Engine does not react to cancelled HTTP requests.
+  // Thus, this parameter controls how long Cloud Tasks will wait to retry the
+  // task, but it does not affect the work done by the App Engine instances.
+  optional int32 dispatch_deadline_ms = 7;
+
+  // app_engine_routing records the routing information for the payload.
+  optional AppEngineRouting app_engine_routing = 8;
+}
+
+// AppEngineRouting contains the routing information for the task, including the
+// service, version, instance, and host that the task is sent to.
+message AppEngineRouting {
+  optional string service = 1;
+  optional string version = 2;
+  optional string instance = 3;
+  optional string host = 4;
+}
+
+// Payload type for CronTaskRunner.
+// CronTaskRunner only handles scheduling and delegates the actual running
+// of the task to another runner.
+message CronTaskRunnerPayload {
+  // Schedule for Cron task. This can be either:
+  // GROC: See //depot/google3/borg/borgcron/groc.g for details.
+  // or CRONTAB: http://en.wikipedia.org/wiki/Cron#Overview
+  // The type is decided based on time_specification_type field.
+  // If it is not specified or is TIME_SPECIFICATION_TYPE_UNSPECIFIED,
+  // GROC is assumed.
+  required string schedule = 1;
+  required string timezone = 2;
+
+  enum TimeSpecificationType {
+    TIME_SPECIFICATION_TYPE_UNSPECIFIED = 0;
+    GROC = 1;
+    CRONTAB = 2;
+  }
+
+  optional TimeSpecificationType time_specification_type = 5;
+
+  // Task payload which will be sent to the recipient.
+  // No recursion is supported, 'delegated_payload' must not be
+  // CronTaskRunnerPayload.
+  required TaskRunnerPayload delegated_payload = 3;
+
+  // User can optionally skip several first iterations.
+  optional int64 skip_num_iterations = 4;
+}
+
+// Payload type for StubbyTaskRunner.
+// Initially based on apphosting/api/stubby/stubby_service.proto
+message StubbyTaskRunnerPayload {
+  // Describes a stubby channel to do a call on.
+  // Specifies all parameters for selecting the server and establishing connect
+  // to it.
+  message StubbyChannel {
+    // A comma-separated list of any combination of the following: a BNS job
+    // prefix, a machine name, or the name of a Chubby file that contains the
+    // list of machine names.
+    required string host = 1;
+
+    enum LoadBalancingPolicy {
+      LEAST_LOADED = 1;
+      ROUND_ROBIN = 2;
+      FIRST_REACHABLE = 3;
+      AFFINITY_SCHEDULING = 4;
+      ERROR_ADVERSE = 5;
+      FIRST_LEAST_LOADED = 6;
+      INVERSE_RTT = 7;
+      LATENCY_DRIVEN_RR = 8;
+    }
+
+    optional LoadBalancingPolicy load_balancing_policy = 2
+        [default = LEAST_LOADED];
+
+    optional string security_protocol = 3 [default = "loas"];
+    optional int32 min_security_level = 4;  // a SSLSecurityLevel value.
+
+    enum TargetSelectionPolicy {
+      NO_FILTER = 1;      // Use rpc2::NoFilterSelectionPolicy
+      RANDOM_SUBSET = 2;  // Use rpc2::RandomSubsetTargetSelectionPolicy
+      NETWORK_AWARE = 3;  // Use rpc2::NetworkAwareTargetSelectionPolicy
+    }
+    optional TargetSelectionPolicy target_selection_policy = 5
+        [default = NO_FILTER];
+
+    // When using RANDOM_SUBSET or NETWORK_AWARE, use this as the max_targets
+    // parameter.
+    optional int32 max_targets = 6 [default = 5];
+
+    optional int32 max_outstanding_rpcs = 7;
+  }
+
+  // Stubby channel to do a call on.
+  required StubbyChannel channel = 1;
+
+  // String in the form: "/Server.Method" to indicate which method on which
+  // service to invoke.
+  required string method = 2;
+
+  // Protocol buffers to send to Method. Should be in binary.
+  // NB: proto2 doesn't support RawMessage.
+  required bytes request = 3 [ctype = CORD];
+
+  // RPC options. For more background, see net/rpc/rpc.h.
+  message RpcOptions {
+    optional double deadline = 1;
+    optional bool fail_fast = 2;
+    optional bool duplicate_suppression = 3;
+    optional uint64 scheduling_hash = 4;
+
+    enum RPCProtocol {
+      TCP = 0;
+      UDP = 1;
+    }
+    optional RPCProtocol protocol = 5;
+
+    enum Format {
+      UNCOMPRESSED = 0;
+      ZIPPY_COMPRESSED = 1;
+    }
+    optional Format response_format = 6;
+    optional Format request_format = 7;
+  }
+
+  optional RpcOptions rpc_options = 4;
+
+  // If true, the enclosing task definition will be sent to Method,
+  // including this StubbyTaskRunnerPayload payload.
+  optional bool request_task_definition = 5 [default = false];
+}
+
+// Statistics for StubbyTaskRunner.
+message StubbyTaskRunnerInfo {
+  // RPC status
+  required int64 status = 1;
+
+  // Application error, if any.
+  optional int64 application_error = 2;
+
+  // Error message, if any.
+  optional bytes error_message = 3;
+}
+
+// Payload for a pull task. The worker pulling the task is the runner and knows
+// how to interpret its own payloads.  We just have a bytes field that can be
+// interpreted as a protocol buffer, for example.
+message PullTaskPayload {
+  required bytes content = 1 [ctype = CORD];
+}
+
+// Payload for a pub sub task. The topic name to post to comes from the queue
+// definition.
+message PubsubTaskRunnerPayload {
+  // The payload should be a serialized [google.pubsub.v1beta2.PubsubMessage][].
+  optional bytes pubsub_message = 1 [ctype = CORD];
+
+  // Internal queues (like cron queues) are allowed to send pubsub messages to
+  // multiple topics and must set the topic name per task. This field is
+  // required for cron tasks, but will be ignored for tasks belonging to regular
+  // queues.
+  optional string internal_topic_name = 2;
+}
+
+message FunctionTaskRunnerPayload {
+  enum RequestMethod {
+    UNKNOWN = 0;
+    GET = 1;
+    POST = 2;
+    HEAD = 3;
+    PUT = 4;
+    DELETE = 5;
+  }
+  optional RequestMethod method = 1 [default = POST];
+
+  optional bytes url = 2;
+
+  repeated group Header = 3 {
+    required bytes key = 4;
+    required bytes value = 5;
+  }
+
+  // Body of the HTTP request (may contain binary data). Ignored unless method
+  // is POST or PUT.
+  optional bytes body = 6 [ctype = CORD];
+
+  // Name of the Cloud Function to which this payload will be sent to.
+  optional string function_name = 7;
+}
+
+// Payload type for ExternalHttpTaskRunner.
+message ExternalHttpTaskRunnerPayload {
+  enum RequestMethod {
+    REQUEST_METHOD_UNSPECIFIED = 0;
+    GET = 1;
+    POST = 2;
+    HEAD = 3;
+    PUT = 4;
+    DELETE = 5;
+    PATCH = 6;
+    OPTIONS = 7;
+  }
+
+  optional RequestMethod method = 1 [default = REQUEST_METHOD_UNSPECIFIED];
+
+  // Required.
+  optional bytes url = 2;
+
+  message Header {
+    // Required.
+    optional bytes key = 1;
+
+    optional bytes value = 2;
+  }
+
+  repeated Header header = 3;
+
+  // Body of the HTTP request (may contain binary data). Ignored unless method
+  // is POST or PUT.
+  optional bytes body = 4 [ctype = CORD];
+
+  // Required.
+  optional string requestor_id = 5;
+
+  // Trawler timeout parameter. Explained here:
+  // http://g3doc/crawler/trawler/fetchclient/README.md#timeouts-in-trawler
+  optional int32 request_deadline_ms = 6;
+
+  // Trawler timeout parameter. Explained here:
+  // http://g3doc/crawler/trawler/fetchclient/README.md#timeouts-in-trawler
+  optional int32 fetch_timeout_ms = 7;
+
+  // Required. User Agent to be specified in Harpoon request.
+  optional string user_agent_to_send = 8;
+
+  // Optional. If set to true, the request fails if the server presents an
+  // invalid SSL certificate.
+  optional bool fail_on_ssl_certificate_error = 9;
+}
+
+message ApiSource {
+  // LINT.IfChange
+  enum Type {
+    UNKNOWN = 0;
+    APP_ENGINE_RUNTIME = 1;
+    TASK_QUEUE_BRIDGE = 2;
+    CLOUD_TASKS_FRONTEND = 3;
+    CLOUD_SCHEDULER_FRONTEND = 4;
+  }
+  // LINT.ThenChange(//depot/google3/logs/proto/apphosting/queue_event.proto)
+}
+
+// http://g3doc/apphosting/g3doc/wiki-carryover/executor.md#Definition_of_a_Task
+// If adding fields to this message, be sure to update
+// ExecutorProtoUtil::CopyTaskExceptPayload().
+//
+// NEXT_TAG = 20
+message TaskDefinition {
+  required java.apphosting.TaskRef task_ref = 1;
+
+  // Time to execute task, in microseconds since the unix epoch.
+  required int64 eta_usec = 2;
+
+  // The previous value of eta_usec. NOT written to BigTable.
+  // Currently only set:
+  //   - When a pull task's lease is updated; eta_usec is set to the lease
+  //     expiry time, and previous_eta_usec takes on eta_usec's previous value.
+  optional int64 previous_eta_usec = 18;
+
+  // Task payload.
+  required TaskRunnerPayload payload = 3;
+
+  // The number of times this task has been dispatched in its lifetime. This
+  // count includes attempts which have been dispatched but haven't received a
+  // response. This count also includes the first dispatch.
+  optional int64 retry_count = 4 [default = 0];
+
+  // Timestamp of when the task is written to the store. This is based on wall
+  // clock in addition to random lower order bits, in order to make it
+  // unique. Finally, it is inverted so that a higher value of store_timestamp
+  // actually means it was generated earlier in time. For more information, see
+  // StoreTimestampGenerator.
+  //
+  // store_timestamp is different from eta_usec. While eta_usec is specified by
+  // the client, this field is filled in by executor and its encoded form is an
+  // internal implementation detail. Cloud Tasks displays the decoded
+  // store_timestamp as task creation time.
+  optional int64 store_timestamp = 5;
+
+  // Information about last task's invocation.
+  optional TaskRunnerStats last_invocation_stats = 6;
+
+  // Human readable description of the task.
+  optional bytes description = 7;
+
+  // Information about how to retry this task on failure.  Overrides any
+  // retry_parameters on the task's queue.
+  optional java.apphosting.RetryParameters retry_parameters = 8;
+
+  // UTC microseconds timestamp at which this task was first tried (i.e.
+  // dispatched to a task runner).
+  optional int64 first_try_usec = 9;
+
+  // Tag associated with this task. This is used as for grouping tasks in a
+  // queue.
+  optional bytes tag = 10;
+
+  // The number of times this task has been dispatched and received a response
+  // from the execution target.
+  optional int64 execution_count = 11;
+
+  // The shard number of the index in which this task's index entries are
+  // located. During the transition period of the Index Key Refactor Project,
+  // some tasks will have entries in the sharded indexes and have this field
+  // explicitly set to an index shard number and other tasks will not have
+  // entries in the sharded indexes and will not have this field explicitly
+  // set. By setting the default value of this field to zero we are asserting
+  // that all such tasks should be treated as belonging to index shard zero.
+  optional int32 index_shard_number = 12 [default = 0];
+
+  // Cron jobs are represented as Tasks in a special Cron queue.
+  // These Cron jobs maintain their own set of retry parameters that
+  // are used by the cron_task_runner.  The paremeters apply to the
+  // current Cron job run (i.e. last time this task was scheduled and run).
+  //
+  // cron_retry_parameters
+  //   Information about how to retry this cron job on failure.
+  // cron_retry_count
+  //   The number of times this Cron job has been retried for this job run.
+  // cron_run_start_usec
+  //   UTC microseconds timestamp at which this job was first attempted for
+  //   the current job run.
+  optional java.apphosting.RetryParameters cron_retry_parameters = 13;
+  optional int64 cron_retry_count = 14 [default = 0];
+  optional int64 cron_run_start_usec = 15;
+
+  // Routing information about a Notify RPC call. When set, scanners can use
+  // this information and cooperate to avoid duplicate executions. Always set on
+  // newly-created tasks.
+  optional java.apphosting.NotifyRoutingRecord notify_record = 16;
+
+  // Indicates what API was used to create this task.
+  optional ApiSource.Type creation_source_type = 17;
+
+  // Includes information for credentials to be used in requests when executing
+  // a task.
+  optional java.apphosting.TaskAuthorization task_authorization = 19;
+}
+
+// Specifies a golden version of a task. Will not always be present in Bigtable,
+// but when it is it will be used to determine which version of the task to
+// execute. When not present, we will instead use the task with the latest
+// Bigtable cell timestamp, which will also be the first one written to
+// Bigtable.
+//
+// A golden version exists when same task is unexpectedly added multiple times
+// within a very short period of time (e.g. because the first bt write
+// succeeded, but not before the deadline so the task was remotely retried).
+// Retries and leases do not create a new task version -- the postponed task
+// uses the same store_timestamp that the task had previously. For more
+// information, see StoreTimestampGenerator.
+message TaskGoldenVersion {
+  // See comments for TaskDefinition::store_timestamp and
+  // StoreTimestampGenerator.
+  required int64 store_timestamp = 1;
+}
+
+// Stores routing information about a Notify RPC call.
+message NotifyRoutingRecord {
+  // Whether a Notify RPC call was sent. When false, explicitly indicates that
+  // no Notify message was sent - this rules out some duplicate execution corner
+  // cases, and might allow scanners to process the task faster.
+  optional bool sent = 1 [default = true];
+
+  // BNS address of the scanner that the Notify RPC call was sent to. Must be
+  // set when sent=true.
+  optional string scanner_bns = 2;
+
+  // The |timestamp_usec| field of the queue map that the sender used for
+  // routing. Must be set when sent=true.
+  optional int64 queue_map_timestamp_usec = 3;
+}

@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+ Copyright 2021 Google LLC
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     https://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+-->
+
+<!-- CAUTION: the following files implement the parsing and validation of -->
+<!-- the index definition schema, and so they all must be kept in sync: -->
+
+<!--     apphosting/datastore/datastore_index.py -->
+<!--     apphosting/datastore/datastore_index_xml.py -->
+<!--     java/com/google/apphosting/utils/config/IndexesXmlReader.java -->
+<!--     java/com/google/apphosting/utils/config/IndexYamlReader.java -->
+<!--     java/com/google/appengine/tools/development/datastore-indexes.xsd -->
+<!--     java/com/google/appengine/tools/development/datastore-indexes.dtd -->
+<!--     java/com/google/appengine/api/datastore/dev/LocalCompositeIndexManager.java -->
+<!--     java/com/google/appengine/api/datastore/CompositeIndexManager.java -->
+
+<!-- TODO: add to this list when we discover even more places -->
+<!-- that are sensitive to schema changes -->
+
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:element name="datastore-indexes" type="datastore-indexesType" />
+  <xs:complexType name="propertyType">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute type="xs:string" name="name" use="required"/>
+        <xs:attribute type="directionType" name="direction" use="optional"/>
+        <xs:attribute type="modeType" name="mode" use="optional"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="datastore-indexesType">
+    <xs:sequence>
+      <xs:element type="datastore-indexType" name="datastore-index" maxOccurs="unbounded" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Number of uses in query history</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+    <xs:attribute type="xs:boolean" name="autoGenerate" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="datastore-indexType">
+    <xs:sequence>
+      <xs:element type="propertyType" name="property" maxOccurs="unbounded" minOccurs="0"/>
+    </xs:sequence>
+    <xs:attribute type="xs:string" name="kind" use="required"/>
+    <xs:attribute type="xs:boolean" name="ancestor" use="optional"/>
+    <xs:attribute type="xs:string" name="source" use="optional"/>
+  </xs:complexType>
+
+  <xs:simpleType name="directionType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="asc"/>
+      <xs:enumeration value="desc"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="modeType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="geospatial"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+</xs:schema>

@@ -1,0 +1,32 @@
+/*
+ * Copyright 2021 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.google.appengine.api.taskqueue;
+
+/**
+ * Mismatch of task method and queue mode. e.g. {@link Queue#leaseTasks(long,
+ * java.util.concurrent.TimeUnit, long)} called on a push queue, {@link Queue#add(TaskOptions)} with
+ * method {@link TaskOptions.Method} PULL to a push queue, or with {@link TaskOptions.Method} not
+ * equal to PULL to a pull queue.
+ *
+ */
+public class InvalidQueueModeException extends RuntimeException {
+  private static final long serialVersionUID = -5127940689940710481L;
+
+  public InvalidQueueModeException(String detail) {
+    super(detail);
+  }
+}

@@ -1,0 +1,61 @@
+/*
+ * Copyright 2021 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+// This file defines a set of protocol buffers that attempt to (mostly) mimick
+// those of the not-ready-for-prime-time TI "labels" API. They have been
+// defined to be binary compatible with the messages from the TI API. See
+// //tech/label/proto/label.proto for details.
+syntax = "proto2";
+
+package cloud_trace;
+
+option java_package = "com.google.apphosting.base.protos";
+option java_outer_classname = "LabelsProtos";
+option cc_enable_arenas = true;
+
+// A single key/value pair.
+message LabelProto {
+  oneof id {
+    // TODO: unnest from the oneof.
+    // The size of the key is up to 128 bytes.
+    string key = 1;
+  }
+
+  oneof value {
+    string str_value = 2;
+    int64 int_value = 3;
+    // The fingerprint of the value.
+    uint64 value_hash_id = 5;
+
+    bool bool_value = 6;
+  }
+
+  // Number of bytes truncanted from original str_value. Is required to support
+  // limits imposed by V2 API.
+  optional int64 truncated_byte_count = 7;
+
+  // Deleted.
+  reserved 4;
+  reserved "key_hash_id";
+}
+
+// A collection of labels.
+message LabelsProto {
+  repeated LabelProto label = 1;
+
+  // The number of labels that were discarded.
+  optional int64 dropped_label_count = 2;
+}

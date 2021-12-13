@@ -1,0 +1,246 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+ Copyright 2021 Google LLC
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     https://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+-->
+
+<!--
+  This file was copied from
+    trunk/modules/jetty/src/main/resources/org/mortbay/jetty/webapp/webdefault.xml
+  in the Jetty SVN repository as of r2324.  It was then modified slightly.
+-->
+
+<!-- ===================================================================== -->
+<!-- This file contains the default descriptor for web applications.       -->
+<!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+<!-- The intent of this descriptor is to include jetty specific or common  -->
+<!-- configuration for all webapps.   If a context has a webdefault.xml    -->
+<!-- descriptor, it is applied before the contexts own web.xml file        -->
+<!--                                                                       -->
+<!-- A context may be assigned a default descriptor by:                    -->
+<!--  + Calling WebApplicationContext.setDefaultsDescriptor                -->
+<!--  + Passed an arg to addWebApplications                                -->
+<!--                                                                       -->
+<!-- This file is used both as the resource within the jetty.jar (which is -->
+<!-- used as the default if no explicit defaults descriptor is set) and it -->
+<!-- is copied to the etc directory of the Jetty distro and explicitly     -->
+<!-- by the jetty.xml file.                                                -->
+<!--                                                                       -->
+<!-- ===================================================================== -->
+<web-app xmlns="http://java.sun.com/xml/ns/javaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_1.xsd"
+         version="3.1">
+
+  <description>
+    Default web.xml file.
+    This file is applied to a Web application before it's own WEB_INF/web.xml file
+  </description>
+
+  <!--
+    All of the default servlets have been intentionally removed.
+  -->
+
+
+    <!-- ==================================================================== -->
+    <!-- Disable TRACE method with security constraint                        -->
+    <!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  -->
+    <security-constraint>
+        <web-resource-collection>
+            <web-resource-name>Disable TRACE</web-resource-name>
+            <url-pattern>/</url-pattern>
+            <http-method>TRACE</http-method>
+        </web-resource-collection>
+        <auth-constraint/>
+    </security-constraint>
+    <security-constraint>
+        <web-resource-collection>
+            <web-resource-name>Enable everything but TRACE</web-resource-name>
+            <url-pattern>/</url-pattern>
+            <http-method-omission>TRACE</http-method-omission>
+        </web-resource-collection>
+    </security-constraint>
+
+  <welcome-file-list>
+    <welcome-file>index.html</welcome-file>
+    <welcome-file>index.jsp</welcome-file>
+  </welcome-file-list>
+
+  <session-config>
+    <session-timeout>1440</session-timeout>
+  </session-config>
+
+    <!-- ==================================================================== -->
+    <!-- Default locale encodings                                             -->
+    <!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  -->
+  <locale-encoding-mapping-list>
+        <locale-encoding-mapping>
+            <locale>ar</locale>
+            <encoding>ISO-8859-6</encoding>
+        </locale-encoding-mapping>
+        <locale-encoding-mapping>
+            <locale>be</locale>
+            <encoding>ISO-8859-5</encoding>
+        </locale-encoding-mapping>
+        <locale-encoding-mapping>
+            <locale>bg</locale>
+            <encoding>ISO-8859-5</encoding>
+        </locale-encoding-mapping>
+        <locale-encoding-mapping>
+            <locale>ca</locale>
+            <encoding>ISO-8859-1</encoding>
+        </locale-encoding-mapping>
+        <locale-encoding-mapping>
+            <locale>cs</locale>
+            <encoding>ISO-8859-2</encoding>
+        </locale-encoding-mapping>
+        <locale-encoding-mapping>
+            <locale>da</locale>
+            <encoding>ISO-8859-1</encoding>
+        </locale-encoding-mapping>
+        <locale-encoding-mapping>
+            <locale>de</locale>
+            <encoding>ISO-8859-1</encoding>
+        </locale-encoding-mapping>
+        <locale-encoding-mapping>
+            <locale>el</locale>
+            <encoding>ISO-8859-7</encoding>
+        </locale-encoding-mapping>
+        <locale-encoding-mapping>
+            <locale>en</locale>
+            <encoding>ISO-8859-1</encoding>
+        </locale-encoding-mapping>
+        <locale-encoding-mapping>
+            <locale>es</locale>
+            <encoding>ISO-8859-1</encoding>
+        </locale-encoding-mapping>
+        <locale-encoding-mapping>
+            <locale>et</locale>
+            <encoding>ISO-8859-1</encoding>
+        </locale-encoding-mapping>
+        <locale-encoding-mapping>
+            <locale>fi</locale>
+            <encoding>ISO-8859-1</encoding>
+        </locale-encoding-mapping>
+        <locale-encoding-mapping>
+            <locale>fr</locale>
+            <encoding>ISO-8859-1</encoding>
+        </locale-encoding-mapping>
+        <locale-encoding-mapping>
+            <locale>hr</locale>
+            <encoding>ISO-8859-2</encoding>
+        </locale-encoding-mapping>
+        <locale-encoding-mapping>
+            <locale>hu</locale>
+            <encoding>ISO-8859-2</encoding>
+        </locale-encoding-mapping>
+        <locale-encoding-mapping>
+            <locale>is</locale>
+            <encoding>ISO-8859-1</encoding>
+        </locale-encoding-mapping>
+        <locale-encoding-mapping>
+            <locale>it</locale>
+            <encoding>ISO-8859-1</encoding>
+        </locale-encoding-mapping>
+        <locale-encoding-mapping>
+            <locale>iw</locale>
+            <encoding>ISO-8859-8</encoding>
+        </locale-encoding-mapping>
+        <locale-encoding-mapping>
+            <locale>ja</locale>
+            <encoding>Shift_JIS</encoding>
+        </locale-encoding-mapping>
+        <locale-encoding-mapping>
+            <locale>ko</locale>
+            <encoding>EUC-KR</encoding>
+        </locale-encoding-mapping>
+        <locale-encoding-mapping>
+            <locale>lt</locale>
+            <encoding>ISO-8859-2</encoding>
+        </locale-encoding-mapping>
+        <locale-encoding-mapping>
+            <locale>lv</locale>
+            <encoding>ISO-8859-2</encoding>
+        </locale-encoding-mapping>
+        <locale-encoding-mapping>
+            <locale>mk</locale>
+            <encoding>ISO-8859-5</encoding>
+        </locale-encoding-mapping>
+        <locale-encoding-mapping>
+            <locale>nl</locale>
+            <encoding>ISO-8859-1</encoding>
+        </locale-encoding-mapping>
+        <locale-encoding-mapping>
+            <locale>no</locale>
+            <encoding>ISO-8859-1</encoding>
+        </locale-encoding-mapping>
+        <locale-encoding-mapping>
+            <locale>pl</locale>
+            <encoding>ISO-8859-2</encoding>
+        </locale-encoding-mapping>
+        <locale-encoding-mapping>
+            <locale>pt</locale>
+            <encoding>ISO-8859-1</encoding>
+        </locale-encoding-mapping>
+        <locale-encoding-mapping>
+            <locale>ro</locale>
+            <encoding>ISO-8859-2</encoding>
+        </locale-encoding-mapping>
+        <locale-encoding-mapping>
+            <locale>ru</locale>
+            <encoding>ISO-8859-5</encoding>
+        </locale-encoding-mapping>
+        <locale-encoding-mapping>
+            <locale>sh</locale>
+            <encoding>ISO-8859-5</encoding>
+        </locale-encoding-mapping>
+        <locale-encoding-mapping>
+            <locale>sk</locale>
+            <encoding>ISO-8859-2</encoding>
+        </locale-encoding-mapping>
+        <locale-encoding-mapping>
+            <locale>sl</locale>
+            <encoding>ISO-8859-2</encoding>
+        </locale-encoding-mapping>
+        <locale-encoding-mapping>
+            <locale>sq</locale>
+            <encoding>ISO-8859-2</encoding>
+        </locale-encoding-mapping>
+        <locale-encoding-mapping>
+            <locale>sr</locale>
+            <encoding>ISO-8859-5</encoding>
+        </locale-encoding-mapping>
+        <locale-encoding-mapping>
+            <locale>sv</locale>
+            <encoding>ISO-8859-1</encoding>
+        </locale-encoding-mapping>
+        <locale-encoding-mapping>
+            <locale>tr</locale>
+            <encoding>ISO-8859-9</encoding>
+        </locale-encoding-mapping>
+        <locale-encoding-mapping>
+            <locale>uk</locale>
+            <encoding>ISO-8859-5</encoding>
+        </locale-encoding-mapping>
+        <locale-encoding-mapping>
+            <locale>zh</locale>
+            <encoding>GB2312</encoding>
+        </locale-encoding-mapping>
+        <locale-encoding-mapping>
+            <locale>zh_TW</locale>
+            <encoding>Big5</encoding>
+        </locale-encoding-mapping>
+    </locale-encoding-mapping-list>
+</web-app>
+

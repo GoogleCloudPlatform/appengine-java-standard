@@ -1,0 +1,67 @@
+/*
+ * Copyright 2021 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+// Copyright 2009 Google Inc. All Rights Reserved.
+//
+// Onestore action PBs. See
+// http://g3doc/apphosting/g3doc/wiki-carryover/datastore_queues.md.
+//
+// Note: the action is defined in the separate file:
+//   a) to avoid the dependency on datastore_v3.proto in onestore.mdl
+//   b) to separate between entity and task definitions
+
+syntax = "proto2";
+
+package storage_onestore_v3;
+
+import "task.proto";
+
+option java_package = "com.google.storage.onestore.v3.proto2api";
+option java_outer_classname = "OnestoreAction";
+option go_package = "storage_onestore_v3";
+
+message Action {
+  optional java.apphosting.TaskDefinition task = 1;
+  // The details of the transaction that added the task. This is used purely for
+  // logging in Executor and should not affect the handling logic of the action.
+  optional TransactionData transaction_data = 2;
+  // Information about the rpc that enqueued the action, for logging
+  // and monitoring
+  optional ActionRpcInfo action_rpc_info = 3;
+  // Unique identifier of the action, populated only for transactional
+  // task actions on megastore, not for those on spanner.
+  optional string uuid = 4;
+}
+
+// The transaction handle, app ID, and database ID are used to identify a
+// Datastore Transaction.
+message TransactionData {
+  // The transaction handle. All values from 0 to 2^64 - 1 are valid handles.
+  optional fixed64 handle = 1;
+  // The ID of the App that created the transaction.
+  optional string app_id = 2;
+  // The database that the transaction is for.
+  optional string database_id = 3;
+}
+
+// Information about the rpc request that enqueued the action for megastore
+message ActionRpcInfo {
+  // The global id of the rpc.
+  optional int64 enqueuing_rpc_global_id = 1;
+  // The time (in microseconds since epoch) at which the rpc arrived.
+  // It matches RpcInformation.timestamp_us
+  optional int64 enqueuing_rpc_start_timestamp_us = 2;
+}

@@ -1,0 +1,481 @@
+/*
+ * Copyright 2021 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+// Copyright 2008 Google Inc.
+// All Rights Reserved.
+//
+
+//
+// The memcache API provides a memcached-alike API to Prometheus applications.
+//
+// If anything in this document is unclear, refer to the official
+// memcached protocol specs, which this service attempts to mimic:
+//   http://code.sixapart.com/svn/memcached/tags/1.2.4/doc/protocol.txt
+//
+// These stubby definitions are closely related to those from
+// google3/cacheserving/memcacheg/proto/rpc.proto, but differ in a few ways:
+//    * intended to be visible to external developers
+//    * missing some functionality that may be available in memcacheg, allowing
+//      memcacheg to move independently from memcache API.
+//    * the name_space fields exposed here are used to build
+//      the namespace, but do not specify it completely.  The app_id is
+//      used as the top level namespace, and name_space is immediately below.
+//      If the name_space field is "", it is mapped to the app's root namespace.
+
+syntax = "proto2";
+
+// Some generic_services option(s) added automatically.
+// See:  http:<internal>
+package java.apphosting;
+
+option java_generic_services = true;  // auto-added
+option java_package = "com.google.appengine.api.memcache";
+option java_outer_classname = "MemcacheServicePb";
+
+message MemcacheServiceError {
+  enum ErrorCode {
+    OK = 0;
+
+    // This could be any error including including misconfiguration,
+    // client-caused bad keys, and some types of temporary
+    // unavailability.
+    UNSPECIFIED_ERROR = 1;
+
+    // Can currently (Mar 2014) only be returned by GrabTail, which is
+    // not exposed to customer.
+    NAMESPACE_NOT_SET = 2;
+
+    // A non-superuser app attempted to use app_override.
+    PERMISSION_DENIED = 3;
+
+    // obsolete NUM_BACKENDS_UNSPECIFIED = 4;
+
+    // obsolete MEMCACHE_POOL_HINT_UNSPECIFIED = 5;
+
+    // An attempt was made to increment a value that was not a valid
+    // number.
+    INVALID_VALUE = 6;
+
+    // obsolete MEMCACHE_SHARDING_STRATEGY_UNSPECIFIED = 7;
+
+    // obsolete APP_CONFIG_ACCESS_ERROR = 8;
+
+    // The memcache_service is currently unavailable.  This is a most
+    // likely a transient condition and may be corrected by retrying
+    // with a backoff.  Possible reasons include not being able to
+    // connect to memcacheg backends because of shardmap changes or
+    // global chubby outages.  For historical reasons the runtimes
+    // convert this into a capability-disabled exception or error.
+    UNAVAILABLE = 9;
+  }
+}
+
+// This message allows you to manipulate the memcache of a different
+// application (not the memcache that belongs to the app initiating
+// the request).  If you are working with your own memcache (the usual case)
+// you shouldn't specify it.
+//
+// Originally this mechanism required the client to pass along details
+// of the backend configuration, since the appserver hosting the app
+// performing the override would not have this info for the target app.  The
+// current memcache service implementation has been improved to obviate this,
+// and the fields marked deprecated below will be ignored by the new server.
+//
+// TODO: Remove uses of deprecated fields once the new memcache
+// service implementation is deployed.
+message AppOverride {
+  // The app_id of the target memcache.
+  required string app_id = 1;
+
+  // Do not reuse ids of removed fields: 2, 3, 4, 5;
+  // NB: Can't use 'reserved' in this file, it needs to work with proto1.
+}
+
+message MemcacheGetRequest {
+  repeated bytes key = 1;
+  optional string name_space = 2 [default = ""];
+
+  // If set true, returned items will include a "cas_id" value needed
+  // to do a future atomic compare-and-swap operation.  This allocates
+  // and initializes the cas_id on each returned item, even if it
+  // wasn't put into memcacheg initially with cas set.  Because the
+  // cas_id takes memory in the server and bandwidth in the response,
+  // you should only set this if you're actually planning to use CAS.
+  optional bool for_cas = 4;
+
+  optional AppOverride override = 5;
+}
+
+message MemcacheGetResponse {
+  // One item will be returned for each HIT, i.e. where the value was found for
+  // the requested key.  Order is not specified.
+  repeated group Item = 1 {
+    required bytes key = 2;
+    required bytes value = 3;
+    optional fixed32 flags = 4;  // server-opaque (app-owned) flags
+
+    // The compare-and-swap ID, if requested.  Opaque to the client.
+    // All the client needs to know is that if they do a get request
+    // with "for_cas" set above, then get a cas_id, and then do a
+    // SetRequest with policy CAS, passing along the same opaque
+    // cas_id, it will only succeed if nobody else has replaced the
+    // value since then.  The cas_ids won't be reused between versions
+    // of the value.
+    optional fixed64 cas_id = 5;
+
+    // Relative to now.  Unset if this item has no expiration timestamp.
+    optional int32 expires_in_seconds = 6;
+  }
+
+  enum GetStatusCode {
+    // Key was found and value successfully returned.
+    HIT = 1;
+
+    // Key does not exist on the backend.
+    MISS = 2;
+
+    // Key was found, but value not returned because the response was truncated
+    // to fit into limited length of response.
+    //
+    // This is expected only if many keys were requested in a batch request;
+    // the default response size limit is 32 MiB, while items cannot be larger
+    // than 1 MiB.
+    TRUNCATED = 3;
+
+    // Response from backend not received in time.  It's not known whether the
+    // key exists.
+    DEADLINE_EXCEEDED = 4;
+
+    // Could not reach memcacheg backend (may be dead).  It's not known whether
+    // the key exists.
+    UNREACHABLE = 5;
+
+    // Other service error, e.g. other RPC errors, shardlock failure, missing
+    // config (ServingState).  It's not known whether the key exists.
+    OTHER_ERROR = 6;
+  }
+  // One get_status will be returned for each requested key, in the same order
+  // that the requests were in.
+  repeated GetStatusCode get_status = 7;
+}
+
+message MemcacheSetRequest {
+  enum SetPolicy {
+    SET = 1;      // set value in memcached, unconditionally
+    ADD = 2;      // add to memcached, if it doesn't already exist
+    REPLACE = 3;  // put it in memcached, but only if it's already in there
+
+    // Compare-and-swap.  If using this policy, the 'cas_id' optional
+    // field is required, else NOT_STORED will be returned.  This
+    // policy is like REPLACE, but a smart replace that only updates
+    // the value if nobody else has between your Get and your Set.
+    // See the docs in MemcacheGetRequest and MemcacheGetResponse.
+    CAS = 4;
+  }
+  repeated group Item = 1 {
+    required bytes key = 2;  // max 250 bytes, per upstream spec
+    required bytes value = 3;
+
+    // From the docs above:
+    // <flags> is an arbitrary 32-bit unsigned integer that the server
+    // stores along with the data and sends back when the item is
+    // retrieved.  Clients may use this as a bit field to store
+    // data-specific information; this field is opaque to the server.
+    optional fixed32 flags = 4;
+
+    optional SetPolicy set_policy = 5 [default = SET];
+
+    // unixtime to expire key.  0 or unset means "no expiration"
+    // From the memcached documentation:
+    // <exptime> is expiration time.  If it's 0, the item never expires
+    // (although it may be deleted from the cache to make place for
+    // other items).  If it's non-zero (either Unix time or offset in
+    // seconds from current time), it is guaranteed that clients will
+    // not be able to retrieve this item after the expiration time
+    // arrives (measured by server time).
+    optional fixed32 expiration_time = 6 [default = 0];
+
+    // Required if using the CAS (compare & swap) set_policy.  This is
+    // the cas_id as returned in MemcacheGetResponse, requested in
+    // MemacheGetResponse.  The value, opaque to the client, is the handle
+    // the guarantees that nobody modified the value from the time you
+    // requested it until the time you replaced it with CAS.  Holding a
+    // a cas_id is not a lock though:  anybody can beat you to the CAS.
+    // If you lose the race, you'll get the status code EXISTS returned.
+    // See docs in MemcacheSetResponse.
+    optional fixed64 cas_id = 8;
+
+    // Optionally set this when doing a SET or ADD if you plan to do a
+    // CAS operation on this item in the future, which will cause the
+    // item's internal cas_id to be allocated early, rather than the
+    // server upgrading it to include a cas_id in the future when you
+    // do a Get.  You may still do a CAS operation in the future on
+    // any key without setting this.  This is purely an optimization
+    // hint to the server.
+    optional bool for_cas = 9;
+  }
+  optional string name_space = 7 [default = ""];
+  optional AppOverride override = 10;
+}
+
+message MemcacheSetResponse {
+  enum SetStatusCode {
+    // Key-value pair was successfully stored.
+    STORED = 1;
+
+    // Not stored for policy reasons (e.g. policy=ADD but item exists),
+    // not error reasons.
+    NOT_STORED = 2;
+
+    // Not stored due to bad request, e.g. invalid key, item too large, ...
+    ERROR = 3;
+
+    // If you lost a CAS race.  From the memcached docs: "to indicate
+    // that the item you are trying to store with a CAS command has
+    // been modified since you last fetched it."  If instead the item
+    // being CAS'd has fallen out of memcacheg, NOT_STORED will be
+    // returned instead.
+    EXISTS = 4;
+
+    // Response from backend not received in time.  It's not known whether the
+    // item was stored.
+    DEADLINE_EXCEEDED = 5;
+
+    // Could not reach memcacheg backend (may be dead).  The item was
+    // definitively not stored.
+    UNREACHABLE = 6;
+
+    // Other service error, e.g. other RPC errors, shardlock failure, missing
+    // config (ServingState).  It's not known whether the item was stored or
+    // not.
+    OTHER_ERROR = 7;
+  }
+  // One set_status will be returned for each set key, in the same
+  // order that the requests were in.
+  repeated SetStatusCode set_status = 1;
+}
+
+message MemcacheDeleteRequest {
+  repeated group Item = 1 {
+    required bytes key = 2;  // max 250 bytes, per upstream spec
+
+    // From the upstream memcached protocol docs on delete time:
+    //
+    //  - <time> is the amount of time in seconds (or Unix time until which)
+    //    the client wishes the server to refuse "add" and "replace" commands
+    //    with this key.  For this amount of item, the item is put into a
+    //    delete queue, which means that it won't possible to retrieve it by
+    //    the "get" command, but "add" and "replace" command with this key
+    //    will also fail (the "set" command will succeed, however).  After the
+    //    time passes, the item is finally deleted from server memory.
+    //
+    //    The parameter <time> is optional, and, if absent, defaults to 0
+    //    (which means that the item will be deleted immediately and further
+    //    storage commands with this key will succeed).
+
+    // There's no limit to what this value may be, outside of the limit of
+    // it being a 32-bit int.
+    optional fixed32 delete_time = 3 [default = 0];
+  }
+  optional string name_space = 4 [default = ""];
+  optional AppOverride override = 5;
+}
+
+message MemcacheDeleteResponse {
+  enum DeleteStatusCode {
+    // The key existed and was deleted.
+    DELETED = 1;
+
+    // The key didn't exist and therefore didn't need to be deleted.
+    NOT_FOUND = 2;
+
+    // Response from backend not received in time.  It's not known whether the
+    // item existed and it's also not known whether it was deleted.
+    DEADLINE_EXCEEDED = 3;
+
+    // Could not reach memcacheg backend (may be dead).  It's not known whether
+    // the item existed, but it definitively was not deleted.
+    UNREACHABLE = 4;
+
+    // Other service error, e.g. other RPC errors, shardlock failure, missing
+    // config (ServingState).  It's not known whether the item existed and
+    // it's also not known whether it was deleted.
+    OTHER_ERROR = 5;
+  }
+  // one set_status will be returned for each set key, matching the
+  // order of the requested items to delete.
+  repeated DeleteStatusCode delete_status = 1;
+}
+
+// The memcached protocol spec defines the deltas for both "incr"
+// and "decr" as uint64 values.  Since we're lumping these together
+// as one RPC, we also need the optional direction to specify decrementing.
+// By default the delta is '1' and direction is increment (the common use case).
+// Note that this mutation request doesn't support multiple operations
+// at once, intentionally, as that's a rare operation.
+message MemcacheIncrementRequest {
+  enum Direction {
+    INCREMENT = 1;
+    DECREMENT = 2;
+  }
+  required bytes key = 1;  // max 250 bytes, per upstream spec
+  optional string name_space = 4 [default = ""];
+
+  // The amount to increment/decrement the value by, if it already
+  // exists in the cache.  Note that this does not implicitly create a
+  // new counter starting at the specified delta.  To initialize a new
+  // counter, the client must Set an initial value.  (which they send
+  // as a decimal string, just like memcached).
+  optional uint64 delta = 2 [default = 1];
+  optional Direction direction = 3 [default = INCREMENT];
+
+  // If set (even if set to 0), traditional memcached semantics around
+  // needing to set the value in the cache before doing an increment
+  // are ignored and the value is instead initialized to this value if
+  // it's not already in the cache.  If you want this before, you'll
+  // probably want to set this to zero, where most apps count from.
+  optional uint64 initial_value = 5;
+
+  // If set, determines the flags that are used for a value
+  // initialized from initial_value.
+  optional fixed32 initial_flags = 6;  // server-opaque (app-owned) flags
+
+  optional AppOverride override = 7;
+}
+
+message MemcacheIncrementResponse {
+  enum IncrementStatusCode {
+    // Key was found and incremented.
+    OK = 1;
+
+    // For policy reasons, e.g. key doesn't exist and initial value was not
+    // specified, existing value wasn't a number, or invalid request.
+    NOT_CHANGED = 2;
+
+    // May or may not have been incremented due to some server error.
+    //
+    // DEPRECATED in favor of the 3 status codes below. As of April 2017, only
+    // ERROR is returned. Once we change all clients to understand the new codes
+    // below, we'll flip --memcache_return_better_errors and ERROR will never be
+    // returned (tracked in b/25965653).
+    ERROR = 3;
+
+    // Response from backend not received in time.  It's not known whether the
+    // key exists and it's also not known whether it was incremented.
+    DEADLINE_EXCEEDED = 4;
+
+    // Could not reach memcacheg backend (may be dead).  It's not known whether
+    // the key exists, but it definitively was not incremented.
+    UNREACHABLE = 5;
+
+    // Other service error, e.g. other RPC errors, shardlock failure, missing
+    // config (ServingState).  It's not known whether the key exists and it's
+    // also not known whether it was incremented.
+    OTHER_ERROR = 6;
+  }
+
+  // The new value, only set if the item was found.  Per the spec,
+  // underflow is capped at zero, but overflow wraps around.
+  optional uint64 new_value = 1;
+
+  // Always set, unlike cacheserving_memcacheg::MemcacheIncrementResponse which
+  // is set only if part of BatchIncrement() call.
+  optional IncrementStatusCode increment_status = 2;
+}
+
+// Allow for multiple increment/decrements in parallel.  Combined with the
+// 'initial_value' field of the MemcacheIncrementRequest message, this can
+// be used to track a large set of counters with low-latency.
+message MemcacheBatchIncrementRequest {
+  optional string name_space = 1 [default = ""];
+
+  repeated MemcacheIncrementRequest item = 2;
+
+  optional AppOverride override = 3;
+}
+
+message MemcacheBatchIncrementResponse {
+  // One 'item' will always be returned in the response for each 'item' in the
+  // request, with no exceptions.
+  repeated MemcacheIncrementResponse item = 1;
+}
+
+message MemcacheFlushRequest {
+  // Note: There is no name_space parameter.  This request flushes
+  // all memcache data for an app.
+  // Note: we don't support upstream's flush_all 'time' parameter
+  optional AppOverride override = 1;
+}
+
+message MemcacheFlushResponse {
+  // This space intentionally left blank.  Reserved for future
+  // expansion.
+}
+
+message MemcacheStatsRequest {
+  // N.B.(jackkelly): Stats for the entire app are returned, regardless of which
+  // namespaces (if any) are used.
+  optional AppOverride override = 1;
+  // Number of hot key requested.
+  optional int32 max_hotkey_count = 2 [default = 0];
+}
+
+// This is a merge of all the NamespaceStats for each of the namespaces owned by
+// the requesting application.
+message MergedNamespaceStats {
+  // All these stats reset whenever the process starts up or the task
+  // moves around.  They may also reset if the namespace becomes empty
+  // (due to evictions or explicit deletes) and the server removes its
+  // Namespace data structure.
+
+  // Counters:  (only increase, except when stats reset)
+  required uint64 hits = 1;
+  required uint64 misses = 2;
+  required uint64 byte_hits = 3;  // bytes transferred on gets
+
+  // Not counters:
+  required uint64 items = 4;
+  required uint64 bytes = 5;
+
+  // How long (in seconds) it's been since the oldest item in the
+  // namespace's LRU chain has been accessed.  This is how long a new
+  // item can currently be put in the cache and survive without being
+  // accessed.  This is _not_ about the time since the item was
+  // created, but how long it's been since it was accessed.
+  required fixed32 oldest_item_age = 6;
+
+  // Only set when hot keys are present and requested through stats.
+  repeated MemcacheHotKey hotkeys = 7;
+}
+
+// Memcache key that has a hit rate higher than a certain threshold.  This
+// threshold is controlled by the flag --hotkey_threshold_qps in memcacheg.
+message MemcacheHotKey {
+  required bytes key = 1;  // Max 250 bytes.
+
+  // A query is defined as an individual key operation, i.e. a single GET
+  // operation on one particular key.  A memcache API call can contain multiple
+  // key operations in a single call.
+  required double qps = 2;  // Queries per second.
+
+  // The namespace this key belongs to.
+  optional string name_space = 3;
+}
+
+message MemcacheStatsResponse {
+  // This is set if the namespace was found:
+  optional MergedNamespaceStats stats = 1;
+}

@@ -1,0 +1,57 @@
+# Copyright 2021 Google LLC
+
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+
+#     https://www.apache.org/licenses/LICENSE-2.0
+
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Can be rendered via https://dreampuf.github.io/GraphvizOnline
+
+digraph {
+{
+node [margin=0 fontcolor=black fontsize=32 width=0.5 shape=ovale style=filled]
+appengine_resources [fillcolor=yellow label="appengine-resources"]
+appengine_utils [fillcolor=yellow label="appengine-utils"]
+protos [fillcolor=yellow label="protos"]
+sessiondata [fillcolor=yellow label="sessiondata"]
+runtime_shared [fillcolor=orange label="runtime-shared *"]
+appengine_apis [fillcolor=yellow label="appengine-apis"]
+appengine_apis_dev [fillcolor=yellow label="appengine-apis-dev"]
+shared_sdk [fillcolor=yellow label="shared-sdk"]
+runtime_local [fillcolor=orange label="runtime-local"]
+appengine_api_legacy [fillcolor=orange label="appengine-api-legacy"]
+appengine_testing [fillcolor=orange label="appengine-testing"]
+appengine_local_runtime_shared [fillcolor=orange label="appengine-local-runtime-shared"]
+appengine_remoteapi [fillcolor=orange label="appengine-remoteapi"]
+appengine_tools_api [fillcolor=orange label="appengine-tools-api"]
+runtime_main [fillcolor=orange label="runtime-main * "]
+runtime_impl [fillcolor=orange label="runtime-impl *"]
+runtime_util [fillcolor=yellow label="runtime-util"]
+appengine_api_1_0_sdk [fillcolor=orange label="appengine-api-1_0-sdk"]
+appengine_api_stubs [fillcolor=orange label="appengine-api-stubs"]
+runtime_util -> {}
+}
+
+runtime_shared -> sessiondata
+appengine_apis -> {protos, runtime_shared}
+appengine_apis_dev -> {appengine_apis,protos,appengine_utils, shared_sdk, appengine_resources}
+appengine_api_1_0_sdk -> {appengine_apis}
+appengine_api_stubs -> {appengine_apis_dev, shared_sdk}
+shared_sdk -> {appengine_api_1_0_sdk ,sessiondata}
+appengine_api_legacy -> {appengine_api_1_0_sdk}
+appengine_testing -> {appengine_apis,appengine_apis_dev}
+appengine_local_runtime_shared -> {appengine_apis_dev,runtime_shared}
+appengine_remoteapi -> {appengine_apis}
+appengine_tools_api -> {appengine_apis_dev, appengine_remoteapi,appengine_utils}
+runtime_main -> {runtime_util }
+runtime_impl -> {appengine_utils,protos,appengine_api_1_0_sdk, runtime_util}
+runtime_local -> {appengine_remoteapi,appengine_apis_dev,runtime_shared,appengine_tools_api,shared_sdk,appengine_utils}
+runtime_util -> {}
+}

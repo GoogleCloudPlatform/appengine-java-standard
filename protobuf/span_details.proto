@@ -1,0 +1,190 @@
+/*
+ * Copyright 2021 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+// These messages are designed to provide metadata for recording trace events,
+// in order to enrich the trace data and elaborate on the runtime context of the
+// trace.
+// Documentation for these values is available at: http:<internal>
+syntax = "proto2";
+
+package cloud_trace;
+
+import "label_options.proto";
+import "span_kind.proto";
+
+option java_package = "com.google.apphosting.base.protos";
+
+// StartSpanDetails contains details on the start span event.
+message StartSpanDetails {
+  // The span start timestamp, in nanoseconds since the epoch.
+  optional int64 timestamp = 1;
+  // The name of the span.
+  optional string name = 2;
+  // The kind of the span.
+  optional SpanKind kind = 3;
+  // Whether this span is a primary span.  We only search and return the primary
+  // spans of a trace when a ROOTSPAN view is requested.  In most cases, primary
+  // spans are also root spans.
+  optional bool is_primary = 4;
+}
+
+// EndSpanDetails contains details on the end span event.
+message EndSpanDetails {
+  // The span end timestamp, in nanoseconds since the epoch.
+  optional int64 timestamp = 1;
+}
+
+// A SpanDetailsProto can be added to spans in a trace event. These can be used
+// to supply the relevant span metadata to the trace.
+// NEXT ID: 10
+message SpanDetailsProto {
+  optional HttpDetails http_details = 2;
+  optional AppEngineAppDetails app_engine_app_details = 3;
+  optional AppEngineServiceRpcDetails app_engine_service_rpc_details = 4;
+
+  // Only one of the following should be set.
+  optional StackTraceDetails stack_trace_details = 5;
+  optional uint64 stack_trace_hash_id = 7;
+
+  optional ErrorDetails error_details = 6;
+
+  // The service component at which this trace span was generated.
+  optional string component = 8;
+
+  optional GCEDetails gce_details = 9;
+}
+
+// This messages provides additional metadata for spans that represent HTTP
+// requests.
+// NEXT ID: 14
+message HttpDetails {
+  // The method string is defined by the mapping in //webutil/http/httputils.cc,
+  // called [kAllProtocols].
+  optional string method = 1;
+  optional string full_url = 2;
+  optional int32 status_code = 3;
+  optional int32 request_payload_size = 4;
+  optional int32 response_payload_size = 5;
+  optional string host = 6;
+  // This field was added for GAE's /urlfetch.Fetch service call.
+  optional string redirected_url = 7;
+  // The user-agent header of the request.
+  optional string user_agent = 8;
+  // The HTTP protocol used between the client and the server, e.g., SPDY.
+  optional string client_protocol = 9;
+  // Country from which the request originated, as an ISO 3166-1 alpha-2 country
+  // code.
+  optional string client_country = 11;
+  // Name of region from which the request originated.
+  optional string client_region = 12;
+  // Name of the city from which the request originated.
+  optional string client_city = 13;
+}
+
+// This message provides additional metadata for spans that represent Google App
+// Engine requests.
+// NEXT ID: 5
+message AppEngineAppDetails {
+  optional string version_id = 1;
+  optional string request_log_id = 2;
+  optional string engine_id = 3;
+  optional string engine_version_id = 4;
+}
+
+// This message provides additional metadata for spans that represent Google App
+// Engine Service API calls.
+// NEXT ID: 6
+message AppEngineServiceRpcDetails {
+  // This message provides additional metadata for spans that represent Google
+  // App Engine Datastore API calls.
+  // NEXT ID: 18
+  message DatastoreDetails {
+    optional int32 offset = 1;
+    optional bool has_cursor = 2;
+    optional bool has_ancestor = 3;
+    // This field is deprecated and will be removed when it's no longer used.
+    optional bool has_transaction = 4;
+    optional string kind = 5;
+    optional int32 count = 6;
+    optional int32 limit = 7;
+    optional int32 size = 8;
+    optional int32 skipped = 9;
+    optional bool more_results = 10;
+    optional int32 index_writes = 11;
+    optional int32 entity_writes = 12;
+    optional int32 requested_entity_puts = 13;
+    optional int32 requested_entity_deletes = 14;
+    optional uint64 query_cursor = 15;
+    optional int64 transaction_handle = 16;
+    optional int32 composite_index_count = 17;
+  }
+
+  // This message provides additional metadata for spans that represent Google
+  // App Engine Stubby API calls.
+  // NEXT ID: 2
+  message StubbyDetails {
+    optional string method = 1;
+  }
+
+  // This message provides additional metadata for spans that represent Google
+  // App Engine Memcache API calls.
+  // NEXT ID: 3
+  message MemcacheDetails {
+    optional int32 count = 1;
+    optional int32 size = 2;
+  }
+
+  optional DatastoreDetails datastore_details = 1;
+  optional StubbyDetails stubby_details = 2;
+  optional MemcacheDetails memcache_details = 3;
+
+  // These error fields are based on the scheme and values documented in
+  // google3/apphosting/base/runtime.proto.
+  optional string error_message = 4;
+  // This field is set when there is an RPC application error.
+  optional int32 application_error = 5;
+}
+
+// This message has details for the GCE VM instance associated with the span.
+// NEXT ID: 2
+message GCEDetails {
+  // This is GCE VM instance IP v4 address in decimal-dot notation.
+  // Storing it formatted in the span (rather than as an integer) makes it
+  // simpler to view and filter it.
+  optional string vm_ipv4 = 1;
+}
+
+// This message contains a stack trace for the given span.
+// NEXT ID: 2
+message StackTraceDetails {
+  // Presents a single stack frame in a stack trace.
+  // NEXT ID: 6
+  message StackFrame {
+    optional string class_name = 1;
+    optional string method_name = 2;
+    optional string file_name = 3;
+    optional int64 line_number = 4;
+    optional int64 column_number = 5;
+  }
+  repeated StackFrame stack_frame = 1;
+}
+
+// This message contains error status details. See more: go/tapper-error-labels.
+// NEXT ID: 3
+message ErrorDetails {
+  optional string name = 1;
+  optional string message = 2;
+}

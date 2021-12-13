@@ -1,0 +1,456 @@
+/*
+ * Copyright 2021 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+// LINT: ALLOW_GROUPS
+
+syntax = "proto2";
+
+package java.apphosting;
+
+import "app_logs.proto";
+import "appinfo.proto";
+import "common.proto";
+import "http.proto";
+import "trace.proto";
+
+option cc_enable_arenas = true;
+option java_package = "com.google.apphosting.base.protos";
+option java_outer_classname = "RuntimePb";
+
+// Request from the Trusted Process (AppServer) to the Untrusted Process (a
+// clone running on a Gen 1 App Engine runtime (python27g, php55g, java8).)
+//
+// Next tag: 49
+message UPRequest {
+  reserved 19, 29, 36;
+
+  required string app_id = 1;
+  // This field will only contain the engine_id portion of the version_id field.
+  optional string module_id = 37 [default = "default"];
+  // This will have the engine_version and minor version timestamp in the format
+  // engine_version.timestamp
+  optional string module_version_id = 38;
+  // This will have the engine_id, engine_version and minor version timestamp,
+  // in the format '[engine_id:]engine_version.timestamp'.
+  required string version_id = 2;
+
+  required string nickname = 3;
+  required string security_ticket = 4;
+
+  optional bool is_admin = 7 [default = false];
+
+  optional string email = 10 [default = ""];
+
+  optional string auth_domain = 11 [default = ""];
+  optional string user_organization = 17 [default = ""];
+
+  required java.apphosting.Handler handler = 5;
+
+  // If 'request' is empty, assume the request PB is in 'shared_buffer'.
+  optional java.apphosting.HttpRequest request = 6;
+
+  // Headers appended by Google, or that have been sanitized from the
+  // HttpRequest.  These are not intended to be seen by application code.
+  repeated java.apphosting.ParsedHttpHeader runtime_headers = 13;
+
+  optional string obfuscated_gaia_id = 14;
+
+  // These values are only provided to apps with TRUSTED_RUNTIME_REQUESTS
+  // permission.
+  optional int64 gaia_id = 8;
+  optional string gaia_session = 9;
+  optional string authuser = 30;
+
+  // Is this app allowing trusted-only functionality in the runtime? Enabled
+  // only if app has TRUSTED_RUNTIME_REQUESTS permission.
+  optional bool is_trusted_app = 12 [default = false];
+
+  // Passed to applications with TRUSTED_RUNTIME_REQUESTS permission to indicate
+  // the authenticated LOAS role of the original HTTPOverRPC Stubby request to
+  // the PFE.
+  optional string peer_username = 15;
+
+  // Passed to applications with TRUSTED_RUNTIME_REQUESTS permission to indicate
+  // the security level of the LOAS connection with the remote peer who
+  // initiated this request with the first PFE who received the request.
+  optional string security_level = 16;
+
+  // A hash of the event-id, used as a unique request identifier within the
+  // requestlogs and applogs bigtables. For more info, see
+  // http://g3doc/apphosting/g3doc/wiki-carryover/logs_design_doc.md.
+  optional string event_id_hash = 20;
+
+  // If provided, a profiler will be attached for the duration of this request.
+  optional java.apphosting.ProfilerSettings profiler_settings = 23;
+
+  // Hostname of the default version of this app.
+  optional string default_version_hostname = 27;
+
+  enum RequestType {
+    OTHER = 0;
+    SHUTDOWN = 1;
+    BACKGROUND = 2;
+  }
+  optional RequestType request_type = 28 [default = OTHER];
+
+  // These values are only provided to apps with TRUSTED_RUNTIME_REQUESTS
+  // permission.
+  optional string appserver_datacenter = 31;
+
+  optional string appserver_task_bns = 32;
+
+  // Equivalent of event_id_hash for Logs v2. This is a user-visible token that
+  // can be correlated with the logs from other backends. For more info, see
+  // http://g3doc/apphosting/g3doc/wiki-carryover/logsv2Design_doc.md#Row_Name_Format.
+  optional string request_log_id = 35;
+
+  enum Deadline {
+    // Constant that represents the amount of time we add into the request
+    // deadline over stubby to ensure that we can cause the clone to throw
+    // an exception instead of having stubby or the sandbox kill the clone
+    RPC_DEADLINE_PADDING_SECONDS = 30;
+  }
+
+  // The following fields are used by Tapper (go/tapper) to trace RPCs.
+  // Trace context carries tracing state and options across servers.
+  optional TraceContextProto trace_context = 40;
+}
+
+// Representation of pending Cloud Debugger actions
+message PendingCloudDebuggerAction {
+  // If true, debuggee registration is pending
+  optional bool debuggee_registration = 1;
+
+  // If true, breakpoint updates are ready.
+  optional bool breakpoint_updates = 2;
+}
+
+// Response to an EvaluationRuntime.HandleRequest call to a clone running on a
+// Gen 1 App Engine runtime (python27g, php55g, java8).
+// Next tag: 90
+message UPResponse {
+  reserved 27;
+
+  // Next tag: 51
+  enum ERROR {
+    reserved 20, 21;
+    // Normal response
+    OK = 0;
+
+    // Error which is the application's fault, and results in a 500 HTTP
+    // response code. For example, if the sandboxed python code threw an
+    // exception, the response should be APP_FAILURE.
+    APP_FAILURE = 1;
+
+    // System-level errors that are not the application's fault, and which
+    // result in a 500 HTTP response code being returned to the user.
+    RESOURCE_NOT_FOUND = 2;
+    UNKNOWN_HANDLER = 3;
+    UNKNOWN_API_VERSION = 6;
+    LOG_FATAL_DEATH = 7;
+    // The clone died.
+    //
+    // For Titanium, CLONE_DEATH is used for gvisor crashes such as a Sentry
+    // crash or a gofer crash.
+    // Clone deaths as a result of container crashes are assigned more
+    // specific codes (USER_CONTAINER_CRASH or GOOGLE_CONTAINER_CRASH).
+    CLONE_DEATH = 8;
+    // A end user controlled container crashed.
+    USER_CONTAINER_CRASH = 23;
+    // A Google controlled container crashed.
+    GOOGLE_CONTAINER_CRASH = 24;
+    // The sandboxed process requested to be killed (not GAE).
+    APP_REQUESTED_KILL = 25;
+    ABORTED = 9;
+    PENDING_DISABLED = 10;
+    BUFFER_ERROR = 15;
+
+    // Invalid security ticket provided to runtime.
+    INVALID_TICKET = 11;
+
+    // The runtime doesn't know about the requested app.  Likely the runtime
+    // restarted without notifying the appserver.
+    UNKNOWN_APP = 4;
+
+    // Since the response may be computed in an independent process
+    // which we communicate with via RPCs, there is a chance for
+    // unexpected RPC errors. We record those here.
+    RPC_FAILURE = 5;
+
+    // The request attempted to contact a server replica that was stopped.
+    SERVER_DOWN = 12;
+
+    // The request terminated when a server that was handling the request was
+    // stopped.
+    SERVER_STOPPED = 13;
+
+    // A shutdown request was unable to run.
+    SHUTDOWN_FAILURE = 14;
+
+    // A background request was unable to run.
+    BACKGROUND_FAILURE = 16;
+
+    // A snapshot request was unable to run.
+    SNAPSHOT_FAILURE = 32;
+
+    // Pending queue for app was too large, could not accept additional
+    // requests.
+    PENDING_QUEUE_TOO_LARGE = 17;
+
+    // The application's binary was not found. This can happen if the appserver
+    // is using a newer compiler_version than that of the last successful app
+    // compilation for this app. It's similar to RESOURCE_NOT_FOUND.
+    // (Go only.)
+    APP_BINARY_NOT_FOUND = 18;
+
+    // One or more threads created by this request is still running.
+    THREADS_STILL_RUNNING = 19;
+
+    // A deadline exceeded exception occurred while importing modules during a
+    // loading request (Python 2.7 only).
+    DEADLINE_DURING_LOADING = 22;
+
+    // Unexpected error, eg config missing.
+    UNEXPECTED_ERROR = 26;
+
+    // An app version that can not start its clone too many times will
+    // see its traffic dropped using the SHED code.
+    SHED = 27;
+    SHED_GOOGLE_ERROR = 35;
+
+    // GSE App failed readiness check.
+    FAILED_READINESS_CHECK = 28;
+
+    // GSE App broke connection to supervisor.
+    USER_CONTAINER_CONNECTION_ERROR = 29;
+
+    // Quota check failed.
+    QUOTA_CHECK_FAILED = 30;
+
+    // Billing is disabled for the project.
+    BILLING_DISABLED = 31;
+
+    // Request was not authenticated.
+    AUTHENTICATION_FAILURE = 33;
+
+    // Request was not authorized.
+    AUTHORIZATION_FAILURE = 34;
+
+    // Response size too large (not used for chunked transfer encoding).
+    RESPONSE_SIZE_TOO_LARGE = 36;
+
+    // Total size of chunked responses buffered by Appserver excceeded the
+    // maximum buffer size.
+    CHUNKED_RESPONSE_BUFFER_LIMIT_EXCEEDED = 37;
+
+    // Bidirectional stream between PFE and Appserver initialization timed out.
+    BIDI_STREAM_INIT_TIMEOUT = 38;
+
+    // Total size of responses buffered in the bidirectional stream response
+    // buffer exceeded maximum buffer size.
+    BIDI_STREAM_RESPONSE_BUFFER_LIMIT_EXCEEDED = 39;
+
+    // Bidirectional stream had insufficient initial quota to send all the
+    // response headers.
+    BIDI_STREAM_INSUFFICIENT_INITIAL_QUOTA = 40;
+
+    // Bidirectional stream returned NOT_ENOUGH_QUOTA when Appserver tried
+    // to send data. This is unexpected because Appserver only sends new
+    // data when bidi stream notifies Appserver that there is enough quota.
+    BIDI_STREAM_NOT_ENOUGH_QUOTA = 41;
+
+    // Bidirectional stream had negative quota after proto overhead was
+    // subtracted.
+    BIDI_STREAM_NEGATIVE_QUOTA = 42;
+
+    // Bidirectional stream returned error when Appserver tried to send data.
+    BIDI_STREAM_SEND_ERROR = 43;
+
+    // Appserver failed to schedule a quota notification through the
+    // bidirectional stream.
+    BIDI_STREAM_SCHEDULE_QUOTA_NOTIFICATION_ERROR = 44;
+
+    // Request failed to finish streaming the response due to deadline timeout
+    BIDI_STREAM_TIMEOUT = 45;
+
+    // Request was intended to be handled by QFE -> node envoy, but routing
+    // information required for this could not be sent to the PFE.
+    APPSERVER_QFE_NODE_SELECTION_RESPONSE_ERROR = 46;
+
+    // This request was meant to route to Node Envoy however there was a
+    // failure to connect to Node Envoy.
+    NODE_ENVOY_CONNECTION_FAILURE = 47;
+
+    // Appserver didn't receive a StartHTTPRequest RPC from envoy.
+    NO_START_HTTP_REQUEST_RECEIVED = 48;
+
+    // The cluster check timed out.
+    NODE_ENVOY_CLUSTER_CHECK_TIMEOUT = 49;
+
+    // Request failed due to Node Envoy downstream (mostly QFE) connection
+    // termination.
+    //
+    // This is an unexpected infrastructure error, as the connection between
+    // QFE and Node Envoy shouldn't be terminated.
+    NODE_ENVOY_DOWNSTREAM_CONNECTION_TERMINATION = 50;
+  }
+
+  required int32 error = 1;
+
+  // Error message for appserver logs.
+  optional string error_message = 2;
+
+  // Optional messages to write to the tenant and user projects.
+  message LogMessages {
+    optional string tenant_project_message = 1;
+    optional string user_project_message = 2;
+    // This should either be empty, or the name of one of the values in the
+    // google.logging.type.LogSeverity enum:
+    // http://google3/google/logging/type/log_severity.proto?l=36&rcl=236227742
+    optional string severity = 3;
+  }
+  repeated LogMessages log_messages = 64;
+
+  // If 'http_response' is empty, assume the response PB is in 'shared_buffer'
+  optional java.apphosting.HttpResponse http_response = 3;
+
+  // Headers added by the runtime, not by the app (barring an exploit).  Not
+  // trusted, these headers must pass a allowlist and validation before being
+  // returned to the user.
+  repeated java.apphosting.ParsedHttpHeader runtime_headers = 15;
+
+  // Our estimate of the number of user mega-cycles (1M cycles) spent
+  // servicing this request.
+  optional int64 user_mcycles = 4;
+
+  // Log statements emitted by the sandbox application. These will be stored in
+  // bigtable and made available to the developers depending on space
+  // limitations.
+  //
+  // The order of entries in this array must be the order in which the
+  // statements were emitted by the sandbox application. Due to inaccuracies of
+  // time computation, we do not require that 'timestamp_usec' be either
+  // strictly increasing or strictly non-decreasing. The order of the messages
+  // is more important than the values in 'timestamp_usec'.
+  repeated java.apphosting.AppLogLine app_log = 26;
+
+  // Log statements emitted by the runtime process using google3 logging
+  // statements like LOG. Unlike LogLine above, which is full of application
+  // logs, the contents of this array are not exposed back to the developer. It
+  // is instead used to diagnose runtime bugs.
+  //
+  // This array is meant to hold all log statements that were generated in
+  // processing this request. In actuality it includes all log statements that
+  // have occurred since the last request completed.
+  repeated group RuntimeLogLine = 10 {
+    // From base/log_severity.h.
+    required int32 severity = 11;
+
+    // The entire log line as it would have appeared in the runtime logs.
+    required string message = 12;
+  }
+
+  // Did anything happen which made it unsafe for this clone to
+  // process additional requests? This is used in
+  // Clone Runtime --> Sandbox communication, and should not be used
+  // elsewhere. Use clone_exit_reason() instead.
+  optional bool terminate_clone = 16 [default = false];
+
+  // Is the clone in an unclean state, preventing it from processing
+  // additional requests? This flag constitutes a refinement of
+  // terminate_clone above and should always be set in conjunction with it.
+  // This is used in Clone Runtime --> Sandbox communication, and
+  // should not be used elsewhere. Use clone_exit_reason() instead.
+  optional bool clone_is_in_unclean_state = 42 [default = false];
+
+  // Serialized form of cloud.trace.TraceEventsProto.
+  // We use the serialized form instead of the proto due to API version
+  // incompatibility. runtime.proto requires Python and Java API v1 while
+  // TraceEventsProto exposes v2.
+  optional bytes serialized_trace = 33;
+
+  // If set, Cloud Debugger should be invoked to complete pending actions.
+  optional PendingCloudDebuggerAction pending_cloud_debugger_action = 39;
+}
+
+message UPAddDelete {
+  enum ERROR { FAILURE = 1; }
+}
+
+// Serialized version of a specific API call. The package and the call
+// indicate what PB definition to use. The pb field contains the
+// protocol buffer itself in bytes.
+//
+// Next tag: 9
+message APIRequest {
+  required string api_package = 1;
+  required string call = 2;
+
+  optional bytes pb = 3 [ctype = CORD];
+
+  required string security_ticket = 4;
+
+  // The following fields are used by Tapper (go/tapper) to trace RPCs.
+  // Trace context carries tracing state and options across servers.
+  //
+  // If present, AppServer creates a child of this span for the API call and
+  // records the span itself. So there is no need to include a "Trace" in the
+  // APIResponse.
+  optional TraceContextProto trace_context = 8;
+}
+
+message APIResponse {
+  enum ERROR {
+    OK = 0;
+    CALL_NOT_FOUND = 1;
+    PARSE_ERROR = 2;
+    SECURITY_VIOLATION = 3;
+    OVER_QUOTA = 4;
+    REQUEST_TOO_LARGE = 5;
+    CAPABILITY_DISABLED = 6;
+    FEATURE_DISABLED = 7;
+    BAD_REQUEST = 8;
+    BUFFER_ERROR = 9;  // Look at the error code in shared_buffer_response.
+    RESPONSE_TOO_LARGE = 10;
+    CANCELLED = 11;
+    REPLAY_ERROR = 12;
+    RPC_ERROR = 13;
+  }
+
+  enum RpcError {
+    DEADLINE_EXCEEDED = 1;
+    APPLICATION_ERROR = 2;
+    UNKNOWN_ERROR = 3;
+  }
+
+  required int32 error = 1;
+  optional string error_message = 2;
+
+  // If error == RPC_ERROR, rpc_error, rpc_application_error, and
+  // error_message describe the rpc error.
+  optional RpcError rpc_error = 6;
+
+  // Only set when error = RPC_ERROR and rpc_error = APPLICATION_ERROR.
+  optional int32 rpc_application_error = 7;
+
+  // Returns the number of megacycles of CPU time used by this API
+  // call, if any.
+  optional int64 cpu_usage = 4 [default = 0];
+
+  // If 'pb' is empty, then assume the response PB is in
+  // 'shared_buffer_response'.
+  optional bytes pb = 3 [ctype = CORD];
+}

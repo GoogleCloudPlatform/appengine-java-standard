@@ -1,0 +1,244 @@
+/*
+ * Copyright 2021 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+// Copyright 2008 Google Inc. All Rights Reserved.
+
+syntax = "proto2";
+
+// Some generic_services option(s) added automatically.
+// See:  http:<internal>
+package java.apphosting;
+
+option java_generic_services = true;  // auto-added
+option java_package = "com.google.appengine.api.images";
+option java_outer_classname = "ImagesServicePb";
+
+message ImagesServiceError {
+  enum ErrorCode {
+    UNSPECIFIED_ERROR = 1;
+    BAD_TRANSFORM_DATA = 2;
+    NOT_IMAGE = 3;
+    BAD_IMAGE_DATA = 4;
+    IMAGE_TOO_LARGE = 5;
+    INVALID_BLOB_KEY = 6;
+    // Errors specific to Google Storage objects.
+    ACCESS_DENIED = 7;
+    OBJECT_NOT_FOUND = 8;
+  }
+}
+
+message ImagesServiceTransform {
+  enum Type {
+    RESIZE = 1;
+    ROTATE = 2;
+    HORIZONTAL_FLIP = 3;
+    VERTICAL_FLIP = 4;
+    CROP = 5;
+    IM_FEELING_LUCKY = 6;
+  }
+}
+
+// Next id is 15.
+message Transform {
+  // Resize the given image to the given specificaiton.  The service will try
+  // to resize the image to the minimum of the two sizes while keeping a
+  // consistent image ratio.
+  optional int32 width = 1;
+  optional int32 height = 2;
+  // If both width and height are specified, and crop to fit is true, the less
+  // restrictiveof the two is used and the image is cropped to fit the other
+  // dimenstion. An offset for the center can be specified as well.
+  optional bool crop_to_fit = 11;  // Per bool-type, default is false.
+  // WARNING: Default is 0.5, must continue to be enforced in cc file.
+  // This default must be kept in this proto2 file as it affects the user
+  // facing libraries.
+  optional float crop_offset_x = 12 [default = 0.5];  // 0: left, 1: right.
+  // WARNING: Default is 0.5, must continue to be enforced in cc file.
+  optional float crop_offset_y = 13 [default = 0.5];  // 0: top,  1: bottom.
+
+  // Rotate an image some number of degrees (90, 180, 270) in the clockwise
+  // direction.
+  optional int32 rotate = 3;  // Per int-type, default is 0.
+
+  // Flip an image horizontally
+  optional bool horizontal_flip = 4;  // Per bool-type, default is false.
+
+  // Flip an image vertically
+  optional bool vertical_flip = 5;  // Per bool-type, default is false.
+
+  // Crop an image.
+  optional float crop_left_x = 6;  // Per float-type, default is zero.
+  optional float crop_top_y = 7;   // Per float-type, default is zero.
+  // WARNING: Default is 1.0, must continue to be enforced in cc file.
+  // These defaults are kept for the sake of the py and other user library
+  // files.  Editing risks user visible change.  However, all non-user code
+  // (C++) should set 1.0 manually as the proto3 version of the proto has no
+  // concept of defaults from proto files.
+  optional float crop_right_x = 8 [default = 1.0];
+  // WARNING: Default is 1.0, must continue to be enforced in cc file.
+  optional float crop_bottom_y = 9 [default = 1.0];
+
+  // Autolevels (Picasa I'm Feeling Lucky)
+  optional bool autolevels = 10;  // Per bool-type, default is false.
+
+  // Allow stretching of the image to exactly fit the specified width and height
+  optional bool allow_stretch = 14;  // Per bool-type, default is false.
+
+  // N.B. We cannot remove these fields via the "reserved" keyword because
+  // doing so is not compatible with the python27_proto build rule.
+  optional bool deprecated_width_set = 101;
+  optional bool deprecated_height_set = 102;
+  optional bool deprecated_crop_offset_x_set = 112;
+  optional bool deprecated_crop_offset_y_set = 113;
+  optional bool deprecated_crop_right_x_set = 108;
+  optional bool deprecated_crop_bottom_y_set = 109;
+}
+
+message ImageData {
+  required bytes content = 1 [ctype = CORD];
+  // If the content is empty, and a valid blob_key is provided,
+  // perform the transform on the specified blob instead, if possible.
+  optional string blob_key = 2;
+
+  // Thumbnailer can return the result image width and height. Flow these back
+  // so we can save some cycles working it out for ourselves later.
+  optional int32 width = 3;
+  optional int32 height = 4;
+
+  optional bool deprecated_blob_key_set = 102;
+}
+
+message InputSettings {
+  enum ORIENTATION_CORRECTION_TYPE {
+    UNCHANGED_ORIENTATION = 0;
+    CORRECT_ORIENTATION = 1;
+  }
+  // Default ENUM 0, UNCHANGED_ORIENTATION.
+  optional ORIENTATION_CORRECTION_TYPE correct_exif_orientation = 1;
+  optional bool parse_metadata = 2;  // Per bool-type, default is false.
+  optional int32 transparent_substitution_rgb = 3;
+
+  optional bool deprecated_correct_exif_orientation_set = 101;
+  optional bool deprecated_transparent_substitution_rgb_set = 103;
+}
+
+message OutputSettings {
+  enum MIME_TYPE {
+    PNG = 0;
+    JPEG = 1;
+    WEBP = 2;
+  }
+
+  optional MIME_TYPE mime_type = 1;  // Default ENUM 0, PNG.
+  optional int32 quality = 2;
+}
+
+message ImagesTransformRequest {
+  required ImageData image = 1;
+  repeated Transform transform = 2;
+  required OutputSettings output = 3;
+  optional InputSettings input = 4;
+}
+
+message ImagesTransformResponse {
+  required ImageData image = 1;
+  // Here we always pass back the width and height of the source image. Other
+  // metadata returned only if parse_metadata is True in the request.  The
+  // metadata is a JSON encoded string.
+  optional string source_metadata = 2;
+}
+
+message CompositeImageOptions {
+  // Index of the image to use for this composition.
+  required int32 source_index = 1;
+  required int32 x_offset = 2;
+  required int32 y_offset = 3;
+  required float opacity = 4;
+
+  // Places the anchor point of the image on the anchor point of the canvas
+  // before applying the offsets.
+  enum ANCHOR {
+    TOP_LEFT = 0;
+    TOP = 1;
+    TOP_RIGHT = 2;
+    LEFT = 3;
+    CENTER = 4;
+    RIGHT = 5;
+    BOTTOM_LEFT = 6;
+    BOTTOM = 7;
+    BOTTOM_RIGHT = 8;
+  }
+
+  required ANCHOR anchor = 5;
+}
+
+message ImagesCanvas {
+  required int32 width = 1;
+  required int32 height = 2;
+  required OutputSettings output = 3;
+  // WARNING: Default is -1, must continue to be enforced in cc file.
+  // This default must be kept in this proto2 file as it affects the user
+  // facing libraries.
+  optional int32 color = 4 [default = -1];  // Default to opaque white.
+
+  optional bool deprecated_color_set = 104;
+}
+
+message ImagesCompositeRequest {
+  repeated ImageData image = 1;
+  repeated CompositeImageOptions options = 2;
+  required ImagesCanvas canvas = 3;
+}
+
+message ImagesCompositeResponse {
+  required ImageData image = 1;
+}
+
+message ImagesHistogramRequest {
+  required ImageData image = 1;
+}
+
+message ImagesHistogram {
+  // 256 for each color channel.
+  repeated int32 red = 1;
+  repeated int32 green = 2;
+  repeated int32 blue = 3;
+}
+
+message ImagesHistogramResponse {
+  required ImagesHistogram histogram = 1;
+}
+
+message ImagesGetUrlBaseRequest {
+  // Obtaining an ImageUrl requires that the image is persisted in Blobstore.
+  required string blob_key = 1;
+
+  // If true, the resulting URL should use https.
+  optional bool create_secure_url = 2;  // Per bool-type, default is false.
+}
+
+message ImagesGetUrlBaseResponse {
+  required string url = 1;
+}
+
+message ImagesDeleteUrlBaseRequest {
+  // The blob key associated with the URL we wish to delete.
+  required string blob_key = 1;
+}
+
+message ImagesDeleteUrlBaseResponse {
+  // Reserved for future use.
+}

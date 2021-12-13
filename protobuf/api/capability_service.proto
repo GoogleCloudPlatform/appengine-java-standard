@@ -1,0 +1,89 @@
+/*
+ * Copyright 2021 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+// Copyright 2008 Google Inc.
+// All Rights Reserved.
+//
+//
+// The Capability service allows applications to detect incoming
+// and current outages in other APIs.
+
+syntax = "proto2";
+
+// Some generic_services option(s) added automatically.
+// See:  http:<internal>
+package java.apphosting;
+
+import "capabilities.proto";
+
+option java_generic_services = true;  // auto-added
+option java_package = "com.google.appengine.api.capabilities";
+option java_outer_classname = "CapabilityServicePb";
+
+message IsEnabledRequest {
+  // The API package for the capabilities you want to check.
+  required string package = 1;
+
+  // Zero or more explicit capabilities you want to check.  Specify
+  // the wildcard capability ("*") to check whether a particular
+  // package is entirely disabled.
+  repeated string capability = 2;
+
+  // Zero or more API methods that you intend to call.  The status of
+  // each of the capabilities required by these API calls will be
+  // returned, in addition to any capabilties explicitly listed above.
+  repeated string call = 3;
+}
+
+message IsEnabledResponse {
+  // N.B.(schwardo): The numerical values are significant.  Of the
+  // statuses that are applicable, only the highest ordinal value will
+  // be returned.
+  enum SummaryStatus {
+    DEFAULT = 0;  //  DEFAULT and ENABLED are kept identical in code.
+
+    // All capabilities are currently enabled and no downtime is
+    // planned.
+    ENABLED = 1;
+
+    // At least one capability is scheduled for downtime in the future.
+    SCHEDULED_FUTURE = 2;
+
+    // At least one capability is scheduled for downtime and the
+    // scheduled time has already passed.
+    SCHEDULED_NOW = 3;
+
+    // At least one capability is currently disabled.  API calls that
+    // depend on this capability will fail.
+    DISABLED = 4;
+
+    // At least one capability is unknown.
+    UNKNOWN = 5;
+  }
+  optional SummaryStatus summary_status = 1;  // Required, not proto enforced.
+
+  // If summary_status is SCHEDULED_FUTURE, this will contain the
+  // number of seconds until it will become SCHEDULED_NOW.
+  optional int64 time_until_scheduled = 2;
+
+  // This will contain the detailed CapabilityConfig for every
+  // capability specified in the request.
+  //
+  // If the overall package is not known, this list will be empty.  If
+  // requested capabilities have no explicit status, the default
+  // status will be used (in production this will always be UNKNOWN).
+  repeated java.apphosting.CapabilityConfig config = 3;
+}

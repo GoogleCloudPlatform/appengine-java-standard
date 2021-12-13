@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+ Copyright 2021 Google LLC
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     https://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <artifactId>appengine-remote-api</artifactId>
+  <parent>
+    <groupId>com.google.appengine</groupId>
+    <artifactId>parent</artifactId>
+    <version>2.0.0-SNAPSHOT</version>
+  </parent>
+  <packaging>jar</packaging>
+  <name>appengine-remote-api</name>
+  <dependencies>
+    <dependency>
+      <groupId>com.google.appengine</groupId>
+      <artifactId>appengine-apis</artifactId>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>com.google.appengine</groupId>
+      <artifactId>appengine-utils</artifactId>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>com.google.http-client</groupId>
+      <artifactId>google-http-client-appengine</artifactId>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>javax.servlet</groupId>
+      <artifactId>javax.servlet-api</artifactId>
+      <optional>true</optional>
+    </dependency>
+  </dependencies>
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-shade-plugin</artifactId>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+            <configuration>
+              <relocations>
+                <relocation>
+                  <pattern>com.fasterxml.jackson</pattern>
+                  <shadedPattern>com.google.appengine.repackaged.com.fasterxml.jackson</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>com.google.api.client</pattern>
+                  <shadedPattern>com.google.appengine.repackaged.com.google.api.client</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>com.google.common</pattern>
+                  <shadedPattern>com.google.appengine.repackaged.com.google.common</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>com.google.errorprone.annotations</pattern>
+                  <shadedPattern>com.google.appengine.repackaged.com.google.errorprone.annotations</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>com.google.io.base</pattern>
+                  <shadedPattern>com.google.appengine.repackaged.com.google.io.protocol</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>com.google.io.protocol</pattern>
+                  <shadedPattern>com.google.appengine.repackaged.com.google.io.protocol</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>com.google.protobuf</pattern>
+                  <shadedPattern>com.google.appengine.repackaged.com.google.protobuf</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>org.apache.commons.codec</pattern>
+                  <shadedPattern>com.google.appengine.repackaged.org.apache.commons.codec</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>org.apache.commons.logging</pattern>
+                  <shadedPattern>com.google.appengine.repackaged.org.apache.commons.logging</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>org.apache.http</pattern>
+                  <shadedPattern>com.google.appengine.repackaged.org.apache.http</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>org.codehaus.jackson</pattern>
+                  <shadedPattern>com.google.appengine.repackaged.org.codehaus.jackson</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>com.google.apphosting.datastore.DatastoreV3Pb</pattern>
+                  <shadedPattern>com.google.apphosting.api.DatastorePb</shadedPattern>
+                </relocation>
+              </relocations>
+              <filters>
+                <filter>
+                  <artifact>com.fasterxml.jackson.core:jackson-core</artifact>
+                  <includes>
+                    <include>com/fasterxml/jackson/**</include>
+                  </includes>
+                </filter>
+                <filter>
+                  <artifact>com.google.appengine:proto1</artifact>
+                  <includes>
+                    <include>com/google/common/util/concurrent/internal/**</include>
+                  </includes>
+                </filter>
+                <filter>
+                  <artifact>com.google.guava:guava</artifact>
+                  <includes>
+                    <include>com/google/common/annotations/**</include>
+                    <include>com/google/common/base/**</include>
+                    <include>com/google/common/collect/**</include>
+                    <include>com/google/common/graph/**</include>
+                    <include>com/google/common/hash/**</include>
+                    <include>com/google/common/io/**</include>
+                    <include>com/google/common/math/**</include>
+                    <include>com/google/common/primitives/**</include>
+                    <include>com/google/common/util/concurrent/**</include>
+                  </includes>
+                </filter>
+                <filter>
+                  <artifact>org.codehaus.jackson:jackson-core-asl</artifact>
+                  <excludes>
+                    <exclude>META-INF/services/com.fasterxml.jackson.core.JsonFactory</exclude>
+                  </excludes>
+                </filter>
+              </filters>
+              <artifactSet>
+                <includes>
+                  <include>com.fasterxml.jackson.core:jackson-core:*</include>
+                  <include>com.google.api-client:google-api-client:*</include>
+                  <include>com.google.appengine:proto1:*</include>
+                  <include>com.google.appengine:utils:*</include>
+                  <include>com.google.errorprone:error_prone_annotations:*</include>
+                  <include>com.google.guava:guava:*</include>
+                  <include>com.google.http-client:google-http-client-apache-v2:*</include>
+                  <include>com.google.http-client:google-http-client-appengine:*</include>
+                  <include>com.google.http-client:google-http-client-gson:*</include>
+                  <include>com.google.http-client:google-http-client-jackson2:*</include>
+                  <include>com.google.http-client:google-http-client-jackson:*</include>
+                  <include>com.google.http-client:google-http-client:*</include>
+                  <include>com.google.oauth-client:google-oauth-client:*</include>
+                  <include>commons-codec:commons-codec:*</include>
+                  <include>commons-logging:commons-logging:*</include>
+                  <include>org.apache.httpcomponents:httpclient:*</include>
+                  <include>org.apache.httpcomponents:httpcore:*</include>
+                  <include>org.codehaus.jackson:jackson-core-asl:*</include>
+                </includes>
+              </artifactSet>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>

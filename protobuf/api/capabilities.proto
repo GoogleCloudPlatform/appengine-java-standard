@@ -1,0 +1,105 @@
+/*
+ * Copyright 2021 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+// Copyright 2008 Google Inc. All Rights Reserved.
+
+syntax = "proto2";
+
+package java.apphosting;
+
+option cc_enable_arenas = true;
+option java_package = "com.google.appengine.api.capabilities";
+option java_outer_classname = "CapabilitiesPb";
+
+message CapabilityConfigList {
+  // The configuration for one or more capabilities.
+  repeated CapabilityConfig config = 1;
+
+  // If specified, default_config will be used to represent the
+  // configuration for any capabilities not explicitly mentioned
+  // above.  This should not be set in production, because we want to
+  // explicitly list all of the capabilities so that they can be
+  // modified quickly.  However, it is useful for testing and
+  // development purposes.
+  optional CapabilityConfig default_config = 2;
+}
+
+message CapabilityConfig {
+  // The API package to which this capability belongs.  This is the
+  // same string that would be specified in APIRequest.api_package.
+  // Package names are case-sensitive.
+  required string package = 1;
+
+  // The identifier for this capability.  This identifier only needs
+  // to be unique within a given package.
+  // Capability names are case-sensitive.
+  required string capability = 2;
+
+  enum Status {
+    DEFAULT = 0;  // DEFAULT and UNKNOWN are kept identical in code.
+
+    // The capability is enabled.
+    ENABLED = 1;
+    // The capability is currently enabled but downtime is scheduled
+    // in the future.  Clients should not rely on it being enabled in
+    // subsequent requests.  This is a transitional state between
+    // ENABLED and DISABLED designed to give advanced clients a chance
+    // to disable UI elements or perform other preparation work.
+    SCHEDULED = 2;
+    // The capability is disabled and attempts to use it will produce
+    // an error.
+    DISABLED = 3;
+    // No information is known about this capability.  We try to
+    // reject any configurations that don't mention all of the
+    // registered capabilities, so this state should not happen in
+    // practice.  If it does we treat it the same as DISABLED.
+    UNKNOWN = 4;
+  }
+  optional Status status = 3 [default = UNKNOWN];
+
+  // When the status is SCHEDULED, this is the time that the outage is
+  // expected to begin.  Note that the status does not automatically
+  // change to DISABLED at this time, nor do API calls start failing.
+  // However, clients that are using the capability introspection API
+  // may begin taking appropriate countermeasures at this time.
+  //
+  // Format: "YYYY/MM/DD hh:mm:ss".  The time is assumed to be in
+  // Google Standard Time (PST/PDT).
+  optional string scheduled_time = 7;
+
+  // If specified, this message may be displayed to internal support
+  // staff (e.g. on /statusz).  This field can include PCR numbers,
+  // datacenter identifiers, internal project names, etc.
+  optional string internal_message = 4;
+
+  // If specified, this status message will be displayed to
+  // application administrators (e.g. via the admin console).
+  //
+  // NOTE: This message will be displayed to external developers, so
+  // it should not contain any Google-specific terminology or
+  // proprietary details.
+  optional string admin_message = 5;
+
+  // If status is set to DISABLED and this message is provided,
+  // it will be returned to the application in the APIResponse.
+  //
+  // NOTE: Some applications may (either intentionally or
+  // unintentionally) display this message to end users, so this
+  // message should be as user-friendly as possible.  Put any
+  // technical details aimed at developers in admin_message, and any
+  // Google-specific details in internal_message.
+  optional string error_message = 6;
+}

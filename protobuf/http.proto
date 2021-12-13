@@ -1,0 +1,149 @@
+/*
+ * Copyright 2021 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+syntax = "proto2";
+
+package java.apphosting;
+
+option cc_enable_arenas = true;
+option java_package = "com.google.apphosting.base.protos";
+option java_outer_classname = "HttpPb";
+
+// A parsed copy of the HTTP headers, except it doesn't have first
+// line of the request.
+message ParsedHttpHeader {
+  required string key = 1;
+  required string value = 2;
+}
+
+enum ServingDestination {
+  WORKER = 0;               // Served by worker code, default value.
+  TITANIUM_SUPERVISOR = 1;  // Served by the supervisor.
+}
+
+// Representation of an entire HTTP request, as a PB.
+message HttpRequest {
+  reserved 13, 14, 20;
+
+  required string url = 1;
+
+  // This data can be many MB in size.  We use Cords to prevent copying.
+  optional bytes postdata = 2 [ctype = CORD];
+
+  // The headers included here are only the "safe" headers which may
+  // be exposed to client code. The headers should not contain
+  // Google-specific headers which may not be secure for client
+  // access.
+  // Note that the "Host" header is required/mandatory for HTTP/1.1
+  repeated ParsedHttpHeader headers = 3;
+
+  // Many of these values may be extracted from internal X-Google-*
+  // headers, which should be removed from the headers list above.
+
+  required string user_ip = 4;     // filled in from X-User-Ip
+  optional string server_ip = 16;  // filled from X-Google-GFE-Frontline-Info
+  optional bool trusted = 5 [default = false];  // from HTTPServerRequest
+
+  // Request method.
+  required string protocol = 6;
+
+  // Original request method.
+  // In some cases, request method could be overridden, for example, for
+  // a QFE node selection request, protocol is always set to GET. Therefore,
+  // this field is used to record the original request method.
+  optional string original_request_method = 24;
+
+  optional string http_version = 7 [default = "HTTP/1.1"];
+
+  // Did this request come to Google (GFE) over HTTPS/SSL rather than HTTP?
+  optional bool is_https = 8 [default = false];
+
+  // The request came from Executor. Note: this also includes cron requests
+  // since they are sent by Executor.
+  optional bool is_offline = 9 [default = false];
+
+  // Whether this request can go on the pending queue.
+  optional bool enable_pending_queue = 10 [default = true];
+
+  // If set, the appserver which should handle this request.
+  //
+  // NOTE: While the name of this field is 'appserver_bns', it will only
+  // be a bns task address for appmaster1 apps. For appmaster2 apps, this will
+  // be the appserver's gns address.
+  optional string appserver_bns = 11;
+
+  // If true this request will always load a new clone.
+  optional bool warming_request = 12 [default = false];
+
+  // If set, this request was issued by an appserver and this field identifies
+  // the request to the appserver. An id specified by an appserver will be
+  // non-negative.
+  optional int64 warming_request_id = 22 [default = -1];
+
+  // If set, the request will shutdown the clone with clone_id set in
+  // shutdown_clone_id.
+  optional string shutdown_request_clone_id = 17;
+
+  // If set, this is a /_ah/background request that will be sent
+  // to the clone with clone_id set in shutdown_clone_id.
+  optional string background_request_clone_id = 18;
+
+  // If set, this request will be sent to the clone with this clone_id. This
+  // field is used by Appserver to send /_ah/.* requests to a particular clone.
+  // The AppHttpRequest.clone_key is also used to route the request to a
+  // particular clone, but that one is set by PFE for session affinity.
+  optional string clone_id = 21;
+
+  // If true, "gzip(gfe)" was stripped from the User-Agent: value in 'headers'.
+  optional bool gzip_gfe = 15 [default = false];
+
+  // Component within a clone that should serve the request.
+  optional ServingDestination serving_destination = 19;
+
+  // If set, this request is a QFE node selection request.
+  //
+  // It is a "control plane" request for:
+  //   1) finding an available AppServer and clone to serve the incoming
+  //      request, so that the it can instruct the QFE to route the request
+  //      to this "selected" clone through Node Envoy.
+  //   2) reserving the clone until the actual request is complete so that
+  //      AppServer would not kill the clone early.
+  optional bool qfe_node_selection_request = 23;
+}
+
+// Representation of an entire HTTP response, as a PB.
+message HttpResponse {
+  // This value will be from
+  // webutil/http/httpresponse.h:HTTPResponse::ResponseCode.
+  required int32 responsecode = 1;
+
+  repeated ParsedHttpHeader output_headers = 2;
+
+  // This data can be many MB in size.  We use Cords to prevent copying.
+  required bytes response = 3;
+
+  repeated ParsedHttpHeader output_trailers = 6;
+
+  // If set, indicates two things:
+  //  1) the response has been compressed by trusted code
+  //  2) the size of the uncompressed response
+  optional int64 uncompressed_size = 4;
+
+  // If true, the response will be uncompressed by the GFE (or another proxy)
+  // before it is sent to the client.  This can happen if a proxy wants all
+  // responses to be compressed for caching or bandwidth reasons.
+  optional bool uncompress_for_client = 5;
+}

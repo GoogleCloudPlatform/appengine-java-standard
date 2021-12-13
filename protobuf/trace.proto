@@ -1,0 +1,36 @@
+/*
+ * Copyright 2021 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+// Protos used by Tapper to collect RPC traces (go/tapper).
+
+syntax = "proto2";
+
+package java.apphosting;
+
+option cc_enable_arenas = true;
+option java_package = "com.google.apphosting.base.protos";
+option java_outer_classname = "TracePb";
+
+// This message contains the tracing state and options carried to trace RPCs.
+message TraceContextProto {
+  optional bytes trace_id = 1;
+
+  // Unique id of a span belonging to the trace.
+  optional fixed64 span_id = 2;
+
+  // Tracing mask to turn on/off different tracing options.
+  optional uint32 trace_mask = 3;
+}

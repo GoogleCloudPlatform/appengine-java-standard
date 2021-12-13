@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+ Copyright 2021 Google LLC
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     https://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+-->
+
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:element name="backends" type="backendsType"/>
+
+  <xs:complexType name="backendsType">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:element type="backendType" name="backend" maxOccurs="unbounded" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="backendType">
+    <xs:all>
+      <xs:element type="xs:integer" name="instances" minOccurs="0"/>
+      <xs:element type="classType" name="class" minOccurs="0"/>
+      <xs:element type="xs:integer" name="max-concurrent-requests" minOccurs="0"/>
+      <xs:element type="optionsType" name="options" minOccurs="0"/>
+    </xs:all>
+    <xs:attribute type="xs:string" name="name" use="required"/>
+  </xs:complexType>
+
+  <xs:simpleType name="classType">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="B[0-8]|B4_1G"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="optionsType">
+    <xs:all>
+      <xs:element type="xs:boolean" name="dynamic" minOccurs="0"/>
+      <xs:element type="xs:boolean" name="fail-fast" minOccurs="0"/>
+      <xs:element type="xs:boolean" name="public" minOccurs="0"/>
+    </xs:all>
+  </xs:complexType>
+</xs:schema>
+

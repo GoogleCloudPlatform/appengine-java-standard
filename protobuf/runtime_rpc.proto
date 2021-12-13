@@ -1,0 +1,69 @@
+/*
+ * Copyright 2021 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+// LINT: ALLOW_GROUPS
+
+syntax = "proto2";
+
+package apphosting;
+
+import "appinfo.proto";
+import "empty-message.proto";
+import "runtime.proto";
+
+option cc_enable_arenas = true;
+option java_package = "com.google.apphosting.base.protos";
+
+// A service for evaluating HTTP requests. This service is implemented by
+// all the App Engine runtimes. Note that all our existing sandbox/VM
+// environments only support a single app version at a time, despite the
+// multi-app-version capability implied by this interface.
+//
+// TODO: Consider changing the interface to not suggest that it can
+// support multiple app versions. This would probably make the code less
+// confusing. Related to that, there's no reason why the AppServer-side of
+// the runtime needs to inherit from this interface. To the extent that it
+// really does need similar methods, it can define its own local (non-RPC)
+// versions of those interfaces.
+service EvaluationRuntime {
+  // Given information an application and an HTTP request, execute the
+  // request and prepare a response for the user.
+  rpc HandleRequest(java.apphosting.UPRequest)
+      returns (java.apphosting.UPResponse) {}
+
+  // Add an app version to the runtime.
+  rpc AddAppVersion(java.apphosting.AppInfo) returns (EmptyMessage) {}
+
+  // Delete an app version from the runtime.
+  //
+  // NOTE: Here, AppInfo will be an AppInfo-lite.
+  rpc DeleteAppVersion(java.apphosting.AppInfo) returns (EmptyMessage) {}
+}
+
+service APIHost {
+  // Given a request for a particular API call, evaluate the call and
+  // return the appropriate response.
+  //
+  // In the event of an application-level error, the returned RPC status will be
+  // APPLICATION_ERROR and an enum explaining the error will be in the
+  // application_error field of the RPC object. This method of application-level
+  // error reporting is a consequence of two conditions:
+  //    (a) Unless they roll their own error scheme, API implementors will only
+  //        be able to report failures through the RPC object.
+  //    (b) When the application_error is set on an RPC object, response
+  //        protocol messages are no longer transmitted back to the client.
+  rpc Call(java.apphosting.APIRequest) returns (java.apphosting.APIResponse) {}
+}

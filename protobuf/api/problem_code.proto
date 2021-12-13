@@ -1,0 +1,451 @@
+/*
+ * Copyright 2021 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+syntax = "proto3";
+
+package java.cloud.datastore.proto.logs_enums;
+
+option java_package = "com.google.cloud.datastore.logs";
+option java_multiple_files = true;
+
+// NOTE: All of the following enums are used in logs. See
+// <internal>
+// for rules when editing.
+
+// Next ID: 115
+enum ProblemCode {
+  PROBLEM_CODE_UNSPECIFIED = 0;
+
+  // A transaction handle was not found in the handle map in this backend.
+  MISSING_TRANSACTION_HANDLE = 1;
+
+  // A transaction failed because of another concurrent transaction, or
+  // contention.
+  TRANSACTION_CONCURRENCY_ERROR = 2;
+
+  // A call needs a specific storage feature that is missing from the selected
+  // storage instance.
+  MISSING_STORAGE_FEATURE = 3;
+
+  // The requested index definition already exists.
+  INDEX_ALREADY_EXISTS = 4;
+
+  // IAM was temporarily unavailable. Note: IAM errors are inherently safe to
+  // retry on because they inhibit any mutations.
+  IAM_UNAVAILABLE = 5;
+
+  // IAM responded with an unexpected error code.
+  IAM_UNEXPECTED_RESPONSE = 6;
+
+  // Legacy problems, i.e. ones without a particular {@link ProblemCode}.
+  // Do not use for specific problems!
+  LEGACY = 7;
+
+  // A write failed because the user requested that the entity does not exist
+  // (insert) but it was found in storage.
+  WRITE_PRECONDITION_FAILED_ALREADY_EXISTS = 8;
+
+  // A write failed because the user requested that the entity exist (update)
+  // but it was not found in storage.
+  WRITE_PRECONDITION_FAILED_NOT_FOUND = 9;
+
+  // A write failed because the user requested that the entity had a given
+  // version number, but that version number was ahead of the entity's version.
+  WRITE_PRECONDITION_FAILED_FUTURE_BASE_VERSION = 10;
+
+  // A write failed because the user requested that the entity had a given
+  // version number, but that version number was behind the entity's version.
+  WRITE_PRECONDITION_FAILED_PAST_BASE_VERSION = 11;
+
+  // The metadata record that stores the list of builtin indexes and their
+  // serving states is unexpectedly missing from the metadata database.
+  MISSING_BUILTIN_INDEX_RECORD = 12;
+
+  // There's no EUC attached to the RPC.
+  MISSING_EUC = 15;
+
+  // A user attempted to write an entity that is too large.
+  ENTITY_SIZE_OVER_LIMIT = 17;
+
+  // A user attempted to create an index that would exceed the indexing limit.
+  MAX_ACTIVE_INDEXES_PER_DATABASE_EXCEEDED = 18;
+
+  // A user attempted to disable an index when doing so would exceed the # of
+  // allowable concurrent disabling indexes.
+  MAX_DEACTIVATING_INDEXES_PER_DATABASE_EXCEEDED = 19;
+
+  // A user attempted to create a single field configuration that would exceed
+  // the allowable limit.
+  MAX_UP_SINGLE_FIELD_RULES_EXCEEDED = 20;
+
+  // A user attempted to create a ttl config that would exceed
+  // the allowable limit per kind.
+  MAX_UP_TTL_CONFIG_PER_KIND_EXCEEDED = 110;
+
+  // A user attempted to disable a single field rule when doing so
+  // would exceed the # of allowable concurrent disabling rules.
+  MAX_DOWN_SINGLE_FIELD_RULES_EXCEEDED = 21;
+
+  // A scheduler limit was exceeded, e.g. queued byte size.
+  SCHEDULER_LIMIT = 22;
+
+  // A quota limit was exceeded.
+  DEMAND_QUOTA_EXCEEDED = 23;
+
+  // Shimmed InitializeIndexing request cannot succeed before the
+  // min_initialize_time. See http:<internal>
+  // information.
+  SHIM_MIN_INITIALIZE_TIME_IN_FUTURE = 24;
+
+  // Shimmed InitializeIndexing cannot return successfully until after
+  // InitializeIndexingResponse.min_start_time. See
+  // http:<internal>.
+  SHIM_MIN_START_TIME_IN_FUTURE = 25;
+
+  // Couldn't lookup the CLC owner for a particular database.
+  CHANGE_LISTENER_LOOKUP_UNAVAILABLE = 26;
+
+  // The underlying storage layer could not handle a transaction of the given
+  // size.
+  TRANSACTION_TOO_BIG = 27;
+
+  // Megamover journal contained either no entries or just a single tombstone.
+  NEED_TO_REREAD_MEGAMOVER_JOURNAL = 28;
+
+  // The backing storage instance was unavailable to server requests for
+  // unanticipated reasons.
+  BACKING_STORE_IS_BROKEN = 29;
+
+  // We were unsuccessful in sending Prepares to all authoritative CLCs for this
+  // database. It is surfaced as {@code Code.Unavailable}.
+  CHANGE_LISTENER_PREPARE_FAILED = 30;
+
+  // A key without app has other elements. The validation guarded by the
+  // following switch failed:
+  // http://google3/apphosting/datastore/config.proto?l=177&rcl=203046563
+  NON_EMPTY_ENTITY_REF_WITHOUT_APP = 31;
+
+  // An entity specified an entity group that doesn't match its key. The
+  // validation guarded by the following switch failed:
+  // http://google3/apphosting/datastore/config.proto?l=169&rcl=203046563
+  ENTITY_GROUP_DOES_NOT_MATCH_KEY = 32;
+
+  // An entity has unknown fields. The validation guarded by the following
+  // switch failed:
+  // http://google3/apphosting/datastore/config.proto?l=249&rcl=203046563
+  ENTITY_WITH_UNKNOWN_FIELDS = 33;
+
+  // A key had a database even though support for databases is not allowed. The
+  // validation guarded by the following switch failed:
+  // http://google3/apphosting/datastore/config.proto?l=97&rcl=203046563
+  NO_DB_SUPPORT = 34;
+
+  // A key name is not valid UTF-8. The validation guarded by the following
+  // switch failed:
+  // http://google3/apphosting/datastore/config.proto?l=214&rcl=203046563
+  KEY_NAME_NOT_UTF8 = 35;
+
+  // A query filter has an incomplete key path. The validation guarded by the
+  // following switch failed:
+  // http://google3/apphosting/datastore/config.proto?l=125&rcl=203046563
+  INCOMPLETE_KEY_PATHS_IN_QUERY_FILTERS = 36;
+
+  // A key is over the size limit.
+  KEY_SIZE_OVER_LIMIT = 37;
+
+  // A value key or entity value key references the a partition that matches the
+  // partition of the entity that contains it. The validation guarded by the
+  // following switch failed:
+  // http://google3/apphosting/datastore/config.proto?l=219&rcl=203046563
+  CROSS_PARTITION_ENTITY_REF = 38;
+
+  // A property name is not valid UTF-8.
+  PROPERTY_NAME_NOT_UTF8 = 39;
+
+  // A value has a meaning that doesn't match its type. The validation guarded
+  // by the following switch failed:
+  // http://google3/apphosting/datastore/config.proto?l=186&rcl=203046563
+  PROPERTY_VALUE_MEANING_DOES_NOT_MATCH_TYPE = 40;
+
+  // A point value doesn't have the correct meaning. The validation guarded by
+  // the following switch failed:
+  // http://google3/apphosting/datastore/config.proto?l=243&rcl=203046563
+  GEO_POINT_HAS_UNEXPECTED_MEANING = 41;
+
+  // A property with the EMPTY_LIST meaning contains a value.
+  EMPTY_LIST_MEANING_WITH_VALUE = 90;
+
+  // A property with a meaning that requires an integer value (e.g. GD_WHEN)
+  // does not contain an integer value.
+  INTEGER_MEANING_MISSING_INTEGER_VALUE = 91;
+
+  // A property with the GEORSS_POINT meaning does not contain a point value.
+  GEORSS_POINT_MEANING_MISSING_POINT_VALUE = 92;
+
+  // A GEO point has an invalid value. A validation that may have been guarded
+  // by the following switch failed:
+  // http://google3/apphosting/datastore/config.proto?l=238&rcl=203046563
+  INVALID_GEO_POINT = 42;
+
+  // A user value string field is not valid UTF-8. The validation guarded by the
+  // following switch failed:
+  // http://google3/apphosting/datastore/config.proto?l=155&rcl=203046563
+  USER_FIELD_VALUE_NOT_UTF8 = 43;
+
+  reserved 44;
+
+  // A value string with meaning is not valid UTF-8. The validation guarded by
+  // the following switch failed:
+  // http://google3/apphosting/datastore/config.proto?l=254&rcl=203046563
+  PROPERTY_VALUE_STRING_WITH_MEANING_NOT_UTF8 = 45;
+
+  // An unindexed value containing an entity proto isn't valid. The validation
+  // guarded by the following switch failed:
+  // http://google3/apphosting/datastore/config.proto?l=231&rcl=203046563
+  INVALID_UNINDEXED_PROPERTY_VALUE = 46;
+
+  // A kind is not valid UTF8. The validation guarded by the following switch
+  // failed:
+  // http://google3/apphosting/datastore/config.proto?l=211&rcl=203046563
+  KIND_NOT_UTF8 = 47;
+
+  // A value is nested deeper than the max nesting limit.
+  VALUE_NESTED_TOO_DEEPLY = 48;
+
+  // An indexed property has a name that collides with another one, for
+  // example: {"A": {"B": 1}, "A.C": 1}
+  INDEXED_PROPERTY_NAME_COLLISION = 49;
+
+  // A property with an entity has a value that could not be deserialized.
+  PROTO_SERIALIZATION_FAILURE = 50;
+
+  // Human accesses to internal RPC services must include a structured
+  // justification, e.g. via admin_session.
+  HUMAN_CALLER_WITHOUT_JUSTIFICATION = 51;
+
+  // General error when the user sets an unsupported value for a field.
+  UNSUPPORTED_FIELD_VALUE = 52;
+
+  // The underlying storage layer could not handle a batch write of the
+  // given size.
+  BATCH_WRITE_TOO_BIG = 53;
+
+  // The same document cannot be written more than once in a single request.
+  BATCH_WRITE_INDISTINCT_DOCUMENTS = 54;
+
+  // For a condition on primary key the property value should be a reference.
+  NO_REFERENCE_VALUE_FOR_PRIMARY_KEY = 55;
+
+  // A Prepare failed with RESOURCE_EXHAUSTED indicating that this database's
+  // write qps or bandwidth usage is overlimit.
+  CHANGE_LISTENER_PREPARE_RESOURCE_EXHAUSTED = 56;
+
+  // Megastore backends do not support 'OR' queries.
+  DISJUNCTIVE_QUERIES_NOT_SUPPORTED = 57;
+
+  // Only a single 'IN' or 'ARRAY_CONTAINS_ANY' or '!=' operator is allowed
+  // per query.
+  ONLY_SINGLE_DISJUNCTIVE_OPERATOR = 58;
+
+  // Trying to normalize a query into DNF was going to result in too many
+  // disjunctions.
+  TOO_MANY_NORMALIZED_DISJUNCTIONS = 59;
+
+  reserved 60;
+
+  // The requested snapshot is too old for the system to serve.
+  SNAPSHOT_TOO_OLD = 61;
+
+  // The requested snapshot is in the future and unservable.
+  SNAPSHOT_TOO_NEW = 88;
+
+  /** Multiple types were set for a property value. */
+  PROPERTY_VALUE_WITH_MULTIPLE_TYPES_SET = 62;
+
+  /** A property value has a meaning that can't be indexed. */
+  UNINDEXABLE_MEANING = 63;
+
+  /** A path has both an id and name set. */
+  PATH_WITH_BOTH_ID_AND_NAME_SET = 64;
+
+  /** A property has an unknown meaning uri. */
+  PROPERTY_WITH_UNKNOWN_MEANING_URI = 65;
+
+  /** A property does not have a multiple field set where it should. */
+  PROPERTY_WITH_INVALID_MULTIPLE_FIELD = 66;
+
+  /** An entity key path is empty. */
+  EMPTY_KEY_PATH = 67;
+
+  /** An entity owner contains a nickname. */
+  OWNER_CONTAINS_NICKNAME = 68;
+
+  /** This backend cannot process this type of project.  */
+  PROJECT_STATE_NOT_SUPPORTED = 69;
+
+  // The serving state was incorrect according to the call.
+  SERVING_STATE_CHECK_FAILED = 70;
+
+  // The project has DATASTORE_BACKEND_ONLY_PROCESS_ROOT_USER_REQUESTS or
+  // DATASTORE_BACKEND_ONLY_PROCESS_ROOT_USER_WRITE_REQUESTS option, a request
+  // call with something other than Googler LOAS credentials is rejected.
+  NON_ROOT_USER_REQUEST_REJECTION = 71;
+
+  // The request to update an index contained a different id than the one in
+  // persistence.
+  INDEX_ID_MISMATCH = 72;
+
+  // Spanner transaction was aborted due to invalid commit time.
+  //
+  // The timestamp that Spanner picked for the commit was below the minimum
+  // timestamp specified by the Backend.
+  SPANNER_COMMIT_TIME_TOO_SMALL = 73;
+
+  // Spanner transaction was aborted due to invalid commit time.
+  //
+  // The timestamp that Spanner picked for the commit was above the maximum
+  // timestamp specified by the Backend. The Backend specifies minimum and
+  // maximum commit times in order to keep the Change-Log-Cache in sync with
+  // Spanner.
+  SPANNER_COMMIT_TIME_TOO_LARGE = 74;
+
+  // Spanner transaction was aborted due to lock conflicts.
+  //
+  // This occurs when multiple transactions compete for the same resource,
+  // go/spanner-txns#deadlock-detection. The suggested customer behavior is to
+  // retry locally.
+  SPANNER_ABORTED_LOCK_CONFLICT = 75;
+
+  // Spanner transaction was aborted due to a stale assignment in the Lamprey.
+  //
+  // This occurs when Spanner moves a tablet (normally driven from user load
+  // patterns) and the Lamprey local to the Backend attempts to commit to it
+  // using its old location.
+  SPANNER_DIRECTORY_NOT_IN_TABLET = 77;
+
+  // Spanner transaction failed due to a generic ABORTED error code.
+  //
+  // This can come a number of issues, such as tablet pushback.
+  SPANNER_GENERIC_ABORT = 81;
+
+  // An unindexed, unparseable nested entity is too long
+  UNINDEXED_UNPARSEABLE_NESTED_ENTITY_TOO_LONG = 76;
+
+  // An index entry is too large and we cannot write it to storage.
+  INDEX_ENTRY_TOO_LARGE = 78;
+
+  // A server decided not to process a request because of a routing error of
+  // some sort.
+  ROUTING_ERROR = 79;
+
+  // Was unable to fetch from local metadata.
+  LOCAL_METADATA_FETCH_FAIL = 80;
+
+  // Was unable to fetch from the local VpcScRestricted cache.
+  LOCAL_VPC_SC_RESTRICTED_FETCH_FAIL = 114;
+
+  // Metadata fetch attempted without specifying instance/shard.
+  MISSING_FIRESTORE_DATABASE_LOCATION_EXTENSION = 82;
+
+  // App does not have the required state to copy back data from Spanner to
+  // Megastore (to support Datastore-to-Firestore rollback).
+  SPANNER_TO_MEGASTORE_COPY_NOT_ALLOWED = 83;
+
+  // At least one of the entities in the write exceeds the index entries count
+  // or bytes limit (https://firebase.google.com/docs/firestore/quotas).
+  INDEX_ENTRIES_COUNT_LIMIT_EXCEEDED = 84;
+  INDEX_ENTRIES_BYTES_LIMIT_EXCEEDED = 85;
+
+  // Advisory codes for understanding b/179304810.
+  // entity.entity_group in a nested is empty but the key is not.
+  NESTED_ENTITY_ENTITY_GROUP_EMPTY = 86;
+  // entity.entity_group in a nested entity has more than one path element.
+  NESTED_ENTITY_ENTITY_GROUP_MULTIPLE_PATH_ELEMENTS = 87;
+
+  // A property contains an empty list while having the multiple field set
+  EMPTY_LIST_WITH_MULTIPLE = 89;
+
+  // We were unsuccessful in sending Prepares to all authoritative ChangeServers
+  // for this write request. It is surfaced as {@code Code.Unavailable}.
+  SHARDED_CHANGE_LISTENER_PREPARE_FAILED = 99;
+
+  // A Prepare failed with RESOURCE_EXHAUSTED indicating that this database's
+  // write qps or bandwidth usage is overlimit. It is surfaced as
+  // {@code Code.Resource_Exhausted}.
+  SHARDED_CHANGE_LISTENER_PREPARE_RESOURCE_EXHAUSTED = 100;
+
+  // We were unsuccessful in doing lookup of the authoritative ChangeServers
+  // for this write request. It is surfaced as {@code Code.Unavailable}.
+  SHARDED_CHANGE_LISTENER_LOOKUP_FAILED = 101;
+
+  // We were unsuccessful in doing a lookup of authoritative ChangeServers for
+  // this write request because we don't have assignment information for a
+  // certain document in the request. It will be converted into
+  // SHARDED_CHANGE_LISTENER_LOOKUP_FAILED and surfaced as
+  // {@code Code.Unavailable}.
+  SHARDED_CHANGE_LISTENER_LOOKUP_NOT_OWNED_ANYWHERE = 102;
+
+  // We were unsuccessful in doing a lookup of authoritative ChangeServers for
+  // this write request because we don't have any assignment information.
+  // It will be converted into SHARDED_CHANGE_LISTENER_LOOKUP_FAILED and
+  // surfaced as {@code Code.Unavailable}.
+  SHARDED_CHANGE_LISTENER_LOOKUP_NO_VALID_ASSIGNMENT = 103;
+
+  // We were unsuccessful in doing a lookup of authoritative ChangeServers for
+  // this write request because we don't have replica group information for a
+  // certain document in the request. It will be converted into
+  // SHARDED_CHANGE_LISTENER_LOOKUP_FAILED and surfaced as
+  // {@code Code.Unavailable}.
+  SHARDED_CHANGE_LISTENER_LOOKUP_NO_VALID_REPLICA_GROUP = 104;
+
+  // We were unsuccessful in doing a lookup of authoritative ChangeServers for
+  // this write request because there is no documents in the request. It will be
+  // converted into SHARDED_CHANGE_LISTENER_LOOKUP_FAILED and surfaced as
+  // {@code Code.Internal} because the error should have been found earlier.
+  SHARDED_CHANGE_LISTENER_LOOKUP_MISSING_KEYS = 105;
+
+  // We were unsuccessful in doing a lookup of authoritative ChangeServers for
+  // this write request because the pool information doesn't match.
+  // It will be converted into SHARDED_CHANGE_LISTENER_LOOKUP_FAILED and
+  // surfaced as {@code Code.Internal}.
+  SHARDED_CHANGE_LISTENER_LOOKUP_INCORRECT_POOL = 106;
+
+  // We were unsuccessful in doing a lookup of authoritative ChangeServers for
+  // this write request because the path of a certain document in the request is
+  // illegal. It will be converted into SHARDED_CHANGE_LISTENER_LOOKUP_FAILED
+  // and surfaced as {@code Code.Internal} because the error should have been
+  // found earlier.
+  SHARDED_CHANGE_LISTENER_LOOKUP_INVALID_KEYS = 107;
+
+  // We were unsuccessful in doing a lookup of authoritative ChangeServers for
+  // this write request because it fails to get Stub from the StubCache based
+  // on the ChangeServer address.
+  SHARDED_CHANGE_LISTENER_LOOKUP_INVALID_STUB_CACHE = 108;
+
+  // The database is not ready for Wipeout since it is not hard deleted.
+  BAD_WIPEOUT_REQUEST_DATABASE_NOT_DELETED = 109;
+
+  // We were unsuccessful in sending Prepares to all authoritative ChangeServers
+  // for this pool because a peer pool has failed its Prepare phase.
+  SHARDED_CHANGE_LISTENER_PEER_POOL_PREPARE_FAILED = 111;
+
+  // The ownership lookup (with retries) for a certain set of documents failed
+  // permanently because it fails too many times.
+  SHARDED_CHANGE_LISTENER_LOOKUP_FAILED_TOO_MANY_RETRIES = 112;
+  // The ownership lookup (with retries) for a certain set of documents failed
+  // permanently because it hits a non-retryable error.
+  SHARDED_CHANGE_LISTENER_LOOKUP_NON_RETYABLE_ERROR = 113;
+}

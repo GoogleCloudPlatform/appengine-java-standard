@@ -1,0 +1,353 @@
+/*
+ * Copyright 2021 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+// Copyright 2009 Google Inc. All Rights Reserved.
+//
+// The definition of an executor queue.
+//
+// http://g3doc/apphosting/g3doc/wiki-carryover/executor.md#Definition_of_a_Task
+
+syntax = "proto2";
+
+package java.apphosting;
+
+import "group.proto";
+import "retry.proto";
+import "target.proto";
+
+option java_package = "com.google.apphosting.executor";
+
+message QueueRef {
+  // Group to which the queue belongs.
+  required java.apphosting.GroupRef group_ref = 1;
+
+  // Name of the queue.
+  required bytes name = 2;
+}
+
+// Queue range borders are compared based on the lexicographic ordering of
+// their corresponding (customer, group, queue) tuples.
+message QueueRangeBorder {
+  // Must always be non-empty.
+  //
+  // See documentation of apphosting.GroupRef.customer.
+  required bytes customer = 1;
+
+  // For both group and queue names, the following ordering rules apply.
+  //
+  //   (a) An empty value is less than all other values.
+  //       It is like negative infinity.
+  //   (b) A missing value is greater than all other values.
+  //       It is like positive infinity.
+  //
+  // This allows us to represent concepts in QueueRange such as:
+  //    * all queues for a customer
+  //    * all queues for a group
+  //    * all queues for a customer less/greater than some queue/group
+  //    * all queues for a group less/greater than some queue
+  optional bytes group = 2;
+  optional bytes queue = 3;
+}
+
+message QueueRange {
+  // This range includes all queues for which 'queue >= start' and 'queue <
+  // limit', according to strict lexicographic comparison.
+  required QueueRangeBorder start = 1;
+  required QueueRangeBorder limit = 2;
+}
+
+// The parameters that determine the speed in which the queue can reach its
+// maximum task dispatch rate at startup.
+// NEXT TAG: 2
+message QueueRampupParameters {
+  // The Speendup Factor.
+  //
+  // speedup_factor controls the speed in which the queue can reach its maximum
+  // task dispatch rate at startup. Its value should be bigger or equal to 0.25
+  // and less than or equal to 4. The bigger this value is the shorter the ramp
+  // up duration till the queue can operate at its maximum rate.
+  optional double speedup_factor = 1;
+}
+
+// The parameters that define the rate at which a queue's tasks may be run.
+// These parameters refer to the underlying token bucket implementation.
+//
+// NEXT TAG: 11
+message QueueThrottlingParameters {
+  // The refill rate of the token bucket.  In the long run, the queue may not
+  // exceed this rate of execution.
+  required double bucket_refill_per_second = 1;
+
+  // The capacity of the token bucket. If < 1.0 tasks will not be executed,
+  // i.e. deactivates the queue.
+  required double bucket_capacity = 2;
+
+  // Limits the number of requests a queue may have in flight at any one time.
+  // If not present, then no limit will be applied. This field is only
+  // applicable for push queues.
+  optional int32 max_concurrent_requests = 3;
+
+  // Limits the number of pull tasks requests a queue can serve in a second.
+  // This limit is enforced only for allocated queues. If the field is unset or
+  // set to 0, the default throttling limits is enforced. For unallocated
+  // queues, the default throttling limit is enforced.
+  optional int32 max_pull_requests_per_second = 8 [default = 0];
+
+  // rampup_parameters determines the speed in which the queue can reach its
+  // maximum task dispatch rate at startup.
+  optional QueueRampupParameters rampup_parameters = 10;
+
+  // Override the user-specified configs. Queue overrides take
+  // precedence over group overrides set in GroupDefinition. Setting
+  // any number to 0 is equivalent to pausing. Setting a number to < 0
+  // is equivalent to unset.
+  //
+  // TODO: Check the claim about being
+  // functionally equivalent to paused. Will the queue show as
+  // "paused" in the admin console? How will the queue appear in the
+  // admin console? In general, will the overrides be visible in the
+  // admin console?
+  optional double override_bucket_refill_per_second = 4 [default = -1];
+  optional double override_bucket_capacity = 5 [default = -1];
+  optional int32 override_max_concurrent_requests = 7 [default = -1];
+  optional int32 override_max_pull_requests_per_second = 9 [default = -1];
+}
+
+message HttpTaskRunnerHeader {
+  required bytes key = 1;
+  required bytes value = 2;
+}
+
+message ThresholdCrossing {
+  optional int64 threshold = 1;
+  optional int64 last_crossed_usec = 2;
+}
+
+message QueueAllocation {
+  // Latest timestamps when capacity bucket thresholds were crossed for a queue.
+  // It contains the capacity bucket that a queue belongs to from a moment in
+  // time in response to capacity changes, either when increasing or decreasing.
+  // Although this does not necessarily need to match their actual allocated
+  // capacity, given adjustment delays.
+  repeated ThresholdCrossing thresholds_crossed = 1;
+}
+
+// Modifies the target for all the tasks within the queue.
+message TargetOverride {}
+
+// LINT.IfChange
+// Overrides the Http target for all the Http tasks in the queue.
+message HttpTargetOverride {
+  // The Scheme which can be one of HTTP or HTTPs.
+  enum Scheme {
+    SCHEME_UNSPECIFIED = 0;
+    HTTP = 1;
+    HTTPS = 2;
+  }
+
+  // When specified, replaces the scheme from task Uri.
+  optional Scheme scheme = 1;
+
+  // When specified, replaces the host from task Uri.
+  optional string host = 2;
+
+  // When specified, replaces the port from task Uri. If the Uri does not have
+  // port, it will be added.
+  optional int64 port = 3;
+
+  // Path string. When specified, will replace the path of task Uri.
+  optional string path = 4;
+
+  // The query string. When specified, will be appended (suffixed) to the query
+  // string of the task Uri.
+  optional string query = 5;
+
+  enum HttpMethod {
+    HTTP_METHOD_UNSPECIFIED = 0;
+    POST = 1;
+    GET = 2;
+    HEAD = 3;
+    PUT = 4;
+    DELETE = 5;
+    PATCH = 6;
+    OPTIONS = 7;
+  }
+  // When specified, overrides the HttpMethod.
+  optional HttpMethod http_method = 6;
+
+  // Task authorization method for all the tasks in the queue.
+  optional java.apphosting.TaskAuthorization task_authorization = 7;
+}
+// LINT.ThenChange( //depot/google3/cloud/tasks/internal/target.proto)
+
+// NEXT TAG: 26
+message QueueDefinition {
+  required QueueRef queue_ref = 1;
+  required QueueThrottlingParameters throttling_parameters = 2;
+
+  // A human-readable string which describes the rate of execution for this
+  // queue. Specifically this is the 'rate:' field from queue.yaml which may
+  // contain values such as "10/m" or "200/d" or "1/s". Note that this is
+  // specific to the App Engine Task Queue API but it saves us a lot of effort
+  // to store it here as opposed to somewhere else.
+  optional string user_specified_rate = 3;
+
+  // Timestamp at which this queue was last purged of tasks. While these purged
+  // tasks (the tasked enqueued before the purge time) are waiting to be
+  // tombstoned and eventually removed from our tables by a mapreduce,  they
+  // should not be executed or returned by queries.
+  optional int64 last_purge_usec = 4 [default = 0];
+
+  // A marker (separate from throttling parameters) that this queue is paused.
+  // When is_paused is true, Executor will not execute tasks.
+  optional bool paused = 5 [default = false];
+
+  // Queue-wide RetryParameters.
+  optional java.apphosting.RetryParameters retry_parameters = 6;
+
+  // Allocation type determines what kind of scanner a queue is assigned to.
+  // High-throughput queues are directly assigned to "allocated" scanners, while
+  // the rest is assigned to a pool of "default" scanners.
+  // More information at go/queue-isolation.
+  enum AllocationType {
+    ALLOCATION_TYPE_UNSPECIFIED = 0;
+    DEFAULT = 1;
+    ALLOCATED = 2;
+  }
+
+  enum QueueMode {
+    PUSH = 0;
+    PULL = 1;
+  }
+
+  // A queue can be a push queue (e.g. appengine's normal taskqueues) in which
+  // tasks are sent to workers at the queue's predefined rate, or it can be a
+  // pull queue, in which case workers will poll the queue for tasks that they
+  // are ready to execute.
+  optional QueueMode mode = 7 [default = PUSH];
+
+  // A set of header overrides that are applied to all HttpTaskRunnerPayloads.
+  // NOTE: Overrides of X-Appengine-{Queue,Task}* headers will not be applied.
+  repeated HttpTaskRunnerHeader header_override = 9;
+
+  // Access Control. Executor stores but does not currently enforce the ACL.
+  // Should contain a serialized Acl.ACLProto whose definition we don't wish to
+  // leak into public code.
+  optional bytes acl = 10 [ctype = CORD];
+
+  // The creator of this queue. Defaults to "apphosting" for queues created via
+  // App Engine's Task Queue Api.
+  optional string creator_name = 11 [ctype = CORD, default = "apphosting"];
+
+  // Sets the sharding factors for a queue's index tables. The invariant
+  // that num_read_shards >= num_write_shards must be respected.
+  optional uint32 num_read_shards = 12 [default = 1];
+  optional uint32 num_write_shards = 13 [default = 1];
+
+  // Periodically updated to indicate if a queue is still active.
+  optional int64 last_heartbeat_usec = 14;
+
+  // Periodically updated with a count of the alive tasks on the queue.  The
+  // value is not updated on the queue but filled in by the Store similar to the
+  // implementation of last_heartbeat_used.
+  optional int64 queue_task_count_checkpoint = 15 [default = 0];
+
+  // Can only be specified for PUSH queues. And if specified, the queue will
+  // only accept pubsub tasks.
+  optional PubsubQueueDefinition pubsub_queue_def = 16;
+
+  // If true, Cloud Logging is enabled for this queue.
+  // No longer in use. Use log_sampling_fraction.
+  optional bool enable_cloud_logging = 17 [default = false, deprecated = true];
+
+  // The allocated rate capacity for this queue.
+  optional int64 allocated_capacity = 18 [default = 0];
+
+  // The amount of time a task is allowed to live until it's garbage collected.
+  // If this amount of time passes after the task's creation it is deleted,
+  // regardless of the state the task is in.
+  optional int64 maximum_alive_lifetime_usec = 19;
+
+  // The amount of time a task is allowed to be in a tombstoned states until
+  // it's garbage collected.
+  optional int64 maximum_tombstone_lifetime_usec = 20;
+
+  // Metadata regarding this queue's allocation.
+  optional QueueAllocation queue_allocation = 21;
+
+  // The fraction of operations to log. This field is now superceeded by
+  // stackdriver_logging_config.
+  optional double log_sampling_ratio = 22 [deprecated = true];
+
+  // Cloud logging configuration.
+  optional StackdriverLoggingConfiguration stackdriver_logging_config = 23;
+
+  // Executiuon mode of the queue. Can either be "interactive" or "batch"
+  // (for queues with large backlog of tasks).
+  // See go/interactive-cloud-tasks for more details.
+  enum ExecutionMode {
+    EXECUTION_MODE_UNSPECIFIED = 0;
+    INTERACTIVE = 1;
+    BATCH = 2;
+  }
+  optional ExecutionMode execution_mode = 24 [deprecated = true];
+
+  // Target overrides on this queue. When specified, all the tasks in this queue
+  // will be executed according to this target.
+  optional TargetOverride target_override = 25;
+}
+
+// Pubsub specific parameters for a push queue
+message PubsubQueueDefinition {
+  // The pubsub topic name that this queue is allowed to post to.
+  //
+  // NOTE: If this topic is changed on an existing queue using UpdateQueue(),
+  // previously added tasks (that haven't yet run) will publish to this new
+  // topic.
+  optional string topic_name = 1;
+}
+
+message QueueRangeAssignment {
+  required java.apphosting.QueueRange queue_range = 1;
+
+  // The bns address of the scanner that owns the queues in this range.
+  required bytes scanner_task = 2;
+
+  // Time at which this queue range assignment was first created.
+  optional int64 timestamp_usec = 3;
+}
+
+// Encodes a mapping from queue to scanner task.
+message QueueMap {
+  // The scanner assignments for PUSH queues in each range. Ranges should be
+  // non-overlapping and in ascending order. Note, the ranges may overlap those
+  // in pull_range.
+  repeated java.apphosting.QueueRangeAssignment push_range = 5;
+
+  // The scanner assignments for PULL queues in each range. Ranges should be
+  // non-overlapping and in ascending order. Note, the ranges may overlap those
+  // in push_range.
+  repeated java.apphosting.QueueRangeAssignment pull_range = 6;
+
+  // Time at which this queue map was generated.
+  required int64 timestamp_usec = 4;
+}
+
+// Stackdriver logging configuration
+message StackdriverLoggingConfiguration {
+  // The fraction of operations to log.
+  optional double sampling_ratio = 1;
+}

@@ -1,0 +1,279 @@
+/*
+ * Copyright 2021 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+// Copyright 2010 Google Inc. All Rights Reserved.
+//
+// This protocol buffer defines documents used by indexing
+// and searching services.
+//
+// This file should be kept in sync with:
+// google3/googledata/apphosting/megastore/qa/proto/document.proto
+// google3/googledata/apphosting/megastore/prod-appengine/proto/document.proto
+
+syntax = "proto2";
+
+package storage_onestore_v3;
+
+option java_package = "com.google.apphosting.api.search";
+option java_outer_classname = "DocumentPb";
+
+// The value of a document field.
+message FieldValue {
+  // The type of content in the field value.
+  enum ContentType {
+    // The content is plain text.
+    TEXT = 0;
+
+    // The content is HTML.
+    HTML = 1;
+
+    // The content is indivisible text.
+    ATOM = 2;
+
+    // The content is a date.
+    DATE = 3;
+
+    // The content is a number.
+    NUMBER = 4;
+
+    // The content is a location.
+    GEO = 5;
+
+    // The content is an untokenized prefix field.
+    UNTOKENIZED_PREFIX = 6;
+
+    // The content is a tokenized prefix field.
+    TOKENIZED_PREFIX = 7;
+
+    // The content is a vector of double numbers
+    VECTOR = 8;
+  }
+
+  // The type of content in this field value.
+  optional ContentType type = 1 [default = TEXT];
+
+  // The language of the content. The language must be a valid ISO 639-1 code.
+  optional string language = 2 [default = "en"];
+
+  // The field in which HTML, TEXT, ATOM, DATE, NUMBER, UNTOKENIZED_PREFIX, and
+  // TOKENIZED_PREFIX values are stored. For DATE fields, it is the milliseconds
+  // since Unix epoch, formatted as what Java's Long.parseLong accepts.
+  // For NUMBER fields, it is formatted as what Java's Double.parseDouble
+  // accepts.
+  optional string string_value = 3;
+
+  // The field in which GEO values are stored
+  optional group Geo = 4 {
+    required double lat = 5;
+    required double lng = 6;
+  }
+
+  // The field in which VECTOR values are stored. Vector is defined as an
+  // ordered set of doubles.
+  repeated double vector_value = 7;
+}
+
+// A document field.
+message Field {
+  // The name of the field.
+  required string name = 1;
+
+  // The value of the field.
+  required FieldValue value = 2;
+}
+
+// A mapping from a field name to known types associated with it.
+message FieldTypes {
+  // The user given field name.
+  required string name = 1;
+
+  // The types associated with the given field name.
+  repeated FieldValue.ContentType type = 2;
+}
+
+message IndexShardSettings {
+  // Total number of shards in the previous configuration.
+  repeated int32 prev_num_shards = 1;
+  // Current total number of shards for this index.
+  required int32 num_shards = 2 [default = 1];
+  // The set of prev_num_shards that are not searchable. This is a disjoint set
+  // relative to the prev_num_shards list.
+  repeated int32 prev_num_shards_search_false = 3;
+  // The local replica to use for searches
+  optional string local_replica = 4 [default = ""];
+}
+
+message IndexMetadata {
+  optional bool is_over_field_number_threshold = 1 [default = false];
+  optional IndexShardSettings index_shard_settings = 2;
+
+  // The index state could be modified upon a user request or a scanner.
+  // When user issues a delete request, the state is set to SOFT_DELETED,
+  // while it is still possible for user to cancel that deletion.
+  // When the scanner finds out that index_delete_time has passed,
+  // or a Dexter instance finds out index_delete_time has passed upon a RPC,
+  // it sets the index's state to PURGING by writing to Megastore.
+  // User is now not able to cancel the deletion.
+  // When the scanner sees that all traces of the index are deleted,
+  // it removes the index metadata row.
+  //
+  // We transition between state as follows:
+  //
+  //                                    Index
+  //                       +--------+  Created    +---------+
+  //            start----->|  Non-  |------------>| ACTIVE  |
+  //                       |existent|             |         |
+  //             Scanner   +--------+             +---------+
+  //             finds out     ^                     ^   |
+  //             all deletes   |        User cancels |   |  User issues
+  //             completed     |      index deletion |   |  index deletion
+  //                           |                     |   v
+  //                       +--------+             +---------+
+  //                       | PURGE- |<------------|  SOFT_  |
+  //                       |  ING   |  Scanner/   | DELETED |
+  //                       +--------+  Dexter     +---------+
+  //                                   finds out
+  //                                   index_delete_time
+  //                                   passed
+  enum IndexState {
+    // Index is active.
+    ACTIVE = 0;
+    // Index seen as marked deleted; purge trigger time not yet seen.
+    // The deletion could still be cancelled at this point.
+    SOFT_DELETED = 1;
+    // Purge trigger time seen, purge processes should run.
+    PURGING = 2;
+  }
+  optional IndexState index_state = 3 [default = ACTIVE];
+
+  // The scheduled deletion time, in milliseconds from 1970-01-01T00:00:00Z
+  // Present iff index_state is SOFT_DELETED or PURGING.
+  optional int64 index_delete_time = 4;
+
+  // The maximum size of the index (if quota override is present).
+  // Used to: recreate dynamic quota profiles and purge them during wipeout.
+  optional int64 max_index_size_bytes = 5;
+
+  message DeletionStatus {
+    optional int64 started_time = 3;
+    optional int64 completed_time = 4;
+  }
+
+  // Tracks the status of each component that is part of the index deletion
+  // process. Each details represents the status of one replica.
+  message IndexDeletionDetails {
+    // Which replica these details describe
+    required string replica_name = 1;
+
+    // Track if all Megastore writes have been applied
+    optional DeletionStatus precheck = 2;
+
+    // Tracks ST-BTI data deletion
+    optional DeletionStatus st_bti = 3;
+
+    // Tracks deletion from the Megastore CustomerDocument table
+    optional DeletionStatus ms_docs = 4;
+  }
+
+  // Details about which components have completed for index deletion,
+  // one per replica.
+  repeated IndexDeletionDetails replica_deletion = 6;
+}
+
+// The value of a document facet.
+message FacetValue {
+  // The type of content in the facet value.
+  // Keeping the numbering consistent with FieldType
+  enum ContentType {
+    // The content is indivisible text.
+    ATOM = 2;
+
+    // The content is a number.
+    NUMBER = 4;
+  }
+
+  // The type of content in this facet value.
+  optional ContentType type = 1 [default = ATOM];
+
+  // The field in which ATOM or NUMBER values are stored.
+  // For NUMBER fields, it is formatted as what Java's
+  // Double.parseDouble accepts.
+  optional string string_value = 3;
+}
+
+// A document facet.
+message Facet {
+  // The name of the facet.
+  required string name = 1;
+
+  // The value of the facet.
+  required FacetValue value = 2;
+}
+
+// The metadata of a document.
+message DocumentMetadata {
+  // The version number of this document. This should increment every time the
+  // document is modified. DocumentMetadata will stay around after deletes, so
+  // the version number will carry over after a delete and a document of the
+  // same name is indexed.
+  optional int64 version = 1;
+
+  // The highest version number of this document that has been written to the
+  // ST index.
+  optional int64 committed_st_version = 2;
+}
+
+// A document is a collection of fields.
+message Document {
+  // An identifier for the document. If missing, a unique id will
+  // automatically be chosen for the document.
+  optional string id = 1;
+
+  // The language the document is written in. The language must be a valid ISO
+  // 639-1 code.
+  optional string language = 2 [default = "en"];
+
+  // The set of fields of the document.
+  repeated Field field = 3;
+
+  // An id specified by the client, used to return documents in a defined
+  // order in search results. If it is not specified, then the number
+  // of seconds since 2011/1/1.
+  optional int32 order_id = 4;
+
+  // Did we generate the order id ("rank") or did the client provide it?
+  optional OrderIdSource order_id_source = 6 [default = SUPPLIED];
+
+  enum OrderIdSource {
+    // We generated an order ID.
+    DEFAULTED = 0;
+
+    // The client provided an explicit order ID.
+    SUPPLIED = 1;
+  }
+
+  // What sort of storage the index is built on.
+  enum Storage {
+    // Use a disk-based index.
+    DISK = 0;
+  }
+
+  // The storage type the index is built on.
+  optional Storage storage = 5 [default = DISK];
+
+  // The set of facets/categories, the document belongs to.
+  repeated Facet facet = 8;
+}

@@ -1,0 +1,136 @@
+/*
+ * Copyright 2021 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#datastore_search {
+  margin-bottom: 1em;
+}
+
+#hint {
+  background-color: #F6F9FF;
+  border: 1px solid #E5ECF9;
+  margin-bottom: 1em;
+  padding: 0.5em 1em;
+}
+
+#message {
+  color: red;
+  position: relative;
+  bottom: 6px;
+}
+
+#pagetotal {
+  float: right;
+}
+
+#pagetotal .count {
+  font-weight: bold;
+}
+
+table.entities {
+  border: 1px solid #c5d7ef;
+  border-collapse: collapse;
+  width: 100%;
+  margin-bottom: 0;
+}
+
+table.entities th, table.entities td {
+  padding: .25em 1.5em .5em .5em;
+}
+
+table.entities th {
+  font-weight: bold;
+  text-align: left;
+  background: #e5ecf9;
+  white-space: nowrap;
+}
+
+table.entities th a, table.entities th a:visited {
+  color: black;
+  text-decoration: none;
+}
+
+table.entities td {
+  background-color: #fff;
+  text-align: left;
+  vertical-align: top;
+  cursor: pointer;
+}
+
+table.entities tr.even td {
+  background-color: #f9f9f9;
+}
+
+div.entities {
+  background-color: #c5d7ef;
+  margin-top: 0;
+}
+
+.unindexed-marker {
+  font-style: italic;
+}
+
+#entities-pager, #entities-control {
+  padding: .3em 1em .4em 1em;
+}
+
+#entities-pager {
+  text-align: right;
+}
+
+.ae-datastore-index-name {
+  font-size: 1.2em;
+  font-weight:bold;
+}
+
+.ae-datastore-index-status {
+  border:1px solid #c0dfbf;
+  background:#f3f7f3;
+  margin:0 25px 0 0;
+  padding:3px
+}
+
+#ae-datastore-index-status-col {
+  width:15%
+}
+
+.ae-datastore-index-status-Building {
+  border-color:#edebcd;
+  background:#fefdec
+}
+
+.ae-datastore-index-status-Deleting {
+  border-color:#ccc;
+  background:#eee
+}
+
+.ae-datastore-index-status-Error {
+  border-color:#ffd3b4;
+  background:#ffeae0
+}
+
+.ae-datastore-index-defs {
+  padding-left:20px
+}
+
+.ae-datastore-index-defs-row {
+  border-top:1px solid #ddd
+}
+
+.ae-datastore-index-defs .ae-unimportant {
+  font-size:.8em
+}
+
+  

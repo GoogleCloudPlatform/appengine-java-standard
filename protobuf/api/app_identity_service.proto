@@ -1,0 +1,110 @@
+/*
+ * Copyright 2021 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+// Copyright 2010 Google Inc. All Rights Reserved.
+
+// This file contains API definitions for signing services.
+
+syntax = "proto2";
+
+package java.apphosting;
+
+option java_package = "com.google.appengine.api.appidentity";
+option java_outer_classname = "AppIdentityServicePb";
+
+message AppIdentityServiceError {
+  // The rpc calls may return an application error which may have a value
+  // from error code in gaiamint response or AppIdentityServiceError. The goal
+  // of returning backend error is to make debugging easier.
+  // See gaiamintservice.proto for more errors.
+  enum ErrorCode {
+    // Errors with low numbers are from gaiamintservice.proto.
+    // Only a few are copied here as this is visible externally.
+    SUCCESS = 0;
+    UNKNOWN_SCOPE = 9;
+    // Errors 1000 and higher are unique to this service.
+    BLOB_TOO_LARGE = 1000;
+    DEADLINE_EXCEEDED = 1001;
+    NOT_A_VALID_APP = 1002;
+    UNKNOWN_ERROR = 1003;
+    GAIAMINT_NOT_INITIAILIZED = 1004;
+    NOT_ALLOWED = 1005;
+    NOT_IMPLEMENTED = 1006;
+  }
+}
+
+message SignForAppRequest {
+  optional bytes bytes_to_sign = 1;
+  // optional string app_id = 2;
+}
+
+message SignForAppResponse {
+  optional string key_name = 1;
+  optional bytes signature_bytes = 2;
+}
+
+message GetPublicCertificateForAppRequest {
+  // optional string app_id = 1;
+}
+
+message PublicCertificate {
+  optional string key_name = 1;
+  optional string x509_certificate_pem = 2;
+}
+
+message GetPublicCertificateForAppResponse {
+  repeated PublicCertificate public_certificate_list = 1;
+  optional int64 max_client_cache_time_in_second = 2;
+}
+
+message GetServiceAccountNameRequest {
+  // optional string app_id = 1;
+}
+
+message GetServiceAccountNameResponse {
+  optional string service_account_name = 1;
+}
+
+message GetAccessTokenRequest {
+  repeated string scope = 1;
+  // At the moment the 'id' and 'name' fields are used only for superapps.
+  // However if/when we support multiple robot for a single app, they will
+  // will be used to select the appropriate account.
+
+  // TODO: reserve these two fields once all the depending codes
+  // are removed.
+  optional int64 service_account_id = 2;  // GAIA ID.  Super-apps only.
+
+  // Service account name is superapp only, and only a refresh token of the
+  // form r:refresh token is supported.
+  optional string service_account_name = 3 [deprecated = true];
+
+  // optional string app_id = 4;
+}
+
+message GetAccessTokenResponse {
+  optional string access_token = 1;
+  optional int64 expiration_time = 2;  // Seconds since the epoch.
+}
+
+message GetDefaultGcsBucketNameRequest {
+  // optional string app_id = 1;
+}
+
+message GetDefaultGcsBucketNameResponse {
+  // The default google storage bucket name for the application.
+  optional string default_gcs_bucket_name = 1;
+}

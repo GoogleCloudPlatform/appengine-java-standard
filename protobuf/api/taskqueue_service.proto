@@ -1,0 +1,795 @@
+/*
+ * Copyright 2021 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+// Copyright 2009 Google Inc. All Rights Reserved.
+//
+// The Task Queue API provides App Engine applications access to the Prometheus
+// Executor: a reliable, scalable, and distributed task queue workflow. Clients
+// input tasks into queues, and they are executed according to the task eta and
+// the queue throttling rate.
+//
+//   http://g3doc/apphosting/g3doc/wiki-carryover/executor.md
+//   http://g3doc/apphosting/g3doc/wiki-carryover/task_queue_api.md
+//
+
+syntax = "proto2";
+
+package java.apphosting;
+
+import "datastore_v3.proto";
+
+option java_package = "com.google.appengine.api.taskqueue";
+option java_outer_classname = "TaskQueuePb";
+
+message TaskQueueServiceError {
+  enum ErrorCode {
+    // Not an error.
+    OK = 0;
+
+    // Unknown queue. Queues must be created before tasks can be added to them.
+    UNKNOWN_QUEUE = 1;
+
+    // Transient failure.
+    TRANSIENT_ERROR = 2;
+
+    // Unexpected internal error.
+    INTERNAL_ERROR = 3;
+
+    // Task was too large. As of 04-29-2009 we enforce a maximum task size of
+    // 10K. This may change over time. Note that for tasks larger than 1MB such
+    // API calls will instead see a APIResponse::REQUEST_TOO_LARGE error.
+    TASK_TOO_LARGE = 4;
+
+    // The task name was too long, or contained illegal characters.
+    INVALID_TASK_NAME = 5;
+
+    // The task name was too long, or contained illegal characters.
+    INVALID_QUEUE_NAME = 6;
+
+    // The URL was too long, or was not a relative URL.
+    INVALID_URL = 7;
+
+    // Invalid queue throttling parameters.
+    INVALID_QUEUE_RATE = 8;
+
+    // App is not allowed to perform the requested operation.
+    PERMISSION_DENIED = 9;
+
+    // Task already exists. It has not yet run.
+    TASK_ALREADY_EXISTS = 10;
+
+    // Task has been tombstoned.
+    TOMBSTONED_TASK = 11;
+
+    // Task was scheduled to run too far into the future, or was negative.
+    INVALID_ETA = 12;
+
+    // Unexpected invalid request. The most common reasons for invalid
+    // requests are covered by other INVALID_* codes, but this code
+    // is reserved for the most pathological situations.
+    INVALID_REQUEST = 13;
+
+    // Unknown Task Name.
+    UNKNOWN_TASK = 14;
+
+    // Queue has been tombstoned.
+    TOMBSTONED_QUEUE = 15;
+
+    // A task with an identical name appears in the same bulk task creation
+    // request.
+    DUPLICATE_TASK_NAME = 16;
+
+    // A component in a bulk operation was skipped because another component
+    // failed.
+    SKIPPED = 17;
+
+    // A bulk operation involves more than the allowed number of tasks.
+    TOO_MANY_TASKS = 18;
+
+    // Payload was not recognized.
+    INVALID_PAYLOAD = 19;
+
+    // RetryParameters were not valid.
+    INVALID_RETRY_PARAMETERS = 20;
+
+    // Invoking PULL queue operations when mode is PUSH or vice versa.
+    INVALID_QUEUE_MODE = 21;
+
+    // A Gaia lookup error occured.
+    ACL_LOOKUP_ERROR = 22;
+
+    // A transactional task queue operation was too large.
+    TRANSACTIONAL_REQUEST_TOO_LARGE = 23;
+
+    // The queue creator name does not match
+    INCORRECT_CREATOR_NAME = 24;
+
+    // The lease for the task has expired
+    TASK_LEASE_EXPIRED = 25;
+
+    // The queue has been paused and leases cannot be modified.
+    QUEUE_PAUSED = 26;
+
+    // Task has an invalid tag.
+    INVALID_TAG = 27;
+
+    // The queue logging configuration is invalid.
+    INVALID_LOGGING_CONFIG = 28;
+
+    // The value of dispatch deadline is invalid or is exceeding the limits.
+    INVALID_DISPATCH_DEADLINE = 29;
+
+    // Reserved range for the Datastore error codes.
+    // Original Datastore error code is shifted by DATASTORE_ERROR offset.
+    DATASTORE_ERROR = 10000;
+
+    // Explicitly list the shifted datastore error codes. A test will detect if
+    // the values here get out of sync with the original ones in
+    // datastore_v3.proto. By listing the error codes we ensure that they can
+    // safely be translated into Java enum values.
+    DATASTORE_BAD_REQUEST = 10001;
+    DATASTORE_CONCURRENT_TRANSACTION = 10002;
+    DATASTORE_INTERNAL_ERROR = 10003;
+    DATASTORE_NEED_INDEX = 10004;
+    DATASTORE_TIMEOUT = 10005;
+    DATASTORE_PERMISSION_DENIED = 10006;
+    DATASTORE_BIGTABLE_ERROR = 10007;
+    DATASTORE_COMMITTED_BUT_STILL_APPLYING = 10008;
+    DATASTORE_CAPABILITY_DISABLED = 10009;
+    DATASTORE_TRY_ALTERNATE_BACKEND = 10010;
+    DATASTORE_SAFE_TIME_TOO_OLD = 10011;
+    DATASTORE_RESOURCE_EXHAUSTED = 10012;
+    DATASTORE_NOT_FOUND = 10013;
+    DATASTORE_ALREADY_EXISTS = 10014;
+    DATASTORE_FAILED_PRECONDITION = 10015;
+    DATASTORE_UNAUTHENTICATED = 10016;
+    DATASTORE_ABORTED = 10017;
+    DATASTORE_SNAPSHOT_VERSION_TOO_OLD = 10018;
+  }
+}
+
+// Base message for generic task payload. Http & cron payloads haven't been
+// refactored yet.
+message TaskPayload {
+  option message_set_wire_format = true;  // required for wire compatibility
+}
+
+message TaskQueueRetryParameters {
+  // The maxiumum number of times this operation can be retried before failing
+  // permanently. Note: if both retry_limit and age_limit_sec are
+  // present, then we fail permanently only when both limits have been reached.
+  optional int32 retry_limit = 1;
+
+  // The maximum time since the first try of this operation that can pass before
+  // failing permanently. Note: if both retry_limit and age_limit_sec are
+  // present, then we fail permanently only when both limits have been reached.
+  optional int64 age_limit_sec = 2;
+
+  // The following three parameters affect the retry backoff interval, i.e. the
+  // time after a failure at which we schedule a retry of the failed operation.
+
+  // The minimum time interval after a failure of an operation at which we can
+  // schudule a retry of that operation.
+  optional double min_backoff_sec = 3 [default = 0.1];
+
+  // The maximum time interval after a failure of an operation at which we can
+  // schudule a retry of that operation.
+  optional double max_backoff_sec = 4 [default = 3600];
+
+  // The maximum number of times the current retry interval will be
+  // doubled before the interval increases linearly.
+  //
+  // A task's retry interval starts at min_backoff_sec, then doubles
+  // max_doublings times, then increases linearly, and finally retries
+  // are made at intervals of max_backoff_sec until the retry_limit is
+  // reached. Thus after max_doublings intervals, the retry interval
+  // will be 2^(max_doublings - 1) * min_backoff_sec, and then the
+  // retry interval will be linearly increased by 2^max_doublings *
+  // min_backoff_sec, until max_backoff_sec is reached.
+  //
+  // For example, if min_backoff_sec is 10s, max_backoff_sec is 300s,
+  // and max_doublings is 3, then the a task will first be retried in
+  // 10s. The retry interval will double three times, and then
+  // increase linearly by 2^3 * 10s, and then stay constant at
+  // 300s. Thus, the requests will retry at 10s, 20s, 40s, 80s, 160s,
+  // 240s, 300s, 300s, ....
+  optional int32 max_doublings = 5 [default = 16];
+}
+
+message TaskQueueAcl {
+  // User email addresses must correspond to a GAIA account. These users can
+  // lease and delete from the queue.
+  repeated bytes user_email = 1;
+
+  // Writer email addresses must correspond to a GAIA account. These users can
+  // add tasks to the queue.
+  repeated bytes writer_email = 2;
+}
+
+message TaskQueueHttpHeader {
+  required bytes key = 1;
+  required bytes value = 2;
+}
+
+message TaskQueueMode {
+  enum Mode {
+    PUSH = 0;
+    PULL = 1;
+  }
+}
+
+message TaskQueueAddRequest {
+  // Name of the queue to add the task to.
+  required bytes queue_name = 1;
+
+  // Name of the task.
+  //
+  // If empty, a unique task name will automatically be chosen for the task.
+  required bytes task_name = 2;
+
+  // Time to execute task, in microseconds since the unix epoch.
+  //
+  // Values less than current time are silently increased to the current time.
+  required int64 eta_usec = 3;
+
+  enum RequestMethod {
+    GET = 1;
+    POST = 2;
+    HEAD = 3;
+    PUT = 4;
+    DELETE = 5;
+  }
+  optional RequestMethod method = 5 [default = POST];
+
+  // Required for all Http tasks.
+  optional bytes url = 4;
+
+  // Additional headers to include on the task http request. These headers will
+  // be sanitized, and some may be removed entirely. Please refer to
+  // taskqueue_service.cc and http_task_runner.cc for details about the
+  // sanitization done. Most notably:
+  //
+  //    * The Host: header is ignored and then set to the host of the request
+  //      making the API call.
+  //
+  //    * The User-Agent: header is accepted, but we will append to it.
+  //
+  //    * The Referer: header is ignored and then set to the url of the request
+  //      making the API call.
+  //
+  // The most notable thing the client library is expected to add here is
+  // Content-Type: header, as if none is specified we will default to
+  // application/octet-stream. Otherwise there are no special expectations here.
+  repeated group Header = 6 {
+    required bytes key = 7;
+    required bytes value = 8;
+  }
+
+  // Body of the HTTP request (may contain binary data). Ignored unless method
+  // is POST or PUT.
+  optional bytes body = 9 [ctype = CORD];
+
+  // Transaction reference, see
+  // http://g3doc/apphosting/g3doc/wiki-carryover/datastore_queues.md.
+  optional apphosting_datastore_v3.Transaction transaction = 10;
+
+  // Cloud Datastore transaction identifier (a serialized
+  // cloud_datastore.internal.Transaction). If set, AddActions will
+  // be called on the Cloud Datastore interop API instead of the datastore_v3
+  // API.
+  optional bytes datastore_transaction = 21;
+
+  // Name of the app_id - only works for admin console.
+  optional bytes app_id = 11;
+
+  // Timetable of recurrent task, currently only works for admin console.
+  optional group CronTimetable = 12 {
+    // Task schedule in the groc format.
+    // For details please refer to //depot/google3/borg/borgcron/groc.g
+    required bytes schedule = 13;
+    required bytes timezone = 14;
+  }
+
+  // Human readable description of the task.
+  optional bytes description = 15;
+
+  // Payload for the task. All task payload types will be eventually here.
+  optional TaskPayload payload = 16;
+
+  optional TaskQueueRetryParameters retry_parameters = 17;
+
+  optional TaskQueueMode.Mode mode = 18;  // Default is ENUM 0, PUSH.
+
+  // Tag associated with this task. This is used for grouping tasks in a
+  // queue.
+  optional bytes tag = 19;
+
+  optional TaskQueueRetryParameters cron_retry_parameters = 20;
+
+  // The deadline for requests sent to the worker. If the worker does not
+  // respond by this deadline then the request is cancelled and the attempt
+  // is marked as a `DEADLINE_EXCEEDED` failure. The task will be retried based
+  // on the retry configuration.
+  optional int64 dispatch_deadline_usec = 22;
+}
+
+message TaskQueueAddResponse {
+  // If 'task_name' was empty in TaskQueueAddRequest, then 'chosen_task_name'
+  // will contain the unique task name that was chosen for the task. Otherwise
+  // it will be empty.
+  optional bytes chosen_task_name = 1;
+}
+
+message TaskQueueBulkAddRequest {
+  repeated TaskQueueAddRequest add_request = 1;
+}
+
+message TaskQueueBulkAddResponse {
+  // Note: the RPC may return RPC::OK even if some tasks could not be added.
+
+  // One result per input add_request, in the same order.
+  repeated group TaskResult = 1 {
+    // The error code associated with the creation of the task.
+    required TaskQueueServiceError.ErrorCode result = 2;
+
+    // If 'task_name' was empty in TaskQueueAddRequest and the task was added
+    // successfully, then 'chosen_task_name' will contain the unique task name
+    // that was chosen for the task. Otherwise it will be absent.
+    optional bytes chosen_task_name = 3;
+  }
+}
+
+message TaskQueueDeleteRequest {
+  // Name of the queue to delete the task from.
+  required bytes queue_name = 1;
+
+  // Names of the tasks to delete.
+  repeated bytes task_name = 2;
+
+  // Name of the app_id - only works for admin console
+  optional bytes app_id = 3;
+}
+
+message TaskQueueDeleteResponse {
+  // One response per input task_name, in the same order.
+  // Note: the Delete RPC will return RPC::OK regardless of how many tasks it
+  // managed to delete; check the individual results to see what happened.
+  repeated TaskQueueServiceError.ErrorCode result = 3;
+}
+
+message TaskQueueForceRunRequest {
+  // Application identifier.
+  optional bytes app_id = 1;
+
+  // Name of the queue task is located in.
+  required bytes queue_name = 2;
+
+  // Name of the task to force run.
+  required bytes task_name = 3;
+}
+
+message TaskQueueForceRunResponse {
+  // Error code response to the given request.
+  required TaskQueueServiceError.ErrorCode result = 3;
+}
+
+message TaskQueueUpdateQueueRequest {
+  // Name of the application
+  optional bytes app_id = 1;
+
+  // Name of the queue.
+  required bytes queue_name = 2;
+
+  // The refill rate of the token bucket.  In the long run, the queue may not
+  // exceed this rate of execution.
+  required double bucket_refill_per_second = 3;
+
+  // The capacity of the token bucket. If < 1.0 tasks not be executed - useful
+  // for deactivating a queue.
+  required int32 bucket_capacity = 4;
+
+  // A human-readable string which describes the rate of execution for this
+  // queue. Specifically this is the 'rate:' field from queue.yaml which may
+  // contain values such as "10/m" or "200/d" or "1/s".
+  optional string user_specified_rate = 5;
+
+  optional TaskQueueRetryParameters retry_parameters = 6;
+
+  // The maximum number of requests that can be running concurrently.
+  optional int32 max_concurrent_requests = 7;
+
+  optional TaskQueueMode.Mode mode = 8;  // Default is ENUM 0, PUSH.
+
+  // Users permitted access to this queue via non-appengine apis.
+  optional TaskQueueAcl acl = 9;
+
+  // Header overrides that will be applied when the task is run.
+  //
+  // This may be used to force all tasks in a queue to execute against a
+  // specific verion/server instance (by overriding the 'Host' header).
+  //
+  // NOTE: Admin-console developers MUST ensure that users can not insert
+  // arbitary values into this field.
+  repeated TaskQueueHttpHeader header_override = 10;
+}
+
+message TaskQueueUpdateQueueResponse {
+  // Reserved for future use.
+}
+
+message TaskQueueFetchQueuesRequest {
+  // Name of the application
+  optional bytes app_id = 1;
+  // Maximum number of rows to return
+  required int32 max_rows = 2;
+}
+
+message TaskQueueFetchQueuesResponse {
+  repeated group Queue = 1 {
+    // queue name
+    required bytes queue_name = 2;
+
+    // The refill rate of the token bucket.  In the long run, the queue may not
+    // exceed this rate of execution.
+    required double bucket_refill_per_second = 3;
+
+    // The capacity of the token bucket. If < 1.0 tasks not be executed - useful
+    // for deactivating a queue.
+    //
+    // TODO: Change this to int32.
+    required double bucket_capacity = 4;
+
+    // A human-readable string which describes the rate of execution for this
+    // queue. Specifically this is the 'rate:' field from queue.yaml which may
+    // contain values such as "10/m" or "200/d" or "1/s".
+    optional string user_specified_rate = 5;
+
+    // A flag indicating the queue is paused (true) or unpaused (false).
+    required bool paused = 6;  // Per bool-type, default is false.
+
+    // Retry parameters for this queue. If a task specifies its own retry
+    // parameters, they are used instead.  If both are absent, defaults are
+    // used.
+    optional TaskQueueRetryParameters retry_parameters = 7;
+
+    // The maximum number of requests that can be running concurrently.
+    optional int32 max_concurrent_requests = 8;
+
+    optional TaskQueueMode.Mode mode = 9;  // Default is ENUM 0, PUSH.
+
+    // Users permitted access to this queue via non-appengine APIs.
+    optional TaskQueueAcl acl = 10;
+
+    // Header overrides that will be applied when the task is run.
+    repeated TaskQueueHttpHeader header_override = 11;
+
+    // The creator of this queue. Defaults to "apphosting" for queues created
+    // via App Engine's Task Queue Api.
+    optional string creator_name = 12 [ctype = CORD, default = "apphosting"];
+  }
+}
+
+message TaskQueueFetchQueueStatsRequest {
+  // Name of the application.
+  optional bytes app_id = 1;
+
+  // Name of the queues to fetch statistics for.
+  repeated bytes queue_name = 2;
+
+  // The maximum number of tasks to scan for each queue. If a queue has more
+  // tasks than 'max_num_tasks', then we will return an approximation of the
+  // number of tasks.
+  //
+  // If zero (or left unset) then only the approximation will be returned.
+  optional int32 max_num_tasks = 3;  // Per int-type, default is 0.
+}
+
+// Queue information from Executor Scanner.
+message TaskQueueScannerQueueInfo {
+  // The number of the queue's tasks executed in the last minute.
+  required int64 executed_last_minute = 1;
+
+  // The number of the queue's tasks executed in the last hour.
+  required int64 executed_last_hour = 2;
+
+  // The length of time that execution statistics have been recorded for this
+  // queue.  If the queue is still in its startup phase (unable to process
+  // tasks), this will be set to zero.
+  required double sampling_duration_seconds = 3;
+
+  // The number of requests from the queue for which a reply has not yet been
+  // received.
+  optional int32 requests_in_flight = 4;
+
+  // The rate as enforced by the scanner (requests per seconds).
+  optional double enforced_rate = 5;
+}
+
+message TaskQueueFetchQueueStatsResponse {
+  // Results here will be in the same order as the queues were requested in
+  // TaskQueueFetchQueueStatsRequest::queue_name.
+  //
+  // If the requested queue does not actually exist, the returned QueueStats
+  // will be the same as for a queue which is currently empty.
+  repeated group QueueStats = 1 {
+    // The number of non-completed tasks in the queue. Note that this may be
+    // greater than TaskQueueFetchQueueStatsRequest::max_num_tasks.
+    required int32 num_tasks = 2;
+
+    // The eta of the oldest non-completed task for the queue, or -1 if there
+    // were no non-completed tasks found in the queue.
+    required int64 oldest_eta_usec = 3;
+
+    // Queue information fetched from the scanner. Will not be present if the
+    // scanner was unavailable, or the queue was not found on the scanner (e.g.
+    // it may have recently migrated to a different scanner).
+    optional TaskQueueScannerQueueInfo scanner_info = 4;
+  }
+}
+message TaskQueuePauseQueueRequest {
+  // Name of the application
+  required bytes app_id = 1;
+
+  // Name of the queue to purge.
+  required bytes queue_name = 2;
+
+  // Pause(true) or unpause(false)
+  required bool pause = 3;
+}
+
+message TaskQueuePauseQueueResponse {
+  // Reserved for future use.
+}
+
+message TaskQueuePurgeQueueRequest {
+  // Name of the application
+  optional bytes app_id = 1;
+
+  // Name of the queue to purge.
+  required bytes queue_name = 2;
+}
+
+message TaskQueuePurgeQueueResponse {
+  // Reserved for future use.
+}
+
+message TaskQueueDeleteQueueRequest {
+  // Name of the application
+  required bytes app_id = 1;
+
+  // Name of the queue.
+  required bytes queue_name = 2;
+}
+
+message TaskQueueDeleteQueueResponse {
+  // Reserved for future use.
+}
+
+message TaskQueueDeleteGroupRequest {
+  // Name of the application
+  required bytes app_id = 1;
+}
+
+message TaskQueueDeleteGroupResponse {
+  // Reserved for future use.
+}
+
+message TaskQueueQueryTasksRequest {
+  // Name of the application.
+  optional bytes app_id = 1;
+
+  // Name of the queues to query for tasks.
+  required bytes queue_name = 2;
+
+  // This message can perform three different types of queries:
+  //  * By tag: If tag is specified then we scan the by_tag index, starting at
+  //        the task specified by (start_tag, start_eta_usec, start_taskname).
+  //  * By eta: If eta is specified (and start_tag is not), then we scan the
+  //        by_eta index, starting at the task specified by (start_eta_usec,
+  //        start_taskname).
+  //  * By name: If neither start_tag or start_eta_usec are specified, then we
+  //        scan the name index starting at the task specified by (start_name).
+  //
+  // The full tuple is used to break the tie when there are fields with the same
+  // value. Otherwise if we had 1000 tasks with the same eta_usec or tag, we
+  // couldn't usefully page through them.
+
+  // Prefix of the task name to start with.
+  optional bytes start_task_name = 3;
+
+  // ETA to start with.
+  optional int64 start_eta_usec = 4;
+
+  // The tag to start with.
+  optional bytes start_tag = 6;
+
+  // The number of tasks to return
+  optional int32 max_rows = 5 [default = 1];
+}
+
+message TaskQueueQueryTasksResponse {
+  repeated group Task = 1 {
+    // The task name - might be an autogenerated one.
+    required bytes task_name = 2;
+
+    // Time task will be executed, in microseconds since the unix epoch.
+    required int64 eta_usec = 3;
+
+    // The URL.
+    optional bytes url = 4;
+
+    enum RequestMethod {
+      GET = 1;
+      POST = 2;
+      HEAD = 3;
+      PUT = 4;
+      DELETE = 5;
+    }
+    optional RequestMethod method = 5;
+
+    // The number of times this task has been retried.
+    optional int32 retry_count = 6;  // Per int-type, default is 0.
+
+    // Additional headers included on the task http request (post-sanitisation).
+    repeated group Header = 7 {
+      required bytes key = 8;
+      required bytes value = 9;
+    }
+
+    // Number of bytes in the body. Only for POST and PUT.
+    optional int32 body_size = 10;
+
+    // Body of the HTTP request (may contain binary data). Only for POST or PUT.
+    optional bytes body = 11 [ctype = CORD];
+
+    // Time task was created, in microseconds since the unix epoch.
+    // Currently this just has seconds resolution.
+    required int64 creation_time_usec = 12;
+
+    // Timetable of recurrent task.
+    optional group CronTimetable = 13 {
+      // Task schedule in the groc format.
+      // For details please refer to //depot/google3/borg/borgcron/groc.g
+      required bytes schedule = 14;
+      required bytes timezone = 15;
+    }
+
+    // Information about last task's invocation.
+    optional group RunLog = 16 {
+      // When this run was started, in microseconds, and relative to
+      // midnight January 1, 1970 UTC.
+      required int64 dispatched_usec = 17;
+
+      // The latency in microseconds between the task schedule and
+      // actual dispatch time.
+      required int64 lag_usec = 18;
+
+      // The time this run took, in microseconds.
+      required int64 elapsed_usec = 19;
+
+      // Http response code received from the application.
+      optional int64 response_code = 20;
+
+      // Reason this task is to be retried.
+      optional string retry_reason = 27;
+    }
+
+    // Human readable description of the task.
+    optional bytes description = 21;
+
+    optional TaskPayload payload = 22;
+
+    // Retry parameters for this task.
+    // For cron tasks, this corresponds to
+    // TaskDefinition.cron_retry_parameters. For other task type this
+    // corresponds to TaskDefinition.retry_parameters.
+    optional TaskQueueRetryParameters retry_parameters = 23;
+
+    // Time at which the task was first tried
+    optional int64 first_try_usec = 24;
+
+    // Tag associated with this task. This is used as for grouping tasks in a
+    // queue.
+    optional bytes tag = 25;
+
+    // The number of times this task has been executed. Every time a task
+    // is handled by an instance, this count is increased by 1.
+    optional int32 execution_count = 26;  // Per int-type, default is 0.
+
+    // The deadline for requests sent to the worker.
+    optional int64 dispatch_deadline_usec = 28;
+  }
+}
+
+message TaskQueueFetchTaskRequest {
+  optional bytes app_id = 1;
+
+  required bytes queue_name = 2;
+
+  required bytes task_name = 3;
+}
+
+message TaskQueueFetchTaskResponse {
+  // The QueryTaskResponse will only have either 0 or 1 entries.
+  required TaskQueueQueryTasksResponse task = 1;
+}
+
+message TaskQueueUpdateStorageLimitRequest {
+  required bytes app_id = 1;
+  required int64 limit = 2;  // Storage limit in bytes.
+}
+
+message TaskQueueUpdateStorageLimitResponse {
+  required int64 new_limit = 1;
+}
+
+message TaskQueueQueryAndOwnTasksRequest {
+  required bytes queue_name = 1;
+
+  // Time from receiving the request for which the tasks will be owned.
+  required double lease_seconds = 2;
+
+  // Number of tasks on return. If fewer tasks are available, all available
+  // will be returned.
+  required int64 max_tasks = 3;
+
+  // True if the response should contain tasks grouped by tag.
+  optional bool group_by_tag = 4;  // Per bool-type, default is false.
+
+  // The tag allowed for tasks in the response.  Must only be specified if
+  // group_by_tag is true.  If group_by_tag is true and tag is not specified
+  // then tasks will be grouped by the first available tag.
+  optional bytes tag = 5;
+}
+
+message TaskQueueQueryAndOwnTasksResponse {
+  repeated group Task = 1 {
+    // The name of task.
+    required bytes task_name = 2;
+
+    // The new eta value of the task after the lease has been applied.
+    required int64 eta_usec = 3;
+
+    // The number of times this task has been retried. Every time a task
+    // is queried and owned, the retry count is increased by 1.
+    optional int32 retry_count = 4;  // Per int-type, default is 0.
+
+    // Body content data of the task.
+    optional bytes body = 5 [ctype = CORD];
+
+    // Tag for this task.
+    optional bytes tag = 6;
+  }
+}
+
+message TaskQueueModifyTaskLeaseRequest {
+  // The queue name
+  required bytes queue_name = 1;
+
+  // The task name
+  required bytes task_name = 2;
+
+  // The eta_usec of the task, used to check the lease owner
+  required int64 eta_usec = 3;
+
+  // The time to modify the lease for, from now.
+  required double lease_seconds = 4;
+}
+
+message TaskQueueModifyTaskLeaseResponse {
+  // The updated eta_usec of the task after the lease has been modified.
+  required int64 updated_eta_usec = 1;
+}

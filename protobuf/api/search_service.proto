@@ -1,0 +1,751 @@
+/*
+ * Copyright 2021 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+// Copyright 2010 Google Inc. All Rights Reserved.
+//
+// This protocol buffer defines the search service used by clients to
+// build indexes and to search those indexes.
+
+// LINT: ALLOW_GROUPS
+
+syntax = "proto2";
+
+package java.apphosting;
+
+import "document.proto";
+
+option java_package = "com.google.appengine.api.search.proto";
+option java_outer_classname = "SearchServicePb";
+
+// A protocol buffer which contains an enumeration of errors.
+message SearchServiceError {
+  // Errors that are generated for each document contained in a
+  // IndexDocumentRequest or DeleteDocumentRequest.
+  enum ErrorCode {
+    // Not an error.
+    OK = 0;
+
+    // The client made an invalid request, something about the request
+    // needs to be changed.
+    INVALID_REQUEST = 1;
+
+    // A transient problem occurred. Try again later.
+    TRANSIENT_ERROR = 2;
+
+    // An internal error occurred.
+    INTERNAL_ERROR = 3;
+
+    // Client does not have permission to make the request.
+    PERMISSION_DENIED = 4;
+
+    // Operation could not finish within the deadline.
+    TIMEOUT = 5;
+
+    // Multiple updates to the same document at the same time.
+    CONCURRENT_TRANSACTION = 6;
+  }
+}
+
+// The processed status of a request or element of a request.
+message RequestStatus {
+  // An error that occurred on processing a request or element
+  // of a request.
+  required SearchServiceError.ErrorCode code = 1;
+
+  // Any detail about the error.
+  optional string error_detail = 2;
+
+  // Canonical error code.
+  optional int32 canonical_code = 3;
+}
+
+// Full specification of an index. An index is uniquely identified by source,
+// application name (not part of index spec), namespace, and name of the index.
+// The index consistency impacts how documents are added to the index and how
+// searches are performed on the index. The mode defines how urgent a given
+// operation is and currently, only impacts addition and deletion.
+message IndexSpec {
+  // The name of the index.
+  required string name = 1;
+
+  // The consistency requirement on the index.
+  enum Consistency {
+    // The index is globally consistent.
+    GLOBAL = 0;
+
+    // The index is only consistent on a document level.
+    PER_DOCUMENT = 1;
+  }
+
+  // The consistency mode (either local or global) for this index.
+  // Once set, the consistency is fixed for the life of the index.
+  // It is set on the first indexing call and only checked subsequently.
+  optional Consistency consistency = 2 [default = PER_DOCUMENT];
+
+  // The namespace associated with this index; if not specified we
+  // assume the default namespace.
+  optional string namespace = 3;
+
+  // The version of the index on which we wish to operate; if
+  // not specified we assume the active version. NOT USED.
+  optional int32 version = 4;
+
+  // The source of documents being indexed.
+  enum Source {
+    // The documents were indexed using the Search API.
+    SEARCH = 0;
+
+    // The documents are automatic conversions of Datastore Entities.
+    DATASTORE = 1;
+
+    // The documents are automatic conversions of Cloud Storage Objects.
+    CLOUD_STORAGE = 2;
+  }
+
+  // The source of the documents being indexed.
+  optional Source source = 5 [default = SEARCH];
+
+  // The mode in which the index is to operate. This currently
+  // impacts only add and remove operations on the index.
+  enum Mode {
+    // Indicates that index operations should be executed as promptly as
+    // possible. For GLOBAL indexes, this means that adding or removing
+    // documents should block until the changes are visible in search.
+    // For PER_DOCUMENT indexes tokenization is started by the time the
+    // Index.add() method returns and finishes in time proportional
+    // to the complexity of the task, rather than the number of free
+    // cycles available to the backend.
+    PRIORITY = 0;
+
+    // Returns as soon as possible. This mode does not offer any guarantees
+    // as to how fast the backend commits the results of the operation. In
+    // particular, there may be a significant delay between adding a document
+    // to an index and that document being retured in search results.
+    BACKGROUND = 1;
+  }
+
+  // The mode in which index operations are committed. The mode is not
+  // persisted and can be changed from one RPC call to the next.
+  optional Mode mode = 6 [default = PRIORITY];
+}
+
+// Extended information about an index.
+message IndexMetadata {
+  // Index specification (fully qualified name).
+  required IndexSpec index_spec = 1;
+
+  // Index schema. Can be optionally returned in response to ListIndexesRequest.
+  // It will be ignored in other requests for now.
+  repeated storage_onestore_v3.FieldTypes field = 2;
+
+  // Amount of storage currently used by this index.  Note that in
+  // unusual circumstances the amount_used could be more than the
+  // limit, either because the quota enforcement mechanism sacrifices
+  // accuracy for throughput, or in a case where the limit were
+  // initially high but then was subsequently changed to become lower.
+  message Storage {
+    optional int64 amount_used = 1;
+    optional int64 limit = 2;
+  }
+  optional Storage storage = 3;
+
+  // The index state could be modified upon a user request or a scanner.
+  // When user issues a delete request, the state is set to SOFT_DELETED,
+  // while it is still possible for user to cancel that deletion.
+  // When the scanner finds out that index_delete_time has passed,
+  // or a Dexter instance finds out index_delete_time has passed upon a RPC,
+  // it sets the index's state to PURGING by writing to Megastore.
+  // User is now not able to cancel the deletion.
+  // When the scanner sees that all traces of the index are deleted,
+  // it removes the index metadata row.
+  //
+  // We transition between state as follows:
+  //
+  //                                    Index
+  //                       +--------+  Created    +---------+
+  //            start----->|  Non-  |------------>| ACTIVE  |
+  //                       |existent|             |         |
+  //             Scanner   +--------+             +---------+
+  //             finds out     ^                     ^   |
+  //             all deletes   |        User cancels |   |  User issues
+  //             completed     |      index deletion |   |  index deletion
+  //                           |                     |   v
+  //                       +--------+             +---------+
+  //                       | PURGE- |<------------|  SOFT_  |
+  //                       |  ING   |  Scanner/   | DELETED |
+  //                       +--------+  Dexter     +---------+
+  //                                   finds out
+  //                                   index_delete_time
+  //                                   passed
+  enum IndexState {
+    // Index is active.
+    ACTIVE = 0;
+    // Index seen as marked deleted; purge trigger time not yet seen.
+    // The deletion could still be cancelled at this point.
+    SOFT_DELETED = 1;
+    // Purge trigger time seen, purge processes should run.
+    PURGING = 2;
+  }
+  optional IndexState index_state = 4 [default = ACTIVE];
+
+  // The scheduled deletion time, in milliseconds from 1970-01-01T00:00:00Z
+  // Present iff index_state is SOFT_DELETED or PURGING.
+  optional int64 index_delete_time = 5;
+
+  // Number of shards in index.
+  optional int32 num_shards = 6 [default = 1];
+}
+
+// Write some documents to a named index, update existing documents.
+message IndexDocumentParams {
+  // The documents to write to the index.
+  repeated storage_onestore_v3.Document document = 1;
+
+  // When to write the documents to the index.
+  enum Freshness {
+    // Blocks until documents are searchable.
+    SYNCHRONOUSLY = 0;
+
+    // Inserts documents when convenient for the back end.
+    WHEN_CONVENIENT = 1;
+  }
+
+  // When the documents will be searchable.
+  optional Freshness freshness = 2 [default = SYNCHRONOUSLY, deprecated = true];
+
+  // The specification of the index.
+  required IndexSpec index_spec = 3;
+}
+
+// A request to index specific documents.
+message IndexDocumentRequest {
+  // The parameters describing document to index.
+  required IndexDocumentParams params = 1;
+
+  // Name of the app_id - only works for admin console.
+  optional bytes app_id = 3;
+}
+
+// A response to an index document request.
+message IndexDocumentResponse {
+  // The status of a individual document index request.
+  repeated RequestStatus status = 1;
+
+  // The id of the document indexed. If the id was missing,
+  // then will be the id chosen by the service for the Document.
+  repeated string doc_id = 2;
+}
+
+// Delete the specified documents from a named index.
+message DeleteDocumentParams {
+  // The identifiers of the documents to delete.
+  repeated string doc_id = 1;
+
+  // The specification of the index.
+  required IndexSpec index_spec = 2;
+}
+
+// The request to delete given set of documents.
+message DeleteDocumentRequest {
+  // The parameters describing documents to delete.
+  required DeleteDocumentParams params = 1;
+
+  // Name of the app_id - only works for admin console.
+  optional bytes app_id = 3;
+}
+
+// A response to a delete document request.
+message DeleteDocumentResponse {
+  // The status of a document delete.
+  repeated RequestStatus status = 1;
+}
+
+// The parameters for listing documents in an index.
+message ListDocumentsParams {
+  // The index from which to list documents.
+  required IndexSpec index_spec = 1;
+
+  // The doc_id from which to list documents from. Only documents with Ids
+  // greater than or equal to start_doc_id are returned, and they are returned
+  // in doc_id order.
+  optional string start_doc_id = 2;
+
+  // Whether or not to include the document with the name
+  // specified by the start_doc_id parameter. By default
+  // we return the document with the name matching start_doc_id.
+  optional bool include_start_doc = 3 [default = true];
+
+  // The maximum number of documents to return.
+  optional int32 limit = 4 [default = 100];
+
+  // Specifies whether complete documents are returned, or just their keys.
+  optional bool keys_only = 5;
+}
+
+// The request to list documents in an index.
+message ListDocumentsRequest {
+  // The parameters of documents to be listed.
+  required ListDocumentsParams params = 1;
+
+  // Name of the app_id - only works for admin console.
+  optional bytes app_id = 2;
+}
+
+// The response to a request to list documents.
+message ListDocumentsResponse {
+  // The status of the list documents request.
+  required RequestStatus status = 1;
+
+  // The document list.
+  repeated storage_onestore_v3.Document document = 2;
+}
+
+// The parameters for deleting an index.
+message DeleteIndexParams {
+  // The index to be deleted.
+  required IndexSpec index_spec = 1;
+}
+
+// The request to delete an index.
+message DeleteIndexRequest {
+  // The parameters of index to be deleted.
+  required DeleteIndexParams params = 1;
+
+  // Name of the app_id - only works for admin console.
+  optional bytes app_id = 2;
+}
+
+// The response to a request to delete an index.
+message DeleteIndexResponse {
+  // The status of the delete index request.
+  required RequestStatus status = 1;
+}
+
+// The parameters for undeleting an index.
+message CancelDeleteIndexParams {
+  // The index to be undeleted.
+  required IndexSpec index_spec = 1;
+}
+
+// The request to undelete an index.
+message CancelDeleteIndexRequest {
+  // The parameters of index to be undeleted.
+  required CancelDeleteIndexParams params = 1;
+
+  // Name of the app_id - only works for admin console.
+  optional bytes app_id = 2;
+}
+
+// The response to a request to undelete index.
+message CancelDeleteIndexResponse {
+  // The status of the undelete index request.
+  required RequestStatus status = 1;
+}
+
+// Get a list of indexes available.
+message ListIndexesParams {
+  // Fetch schema of corresponding indexes if the flag is true.
+  optional bool fetch_schema = 1;
+
+  // The number of indexes returned. If not specified we return
+  // 20 indexes.
+  optional int32 limit = 2 [default = 20];
+
+  // The namespace of indexes to returned. If not specified
+  // we return indexes that belong to the default namespace.
+  optional string namespace = 3;
+
+  // The name of the first index to be returned by the list
+  // indexes operation. If the exclude_start_index is set
+  // to true, we return the index with the name following
+  // the start_index_name.
+  optional string start_index_name = 4;
+
+  // Whether or not to include the index with the name
+  // specified via start_index_name parameter. By default
+  // we return the index with the name matching start_index_name.
+  optional bool include_start_index = 5 [default = true];
+
+  // The prefix of the index name. This parameter can be used to
+  // request all indexes with names that have this prefix.
+  optional string index_name_prefix = 6;
+
+  // The offset to be used with limit for arbitrary paging.
+  optional int32 offset = 7;
+
+  // The source of the documents being indexed.
+  optional IndexSpec.Source source = 8 [default = SEARCH];
+}
+
+// The request to list all known indexes.
+message ListIndexesRequest {
+  // The parameters of indexes to be listed.
+  required ListIndexesParams params = 1;
+
+  // Name of the app_id - only works for admin console.
+  optional bytes app_id = 3;
+}
+
+// The response to a request to list the indexes available.
+message ListIndexesResponse {
+  // The status of a individual document index request.
+  required RequestStatus status = 1;
+
+  // The information about available indexes.
+  repeated IndexMetadata index_metadata = 2;
+}
+
+// Delete the schemas from the specified indexes.
+message DeleteSchemaParams {
+  // The source of the indexes having schemas removed.
+  optional IndexSpec.Source source = 1 [default = SEARCH];
+
+  // The specification of indexes to have their schema deleted.
+  repeated IndexSpec index_spec = 2;
+
+  // Require the index to be empty (contain no documents) before
+  // allowing DeleteSchema. If true and documents exist, DeleteSchema will
+  // usually fail. However, due to search's eventual consistency, a successful
+  // DeleteSchema with require_empty_index true may leave behind documents. For
+  // example, a customer may write new documents in one thread while calling
+  // DeleteSchema in another. DeleteSchema will not see a
+  // written-but-not-applied document and succeed, leaving the newly-written
+  // document in an "orphaned" state (this document can be found later via
+  // ListDocuments). This flag's goal is to prevent customers from orphaning
+  // large numbers of documents they will get billed for.
+  optional bool require_empty_index = 3;
+}
+
+// The request to delete schemas from specified indexes.
+message DeleteSchemaRequest {
+  // The parameters describing schemas to delete.
+  required DeleteSchemaParams params = 1;
+
+  // Name of the app_id - only works for admin console.
+  optional bytes app_id = 3;
+}
+
+// A response to a delete schema request.
+message DeleteSchemaResponse {
+  // The status of a schema delete.
+  repeated RequestStatus status = 1;
+}
+
+// Sorting specification for a single dimension. Multi-dimenionsal sorting
+// is supported by a collection of SortSpecs.
+message SortSpec {
+  // An expression that assigns a "sorting score" to a document, i.e.
+  // the position in the sorted list. A corresponding default must be
+  // provided below.
+  required string sort_expression = 1;
+
+  // Indicates whether the search results are returned in "descending order"
+  // of their "sorting score".
+  optional bool sort_descending = 2 [default = true];
+
+  // Default value to use in case the sort expression evaluation results
+  // in a runtime error. Must provide for text sorts.
+  optional string default_value_text = 4;
+
+  // Default value to use in case the sort expression evaluation results
+  // in a runtime error. Must provide for numeric sorts.
+  optional double default_value_numeric = 5;
+}
+
+// A specification of the scorer to invoke on a search result.
+message ScorerSpec {
+  // The types of scorers available.
+  enum Scorer {
+    // A generic scorer that uses match scoring and rescoring.
+    RESCORING_MATCH_SCORER = 0;
+    // A scorer that returns a score based on term frequency divided by document
+    // frequency.
+    MATCH_SCORER = 2;
+  }
+
+  // The type of scorer to invoke.
+  optional Scorer scorer = 1 [default = MATCH_SCORER];
+
+  // Limit on number of top retrieved results to score.
+  optional int32 limit = 2 [default = 1000];
+
+  // Parameters for the match scorer encoded in a string.
+  optional string match_scorer_parameters = 9;
+}
+
+// Defines which fields will be returned.
+message FieldSpec {
+  // The name of each field to be returned in documents in the search results,
+  // such as "location" or "price" or "title".
+  repeated string name = 1;
+
+  // An expression that will be computed for each result returned. For
+  // example, if the client wants the total price, the expression might
+  // be "Price + Tax" and the name might be TotalPrice. If the client
+  // wants a snippet of field named "content" matching a query "good times",
+  // the expression would be "snippet(\"good times\", content)"
+  // and the name might be snippet.
+  repeated group Expression = 2 {
+    required string name = 3;
+    required string expression = 4;
+  }
+}
+
+message FacetRange {
+  // Label of the range. could be (start)...(end) or a custom name
+  optional string name = 1;
+  // start and end of the range. At least one of these must be supplied.
+  optional string start = 2;
+  optional string end = 3;
+}
+
+message FacetRequestParam {
+  // how many facet values should be returned for this facet
+  optional int32 value_limit = 1;
+
+  // if provided, return values in range instead of single values
+  // Note: number fields should always have range, otherwise
+  //   one single range min...max will be created for them
+  repeated FacetRange range = 2;
+
+  // if provided, only count these values. Cannot be used
+  // with ranges
+  repeated string value_constraint = 3;
+}
+
+message FacetAutoDetectParam {
+  // how many facet values should be returned for each facet
+  optional int32 value_limit = 1 [default = 10];
+}
+
+message FacetRequest {
+  // name of the facet
+  required string name = 1;
+
+  // Specify parameters for this facet
+  optional FacetRequestParam params = 2;
+}
+
+message FacetRefinement {
+  // e.g., "genre"
+  required string name = 1;
+
+  // e.g., "adventure"
+  optional string value = 2;
+
+  // the refinement range
+  // Note: Either value or range should be set. They cannot both
+  // be set in the same request.
+  message Range {
+    // start of the range. e.g., "1" for "1..100"
+    // At least one of start or end value must be supplied.
+    optional string start = 1;
+
+    // end of the range. e.g., "100" for "1..100"
+    // At least one of start or end value must be supplied.
+    optional string end = 2;
+  }
+
+  // e.g. "1..100"
+  optional Range range = 3;
+}
+
+// Parameters to search an index for documents which match a query,
+// restricting the document fields to those given, and sorting and scoring the
+// results, whilst supporting pagination.
+message SearchParams {
+  // The full specification of the index to search.
+  required IndexSpec index_spec = 1;
+
+  // The query string must be in the search query syntax. These strings can
+  // be constructed by hand, or by using the query api.
+  required string query = 2;
+
+  // Use a cursor returned from a previous set of search results as
+  // a starting point to retrieve the next set of results. This can get you
+  // better performance, and also improves the consistency of pagination
+  // through index updates.
+  optional string cursor = 4;
+
+  // Use the offset if you want to move to arbitrary result. You can use to
+  // move to the location independent of the last returned results. However,
+  // this freedom comes at a price, as the backend reads all documents
+  // preceeding the given offset and just does not return them.
+  optional int32 offset = 11;
+
+  // What sort of cursor should be returned with the results?
+  enum CursorType {
+    // No cursor will be returned.
+    NONE = 0;
+
+    // A single cursor will be returned to continue from the end of the
+    // results.
+    SINGLE = 1;
+
+    // One cursor will be returned with each search result so you can
+    // continue after any result.
+    PER_RESULT = 2;
+  }
+
+  // The type of the cursor returned with a search result.
+  optional CursorType cursor_type = 5 [default = NONE];
+
+  // Limit on number of search results to return. The backend supports
+  // pagination. Clients are encouraged to request only those search
+  // results needed for display (instead of requesting the typical 1000
+  // results and filtering).
+  optional int32 limit = 6 [default = 20];
+
+  // Sets the minimum accuracy requirement for SearchResponse.matched_count.
+  // If set, matched_count will be accurate up to at least that number.
+  // For example, when set to 100, any matched_count <= 100 is accurate.
+  // This option may add considerable latency / expense, especially when used
+  // with field_spec. By default, accuracy is the same as the limit.
+  optional int32 matched_count_accuracy = 7;
+
+  // Multi-dimensional sort the search results.
+  repeated SortSpec sort_spec = 8;
+
+  // The client can control scoring on a query-by-query basis.
+  optional ScorerSpec scorer_spec = 9;
+
+  // Which fields from the documents the client wants returned.
+  // If the field_spec message is not set, then all fields
+  // are returned. If the FieldSpec has no field names specified,
+  // then no fields are returned.
+  optional FieldSpec field_spec = 10;
+
+  // Specifies whether complete documents are returned, or just their keys.
+  optional bool keys_only = 12;
+
+  // Possible parsing modes. Currently we only support two modes: strict
+  // and relaxed. In strict mode any query that is invalid according to
+  // our grammar is rejected. In relaxed mode, we make the best attempt
+  // at parsing the query. In the worst case we treat it as a bunch of text.
+  enum ParsingMode {
+    // Any error causes an exception.
+    STRICT = 0;
+
+    // Errors are consumed.
+    RELAXED = 1;
+  }
+
+  // Whether the query parsing should be strict.
+  optional ParsingMode parsing_mode = 13 [default = STRICT];
+
+  // Specify how many facets should be discovered based on the result.
+  optional int32 auto_discover_facet_count = 15 [default = 0];
+
+  // Specify which facet to be included always in the result.
+  repeated FacetRequest include_facet = 16;
+
+  // Refine results based on given facets. Refinements would be conjunction if
+  // the names are different and disjunction if the names are the same.
+  repeated FacetRefinement facet_refinement = 17;
+
+  // Parameters for facet auto-detection
+  optional FacetAutoDetectParam facet_auto_detect_param = 18;
+
+  // Set number of search result we should go ahead to
+  // gather facet information.
+  // For example, when set to 1000, any document in
+  // first 1000 results will be used to compute facets.
+  optional int32 facet_depth = 19 [default = 1000];
+
+  // Whether to enable or disable query rewrite.
+  optional bool enable_query_rewrite = 20 [default = false];
+}
+
+// Request to search index for the specified parameters.
+message SearchRequest {
+  // The parameters of the search.
+  required SearchParams params = 1;
+
+  // Name of the app_id - only works for admin console.
+  optional bytes app_id = 3;
+}
+
+message FacetResultValue {
+  // Value (constraint) name. could be a simple value name (e.g.,
+  // "red" or "white" for "Wine Type") or a range name (e.g,
+  // "1..100" when requested a number range facet)
+  required string name = 1;
+  required int32 count = 2;
+
+  // The refinement message that can be used to refine future search requests
+  // using this facet result value.
+  required FacetRefinement refinement = 3;
+}
+
+message FacetResult {
+  // facet name (e.g. "Wine Type")
+  required string name = 1;
+
+  // list of values/ranges for this facet
+  repeated FacetResultValue value = 2;
+}
+
+// A document which matches the search query.
+message SearchResult {
+  // The document which matches the query.
+  required storage_onestore_v3.Document document = 1;
+
+  // A key-value pair containing the result of any extra expressions
+  // requested. For example, a request with an expression named TotalPrice
+  // defined as "Price + Tax" means a Field with a key named TotalPrice and
+  // with value set to the computed sum will be returned in a search result
+  // expression.
+  // As another example, if a request contains an expression named
+  // snippet defined as "snippet(\"good times\", content)" then
+  // the returned expression will be a Field named snippet with text value
+  // containing a snippet of text from the Field named "content",
+  // matching the query "good times" .
+  repeated storage_onestore_v3.Field expression = 4;
+
+  // Deprecated: score assigned during evaluation.
+  // Clients should retrieve scores with a FieldSpec whose Expression
+  // uses the special variable name '_score'.
+  repeated double score = 2;
+
+  // A cursor to be used for issuing a subsequent search that will return
+  // elements beginning after this result.
+  optional string cursor = 3;
+}
+
+// The response to a search request.
+message SearchResponse {
+  // The documents which matched the search query.
+  repeated SearchResult result = 1;
+
+  // The count of documents that matched the query (greater than
+  // or equal to the number of documents actually returned).
+  // Note that this is an approximation and not an exact count unless
+  // it is less than or equal to SearchRequest.matched_count_accuracy.
+  required int64 matched_count = 2;
+
+  // The status of the search request.
+  required RequestStatus status = 3;
+
+  // A cursor to be used for issuing a subsequent search that will return
+  // elements beginning after this set of results.
+  optional string cursor = 4;
+
+  // a list of facets with their values and counts
+  repeated FacetResult facet_result = 5;
+
+  // The count of documents scored during query execution.
+  optional int32 docs_scored = 6;
+}

@@ -1,0 +1,147 @@
+/*
+ * Copyright 2021 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+// Design doc at http:<internal>
+
+syntax = "proto2";
+
+package java.apphosting;
+
+option java_package = "com.google.appengine.api.modules";
+option java_outer_classname = "ModulesServicePb";
+
+// Error codes returned via RPC::set_application_error().
+message ModulesServiceError {
+  enum ErrorCode {
+    OK = 0;
+    INVALID_MODULE = 1;
+    INVALID_VERSION = 2;
+    INVALID_INSTANCES = 3;
+    TRANSIENT_ERROR = 4;
+
+    // Set if the existing state is not what is expected given the action.
+    UNEXPECTED_STATE = 5;
+  }
+}
+
+message GetModulesRequest {
+  // It is implied that this request is for the application making the API call.
+}
+
+message GetModulesResponse {
+  // A list of the modules that the application has created.  The 'default'
+  // module will always be included in this list, so the list length will always
+  // be at least 1.
+  repeated string module = 1;
+}
+
+message GetVersionsRequest {
+  // The module to get a list of versions for.  If the given module does not
+  // exist, then an INVALID_MODULE error code will be returned.
+  optional string module = 1;
+}
+
+message GetVersionsResponse {
+  // A list of the versions that the application has created for the given
+  // module.
+  repeated string version = 1;
+}
+
+message GetDefaultVersionRequest {
+  // The module to get the default version for.  If the given module does not
+  // exist, then an INVALID_MODULE error code will be returned.
+  optional string module = 1;
+}
+
+message GetDefaultVersionResponse {
+  // The default version for the given module.
+  optional string version = 1;  // Required, but not proto enforced.
+}
+
+message GetNumInstancesRequest {
+  // The module to get the number of instances for.  If the given module does
+  // not exist, then an INVALID_MODULE error code will be returned.
+  optional string module = 1;
+  // The version of the module to get the number of instances for.  If the given
+  // version does not exist for the module, then an INVALID_VERSION error code
+  // will be returned.
+  optional string version = 2;
+}
+
+message GetNumInstancesResponse {
+  // The default version for the given module.
+  optional int64 instances = 1;  // Required, but not proto enforced.
+}
+
+message SetNumInstancesRequest {
+  // The module to set the number of instances for.  If the given module does
+  // not exist, then an INVALID_MODULE error code will be returned.
+  optional string module = 1;
+  // The version of the module to set the number of instances for.  If the given
+  // version does not exist for the module, then an INVALID_VERSION error code
+  // will be returned.
+  optional string version = 2;
+  // The number of instances to assign to the given module and version.  If the
+  // given number is invalid for any reason, then an INVALID_INSTANCES error
+  // code will be returned.
+  required int64 instances = 3;
+}
+
+message SetNumInstancesResponse {}
+
+message StartModuleRequest {
+  // The module to start.  If the given module does not exist, then an
+  // INVALID_MODULE error code will be returned.
+  required string module = 1;
+  // The version of the module to start.  If the given version does not exist
+  // for the module, then an INVALID_VERSION error code will be returned.
+  required string version = 2;
+}
+
+message StartModuleResponse {}
+
+message StopModuleRequest {
+  // The module to stop.  If the given module does not exist, then an
+  // INVALID_MODULE error code will be returned.
+  optional string module = 1;
+  // The version of the module to stop.  If the given version does not exist
+  // for the module, then an INVALID_VERSION error code will be returned.
+  optional string version = 2;
+}
+
+message StopModuleResponse {}
+
+message GetHostnameRequest {
+  // The module to get a hostname for.  If the given module does not exist,
+  // then an INVALID_MODULE error code will be returned.
+  optional string module = 1;
+  // The version to get a hostname for.  If the given version does not exist
+  // for the module, then an INVALID_VERSION error code will be returned.  If
+  // the version is not set, then we will use the version of the current
+  // instance if it exists on the target module, otherwise the default version
+  // of the target module will be used.
+  optional string version = 2;
+  // The instance to get a hostname for.  If the given instance is not
+  // addressable for the given module version, then an INVALID_INSTANCES error
+  // code will be returned.
+  optional string instance = 3;
+}
+
+message GetHostnameResponse {
+  // The canonical hostname that addresses the given module, version and
+  // instance.
+  optional string hostname = 1;
+}

@@ -1,0 +1,33 @@
+<!--
+ Copyright 2021 Google LLC
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     https://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+-->
+
+<!-- validation of the index definition schema; they all must be kept in -->
+<!-- sync.  Please refer to -->
+<!-- java/com/google/appengine/tools/development/datastore-indexes.xsd -->
+<!-- for the list of these files. -->
+
+<!ELEMENT datastore-indexes (datastore-index)*>
+<!ATTLIST datastore-indexes
+          autoGenerate (true|false) #REQUIRED>
+<!ELEMENT datastore-index (property)*>
+<!ATTLIST datastore-index
+          ancestor CDATA #IMPLIED
+          kind CDATA #REQUIRED>
+<!ELEMENT property (#PCDATA)>
+<!ATTLIST property
+          direction (asc|desc) #IMPLIED
+          mode (geospatial) #IMPLIED
+          name CDATA #REQUIRED>

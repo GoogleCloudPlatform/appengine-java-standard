@@ -1,0 +1,587 @@
+/*
+ * Copyright 2021 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+// LINT: LEGACY_NAMES
+// LINT: ALLOW_GROUPS
+// Onestore schema PBs. See http://g3doc/storage/onestore/g3doc/schema.md .
+
+syntax = "proto2";
+
+package storage_onestore_v3;
+
+option java_package = "com.google.storage.onestore.v3.proto2api";
+option java_outer_classname = "OnestoreEntity";
+option go_package = "storage_onestore_v3";
+
+// Messages in this file specify a representation for entities.
+// The primary use of this representation is for the Onestore Megastore schema.
+// File "apphosting/datastore/entity_v4.proto" contains
+// another representation for entities.
+// These representations must be kept in synch.
+
+// The PropertyValue PB represents a property value, and is indexed by
+// megastore in onestore.mdl. At most one of the value fields should be set.
+// If no value field is set, the value is interpreted as a null, which is
+// considered its own distinct storage type. This is all enforced in code in
+// the datastore.
+message PropertyValue {
+  // primitives
+  optional int64 int64Value = 1;
+  optional bool booleanValue = 2;
+  optional string stringValue = 3;  // May contain arbitrary bytes.
+  optional double doubleValue = 4;
+
+  // composites. keep these in sync with the first-class PBs below.
+  optional group PointValue = 5 {
+    // For legacy reasons, geographical points' latitude maps to x and
+    // longitude to y, even though lat is North-South and lng is East-West.
+    required double x = 6;
+    required double y = 7;
+  }
+
+  optional group UserValue = 8 {
+    // the order of these fields matters. email is first so that users are
+    // sorted by email, using simple string comparison.
+    required string email = 9;
+    required string auth_domain = 10;
+    optional string nickname = 11;
+    required int64 gaiaid = 18;
+    // obfuscated_gaiaid is never actually stored in the datastore, see User
+    // below for more details.
+    optional string obfuscated_gaiaid = 19;
+    // federated_identity and federated_provider are only set for federated
+    // login user, and are never actually stored in the datastore.
+    optional string federated_identity = 21;
+    optional string federated_provider = 22;
+  }
+
+  // NOTE: Because of Megastore indexing restrictions, we cannot
+  // use the stand-alone Reference and Path PBs defined below. See
+  // http://wiki/Main/MegastoreIndexingPBs. If you amend this group, amend
+  // those PB definitions in this file as well.
+  optional group ReferenceValue = 12 {
+    required string app = 13;
+    // name_space is required to add multi tenancy support for datastore.
+    // See http:<internal>.
+    optional string name_space = 20;
+    repeated group PathElement = 14 {
+      required string type = 15;
+      // either name or id should be set
+      optional int64 id = 16;
+      optional string name = 17;
+    }
+    optional string database_id = 23;
+  }
+}
+
+message Property {
+  // Meanings usually, but not always, have a functional relationship to
+  // storage type. Some don't, however: an ATOM_AUTHOR might be a User or a
+  // string, depending on what was stored.
+  enum Meaning {
+    // NOTE: using meaning to indicate blobs and text is a
+    // double-edged sword. if future semantic meanings are also text or blobs,
+    // they'll need to be special-cased in code. that's not a great design.
+    NO_MEANING = 0;   // explicit default
+    BLOB = 14;        // raw binary data, of any length
+    TEXT = 15;        // a UTF-8 encoded string, of any length
+    BYTESTRING = 16;  // raw binary data, at most 500 characters
+
+    // GDNamespace types:
+
+    // from the http://www.w3.org/2005/Atom namespace. see
+    // http://www.atomenabled.org/developers/syndication/
+    ATOM_CATEGORY = 1;  // a tag
+    ATOM_LINK = 2;      // a URI
+    ATOM_TITLE = 3;     // a human readable title
+    ATOM_CONTENT = 4;   // the main "content" of the entity
+    ATOM_SUMMARY = 5;   // a human readable short summary
+    ATOM_AUTHOR = 6;    // the author, a person
+
+    // from the http://schemas.google.com/g/2005 namespace. see
+    // http://code.google.com/apis/gdata/common-elements.html
+    //
+    // many elements are missing, notably gd:entryLink, gd:feedLink,
+    // gd:originalEvent, gd:recurrence*, gd:where, and gd:who. use
+    // REFERENCE, ATOM_LINK, GD_POSTALADDRESS, GD_GEOPT, and the
+    // Contact entity instead.
+    GD_WHEN = 7;            // timestamp, as int64 microseconds since the epoch
+                            // Also used in the Cloud Datastore v1 API to
+                            // represent a timestamp as int64 microseconds since
+                            // epoch when it falls outside the range allowed by
+                            // RFC 3339 (and google.protobuf.Timestamp).
+    GD_EMAIL = 8;           // RFC 2822 email address
+    GEORSS_POINT = 9;       // "lat,long"
+    GD_IM = 10;             // IANA-style URI, e.g. xmpp:heaven@gmail.com
+                            //   or aim:goim?screenname=bl4ize
+    GD_PHONENUMBER = 11;    // human-readable phone number, any format
+    GD_POSTALADDRESS = 12;  // human-readable postal address. leading and
+                            //  trailing whitespace are stripped; embedded
+                            //  newlines and whitespace are significant.
+    GD_RATING = 13;         // an integer rating in [0, 100].
+
+    BLOBKEY = 17;       // a BlobKey (see http:<internal>).
+    ENTITY_PROTO = 19;  // An encoded byte representation of an EntityProto
+    // USER_PROTO = 20;     // An Entity that represents an App Eng V3
+    // UserValue. Not used by App Eng V3.
+    // POINT_PROTO = 21;    // An Entity that represents an App Eng V3
+    // PointValue. Not used by App Eng V3.
+    // ZLIB_BLOB = 22;      // A blob with App Eng V3 uri_meaning "ZLIB".
+    // Not used by App Eng V3.
+    // POINT_WITHOUT_V3_MEANING = 23;   // A geopoint with App Eng V3 meaning
+    // NONE. Not used by App Eng V3.
+    EMPTY_LIST = 24;
+    // NON_UTF8_BLOB_WITH_APP_ENG_V3_MEANING_NONE = 25;
+    // A non-UTF-8 blob without an App Eng V3 meaning.
+    // Not used by App Eng V3.
+    // NON_UTF8_BLOB_WITH_APP_ENG_V3_MEANING_TEXT = 26;
+    // A non-UTF-8 blob with App Eng V3 meaning TEXT.
+    // Not used by App Eng V3.
+
+    INDEX_VALUE =
+        18;  // A property that was reconstructed from index data
+             // Indicates that a null value is meant to represent an empty list.
+  }
+
+  // Meanings are optional. If they are not provided, some amount of
+  // meaning may already be implied by the underlying storage type,
+  // such as User or Reference.
+  optional Meaning meaning = 1 [default = NO_MEANING];
+  // If requested, raw URIs may be used to define semantic meaning for
+  // a property. This is less efficient, but allows anything to be
+  // expressed, and popular URIs may be converted to enum Meaning
+  // values later.
+  optional string meaning_uri = 2;
+
+  // The name of this property.
+  required string name = 3;
+
+  // The property value.
+  required PropertyValue value = 5;
+
+  // Whether this property is multiply valued or not. (If true, it may have
+  // multiple values now, or it may be *intended* to have multiple values
+  // eventually, even if it has just one now.)
+  //
+  // This is currently used as sugar for the native language datastore APIs,
+  // so they know whether to return a property value as a single value or a
+  // list.
+  required bool multiple = 4;
+
+  // When set on a property in EntityProto.rawProperties stashed indicates
+  // that upon read the stashed value should be moved to properties at the
+  // position indicated by its value (i.e. the position that was originally
+  // assumed by the stashed property in the list of properties). Stashed
+  // properties must appear in index order in raw properties.
+  // Stashed is an internal Datastore concept that is not intended to be
+  // externally visible.
+  optional int32 stashed = 6 [default = -1];
+
+  // When set on a property within EntityProto.properties indicates that the
+  // property was created by Datastore for indexing purposes and so should
+  // be removed upon read.
+  optional bool computed = 7 [default = false];
+}
+
+// A Onestore Path; also used as an Entity Group key.  This is an ordered list
+// of (type, id or name) tuples. Each element should have either an id or a
+// name, but not both. See
+// http://g3doc/storage/onestore/g3doc/schema.md#Keys_and_paths .
+//
+// Keep this in sync with PropertyValue.ReferenceValue.Path, both tag names and
+// tag number ordering! If you make a change here, make the same change there.
+message Path {
+  repeated group Element = 1 {
+    required string type = 2;
+    // In paths that have been persisted, one and only one of the following
+    // should be set.
+    optional int64 id = 3;
+    optional string name = 4;
+  }
+}
+
+// **************************************************
+// BIG WARNING ON REALLY UNFORTUNATE CODE DEPENDENCY
+// **************************************************
+// Note that because of b/20458868 we have a dependency on the field
+// declaration order within this file.  In particular, all new fields
+// must be added at the end of their structures so that old MessageLites
+// will still deserialize correctly.  Also note that fields cannot be
+// removed.
+// **************************************************
+
+// An entity's primary key. See
+// http://g3doc/storage/onestore/g3doc/schema.md#Keys_and_paths .
+//
+// Keep this in sync with PropertyValue.ReferenceValue, both tag names and tag
+// number ordering! If you make a change here, make the same change there.
+message Reference {
+  required string app = 13;
+  // name_space is required to add multi tenancy support for datastore.
+  // See http:<internal>.
+  optional string name_space = 20;
+  required Path path = 14;
+  optional string database_id = 23;
+}
+
+// A Gaia user. Supports both public and dasher accounts.
+//
+// Keep this in sync with PropertyValue.UserValue, both tag names and tag
+// number ordering! If you make a change here, make the same change there.
+message User {
+  // email, auth domain, and gaia id are required. email should be considered
+  // transient, though. we store it in the datastore to allow querying and
+  // sorting on it, and as an optimization to reduce our load on gaia.
+  // unfortunately, this means that it slowly becomes stale as users change
+  // their email addresses. we'll eventually work on a way to keep them fresh,
+  // but not in the short term.
+  //
+  // nickname is currently unused. we may use it in the future if/when we
+  // allow users to pick and use a gaia nickname.
+  //
+  // obfuscated_gaiaid is never stored in the datastore.  It is used to store an
+  // obfuscated version of the gaiaid for use by applications. We save a field
+  // for it here so that we can pass it as part of UserProperties with query
+  // results.
+  //
+  // federated_identity and federated_provider are only set for federated login
+  // users and 'NEVER' stored in datastore.
+  //
+  // see
+  // http://g3doc/apphosting/g3doc/wiki-carryover/unified_theory_of_users.md
+  // and http://b/1004461 for more details.
+  required string email = 1;
+  required string auth_domain = 2;
+  optional string nickname = 3;
+  required int64 gaiaid = 4;
+  optional string obfuscated_gaiaid = 5;
+  optional string federated_identity = 6;
+  optional string federated_provider = 7;
+}
+
+message EntityProto {
+  // This entity's primary key. Contains app name and path.
+  required Reference key = 13;
+
+  // This entity's group. By default, this is the top-level entity's path.
+  // If/when we allow apps to specify entity groups themselves, it will be a
+  // single string.
+  required Path entity_group = 16;
+
+  // The user who was logged in when this entity was created. The semantics
+  // around this are difficult, so it's currently only used for debugging and
+  // forensics.
+  optional User owner = 17;
+
+  // Kinds represent particular semantic kinds of entities. Entity
+  // kinds are akin to GDNamespace kinds, which are richer than a
+  // single property, and represent a set of properties. Essentially,
+  // this is the direct analogue of Meaning, but on a whole-entity
+  // level.
+  enum Kind {
+    // GDNamespace kinds:
+    GD_CONTACT = 1;  // a contact, such as a person, venue, organization
+    GD_EVENT = 2;    // a calendar event
+    GD_MESSAGE = 3;  // such as an email, a discussion group posting
+  }
+  optional Kind kind = 4;
+  // If requested, raw URIs may be used to define a semantic kind for
+  // an entity. This is less efficient, but allows anything to be
+  // expressed, and popular URIs may be converted to enum Kind values
+  // later.
+  optional string kind_uri = 5;
+
+  // Properties that should be indexed by value go in the property field.
+  // Properties that shouldn't, like blobs and long text fields (e.g. XML), go
+  // in raw_property. Stashed properties must appear in index order in
+  // raw_property.
+  repeated Property property = 14;
+  repeated Property raw_property = 15;
+}
+
+// All metadata about the Entity go here.
+message EntityMetadata {
+  // Track Entity created/updated version explicitly instead of depending on
+  // implementation specific megastore timestamp.  This makes the version number
+  // immune to indexing operations and also allows for easier migration to
+  // Spanner.
+  optional int64 created_version = 1;
+  optional int64 updated_version = 2;
+}
+
+// Summary about the Entity that could be used in stats computation.
+message EntitySummary {
+  message PropertySummary {
+    required string name = 1;
+    optional string property_type_for_stats = 2;
+    optional int32 size_bytes = 3;
+  }
+
+  repeated PropertySummary large_raw_property = 1;
+}
+
+// Composite properties for composite indexes. These are populated by the
+// datastore implementation based on the entity's properties and the
+// application-defined custom indexes.
+//
+// See
+// http://g3doc/apphosting/g3doc/wiki-carryover/datastore_custom_index.md
+message CompositeProperty {
+  // The ID of the associated composite index.
+  required int64 index_id = 1;
+
+  // The first value element is the ancestor, if the index calls for it, as a
+  // byte-encoded Path. The rest are the properties in the index, in order, as
+  // byte-encoded PropertyValues.
+  //
+  // The Megastore byte-encoding format is used. The descending byte-encoding
+  // format is used if the property should be sorted in descending order.
+  //
+  // As with PropertyValue, embedded Path and PropertyValue
+  // fields aren't used because megastore can't index nested PBs. See
+  // http://wiki/Main/MegastoreIndexingPBs.
+  repeated string value = 2;  // May contain arbitrary bytes.
+}
+
+// An index either contains 1 or more search index properties, in which
+// case it is a search index, or it contains 0 search index properties,
+// in which case it is an ordered index.
+//
+// Next tag: 9
+message Index {
+  // The type of entity being indexed.
+  required string entity_type = 1;
+
+  // For an ordered index, specifies whether each of the entity's ancestors
+  // will be included. Must be set to false for a search index.
+  //
+  // Each direct ancestor is indexed separately in its own composite property.
+  // For example, an entity with the path /Blog,1/Post,2/Comment,3 would have
+  // separate composite properties for /Blog,1 and /Blog,1/Post,2.
+  //
+  // The ancestor field is mutually exclusive with parent.
+  required bool ancestor = 5;
+
+  // True iff this is a "parent index".
+  //
+  // Parent indexes map documents to the path of their parent document.
+  //
+  // These differ from ancestor=true indexes because parent indexes
+  // record only the immediate parent. Example: an entity with the path
+  // /Blog,1/Post,2/Comment,3 would have a single index entry of /Blog,1/Post,2.
+  // If there is no parent, the path of the parent document will be empty.
+  //
+  // The parent field is mutually exclusive with ancestor.
+  optional bool parent = 7;
+
+  enum Version {
+    VERSION_UNSPECIFIED = 0;
+    // Indexes provide Datastore query semantics.
+    V1 = 1;
+    // Indexes provide Firestore query semantics. Index definitions are
+    // Datastore V3 compatible.
+    V2 = 2;
+    // Indexes provide Firestore query semantics. Index definitions use internal
+    // data serialization.
+    V3 = 3;
+  }
+
+  // The version of the index. If unspecified will default to V1.
+  optional Version version = 8 [default = VERSION_UNSPECIFIED];
+
+  // For any kind of index,
+  // a sequence of property names and their index attributes.
+  repeated group Property = 2 {
+    // For any kind of index, the name of the Datastore property to index.
+    required string name = 3;
+
+    // These tag numbers must match the tag numbers in the
+    // datastore_v3.Query.Order.Direction enum!
+    // TODO; unify the two enums.
+    enum Direction {
+      DIRECTION_UNSPECIFIED = 0;
+      ASCENDING = 1;
+      DESCENDING = 2;
+    }
+    optional Direction direction = 4 [default = DIRECTION_UNSPECIFIED];
+
+    // In a search index, if mode is unspecified, the index is usable
+    // only on a query that specifies an exact value for the
+    // property.  In the future we will probably add another mode to
+    // indicate that values are to be indexed in such a way as to make
+    // them optional in queries, and/or to support inequality/range
+    // terms on numeric types.
+    enum Mode {
+      MODE_UNSPECIFIED = 0;
+      // TODO
+      // TODO
+      GEOSPATIAL = 3;
+      ARRAY_CONTAINS = 4;
+    }
+    optional Mode mode = 6 [default = MODE_UNSPECIFIED];
+  }
+}
+
+// Next tag: 13
+message CompositeIndex {
+  // The app that owns this composite index.
+  required string app_id = 1;
+
+  // The database this CompositeIndex exists in.
+  optional string database_id = 12;
+
+  // The index's ID. Used in CompositeProperty.
+  required int64 id = 2;
+
+  // The index definition, including the entity type and properties.
+  required Index definition = 3;
+
+  // WRITE_ONLY indices have been created, but are not yet fully populated.
+  // Composite properties for them must be populated when entities are Put, but
+  // they may not yet be used to execute queries.
+  //
+  // READ_WRITE indices are fully populated. They may be used to execute
+  // queries. Like WRITE_ONLY, composite properties for them must be populated
+  // on Puts.
+  //
+  // DELETED indices are marked for eventual deletion from the megastore
+  // CompositeIndices table. They should be disregarded for both queries and
+  // Puts.
+  //
+  // ERROR indices encountered an error while being built or deleted. They
+  // should be disregarded for both queries and Puts.
+  //
+  // The allowed state changes are:
+  //
+  // WRITE_ONLY => READ_WRITE
+  // WRITE_ONLY => DELETED
+  // WRITE_ONLY => ERROR
+  // READ_WRITE => DELETED
+  // ERROR => DELETED
+  // DELETED => WRITE_ONLY if the WorkflowState is COMPLETED.
+  // DELETED => ERROR
+  enum State {
+    WRITE_ONLY = 1;
+    READ_WRITE = 2;
+    DELETED = 3;
+    ERROR = 4;
+  }
+  required State state = 4;
+
+  // The workflow state allows the indexer to manage the intermediate state
+  // of indexes as the progress through building and deleting. If the workflow
+  // state is unset, the logic must use best effort to calculate from the
+  // index state.
+  enum WorkflowState {
+    PENDING = 1;
+    ACTIVE = 2;
+    COMPLETED = 3;
+  }
+  optional WorkflowState workflow_state = 10 [deprecated = true];
+
+  // Only set if the index state is ERROR. This should give more information as
+  // to why the index failed to build or delete. This message may be exposed to
+  // external customers.
+  optional string error_message = 11 [deprecated = true];
+
+  // When this option is set the datastore will try to plan query execution
+  // with indexes that do not have this option set. If the datastore fails to
+  // come up with a query plan because of a lacking index it will retry query
+  // planning to include indexes marked with this option.
+  //
+  // This option only applies to indexes in the state READ_WRITE.
+  //
+  // As of 09/2018, there are no indexes with this enabled.
+  optional bool only_use_if_required = 6 [default = false, deprecated = true];
+
+  // This flag signals a single property index that should not
+  // be built (disabled). As of 09/2018, this field is no longer used.
+  optional bool disabled_index = 9 [default = false, deprecated = true];
+
+  // These tags should be safely reusable a few versions from now (September
+  // 2016).
+  repeated string deprecated_read_division_family = 7;
+  optional string deprecated_write_division_family = 8;
+}
+
+// References used to track the manual-mode search index entries associated with
+// an entity. We update this property in the same job as the index writes.
+message SearchIndexEntry {
+  // The ID of the associated CompositeIndex.
+  required int64 index_id = 1;
+
+  // Value of write_division_family from when this index entry was written.
+  // We use this to remove documents from division families
+  // to which we are no longer writing as part of normal mutations.
+  required string write_division_family = 2;
+
+  // Fingerprints of the document from when it was written. We use this to
+  // detect when mutations require updating documents, for example due to
+  // bug fixes to the Unicode normalization algorithm.
+  optional fixed64 fingerprint_1999 = 3;
+  optional fixed64 fingerprint_2011 = 4;
+}
+
+// A position in an index relative to the postfix values of an index row.
+message IndexPostfix {
+  message IndexValue {
+    required string property_name = 1;
+    required PropertyValue value = 2;
+  }
+
+  repeated IndexValue index_value = 1;
+
+  optional Reference key = 2;
+
+  // If the position is before or after the given index values relative to the
+  // index's order.
+  optional bool before = 3 [default = true];
+
+  // If true, and the first sort order direction from the query is ascending,
+  // this cursor points to immediately before the position it contains. If
+  // false, or the first sort order from the query is descending, it points
+  // to immediately after the position it contains.
+  //
+  //   before_ascending | sort order | before/after
+  //   --------------------------------------------
+  //   true               ASC          before
+  //   true               DESC         after
+  //   false              ASC          after
+  //   false              DESC         before
+  //
+  // Ultimately, all non-empty cursors returned by the backend will
+  // populate this field, and all non-empty cursors received by the backend
+  // will be upconverted to contain it before query execution.
+  //
+  // This field will ultimately replace before.
+  optional bool before_ascending = 4;
+}
+
+// An absolute position in a single index. Prefer IndexPostfix to describe
+// an index position.
+//
+// TODO: Add something to this message to indicate what kind of
+// cursor it is, so that it can't be used for an unintended query.
+message IndexPosition {
+  optional string key = 1;  // May contain arbitrary bytes.
+
+  // If the position is before or after the given index values relative to the
+  // index's order.
+  optional bool before = 2 [default = true];
+
+  // See IndexPostfix.before_ascending.
+  optional bool before_ascending = 3;
+}

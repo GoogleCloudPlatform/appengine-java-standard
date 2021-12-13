@@ -1,0 +1,480 @@
+/*
+ * Copyright 2021 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+// Copyright 2010 Google Inc. All Rights Reserved.
+
+syntax = "proto2";
+
+package java.apphosting;
+
+import "source.proto";
+
+option java_package = "com.google.apphosting.api.logservice";
+option java_outer_classname = "LogServicePb";
+
+// Log service error codes returned via RPC::set_application_error().
+message LogServiceError {
+  enum ErrorCode {
+    OK = 0;
+    INVALID_REQUEST = 1;
+    STORAGE_ERROR = 2;
+  }
+}
+
+// N.B.(jhaugh): These two messages are partial copies of the AppLogLine and
+// AppLogGroup messages defined in <internal>
+// redefined here to allow userspace code to serialize log lines.
+message UserAppLogLine {
+  required int64 timestamp_usec = 1;
+  required int64 level = 2;
+  required string message = 3;
+
+  // Line of code that generated this log message.
+  optional SourceLocation source_location = 4;
+}
+
+message UserAppLogGroup {
+  repeated UserAppLogLine log_line = 2;
+}
+
+message FlushRequest {
+  // Type: encoded AppLogGroup pb, from <internal>
+  // Userspace code uses UserAppLogLine and UserAppLogGroup defined above.
+  optional bytes logs = 1;
+}
+
+// NOTE: All protos relating to the Read method are under construction,
+// and may be changed or renumbered at any time.  Do not ship any code which
+// depends on them in their present state.  TODO: Solidify protos.
+
+// Token used to continue paged reads between calls.
+message LogOffset {
+  optional bytes request_id = 1;
+
+  // N.B. We cannot remove these fields via the "reserved" keyword because
+  // doing so is not compatible with the python27_proto build rule.
+  optional bool deprecated_request_id_set = 101;
+}
+
+// Application log line emitted while processing a request.
+message LogLine {
+  // Time when log entry was made, in microseconds since the Unix epoch.  May
+  // be inaccurate.
+  required int64 time = 1;
+
+  // Level or severity of log.
+  required int32 level = 2;
+
+  // User provided log message.
+  required string log_message = 3;
+
+  // Line of code that generated this log message.
+  optional SourceLocation source_location = 4;
+}
+
+// Complete log information about a single request to an application.
+//
+// Next tag: 40
+message RequestLog {
+  // Identifies the application that handled this request.
+  required string app_id = 1;
+
+  // Identifies the module of the application that handled this request.
+  // WARNING: Default is "default", must continue to be enforced in cc file as
+  // well.  This default must be kept in this proto2 file as it affects the user
+  // facing libraries.  This variable is only set from one location at this
+  // time, which already creates the "default" default value. -
+  // apphosting/api/logservice/logs_reader.cc:~1015
+  optional string module_id = 37 [default = "default"];
+
+  // Version of the application that handled this request.
+  required string version_id = 2;
+
+  // Globally unique identifier for a request, based on request start time.
+  // Request ids for requests which started later will compare greater as
+  // binary strings than those for requests which started earlier.
+  required bytes request_id = 3;
+
+  // May be used to continue a read forward of this record just like with the
+  // final LogOffset present in the LogReadResponse.
+  optional LogOffset offset = 35;
+
+  // Origin IP address (as inet_ntop would use).
+  required string ip = 4;
+
+  // A string that identifies a logged-in user who made this request, or empty
+  // if the user is not logged in.
+  //
+  // Most likely, this is the part of the user's email before the '@' sign.  The
+  // field value is the same for different requests from the same user, but
+  // different users may have a similar name.  This information is also
+  // available to the application via Users API.
+  //
+  // (-- The information is filled from the GAIA cookie for regular users.  For
+  // end-users accessing the app from inside google, this will be filled via
+  // GaiaUtil::GetNickname, a deprecated method, and thus might go away
+  // unexpectedly. --)
+  // See google/appengine/logging/v1/request_log.proto for up-to-date info.
+  optional string nickname = 5;
+
+  // A time near the beginning of request processing in the Edge PFE. This time
+  // is measured in microseconds since epoch.
+  required int64 start_time = 6;
+
+  // A time near the end of AppServer's processing of the request, just before
+  // the logs are written, and measured in microseconds since epoch.
+  required int64 end_time = 7;
+
+  // This is the same as end_time - start_time, and is measured in microseconds.
+  required int64 latency = 8;
+
+  // Number of megacycles that may have been required to process this request
+  // inside the clone. Note that this field is not very accurate in how it
+  // associates cycles to requests when requests run concurrently, although
+  // the total across all requests that ran within a given timeframe will be
+  // accurate.
+  required int64 mcycles = 9;
+
+  // Request method (GET, PUT, POST, etc).
+  required string method = 10;
+
+  // Contains the path and query portion of the URL that was requested. For
+  // example, if the URL was "http://example.com/app?name=val#fragment", the
+  // resource string would be "/app?name=val".
+  required string resource = 11;
+
+  // HTTP version of request.
+  required string http_version = 12;
+
+  // Response status of request.
+  required int32 status = 13;
+
+  // Size in bytes sent back to client by request.
+  required int64 response_size = 14;
+
+  // Referrer URL of request.
+  optional string referrer = 15;
+
+  // User agent used for making request.
+  optional string user_agent = 16;
+
+  // File or class within URL mapping used for request.  Useful for tracking
+  // down the source code which was responsible for managing request.
+  // Especially for multiply mapped handlers.
+  required string url_map_entry = 17;
+
+  // Apache combined log entry for request.
+  //   See: http://httpd.apache.org/docs/1.3/logs.html
+  //
+  // The information in this field can be constructed from the rest of
+  // this message, however, this field is included for convenience.
+  required string combined = 18;
+
+  // Number of megacycles spent by AppServer in serving API calls from the
+  // clone for this request. Note that in many cases, API calls also trigger
+  // RPCs out of the AppServer, and the CPU cycles in the backend to serve
+  // those calls are not included.
+  optional int64 api_mcycles = 19;
+
+  // The Internet host and port number of the resource being requested.
+  optional string host = 20;
+
+  // An indication of the relative cost of serving this request. This does not
+  // have a direct correspondence to the dollar amounts that will show up on
+  // the bill, but it is roughly proportional to the contribution this request
+  // makes toward the billed amount.
+  optional double cost = 21;
+
+  // TaskQueue API, request's queue and task names (for an offline request).
+  optional string task_queue_name = 22;
+  optional string task_name = 23;
+
+  // Was this request a loading request for this clone?
+  optional bool was_loading_request = 24;
+
+  // Time, in microseconds, this request spent in the pending request queue, if
+  // it was pending at all.
+  optional int64 pending_time = 25;
+
+  // The server replica that handled the request, if any.
+  // WARNING: Default is -1, must continue to be enforced in cc file as well.
+  // This default must be kept in this proto2 file as it affects the user
+  // facing libraries.
+  optional int32 replica_index = 26 [default = -1];
+
+  // If true, represents a finished request.  Otherwise, the request is active.
+  // WARNING: Default is true, must continue to be enforced in cc file as well.
+  // This default must be kept in this proto2 file as it affects the user
+  // facing libraries.
+  optional bool finished = 27 [default = true];
+
+  // Mostly-unique identifier for the clone that handled the request.
+  optional bytes clone_key = 28;
+
+  // List of log lines emitted by the application while serving this request,
+  // if requested.
+  repeated LogLine line = 29;
+
+  // True if fewer log lines are being returned than are known to exist, for
+  // example because 'app_logs_per_request' was specified.  Will never be set
+  // if 'include_app_logs' was not true.
+  optional bool lines_incomplete = 36;
+
+  // Version of the App Engine stack that processed this request
+  // (e.g. "1.9.13"). Is actually a string.
+  optional bytes app_engine_release = 38;
+
+  // Cloud Trace identifier of the trace for this request.
+  optional string trace_id = 39;
+
+  //
+  // Google-only fields.  These fields will only be filled in for privileged
+  // applications or users, and should not be shared outside of Google.  The
+  // field names are intentionally obscured to avoid revealing internal details.
+
+  // If this clone exited as part of this request, stores the reason.
+  // Type: LogEnum::CloneExitReason
+  optional int32 exit_reason = 30;
+
+  // Was this request throttled by wallclock restrictions?
+  optional bool was_throttled_for_time = 31;
+
+  // Was this request throttled by per-app active requests restrictions?
+  optional bool was_throttled_for_requests = 32;
+
+  // The amount of time, in microseconds, that this request was throttled by
+  // the CPU throttler, if any.
+  optional int64 throttled_time = 33;
+
+  // Task BNS address for the AppServer this clone is running on.
+  optional bytes server_name = 34;
+}
+
+message LogModuleVersion {
+  // WARNING: Default is "default", must continue to be enforced in cc file.
+  // This default must be kept in this proto2 file as it affects the user
+  // facing libraries.
+  optional string module_id = 1 [default = "default"];
+
+  // NOTE: For the time being this is enforced as required in code.
+  optional string version_id = 2;  // Actually an engine_version_id.
+
+  optional bool deprecated_module_id_set = 101;
+  optional bool deprecated_version_id_set = 102;
+}
+
+// Request to read an application's logs.  Results will returned in order by
+// request completion time, from most recently completed to least recently.
+//
+// Next tag = 20
+message LogReadRequest {
+  // Application id of logs to read.
+  required string app_id = 1;
+
+  // DEPRECATED: Please use 'module_version' instead.
+  repeated string version_id = 2;
+
+  // List of engine_id, engine_version_id pairs of the application for which to
+  // read logs.
+  repeated LogModuleVersion module_version = 19;
+
+  //
+  // Range options.
+
+  // Earliest request completion time in microseconds since the epoch for which
+  // results should be returned.  This value is inclusive.
+  optional int64 start_time = 3;
+
+  // Latest request completion time in microseconds since the epoch for which
+  // results should be returned.  This value is exclusive.
+  optional int64 end_time = 4;
+
+  // If set, this represents a LogOffset returned by a previous Read request
+  // that will bound the end time of results, exclusive of itself.  Paged Read
+  // calls should use the same start_time and end_time and only update offset.
+  optional LogOffset offset = 5;
+
+  // A list of request_ids to return instead of the range specified above.
+  repeated bytes request_id = 6;
+
+  //
+  // Indexed filtering options.
+
+  // If set, only requests containing a LogLine of at least this level will be
+  // returned.  Per logsutil.py: DEBUG = 0, INFO = 1, WARNING = 2, ERROR = 3
+  // CRITICAL = 4
+  optional int32 minimum_log_level = 7;
+
+  // Unless set to true, only requests that have completed will be returned.
+  optional bool include_incomplete = 8;
+
+  // Number of requests to return; fewer may actually be returned in some cases.
+  optional int64 count = 9;
+
+  //
+  // Unindexed filtering options.
+
+  // If set, only requests where either the combined log field or any
+  // application logs (if 'include_app_logs' is true) partial match this RE2
+  // expression will be returned.
+  optional string combined_log_regex = 14;
+
+  // If set, only requests whose (virtual) host field partial matches this RE2
+  // expression will be returned.
+  optional string host_regex = 15;
+
+  // If set, only logs from the given (backend) replica index will be returned.
+  optional int32 replica_index = 16;
+
+  // TODO: Replace above fields with a general way to filter inside the
+  // reader, e.g., REs specified for named fields within a larger boolean expr.
+
+  //
+  // Result options.
+
+  // If true, application log messages will be returned with each result.
+  optional bool include_app_logs = 10;
+
+  // If set, no more than the specified number of application logs will be
+  // returned with each RequestLog, with earlier application logs omitted.
+  optional int32 app_logs_per_request = 17;
+
+  // Include virtual host name in the combined log string.
+  optional bool include_host = 11;
+
+  // Include everything we know about this request in the combined log string.
+  optional bool include_all = 12;
+
+  // If true the server may cache the internal structures used to perform this
+  // read, allowing continued reads from within the same http request to
+  // execute more quickly.  This should not be set to true for cases where the
+  // continuation request will come from a different http request, as is the
+  // case for the Admin Console logs viewer or 'appcfg request_logs'.
+  optional bool cache_iterator = 13;
+
+  // Assumed number of log shards, honored only for LOGS_READER_SUPERUSER apps.
+  // Important to allow the reading of all logs for an app where its
+  // GlobalConfig may not be in memory.
+  optional int32 num_shards = 18;
+
+  optional bool deprecated_start_time_set = 103;
+  optional bool deprecated_end_time_set = 104;
+  optional bool deprecated_minimum_log_level_set = 107;
+  optional bool deprecated_count_set = 109;
+  optional bool deprecated_combined_log_regex_set = 114;
+  optional bool deprecated_host_regex_set = 115;
+  optional bool deprecated_replica_index_set = 116;
+  optional bool deprecated_app_logs_per_request_set = 117;
+  optional bool deprecated_num_shards_set = 118;
+}
+
+// Provides application log entries.
+message LogReadResponse {
+  repeated RequestLog log = 1;
+
+  // If set, a LogOffset that may be used in LogReadRequest to continue where
+  // this read ended.  If unset, there are no more log records to read for the
+  // given ReadRequest options.
+  optional LogOffset offset = 2;
+
+  // Latest request completion time in microseconds since the epoch seen while
+  // performing the requested read.  Relevant for unindexed searches in order
+  // to display progress to the user.  Will be unset if the read is complete.
+  optional int64 last_end_time = 3;
+}
+
+// A record of how much log space is used by an application version within a
+// given time range.
+// Next tag: 7
+message LogUsageRecord {
+  // Major version id of application for which the log records contributing to
+  // this record correspond.  Will be specified if 'combine_versions' was false.
+  optional string version_id = 1;
+
+  // Earliest request completion time in seconds since the epoch for logs that
+  // would contribute to this usage record given the request parameters.  This
+  // value is inclusive.
+  optional int32 start_time = 2;
+
+  // Latest request completion time in seconds since the epoch for logs that
+  // would contribute to this usage record.  This value is exclusive.
+  optional int32 end_time = 3;
+
+  // The total number of request logs contributing to this record.
+  optional int64 count = 4;
+
+  // The total size in bytes of request logs contributing to this record.
+  optional int64 total_size = 5;
+
+  // For superuser reads only, the number of cells existing in the Bigtable for
+  // this period.  For non-summary records this will be -1 if any contributing
+  // cell names contained uniquifiers, as created by the backfill MapReduce.
+  // For summary records these -1s are treated as 0 when summing the values.
+  optional int32 records = 6;
+}
+
+// Requests log usage statistics for an application.
+// Next tag = 9
+message LogUsageRequest {
+  // Application id for which logs usage should be retrieved.
+  required string app_id = 1;
+
+  // Major version(s) of application for which to retrieve logs usage.  An
+  // empty list indicates that usage for all versions should be retrieved.
+  // TODO: Replace this with a repeated LogModuleVersion field.
+  repeated string version_id = 2;
+
+  // Earliest request completion time in seconds since the epoch for which logs
+  // usage data should be returned.  This value is rounded down to an hour, and
+  // is then inclusive.
+  optional int32 start_time = 3;
+
+  // Latest request completion time in seconds since the epoch for which logs
+  // usage data should be returned.  This value is rounded up to an hour, and
+  // is then exclusive.
+  optional int32 end_time = 4;
+
+  // Interval in hours over which usage data should be aggregated.  If zero,
+  // a single usage record will be created per application version.
+  // WARNING: Default is 1, must continue to be enforced in cc file as well.
+  optional uint32 resolution_hours = 5 [default = 1];
+
+  // If true, usage records for all selected versions will be combined into a
+  // single response record for each time period.
+  optional bool combine_versions = 6;
+
+  // If set and a superuser, specifies that results should be read from a
+  // non-default usage version.
+  optional int32 usage_version = 7;
+
+  // If true, only a list of versions with logs usage data within the specified
+  // time bounds will be returned, with all fields other than version_id left
+  // blank.  Combine_versions will ignored and treated as false in this mode.
+  optional bool versions_only = 8;
+
+  optional bool deprecated_resolution_hours_set = 105;
+  optional bool deprecated_usage_version_set = 107;
+}
+
+// Provides log usage statistics for an application.
+message LogUsageResponse {
+  // A LogUsageRecord for each version and time period requested, ordered by
+  // time and then version.
+  repeated LogUsageRecord usage = 1;
+
+  // The sum of all data included in the repeated usage field above.
+  optional LogUsageRecord summary = 2;
+}

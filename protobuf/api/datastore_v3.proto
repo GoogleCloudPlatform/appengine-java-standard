@@ -1,0 +1,978 @@
+/*
+ * Copyright 2021 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+// LINT: LEGACY_NAMES
+// LINT: ALLOW_GROUPS
+// Copyright 2006 Google Inc. All Rights Reserved.
+//
+// Prometheus datastore. See http://wiki/Main/PrometheusDatastore .
+//
+// The prometheus datastore API. These are the structures and RPCs that are
+// used between the untrusted and trusted processes, *not* the API that's
+// presented to apps in their native language.
+//
+// Onestore PBs from storage/onestore/[versions/*/]entity.proto are used to
+// represent entities, properties, and primary keys, using Entity, Property,
+// and Reference, respectively.
+//
+// See datastore_client.h and jcg/apphosting/datastore/Datastore.java for more
+// documentation about the calls themselves.
+//
+// Some of the string fields may contain arbitrary bytes, as indicated below.
+// Therefore, certain protobuf client libraries may have problems when
+// accessing this API.
+//   * In Python, the proto2 API cannot parse or serialize these messages, but
+//     proto1 APIs can.
+//   * In C++, debug builds of the proto2 API will generate ERROR log messages
+//     when parsing or serializing these messages, but otherwise handle them
+//     correctly.
+//   * In Go and Java, the proto2 API can handle non-Unicode strings without
+//     errors. In Java, you need to be sure to be careful to get and set the
+//     values using the get...Bytes and set...Bytes methods.
+// There is a sister apphosting_datastore_v3_bytes package that actually fixes
+// this problem.  Any string field flagged with a comment contating the keyword
+// "arbitrary bytes" has been switched to an actual bytes type
+
+syntax = "proto2";
+
+package apphosting_datastore_v3;
+
+import "action.proto";
+import "entity.proto";
+import "snapshot.proto";
+
+option java_package = "com.google.apphosting.datastore.proto2api";
+option java_outer_classname = "DatastoreV3Pb";
+
+//
+// A transaction handle. See
+// http://g3doc/apphosting/g3doc/wiki-carryover/datastore_transactions.md .
+//
+// Next tag is 7
+message Transaction {
+  // Tag 4 was InternalHeader
+
+  // all possible values from 0 to 2^64 - 1 are valid handles. there is no
+  // special "error" or "unset" value.
+  required fixed64 handle = 1;
+
+  // id of the application e.g. "admin-console".
+  required string app = 2;
+
+  // The database that this transaction is for.
+  // Ignored except for rpcs Commit and Rollback.
+  optional string database_id = 6;
+
+  // For each changed entity a child marker entity will be created
+  // to trace the mutation.
+  // Ignored except for rpc Commit.
+  optional bool mark_changes = 3 [default = false];
+
+  // All index definitions related to the transaction.
+  // Ignored except for rpc Commit.
+  repeated storage_onestore_v3.CompositeIndex composite_index = 5;
+}
+
+//
+// Query API. See
+// http://g3doc/apphosting/g3doc/wiki-carryover/datastore_query_planner.md .
+//
+// Next tag is 45
+message Query {
+  // Tag 39 was InternalHeader
+  required string app = 1;
+  // The database that this query is for.
+  optional string database_id = 42;
+  // name_space is to add multi tenancy support for datastore.
+  // See http:<internal>.
+  optional string name_space = 29;
+
+  // kind and ancestor both restrict the query results. if kind is provided,
+  // only entities of that kind are returned. if ancestor is provided, only
+  // entities descended from that ancestor by path, including the ancestor
+  // itself, are returned. either one or both must be provided.
+  optional string kind = 3;
+  optional storage_onestore_v3.Reference ancestor = 17;
+  // If true, the query will only return entities that are direct descendants
+  // of the given ancestor, or root entities if not ancestor is set.
+  optional bool shallow = 43;
+
+  // filter based on property values. when a Query has multiple filters,
+  // the effect is their logical conjunction. that is, they are combined
+  // using a logical "AND" operation, rather than an "OR".
+  //
+  // there are two types of filters: traditional "ordered" filters,
+  // and geo-spatial filters.
+  //
+  // for ordered filters, when they are evaluated in memory, they're
+  // evaluated in the order they're provided here. you can take
+  // advantage of this by putting the most restrictive filters, ie the
+  // ones that match the least number of results, first.
+  //
+  // geo-spatial filters may be combined with ordered filters, but only
+  // those using the EQUAL operator.
+  repeated group Filter = 4 {
+    enum Operator {
+      LESS_THAN = 1;
+      LESS_THAN_OR_EQUAL = 2;
+      GREATER_THAN = 3;
+      GREATER_THAN_OR_EQUAL = 4;
+      EQUAL = 5;
+      IN = 6;
+      EXISTS = 7;
+      CONTAINED_IN_REGION = 8;
+      NOT_EQUAL = 9;
+    }
+
+    required Operator op = 6;
+
+    // usually, for an ordered filter, the Property specifies both the
+    // name of the property of interest, and the value against which
+    // to compare it using the operator defined in "op", above.
+    // however, for geo-spatial filters, the Property is used only to
+    // convey the property name.  The value to "compare" it against
+    // (using some form of geo-region containment) is specified by
+    // geo_region, below.
+    repeated storage_onestore_v3.Property property = 14;
+
+    // used only with CONTAINED_IN_REGION: the filter evaluates to
+    // true if the geo point property named by "property" is contained
+    // in this geo-region.  In this case the "value" field of the
+    // Property is unused (despite the fact that that field is marked
+    // as "required").
+    optional GeoRegion geo_region = 40;
+  }
+
+  // TODO: Remove this field.
+  // currently not implemented. eventually, when provided, this will be used
+  // as a plain-text search query. ideally, it will be combined with any
+  // filters, sort orders, and ancestor.
+  optional string search_query = 8;
+
+  // these apply in the order they're added, e.g. adding ("date", DESC),
+  // then adding ("rank", DESC) would sort first by date, descending, then
+  // by rank, descending.
+  repeated group Order = 9 {
+    // These tag numbers must match the tag numbers in the
+    // Index.Property.Direction enum!
+    enum Direction {
+      ASCENDING = 1;
+      DESCENDING = 2;
+    }
+
+    required string property = 10;
+    optional Direction direction = 11 [default = ASCENDING];
+  }
+
+  // TODO: Consider pulling all the items after this point into a
+  // QueryRequest message
+
+  // an optional hint for how to plan and execute the query. if the app knows
+  // that an ancestor or filter will greatly restrict the number of results, it
+  // can include a hint to help the query planner decide which to apply first.
+  //
+  // note that app engine does not currently use hints.
+  //
+  // the query planner honors hints sometimes, but not always. See
+  // http://g3doc/apphosting/g3doc/wiki-carryover/datastore_query_planner.md#query_hint
+  //
+  // be careful with hints and sort orders! they can be dangerous. if a sort
+  // order is present, prometheus will default to scanning over it first, to
+  // avoid fetching and sorting a large (possibly unbounded) number of results
+  // in memory. in general, this is the safest bet.
+  //
+  // however, if the app knows that a filter or ancestor will only match a
+  // very small number of results, it can be much faster to apply that first,
+  // and sort all of the results in memory. if there's even a chance of the
+  // result set being large, though, this is dangerous. proceed with care!
+  //
+  // TODO: support hints with composite indexes; currently composite
+  // indexes will not be used if a hint is specified that can be satisfied!
+  // see
+  // http://g3doc/apphosting/g3doc/wiki-carryover/datastore_custom_index.md#Query_Planning
+  enum Hint {
+    ORDER_FIRST = 1;
+    ANCESTOR_FIRST = 2;
+    FILTER_FIRST = 3;
+  }
+  optional Hint hint = 18;
+
+  // An optional number of entities to try to prefetch and return in the
+  // RunQuery response. If not specified the underlying datastore implementation
+  // will pick.
+  optional int32 count = 23;
+
+  // start returning results at this offset. useful for paging.
+  optional int32 offset = 12 [default = 0];
+
+  // an optional upper bound on the number of results returned for this query.
+  // "count" queries are requested by setting limit to 0 and the offset to the
+  // maximum number of records the user wants to count (possibly infinite).
+  optional int32 limit = 16;
+
+  // the position at which to start the query
+  // TODO: choose better name when switching to plannable cursors.
+  // TODO: Change the type of this field to bytes?
+  optional CompiledCursor compiled_cursor = 30;
+
+  // the position at which to end the query
+  // TODO: Change the type of this field to bytes?
+  optional CompiledCursor end_compiled_cursor = 31;
+
+  // the composite indexes, if any, that are available to the query planner
+  repeated storage_onestore_v3.CompositeIndex composite_index = 19;
+
+  // if true, the datastore will only run this query if there's an index or
+  // set of indices that perfectly match it. if not, it will return an error.
+  optional bool require_perfect_plan = 20 [default = false];
+
+  // if true, only return the keys of matching entities and not the whole
+  // entity. this makes the query somewhat faster and a lot less expensive, in
+  // terms of disk seeks, since it doesn't have to fetch each result entity.
+  // note that this property indicates the _user's_ request to execute a
+  // keys-only query.  The backend may also elect to perform a keys-only query
+  // in order to answer a count() request, which is denoted by a limit of size
+  // 0 (see above comment on limit).
+  //
+  // if this is true, require_perfect_plan must also be set to true.
+  optional bool keys_only = 21 [default = false];
+
+  // if specified, the query must be an ancestor query, and the ancestor must
+  // be in the same entity group as the other operations in the transaction.
+  optional Transaction transaction = 22;
+
+  // TODO: I believe this field is ignored.  Remove it.
+  // An optional argument that determines if a compiled query should be
+  // returned. If true, a compiled query will be constructed such that
+  // it will resume the given query immediately after the last result provided.
+  // Additionally this value must be true for a NextRequest with compile == true
+  // to be successful.
+  optional bool compile = 25 [default = false];
+
+  // How long to wait on the primary replica before attempting to read from a
+  // secondary, possibly stale replica. May not be set if a transaction is
+  // provided.
+  // NOTE: The actual value is overwritten by the datastore, setting
+  // only has the effect of enabling failover in M/S.
+  optional int64 failover_ms = 26;
+
+  // Should Datastore use READ_CURRENT (strong reads) for this request?
+  // If unset the datastore decides based on a flag that defaults to
+  // READ_CONSISTENT. Only applies to ancestor queries. This lets the caller
+  // choose between low latency/eventual consistency (false) and potentially
+  // higher latency/strong consistency (true). This is typically not a concern
+  // with 1.0.1 replication as (false) will never return results more than one
+  // job behind, but is important for paxos where (false) can return results
+  // that are significantly behind.
+  optional bool strong = 32;
+
+  // A list of property names to return. A request with this set is satisfied
+  // using an index instead of looking up the full entity. As only the
+  // PropertyValue is known in the index, the meaning of any property return
+  // is set to Property.Meaning.INDEX_VALUE. Additionally, only entities with
+  // all the properties specified will be returned, i.e. there is an implied
+  // existence filter on every property specified.
+  repeated string property_name = 33;
+
+  // Properties that should be included in the GROUP BY clause.
+  repeated string group_by_property_name = 34;
+
+  // For a normal query, this applies to keys and defaults to true, for a query
+  // with property_names, this applies to the set of properties returned and
+  // defaults to false
+  optional bool distinct = 24;
+
+  // If set, a minimum safe time required of the application's key range
+  // in any Megastore table EntityGroups data replica read by the query.
+  optional int64 min_safe_time_seconds = 35;
+
+  // When min_safe_time_seconds is set, the app server injects the names
+  // of the data replicas of our entity Megastore table for which the
+  // application's key range's safe time is >= min_safe_time_seconds.
+  repeated string safe_replica_name = 36;
+
+  // If true, then the original offset is persisted for subsequent Next RPCs
+  // and a BAD_REQUEST is raised if the NextRequest specifies an offset
+  // that does not match the one from the original request.
+  // NOTE: This is the only behavior supported by datastore_v4.
+  // DEPRECATED: This is now always assumed to be true. Setting it has no
+  // effect.
+  optional bool persist_offset = 37 [default = true, deprecated = true];
+
+  // Only for Spanner-backed apps: Reads entities as they were at the given
+  // time, represented as microseconds of UTC time since Unix epoch
+  // 1970-01-01T00:00:00Z.
+  optional int64 read_time_us = 44;
+}
+
+// There is no real difference between a RegionPoint and the
+// PointValue within storage_onestore_v3.PropertyValue.  But because
+// of compatibility concerns we cannot get rid of PointValue, yet
+// unfortunately we cannot reuse it for the bounding regions (because
+// this type of reuse is not supported for "Groups").
+message RegionPoint {
+  required double latitude = 1;
+  required double longitude = 2;
+}
+
+message CircleRegion {
+  required RegionPoint center = 1;
+  required double radius_meters = 2;
+}
+
+message RectangleRegion {
+  required RegionPoint southwest = 1;
+  required RegionPoint northeast = 2;
+}
+
+message GeoRegion {
+  // Exactly one of the following should be set.
+  optional CircleRegion circle = 1;
+  optional RectangleRegion rectangle = 2;
+}
+
+// A query that has been compiled down into a set of bigtable scans.
+//
+// NOTE: support for in memory filters is limited so most non-perfect
+// plans are not supported.
+message CompiledQuery {
+  // The primary scan. In the case of mergejoin this is used to specify a
+  // primary key range.
+  required group PrimaryScan = 1 {
+    // If unset, scan is assumed to be against the primary_key index. If
+    // accompanied by MergeJoinScans this must be unset.
+    optional string index_name = 2;
+
+    // Encoded key range. If index_name is set these are index keys.
+    // Otherwise these are encoded primary keys.
+    optional string start_key = 3;  // May contain arbitrary bytes.
+    optional bool start_inclusive = 4;
+    optional string end_key = 5;  // May contain arbitrary bytes.
+    optional bool end_inclusive = 6;
+
+    // Merge join postfix constraints
+    repeated string start_postfix_value = 22;  // May contain arbitrary bytes.
+    repeated string end_postfix_value = 23;    // May contain arbitrary bytes.
+
+    // This field is set for a special groomer query only. It sets the maximum
+    // timestamp of an unfinished transaction.
+    optional int64 end_unapplied_log_timestamp_us = 19;
+  }
+
+  // The constraints imposed through a merge join.
+  // NOTE: MergeJoin queries require at least two merge join scans
+  // If only one is specified an error is thrown as a primary scan can satisfy
+  // the request.
+  repeated group MergeJoinScan = 7 {
+    // These scans must be on a secondary index (as primary index scans should
+    // be merged into the primary scan).
+    required string index_name = 8;
+
+    // NOTE: prefix values must be stored separately and are
+    // encoded/decoded by the associated megastore property type. This is
+    // needed as only a fully specified key can be split into its individual
+    // values through Key.getValue().
+    repeated string prefix_value = 9;  // May contain arbitrary bytes.
+
+    // If the specified prefix is a value prefix (last component is a prefix of
+    // the value for that field).
+    optional bool value_prefix = 20 [default = false];
+  }
+
+  // The index definition to use when decoding the composite index data for a
+  // result. Only set for scans on a composite index
+  optional storage_onestore_v3.Index index_def = 21;
+
+  // the native or in memory offset associated with this query
+  optional int32 offset = 10 [default = 0];
+
+  // the native or in memory limit associated with this query
+  optional int32 limit = 11;
+
+  // if true, only return keys. See Query.keys_only for discussion.
+  required bool keys_only = 12;
+
+  // see property_name on Query
+  repeated string property_name = 24;
+
+  // the number of postfix properties that should be distinct
+  optional int32 distinct_infix_size = 25;
+
+  // the number of key path elements that results must have
+  optional int32 key_path_length = 27;
+
+  // In memory entity filters that must be re-applied (this can be needed even
+  // on perfect plans).
+  optional group EntityFilter = 13 {
+    optional bool distinct = 14 [default = false];
+
+    optional string kind = 17;
+    optional storage_onestore_v3.Reference ancestor = 18;
+
+    // TODO: serialize in memory filters as well
+    // TODO: serialize in memory sort as well
+  }
+
+  optional string plan_label = 26;
+}
+
+// A message that represents a compiled query cursor.
+//
+// Cursors returned by the backend populate at most one of postfix_position
+// (for plannable positions) or absolute_position (for encoded positions).
+// The position group can encode either a plannable or encoded positions (as
+// described in detail below), but it is accepted for backwards compatibility
+// only and is cleared during normalization.
+message CompiledCursor {
+  // The position for the given query.
+  //
+  // If no position is provided or the position is empty this is a valid cursor
+  // that points to the first element of the given result set.
+  //
+  // The position can be encoded in one of two ways. If IndexValues or key is
+  // specified then this is a "plannable" position that can be used regardless
+  // of how the query is planned. If start_key is specified then it is a
+  // "compiled" or "encoded" position which can only be used on the exact same
+  // scan that it was generated from. Both start_key and key/IndexValue cannot
+  // be specified in a single position.
+  //
+  // NOTE: All fields have been marked deprecated because the
+  // deprecation annotations aren't well-supported on groups.
+  optional group Position = 2 [deprecated = true] {
+    // The encoded key to which this cursor position refers to. This is an
+    // encoded index or primary key.
+    // TODO: rename to "encoded_key"
+    // TODO: consider removing after 1.4.5
+    optional string start_key = 27 [deprecated = true];  // Arbitrary bytes.
+
+    repeated group IndexValue = 29 [deprecated = true] {
+      optional string property = 30 [deprecated = true];
+      required storage_onestore_v3.PropertyValue value = 31 [deprecated = true];
+    }
+
+    optional storage_onestore_v3.Reference key = 32 [deprecated = true];
+
+    // If the position is inclusive when used as the start for a query. If used
+    // as an end position this value will be inverted by the datastore before
+    // applying it to a query. For example if a cursor points to the position
+    // between 'B' and 'C' in 'ABCD' that position is encoded either as B
+    // exclusive or C inclusive. Using either one of these as a start position
+    // will give 'CD'. If I want to use this as an end cursor (to get 'AB') the
+    // position of the cursor needs to be B inclusive or C exclusive.
+    optional bool start_inclusive = 28 [default = true, deprecated = true];
+
+    // If true, and the first sort order direction from the query is ascending,
+    // this cursor points to immediately before the position it contains. If
+    // false, or the first sort order from the query is descending, it points
+    // to immediately after the position it contains.
+    //
+    //   before_ascending | sort order | before/after
+    //   --------------------------------------------
+    //   true               ASC          before
+    //   true               DESC         after
+    //   false              ASC          after
+    //   false              DESC         before
+    //
+    // Ultimately, all non-empty cursors returned by the backend will
+    // populate this field, and all non-empty cursors received by the backend
+    // will be upconverted to contain it before query execution.
+    //
+    // This field will ultimately replace start_inclusive.
+    optional bool before_ascending = 33 [deprecated = true];
+  }
+
+  // If specified, this is a plannable cursor.
+  optional storage_onestore_v3.IndexPostfix postfix_position = 1;
+
+  // If specified, this is an encoded cursor.
+  optional storage_onestore_v3.IndexPosition absolute_position = 3;
+}
+
+// A query cursor.
+// Next tag: 4
+message Cursor {
+  // all possible values from 0 to 2^64 - 1 are valid cursors. there is no
+  // special "error" or "unset" value.
+  required fixed64 cursor = 1;
+
+  // The app id
+  optional string app = 2;
+
+  // the database
+  optional string database_id = 3;
+}
+
+// RPC request and response objects, along with response error codes for error
+// handling. Prometheus uses Stubby's application error reporting mechanism, and
+// always sets an error detail message. However, in the case of internal errors,
+// these messages should not be reported to users.
+message Error {
+  enum ErrorCode {
+    // If you add a new error code here, then also add it to the list of
+    // tunneled datastore error codes in taskqueue.
+    // LINT.IfChange
+
+    // NOTE: Keep in sync with datastore_v4.proto.
+    BAD_REQUEST = 1;
+    CONCURRENT_TRANSACTION = 2;
+    INTERNAL_ERROR = 3;
+    NEED_INDEX = 4;
+    TIMEOUT = 5;
+    PERMISSION_DENIED = 6;
+    BIGTABLE_ERROR = 7;
+    COMMITTED_BUT_STILL_APPLYING = 8;
+    CAPABILITY_DISABLED = 9;
+    TRY_ALTERNATE_BACKEND = 10;
+    SAFE_TIME_TOO_OLD = 11;
+    RESOURCE_EXHAUSTED = 12;
+    SNAPSHOT_VERSION_TOO_OLD = 18;
+    // Each error code's default log level is specified in
+    // DatastoreException.DEFAULT_LOG_LEVELS.
+
+    // Codes that are never returned by this service but which are used
+    // internally because they correspond to canonical error codes.
+    NOT_FOUND = 13;
+    ALREADY_EXISTS = 14;
+    FAILED_PRECONDITION = 15;
+    UNAUTHENTICATED = 16;
+    ABORTED = 17;
+
+    // LINT.ThenChange(//depot/google3/apphosting/api/taskqueue/taskqueue_service.proto)
+  }
+}
+
+message Cost {
+  optional int32 index_writes = 1;
+  optional int32 index_write_bytes = 2;  // Deprecated
+  optional int32 entity_writes = 3;
+  optional int32 entity_write_bytes = 4;  // Deprecated
+  // Used in the Commit response so we know how many put and delete ops to
+  // charge for (we charge based on the number of puts and deletes requested,
+  // not the number of puts and deletes actually performed).
+  optional group CommitCost = 5 {
+    optional int32 requested_entity_puts = 6;
+    optional int32 requested_entity_deletes = 7;
+  }
+  optional int32 approximate_storage_delta = 8;
+  // Number of times any id sequence was updated as a result of the request.
+  optional int32 id_sequence_updates = 9;
+}
+
+message GetRequest {
+  // Tag 6 was InternalHeader
+  repeated storage_onestore_v3.Reference key = 1;
+  optional Transaction transaction = 2;
+
+  // How long to wait on the primary replica before attempting to read from a
+  // secondary, possibly stale replica. May not be set if a transaction is
+  // provided.
+  // NOTE: The actual value is overwritten by the datastore, setting
+  // only has the effect of enabling failover in M/S.
+  optional int64 failover_ms = 3;
+
+  // Should Datastore use READ_CURRENT (strong reads) for this request?
+  // If unset the datastore decides based on a flag that defaults to
+  // READ_CONSISTENT. This lets the caller choose between low latency/eventual
+  // consistency (false) and potentially higher latency/strong consistency
+  // (true). This is typically not a concern with 1.0.1 replication as (false)
+  // will never return results more than one job behind, but is important for
+  // paxos where (false) can return results that are significantly behind.
+  optional bool strong = 4;
+
+  // This flag allows the datastore to defer fetching some of the requested
+  // keys. If set, results may not be returned in the same order as requested,
+  // and the deferred field will be populated with any keys that were not
+  // fetched. If not set, the datastore may throw an exception instead of
+  // fetching all the requested entities to protect itself from running out of
+  // memory.
+  optional bool allow_deferred = 5 [default = false];
+}
+
+message GetResponse {
+  // The entity field will be set for keys that were found, and the key field
+  // will be set for keys that weren't found.
+  //
+  // If allow_deferred was set in the request, then these Entities may not be in
+  // the same order as the keys in the request.  See the in_order field.
+  // Additionally, there would be no guarantee on how many results will appear
+  // if the request contained duplicate keys.
+  //
+  // If allow_deferred was not set in the request, then these Entities will
+  // always be in the same order as the request, and the in_order field will be
+  // true.
+  repeated group Entity = 1 {
+    optional storage_onestore_v3.EntityProto entity = 2;
+    optional storage_onestore_v3.Reference key = 4;
+
+    // The version of the entity
+    // If the entity does not exist, a version number is returned for <empty>
+    // iff 'strong' or 'transaction' was set.
+    optional int64 version = 3;
+  }
+
+  // A list of keys that were not looked up due to resource constraints.
+  repeated storage_onestore_v3.Reference deferred = 5;
+
+  // Signifies whether or not the entities in this response match the order of
+  // the keys in the GetRequest.  This also implies that there are no deferred
+  // results.
+  // TODO: We should eventually switch this default value to false.
+  // It is nice to have it default to true during initial rollout so that
+  // clients will fall back to their existing behavior if we need to rollback
+  // the backend and this is unset.
+  optional bool in_order = 6 [default = true];
+}
+
+message PutRequest {
+  // Tag 11 was InternalHeader
+  repeated storage_onestore_v3.EntityProto entity = 1;
+  optional Transaction transaction = 2;
+  repeated storage_onestore_v3.CompositeIndex composite_index = 3;
+
+  // Currently, the only supported trusted put operation is for modifying
+  // entities with reserved names.
+  optional bool trusted = 4 [default = false];
+
+  // Used by the app server to ignore a user specified read-only period
+  optional bool force = 7 [default = false];
+
+  // For each changed entity a child marker entity will be created
+  // to trace the mutation.
+  // The flag shouldn't be set in transactional requests:
+  // Commit request controls the behavior for all mutations in the transaction.
+  optional bool mark_changes = 8 [default = false];
+  // TODO: This field is unused.  Remove it.
+  repeated storage_onestore_v3.Snapshot snapshot = 9;
+
+  // TODO: Remove once sequential auto id deprecation period expires.
+  enum AutoIdPolicy {
+    CURRENT = 0;
+    SEQUENTIAL = 1;
+  }
+  optional AutoIdPolicy auto_id_policy = 10 [default = CURRENT];
+
+  // Monotonically increasing sequence number provided by the client
+  // to indicate ordering of put/delete requests in a transaction.
+  //
+  // Note:
+  //
+  // - Negative sequence numbers are invalid.
+  // - Requests without a sequence number is equivalent to setting it to 0
+  //   and will be ordered before requests with sequence numbers.
+  // - Multiple requests with the same sequence number will be processed
+  //   in the order which they are received.
+  optional int64 sequence_number = 12;
+}
+
+message PutResponse {
+  repeated storage_onestore_v3.Reference key = 1;
+  optional Cost cost = 2;
+  // The new version number for each entity put.
+  // Noop puts will return the version of the existing entity.
+  repeated int64 version = 3;
+}
+
+message TouchRequest {
+  // Tag 10 was InternalHeader
+  repeated storage_onestore_v3.Reference key = 1;
+  repeated storage_onestore_v3.CompositeIndex composite_index = 2;
+  optional bool force = 3 [default = false];
+  // TODO: This field is unused.  Remove it.
+  repeated storage_onestore_v3.Snapshot snapshot = 9;
+}
+
+message TouchResponse {
+  optional Cost cost = 1;
+}
+
+message DeleteRequest {
+  // Tag 10 was InternalHeader
+  repeated storage_onestore_v3.Reference key = 6;
+  optional Transaction transaction = 5;
+
+  // Note that this field was added in July 2014 (App Engine release 1.9.9).  Up
+  // until then, composite indexes were not provided in DeleteRequests because
+  // all of the information needed to clean up indexes is present on the
+  // EntityEntity in Megastore.  For the new Spanner implementation, these will
+  // be required though.
+  repeated storage_onestore_v3.CompositeIndex composite_index = 11;
+
+  // Currently, the only supported trusted delete operation is modifying
+  // entities with reserved names.
+  optional bool trusted = 4 [default = false];
+
+  // Used by the app server to ignore a user specified read-only period
+  optional bool force = 7 [default = false];
+
+  // For each changed entity a child marker entity will be created
+  // to trace the mutation.
+  // The flag shouldn't be set in transactional requests:
+  // Commit request controls the behavior for all mutations in the transaction.
+  optional bool mark_changes = 8 [default = false];
+  // TODO: This field is unused.  Remove it.
+  repeated storage_onestore_v3.Snapshot snapshot = 9;
+
+  // Monotonically increasing sequence number provided by the client
+  // to indicate ordering of put/delete requests in a transaction.
+  //
+  // Note:
+  //
+  // - Negative sequence numbers are invalid.
+  // - Requests without a sequence number is equivalent to setting it to 0
+  //   and will be ordered before requests with sequence numbers.
+  // - Multiple requests with the same sequence number will be processed
+  //   in the order which they are received.
+  optional int64 sequence_number = 12;
+}
+
+message DeleteResponse {
+  optional Cost cost = 1;
+  // The latest version number for each entity in the request at which the given
+  // entity does not exist (regardless if the entity was deleted by this
+  // request, was deleted by a previous request or never existed).
+  repeated int64 version = 3;
+}
+
+message NextRequest {
+  // Tag 5 was InternalHeader
+  required Cursor cursor = 1;
+  // The requested number of entities to return, if not specified the underlying
+  // datastore implementation will pick
+  optional int32 count = 2;
+
+  // The requested number of entities to skip before returning any results.
+  // DEPRECATED: Leave offset unset to use the offset persisted from the
+  // RunQuery call. If set, this offset must be equal to the original offset
+  // minus the number of skipped results so far.
+  optional int32 offset = 4 [default = 0, deprecated = true];
+
+  // If true, Next() will try and compile the given cursor into a CompiledCursor
+  // so it can be resumed later. This will only succeed if the RunQuery request
+  // that returned the cursor was called with Query.compile = true
+  optional bool compile = 3 [default = false];
+}
+
+message QueryResult {
+  // A cursor that can be used in a call to Next()
+  optional Cursor cursor = 1;
+
+  // The resulting entities or keys.
+  repeated storage_onestore_v3.EntityProto result = 2;
+
+  // The number of results skipped over
+  optional int32 skipped_results = 7;
+
+  // True if a call to Next() will return more results.
+  required bool more_results = 3;
+
+  // If true, only the keys in the result EntityProtos will be set. this
+  // happens in response to a Query with keys_only set to true.
+  optional bool keys_only = 4;
+
+  // If true, only index values in the result EntityProtos will be set. This
+  // happens in response to a Query with at least one property_name set.
+  optional bool index_only = 9;
+
+  // If the caller should be charged a small op for each result returned.
+  // We charge a small op for simple index scans. Anything that has to seek
+  // for each result costs a read op.
+  optional bool small_ops = 10;
+
+  // This will only be populated if the request has compile=true and the Query
+  // supports being compiled. Only populated by RunQuery() (not populated by
+  // Next()).
+  optional CompiledQuery compiled_query = 5;
+
+  // This will only be populated if the request has compile=true and
+  // the Query supports being compiled.
+  // TODO: Change the type of this field to bytes?
+  optional CompiledCursor compiled_cursor = 6;
+
+  // The indexes used to perform the query.
+  // Includes composite indexes, single property indexes, the primary index,
+  // and kind indexes.
+  // Every index has app_id = <appId> and state = READ_WRITE.
+  // Any non-composite index has id = 0.
+  // A composite index has definition.ancestor set appropriately.
+  // Single property and kind indexes have definition.ancestor = false.
+  // The primary index has definition.ancestor = true.
+  // A simple index has definition.entity_type = <kind> and exactly 1 property.
+  // The primary index has definition.entity_type = "" and no properties.
+  // The kind index has definition.entity_type = <kind> and no properties.
+  // This field is used by QueryResult instances returned by rpc RunQuery.
+  // This field is not used by QueryResult instances returned by rpc Next.
+  repeated storage_onestore_v3.CompositeIndex index = 8;
+
+  // The versions of the resulting entities.
+  repeated int64 version = 11;
+
+  // Cursors pointing just after the result at the same index.
+  // TODO: Change the type of this field to bytes?
+  repeated CompiledCursor result_compiled_cursor = 12;
+
+  // The cursor just after the last result skipped due to an offset.
+  // TODO: Change the type of this field to bytes?
+  optional CompiledCursor skipped_results_compiled_cursor = 13;
+}
+
+message AllocateIdsRequest {
+  // Tag 4 was InternalHeader
+
+  // ID sequences are namespaced to (parent, kind) combinations, the easiest
+  // representation of which is a Reference with the final part of the path
+  // ignored. In most cases this will be the result of an entity.key() call
+  // on an entity instance, but a Reference generated manually with a path
+  // will suffice: the key need not reference an actual entity.
+  // If this field is set, reserve must not be set.
+  optional storage_onestore_v3.Reference model_key = 1;
+
+  // The number of IDs we want to allocate. Cannot be set if min is also set.
+  optional int64 size = 2;
+
+  // Allocate Ids up to this maximum value. Cannot be set if size is
+  // also set.
+  //
+  // WARNING!! Does not invalidate old batches in other instances so ids
+  // may still be assigned below this value. Only new batches will be
+  // larger than this value which means that on a collision (where the
+  // datastore tries to assign a key that already exists) the next batch pulled
+  // will be valid. Without this the datastore would repeatedly pull bad batches
+  // until a valid batch is found.
+  //
+  // The returned range is guaranteed not to collide with the datastore (range
+  // may be empty).
+  optional int64 max = 3;
+
+  // Keys with complete paths for which to reserve all IDs in the path.
+  // If this field is set, model_key, size, and max must not be set.
+  repeated storage_onestore_v3.Reference reserve = 5;
+
+  // Currently only used to allow reserving ids for a reserved key.
+  optional bool trusted = 6 [default = false];
+}
+
+message AllocateIdsResponse {
+  // This has the exact same semantics as IdBatch.java and represents a range
+  // of allocated IDs from start to end, inclusive.
+  required int64 start = 1;
+  required int64 end = 2;
+  optional Cost cost = 3;
+}
+
+message CompositeIndices {
+  repeated storage_onestore_v3.CompositeIndex index = 1;
+}
+
+message AddActionsRequest {
+  // Tag 3 was InternalHeader
+
+  required Transaction transaction = 1;
+  repeated storage_onestore_v3.Action action = 2;
+}
+
+message AddActionsResponse {
+  // reserved
+}
+
+// Next tag is 8
+message BeginTransactionRequest {
+  // Tag 3 was InternalHeader
+
+  // The app to create the transaction in.
+  required string app = 1;
+  // If true, transactions can span (small) numbers of entity groups
+  // (aka cross-group (XG) transactions)
+  optional bool allow_multiple_eg = 2 [default = false];
+
+  // The database to create the transaction in.
+  optional string database_id = 4;
+
+  enum TransactionMode {
+    UNKNOWN = 0;
+    // The transaction will be used only for read operations.
+    READ_ONLY = 1;
+    // The transaction will be used for both read and write operations.
+    READ_WRITE = 2;
+  }
+  // The mode of the transaction that will be created.
+  optional TransactionMode mode = 5 [default = UNKNOWN];
+
+  // 6 was previous_handle, unused.
+
+  // The previous transaction associated with this transaction.
+  // Used for transaction retries to inform priority decisions.
+  optional Transaction previous_transaction = 7;
+}
+
+message CommitResponse {
+  optional Cost cost = 1;
+
+  repeated group Version = 3 {
+    // NOTE: despite the "root_" prefix, this field holds the entity key,
+    // one for each unique entity written.
+    required storage_onestore_v3.Reference root_entity_key = 4;
+    required int64 version = 5;
+  }
+}
+
+message GetIndicesRequest {
+  required string app_id = 1;
+  optional string database_id = 2;
+}
+
+// UpdateIndexResponse contains an `any`-equivalent message to ease protocol
+// evolution in the AppEngine-based indexer. These fields are only populated
+// when the "v3 shim" handled the UpdateIndex call, and are unset otherwise.
+//
+// See http://google3/google/protobuf/any.proto for instructions on the meaning
+// of the fields. See the service implementation to see supported messages. This
+// is not using the protobuf `any` type because non-datastore dependencies are
+// not supported by the custom build rules that support legacy AppEngine
+// runtimes.
+//
+// Warning: This must match the well-known 'any' message definition so the
+// indexer can decode it (b/131182630).
+message UpdateIndexResponse {
+  optional string type_url = 1;
+  optional bytes value = 2;
+}
+
+// This enum exists the Datastore V3 service definition use to live here and
+// provide it. Code in j/c/g/appengine/api/datastore/... uses it to dispatch
+// method calls. Since we can no longer have the Datastore Service defined in
+// this file (b/25600709) we recreate this enum to keep the existing code
+// working.  There is a test that verifies this enum has the same names as
+// the one in DatastoreV3Service.
+message DatastoreService_3 {
+  enum Method {
+    Get = 1;
+    Put = 2;
+    Touch = 3;
+    Delete = 4;
+    RunQuery = 5;
+    AddActions = 6;
+    Next = 7;
+    DeleteCursor = 8;
+    BeginTransaction = 9;
+    Commit = 10;
+    Rollback = 11;
+    AllocateIds = 12;
+    CreateIndex = 13;
+    UpdateIndex = 14;
+    GetIndices = 15;
+    DeleteIndex = 16;
+  }
+}
