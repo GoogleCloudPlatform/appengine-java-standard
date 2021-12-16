@@ -19,6 +19,7 @@ import static com.google.apphosting.runtime.http.HttpApiProxyImplTestBase.ECHO_M
 import static com.google.apphosting.runtime.http.HttpApiProxyImplTestBase.ECHO_SERVICE;
 import static com.google.apphosting.runtime.http.HttpApiProxyImplTestBase.FAKE_SECURITY_TICKET;
 import static com.google.common.base.StandardSystemProperty.FILE_SEPARATOR;
+import static com.google.common.base.StandardSystemProperty.OS_NAME;
 import static com.google.common.truth.Truth.assertThat;
 import static java.nio.charset.StandardCharsets.US_ASCII;
 import static org.junit.Assert.assertThrows;
@@ -56,8 +57,9 @@ public class ApiHostSuspendResumeTest {
    */
   @Test
   public void suspendResume() throws IOException, InterruptedException {
-    if (FILE_SEPARATOR.value().equals("\\")) {
-      // Test relies on /prof/self/* files not present on Windows systems.
+    if (FILE_SEPARATOR.value().equals("\\")
+        || Ascii.toLowerCase(OS_NAME.value()).startsWith("mac os x")) {
+      // Test relies on /prof/self/* files not present on Windows or Mac systems.
       return;
     }
 
