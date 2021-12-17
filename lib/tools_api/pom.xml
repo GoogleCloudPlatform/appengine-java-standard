@@ -19,7 +19,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <artifactId>appengine-tools-api</artifactId>
+  <artifactId>appengine-tools-sdk</artifactId>
 
   <parent>
     <groupId>com.google.appengine</groupId>
@@ -28,7 +28,7 @@
   </parent>
 
   <packaging>jar</packaging>
-  <name>appengine-tools-api</name>
+  <name>appengine-tools-sdk</name>
 
   <dependencies>
     <dependency>
@@ -170,7 +170,6 @@
                     <include>com/google/appengine/tools/development/DevAppServer*</include>
                     <include>com/google/appengine/tools/development/ClassLoaderUtil*</include>
                     <include>com/google/appengine/tools/development/SharedMain*</include>
-                    <include>com/google/appengine/tools/development/gwt/**</include>
                     <include>com/google/appengine/tools/info/**</include>
                     <include>com/google/appengine/tools/util/**</include>
                   </includes>

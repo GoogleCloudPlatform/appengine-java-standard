@@ -46,7 +46,7 @@
     </dependency>
     <dependency>
       <groupId>com.google.appengine</groupId>
-      <artifactId>appengine-tools-api</artifactId>
+      <artifactId>appengine-tools-sdk</artifactId>
     </dependency>
     <dependency>
       <groupId>com.google.appengine</groupId>
@@ -182,7 +182,7 @@
                   </includes>
                 </filter>
                 <filter>
-                  <artifact>com.google.appengine:appengine-tools-api:*</artifact>
+                  <artifact>com.google.appengine:appengine-tools-sdk:*</artifact>
                   <includes>
                     <include>com/google/appengine/tools/development/devappserver2/**</include>
                     <include>com/google/appengine/tools/development/proto/**</include>
@@ -248,7 +248,7 @@
                   <include>com.esotericsoftware.yamlbeans:yamlbeans</include>
                   <include>com.google.appengine:appengine-apis</include>
                   <include>com.google.appengine:appengine-apis-dev</include>
-                  <include>com.google.appengine:appengine-tools-api</include>
+                  <include>com.google.appengine:appengine-tools-sdk</include>
                   <include>com.google.appengine:appengine-utils</include>
                   <include>com.google.appengine:sessiondata</include>
                   <include>com.google.appengine:proto1</include>

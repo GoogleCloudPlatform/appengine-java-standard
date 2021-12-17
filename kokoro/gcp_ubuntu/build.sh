@@ -39,7 +39,7 @@ cp appengine-api-stubs/target/appengine-api-stubs*.jar ${KOKORO_ARTIFACTS_DIR}/m
 cp appengine_testing/target/appengine-testing*.jar ${KOKORO_ARTIFACTS_DIR}/maven-artifacts/appengine-testing.jar
 cp remoteapi/target/appengine-remote-api*.jar ${KOKORO_ARTIFACTS_DIR}/maven-artifacts/appengine-remote-api.jar
 cp runtime_shared/target/runtime-shared*.jar ${KOKORO_ARTIFACTS_DIR}/maven-artifacts/runtime-shared.jar
-cp lib/tools_api/target/appengine-tools-api*.jar ${KOKORO_ARTIFACTS_DIR}/maven-artifacts/appengine-tools-api.jar
+cp lib/tools_api/target/appengine-tools-sdk*.jar ${KOKORO_ARTIFACTS_DIR}/maven-artifacts/appengine-tools-api.jar
 cp lib/xml_validator/target/libxmlvalidator*.jar ${KOKORO_ARTIFACTS_DIR}/maven-artifacts/libxmlvalidator.jar
 cp runtime/impl/target/runtime-impl*.jar ${KOKORO_ARTIFACTS_DIR}/maven-artifacts/runtime-impl.jar
 cp runtime/local/target/runtime-local*.jar ${KOKORO_ARTIFACTS_DIR}/maven-artifacts/runtime-local.jar

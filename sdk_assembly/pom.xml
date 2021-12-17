@@ -177,7 +177,7 @@
                                 </artifactItem>
                                 <artifactItem>
                                     <groupId>com.google.appengine</groupId>
-                                    <artifactId>appengine-tools-api</artifactId>
+                                    <artifactId>appengine-tools-sdk</artifactId>
                                     <version>${project.version}</version>
                                     <type>jar</type>
                                     <overWrite>true</overWrite>
@@ -297,7 +297,7 @@
         </dependency>
         <dependency>
             <groupId>com.google.appengine</groupId>
-            <artifactId>appengine-tools-api</artifactId>
+            <artifactId>appengine-tools-sdk</artifactId>
         </dependency>
         <dependency>
             <groupId>com.google.appengine</groupId>
