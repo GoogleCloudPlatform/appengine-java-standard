@@ -655,7 +655,7 @@ public final class TaskOptions implements Serializable {
   /** Sets the tag for a task. Ignores null or empty tags. */
   public TaskOptions tag(String tag) {
     if (tag != null) {
-      return tag(tag.getBytes(Charset.defaultCharset()));
+      return tag(tag.getBytes(UTF_8));
     }
     return this;
   }

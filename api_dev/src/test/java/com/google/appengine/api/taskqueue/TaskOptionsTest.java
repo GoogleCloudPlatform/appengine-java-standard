@@ -83,6 +83,17 @@ public class TaskOptionsTest extends TestCase {
 
   public static final DeferredTask DEFERRED_TASK_1 = new TestDeferredTask("task 1");
 
+  public void testTagWithNonAsciiCharacter() throws Exception {
+    String tagWithNonAsciiCharacter = "tag:\u00BD"; // "fraction one half" character
+
+    TaskOptions taskOptionsWithTagSet = withDefaults().tag(tagWithNonAsciiCharacter);
+
+    assertEquals(
+        "non-ASCII character in the tag must not be garbled:",
+        tagWithNonAsciiCharacter,
+        taskOptionsWithTagSet.getTag());
+  }
+
   public void testTaskOptions() throws Exception {
     assertEquals("/A/Url", withUrl("/A/Url").getUrl());
     assertEquals((Long) 345L, withCountdownMillis(345L).getCountdownMillis());
