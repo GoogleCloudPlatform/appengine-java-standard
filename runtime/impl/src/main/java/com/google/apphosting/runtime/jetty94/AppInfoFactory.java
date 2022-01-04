@@ -41,18 +41,13 @@ public class AppInfoFactory {
   /** Path in the WAR layout to app.yaml */
   private static final String APP_YAML_PATH = "WEB-INF/appengine-generated/app.yaml";
 
-  private final String applicationRoot;
-  private final String fixedApplicationPath;
   private final String gaeVersion;
   private final String googleCloudProject;
   private final String gaeApplication;
   private final String gaeService;
   private final String gaeServiceVersion;
 
-  public AppInfoFactory(
-      String applicationRoot, String fixedApplicationPath, Map<String, String> env) {
-    this.applicationRoot = applicationRoot;
-    this.fixedApplicationPath = fixedApplicationPath;
+  public AppInfoFactory(Map<String, String> env) {
     String version = env.getOrDefault("GAE_VERSION", DEFAULT_GAE_VERSION);
     String deploymentId = env.getOrDefault("GAE_DEPLOYMENT_ID", null);
     gaeServiceVersion = (deploymentId != null) ? version + "." + deploymentId : version;
@@ -83,7 +78,8 @@ public class AppInfoFactory {
   }
 
   /** Creates a AppinfoPb.AppInfo object. */
-  public AppinfoPb.AppInfo getAppInfoFromFile() throws IOException {
+  public AppinfoPb.AppInfo getAppInfoFromFile(String applicationRoot, String fixedApplicationPath)
+      throws IOException {
     // App should be located under /base/data/home/apps/appId/versionID or in the optional
     // fixedApplicationPath parameter.
     String applicationPath =
@@ -115,7 +111,7 @@ public class AppInfoFactory {
     return getAppInfoWithApiVersion(appYaml.getApi_version());
   }
 
-  private AppinfoPb.AppInfo getAppInfoWithApiVersion(@Nullable String apiVersion) {
+  public AppinfoPb.AppInfo getAppInfoWithApiVersion(@Nullable String apiVersion) {
     final AppinfoPb.AppInfo.Builder appInfoBuilder =
         AppinfoPb.AppInfo.newBuilder()
             .setAppId(gaeApplication)

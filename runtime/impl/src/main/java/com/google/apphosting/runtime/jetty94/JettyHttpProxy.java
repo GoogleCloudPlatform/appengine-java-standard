@@ -260,21 +260,24 @@ public class JettyHttpProxy {
             X_APPENGINE_TIMEOUT_MS,
             X_GOOGLE_INTERNAL_PROFILER);
 
+    private final String applicationRoot;
+    private final String fixedApplicationPath;
     private final AppInfoFactory appInfoFactory;
     private final EvaluationRuntimeServerInterface evaluationRuntimeServerInterface;
 
     ForwardingHandler(ServletEngineAdapter.Config runtimeOptions, Map<String, String> env)
         throws ExecutionException, InterruptedException, IOException {
-      this.appInfoFactory =
-          new AppInfoFactory(
-              runtimeOptions.applicationRoot(), runtimeOptions.fixedApplicationPath(), env);
+      this.applicationRoot = runtimeOptions.applicationRoot();
+      this.fixedApplicationPath = runtimeOptions.fixedApplicationPath();
+      this.appInfoFactory = new AppInfoFactory(env);
       this.evaluationRuntimeServerInterface = runtimeOptions.evaluationRuntimeServerInterface();
     }
 
     private void init() {
       /* The init actions are not done in the constructor as they are not used when testing */
       try {
-        AppinfoPb.AppInfo appinfo = appInfoFactory.getAppInfoFromFile();
+        AppinfoPb.AppInfo appinfo =
+            appInfoFactory.getAppInfoFromFile(applicationRoot, fixedApplicationPath);
         // TODO?
         LocalRpcContext<EmptyMessage> context = new LocalRpcContext<>(EmptyMessage.class);
         evaluationRuntimeServerInterface.addAppVersion(context, appinfo);

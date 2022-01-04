@@ -62,13 +62,13 @@ public final class AppInfoFactoryTest {
   @Test
   public void getGaeService_nonDefault() throws Exception {
     AppInfoFactory factory =
-        new AppInfoFactory("/foo", "/bar", ImmutableMap.of("GAE_SERVICE", "mytestservice"));
+        new AppInfoFactory(ImmutableMap.of("GAE_SERVICE", "mytestservice"));
     assertThat(factory.getGaeService()).isEqualTo("mytestservice");
   }
 
   @Test
   public void getGaeService_defaults() throws Exception {
-    AppInfoFactory factory = new AppInfoFactory("/foo", "/bar", ImmutableMap.of());
+    AppInfoFactory factory = new AppInfoFactory(ImmutableMap.of());
     assertThat(factory.getGaeService()).isEqualTo("default");
   }
 
@@ -76,8 +76,6 @@ public final class AppInfoFactoryTest {
   public void getGaeVersion_nonDefaultWithDeploymentId() throws Exception {
     AppInfoFactory factory =
         new AppInfoFactory(
-            "/foo",
-            "/bar",
             ImmutableMap.of(
                 "GAE_SERVICE", "mytestservice",
                 "GAE_DEPLOYMENT_ID", "mydeployment",
@@ -89,8 +87,6 @@ public final class AppInfoFactoryTest {
   public void getGaeVersion_defaultWithDeploymentId() throws Exception {
     AppInfoFactory factory =
         new AppInfoFactory(
-            "/foo",
-            "/bar",
             ImmutableMap.of(
                 "GAE_DEPLOYMENT_ID", "mydeployment",
                 "GAE_VERSION", "100"));
@@ -99,8 +95,7 @@ public final class AppInfoFactoryTest {
 
   @Test
   public void getGaeVersion_defaultWithoutDeploymentId() throws Exception {
-    AppInfoFactory factory =
-        new AppInfoFactory("/foo", "/bar", ImmutableMap.of("GAE_VERSION", "100"));
+    AppInfoFactory factory = new AppInfoFactory(ImmutableMap.of("GAE_VERSION", "100"));
     assertThat(factory.getGaeVersion()).isEqualTo("100");
   }
 
@@ -108,8 +103,6 @@ public final class AppInfoFactoryTest {
   public void getGaeServiceVersion_withDeploymentId() throws Exception {
     AppInfoFactory factory =
         new AppInfoFactory(
-            "/foo",
-            "/bar",
             ImmutableMap.of(
                 "GAE_DEPLOYMENT_ID", "mydeployment",
                 "GAE_VERSION", "100"));
@@ -118,21 +111,19 @@ public final class AppInfoFactoryTest {
 
   @Test
   public void getGaeServiceVersion_withoutDeploymentId() throws Exception {
-    AppInfoFactory factory =
-        new AppInfoFactory("/foo", "/bar", ImmutableMap.of("GAE_VERSION", "100"));
+    AppInfoFactory factory = new AppInfoFactory(ImmutableMap.of("GAE_VERSION", "100"));
     assertThat(factory.getGaeVersion()).isEqualTo("100");
   }
 
   @Test
   public void getGaeApplication_nonDefault() throws Exception {
-    AppInfoFactory factory =
-        new AppInfoFactory("/foo", "/bar", ImmutableMap.of("GAE_APPLICATION", "s~myapp"));
+    AppInfoFactory factory = new AppInfoFactory(ImmutableMap.of("GAE_APPLICATION", "s~myapp"));
     assertThat(factory.getGaeApplication()).isEqualTo("s~myapp");
   }
 
   @Test
   public void getGaeApplication_defaults() throws Exception {
-    AppInfoFactory factory = new AppInfoFactory("/foo", "/bar", ImmutableMap.of());
+    AppInfoFactory factory = new AppInfoFactory(ImmutableMap.of());
     assertThat(factory.getGaeApplication()).isEqualTo("s~testapp");
   }
 
@@ -140,14 +131,12 @@ public final class AppInfoFactoryTest {
   public void getAppInfo_fixedApplicationPath() throws Exception {
     AppInfoFactory factory =
         new AppInfoFactory(
-            null,
-            fixedAppDir,
             ImmutableMap.of(
                 "GAE_SERVICE", "mytestservice",
                 "GAE_DEPLOYMENT_ID", "mydeployment",
                 "GAE_VERSION", "100",
                 "GAE_APPLICATION", "s~myapp"));
-    AppinfoPb.AppInfo appInfo = factory.getAppInfoFromFile();
+    AppinfoPb.AppInfo appInfo = factory.getAppInfoFromFile(null, fixedAppDir);
 
     assertThat(appInfo.getAppId()).isEqualTo("s~myapp");
     assertThat(appInfo.getVersionId()).isEqualTo("mytestservice:100.mydeployment");
@@ -159,15 +148,13 @@ public final class AppInfoFactoryTest {
   public void getAppInfo_appRoot() throws Exception {
     AppInfoFactory factory =
         new AppInfoFactory(
-            appRoot,
-            null,
             ImmutableMap.of(
                 "GAE_SERVICE", "mytestservice",
                 "GAE_DEPLOYMENT_ID", "mydeployment",
                 "GAE_VERSION", "100",
                 "GAE_APPLICATION", "s~myapp",
                 "GOOGLE_CLOUD_PROJECT", "mytestproject"));
-    AppinfoPb.AppInfo appInfo = factory.getAppInfoFromFile();
+    AppinfoPb.AppInfo appInfo = factory.getAppInfoFromFile(appRoot, null);
 
     assertThat(appInfo.getAppId()).isEqualTo("s~myapp");
     assertThat(appInfo.getVersionId()).isEqualTo("mytestservice:100.mydeployment");
@@ -179,17 +166,18 @@ public final class AppInfoFactoryTest {
   public void getAppInfo_noAppYaml() throws Exception {
     AppInfoFactory factory =
         new AppInfoFactory(
-            null,
-            // We tell AppInfoFactory to look directly in the current working directory. There's no
-            // app.yaml there:
-            USER_DIR.value(),
             ImmutableMap.of(
                 "GAE_SERVICE", "mytestservice",
                 "GAE_DEPLOYMENT_ID", "mydeployment",
                 "GAE_VERSION", "100",
                 "GAE_APPLICATION", "s~myapp",
                 "GOOGLE_CLOUD_PROJECT", "bogusproject"));
-    AppinfoPb.AppInfo appInfo = factory.getAppInfoFromFile();
+    AppinfoPb.AppInfo appInfo =
+        factory.getAppInfoFromFile(
+            null,
+            // We tell AppInfoFactory to look directly in the current working directory. There's no
+            // app.yaml there:
+            USER_DIR.value());
 
     assertThat(appInfo.getAppId()).isEqualTo("s~myapp");
     assertThat(appInfo.getVersionId()).isEqualTo("mytestservice:100.mydeployment");
@@ -201,8 +189,6 @@ public final class AppInfoFactoryTest {
   public void getAppInfo_noDirectory() throws Exception {
     AppInfoFactory factory =
         new AppInfoFactory(
-            appRoot,
-            null,
             ImmutableMap.of(
                 "GAE_SERVICE", "mytestservice",
                 "GAE_DEPLOYMENT_ID", "mydeployment",
@@ -211,15 +197,13 @@ public final class AppInfoFactoryTest {
                 // This will make the AppInfoFactory hunt for a directory called bogusproject:
                 "GOOGLE_CLOUD_PROJECT", "bogusproject"));
 
-    assertThrows(NoSuchFileException.class, factory::getAppInfoFromFile);
+    assertThrows(NoSuchFileException.class, () -> factory.getAppInfoFromFile(appRoot, null));
   }
 
   @Test
   public void getAppInfo_givenAppYaml() throws Exception {
     AppInfoFactory factory =
         new AppInfoFactory(
-            null,
-            null,
             ImmutableMap.of(
                 "GAE_SERVICE", "mytestservice",
                 "GAE_DEPLOYMENT_ID", "mydeployment",
@@ -236,5 +220,24 @@ public final class AppInfoFactoryTest {
     assertThat(appInfo.getVersionId()).isEqualTo("mytestservice:100.mydeployment");
     assertThat(appInfo.getRuntimeId()).isEqualTo("java8");
     assertThat(appInfo.getApiVersion()).isEqualTo("200");
+  }
+
+  @Test
+  public void getAppInfo_givenVersion() throws Exception {
+    AppInfoFactory factory =
+        new AppInfoFactory(
+            ImmutableMap.of(
+                "GAE_SERVICE", "mytestservice",
+                "GAE_DEPLOYMENT_ID", "mydeployment",
+                "GAE_VERSION", "100",
+                "GAE_APPLICATION", "s~myapp",
+                "GOOGLE_CLOUD_PROJECT", "mytestproject"));
+
+    AppinfoPb.AppInfo appInfo = factory.getAppInfoWithApiVersion("my_api_version");
+
+    assertThat(appInfo.getAppId()).isEqualTo("s~myapp");
+    assertThat(appInfo.getVersionId()).isEqualTo("mytestservice:100.mydeployment");
+    assertThat(appInfo.getRuntimeId()).isEqualTo("java8");
+    assertThat(appInfo.getApiVersion()).isEqualTo("my_api_version");
   }
 }
