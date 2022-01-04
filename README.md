@@ -17,7 +17,7 @@
 # Google App Engine Standard Environment Source Code for Java 8 and Java11.
 
 
-This is a repository that contains the Java Source Code for [Google App Engine
+This repository contains the Java Source Code for [Google App Engine
 standard environment][ae-docs], the production runtime, the APIs, and local SDK.
 
 [ae-docs]: https://cloud.google.com/appengine/docs/standard/java
