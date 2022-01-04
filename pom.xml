@@ -694,6 +694,13 @@
           <groupId>com.github.os72</groupId>
           <artifactId>protoc-jar-maven-plugin</artifactId>
           <version>3.11.4</version>
+          <configuration>
+            <!-- Try to keep this protoc compiler version up to date with:
+                 https://github.com/protocolbuffers/protobuf/blob/master/java/pom.xml#L7
+                 Read https://github.com/os72/protoc-jar-maven-plugin/issues/107 for context.
+             -->
+             <protocVersion>3.19.1</protocVersion>
+          </configuration>
         </plugin>
         <plugin>
           <groupId>org.antlr</groupId>
