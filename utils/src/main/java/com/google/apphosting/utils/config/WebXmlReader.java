@@ -32,7 +32,7 @@ import org.w3c.dom.Text;
  */
 public class WebXmlReader extends AbstractConfigXmlReader<WebXml> {
 
-  // N.B.(schwardo): this class is not currently used in, and
+  // N.B.: this class is not currently used in, and
   // therefore has not been tested in, the runtime.  Before adding a
   // dependency on this code from the runtime please ensure that there
   // is no possibility for external entity references or other
@@ -40,10 +40,10 @@ public class WebXmlReader extends AbstractConfigXmlReader<WebXml> {
   // restricted environment
 
   // This should be kept in sync with our webdefault.xml files.
-  private static final String[] DEFAULT_WELCOME_FILES = new String[] {
-    "index.html",
-    "index.jsp",
-  };
+  private static final String[] DEFAULT_WELCOME_FILES =
+      new String[] {
+        "index.html", "index.jsp",
+      };
 
   public static final String DEFAULT_RELATIVE_FILENAME = "WEB-INF/web.xml";
 

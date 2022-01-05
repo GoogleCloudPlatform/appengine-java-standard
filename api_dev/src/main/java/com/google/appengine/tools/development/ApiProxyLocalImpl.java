@@ -374,9 +374,7 @@ class ApiProxyLocalImpl implements ApiProxyLocal, DevServices {
     this.properties.putAll(properties);
   }
 
-  /**
-   * Stops all services started by this ApiProxy and releases all of its resources.
-   */
+  /** Stops all services started by this ApiProxy and releases all of its resources. */
   // TODO When we fix DevAppServer to support hot redeployment,
   // it <b>MUST</b> call into {@code stop} when it is attempting to GC
   // a webapp (otherwise background threads won't be stopped, etc...)
@@ -470,7 +468,7 @@ class ApiProxyLocalImpl implements ApiProxyLocal, DevServices {
       //                be safe for now as it's only used by
       //                datastore service to add tasks to taskqueue
       //                service.
-      // N.B. (rudominer). We set the environment prior
+      // N.B. . We set the environment prior
       // to invoking getService() because the environment is
       // needed by some of the services (at least TaskQueue)
       // during initialization.
@@ -587,13 +585,13 @@ class ApiProxyLocalImpl implements ApiProxyLocal, DevServices {
   }
 
   private LocalRpcService startServices(String pkg) {
-    // N.B.(maxr): Service.providers() actually instantiates every
+    // N.B.: Service.providers() actually instantiates every
     // service it finds so it's important that our local service
     // implementations really respect the init/start/stop contract.
     // We don't want services doing anything meaningful when they
     // are constructed.
-    for (LocalRpcService service : ServiceLoader.load(LocalRpcService.class,
-        ApiProxyLocalImpl.class.getClassLoader())) {
+    for (LocalRpcService service :
+        ServiceLoader.load(LocalRpcService.class, ApiProxyLocalImpl.class.getClassLoader())) {
       if (service.getPackage().equals(pkg)) {
         service.init(context, properties);
         service.start();

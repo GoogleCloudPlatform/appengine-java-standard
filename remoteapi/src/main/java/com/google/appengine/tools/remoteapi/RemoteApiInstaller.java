@@ -41,12 +41,10 @@ import org.apache.http.impl.cookie.BasicClientCookie;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
- * Installs and uninstalls the remote API. While the RemoteApi is installed,
- * all App Engine calls made by the same thread that performed the installation
- * will be sent to a remote server.
+ * Installs and uninstalls the remote API. While the RemoteApi is installed, all App Engine calls
+ * made by the same thread that performed the installation will be sent to a remote server.
  *
- * <p>Instances of this class can only be used on a single thread.</p>
- *
+ * <p>Instances of this class can only be used on a single thread.
  */
 // NOTE: This class must be kept in sync with
 // InternalRemoteApiInstaller according to the very long comment in that class.
@@ -63,8 +61,8 @@ public class RemoteApiInstaller {
 
   /**
    * A key that can be put into {@link Environment#getAttributes()} to override the app id used by
-   * the Datastore API.  Note that this is copied from
-   * com.google.appengine.api.datastore.DatastoreApiHelper to avoid a dependency on that class.  It
+   * the Datastore API. Note that this is copied from
+   * com.google.appengine.api.datastore.DatastoreApiHelper to avoid a dependency on that class. It
    * must be kept in sync.
    */
   // TODO: Can we just depend on that class?

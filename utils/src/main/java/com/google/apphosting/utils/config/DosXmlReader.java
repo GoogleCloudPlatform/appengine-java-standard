@@ -29,7 +29,7 @@ import org.w3c.dom.Element;
  */
 public class DosXmlReader extends AbstractConfigXmlReader<DosXml> {
 
-  // N.B.(schwardo): this class is not currently used in, and
+  // N.B.: this class is not currently used in, and
   // therefore has not been tested in, the runtime.  Before adding a
   // dependency on this code from the runtime please ensure that there
   // is no possibility for external entity references or other

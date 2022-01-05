@@ -297,7 +297,7 @@ public final class LocalTaskQueue extends AbstractLocalRpcService {
     // Start the local fetch service.
     // Needs to happen before we start the scheduler to ensure that no
     // jobs get executed before the job has access to a fetch service.
-    // Note(maxr): We considered other ways of having the local task queue
+    // Note: We considered other ways of having the local task queue
     // fetch urls, including a direct dependency on Apache HttpClient,
     // the api-level UrlFetchService, and ApiProxy.  If we had used HttpClient
     // we would have effectively been reimplementing LocalURLFetchService.

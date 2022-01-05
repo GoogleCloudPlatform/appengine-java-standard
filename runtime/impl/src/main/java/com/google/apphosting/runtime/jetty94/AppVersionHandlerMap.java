@@ -401,7 +401,7 @@ public class AppVersionHandlerMap extends AbstractHandlerContainer {
               // Set this special attribute iff the dispatch actually works!
               // We use this attribute to decide if we want to keep the response content
               // or let the Runtime generate the default error page
-              // TODO will mask the exception
+              // TODO: an invalid html dispatch (404) will mask the exception
               request.setAttribute(ERROR_PAGE_HANDLED, errorPage);
               return;
             } else {

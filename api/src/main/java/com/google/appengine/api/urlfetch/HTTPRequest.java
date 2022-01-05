@@ -102,10 +102,9 @@ public class HTTPRequest implements Serializable {
   }
 
   /**
-   * Adds {@code header} to this request. If an {@code HTTPHeader} with
-   * the same {@code name} already exists for this request, it's values
-   * are merged with {@code header}.
-   * 
+   * Adds {@code header} to this request. If an {@code HTTPHeader} with the same {@code name}
+   * already exists for this request, it's values are merged with {@code header}.
+   *
    * @param header a not {@code null} {@code HTTPHeader}
    */
   // TODO: Document any header sanitization done by the

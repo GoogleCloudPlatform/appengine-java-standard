@@ -251,7 +251,7 @@ final class ImageImpl implements Image {
     try {
       while (true) {
         // Search for next marker
-        // NB(tobyr) I don't believe this loop is technically necessary.
+        // NB I don't believe this loop is technically necessary.
         do {
           code = extend(buffer.get());
         } while (code != 0xff);

@@ -390,8 +390,8 @@ public class DevAppServerModulesFilter implements Filter {
   private void doRedirectedBackendRequest(
       HttpServletRequest hrequest, HttpServletResponse hresponse, FilterChain chain)
       throws IOException, ServletException {
-    // N.B.(schwardo): See bug http://b/4442244 happened if you see class cast
-    // exceptions below. (strellis) removed some broken code to deal with them.
+    // N.B.: See bug http://b/4442244 happened if you see class cast
+    // exceptions below.  removed some broken code to deal with them.
     String backendServer = (String) hrequest.getAttribute(BACKEND_REDIRECT_ATTRIBUTE);
     Integer instance = (Integer) hrequest.getAttribute(BACKEND_INSTANCE_REDIRECT_ATTRIBUTE);
     ModulesFilterHelper modulesFilterHelper = getModulesFilterHelper();
@@ -411,8 +411,8 @@ public class DevAppServerModulesFilter implements Filter {
   private void doRedirectedModuleRequest(
       HttpServletRequest hrequest, HttpServletResponse hresponse, FilterChain chain)
       throws IOException, ServletException {
-    // N.B.(schwardo): See bug http://b/4442244 happened if you see class cast
-    // exceptions below. (strellis) removed some broken code to deal with them.
+    // N.B.: See bug http://b/4442244 happened if you see class cast
+    // exceptions below.  removed some broken code to deal with them.
     Integer instance = (Integer) hrequest.getAttribute(MODULE_INSTANCE_REDIRECT_ATTRIBUTE);
     ModulesFilterHelper modulesFilterHelper = getModulesFilterHelper();
     String moduleName = modulesService.getCurrentModule();

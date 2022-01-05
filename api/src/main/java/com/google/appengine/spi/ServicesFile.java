@@ -37,7 +37,6 @@ import java.util.Set;
  * A helper class for reading and writing Services files.
  *
  * @see java.util.ServiceLoader
- *
  */
 public class ServicesFile {
 

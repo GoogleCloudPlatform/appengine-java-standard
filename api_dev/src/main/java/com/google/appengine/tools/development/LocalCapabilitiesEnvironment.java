@@ -124,7 +124,7 @@ public class LocalCapabilitiesEnvironment {
     if (status == null) {
       throw new IllegalArgumentException("Capability Status: " + " is not known");
     }
-    //TODO what about        status = SummaryStatus.SCHEDULED_FUTURE;
+    // TODO what about        status = SummaryStatus.SCHEDULED_FUTURE;
     // and  long timeUntilScheduled?
 
     capabilitiesStatus.put(capabilityName, status);

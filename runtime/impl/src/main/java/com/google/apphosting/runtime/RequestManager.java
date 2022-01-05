@@ -419,7 +419,7 @@ public class RequestManager {
     // Cancel any scheduled future actions associated with this
     // request.
     //
-    // N.B.(schwardo): Copy the list to avoid a
+    // N.B.: Copy the list to avoid a
     // ConcurrentModificationException due to a race condition where
     // the soft deadline runnable runs and adds the hard deadline
     // runnable while we are waiting for it to finish.  We don't
@@ -585,7 +585,7 @@ public class RequestManager {
       // version of it).  If not, create a new exception with the
       // correct class and method, but with an unknown line number.
       //
-      // N.B.(schwardo): Also, we're now using this stack trace to
+      // N.B.: Also, we're now using this stack trace to
       // determine when to terminate the clone.  The above issue may
       // cause us to terminate either too many or two few clones.  Too
       // many is merely wasteful, and too few is no worse than it was

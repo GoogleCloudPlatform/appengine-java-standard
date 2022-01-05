@@ -142,7 +142,7 @@ public final class LocalImagesService extends AbstractLocalRpcService {
       }
     }
 
-    // N.B.(schwardo): This is a bit hacky. We have to force the
+    // N.B.: This is a bit hacky. We have to force the
     // blobstore service to initialize. We could just call
     // BlobStorageFactory.getBlobStorage() lazily, but we would still
     // have to force it at some point. We may as well force it here.
@@ -183,13 +183,15 @@ public final class LocalImagesService extends AbstractLocalRpcService {
               // exception?
               status.setSuccessful(false);
               status.setErrorCode(ErrorCode.BAD_TRANSFORM_DATA.getNumber());
-              throw new ApiProxy.ApplicationException(ErrorCode.BAD_TRANSFORM_DATA.getNumber(),
-                  String.format("%d transforms were supplied; the maximum allowed is %d.",
+              throw new ApiProxy.ApplicationException(
+                  ErrorCode.BAD_TRANSFORM_DATA.getNumber(),
+                  String.format(
+                      "%d transforms were supplied; the maximum allowed is %d.",
                       request.getTransformCount(), ImagesService.MAX_TRANSFORMS_PER_REQUEST));
             }
             int orientation = 1;
-            if (request.getInput().getCorrectExifOrientation() ==
-                ORIENTATION_CORRECTION_TYPE.CORRECT_ORIENTATION) {
+            if (request.getInput().getCorrectExifOrientation()
+                == ORIENTATION_CORRECTION_TYPE.CORRECT_ORIENTATION) {
               Exif exif = getExifMetadata(request.getImage());
               if (exif != null) {
                 Entry entry = exif.getTagValue(Exif.ORIENTATION, true);
@@ -209,9 +211,13 @@ public final class LocalImagesService extends AbstractLocalRpcService {
               // Rotate, Resize, (Crop-to-fit), Effects (e.g., autolevels).
               // Orientation fix is done within the chain modifying flipping
               // and rotation steps.
-              if (orientation != 1 && !(transform.hasCropRightX() || transform.hasCropTopY()
-                                        || transform.hasCropBottomY() || transform.hasCropLeftX())
-                  && !transform.hasHorizontalFlip() && !transform.hasVerticalFlip()) {
+              if (orientation != 1
+                  && !(transform.hasCropRightX()
+                      || transform.hasCropTopY()
+                      || transform.hasCropBottomY()
+                      || transform.hasCropLeftX())
+                  && !transform.hasHorizontalFlip()
+                  && !transform.hasVerticalFlip()) {
                 img = correctOrientation(img, status, orientation);
                 orientation = 1;
               }
@@ -221,8 +227,10 @@ public final class LocalImagesService extends AbstractLocalRpcService {
                 // to keep the dev processing pipeline straightforward for this
                 // combination of transforms.
                 Transform.Builder stretch = Transform.newBuilder();
-                stretch.setWidth(transform.getWidth())
-                    .setHeight(transform.getHeight()).setAllowStretch(true);
+                stretch
+                    .setWidth(transform.getWidth())
+                    .setHeight(transform.getHeight())
+                    .setAllowStretch(true);
                 img = processTransform(img, stretch.build(), status);
                 // Create and process the new crop portion of the transform.
                 Transform.Builder crop = Transform.newBuilder();
@@ -242,13 +250,15 @@ public final class LocalImagesService extends AbstractLocalRpcService {
               }
             }
             status.setSuccessful(true);
-            ImageData imageData = ImageData.newBuilder().setContent(
-              ByteString.copyFrom(saveImage(img, request.getOutput().getMimeType(), status)))
-                  .setWidth(img.getWidth()).setHeight(img.getHeight()).build();
-            return ImagesTransformResponse
-                .newBuilder()
-                .setImage(imageData)
-                .build();
+            ImageData imageData =
+                ImageData.newBuilder()
+                    .setContent(
+                        ByteString.copyFrom(
+                            saveImage(img, request.getOutput().getMimeType(), status)))
+                    .setWidth(img.getWidth())
+                    .setHeight(img.getHeight())
+                    .build();
+            return ImagesTransformResponse.newBuilder().setImage(imageData).build();
           }
         });
   }
@@ -512,7 +522,7 @@ public final class LocalImagesService extends AbstractLocalRpcService {
                     .build();
             // getMimeType is validating the blob is an image.
             getMimeType(imageData);
-            // Note(rudominer) I am commenting out the following line
+            // Note I am commenting out the following line
             // because experimentats indicates that doing so resolves
             // b/7031367 Tests time out with OOMs since 1.7.1
             // TODO Figure out why the following line causes this

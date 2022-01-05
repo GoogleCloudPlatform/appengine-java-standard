@@ -863,7 +863,7 @@ public class AppYamlTranslator {
     protected void addWelcomeFiles(GlobIntersector intersector) {
       Map<String, Object> welcomeProperties = getWelcomeProperties();
       if (welcomeProperties != null) {
-        // N.B.(schwardo): Unfortunately we need to do both / and /*/
+        // N.B.: Unfortunately we need to do both / and /*/
         // rather than just */ here so any /* patterns interact
         // correctly.  If I think too hard about this my brain explodes
         // so I've just left it this way for now.

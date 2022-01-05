@@ -173,9 +173,7 @@ public class TaskQueueViewerServlet extends HttpServlet {
     localTaskQueue = (LocalTaskQueue) apiProxyLocal.getService(LocalTaskQueue.PACKAGE);
   }
   // TODO Pull this function into a utils class for use by other servlets.
-  /**
-   * URL encode the given string in UTF-8.
-   */
+  /** URL encode the given string in UTF-8. */
   private static String urlencode(String val) throws UnsupportedEncodingException {
     return URLEncoder.encode(val, "UTF-8");
   }
@@ -186,9 +184,8 @@ public class TaskQueueViewerServlet extends HttpServlet {
 
   // TODO Pull this function into a utils class for use by other servlets.
   /**
-   * Get the int value of the given param from the given request, returning the
-   * given default value if the param does not exist or the value of the param
-   * cannot be parsed into an int.
+   * Get the int value of the given param from the given request, returning the given default value
+   * if the param does not exist or the value of the param cannot be parsed into an int.
    */
   private static int getIntParam(ServletRequest request, String paramName, int defaultVal) {
     String val = request.getParameter(paramName);
@@ -202,8 +199,8 @@ public class TaskQueueViewerServlet extends HttpServlet {
 
   // TODO Pull this into a common utils class.
   /**
-   * Returns the result of {@link HttpServletRequest#getRequestURI()} with the
-   * values of all the params in {@code args} appended.
+   * Returns the result of {@link HttpServletRequest#getRequestURI()} with the values of all the
+   * params in {@code args} appended.
    */
   private static String filterURL(HttpServletRequest req, String... paramsToInclude)
       throws UnsupportedEncodingException {
@@ -218,12 +215,10 @@ public class TaskQueueViewerServlet extends HttpServlet {
   }
 
   // TODO Pull this into a common utils class.
-  /**
-   * Verifies that the request contains the required parameters.
-   */
-  private static boolean checkParams(HttpServletRequest req,
-                                     HttpServletResponse resp,
-                                     String... paramsRequired) throws IOException {
+  /** Verifies that the request contains the required parameters. */
+  private static boolean checkParams(
+      HttpServletRequest req, HttpServletResponse resp, String... paramsRequired)
+      throws IOException {
     for (String arg : paramsRequired) {
       String value = req.getParameter(arg);
       if (value == null) {

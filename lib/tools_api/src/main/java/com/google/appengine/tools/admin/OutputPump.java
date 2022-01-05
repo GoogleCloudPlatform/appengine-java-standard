@@ -25,14 +25,12 @@ import java.nio.charset.Charset;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-// NB(tobyr) I shamelessly copied this from the SecurityContest app. It'd be
+// NB I shamelessly copied this from the SecurityContest app. It'd be
 // nice to find a way to share this code, but there may not be a point to it
-// once the security contest is over. 
+// once the security contest is over.
 /**
- * Pumps lines from one stream onto another, used specifically for getting
- * the stdout/stderr of a child process onto the parent's.
- *
- *
+ * Pumps lines from one stream onto another, used specifically for getting the stdout/stderr of a
+ * child process onto the parent's.
  */
 public class OutputPump implements Runnable {
   private static final Logger logger = Logger.getLogger(OutputPump.class.getName());

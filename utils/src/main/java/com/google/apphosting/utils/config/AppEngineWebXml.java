@@ -1068,9 +1068,8 @@ public class AppEngineWebXml implements Cloneable {
   }
 
   /**
-   * Represents an {@code <include>} element within the
-   * {@code <static-files>} element.  Currently this includes both a
-   * pattern and an optional expiration time specification.
+   * Represents an {@code <include>} element within the {@code <static-files>} element. Currently
+   * this includes both a pattern and an optional expiration time specification.
    */
   // TODO: convert to AutoValue. That means getting rid of the mutable Map field.
   public static class StaticFileInclude {

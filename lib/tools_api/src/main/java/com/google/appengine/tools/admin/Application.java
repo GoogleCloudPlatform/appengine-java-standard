@@ -290,7 +290,7 @@ public class Application implements GenericApplication {
     this.sourceContext = sourceContext;
 
     webXml = webXmlReader.readWebXml();
-    // TODO;
+    // TODO: validateXml(webXml.getFilename(), new File(SDKDOCS, "servlet.xsd"));
     webXml.validate();
     servletVersion = webXmlReader.getServletVersion();
 

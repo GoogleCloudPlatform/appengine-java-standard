@@ -252,7 +252,7 @@ public class RpcConnection implements Connection, HttpTransport {
     if (skipAdmin) {
       request.setAttribute(SKIP_ADMIN_CHECK_ATTR, true);
 
-      // N.B.(schwardo): If SkipAdminCheck is set, we're actually lying
+      // N.B.: If SkipAdminCheck is set, we're actually lying
       // to Jetty here to tell it that HTTPS is in use when it may not
       // be.  This is useful because we want to bypass Jetty's
       // transport-guarantee checks (to match Python, which bypasses

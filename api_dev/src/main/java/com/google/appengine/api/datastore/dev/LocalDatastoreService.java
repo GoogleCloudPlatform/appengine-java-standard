@@ -1214,7 +1214,7 @@ public abstract class LocalDatastoreService {
     query = validatedQuery.getV3Query();
 
     // Modernize the query's cursors.
-    // NOTE construction of
+    // NOTE: Modernization must follow (not precede) construction of
     // LocalCompositeIndexManager.ValidatedQuery.  I don't know why.
     try {
       CursorModernizer.modernizeQueryCursors(query);

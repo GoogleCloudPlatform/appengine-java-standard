@@ -29,7 +29,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  * <p>Consider using a standard Java string and storing it with the {@link
  * Entity#setUnindexedProperty} method instead.
- *
  */
 public final class Text implements Serializable {
 

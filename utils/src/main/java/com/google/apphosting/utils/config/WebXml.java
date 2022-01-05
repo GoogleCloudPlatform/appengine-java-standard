@@ -145,7 +145,7 @@ public class WebXml {
   public String getMimeTypeForPath(String path) {
     int dot = path.lastIndexOf(".");
     if (dot != -1) {
-      // N.B.(schwardo): It seems like this comparison should be
+      // N.B.: It seems like this comparison should be
       // case-insensitive, but the servlet spec is strangely silent on
       // this.  Tomcat appears to be case-sensitive so we'll do that
       // for now.

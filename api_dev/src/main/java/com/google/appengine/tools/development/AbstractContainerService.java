@@ -127,11 +127,9 @@ public abstract class AbstractContainerService implements ContainerService {
       };
 
   /**
-   * Latch that will open once the module instance is fully initialized.
-   * TODO: This is used by some services but only for the
-   * default instance of the default module. Investigate. Does module
-   * start/stop cause issues? There is some issue with tasks during
-   * Servlet initialization.
+   * Latch that will open once the module instance is fully initialized. TODO: This is used by some
+   * services but only for the default instance of the default module. Investigate. Does module
+   * start/stop cause issues? There is some issue with tasks during Servlet initialization.
    */
   private CountDownLatch moduleInitLatch;
 
@@ -306,7 +304,7 @@ public abstract class AbstractContainerService implements ContainerService {
   public final void shutdown() throws Exception {
     stopHotDeployScanner();
     stopContainer();
-    //TODO: shutdown is generally called for application level shutdown.
+    // TODO: shutdown is generally called for application level shutdown.
     //                The exception is AbstractBackendServers.stopBackend which
     //                stops a single back end. In that case clearing the system
     //                properties for all modules seems wrong.
@@ -346,9 +344,7 @@ public abstract class AbstractContainerService implements ContainerService {
    */
   protected abstract void stopContainer() throws Exception;
 
-  /**
-   * Start up the hot-deployment scanner.
-   */
+  /** Start up the hot-deployment scanner. */
   // TODO: we may want to make this configurable.
   protected abstract void startHotDeployScanner() throws Exception;
 
@@ -417,7 +413,7 @@ public abstract class AbstractContainerService implements ContainerService {
    * application located at {@code root}.
    */
   protected URL[] getClassPathForApp(File root) {
-    // N.B.(schwardo): Do not use File.toURI().toURL() here, as that
+    // N.B.: Do not use File.toURI().toURL() here, as that
     // will cause the file to be URL quoted (e.g. spaces replaced with
     // %20's).  URLClassLoader seems to cope with this okay, but
     // Jasper's JSP compiler uses its own classpath to populate the
@@ -426,7 +422,6 @@ public abstract class AbstractContainerService implements ContainerService {
     // but it does not URL-encode the returned file.
     ClassPathBuilder classPathBuilder =
         new ClassPathBuilder(appEngineWebXml.getClassLoaderConfig());
-
 
     classPathBuilder.addUrls(userCodeClasspathManager.getUserCodeClasspath(root));
     classPathBuilder.addUrls(AppengineSdk.getSdk().getUserJspLibs());

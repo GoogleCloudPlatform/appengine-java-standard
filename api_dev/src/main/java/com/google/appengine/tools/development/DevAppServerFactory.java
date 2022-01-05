@@ -24,11 +24,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Creates new {@link DevAppServer DevAppServers} which can be used to launch
- * web applications.
- *
- */
+/** Creates new {@link DevAppServer DevAppServers} which can be used to launch web applications. */
 // TODO: Describe the difference between standalone and testing servers.
 public class DevAppServerFactory {
 
@@ -185,7 +181,7 @@ public class DevAppServerFactory {
         noJavaAgent);
   }
 
-  // Note(rudominer) For some strange reason, code from AppMaker in google3 is accessing this
+  // Note For some strange reason, code from AppMaker in google3 is accessing this
   // method by reflection. When I added the externalResourceDir parameter I was forced to
   // add yet another override of this method below so as to avoid fixing up all the google3
   // code that does this.

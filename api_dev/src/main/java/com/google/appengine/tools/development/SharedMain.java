@@ -133,7 +133,7 @@ public abstract class SharedMain {
     recordTimeZone();
     Logging.initializeLogging();
     if (System.getProperty("os.name").equalsIgnoreCase("Mac OS X")) {
-      // N.B.(schwardo): Force AWT to initialize on the main thread.  If
+      // N.B.: Force AWT to initialize on the main thread.  If
       // this doesn't happen, we get a SIGBUS crash on Mac OS X when the
       // stub implementation of the Images API tries to use Java2D.
       Toolkit.getDefaultToolkit();

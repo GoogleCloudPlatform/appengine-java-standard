@@ -32,8 +32,8 @@ import java.util.logging.Logger;
  */
 public abstract class AbstractModule<I extends InstanceHolder> implements Module {
   // Should not be used until ContainerService.startup() is called.
-  //TODO: Verify above comment is no longer needed and hopefully remove it.
-   static final Logger LOGGER = Logger.getLogger(AbstractModule.class.getName());
+  // TODO: Verify above comment is no longer needed and hopefully remove it.
+  static final Logger LOGGER = Logger.getLogger(AbstractModule.class.getName());
 
   //Set during construction
   private final ModuleConfigurationHandle moduleConfigurationHandle;

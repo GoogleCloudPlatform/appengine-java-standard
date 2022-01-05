@@ -115,14 +115,12 @@ public class AppEngineWebAppContext extends WebAppContext {
     }
   }
 
-  // N.B.(schwardo): Yuck.  Jetty hardcodes all of this logic into an
+  // N.B.: Yuck.  Jetty hardcodes all of this logic into an
   // inner class of ContextHandler.  We need to subclass WebAppContext
   // (which extends ContextHandler) and then subclass the SContext
   // inner class to modify its behavior.
 
-  /**
-   * Context extension that allows logs to be written to the App Engine log APIs.
-   */
+  /** Context extension that allows logs to be written to the App Engine log APIs. */
   public class AppEngineServletContext extends Context {
 
     @Override

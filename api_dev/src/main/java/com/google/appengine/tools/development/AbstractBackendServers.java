@@ -688,7 +688,7 @@ public abstract class AbstractBackendServers implements BackendContainer,
       stateHolder = new InstanceStateHolder(serverEntry.getName(), instance);
       instanceHelper = new InstanceHelper(serverEntry.getName(), instance, stateHolder,
           container);
-      //TODO: Avoid repeatedly issuing the same environment mismatch errors with
+      // TODO: Avoid repeatedly issuing the same environment mismatch errors with
       //                multiple backends. Investigate if ignoring mismatches
       //                for backends/repeated instances is the right thing to do
       //                when the base policy is to throw exceptions.
@@ -711,16 +711,16 @@ public abstract class AbstractBackendServers implements BackendContainer,
     void createConnection() throws Exception {
       getStateHolder().testAndSet(InstanceState.INITIALIZING, InstanceState.SHUTDOWN);
 
-      //TODO: Pass backend name which should be the current server
+      // TODO: Pass backend name which should be the current server
       //    version for the default server to configure so it is available to
       //    the server's API. Other servers only have one version in
       //    java dev appserver.
       Map<String, Object> instanceConfigProperties =
           ImmutableMap.<String, Object>builder()
-          .putAll(containerConfigProperties)
-          .put(BackendService.BACKEND_ID_ENV_ATTRIBUTE, serverEntry.getName())
-          .put(BackendService.INSTANCE_ID_ENV_ATTRIBUTE, serverInstance)
-          .build();
+              .putAll(containerConfigProperties)
+              .put(BackendService.BACKEND_ID_ENV_ATTRIBUTE, serverEntry.getName())
+              .put(BackendService.INSTANCE_ID_ENV_ATTRIBUTE, serverInstance)
+              .build();
       getContainer().configure(ContainerUtils.getServerInfo(),
           address,
           port,

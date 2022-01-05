@@ -63,7 +63,7 @@ abstract class BaseMemcacheServiceImpl implements BaseMemcacheService {
   }
 
   void setNamespace(String newNamespace) {
-    // N.B.(schwardo): For backwards compatibility reasons, we cannot
+    // N.B.: For backwards compatibility reasons, we cannot
     // do any validation of the namespace here.
     namespace = newNamespace;
   }

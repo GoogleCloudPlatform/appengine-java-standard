@@ -70,7 +70,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  */
 // As much implementation as possible is deferred to DatastoreServiceGlobalConfig.
 //
-// NOTE
+// NOTE: If you add a field to this class, you must also updated the toInternalConfig()
 // method.
 @AutoValue
 public abstract class CloudDatastoreRemoteServiceConfig {

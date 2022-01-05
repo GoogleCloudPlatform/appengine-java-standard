@@ -278,7 +278,7 @@ public class JettyHttpProxy {
       try {
         AppinfoPb.AppInfo appinfo =
             appInfoFactory.getAppInfoFromFile(applicationRoot, fixedApplicationPath);
-        // TODO?
+        // TODO Should we also call ApplyCloneSettings()?
         LocalRpcContext<EmptyMessage> context = new LocalRpcContext<>(EmptyMessage.class);
         evaluationRuntimeServerInterface.addAppVersion(context, appinfo);
         context.getResponse();

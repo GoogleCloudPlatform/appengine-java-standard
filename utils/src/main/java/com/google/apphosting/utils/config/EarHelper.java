@@ -139,7 +139,7 @@ public class EarHelper {
                 + new File(serviceDirectory, AppEngineWebXmlReader.DEFAULT_RELATIVE_FILENAME)
                 + "'");
         webModule.getAppEngineWebXml().setAppId(applicationId);
-        //TODO: Add support for an application id override.
+        // TODO: Add support for an application id override.
         // TODO: consider inserting an app id prefix here if relevant
       }
       moduleListBuilder.add(webModule);

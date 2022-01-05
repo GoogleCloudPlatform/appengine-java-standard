@@ -45,7 +45,7 @@ public class DevLogHandlerTest {
   // is accurate enough for this test and makes it very unlikely for
   // unlucky scheduling to cause flakiness.
   //
-  // TODO so
+  // TODO - mock out the static System.currentTimeMillis() so
   // we don't have to worry about the clock advancing.
   private static long allowedDelayUsecs = 250000;
 

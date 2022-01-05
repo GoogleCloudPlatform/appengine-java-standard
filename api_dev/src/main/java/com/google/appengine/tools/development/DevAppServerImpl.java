@@ -419,18 +419,22 @@ class DevAppServerImpl implements DevAppServer {
     // Requires a privileged block since this may be invoked from a servlet
     // that lives in the user's classloader and may result in the creation of
     // a thread.
-    AccessController.doPrivileged(new PrivilegedAction<Future<Void>>() {
-      @Override
-      public Future<Void> run() {
-        return shutdownScheduler.schedule(new Callable<Void>() {
+    AccessController.doPrivileged(
+        new PrivilegedAction<Future<Void>>() {
           @Override
-          public Void call() throws Exception {
-            shutdown();
-            return null;
+          public Future<Void> run() {
+            return shutdownScheduler.schedule(
+                new Callable<Void>() {
+                  @Override
+                  public Void call() throws Exception {
+                    shutdown();
+                    return null;
+                  }
+                },
+                1000,
+                TimeUnit.MILLISECONDS);
           }
-        }, 1000, TimeUnit.MILLISECONDS);
-      }
-    });
+        });
   }
 
   @Override

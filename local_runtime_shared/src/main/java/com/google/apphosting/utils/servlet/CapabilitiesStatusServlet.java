@@ -44,9 +44,8 @@ public class CapabilitiesStatusServlet extends HttpServlet {
   private LocalCapabilitiesService localCapabilitiesService;
   private LocalCapabilitiesEnvironment localCapabilitiesEnvironment;
 
-  //TODO move that in an official public place
-  static final ImmutableMap<String, Capability>
-      CAPABILITIES =
+  // TODO move that in an official public place
+  static final ImmutableMap<String, Capability> CAPABILITIES =
       new ImmutableMap.Builder<String, Capability>()
           .put("BLOBSTORE", Capability.BLOBSTORE)
           .put("DATASTORE_WRITE", Capability.DATASTORE_WRITE)

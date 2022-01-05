@@ -50,7 +50,7 @@ public final class BlobUploadSessionStorage {
     } finally {
       NamespaceManager.set(namespace);
     }
-    // N.B.(schwardo): Python stores some other properties here, but
+    // N.B.: Python stores some other properties here, but
     // they don't appear to be used.  Add them if they're used in the
     // future.
     entity.setProperty(SUCCESS_PATH, session.getSuccessPath());

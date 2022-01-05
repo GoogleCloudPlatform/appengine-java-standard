@@ -307,7 +307,7 @@ public class AppVersionFactory {
    * returned does not exist.
    */
   private File getRootDirectory(AppVersionKey appVersionKey) throws FileNotFoundException {
-    // N.B.(schwardo): Don't check to see if any directories above
+    // N.B.: Don't check to see if any directories above
     // this one exist -- we don't have permission to stat them.
     File root =
         new File(new File(sharedDirectory, appVersionKey.getAppId()), appVersionKey.getVersionId());
@@ -406,7 +406,7 @@ public class AppVersionFactory {
     // user code does not include the API code and we need to append
     // our own copy of the requested API version.
     //
-    // N.B.(schwardo): The API version jar should come after
+    // N.B.: The API version jar should come after
     // WEB-INF/classes (to avoid violating the servlet spec) but
     // before other WEB-INF/lib jars (in case the user is including
     // appengine-tools-api.jar or something else superfluous).

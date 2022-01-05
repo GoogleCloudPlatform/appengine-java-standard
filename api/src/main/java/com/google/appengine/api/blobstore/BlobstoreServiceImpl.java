@@ -130,7 +130,7 @@ class BlobstoreServiceImpl implements BlobstoreService {
     // N.B.(gregwilkins): Content-Length is not needed by blobstore and causes error in jetty94
     response.setContentLength(-1);
 
-    // N.B.(schwardo): Blobstore serving is only enabled for 200 responses.
+    // N.B.: Blobstore serving is only enabled for 200 responses.
     response.setStatus(HttpServletResponse.SC_OK);
     response.setHeader(SERVE_HEADER, blobKey.getKeyString());
     if (byteRange != null) {
@@ -196,7 +196,7 @@ class BlobstoreServiceImpl implements BlobstoreService {
 
   @Override
   public Map<String, List<BlobKey>> getUploads(HttpServletRequest request) {
-    // N.B.(schwardo): We're storing strings instead of BlobKey
+    // N.B.: We're storing strings instead of BlobKey
     // objects in the request attributes to avoid conflicts between
     // the BlobKey classes loaded by the two classloaders in the
     // DevAppServer.  We convert back to BlobKey objects here.

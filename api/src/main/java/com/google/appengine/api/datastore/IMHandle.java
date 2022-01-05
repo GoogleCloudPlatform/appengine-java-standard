@@ -25,7 +25,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * An instant messaging handle. Includes both an address and its protocol. The protocol value is
  * either a standard IM scheme (legal scheme values are defined by {@link Scheme} or a URL
  * identifying the IM network for the protocol (e.g. http://aim.com/).
- *
  */
 // TODO: Make the file GWT-compatible (import java.net is not
 // supported in GWT, also String.format(String, String, String) is not

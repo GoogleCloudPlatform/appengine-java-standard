@@ -122,9 +122,10 @@ public class StandaloneInstance extends SharedMain {
       boolean noJavaAgent = true;
       // TODO: Implement Java Agent support.
 
-      Map<String, ?> containerConfigOptions = ImmutableMap.of(
-          "com.google.appengine.apiHost", apiHost,
-          "com.google.appengine.apiPort", apiPort);
+      Map<String, ?> containerConfigOptions =
+          ImmutableMap.of(
+              "com.google.appengine.apiHost", apiHost,
+              "com.google.appengine.apiPort", apiPort);
       DevAppServer2Factory devAppServer2Factory = new DevAppServer2Factory();
       File externalResourceDir = null;
       File webXmlLocation = null;

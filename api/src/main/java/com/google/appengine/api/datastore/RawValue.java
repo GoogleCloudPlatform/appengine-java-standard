@@ -139,10 +139,10 @@ public final class RawValue implements Serializable {
         case STRING_VALUE:
           return valueV1.getStringValueBytes().toByteArray();
         case BLOB_VALUE:
-          // TODO.
+          // TODO: return a short blob? (not currently possible to get here).
           return valueV1.getBlobValue().toByteArray();
         case TIMESTAMP_VALUE:
-          // TODO.
+          // TODO: return a Date? (not currently possible to get here).
           return DatastoreHelper.getTimestamp(valueV1);
         case GEO_POINT_VALUE:
           if (valueV1.getMeaning() == 0 || valueV1.getMeaning() == Meaning.INDEX_VALUE.getValue()) {

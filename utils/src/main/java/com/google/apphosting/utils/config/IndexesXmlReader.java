@@ -47,18 +47,16 @@ import org.w3c.dom.Element;
  */
 public class IndexesXmlReader extends AbstractConfigXmlReader<IndexesXml> {
 
-  // N.B.(schwardo): this class is not currently used in, and
+  // N.B.: this class is not currently used in, and
   // therefore has not been tested in, the runtime.  Before adding a
   // dependency on this code from the runtime please ensure that there
   // is no possibility for external entity references or other
   // dependencies that may cause it to fail when running under the
   // restricted environment
 
-  /**
-   * Relative-to-{@code GenerationDirectory.GENERATED_DIR_PROPERTY} file for
-   * generated index.
-   */
+  /** Relative-to-{@code GenerationDirectory.GENERATED_DIR_PROPERTY} file for generated index. */
   public static final String GENERATED_INDEX_FILENAME = "datastore-indexes-auto.xml";
+
   public static final String INDEX_FILENAME = "datastore-indexes.xml";
   public static final String INDEX_YAML_FILENAME = "WEB-INF/index.yaml";
 

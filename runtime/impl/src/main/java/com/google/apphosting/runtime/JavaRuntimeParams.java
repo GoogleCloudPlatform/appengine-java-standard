@@ -157,16 +157,14 @@ final class JavaRuntimeParams {
 
   // TODO: this flag is no longer used and should be deleted
   @Parameter(
-    description = "Deprecated.",
-    names = {"--default_max_api_request_size"}
-  )
+      description = "Deprecated.",
+      names = {"--default_max_api_request_size"})
   private int maxApiRequestSize = 1048576;
 
   // TODO: this flag is no longer used and should be deleted
   @Parameter(
-    description = "Deprecated.",
-    names = {"--max_api_request_size_map"}
-  )
+      description = "Deprecated.",
+      names = {"--max_api_request_size_map"})
   private String maxApiRequestSizeMap = "";
 
   @Parameter(

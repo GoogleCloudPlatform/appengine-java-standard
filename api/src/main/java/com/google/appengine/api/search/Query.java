@@ -96,8 +96,7 @@ public class Query {
     @Nullable private List<FacetRefinement> refinements = new ArrayList<>();
     // NOTE: We will add query id and schema as Nullable attributes.
 
-    protected Builder() {
-    }
+    protected Builder() {}
 
     /**
      * Constructs a {@link Query} builder with the given query.

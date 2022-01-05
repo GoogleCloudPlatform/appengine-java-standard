@@ -51,10 +51,7 @@ public interface ApiProxyLocal extends Delegate<Environment> {
   // TODO When we fix DevAppServer to support hot redeployment,
   // it <b>MUST</b> call into {@code stop} when it is attempting to
   // GC a webapp (otherwise background threads won't be stopped, etc...)
-  /**
-   * Stops all services started by this ApiProxy and releases
-   * all of its resources.
-   */
+  /** Stops all services started by this ApiProxy and releases all of its resources. */
   void stop();
 
   /**

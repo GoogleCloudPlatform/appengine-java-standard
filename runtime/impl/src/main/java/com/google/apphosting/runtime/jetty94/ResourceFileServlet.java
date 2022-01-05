@@ -127,7 +127,7 @@ public class ResourceFileServlet extends HttpServlet {
     }
 
     if (pathInContext.endsWith(URIUtil.SLASH)) {
-      // N.B.(schwardo): Resource.addPath() trims off trailing
+      // N.B.: Resource.addPath() trims off trailing
       // slashes, which may result in us serving files for strange
       // paths (e.g. "/index.html/").  Since we already took care of
       // welcome files above, we just return a 404 now if the path
