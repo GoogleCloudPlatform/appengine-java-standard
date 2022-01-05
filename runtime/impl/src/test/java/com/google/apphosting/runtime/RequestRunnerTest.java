@@ -153,7 +153,7 @@ public final class RequestRunnerTest {
             .setRequestManager(requestManager)
             .setCoordinator(coordinator)
             .setCompressResponse(true)
-            .setServletEngine(servletEngine)
+            .setUpRequestHandler(servletEngine)
             .build();
 
     threadGroupPool.start("test-thread", requestRunner);
@@ -204,7 +204,7 @@ public final class RequestRunnerTest {
             .setRequestManager(requestManager)
             .setCoordinator(coordinator)
             .setCompressResponse(true)
-            .setServletEngine(servletEngine)
+            .setUpRequestHandler(servletEngine)
             .build();
 
     threadGroupPool.start("test-thread", requestRunner);
@@ -321,7 +321,7 @@ public final class RequestRunnerTest {
                       .setRequestManager(requestManager)
                       .setCoordinator(coordinator)
                       .setCompressResponse(true)
-                      .setServletEngine(servletEngine)
+                      .setUpRequestHandler(servletEngine)
                       .build();
 
               threadGroupPool.start("test-thread", requestRunner);

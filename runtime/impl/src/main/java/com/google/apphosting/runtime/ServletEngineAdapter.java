@@ -16,14 +16,11 @@
 
 package com.google.apphosting.runtime;
 
-import com.google.apphosting.base.protos.RuntimePb.UPRequest;
 import com.google.apphosting.runtime.anyrpc.EvaluationRuntimeServerInterface;
 import com.google.auto.value.AutoValue;
 import com.google.common.net.HostAndPort;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import javax.annotation.Nullable;
-import javax.servlet.ServletException;
 
 /**
  * This interface abstracts away the details of starting up and
@@ -32,7 +29,7 @@ import javax.servlet.ServletException;
  * Prometheus Untrusted Process API.
  *
  */
-public interface ServletEngineAdapter {
+public interface ServletEngineAdapter extends UPRequestHandler {
   /**
    * Performs whatever setup is necessary for this servlet container. This method waits for setup to
    * complete before returning.
@@ -63,18 +60,6 @@ public interface ServletEngineAdapter {
    * resources associated with it.
    */
   void deleteAppVersion(AppVersion appVersion);
-
-  /**
-   * Executes the HTTP request specified by {@code upRequest} and writes the response to {@code
-   * upResponse}.
-   *
-   * <p>Finds, and if necessary, instantiates and initializes the appropriate servlet, invokes it,
-   * and copies the response into {@code upResponse}.
-   *
-   * @throws IOException If any error related to the request buffer was detected.
-   */
-  void serviceRequest(UPRequest upRequest, MutableUpResponse upResponse)
-      throws ServletException, IOException;
 
   /**
    * Sets the {@link SessionStoreFactory} that will be used to create the list

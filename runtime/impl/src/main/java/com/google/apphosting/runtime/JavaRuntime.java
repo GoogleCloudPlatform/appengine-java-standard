@@ -416,7 +416,7 @@ public class JavaRuntime implements EvaluationRuntimeServerInterface {
                 .setRequestManager(requestManager)
                 .setCoordinator(coordinator)
                 .setCompressResponse(compressResponse)
-                .setServletEngine(servletEngine)
+                .setUpRequestHandler(servletEngine)
                 .build();
         appVersion
             .getThreadGroupPool()
