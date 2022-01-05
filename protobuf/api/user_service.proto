@@ -17,7 +17,6 @@
 // Copyright 2006 Google Inc.
 // All Rights Reserved.
 //
-//
 // Stubby service definition to retrieve information about users.
 
 syntax = "proto2";

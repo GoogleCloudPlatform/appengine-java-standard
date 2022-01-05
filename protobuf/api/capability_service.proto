@@ -17,7 +17,6 @@
 // Copyright 2008 Google Inc.
 // All Rights Reserved.
 //
-//
 // The Capability service allows applications to detect incoming
 // and current outages in other APIs.
 
