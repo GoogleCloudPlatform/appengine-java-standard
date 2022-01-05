@@ -19,7 +19,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <artifactId>runtime-local</artifactId>
+  <artifactId>appengine-local-runtime</artifactId>
 
   <parent>
     <groupId>com.google.appengine</groupId>
@@ -28,8 +28,8 @@
   </parent>
 
   <packaging>jar</packaging>
-  <name>runtime-local</name>
-  <description>?</description>
+  <name>appengine-local-runtime</name>
+  <description>App Engine Local devappserver.</description>
 
   <dependencies>
     <dependency>

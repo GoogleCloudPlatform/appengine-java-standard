@@ -146,7 +146,7 @@
                                 </artifactItem>
                                 <artifactItem>
                                     <groupId>com.google.appengine</groupId>
-                                    <artifactId>runtime-local</artifactId>
+                                    <artifactId>appengine-local-runtime</artifactId>
                                     <version>${project.version}</version>
                                     <type>jar</type>
                                     <overWrite>true</overWrite>
@@ -197,7 +197,7 @@
                                 </artifactItem>
                                 <artifactItem>
                                     <groupId>com.google.appengine</groupId>
-                                    <artifactId>runtime-local</artifactId>
+                                    <artifactId>appengine-local-runtime</artifactId>
                                     <version>${project.version}</version>
                                     <type>jar</type>
                                     <overWrite>true</overWrite>
@@ -289,7 +289,7 @@
         </dependency>
         <dependency>
             <groupId>com.google.appengine</groupId>
-            <artifactId>runtime-local</artifactId>
+            <artifactId>appengine-local-runtime</artifactId>
         </dependency>
         <dependency>
             <groupId>com.google.appengine</groupId>

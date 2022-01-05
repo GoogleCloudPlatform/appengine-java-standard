@@ -261,7 +261,7 @@
       </dependency>
       <dependency>
         <groupId>com.google.appengine</groupId>
-        <artifactId>runtime-local</artifactId>
+        <artifactId>appengine-local-runtime</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>

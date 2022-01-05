@@ -42,7 +42,7 @@ cp runtime_shared/target/runtime-shared*.jar ${KOKORO_ARTIFACTS_DIR}/maven-artif
 cp lib/tools_api/target/appengine-tools-sdk*.jar ${KOKORO_ARTIFACTS_DIR}/maven-artifacts/appengine-tools-api.jar
 cp lib/xml_validator/target/libxmlvalidator*.jar ${KOKORO_ARTIFACTS_DIR}/maven-artifacts/libxmlvalidator.jar
 cp runtime/impl/target/runtime-impl*.jar ${KOKORO_ARTIFACTS_DIR}/maven-artifacts/runtime-impl.jar
-cp runtime/local/target/runtime-local*.jar ${KOKORO_ARTIFACTS_DIR}/maven-artifacts/runtime-local.jar
+cp runtime/local/target/appengine-local-runtime*.jar ${KOKORO_ARTIFACTS_DIR}/maven-artifacts/appengine-local-runtime.jar
 cp runtime/main/target/runtime-main*.jar ${KOKORO_ARTIFACTS_DIR}/maven-artifacts/runtime-main.jar
 cp local_runtime_shared/target/appengine-local-runtime-shared*.jar ${KOKORO_ARTIFACTS_DIR}/maven-artifacts/appengine-local-runtime-shared.jar
 cp quickstartgenerator/target/quickstartgenerator*.jar ${KOKORO_ARTIFACTS_DIR}/maven-artifacts/quickstartgenerator.jar
