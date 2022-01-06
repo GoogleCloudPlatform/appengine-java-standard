@@ -23,9 +23,9 @@ cd $src_dir
 
 # Make sure `JAVA_HOME` is set.
 echo "JAVA_HOME = $JAVA_HOME"
-mvn -v
+./mvnw -v
 
-mvn -e clean install
+./mvnw -e clean install
 
 # The artifacts under `${KOKORO_ARTIFACTS_DIR}/maven-artifacts` will be uploaded.
 mkdir ${KOKORO_ARTIFACTS_DIR}/maven-artifacts
