@@ -206,7 +206,7 @@ public class HttpCompression {
     return canCompressFor(!compressForGfe, userAgent, acceptEncoding, contentType);
   }
 
-  // <internal>
+  // below is from <internal>
   // and a mix of java
   // <internal>
 
