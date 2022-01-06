@@ -63,7 +63,7 @@ class RemoteDatastore {
 
   /** Contains an entry for every query we've ever run. */
   private final Map<Long, QueryState> idToCursor = new ConcurrentHashMap<>();
-  // TODO entries are never removed, which is a memory leak.
+  // TODO(b/68190107) entries are never removed, which is a memory leak.
   // (But Python has the same problem.)
 
   /**
@@ -86,7 +86,7 @@ class RemoteDatastore {
   }
 
   byte[] handleDatastoreCall(String methodName, byte[] request) {
-    // TODO Perhaps replace with a map of handlers.
+    // TODO(b/68190109) Perhaps replace with a map of handlers.
     // TODO Support AddActions.
     switch (methodName) {
       case "RunQuery":

@@ -313,7 +313,7 @@ public abstract class JavaRuntimeViaHttpBase {
         // Should be via a blaze build.
         errPump.awaitOutputLineMatching(".*Beginning accept loop.*", SERVER_START_TIMEOUT_SECONDS);
       } else {
-        // TODO:
+        // TODO(b/192665275):
         // For some reason, a Maven build does not emit anymore this log, need to investigate.
         // For now, just wait a bit so the server is started in tests.
         Thread.sleep(3000);

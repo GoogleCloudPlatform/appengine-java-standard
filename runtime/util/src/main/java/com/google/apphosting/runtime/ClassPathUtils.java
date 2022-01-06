@@ -118,7 +118,7 @@ public class ClassPathUtils {
       runtimeClasspath =
           System.getProperty(RUNTIME_IMPL_PROPERTY) + PATH_SEPARATOR + runtimeClasspath;
     }
-    // Only for Java8g, TODO
+    // Only for Java8g, TODO(b/122040046)
     if (new File(runtimeBase, "runtime-rpc-plugins.jar").exists()) {
       runtimeClasspath += ":" + runtimeBase + "/runtime-rpc-plugins.jar";
     }

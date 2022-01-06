@@ -61,7 +61,7 @@ public class IndexesXmlReader extends AbstractConfigXmlReader<IndexesXml> {
   public static final String INDEX_YAML_FILENAME = "WEB-INF/index.yaml";
 
   /** Name of the XML tag in {@code datastore-indexes.xml} for autoindexing */
-  // TODO: Use this to decide whether to read the auto-generated file;
+  // TODO(b/18915587): Use this to decide whether to read the auto-generated file;
   // (also, replace repeated mentions of this string value hard-coded elsewhere)
   public static final String AUTOINDEX_TAG = "autoGenerate";
 

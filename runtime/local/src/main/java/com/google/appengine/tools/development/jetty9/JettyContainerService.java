@@ -185,7 +185,8 @@ public class JettyContainerService extends AbstractContainerService {
             // a cached session after a pause, in which case there will be no environment available
             // to use.  In that case another environment not associated with a request will need to
             // be created for such flushes.
-            LocalEnvironment env = request == null
+            LocalEnvironment env =
+                request == null
                     ? environments.stream().findAny().orElse(null)
                     : (LocalEnvironment) request.getAttribute(LocalEnvironment.class.getName());
             if (env != null) {

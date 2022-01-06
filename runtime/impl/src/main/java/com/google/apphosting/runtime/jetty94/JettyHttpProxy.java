@@ -379,7 +379,7 @@ public class JettyHttpProxy {
               .setModuleId(appInfoFactory.getGaeService())
               .setModuleVersionId(appInfoFactory.getGaeServiceVersion());
 
-      // TODO Need to find a mapping for all these upReqBuilder fields:
+      // TODO(b/78515194) Need to find a mapping for all these upReqBuilder fields:
       /*
       setRequestLogId();
       setEventIdHash();

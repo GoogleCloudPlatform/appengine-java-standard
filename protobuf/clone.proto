@@ -264,14 +264,14 @@ message SupervisorSettings {
 
   // Maximum cpu rate to allow for any clone belonging to this version, enforced
   // by the throttler.
-  // TODO although this field is called a rate, it is treated in
+  // TODO(b/125948820) although this field is called a rate, it is treated in
   // the code as a mhz value.
   optional double max_cpu_rate = 21;
 
   // Padding for maximum cpu rate of this clone. It will be ignored if
   // max_cpu_rate is set. Otherwise, it will be added to the instance class
   // specific mcycle value as defined by --instance_class_cpu_mhz.
-  // TODO although this field is called a rate, it is treated in
+  // TODO(b/125948820) although this field is called a rate, it is treated in
   // the code as a mhz value.
   optional double cpu_rate_padding = 71;
 

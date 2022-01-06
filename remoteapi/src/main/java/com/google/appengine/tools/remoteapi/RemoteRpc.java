@@ -77,7 +77,7 @@ class RemoteRpc {
           IllegalArgumentException serverSide = (IllegalArgumentException) contents;
           throw new IllegalArgumentException(serverSide.getMessage(), serverSide);
         } else if (contents instanceof RuntimeException) {
-            // TODO this eats the client-side stack trace, which is
+            // TODO(b/68190110) this eats the client-side stack trace, which is
             // usually more important for debugging. We should throw a new exception
             // of the same type for any subtypes of RuntimeException we care about.
             throw (RuntimeException) contents;

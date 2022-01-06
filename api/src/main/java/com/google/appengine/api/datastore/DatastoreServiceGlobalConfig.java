@@ -43,7 +43,7 @@ import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
 /** See {@link CloudDatastoreRemoteServiceConfig}. */
-// TODO: consider merging with CloudDatastoreRemoteServiceConfig
+// TODO(b/64163395): consider merging with CloudDatastoreRemoteServiceConfig
 @AutoValue
 abstract class DatastoreServiceGlobalConfig {
 

@@ -299,8 +299,8 @@ class DatastoreSessionStore implements SessionStore {
           new ClassLoadingObjectInputStream(new ByteArrayInputStream(blob.getBytes()))) {
         @SuppressWarnings("unchecked")
         Map<String, Object> map = (Map<String, Object>) ois.readObject();
-        
-        // TODO (gregwilkins): avoid this data copy
+
+        // TODO: avoid this data copy
         session.putAllAttributes(map);
       } catch (Exception ex) {
         throw new UnreadableSessionDataException(id, _context, ex);

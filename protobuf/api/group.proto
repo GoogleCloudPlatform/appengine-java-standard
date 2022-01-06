@@ -61,7 +61,7 @@ message GroupThrottlingParameters {
 message GroupDefinition {
   // NOTE: The proto compiler used by the python2.7 runtime is very old,
   // and thus does not understand the 'reserved' keyword.
-  // TODO: Once the compiler has been updated, convert this into a
+  // TODO(b/29157040): Once the compiler has been updated, convert this into a
   // reserved tag number.
   optional bool OBSOLETE_disabled = 2;
 

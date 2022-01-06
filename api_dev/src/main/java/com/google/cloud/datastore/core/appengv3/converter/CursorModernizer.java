@@ -199,7 +199,7 @@ public class CursorModernizer {
    * @param position Position in which to set before_ascending.
    * @param firstSortDirection First sort order direction from the query.
    */
-  // TODO: This @VisibleForTesting annotation was being ignored by prod code.
+  // TODO(b/120887495): This @VisibleForTesting annotation was being ignored by prod code.
   // Please check that removing it is correct, and remove this comment along with it.
   // @VisibleForTesting
   public static void setBeforeAscending(

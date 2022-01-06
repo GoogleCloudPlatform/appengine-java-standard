@@ -426,8 +426,8 @@ message Index {
     // terms on numeric types.
     enum Mode {
       MODE_UNSPECIFIED = 0;
-      // TODO
-      // TODO
+      // TODO: ORDERED = 1; (or something to that effect)
+      // TODO: DYNAMIC = 2; (or something to that effect)
       GEOSPATIAL = 3;
       ARRAY_CONTAINS = 4;
     }

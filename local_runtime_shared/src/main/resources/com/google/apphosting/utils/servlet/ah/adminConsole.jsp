@@ -25,7 +25,7 @@
       // Datastore is the default section
       sub = DATASTORE_SUBSECTION;
     }
-    // Note(bslatkin): Use this line to point to JSPs in your application's
+    // Note: Use this line to point to JSPs in your application's
     // "war/ah/" directory to speed up development of the local admin page:
     //     return "/ah/" + sub + suffix + ".jsp";
     return "/_ah/" + sub + suffix;

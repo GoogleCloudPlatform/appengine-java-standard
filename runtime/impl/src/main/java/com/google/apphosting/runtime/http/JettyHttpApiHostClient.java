@@ -187,7 +187,7 @@ class JettyHttpApiHostClient extends HttpApiHostClient {
           logger.atWarning().withCause(failure).log("API connection appears to be disabled");
           cancelled(callback);
         } else if (failure instanceof HttpResponseException) {
-          // TODO remove this once upgraded to Jetty that includes the cause
+          // TODO(b/111131627) remove this once upgraded to Jetty that includes the cause
           HttpResponseException hre = (HttpResponseException) failure;
           Response response = hre.getResponse();
           String httpError = response.getStatus() + " " + response.getReason();

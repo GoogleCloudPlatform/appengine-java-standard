@@ -567,7 +567,7 @@ public class ApiProxyImpl implements ApiProxy.Delegate<ApiProxyImpl.EnvironmentI
     public <T extends Throwable> T getExceptionWithRequestId(T exception, String requestId) {
       StackTraceElement[] frames = exception.getStackTrace();
       StackTraceElement[] newFrames = new StackTraceElement[frames.length + 1];
-      // NOTE Cloud Trace relies on the negative line number to decide
+      // NOTE: Cloud Trace relies on the negative line number to decide
       // whether a frame is generated/magic or not.
       newFrames[0] =
           new StackTraceElement(FRAME_CLASS, FRAME_METHOD_PREFIX + requestId, FRAME_FILE, -1);

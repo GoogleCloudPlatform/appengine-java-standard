@@ -44,7 +44,7 @@ public class AppEngineSessionData extends SessionData {
    * @return The mutable attribute map that can be stored in memcache and datastore
    */
   public Map<String, Object> getMutableAttributes() {
-    // TODO (gregwilkins): Direct access to the mutable map is required to maintain binary
+    // TODO: Direct access to the mutable map is required to maintain binary
     // compatibility with jetty93 based runtimes for sessions stored in memcache and datastore.
     // This is a somewhat convoluted and inefficient approach, so once jetty93 runtimes are
     // removed this code should be revisited for simplicity and efficiency.  Also a version number
