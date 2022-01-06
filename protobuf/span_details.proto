@@ -17,7 +17,7 @@
 // These messages are designed to provide metadata for recording trace events,
 // in order to enrich the trace data and elaborate on the runtime context of the
 // trace.
-// Documentation for these values is available at: http:<internal>
+// Documentation for these values is available at: http://go/tapper
 syntax = "proto2";
 
 package cloud_trace;

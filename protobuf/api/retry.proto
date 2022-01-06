@@ -18,7 +18,7 @@
 //
 // The definition of a retry strategy for an executor task.
 //
-// http:<internal>
+// http://go/promsyd/design-docs
 //   User Configurable Task Retries
 
 syntax = "proto2";

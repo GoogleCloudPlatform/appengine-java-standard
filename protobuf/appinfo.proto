@@ -121,7 +121,7 @@ message AppInfo {
   //
   // *  *  *
   //
-  // Interested in more? See http:<internal>.
+  // Interested in more? See http://go/app-engine-ids.
   optional string version_id = 2 [default = "1"];
 
   // Time at which this AppInfo was written, in microseconds. This field should

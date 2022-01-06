@@ -853,7 +853,7 @@ public class AppYamlTranslator {
           // Add /_ah/spi/* handler back in explicitly after intersection and duplicate
           // removal, otherwise it will be subsumed by /_ah/* above.  Admin console
           // must see this explicitly as a signal that the app is serving an API
-          // endpoint.  See http:<internal>
+          // endpoint.  See http://go/swarmSignal2
           globs.add(GlobFactory.createGlob(API_ENDPOINT_REGEX, DYNAMIC_PROPERTY, true));
         }
       }

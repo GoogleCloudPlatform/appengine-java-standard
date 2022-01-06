@@ -36,7 +36,7 @@
 syntax = "proto2";
 
 // Some generic_services option(s) added automatically.
-// See:  http:<internal>
+// See:  http://go/proto2-generic-services-default
 package java.apphosting;
 
 option java_generic_services = true;  // auto-added

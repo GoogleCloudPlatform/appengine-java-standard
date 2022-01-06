@@ -106,13 +106,13 @@ enum ProblemCode {
   DEMAND_QUOTA_EXCEEDED = 23;
 
   // Shimmed InitializeIndexing request cannot succeed before the
-  // min_initialize_time. See http:<internal>
+  // min_initialize_time. See http://go/firestore-v3-indexing-hacks for more
   // information.
   SHIM_MIN_INITIALIZE_TIME_IN_FUTURE = 24;
 
   // Shimmed InitializeIndexing cannot return successfully until after
   // InitializeIndexingResponse.min_start_time. See
-  // http:<internal>.
+  // http://go/firestore-v3-indexing-hacks for more information.
   SHIM_MIN_START_TIME_IN_FUTURE = 25;
 
   // Couldn't lookup the CLC owner for a particular database.
