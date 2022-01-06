@@ -96,7 +96,9 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
     server = new Server(new QueuedThreadPool(MAX_THREAD_POOL_THREADS, MIN_THREAD_POOL_THREADS));
     rpcConnector = new RpcConnector(server);
     server.setConnectors(new Connector[] {rpcConnector});
-    appVersionHandlerMap = new AppVersionHandlerMap(server, serverInfo, contextFactory);
+    AppVersionHandlerFactory appVersionHandlerFactory =
+        new AppVersionHandlerFactory(server, serverInfo, contextFactory);
+    appVersionHandlerMap = new AppVersionHandlerMap(appVersionHandlerFactory);
     server.setHandler(appVersionHandlerMap);
 
     if (runtimeOptions.useJettyHttpProxy()) {

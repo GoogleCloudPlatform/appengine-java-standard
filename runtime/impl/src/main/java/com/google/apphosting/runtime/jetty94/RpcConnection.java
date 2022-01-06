@@ -364,7 +364,8 @@ public class RpcConnection implements Connection, HttpTransport {
    */
   private static boolean hasExceptionHandledByErrorPage(Request servletRequest) {
     Object errorPage = servletRequest.getAttribute(WebAppContext.ERROR_PAGE);
-    Object errorPageHandled = servletRequest.getAttribute(AppVersionHandlerMap.ERROR_PAGE_HANDLED);
+    Object errorPageHandled =
+        servletRequest.getAttribute(AppVersionHandlerFactory.ERROR_PAGE_HANDLED);
     return errorPage != null && errorPage.equals(errorPageHandled);
   }
 
