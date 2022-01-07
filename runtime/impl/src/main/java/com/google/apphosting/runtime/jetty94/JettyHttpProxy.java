@@ -234,7 +234,7 @@ public class JettyHttpProxy {
     private static final String IS_TRUSTED = "1";
 
     // The impersonated IP address of warmup requests (and also background)
-    //     (<internal>)
+    //     (<internal20>)
     private static final String WARMUP_IP = "0.1.0.3";
 
     private static final ImmutableSet<String> PRIVATE_APPENGINE_HEADERS =

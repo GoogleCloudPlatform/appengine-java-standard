@@ -53,7 +53,7 @@ def open_java_proto_library(
         out_dir=$$(sed 's,/java/.*,/java,' <<<$(RULEDIR))
         target="$$(pwd)"/$@
         jar="$$(pwd)"/$(location //third_party/java/jdk/jar)
-        rewrite_script="$$(pwd)"/$(location <internal>)
+        rewrite_script="$$(pwd)"/$(location <internal12>)
         srcs=({srcs})
         $(location //third_party/protobuf/compiler:protoc) \
             -I third_party/java_src/appengine_standard/protobuf -I third_party/java_src/appengine_standard/protobuf/api \
@@ -64,7 +64,7 @@ def open_java_proto_library(
         "$${{jar}}" cf "$${{target}}" $${{javasrc}}
         """.format(srcs = " ".join(srcs)),
         tools = [
-            "<internal>",
+            "<internal12>",
             "//third_party/java/jdk/jar",
             "//third_party/protobuf/compiler:protoc",
         ],

@@ -550,7 +550,7 @@ public final class LocalImagesService extends AbstractLocalRpcService {
 
   @Override
   public Integer getMaxApiRequestSize() {
-    // Keep this in sync with MAX_REQUEST_SIZE in <internal>.
+    // Keep this in sync with MAX_REQUEST_SIZE in <internal5>.
     return 32 << 20;  // 32 MB
   }
 

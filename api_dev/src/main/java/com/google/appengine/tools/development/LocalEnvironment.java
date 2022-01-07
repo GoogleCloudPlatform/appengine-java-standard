@@ -21,7 +21,7 @@ import static java.nio.charset.StandardCharsets.US_ASCII;
 import com.google.appengine.api.NamespaceManager;
 import com.google.apphosting.api.ApiProxy;
 import com.google.apphosting.utils.config.WebModule;
-// <internal>
+// <internal24>
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.security.MessageDigest;
@@ -248,7 +248,7 @@ abstract public class LocalEnvironment implements ApiProxy.Environment {
    * in big-endian byte order. To ensure uniqueness, a hash of the incrementing counter is appended.
    * Hexadecimal encoding is used instead of base64 in order to preserve comparison order.
    */
-  // <internal>
+  // <internal25>
   private String generateRequestId() {
     try {
       ByteBuffer buf = ByteBuffer.allocate(12);

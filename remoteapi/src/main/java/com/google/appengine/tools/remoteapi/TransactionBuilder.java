@@ -20,7 +20,7 @@ import com.google.apphosting.datastore.DatastoreV3Pb;
 import com.google.apphosting.utils.remoteapi.RemoteApiPb;
 import com.google.io.protocol.ProtocolMessage;
 import com.google.protobuf.ByteString;
-// <internal>
+// <internal24>
 import com.google.storage.onestore.v3.OnestoreEntity;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -191,7 +191,7 @@ class TransactionBuilder {
     return result;
   }
 
-  // <internal>
+  // <internal25>
   private static byte[] computeSha1(OnestoreEntity.EntityProto entity) {
     MessageDigest md;
     try {

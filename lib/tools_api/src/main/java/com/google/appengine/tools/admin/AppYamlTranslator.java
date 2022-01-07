@@ -79,7 +79,7 @@ public class AppYamlTranslator {
     EXPIRATION_PROPERTY,
   };
 
-  // This should be kept in sync with MAX_URL_MAPS in <internal>.
+  // This should be kept in sync with MAX_URL_MAPS in <internal1>.
   private static final int MAX_HANDLERS = 100;
 
   private final AppEngineWebXml appEngineWebXml;

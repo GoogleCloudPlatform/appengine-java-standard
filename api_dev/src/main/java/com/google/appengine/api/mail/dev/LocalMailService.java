@@ -298,7 +298,7 @@ public final class LocalMailService extends AbstractLocalRpcService {
 
   @Override
   public Integer getMaxApiRequestSize() {
-    // Keep this in sync with MAX_REQUEST_SIZE in <internal>.
+    // Keep this in sync with MAX_REQUEST_SIZE in <internal6>.
     return 32 << 20;  // 32 MB
   }
 }

@@ -22,7 +22,7 @@ option java_package = "com.google.cloud.datastore.logs";
 option java_multiple_files = true;
 
 // NOTE: All of the following enums are used in logs. See
-// <internal>
+// <internal14>
 // for rules when editing.
 
 // Next ID: 115

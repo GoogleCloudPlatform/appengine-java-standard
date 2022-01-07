@@ -177,7 +177,7 @@ public class RuntimeLogSink {
       sb.append(message);
       sb.append("\n");
       if (record.getThrown() != null) {
-        // See <internal>
+        // See <internal19>
         // The log line is going to be truncated to some Kb by the App Server anyway.
         // We could be smart here to truncate as well, but this is an edge case.
         try {

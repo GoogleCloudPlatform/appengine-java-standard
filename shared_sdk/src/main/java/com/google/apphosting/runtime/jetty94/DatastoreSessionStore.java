@@ -28,7 +28,7 @@ import com.google.appengine.api.datastore.KeyFactory;
 import com.google.apphosting.runtime.SessionStore;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.flogger.GoogleLogger;
-// <internal>
+// <internal22>
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -277,7 +277,7 @@ class DatastoreSessionStore implements SessionStore {
           maxInactiveMs);
     }
 
-    // <internal>
+    // <internal23>
     private SessionData createSessionData(Entity entity, String id, long time)
         throws UnreadableSessionDataException {
       // Turn an Entity into a Session.

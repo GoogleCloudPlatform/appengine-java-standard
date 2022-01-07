@@ -98,7 +98,7 @@ public final class LocalMemcacheService extends AbstractLocalRpcService {
 
     public long bytes;
 
-    /** "compare-and-swap" ID. See comments in <internal>. */
+    /** "compare-and-swap" ID. See comments in <internal9>. */
     public Long casId; // null ==> entry does not have a CAS ID.
 
     /**
@@ -630,7 +630,7 @@ public final class LocalMemcacheService extends AbstractLocalRpcService {
 
   @Override
   public Integer getMaxApiRequestSize() {
-    // Keep this in sync with MAX_REQUEST_SIZE in <internal>.
+    // Keep this in sync with MAX_REQUEST_SIZE in <internal10>.
     return 32 << 20; // 32 MB
   }
 
