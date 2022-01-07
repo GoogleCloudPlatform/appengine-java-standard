@@ -26,7 +26,7 @@ import com.google.appengine.api.appidentity.PublicCertificate;
 import com.google.appengine.tools.development.testing.LocalAppIdentityServiceTestConfig;
 import com.google.appengine.tools.development.testing.LocalServiceTestHelper;
 import com.google.common.collect.Lists;
-
+// <internal>
 import java.io.IOException;
 import java.security.Signature;
 import java.util.List;
@@ -60,7 +60,7 @@ public class LocalAppIdentityServiceIntegrationTest {
         (LocalAppIdentityService) LocalServiceTestHelper.getLocalService("app_identity_service");
   }
 
-  
+  // <internal>
   @Test
   public void testSignBlob() throws Exception {
     AppIdentityService.SigningResult signingResult = service.signForApp(BLOB.getBytes(UTF_8));

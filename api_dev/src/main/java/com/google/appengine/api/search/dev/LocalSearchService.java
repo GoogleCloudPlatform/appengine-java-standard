@@ -40,7 +40,7 @@ import com.google.common.collect.Lists;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 import com.google.protobuf.InvalidProtocolBufferException;
-
+// <internal>
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -220,7 +220,7 @@ public class LocalSearchService extends AbstractLocalRpcService {
     LOG.info(getPackage() + " initialized");
   }
 
-  
+  // <internal>
   private void loadDocumentMap(File indexDirectory, File documentsFile) {
     String path = documentsFile.getAbsolutePath();
 

@@ -17,7 +17,7 @@
 package com.google.appengine.tools.remoteapi;
 
 import com.google.apphosting.utils.remoteapi.RemoteApiPb;
-
+// <internal>
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -153,7 +153,7 @@ class RemoteRpc {
     return result;
   }
 
-  
+  // <internal>
   private static Object parseJavaException(
       RemoteApiPb.Response parsedResponse, String packageName, String methodName) {
     try {

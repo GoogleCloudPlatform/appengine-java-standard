@@ -21,7 +21,7 @@ import com.google.appengine.tools.remoteapi.RemoteApiOptions;
 import com.google.apphosting.base.protos.api.RemoteApiPb;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.ExtensionRegistry;
-
+// <internal>
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -144,7 +144,7 @@ class RemoteRpc {
         .build();
   }
 
-  
+  // <internal>
   private static Throwable parseJavaException(
       RemoteApiPb.Response parsedResponse, String packageName, String methodName) {
     try {

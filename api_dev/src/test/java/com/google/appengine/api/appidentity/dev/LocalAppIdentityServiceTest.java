@@ -38,7 +38,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.io.CharSource;
 import com.google.common.io.LineProcessor;
 import com.google.protobuf.ByteString;
-
+// <internal>
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.security.PublicKey;
@@ -85,7 +85,7 @@ public class LocalAppIdentityServiceTest {
     return createService(config, false);
   }
 
-  
+  // <internal>
   @Test
   public void testLocalAppSigning() throws Exception {
     LocalAppIdentityServiceTestConfig config = new LocalAppIdentityServiceTestConfig();

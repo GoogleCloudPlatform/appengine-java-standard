@@ -86,8 +86,8 @@ import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
-
-
+// <internal>
+// <internal>
 import com.google.storage.onestore.v3.OnestoreEntity.CompositeIndex;
 import com.google.storage.onestore.v3.OnestoreEntity.EntityProto;
 import com.google.storage.onestore.v3.OnestoreEntity.Index;
@@ -1873,7 +1873,7 @@ public abstract class LocalDatastoreService {
     }
   }
 
-  
+  // <internal>
   private void load() {
     if (noStorage) {
       return;
@@ -2010,7 +2010,7 @@ public abstract class LocalDatastoreService {
         }
       }
 
-      
+      // <internal>
       private Profile takeSnapshot() {
         try {
           ByteArrayOutputStream bos = new ByteArrayOutputStream();
@@ -3103,7 +3103,7 @@ public abstract class LocalDatastoreService {
       /** Number of bytes of the hash to save */
       private static final int SMALL_LENGTH = 2;
 
-      
+      // <internal>
       @SuppressWarnings("UnsafeFinalization")
       @Override
       PropertyValue getValue(EntityProto entity) {
