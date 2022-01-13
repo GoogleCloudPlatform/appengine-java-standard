@@ -562,7 +562,7 @@ public class ApplicationConfigurationManager {
         currentModuleMapBuilder.put(handle.getModule().getApplicationDirectory(),
             handle.getModule());
       }
-      return currentModuleMapBuilder.build();
+      return currentModuleMapBuilder.buildOrThrow();
     }
 
     private Map<File, WebModule> getUpdatedModuleMap(EarInfo earInfo) {
@@ -571,7 +571,7 @@ public class ApplicationConfigurationManager {
       for (WebModule module : earInfo.getWebModules()) {
         updatedModuleMapBuilder.put(module.getApplicationDirectory(), module);
       }
-      return updatedModuleMapBuilder.build();
+      return updatedModuleMapBuilder.buildOrThrow();
     }
 
     private void checkWarDirectoriesMatch(Set<File>currentWarDirectories,
