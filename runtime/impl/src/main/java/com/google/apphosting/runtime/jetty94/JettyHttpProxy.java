@@ -234,7 +234,7 @@ public class JettyHttpProxy {
     private static final String IS_TRUSTED = "1";
 
     // The impersonated IP address of warmup requests (and also background)
-    //     (<internal>)
+    //     (<internal20>)
     private static final String WARMUP_IP = "0.1.0.3";
 
     private static final ImmutableSet<String> PRIVATE_APPENGINE_HEADERS =
@@ -278,7 +278,7 @@ public class JettyHttpProxy {
       try {
         AppinfoPb.AppInfo appinfo =
             appInfoFactory.getAppInfoFromFile(applicationRoot, fixedApplicationPath);
-        // TODO?
+        // TODO Should we also call ApplyCloneSettings()?
         LocalRpcContext<EmptyMessage> context = new LocalRpcContext<>(EmptyMessage.class);
         evaluationRuntimeServerInterface.addAppVersion(context, appinfo);
         context.getResponse();
@@ -379,7 +379,7 @@ public class JettyHttpProxy {
               .setModuleId(appInfoFactory.getGaeService())
               .setModuleVersionId(appInfoFactory.getGaeServiceVersion());
 
-      // TODO Need to find a mapping for all these upReqBuilder fields:
+      // TODO(b/78515194) Need to find a mapping for all these upReqBuilder fields:
       /*
       setRequestLogId();
       setEventIdHash();

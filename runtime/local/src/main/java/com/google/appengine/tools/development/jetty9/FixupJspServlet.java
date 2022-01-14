@@ -100,7 +100,7 @@ public class FixupJspServlet extends JspServlet {
         throws IllegalAccessException, InvocationTargetException {}
   }
 
-  // NB(tobyr) This method is here, because there appears to be
+  // NB This method is here, because there appears to be
   // a bug in either Jetty or Jasper where <jsp-file> entries in web.xml
   // don't get handled correctly. This interaction between Jetty and Jasper
   // appears to have always been broken, irrespective of App Engine

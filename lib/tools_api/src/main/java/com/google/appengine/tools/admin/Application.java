@@ -290,7 +290,7 @@ public class Application implements GenericApplication {
     this.sourceContext = sourceContext;
 
     webXml = webXmlReader.readWebXml();
-    // TODO;
+    // TODO: validateXml(webXml.getFilename(), new File(SDKDOCS, "servlet.xsd"));
     webXml.validate();
     servletVersion = webXmlReader.getServletVersion();
 
@@ -1312,7 +1312,7 @@ public class Application implements GenericApplication {
       optionList.addAll(Arrays.asList("-source", "8"));
       optionList.addAll(Arrays.asList("-target", "8"));
     } else if (runtime.startsWith(GOOGLE_LEGACY_RUNTIME_ID) || runtime.equals(JAVA_11_RUNTIME_ID)) {
-      // TODO: for now, it's still possible to use a JDK8 to compile and deploy Java11
+      // TODO(b/115569833): for now, it's still possible to use a JDK8 to compile and deploy Java11
       // apps.
       optionList.addAll(Arrays.asList("-source", "8"));
       optionList.addAll(Arrays.asList("-target", "8"));

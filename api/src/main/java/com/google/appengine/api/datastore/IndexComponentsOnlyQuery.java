@@ -60,7 +60,7 @@ class IndexComponentsOnlyQuery extends ValidatedQuery {
   }
 
   private void removeNativelySupportedComponents() {
-    /* NOTE */
+    /* NOTE: Keep in sync with datastore_index.py:RemoveNativelySupportedComponents() */
 
     for (Filter filter : query.filters()) {
       if (filter.getOpEnum() == Operator.EXISTS) {

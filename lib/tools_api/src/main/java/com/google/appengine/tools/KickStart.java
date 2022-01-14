@@ -191,7 +191,7 @@ public class KickStart {
     builder.directory(newWorkingDir);
 
     if (startOnFirstThread) {
-      // N.B.(schwardo): If we're on Mac OS X, add
+      // N.B.: If we're on Mac OS X, add
       // -XstartOnFirstThread to suppress the addition of an app to
       // the Dock even though we're going to initialize AWT (to work
       // around a subsequent crash in the stub implementation of the

@@ -25,7 +25,12 @@
   <packaging>jar</packaging>
   <name>appengine-remote-api</name>
   <dependencies>
-    <dependency>
+     <dependency>
+       <groupId>com.google.api-client</groupId>
+       <artifactId>google-api-client-appengine</artifactId>
+       <optional>true</optional>
+     </dependency>
+     <dependency>
       <groupId>com.google.appengine</groupId>
       <artifactId>appengine-apis</artifactId>
       <optional>true</optional>
@@ -63,6 +68,18 @@
             </goals>
             <configuration>
               <relocations>
+                <relocation>
+                  <pattern>ccom.google.api.client.googleapis.extensions.appengine.auth.oauth2</pattern>
+                  <shadedPattern>com.google.appengine.repackaged.com.google.api.client.googleapis.extensions.appengine.auth.oauth2</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>ccom.google.api.client.googleapis.extensions.appengine.testing.auth.oauth2</pattern>
+                  <shadedPattern>com.google.appengine.repackaged.com.google.api.client.googleapis.extensions.appengine.testing.auth.oauth2</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>ccom.google.api.client.googleapis.extensions.appengine.notifications</pattern>
+                  <shadedPattern>com.google.appengine.repackaged.com.google.api.client.googleapis.extensions.appengine.notifications</shadedPattern>
+                </relocation>
                 <relocation>
                   <pattern>com.fasterxml.jackson</pattern>
                   <shadedPattern>com.google.appengine.repackaged.com.fasterxml.jackson</shadedPattern>
@@ -166,6 +183,7 @@
                   <include>org.apache.httpcomponents:httpclient:*</include>
                   <include>org.apache.httpcomponents:httpcore:*</include>
                   <include>org.codehaus.jackson:jackson-core-asl:*</include>
+                  <include>com.google.api-client:google-api-client-appengine:*</include>
                 </includes>
               </artifactSet>
             </configuration>

@@ -58,7 +58,6 @@ import java.util.List;
  *
  * <p>{@link MultiQueryComponent}s with different {@link Order}s can be added to the same {@link
  * MultiQueryBuilder} in any configuration.
- *
  */
 // TODO: consider allowing the order in which components are
 // process be separate from the order of the filters appear in the

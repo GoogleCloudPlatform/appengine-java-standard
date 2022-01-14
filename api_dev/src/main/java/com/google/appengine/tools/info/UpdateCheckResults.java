@@ -144,7 +144,7 @@ public class UpdateCheckResults {
   public static class VersionComparator implements Comparator<String> {
     @Override
     public int compare(String string1, String string2) throws NumberFormatException {
-      // N.B.(schwardo): This code is loosely equivalent to
+      // N.B.: This code is loosely equivalent to
       // java.lang.Package.isCompatibleWith(String).
       String[] array1 = string1.split("\\.");
       String[] array2 = string2.split("\\.");

@@ -36,44 +36,34 @@ import java.util.regex.Pattern;
 import javax.annotation.concurrent.GuardedBy;
 
 /**
- * {@code AppsLogWriter} is responsible for batching application logs
- * for a single request and sending them back to the AppServer via the
- * LogService.Flush API call and the final return from the request
- * RPC.
+ * {@code AppsLogWriter} is responsible for batching application logs for a single request and
+ * sending them back to the AppServer via the LogService.Flush API call and the final return from
+ * the request RPC.
  *
  * <p>The current algorithm used to send logs is as follows:
+ *
  * <ul>
- * <li>Log messages are always appended to the current
- * {@link UPResponse}, which is returned back to the AppServer when
- * the request completes.</li>
- *
- * <li>The code never allows more than {@code byteCountBeforeFlush} bytes of
- * log data to accumulate in the {@link UPResponse}. If adding a new log line
- * would exceed that limit, the current set of logs are removed from it and an
- * asynchronous API call is started to flush the logs before buffering the
- * new line.</li>
- *
- * <li>If another flush occurs while a previous flush is still
- * pending, the caller will block synchronously until the previous
- * call completed.</li>
- *
- * <li>When the overall request completes, the request will block
- * until any pending flush is completed
- * ({@link RequestManager#waitForPendingAsyncFutures(java.util.Collection<Future<?>>)})
- * and then return the final set of logs in {@link UPResponse}.</li>
+ *   <li>Log messages are always appended to the current {@link UPResponse}, which is returned back
+ *       to the AppServer when the request completes.
+ *   <li>The code never allows more than {@code byteCountBeforeFlush} bytes of log data to
+ *       accumulate in the {@link UPResponse}. If adding a new log line would exceed that limit, the
+ *       current set of logs are removed from it and an asynchronous API call is started to flush
+ *       the logs before buffering the new line.
+ *   <li>If another flush occurs while a previous flush is still pending, the caller will block
+ *       synchronously until the previous call completed.
+ *   <li>When the overall request completes, the request will block until any pending flush is
+ *       completed ({@link
+ *       RequestManager#waitForPendingAsyncFutures(java.util.Collection<Future<?>>)}) and then
+ *       return the final set of logs in {@link UPResponse}.
  * </ul>
  *
- * <p>This class is also responsible for splitting large log entries
- * into smaller fragments, which is unrelated to the batching
- * mechanism described above but is necessary to prevent the AppServer
+ * <p>This class is also responsible for splitting large log entries into smaller fragments, which
+ * is unrelated to the batching mechanism described above but is necessary to prevent the AppServer
  * from truncating individual log entries.
  *
- * <p>TODO: In the future we may wish to
- * initiate flushes from a scheduled future which would happen in a
- * background thread.  In this case, we must pass the
- * {@link ApiProxy.Environment} in explicitly so API calls can be made on
- * behalf of the original thread.
- *
+ * <p>TODO: In the future we may wish to initiate flushes from a scheduled future which would happen
+ * in a background thread. In this case, we must pass the {@link ApiProxy.Environment} in explicitly
+ * so API calls can be made on behalf of the original thread.
  */
 public class AppLogsWriter {
   private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();

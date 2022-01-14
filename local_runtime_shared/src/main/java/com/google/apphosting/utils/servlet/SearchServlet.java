@@ -545,7 +545,7 @@ public class SearchServlet extends HttpServlet {
         case DATE: value = new SimpleDateFormat("yyyy-MM-dd").format(field.getDate()); break;
         case GEO_POINT: value = field.getGeoPoint().toString(); break;
         default:
-          // TODO: go/enum-switch-lsc
+          // TODO(b/18683919): go/enum-switch-lsc
       }
     }
 

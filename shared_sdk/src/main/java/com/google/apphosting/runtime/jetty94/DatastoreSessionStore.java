@@ -28,7 +28,7 @@ import com.google.appengine.api.datastore.KeyFactory;
 import com.google.apphosting.runtime.SessionStore;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.flogger.GoogleLogger;
-
+// <internal22>
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -277,7 +277,7 @@ class DatastoreSessionStore implements SessionStore {
           maxInactiveMs);
     }
 
-    
+    // <internal23>
     private SessionData createSessionData(Entity entity, String id, long time)
         throws UnreadableSessionDataException {
       // Turn an Entity into a Session.
@@ -299,8 +299,8 @@ class DatastoreSessionStore implements SessionStore {
           new ClassLoadingObjectInputStream(new ByteArrayInputStream(blob.getBytes()))) {
         @SuppressWarnings("unchecked")
         Map<String, Object> map = (Map<String, Object>) ois.readObject();
-        
-        // TODO (gregwilkins): avoid this data copy
+
+        // TODO: avoid this data copy
         session.putAllAttributes(map);
       } catch (Exception ex) {
         throw new UnreadableSessionDataException(id, _context, ex);

@@ -44,12 +44,9 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 /**
- * Constructs an {@link AppEngineWebXml} from an xml document corresponding to
- * appengine-web.xsd.
+ * Constructs an {@link AppEngineWebXml} from an xml document corresponding to appengine-web.xsd.
  *
- * TODO: Add a real link to the xsd once it exists and do schema
- * validation.
- *
+ * <p>TODO: Add a real link to the xsd once it exists and do schema validation.
  */
 class AppEngineWebXmlProcessor {
 

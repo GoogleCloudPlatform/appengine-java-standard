@@ -25,12 +25,12 @@ runtime_shared [fillcolor=orange label="runtime-shared *"]
 appengine_apis [fillcolor=yellow label="appengine-apis"]
 appengine_apis_dev [fillcolor=yellow label="appengine-apis-dev"]
 shared_sdk [fillcolor=yellow label="shared-sdk"]
-runtime_local [fillcolor=orange label="runtime-local"]
+appengine_local_runtime [fillcolor=orange label="appengine-local-runtime"]
 appengine_api_legacy [fillcolor=orange label="appengine-api-legacy"]
 appengine_testing [fillcolor=orange label="appengine-testing"]
 appengine_local_runtime_shared [fillcolor=orange label="appengine-local-runtime-shared"]
 appengine_remoteapi [fillcolor=orange label="appengine-remoteapi"]
-appengine_tools_api [fillcolor=orange label="appengine-tools-api"]
+appengine_tools_sdk [fillcolor=orange label="appengine-tools-sdk"]
 runtime_main [fillcolor=orange label="runtime-main * "]
 runtime_impl [fillcolor=orange label="runtime-impl *"]
 runtime_util [fillcolor=yellow label="runtime-util"]
@@ -49,9 +49,9 @@ appengine_api_legacy -> {appengine_api_1_0_sdk}
 appengine_testing -> {appengine_apis,appengine_apis_dev}
 appengine_local_runtime_shared -> {appengine_apis_dev,runtime_shared}
 appengine_remoteapi -> {appengine_apis}
-appengine_tools_api -> {appengine_apis_dev, appengine_remoteapi,appengine_utils}
+appengine_tools_sdk -> {appengine_apis_dev, appengine_remoteapi,appengine_utils}
 runtime_main -> {runtime_util }
 runtime_impl -> {appengine_utils,protos,appengine_api_1_0_sdk, runtime_util}
-runtime_local -> {appengine_remoteapi,appengine_apis_dev,runtime_shared,appengine_tools_api,shared_sdk,appengine_utils}
+appengine_local_runtime -> {appengine_remoteapi,appengine_apis_dev,runtime_shared,appengine_tools_sdk,shared_sdk,appengine_utils}
 runtime_util -> {}
 }

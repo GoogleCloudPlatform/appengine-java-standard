@@ -406,8 +406,8 @@ class ModulesServiceImpl implements ModulesService {
   // TODO: When b/12034257 is fixed remove this wrapper and use the new
   //     com.google.appengine.api.utils.FutureWrapper function.
   /**
-   * Delegating {@link Future<Void>} to ignore {@link UnexpectedStateException} in calls
-   * to {@link #get} and {@link #get(long, TimeUnit)}.
+   * Delegating {@link Future<Void>} to ignore {@link UnexpectedStateException} in calls to {@link
+   * #get} and {@link #get(long, TimeUnit)}.
    */
   @SuppressWarnings("javadoc")
   private static class IgnoreUnexpectedStateExceptionFuture extends ForwardingFuture<Void> {

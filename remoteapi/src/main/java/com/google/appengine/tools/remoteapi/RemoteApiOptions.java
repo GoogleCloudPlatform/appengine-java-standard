@@ -234,8 +234,8 @@ public class RemoteApiOptions {
   }
 
   /**
-   * Use credentials appropriate for talking to the Development Server.
-   * Overrides any previously-provided credentials.
+   * Use credentials appropriate for talking to the Development Server. Overrides any
+   * previously-provided credentials.
    *
    * @return this {@code RemoteApiOptions} instance
    */

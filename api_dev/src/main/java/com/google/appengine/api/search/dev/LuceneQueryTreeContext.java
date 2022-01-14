@@ -30,7 +30,13 @@ class LuceneQueryTreeContext extends QueryTreeContext<LuceneQueryTreeContext>  {
   enum ComparisonOp {
     // NOTE: These operators must have the names that match
     // those of ST numeric comparison operators.
-    NE, EQ, LT, LE, GT, GE, HAS;
+    NE,
+    EQ,
+    LT,
+    LE,
+    GT,
+    GE,
+    HAS;
   }
 
   private Query query;

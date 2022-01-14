@@ -16,7 +16,7 @@
 
 package com.google.apphosting.runtime;
 
-
+// <internal22>
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -47,9 +47,9 @@ public final class SessionManagerUtil {
     }
   }
 
-  
+  // <internal23>
   public static Object deserialize(byte[] bytes) {
-    // N.B.(schwardo): There is most likely user code on the stack
+    // N.B.: There is most likely user code on the stack
     // here, but because the value we're returning is not related to
     // our ClassLoader we'll fail the
     // RuntimePermission("getClassLoader") check.  We do have this
@@ -63,7 +63,7 @@ public final class SessionManagerUtil {
     // code initiate this serialization, rather than having
     // implementation code perform it on the user's behalf.
     try (ObjectInputStream ois =
-          new DelegatingObjectInputStream(new ByteArrayInputStream(bytes), classLoader)) {
+        new DelegatingObjectInputStream(new ByteArrayInputStream(bytes), classLoader)) {
       return ois.readObject();
     } catch (IOException | ClassNotFoundException ex) {
       throw new RuntimeException(ex);
@@ -117,7 +117,7 @@ public final class SessionManagerUtil {
     @Override
     protected Class<?> resolveProxyClass(String[] interfaces)
         throws IOException, ClassNotFoundException {
-      // Note(rudominer) This logic was copied from ObjectInputStream.java in the
+      // Note This logic was copied from ObjectInputStream.java in the
       // JDK, and then modified to use the UserClassLoader instead of the
       // "latest" loader that is used there.
       ClassLoader nonPublicLoader = null;

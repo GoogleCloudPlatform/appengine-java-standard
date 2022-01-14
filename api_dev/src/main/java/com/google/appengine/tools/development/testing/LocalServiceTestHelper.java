@@ -362,7 +362,7 @@ public class LocalServiceTestHelper {
         envInstance = 0;
     }
 
-    // Note(rudominer) It is important that we set the environment before
+    // Note It is important that we set the environment before
     // invoking config.setUp() below for each of the LocalServiceTestConfigs.
     // The LocalTaskQueueTestConfig needs the environment to be available.
     ApiProxy.setEnvironmentForCurrentThread(newEnvironment());
@@ -384,10 +384,10 @@ public class LocalServiceTestHelper {
   }
 
   /**
-   * Constructs the {@link com.google.apphosting.api.ApiProxy.Environment} that
-   * will be installed. Subclass and override to provide your own implementation.
+   * Constructs the {@link com.google.apphosting.api.ApiProxy.Environment} that will be installed.
+   * Subclass and override to provide your own implementation.
    */
-  // N.B.(rudominer) Notice that the environment constructed returns
+  // N.B. Notice that the environment constructed returns
   // the live values of the member variables of
   // {@code LocalServiceTestHelper}. That explains why all the getters
   // are re-implemented in this subclass of

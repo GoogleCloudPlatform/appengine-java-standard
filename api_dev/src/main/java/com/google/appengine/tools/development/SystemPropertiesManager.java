@@ -100,7 +100,7 @@ public class SystemPropertiesManager {
    */
   public void setAppengineSystemProperties(String release, String applicationId,
       String majorVersionId) {
-    // NB(tobyr) Shouldn't need to save away these properties
+    // NB Shouldn't need to save away these properties
     SystemProperty.environment.set(SystemProperty.Environment.Value.Development);
     if (release == null) {
       // Happens in unit tests and other possibly weird scenarios

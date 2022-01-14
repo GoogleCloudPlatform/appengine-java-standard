@@ -75,7 +75,7 @@ message PropertyValue {
   optional group ReferenceValue = 12 {
     required string app = 13;
     // name_space is required to add multi tenancy support for datastore.
-    // See http:<internal>.
+    // See http://go/appenginenamespace for a more in depth explanation.
     optional string name_space = 20;
     repeated group PathElement = 14 {
       required string type = 15;
@@ -133,7 +133,7 @@ message Property {
                             //  newlines and whitespace are significant.
     GD_RATING = 13;         // an integer rating in [0, 100].
 
-    BLOBKEY = 17;       // a BlobKey (see http:<internal>).
+    BLOBKEY = 17;       // a BlobKey (see http://go/prom-slob).
     ENTITY_PROTO = 19;  // An encoded byte representation of an EntityProto
     // USER_PROTO = 20;     // An Entity that represents an App Eng V3
     // UserValue. Not used by App Eng V3.
@@ -231,7 +231,7 @@ message Path {
 message Reference {
   required string app = 13;
   // name_space is required to add multi tenancy support for datastore.
-  // See http:<internal>.
+  // See http://go/appenginenamespace for a more in depth explanation.
   optional string name_space = 20;
   required Path path = 14;
   optional string database_id = 23;
@@ -426,8 +426,8 @@ message Index {
     // terms on numeric types.
     enum Mode {
       MODE_UNSPECIFIED = 0;
-      // TODO
-      // TODO
+      // TODO: ORDERED = 1; (or something to that effect)
+      // TODO: DYNAMIC = 2; (or something to that effect)
       GEOSPATIAL = 3;
       ARRAY_CONTAINS = 4;
     }

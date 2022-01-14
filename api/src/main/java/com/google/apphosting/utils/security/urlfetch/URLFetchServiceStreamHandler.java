@@ -217,7 +217,7 @@ public class URLFetchServiceStreamHandler extends URLStreamHandler {
    */
   @Override
   protected synchronized InetAddress getHostAddress(URL u) {
-    // N.B.(schwardo): This is invoked by URL.equals() and
+    // N.B.: This is invoked by URL.equals() and
     // URL.hashCode() -- apparently with privileged permissions.
     return null;
   }
@@ -289,7 +289,7 @@ public class URLFetchServiceStreamHandler extends URLStreamHandler {
     
     public Connection(URL url) {
       super(url);
-      // NB(tobyr) The JRE makes the default 0, which means "infinite timeout".
+      // NB The JRE makes the default 0, which means "infinite timeout".
       // We don't want that to be the default (and it's not technically spec'd
       // to be the default), so we change it here.
       int deadlineMs = DeadlineParser.INSTANCE.deadlineMs;
@@ -445,7 +445,7 @@ public class URLFetchServiceStreamHandler extends URLStreamHandler {
       if (entry != null) {
         List<String> values = entry.getValue();
         if (values != null) {
-          // N.B.(schwardo): According to the javadoc, I think we're
+          // N.B.: According to the javadoc, I think we're
           // actually supposed to be returning the final entry in values
           // here, not all of them.  However, I don't want to break
           // anything now.
@@ -519,7 +519,7 @@ public class URLFetchServiceStreamHandler extends URLStreamHandler {
         throw new IOException(msg);
       }
 
-      // NB(tobyr) This maintains backwards compatibility with Sun's protocol
+      // NB This maintains backwards compatibility with Sun's protocol
       // implementation. If the user forgot to set POST explicitly
       // (it defaults to GET), we transparently set it for them.
       if (method.equalsIgnoreCase(HTTPMethod.GET.name())) {

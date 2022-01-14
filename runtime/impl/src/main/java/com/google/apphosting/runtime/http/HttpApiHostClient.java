@@ -65,9 +65,7 @@ abstract class HttpApiHostClient implements APIHostClientInterface {
 
   // TODO: study the different limits that we have for different transports and
   // make them more consistent, as well as sharing definitions like this one.
-  /**
-   * The maximum size in bytes that we will allow in a request or a response payload.
-   */
+  /** The maximum size in bytes that we will allow in a request or a response payload. */
   static final int MAX_PAYLOAD = 50 * 1024 * 1024;
   /**
    * Extra bytes that we allow in the HTTP content, basically to support serializing the other

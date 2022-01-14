@@ -61,13 +61,14 @@ class RemoteApiDelegate implements Delegate<Environment> {
   public Future<byte[]> makeAsyncCall(final Environment env, final String serviceName,
       final String methodName, final byte[] request, ApiConfig apiConfig) {
     // TODO respect deadline in apiConfig
-    return executor.submit(new Callable<byte[]>() {
-      @Override
-      public byte[] call() throws Exception {
-        // note that any exceptions thrown will be captured and thrown by the Future instead.
-        return makeSyncCall(env, serviceName, methodName, request);
-      }
-    });
+    return executor.submit(
+        new Callable<byte[]>() {
+          @Override
+          public byte[] call() throws Exception {
+            // note that any exceptions thrown will be captured and thrown by the Future instead.
+            return makeSyncCall(env, serviceName, methodName, request);
+          }
+        });
   }
 
   @Override

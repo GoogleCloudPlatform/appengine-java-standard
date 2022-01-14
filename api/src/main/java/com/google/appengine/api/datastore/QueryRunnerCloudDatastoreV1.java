@@ -190,7 +190,7 @@ final class QueryRunnerCloudDatastoreV1 implements QueryRunner {
     Object value = predicate.getValue();
     if (operator == Query.FilterOperator.IN) {
       // Convert a 1-element IN to EQUAL.
-      // TODO: Remove this once native IN support is available.
+      // TODO(b/2105715): Remove this once native IN support is available.
       if (!(predicate.getValue() instanceof Collection<?>)) {
         throw new IllegalArgumentException("IN filter value is not a Collection.");
       }

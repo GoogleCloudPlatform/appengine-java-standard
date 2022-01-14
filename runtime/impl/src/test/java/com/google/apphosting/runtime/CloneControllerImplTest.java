@@ -101,7 +101,7 @@ public class CloneControllerImplTest {
 
   @Test
   public void testPerformanceDataEnabledAgainstRealPerfData() throws Exception {
-    // This is just a file that I (emcmanus) fished out of /tmp/hsperfdata_emcmanus at some point.
+    // This is just a file that I  fished out of /tmp/hsperfdata_emcmanus at some point.
     // It's from a Maven process.
     byte[] perfData;
     try (InputStream in = getClass().getResourceAsStream("hsperf.data")) {

@@ -66,9 +66,7 @@ public final class LocalMailService extends AbstractLocalRpcService {
   // TODO: Provide an implementation that delegates to javax.mail so that
   // we can actually send mail in the local runtime.
 
-  /**
-   * The package name for this service.
-   */
+  /** The package name for this service. */
   public static final String PACKAGE = "mail";
 
   /**
@@ -300,7 +298,7 @@ public final class LocalMailService extends AbstractLocalRpcService {
 
   @Override
   public Integer getMaxApiRequestSize() {
-    // Keep this in sync with MAX_REQUEST_SIZE in <internal>.
+    // Keep this in sync with MAX_REQUEST_SIZE in <internal6>.
     return 32 << 20;  // 32 MB
   }
 }

@@ -99,7 +99,7 @@ public class UpdateCheck {
    * file in their home directory.
    */
   public boolean allowedToCheckForUpdates() {
-    // N.B.(schwardo): It would be nice to use Preferences here, but
+    // N.B.: It would be nice to use Preferences here, but
     // we want to make it very easy for users to opt-out, and
     // requiring users to modify the registry on Windows by hand is
     // not a good idea.  Creating a file should be simple enough.

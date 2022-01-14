@@ -24,7 +24,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * annotated with {@link PreQuery} that receive instances of this class may modify the {@link Query}
  * returned by calling {@link #getCurrentElement()}. This is an effective way to modify queries
  * prior to execution.
- *
  */
 // TODO: Allow users to add entities to the result set and have them merged
 // in as the results are streamed back.

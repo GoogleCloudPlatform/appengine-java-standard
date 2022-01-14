@@ -79,7 +79,7 @@ public class MultipartMimeUtils {
     ContentType contentType = new ContentType(part.getContentType());
     String charset = contentType.getParameter("charset");
     if (charset == null) {
-      // N.B.(schwardo): The MIME spec doesn't seem to provide a
+      // N.B.: The MIME spec doesn't seem to provide a
       // default charset, but the default charset for HTTP is
       // ISO-8859-1.  That seems like a reasonable default.
       charset = "ISO-8859-1";

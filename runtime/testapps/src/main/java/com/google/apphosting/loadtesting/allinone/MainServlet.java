@@ -116,7 +116,7 @@ import javax.swing.JEditorPane;
  * Servlet capable of performing a variety of actions based on the value of
  * the query parameters.
  *
- * <p>Originally this code was compatible with {@code <internal>},
+ * <p>Originally this code was compatible with {@code <internal4>},
  * but it has evolved enough since then that compatibility should not be expected.
  *
  * <p>This servlet also accepts POST requests and returns a plain text response containing

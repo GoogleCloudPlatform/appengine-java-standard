@@ -416,7 +416,7 @@ public class JavaRuntime implements EvaluationRuntimeServerInterface {
                 .setRequestManager(requestManager)
                 .setCoordinator(coordinator)
                 .setCompressResponse(compressResponse)
-                .setServletEngine(servletEngine)
+                .setUpRequestHandler(servletEngine)
                 .build();
         appVersion
             .getThreadGroupPool()
@@ -668,7 +668,7 @@ public class JavaRuntime implements EvaluationRuntimeServerInterface {
     private void pollNetworkingReady() {
       logger.atInfo().log("Polling for if networking is ready.");
       long start = System.nanoTime();
-      // TODO: The gateway client seems to require multiple seconds to be ready.
+      // TODO(b/33757746): The gateway client seems to require multiple seconds to be ready.
       for (int i = 0; i < 100; i++) {
         try {
           InetAddress.getByName("google.com");

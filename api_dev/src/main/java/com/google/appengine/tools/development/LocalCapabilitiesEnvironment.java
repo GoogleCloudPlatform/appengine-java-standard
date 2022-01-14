@@ -40,7 +40,7 @@ public class LocalCapabilitiesEnvironment {
    */
   public static final String KEY_PREFIX = "capability.status.";
 
-  // <internal>
+  // see <internal13>
   // &q=register_methods.cc&l=62
   public static final ImmutableSet<String> DATASTORE_WRITE_RPCS = new ImmutableSet.Builder<String>()
       .add("Delete")
@@ -124,7 +124,7 @@ public class LocalCapabilitiesEnvironment {
     if (status == null) {
       throw new IllegalArgumentException("Capability Status: " + " is not known");
     }
-    //TODO what about        status = SummaryStatus.SCHEDULED_FUTURE;
+    // TODO what about        status = SummaryStatus.SCHEDULED_FUTURE;
     // and  long timeUntilScheduled?
 
     capabilitiesStatus.put(capabilityName, status);

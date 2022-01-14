@@ -17,7 +17,7 @@
 package com.google.appengine.tools.remoteapi;
 
 import com.google.apphosting.utils.remoteapi.RemoteApiPb;
-
+// <internal22>
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -77,7 +77,7 @@ class RemoteRpc {
           IllegalArgumentException serverSide = (IllegalArgumentException) contents;
           throw new IllegalArgumentException(serverSide.getMessage(), serverSide);
         } else if (contents instanceof RuntimeException) {
-            // TODO this eats the client-side stack trace, which is
+            // TODO(b/68190110) this eats the client-side stack trace, which is
             // usually more important for debugging. We should throw a new exception
             // of the same type for any subtypes of RuntimeException we care about.
             throw (RuntimeException) contents;
@@ -153,7 +153,7 @@ class RemoteRpc {
     return result;
   }
 
-  
+  // <internal23>
   private static Object parseJavaException(
       RemoteApiPb.Response parsedResponse, String packageName, String methodName) {
     try {

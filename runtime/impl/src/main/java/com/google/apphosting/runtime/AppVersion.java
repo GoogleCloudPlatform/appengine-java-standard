@@ -201,26 +201,28 @@ public class AppVersion implements CloudDebuggerCallback {
   @Override
   public ClassType getClassType(final Class<?> cls) {
     return AccessController.doPrivileged(
-        (PrivilegedAction<ClassType>) () -> {
-          ClassLoader testedClassLoader = cls.getClassLoader();
+        (PrivilegedAction<ClassType>)
+            () -> {
+              ClassLoader testedClassLoader = cls.getClassLoader();
 
-          // TODO: add support for custom class loaders that an application may create.
-          if (testedClassLoader == classLoader) {
-            return ClassType.APPLICATION;
-          }
+              // TODO: add support for custom class loaders that an application may create.
+              if (testedClassLoader == classLoader) {
+                return ClassType.APPLICATION;
+              }
 
-          if (testedClassLoader == getClass().getClassLoader()) {
-            return ClassType.RUNTIME;
-          }
+              if (testedClassLoader == getClass().getClassLoader()) {
+                return ClassType.RUNTIME;
+              }
 
-          ClassLoader systemClassLoader = ClassLoader.getSystemClassLoader();
-          if ((testedClassLoader == systemClassLoader)
-              || (testedClassLoader == systemClassLoader.getParent())) { // Bootstrap ClassLoader.
-            return ClassType.SAFE_RUNTIME;
-          }
+              ClassLoader systemClassLoader = ClassLoader.getSystemClassLoader();
+              if ((testedClassLoader == systemClassLoader)
+                  || (testedClassLoader
+                      == systemClassLoader.getParent())) { // Bootstrap ClassLoader.
+                return ClassType.SAFE_RUNTIME;
+              }
 
-          return ClassType.UNKNOWN;
-        });
+              return ClassType.UNKNOWN;
+            });
   }
 
   public synchronized SourceContext getSourceContext() {

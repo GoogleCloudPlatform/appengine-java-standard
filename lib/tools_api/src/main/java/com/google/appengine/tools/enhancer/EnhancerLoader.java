@@ -84,8 +84,9 @@ public class EnhancerLoader extends URLClassLoader {
     @SuppressWarnings("URLEqualsHashCode")
     Set<URL> newTargets = new HashSet<URL>();
 
-    // TODO, but M and N will always be small
-    nextUrl: for (URL url : enhanceTargets) {
+    // TODO Could make this faster than O(MxN), but M and N will always be small
+    nextUrl:
+    for (URL url : enhanceTargets) {
       String userFileName = getFileName(url);
       for (URL ormUrl : ormLibs) {
         if (userFileName.equals(getFileName(ormUrl))) {
@@ -97,9 +98,9 @@ public class EnhancerLoader extends URLClassLoader {
     
     return newTargets;
   }
-  
-  private static String getFileName(URL url) {    
-    // NB(tobyr) Not using url.toURI() because it fails depending upon
+
+  private static String getFileName(URL url) {
+    // NB Not using url.toURI() because it fails depending upon
     // whether or not the URL has encodings.
     String path = url.getPath();
     int trailingSlash = path.lastIndexOf('/');

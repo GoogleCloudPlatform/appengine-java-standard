@@ -22,13 +22,11 @@ options {
 
 @lexer::header {
   // Copyright 2008 Google, Inc.  All rights reserved.
-  // based on original C++ Antlr2 version by
   package com.google.borg.borgcron;
 }
 
 @header {
   // Copyright 2008 Google, Inc.  All rights reserved.
-  // based on original C++ Antlr2 version by
 
   // Groc (Googley runner of commands) is a microlanguage that provides an
   // alternative to traditional cron syntax/semantics for specifying
@@ -370,7 +368,7 @@ FIFTH     : ( '5th' );
 
 /* Special rule to avoid nondeterminism.  FOURTH_OR_FIFTH is never actually
  * returned but delegates to FOURTH or FIFTH.  For more info see:
- * <internal>
+ * <internal21>
  */
 FOURTH_OR_FIFTH
           : ( ('fourth' { $type = FOURTH; })

@@ -38,15 +38,15 @@ public class ApplicationEnvironment {
   private final File rootDirectory;
 
   /**
-   * This list of properties we copy directly into the user's local
-   * environment, without modification.
+   * This list of properties we copy directly into the user's local environment, without
+   * modification.
    */
   private static final String[] VISIBLE_PROPERTIES = {
     "file.encoding",
     "file.separator",
     "path.separator",
     "line.separator",
-    "os.name", // N.B.(rudominer) Java sets this to "Linux"
+    "os.name", // N.B. Java sets this to "Linux"
     "java.vendor",
     "java.vendor.url",
     "java.class.version",

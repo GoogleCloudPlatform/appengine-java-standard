@@ -40,17 +40,14 @@ public interface UserService {
   /**
    * Returns a URL that can be used to display a login page to the user.
    *
-   * @param destinationURL where the user will be redirected after
-   *                       they log in.
+   * @param destinationURL where the user will be redirected after they log in.
    * @param authDomain not used.
    * @return The URL that will present a login prompt.
-   *
    * @throws IllegalArgumentException If the destinationURL is not valid.
    */
   // TODO: As with User.authDomain, it would be "friendlier" to
   // somehow obscure this method from the general documentation.
-  public String createLoginURL(String destinationURL,
-                               @Nullable String authDomain);
+  public String createLoginURL(String destinationURL, @Nullable String authDomain);
 
   /**
    * Returns a URL that can be used to redirect the user to a third party for federated login.
@@ -88,17 +85,14 @@ public interface UserService {
   /**
    * Returns a URL that can be used to log the current user out of this app.
    *
-   * @param destinationURL where the user will be redirected after
-   *                       they log out.
+   * @param destinationURL where the user will be redirected after they log out.
    * @param authDomain not used.
    * @return The URL that will log the user out.
-   *
    * @throws IllegalArgumentException If the destinationURL is not valid.
    */
   // TODO: As with User.authDomain, it would be "friendlier" to
   // somehow obscure this method from the general documentation.
-  public String createLogoutURL(String destinationURL,
-                                @Nullable String authDomain);
+  public String createLogoutURL(String destinationURL, @Nullable String authDomain);
 
   /**
    * Returns true if there is a user logged in, false otherwise.

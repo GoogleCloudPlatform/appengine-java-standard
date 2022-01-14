@@ -35,23 +35,21 @@ import java.util.logging.Logger;
 /**
  * Contains handlers for calling the datastore via the remote API.
  *
- * A note on Reference re-writing:
+ * <p>A note on Reference re-writing:
  *
- * This class needs to handle Keys containing app ids of either the client app or the remote app.
+ * <p>This class needs to handle Keys containing app ids of either the client app or the remote app.
  * Apps that are using the latest version of the Remote API will generate Keys with the remote app
- * id after installing the Remote API.  However, older versions of the Remote API will generate Keys
- * with the client app id.  Additionally, it's possible that the app could create a Key prior to
+ * id after installing the Remote API. However, older versions of the Remote API will generate Keys
+ * with the client app id. Additionally, it's possible that the app could create a Key prior to
  * installing the Remote API and use that.
  *
- * This class makes sure that all Keys in requests sent to the remote app have the remote app id.
+ * <p>This class makes sure that all Keys in requests sent to the remote app have the remote app id.
  * Keys in responses will also have the remote app id.
  *
- * However, due to implementation details of the Java SDK, Keys from Put operations end up being
- * returned to the user matching the app id of the request.  That is, they will match the app id
- * that was on the Entity being Put.  As discussed above, this could be either the client app id or
- * the remote app id.
- * TODO: consider updating this.
- *
+ * <p>However, due to implementation details of the Java SDK, Keys from Put operations end up being
+ * returned to the user matching the app id of the request. That is, they will match the app id that
+ * was on the Entity being Put. As discussed above, this could be either the client app id or the
+ * remote app id. TODO: consider updating this.
  */
 class RemoteDatastore {
   static final String DATASTORE_SERVICE = "datastore_v3";
@@ -65,7 +63,7 @@ class RemoteDatastore {
 
   /** Contains an entry for every query we've ever run. */
   private final Map<Long, QueryState> idToCursor = new ConcurrentHashMap<>();
-  // TODO entries are never removed, which is a memory leak.
+  // TODO(b/68190107) entries are never removed, which is a memory leak.
   // (But Python has the same problem.)
 
   /**
@@ -88,7 +86,7 @@ class RemoteDatastore {
   }
 
   byte[] handleDatastoreCall(String methodName, byte[] request) {
-    // TODO Perhaps replace with a map of handlers.
+    // TODO(b/68190109) Perhaps replace with a map of handlers.
     // TODO Support AddActions.
     switch (methodName) {
       case "RunQuery":

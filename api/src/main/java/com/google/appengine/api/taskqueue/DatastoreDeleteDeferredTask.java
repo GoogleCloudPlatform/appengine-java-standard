@@ -22,7 +22,6 @@ import com.google.appengine.api.datastore.Key;
 /**
  * A {@link DeferredTask} implementation that deletes the entities uniquely identified by the
  * provided {@link Key Keys} when it runs.
- *
  */
 // TODO: Currently only used by our session management code. Consider
 // making this part of the public api.

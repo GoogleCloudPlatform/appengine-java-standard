@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-// Design doc at http:<internal>
+// Design doc at http://go/prom-modules-api
 
 syntax = "proto2";
 

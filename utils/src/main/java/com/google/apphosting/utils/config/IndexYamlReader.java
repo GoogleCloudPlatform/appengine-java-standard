@@ -217,8 +217,7 @@ public class IndexYamlReader {
    */
   private static String clean(String yaml) {
     // TODO Remove this method once b/3244938 is fixed.
-    return yaml
-        .replaceAll(INDEX_DEFINITIONS_TAG, "")
+    return yaml.replaceAll(INDEX_DEFINITIONS_TAG, "")
         .replaceAll(INDEX_TAG, "")
         .replaceAll(PROPERTY_TAG, "")
         .trim();

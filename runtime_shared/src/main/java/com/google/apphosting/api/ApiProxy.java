@@ -287,10 +287,7 @@ public class ApiProxy {
   // because the runtime package needs to access them, as well as unit
   // tests.  How do we secure this?
 
-  /**
-   * Sets an environment for the current thread.  This should not be
-   * used from user-code.
-   */
+  /** Sets an environment for the current thread. This should not be used from user-code. */
   public static void setEnvironmentForCurrentThread(Environment environment) {
     environmentThreadLocal.set(environment);
     possiblyFlushOutOfBandLogs();

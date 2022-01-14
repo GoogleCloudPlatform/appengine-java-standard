@@ -43,7 +43,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  * @see KeyFactory
  */
-// TODO.
+// TODO: Disable serialization if !isComplete().
 // TODO: Reconsider storing a full-fledged Key as the parent.
 // appId actually only appears once inside each Key so having one
 // appId member per path component is misleading.

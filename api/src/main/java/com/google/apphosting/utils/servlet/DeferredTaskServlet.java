@@ -195,7 +195,7 @@ public class DeferredTaskServlet extends HttpServlet {
             @Override
             protected Class<?> resolveProxyClass(String[] interfaces)
                 throws IOException, ClassNotFoundException {
-              // Note(ozarov) This logic was copied from ObjectInputStream.java in the
+              // Note This logic was copied from ObjectInputStream.java in the
               // JDK, and then modified to use the thread context class loader instead of the
               // "latest" loader that is used there.
               ClassLoader classLoader = Thread.currentThread().getContextClassLoader();

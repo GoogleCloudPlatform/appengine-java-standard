@@ -79,7 +79,7 @@ public class AppYamlTranslator {
     EXPIRATION_PROPERTY,
   };
 
-  // This should be kept in sync with MAX_URL_MAPS in <internal>.
+  // This should be kept in sync with MAX_URL_MAPS in <internal1>.
   private static final int MAX_HANDLERS = 100;
 
   private final AppEngineWebXml appEngineWebXml;
@@ -853,7 +853,7 @@ public class AppYamlTranslator {
           // Add /_ah/spi/* handler back in explicitly after intersection and duplicate
           // removal, otherwise it will be subsumed by /_ah/* above.  Admin console
           // must see this explicitly as a signal that the app is serving an API
-          // endpoint.  See http:<internal>
+          // endpoint.  See http://go/swarmSignal2
           globs.add(GlobFactory.createGlob(API_ENDPOINT_REGEX, DYNAMIC_PROPERTY, true));
         }
       }
@@ -863,7 +863,7 @@ public class AppYamlTranslator {
     protected void addWelcomeFiles(GlobIntersector intersector) {
       Map<String, Object> welcomeProperties = getWelcomeProperties();
       if (welcomeProperties != null) {
-        // N.B.(schwardo): Unfortunately we need to do both / and /*/
+        // N.B.: Unfortunately we need to do both / and /*/
         // rather than just */ here so any /* patterns interact
         // correctly.  If I think too hard about this my brain explodes
         // so I've just left it this way for now.

@@ -46,7 +46,7 @@ public class RequestRunner implements Runnable {
    */
   private static final long WAIT_FOR_USER_RUNNABLE_DEADLINE = 60000L;
 
-  private final ServletEngineAdapter servletEngine;
+  private final UPRequestHandler upRequestHandler;
   private final RequestManager requestManager;
   private final BackgroundRequestCoordinator coordinator;
   private final boolean compressResponse;
@@ -65,7 +65,7 @@ public class RequestRunner implements Runnable {
   public abstract static class Builder {
     Builder() {}
 
-    public abstract Builder setServletEngine(ServletEngineAdapter servletEngine);
+    public abstract Builder setUpRequestHandler(UPRequestHandler upRequestHandler);
 
     public abstract Builder setRequestManager(RequestManager requestManager);
 
@@ -85,7 +85,7 @@ public class RequestRunner implements Runnable {
   }
 
   public RequestRunner(
-      ServletEngineAdapter servletEngine,
+      UPRequestHandler upRequestHandler,
       RequestManager requestManager,
       BackgroundRequestCoordinator coordinator,
       boolean compressResponse,
@@ -93,7 +93,7 @@ public class RequestRunner implements Runnable {
       AnyRpcServerContext rpc,
       UPRequest upRequest,
       MutableUpResponse upResponse) {
-    this.servletEngine = servletEngine;
+    this.upRequestHandler = upRequestHandler;
     this.requestManager = requestManager;
     this.coordinator = coordinator;
     this.compressResponse = compressResponse;
@@ -261,7 +261,7 @@ public class RequestRunner implements Runnable {
   }
 
   private void dispatchServletRequest() throws ServletException, IOException {
-    servletEngine.serviceRequest(upRequest, upResponse);
+    upRequestHandler.serviceRequest(upRequest, upResponse);
     if (compressResponse) {
       // try to compress if necessary (http://b/issue?id=3368468)
       try {

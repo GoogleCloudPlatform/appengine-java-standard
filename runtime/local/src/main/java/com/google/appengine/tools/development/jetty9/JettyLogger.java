@@ -43,7 +43,7 @@ public class JettyLogger extends JavaUtilLog {
   public void warn(String msg, Throwable th) {
     super.warn(msg, th);
 
-    // N.B.(schwardo): There are a number of cases where Jetty
+    // N.B.: There are a number of cases where Jetty
     // swallows exceptions entirely, or at least stashes them away in
     // private fields.  To avoid these situations, we log all warning
     // exceptions to the user's app logs via ApiProxy, as long as we

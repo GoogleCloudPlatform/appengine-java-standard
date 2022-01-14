@@ -147,9 +147,7 @@ public class ApiProxyImpl implements ApiProxy.Delegate<ApiProxyImpl.EnvironmentI
   private static final String INTERRUPTED_SLOT_REASON =
       "the thread was interrupted while waiting for concurrent API calls";
 
-  /**
-   * A logical, user-visible name for the current datacenter.
-   */
+  /** A logical, user-visible name for the current datacenter. */
   // TODO: We may want a nicer interface for exposing this
   // information.  Currently Environment attributes are either
   // internal-only or are wrapped by other, more public APIs.
@@ -569,7 +567,7 @@ public class ApiProxyImpl implements ApiProxy.Delegate<ApiProxyImpl.EnvironmentI
     public <T extends Throwable> T getExceptionWithRequestId(T exception, String requestId) {
       StackTraceElement[] frames = exception.getStackTrace();
       StackTraceElement[] newFrames = new StackTraceElement[frames.length + 1];
-      // NOTE Cloud Trace relies on the negative line number to decide
+      // NOTE: Cloud Trace relies on the negative line number to decide
       // whether a frame is generated/magic or not.
       newFrames[0] =
           new StackTraceElement(FRAME_CLASS, FRAME_METHOD_PREFIX + requestId, FRAME_FILE, -1);
@@ -669,7 +667,7 @@ public class ApiProxyImpl implements ApiProxy.Delegate<ApiProxyImpl.EnvironmentI
 
       endApiSpan();
 
-      // N.B.(schwardo): Do not call settable.setException() with an
+      // N.B.: Do not call settable.setException() with an
       // Error.  SettableFuture will immediately rethrow the Error "to
       // make sure it reaches the top of the call stack."  Throwing an
       // Error from within a Stubby RPC callback will invoke
@@ -700,14 +698,15 @@ public class ApiProxyImpl implements ApiProxy.Delegate<ApiProxyImpl.EnvironmentI
     private void setRpcError(
         StatusProto status, int applicationError, String errorDetail, Throwable cause) {
       logger.atWarning().log("APIHost::Call RPC failed : %s : %s", status, errorDetail);
-      // N.B.(schwardo): Do not call settable.setException() with an
+      // N.B.: Do not call settable.setException() with an
       // Error.  SettableFuture will immediately rethrow the Error "to
       // make sure it reaches the top of the call stack."  Throwing an
       // Error from within a Stubby RPC callback will invoke
       // GlobalEventRegistry's error hook, which will call
       // System.exit(), which will fail.  This is bad.
-      settable.setException(ApiProxyUtils.getRpcError(
-          packageName, methodName, status, applicationError, errorDetail, cause));
+      settable.setException(
+          ApiProxyUtils.getRpcError(
+              packageName, methodName, status, applicationError, errorDetail, cause));
     }
 
     @Override

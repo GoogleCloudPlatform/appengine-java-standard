@@ -290,8 +290,8 @@ public class TraceWriter {
   }
 
   /**
-   * End the API span.
-   * TODO: Remove this function which is the same as endSpan.
+   * End the API span. TODO: Remove this function which is the same as endSpan.
+   *
    * @param context the trace context of the API span
    */
   public void endApiSpan(CloudTraceContext context) {

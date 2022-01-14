@@ -25,7 +25,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * DataTypeUtils#MAX_SHORT_BLOB_PROPERTY_LENGTH}. Unlike {@link Blob}, {@code ShortBlobs} are
  * indexed by the datastore and can therefore be filtered and sorted on in queries. If your data is
  * too large to fit in a {@code ShortBlob} use {@link Blob} instead.
- *
  */
 // TODO: Make the file GWT-compatible (remove non-gwt-compatible
 // dependencies). Once done add this file to the gwt-datastore BUILD target

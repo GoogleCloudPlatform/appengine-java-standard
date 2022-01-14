@@ -47,7 +47,7 @@ class AppIdNamespace implements Serializable, Comparable<AppIdNamespace> {
         || namespace.indexOf(NamespaceResources.NAMESPACE_SEPARATOR) != -1) {
       throw new IllegalArgumentException(BAD_APP_ID_MESSAGE);
     }
-    // N.B.(schwardo): We allow empty appIds here for backwards
+    // N.B.: We allow empty appIds here for backwards
     // compatibility.  Some samples, along with the Eclipse project
     // template, include empty application identifiers, and we don't
     // want the DevAppServer to choke on them.

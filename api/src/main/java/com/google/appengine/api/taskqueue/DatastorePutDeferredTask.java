@@ -19,10 +19,7 @@ package com.google.appengine.api.taskqueue;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
 import com.google.appengine.api.datastore.Entity;
 
-/**
- * A {@link DeferredTask} implementation that puts the provided entities when it runs.
- *
- */
+/** A {@link DeferredTask} implementation that puts the provided entities when it runs. */
 // TODO: Currently only used by our session management code. Consider
 // making this part of the public api.
 class DatastorePutDeferredTask implements DeferredTask {

@@ -97,7 +97,7 @@ message Query {
   // The database that this query is for.
   optional string database_id = 42;
   // name_space is to add multi tenancy support for datastore.
-  // See http:<internal>.
+  // See http://go/appenginenamespace for a more in depth explanation.
   optional string name_space = 29;
 
   // kind and ancestor both restrict the query results. if kind is provided,

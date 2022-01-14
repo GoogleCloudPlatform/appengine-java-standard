@@ -177,7 +177,7 @@ class PreparedMultiQuery extends BasePreparedQuery {
       return KeyAndProperties.create(entity.getKey(), null);
     } else {
       // The index values + keys are deduped.
-      // NOTE only takes into account the key
+      // NOTE: Entity.equals() only takes into account the key
       return KeyAndProperties.create(entity.getKey(), entity.getProperties());
     }
   }

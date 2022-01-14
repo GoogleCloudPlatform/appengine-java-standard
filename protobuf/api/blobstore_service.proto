@@ -16,7 +16,6 @@
 
 // Copyright 2008 Google Inc.
 // All Rights Reserved.
-//
 
 syntax = "proto2";
 

@@ -222,9 +222,13 @@ public class InstanceHelper {
       String moduleName = WebModule.getModuleName(appEngineWebXml);
       // TODO: Set version to backend name after confirming with ludo@
       // for backends call DevAppServerModulesFilter.injectBackendServiceCurrentApiInfo.
-      ApiProxy.setEnvironmentForCurrentThread(new LocalInitializationEnvironment(
-          appEngineWebXml.getAppId(), moduleName, appEngineWebXml.getMajorVersionId(), instance,
-          containerService.getPort()));
+      ApiProxy.setEnvironmentForCurrentThread(
+          new LocalInitializationEnvironment(
+              appEngineWebXml.getAppId(),
+              moduleName,
+              appEngineWebXml.getMajorVersionId(),
+              instance,
+              containerService.getPort()));
 
       // do the shutdown, catch any exceptions in the user supplied code.
       // beginShutdown is blocking and will return when the user supplied

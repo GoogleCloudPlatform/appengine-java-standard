@@ -55,26 +55,28 @@ public class BackgroundThreadFactory implements ThreadFactory {
             LocalEnvironment.getCurrentInstance(), LocalEnvironment.getCurrentPort());
 
     sleepUninterruptably(API_CALL_LATENCY_MS);
-    return AccessController.doPrivileged(new PrivilegedAction<Thread>() {
-        @Override
-        public Thread run() {
-          // TODO: Only allow this to be used from a backend.
-          Thread thread = new Thread(runnable) {
-              @Override
-              public void run() {
-                sleepUninterruptably(THREAD_STARTUP_LATENCY_MS);
-                ApiProxy.setEnvironmentForCurrentThread(environment);
-                try {
-                  runnable.run();
-                } finally {
-                  environment.callRequestEndListeners();
-                }
-              }
-            };
+    return AccessController.doPrivileged(
+        new PrivilegedAction<Thread>() {
+          @Override
+          public Thread run() {
+            // TODO: Only allow this to be used from a backend.
+            Thread thread =
+                new Thread(runnable) {
+                  @Override
+                  public void run() {
+                    sleepUninterruptably(THREAD_STARTUP_LATENCY_MS);
+                    ApiProxy.setEnvironmentForCurrentThread(environment);
+                    try {
+                      runnable.run();
+                    } finally {
+                      environment.callRequestEndListeners();
+                    }
+                  }
+                };
             System.setProperty("devappserver-thread-" + thread.getName(), "true");
-          return thread;
-        }
-    });
+            return thread;
+          }
+        });
   }
 
   final String getAppId() {

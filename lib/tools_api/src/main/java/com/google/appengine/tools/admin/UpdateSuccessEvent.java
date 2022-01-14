@@ -32,9 +32,7 @@ public class UpdateSuccessEvent {
   // TODO Add some sort of information in here that indicates
   // what the new version of the application is.
 
-  /**
-   * Returns the detailed output from the operation process.
-   */
+  /** Returns the detailed output from the operation process. */
   public String getDetails() {
     return details;
   }

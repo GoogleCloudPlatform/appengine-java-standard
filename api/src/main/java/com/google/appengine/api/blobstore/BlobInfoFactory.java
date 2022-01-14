@@ -140,7 +140,7 @@ public class BlobInfoFactory {
     // while older blobs will not. Ensure we construct the BlobInfo object
     // accordingly. Similarly, only __BlobInfo__ entities stored in Google
     // Cloud Storage have a gs_object_name.
-    // TODO (slangley): Remove this check once b/3483289 is fixed.
+    // TODO : Remove this check once b/3483289 is fixed.
     String md5Hash = BlobInfo.DEFAULT_MD5_HASH;
     if (entity.hasProperty(MD5_HASH)) {
         md5Hash = (String) entity.getProperty(MD5_HASH);

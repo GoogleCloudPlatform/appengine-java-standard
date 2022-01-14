@@ -19,10 +19,7 @@ package com.google.appengine.api.datastore;
 import java.io.Serializable;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-/**
- * A user-provided integer rating for a piece of content. Normalized to a 0-100 scale.
- *
- */
+/** A user-provided integer rating for a piece of content. Normalized to a 0-100 scale. */
 // TODO: Make the file GWT-compatible (the method
 // String.format(String, int, int) is not implemented in GWT).
 // Once done add this file to the gwt-datastore BUILD target

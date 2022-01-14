@@ -156,8 +156,10 @@ abstract class LuceneDirectoryMap {
       indexDir.mkdirs();
       // TODO: persist index params; otherwise user can alter them in
       // subsequent local server runs.
-      LOG.fine(String.format("For %s.%s returning FS directory %s",
-          appId, indexSpec.getName(), indexDir.getPath()));
+      LOG.fine(
+          String.format(
+              "For %s.%s returning FS directory %s",
+              appId, indexSpec.getName(), indexDir.getPath()));
       return new LuceneIndexSpec(new SimpleFSDirectory(indexDir), indexSpec);
     }
 

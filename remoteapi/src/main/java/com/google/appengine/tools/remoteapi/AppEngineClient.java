@@ -80,10 +80,8 @@ abstract class AppEngineClient extends BaseRemoteApiClient {
   List<String[]> getHeadersForGet() {
     return getHeadersBase();
   }
-  
-  /**
-   * Simple class representing an HTTP response.
-   */
+
+  /** Simple class representing an HTTP response. */
   // NOTE: This should really live in RemoteApiClient, but moving
   // it breaks clients due to the problems described in http://b/17462897.
   static class Response {
@@ -117,5 +115,6 @@ abstract class AppEngineClient extends BaseRemoteApiClient {
   // (a prerequisite for adding appropriate hooks such that the internal
   // Remote API classes won't need to depend on non-public hooks).
   abstract LegacyResponse legacyPost(String path, String mimeType, byte[] body) throws IOException;
+
   abstract LegacyResponse legacyGet(String path) throws IOException;
 }

@@ -140,7 +140,7 @@ class MemcacheSessionDataMap extends AbstractLifeCycle implements SessionDataMap
             /* lastAccessed= */ now,
             maxInactiveMs);
     jettySession.setExpiry(runtimeSession.getExpirationTime());
-    // TODO (gregwilkins): avoid this data copy
+    // TODO: avoid this data copy
     jettySession.putAllAttributes(runtimeSession.getValueMap());
     return jettySession;
   }

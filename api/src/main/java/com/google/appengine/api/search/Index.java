@@ -96,7 +96,7 @@ public interface Index {
   Future<Results<ScoredDocument>> searchAsync(String query);
 
   /** @see #search(Query) */
-  // NOTE has not been added because the builder
+  // NOTE: searchAsync(Query.Builder) has not been added because the builder
   // purposely requires the query string to be passed in the build method.
   Future<Results<ScoredDocument>> searchAsync(Query query);
 

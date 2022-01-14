@@ -41,7 +41,7 @@ public class SessionCleanupServlet extends HttpServlet {
   static final String SESSION_ENTITY_TYPE = "_ah_SESSION";
   static final String EXPIRES_PROP = "_expires";
 
-  // N.B.(schwardo): This must be less than 500, which is the maximum
+  // N.B.: This must be less than 500, which is the maximum
   // number of entities that may occur in a single bulk delete call.
   static final int MAX_SESSION_COUNT = 100;
 

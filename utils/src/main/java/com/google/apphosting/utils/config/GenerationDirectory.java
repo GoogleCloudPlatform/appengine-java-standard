@@ -26,11 +26,11 @@ import java.io.File;
  */
 public class GenerationDirectory {
 
-  // TODO Move this to com.google.appengine.tools, post launch. 
-  
+  // TODO: Move this to com.google.appengine.tools, post launch.
+
   /**
-   * The directory in which files are generated. The directory
-   * is relative to the WEB-INF folder of the current application.
+   * The directory in which files are generated. The directory is relative to the WEB-INF folder of
+   * the current application.
    */
   public static final String GENERATED_DIR_PROPERTY = "appengine.generated.dir";
 

@@ -45,8 +45,7 @@ public class LocalOAuthAuthorizeTokenServlet extends HttpServlet {
 
   // TODO: Validate that the token exists.
   @Override
-  public void doGet(HttpServletRequest req, HttpServletResponse resp)
-      throws IOException {
+  public void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
     String oauthCallback = req.getParameter("oauth_callback");
     if (oauthCallback == null) {
       oauthCallback = "";
@@ -73,8 +72,7 @@ public class LocalOAuthAuthorizeTokenServlet extends HttpServlet {
 
   // TODO: Mark the token as approved.
   @Override
-  public void doPost(HttpServletRequest req, HttpServletResponse resp)
-      throws IOException {
+  public void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
     String oauthCallback = req.getParameter("oauth_callback");
     if (oauthCallback != null && oauthCallback.length() > 0) {
       resp.sendRedirect(oauthCallback);

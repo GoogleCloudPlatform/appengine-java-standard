@@ -60,7 +60,7 @@ class DevAppServerClassLoader extends URLClassLoader {
    * classes will be loaded (e.g. DevAppServer).
    */
   public static DevAppServerClassLoader newClassLoader(ClassLoader delegate) {
-    // NB(tobyr) Doing shared, then impl, in order, allows us to prefer
+    // NB Doing shared, then impl, in order, allows us to prefer
     // returning shared classes when asked by other classloaders. This makes
     // it so that we don't have to have the impl and shared classes
     // be a strictly disjoint set.
@@ -72,7 +72,7 @@ class DevAppServerClassLoader extends URLClassLoader {
     return new DevAppServerClassLoader(libs.toArray(new URL[libs.size()]), delegate);
   }
 
-  // NB(tobyr)
+  // NB
   //
   // Isolating our code may seem seem like overkill, but it's really necessary
   // in terms of integration scenarios, such as with GWT. In general, we've

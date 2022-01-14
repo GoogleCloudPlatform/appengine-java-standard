@@ -102,7 +102,7 @@ public final class CorrectMailApiTest {
       return result;
     }
 
-    // TODO?
+    // TODO: implement size() to try calling entry.getSize()?
 
     @Override
     public String toString() {

@@ -555,7 +555,7 @@ public class LocalURLFetchService extends AbstractLocalRpcService {
 
   @Override
   public Integer getMaxApiRequestSize() {
-    // Keep this in sync with MAX_REQUEST_SIZE in <internal>.
+    // Keep this in sync with MAX_REQUEST_SIZE in <internal2>.
     return 10 << 20; // 10 MB
   }
 

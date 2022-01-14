@@ -32,15 +32,13 @@ import java.util.List;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
- * An object that is the result of performing a LogService.fetch() operation.
- * LogQueryResults contain the logs from the user's query. Users of this service
- * should use the {@link LogQueryResult#iterator} provided by this class to
- * retrieve their results.
- *
+ * An object that is the result of performing a LogService.fetch() operation. LogQueryResults
+ * contain the logs from the user's query. Users of this service should use the {@link
+ * LogQueryResult#iterator} provided by this class to retrieve their results.
  */
 // Internally, LogQueryResults also contain a cursor that can be used
 // to grab more results as needed.
-// TODO.
+// TODO: Implement Serializable properly (b/5681093).
 public final class LogQueryResult implements Iterable<RequestLogs> {
   private final List<RequestLogs> logs;
   private final @Nullable String cursor;

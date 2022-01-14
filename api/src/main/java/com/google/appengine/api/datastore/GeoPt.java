@@ -22,9 +22,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 /**
  * A geographical point, specified by float latitude and longitude coordinates. Often used to
  * integrate with mapping sites like Google Maps.
- *
  */
-// TODO
+// TODO: Make the file GWT-compatible (Float.floatToIntBits(float)
 // and String.format(String, float, float) is not implemented in GWT).
 // Once done add this file to the gwt-datastore BUILD target.
 public final class GeoPt implements Serializable, Comparable<GeoPt> {

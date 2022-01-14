@@ -68,12 +68,11 @@ public class IndexesXml implements Iterable<IndexesXml.Index>{
 
   /**
    * The type of index.
-   * <p>
-   * This is needed during parsing and validation.  The type is
-   * not explicitly mentioned in the XML, but must be inferred from
-   * the presence of various attributes.  Once the type is
-   * established, it constrains the attributes the may appear in the
-   * rest of the index configuration.
+   *
+   * <p>This is needed during parsing and validation. The type is not explicitly mentioned in the
+   * XML, but must be inferred from the presence of various attributes. Once the type is
+   * established, it constrains the attributes the may appear in the rest of the index
+   * configuration.
    */
   // TODO: consider representing by proper subclasses of class Index
   public enum Type {

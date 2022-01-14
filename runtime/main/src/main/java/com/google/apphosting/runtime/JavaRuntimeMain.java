@@ -115,7 +115,7 @@ public class JavaRuntimeMain {
     String target = "--" + flagName;
     for (int i = 0; i < args.length; i++) {
       if (args[i].equals(target)) {
-        // TODO doesn't appear to be used
+        // TODO: This syntax ("-foo bar" instead of "-foo=bar") doesn't appear to be used
         // anywhere. We should probably stop supporting it.
         if (i + 1 < args.length) {
           return args[i + 1];

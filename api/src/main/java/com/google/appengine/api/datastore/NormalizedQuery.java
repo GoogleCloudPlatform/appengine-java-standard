@@ -49,7 +49,7 @@ class NormalizedQuery {
   private void normalizeQuery() {
     // TODO: consider sharing this code with MegastoreQueryPlanner
 
-    // NOTE
+    // NOTE: Keep in sync with MegastoreQueryPlanner#normalize()
 
     Set<Property> equalityFilterProperties = new HashSet<Property>();
     Set<String> equalityProperties = new HashSet<String>();
@@ -111,7 +111,7 @@ class NormalizedQuery {
       }
     }
 
-    // NOTE
+    // NOTE: Keep in sync with MegastoreQueryPlanner#normalizeForKeyComponents()
 
     /* Strip all orders if filtering on __key__ with equals. */
     for (Filter f : query.filters()) {

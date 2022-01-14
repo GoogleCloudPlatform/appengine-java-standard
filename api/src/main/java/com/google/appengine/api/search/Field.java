@@ -287,9 +287,7 @@ public final class Field implements Serializable {
     DATE,
 
     // TODO: use self descriptive DOUBLE as a name.
-    /**
-     * Double precision floating-point number.
-     */
+    /** Double precision floating-point number. */
     NUMBER,
     /**
      * Geographical coordinates of a point, in WGS84.

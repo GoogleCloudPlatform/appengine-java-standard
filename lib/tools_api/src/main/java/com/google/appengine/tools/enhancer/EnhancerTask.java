@@ -42,8 +42,9 @@ import org.apache.tools.ant.types.FileSet;
  */
 public class EnhancerTask extends Java {
 
-  // NB(tobyr) This code borrows heavily from DataNucleus' EnhancerTask:
-  // <a href="http://datanucleus.svn.sourceforge.net/viewvc/datanucleus/platform/enhancer/trunk/src/java/org/datanucleus/enhancer/tools/EnhancerTask.java?revision=5225">
+  // NB This code borrows heavily from DataNucleus' EnhancerTask:
+  // <a
+  // href="http://datanucleus.svn.sourceforge.net/viewvc/datanucleus/platform/enhancer/trunk/src/java/org/datanucleus/enhancer/tools/EnhancerTask.java?revision=5225">
   // org.datanucleus.enhancer.tools.EnhancerTask, Revision 5225</a>
   //
   // We write our own task instead of DataNucleus' task directly so that
@@ -54,7 +55,7 @@ public class EnhancerTask extends Java {
   //   (we don't want to introduce extra dependencies upon the taskdef
   //    outside of appengine-tools-api.jar).
 
-    private File dir;
+  private File dir;
 
     /** Only runs this task if the property is set. */
     private String ifpropertyset;

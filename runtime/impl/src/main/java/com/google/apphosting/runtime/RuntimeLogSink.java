@@ -34,17 +34,13 @@ import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
 /**
- * {@code RuntimeLogSink} attaches a root {@link Handler} that records
- * all log messages {@code Level.INFO} or higher as a {@link RuntimeLogLine}
- * attached to the current {@link UPResponse}.
+ * {@code RuntimeLogSink} attaches a root {@link Handler} that records all log messages {@code
+ * Level.INFO} or higher as a {@link RuntimeLogLine} attached to the current {@link UPResponse}.
  *
- * TODO: This class is designed to be used in a
- * single-threaded runtime.  If multiple requests are executing in a
- * single process in parallel, their messages will currently overlap.
- * If we want to support this configuration in the future we should do
- * something slightly smarter here (however, we don't want to limit
- * logs to only the thread serving the request).
- *
+ * <p>TODO: This class is designed to be used in a single-threaded runtime. If multiple requests are
+ * executing in a single process in parallel, their messages will currently overlap. If we want to
+ * support this configuration in the future we should do something slightly smarter here (however,
+ * we don't want to limit logs to only the thread serving the request).
  */
 public class RuntimeLogSink {
   private static final Logger rootLogger = Logger.getLogger("");
@@ -181,7 +177,7 @@ public class RuntimeLogSink {
       sb.append(message);
       sb.append("\n");
       if (record.getThrown() != null) {
-        // <internal>
+        // See <internal19>
         // The log line is going to be truncated to some Kb by the App Server anyway.
         // We could be smart here to truncate as well, but this is an edge case.
         try {

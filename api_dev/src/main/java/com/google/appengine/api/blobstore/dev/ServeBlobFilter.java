@@ -85,7 +85,7 @@ public final class ServeBlobFilter implements Filter {
 
   private BlobStorage getBlobStorage() {
     if (blobStorage == null) {
-      // N.B.(schwardo): We need to make sure that the blobstore stub
+      // N.B.: We need to make sure that the blobstore stub
       // has been initialized and has had a chance to initialize
       // BlobStorageFactory using its properties.
       apiProxyLocal.getService(LocalBlobstoreService.PACKAGE);

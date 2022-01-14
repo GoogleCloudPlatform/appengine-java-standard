@@ -35,7 +35,7 @@ message LogServiceError {
 }
 
 // N.B.(jhaugh): These two messages are partial copies of the AppLogLine and
-// AppLogGroup messages defined in <internal>
+// AppLogGroup messages defined in <internal3>.  They are
 // redefined here to allow userspace code to serialize log lines.
 message UserAppLogLine {
   required int64 timestamp_usec = 1;
@@ -51,7 +51,7 @@ message UserAppLogGroup {
 }
 
 message FlushRequest {
-  // Type: encoded AppLogGroup pb, from <internal>
+  // Type: encoded AppLogGroup pb, from <internal3>
   // Userspace code uses UserAppLogLine and UserAppLogGroup defined above.
   optional bytes logs = 1;
 }

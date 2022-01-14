@@ -206,8 +206,8 @@ public class ParserUtils {
   }
 
   /**
-   * Returns if the given string looks like a date to us. We only accept
-   * ISO 8601 dates, which have the dddd-dd-dd format.
+   * Returns if the given string looks like a date to us. We only accept ISO 8601 dates, which have
+   * the dddd-dd-dd format.
    *
    * @param text text checked if it looks like a date
    * @return whether this could be an ISO 8601 date

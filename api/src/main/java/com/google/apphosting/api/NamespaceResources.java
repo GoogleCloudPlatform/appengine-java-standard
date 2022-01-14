@@ -32,7 +32,7 @@ public final class NamespaceResources {
   // existing records.
   //
   // *IMPORTANT* - Keep this in sync with C++ client and Python (and newer runtimes).
-  // (<internal>)
+  // (<internal8>)
   public static final char NAMESPACE_SEPARATOR = '!';
 
   private NamespaceResources() {

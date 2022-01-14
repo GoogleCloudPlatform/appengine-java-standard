@@ -243,7 +243,7 @@ public class ApplicationConfigurationManager {
    * #getEnvironmentVariableMismatchReportingPolicy}.
    */
   private synchronized void checkEnvironmentVariables() {
-    //TODO: Avoid repeating warnings for repeated calls.
+    // TODO: Avoid repeating warnings for repeated calls.
     EnvironmentVariableChecker environmentVariableChecker =
         new EnvironmentVariableChecker(environmentVariableMismatchReportingPolicy);
     for (ModuleConfigurationHandle moduleConfigurationHandle : moduleConfigurationHandles) {
@@ -421,7 +421,7 @@ public class ApplicationConfigurationManager {
     @Override
     public void readConfiguration() {
       synchronized (ApplicationConfigurationManager.this) {
-        //TODO: Get WAR files to work.
+        // TODO: Get WAR files to work.
         if (EarHelper.isEar(configurationRoot.getAbsolutePath())) {
           String message = String.format("Unsupported update from WAR to EAR for: %s",
               configurationRoot.getAbsolutePath());
@@ -562,7 +562,7 @@ public class ApplicationConfigurationManager {
         currentModuleMapBuilder.put(handle.getModule().getApplicationDirectory(),
             handle.getModule());
       }
-      return currentModuleMapBuilder.build();
+      return currentModuleMapBuilder.buildOrThrow();
     }
 
     private Map<File, WebModule> getUpdatedModuleMap(EarInfo earInfo) {
@@ -571,7 +571,7 @@ public class ApplicationConfigurationManager {
       for (WebModule module : earInfo.getWebModules()) {
         updatedModuleMapBuilder.put(module.getApplicationDirectory(), module);
       }
-      return updatedModuleMapBuilder.build();
+      return updatedModuleMapBuilder.buildOrThrow();
     }
 
     private void checkWarDirectoriesMatch(Set<File>currentWarDirectories,
