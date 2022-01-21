@@ -40,30 +40,12 @@
     <dependency>
       <groupId>com.google.appengine</groupId>
       <artifactId>appengine-tools-sdk</artifactId>
-      <exclusions>
-        <exclusion>
-          <groupId>com.google.appengine</groupId>
-          <artifactId>appengine-remote-api</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>commons-logging</groupId>
-          <artifactId>commons-logging</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>com.google.http-client</groupId>
-          <artifactId>google-http-client</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>com.google.oauth-client</groupId>
-          <artifactId>google-oauth-client</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>com.google.oauth-client</groupId>
-          <artifactId>google-oauth-client-java6</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
-
+    <dependency>
+      <groupId>com.google.appengine</groupId>
+      <artifactId>appengine-apis-dev</artifactId>
+      <optional>true</optional>
+    </dependency>
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
@@ -83,83 +65,18 @@
             </goals>
             <configuration>
               <createSourcesJar>true</createSourcesJar>
-              <relocations>
-                <relocation>
-                  <!-- TODO: Change the package to live in apphosting instead. -->
-                  <pattern>com.esotericsoftware.yamlbeans</pattern>
-                  <shadedPattern>com.google.appengine.repackaged.com.esotericsoftware.yamlbeans</shadedPattern>
-                </relocation>
-                <relocation>
-                  <pattern>com.google.borg.borgcron</pattern>
-                  <shadedPattern>com.google.appengine.repackaged.com.google.cron</shadedPattern>
-                </relocation>
-                <relocation>
-                  <pattern>com.google.common</pattern>
-                  <shadedPattern>com.google.appengine.repackaged.com.google.common</shadedPattern>
-                </relocation>
-                <relocation>
-                  <pattern>com.google.errorprone.annotations</pattern>
-                  <shadedPattern>com.google.appengine.repackaged.com.google.errorprone.annotations</shadedPattern>
-                </relocation>
-                <relocation>
-                  <pattern>com.google.io.protocol</pattern>
-                  <shadedPattern>com.google.appengine.repackaged.com.google.io.protocol</shadedPattern>
-                </relocation>
-                <relocation>
-                  <pattern>com.google.protobuf</pattern>
-                  <shadedPattern>com.google.appengine.repackaged.com.google.protobuf</shadedPattern>
-                </relocation>
-                <relocation>
-                  <pattern>org.antlr.runtime</pattern>
-                  <shadedPattern>com.google.appengine.repackaged.org.antlr.runtime</shadedPattern>
-                </relocation>
-              </relocations>
               <filters>
+                <filter>
+                    <artifact>com.google.appengine:appengine-apis-dev:*</artifact>
+                  <includes>
+                    <include>com/google/appengine/tools/development/testing/**</include>
+                  </includes>
+                </filter>
 
-                <filter>
-                  <artifact>com.google.appengine:protos</artifact>
-                  <includes>
-                    <include>com/google/apphosting/base/protos/api/RemoteApiPb*</include>
-                  </includes>
-                </filter>
-                <filter>
-                  <artifact>com.google.appengine:proto1</artifact>
-                  <includes>
-                    <include>com/google/common/flags/*</include>
-                    <include>com/google/common/flags/ext/*</include>
-                    <include>com/google/io/protocol/**</include>
-                    <include>com/google/protobuf/**</include>
-                  </includes>
-                  <excludes>
-                    <exclude>com/google/io/protocol/proto2/*</exclude>
-                  </excludes>
-                </filter>
-                <filter>
-                    <artifact>com.google.appengine:runtime-shared:*</artifact>
-                  <includes>
-                    <include>com/google/apphosting/api/ApiProxy*</include>
-                  </includes>
-                </filter>
-                <filter>
-                    <artifact>com.google.appengine:appengine-utils:*</artifact>
-                    <excludes>
-                      <exclude>com/google/apphosting/testing/PortPicker*.class</exclude>
-                      <exclude>com/google/apphosting/utils/glob/**</exclude>
-                      <exclude>com/google/apphosting/utils/io/IoUtil.class</exclude>
-                      <exclude>com/google/apphosting/utils/security/urlfetch/URLFetchServiceStreamHandler*</exclude>
-                      <exclude>com/google/apphosting/utils/servlet/SnapshotServlet.class</exclude>
-                    </excludes>
-                  </filter>
               </filters>
               <artifactSet>
                 <includes>
-                  <include>com.google.appengine:runtime-shared</include>
-                  <include>com.google.appengine:appengine-api-stubs</include>
-                  <include>com.google.appengine:appengine-utils</include>
-                  <include>com.google.flogger:google-extensions</include>
-                  <include>com.google.flogger:flogger-system-backend</include>
-                  <include>com.google.flogger:flogger</include>
-                  <include>com.google.errorprone:error_prone_annotations</include>
+                  <include>com.google.appengine:appengine-apis-dev</include>
                 </includes>
               </artifactSet>
             </configuration>

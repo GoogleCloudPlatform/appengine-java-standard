@@ -307,9 +307,11 @@
                     <include>com/google/appengine/api/users/dev/**</include>
                     <include>com/google/cloud/datastore/core/**</include>
                     <include>com/google/appengine/tools/development/**</include>
-                    <include>com/google/appengine/tools/development/testing/**</include>
                     <include>META-INF/services/com.google.appengine.tools.development.LocalRpcService</include>
                   </includes>
+                  <excludes>
+                      <exclude>com/google/appengine/tools/development/testing/**</exclude>
+                  </excludes>
                 </filter>
                 <filter>
                   <artifact>com.google.appengine:protos</artifact>
