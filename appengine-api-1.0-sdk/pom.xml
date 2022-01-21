@@ -329,7 +329,7 @@
                     <include>com/google/apphosting/utils/servlet/SnapshotServlet*</include>
                     <include>com/google/apphosting/utils/servlet/TransactionCleanupFilter*</include>
                     <include>com/google/apphosting/utils/servlet/WarmupServlet*</include>
-                    <include>com/google/apphosting/datastore/</include>
+                    <include>com/google/storage/onestore/PropertyType*</include>
                     <include>javax/cache/LICENSE</include>
                     <include>javax/mail/LICENSE</include>
                     <include>org/apache/geronimo/mail/LICENSE</include>
