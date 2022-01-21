@@ -45,6 +45,7 @@
       <groupId>com.google.appengine</groupId>
       <artifactId>appengine-apis-dev</artifactId>
       <optional>true</optional>
+      <!-- Not repackaged yet, so we need relocation entries below. -->
     </dependency>
     <dependency>
       <groupId>junit</groupId>
@@ -65,6 +66,38 @@
             </goals>
             <configuration>
               <createSourcesJar>true</createSourcesJar>
+              <relocations>
+                <!-- Do not delete these mandatory relocation as we depend on non yet repackaged classes, so
+                we need this extra step of relocation there. -->
+                <relocation>
+                  <pattern>com.esotericsoftware.yamlbeans</pattern>
+                  <shadedPattern>com.google.appengine.repackaged.com.esotericsoftware.yamlbeans</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>com.google.borg.borgcron</pattern>
+                  <shadedPattern>com.google.appengine.repackaged.com.google.cron</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>com.google.common</pattern>
+                  <shadedPattern>com.google.appengine.repackaged.com.google.common</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>com.google.errorprone.annotations</pattern>
+                  <shadedPattern>com.google.appengine.repackaged.com.google.errorprone.annotations</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>com.google.io.protocol</pattern>
+                  <shadedPattern>com.google.appengine.repackaged.com.google.io.protocol</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>com.google.protobuf</pattern>
+                  <shadedPattern>com.google.appengine.repackaged.com.google.protobuf</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>org.antlr.runtime</pattern>
+                  <shadedPattern>com.google.appengine.repackaged.org.antlr.runtime</shadedPattern>
+                </relocation>
+              </relocations>
               <filters>
                 <filter>
                     <artifact>com.google.appengine:appengine-apis-dev:*</artifact>
