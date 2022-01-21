@@ -308,7 +308,6 @@
                     <include>com/google/cloud/datastore/core/**</include>
                     <include>com/google/appengine/tools/development/**</include>
                     <include>com/google/appengine/tools/development/testing/**</include>
-                    <include>com/google/storage/onestore/PropertyType*</include>
                     <include>META-INF/services/com.google.appengine.tools.development.LocalRpcService</include>
                   </includes>
                 </filter>
@@ -381,7 +380,7 @@
                   </includes>
                 </filter>
                 <filter>
-                  <artifact>org.quartz-scheduler:quartz</artifact>
+                  <artifact>quartz:quartz</artifact>
                   <includes>
                     <include>org/quartz/**</include>
                   </includes>
@@ -403,7 +402,7 @@
                   <include>org.apache.lucene:lucene-analyzers</include>
                   <include>org.apache.lucene:lucene-core</include>
                   <include>org.jsoup:jsoup</include>
-                  <include>org.quartz-scheduler:quartz</include>
+                  <include>quartz:quartz</include>
                 </includes>
               </artifactSet>
             </configuration>
