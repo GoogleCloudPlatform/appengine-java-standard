@@ -10,7 +10,6 @@ on:
 
 jobs:
   std-java-build:
-    if: github.repository_owner == 'GoogleCloudPlatform'
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
