@@ -25,13 +25,6 @@ jobs:
         key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
         restore-keys: |
           ${{ runner.os }}-maven-
-    - name: Setup gcloud
-      uses: google-github-actions/setup-gcloud@master
-      with:
-        version: latest
-        project_id: spring-cloud-gcp-ci
-        service_account_key: ${{ secrets.GCP_SERVICE_ACCOUNT }}
-        export_default_credentials: true
 
     - name: Build with Maven
       run: |
