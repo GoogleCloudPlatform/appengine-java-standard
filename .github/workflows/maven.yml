@@ -29,5 +29,5 @@ jobs:
     - name: Build with Maven
       run: |
         mvn clean install -B -q
-        
+        echo "done"
         
