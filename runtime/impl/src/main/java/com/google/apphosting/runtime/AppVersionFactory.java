@@ -425,6 +425,19 @@ public class AppVersionFactory {
           } catch (MalformedURLException ex) {
             logger.atWarning().withCause(ex).log("Could not parse URL for %s, ignoring.", apiJar);
           }
+
+          File appengineApiLegacyJar = classPathUtils.getAppengineApiLegacyJar();
+          if (appengineApiLegacyJar != null) {
+            logger.atInfo().log("Adding appengine-api-legacy jar %s", appengineApiLegacyJar);
+            try {
+              // Add appengine-api-legacy jar with appengine-api-jar priority.
+              classPathBuilder.addAppengineJar(
+                  new URL("file", "", appengineApiLegacyJar.getAbsolutePath()));
+            } catch (MalformedURLException ex) {
+              logger.atWarning().withCause(ex).log(
+                  "Could not parse URL for %s, ignoring.", appengineApiLegacyJar);
+            }
+          }
         } else {
           // TODO: We should probably return an
           // UPResponse::UNKNOWN_API_VERSION here, but I'd like to be

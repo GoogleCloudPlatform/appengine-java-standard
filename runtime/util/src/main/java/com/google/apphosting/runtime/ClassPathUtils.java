@@ -49,6 +49,7 @@ public class ClassPathUtils {
   private static final String PREBUNDLED_PROPERTY = "classpath.prebundled";
   private static final String API_PROPERTY = "classpath.api-map";
   private static final String CONNECTOR_J_PROPERTY = "classpath.connector-j";
+  private static final String APPENGINE_API_LEGACY_PROPERTY = "classpath.appengine-api-legacy";
   private static final String LEGACY_PROPERTY = "classpath.legacy";
   // Cannot use Guava library in this classloader.
   private static final String PATH_SEPARATOR = System.getProperty("path.separator");
@@ -129,6 +130,7 @@ public class ClassPathUtils {
     if (useJetty94 && useMavenJars) {
       System.setProperty(RUNTIME_SHARED_PROPERTY, runtimeBase + "/jars/runtime-shared.jar");
       System.setProperty(API_PROPERTY, "1.0=" + runtimeBase + "/jars/appengine-api-1.0-sdk.jar");
+      System.setProperty(APPENGINE_API_LEGACY_PROPERTY, runtimeBase + "/jars/appengine-api-legacy.jar");
     } else {
       System.setProperty(RUNTIME_SHARED_PROPERTY, runtimeBase + "/runtime-shared.jar");
       System.setProperty(API_PROPERTY, "1.0=" + runtimeBase + "/appengine-api.jar");
@@ -181,6 +183,12 @@ public class ClassPathUtils {
    */
   public File getApiJarForVersion(String apiVersion) {
     return apiVersionMap.get(apiVersion);
+  }
+
+
+  public File getAppengineApiLegacyJar() {
+     String filename = System.getProperty(APPENGINE_API_LEGACY_PROPERTY);
+     return filename == null ? null : new File(root, filename);
   }
 
   /**
