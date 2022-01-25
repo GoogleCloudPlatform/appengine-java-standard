@@ -56,6 +56,15 @@ Source code for all public APIs for com.google.appengine.api.* packages.
 - [Code for repackaged API jar](https://github.com/GoogleCloudPlatform/appengine-java-standard/tree/master/appengine-api-1.0-sdk)
 
 
+#### User Visible Changes With Maven Builds
+- Moved com.google.appengine.api.memcache.stdimpl and its dependancy
+  javax.cache from appengine-api-1.0-sdk.jar to 
+  appengine-api-legacy.jar. Users who depend on the
+  moved classes will need to include appengine-api-legacy.jar when
+  they build/deploy. Separating these classes allows
+  appengine-api-1.0-sdk users to choose any version of javax.cache
+  rather than being constrained by an obsolete included version.
+
 ### App Engine Java local development implementation of the APIs
 
 Implementation of all the App Engine APIs for local environment (devappserver)
