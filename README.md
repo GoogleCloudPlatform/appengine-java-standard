@@ -100,5 +100,3 @@ Source code for the App Engine production application server and utilities. It i
 Check out the [contributing guide](CONTRIBUTING.md) to learn how you can report issues and help make changes.
 
 Always be sure to follow the [Code of Conduct](CODE_OF_CONDUCT.md).
-
-
