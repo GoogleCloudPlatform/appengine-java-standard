@@ -32,7 +32,7 @@ class LocationMapper {
           .put("h", Location.EUROPE_WEST3)
           .put("p", Location.US_EAST1)
           .put("s", Location.US_CENTRAL)
-          .build();
+          .buildOrThrow();
 
   @Nullable
   static Location getLocation(String partitionId) {

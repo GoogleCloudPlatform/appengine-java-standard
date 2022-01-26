@@ -18,6 +18,7 @@ package com.google.apphosting.runtime;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import java.io.File;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -34,6 +35,7 @@ public final class ClassPathUtilsTest {
     System.clearProperty("use.java11");
     System.clearProperty("classpath.runtime-impl");
     System.clearProperty("use.mavenjars");
+    System.clearProperty("classpath.appengine-api-legacy");
 
     System.setProperty("classpath.runtimebase", "/tmp");
   }
@@ -155,7 +157,7 @@ public final class ClassPathUtilsTest {
     System.setProperty("use.jetty94", "true");
     System.setProperty("use.mavenjars", "true");
 
-    ClassPathUtils cpu = new ClassPathUtils();
+    ClassPathUtils cpu = new ClassPathUtils(new File("/my_app_root"));
     assertThat(cpu.getConnectorJUrls()).hasLength(1);
     assertThat(System.getProperty("classpath.runtime-impl"))
         .isEqualTo(
@@ -171,6 +173,14 @@ public final class ClassPathUtilsTest {
         .isEqualTo("/tmp/jdbc-mysql-connector.jar");
     assertThat(System.getProperty("classpath.api-map"))
         .isEqualTo("1.0=/tmp/jars/appengine-api-1.0-sdk.jar");
+    assertThat(System.getProperty("classpath.appengine-api-legacy"))
+        .isEqualTo("/tmp/jars/appengine-api-legacy.jar");
+
+    assertThat(cpu.getAppengineApiLegacyJar().getAbsolutePath())
+        .isEqualTo("/my_app_root/tmp/jars/appengine-api-legacy.jar");
+    assertThat(cpu.getApiJarForVersion("1.0").getAbsolutePath())
+        .isEqualTo("/my_app_root/tmp/jars/appengine-api-1.0-sdk.jar");
+
   }
 
   @Test
@@ -194,5 +204,7 @@ public final class ClassPathUtilsTest {
     assertThat(System.getProperty("classpath.connector-j"))
         .isEqualTo("/tmp/jdbc-mysql-connector.jar");
     assertThat(System.getProperty("classpath.api-map")).isEqualTo("1.0=/tmp/appengine-api.jar");
+    assertThat(System.getProperty("classpath.appengine-api-legacy"))
+        .isNull();
   }
 }
