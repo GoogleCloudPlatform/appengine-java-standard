@@ -468,7 +468,7 @@ public class AsyncCloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Se
             .put(parentKey2, parentEntity2)
             .put(childKey22, childEntity22)
             .put(keyWithOtherAppId, entityWithAppIdConflict)
-            .build();
+            .buildOrThrow();
 
     Map<Key, Entity> actualResults = asyncDatastoreService.get(allKeysToGet).get();
     assertThat(actualResults).isEqualTo(expectedResults);

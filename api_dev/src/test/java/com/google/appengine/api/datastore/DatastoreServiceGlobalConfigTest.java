@@ -79,7 +79,7 @@ public class DatastoreServiceGlobalConfigTest {
     env.put("DATASTORE_PROJECT_ID", "project-id");
     env.put("DATASTORE_USE_PROJECT_ID_AS_APP_ID", "true");
     env.put("DATASTORE_EMULATOR_HOST", "emulator-host");
-    EnvProxy.setEnvOverrideForTest(env.build());
+    EnvProxy.setEnvOverrideForTest(env.buildOrThrow());
 
     DatastoreServiceGlobalConfig config = DatastoreServiceGlobalConfig.getConfig();
     assertThat(config.useApiProxy()).isFalse();

@@ -56,7 +56,7 @@ public class CapabilitiesStatusServlet extends HttpServlet {
           .put("PROSPECTIVE_SEARCH", Capability.PROSPECTIVE_SEARCH)
           .put("TASKQUEUE", Capability.TASKQUEUE)
           .put("URL_FETCH", Capability.URL_FETCH)
-          .build();
+          .buildOrThrow();
 
   private static final String CAPABILITIES_STATUS_ATTRIBUTE = "capabilities_status";
 

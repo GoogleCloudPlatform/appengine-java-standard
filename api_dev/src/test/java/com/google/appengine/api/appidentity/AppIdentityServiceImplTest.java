@@ -111,7 +111,7 @@ public class AppIdentityServiceImplTest {
             .put(MEMCACHE_KEY_PREFIX + "[]", ImmutableList.<String>of())
             .put(MEMCACHE_KEY_PREFIX + "['scope1']", ImmutableList.of("scope1"))
             .put(MEMCACHE_KEY_PREFIX + "['scope1','scope2']", ImmutableList.of("scope1", "scope2"))
-            .build();
+            .buildOrThrow();
     AppIdentityServiceImpl service = new AppIdentityServiceImpl();
     for (Map.Entry<String, List<String>> entry : scopesMap.entrySet()) {
       assertThat(service.memcacheKeyForScopes(entry.getValue())).isEqualTo(entry.getKey());
