@@ -103,6 +103,6 @@ public class ParameterFactory implements IStringConverterFactory {
         }
       }
     }
-    return mapBuilder.build();
+    return mapBuilder.buildOrThrow();
   }
 }

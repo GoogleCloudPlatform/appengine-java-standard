@@ -349,10 +349,12 @@ public class LocalModulesServiceTestConfig implements LocalServiceTestConfig {
     ImmutableMap.Builder<String, String> defaultVersionsBuilder = ImmutableMap.builder();
     defaultVersionsBuilder.putAll(defaultVersions);
 
-    testModulesController = new TestModulesController(moduleVersionStateMapBuilder.build(),
-        modulesListBuilder.build(),
-        versionMapBuilder.build().asMap(),
-        defaultVersionsBuilder.build());
+    testModulesController =
+        new TestModulesController(
+            moduleVersionStateMapBuilder.buildOrThrow(),
+            modulesListBuilder.build(),
+            versionMapBuilder.build().asMap(),
+            defaultVersionsBuilder.buildOrThrow());
   }
 
 

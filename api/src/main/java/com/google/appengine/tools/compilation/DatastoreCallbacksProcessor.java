@@ -202,15 +202,20 @@ public class DatastoreCallbacksProcessor extends AbstractProcessor {
       new ImmutableMap.Builder<Class<? extends Annotation>, CallbackVerifier>()
           .put(PrePut.class, new SingleParamCallbackVerifier(PrePut.class, PutContext.class))
           .put(PostPut.class, new SingleParamCallbackVerifier(PostPut.class, PutContext.class))
-          .put(PreDelete.class, new SingleParamCallbackVerifier(
-              PreDelete.class, DeleteContext.class))
-          .put(PostDelete.class, new SingleParamCallbackVerifier(
-              PostDelete.class, DeleteContext.class))
+          .put(
+              PreDelete.class,
+              new SingleParamCallbackVerifier(PreDelete.class, DeleteContext.class))
+          .put(
+              PostDelete.class,
+              new SingleParamCallbackVerifier(PostDelete.class, DeleteContext.class))
           .put(PreGet.class, new SingleParamCallbackVerifier(PreGet.class, PreGetContext.class))
-          .put(PostLoad.class, new SingleParamCallbackVerifier(
-              PostLoad.class, PostLoadContext.class))
-          .put(PreQuery.class, new SingleParamCallbackVerifier(
-              PreQuery.class, PreQueryContext.class)).build();
+          .put(
+              PostLoad.class,
+              new SingleParamCallbackVerifier(PostLoad.class, PostLoadContext.class))
+          .put(
+              PreQuery.class,
+              new SingleParamCallbackVerifier(PreQuery.class, PreQueryContext.class))
+          .buildOrThrow();
 
   @Override
   public SourceVersion getSupportedSourceVersion() {

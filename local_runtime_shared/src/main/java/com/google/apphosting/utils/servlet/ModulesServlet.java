@@ -102,7 +102,7 @@ public class ModulesServlet extends HttpServlet {
                   mapBuilder.put("instances", getAllInstanceHostnames(moduleName, version));
                 }
 
-                return mapBuilder.build();
+                return mapBuilder.buildOrThrow();
               }
             });
 

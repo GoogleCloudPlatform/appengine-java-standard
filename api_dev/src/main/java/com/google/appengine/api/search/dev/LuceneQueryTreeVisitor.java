@@ -86,7 +86,7 @@ class LuceneQueryTreeVisitor implements QueryTreeVisitor<LuceneQueryTreeContext>
                   .put(
                       DocumentPb.FieldValue.ContentType.TOKENIZED_PREFIX,
                       QueryTreeContext.Type.TEXT)
-                  .build());
+                  .buildOrThrow());
 
   private static final ImmutableSet<DocumentPb.FieldValue.ContentType> TEXT_TYPES =
       Sets.immutableEnumSet(

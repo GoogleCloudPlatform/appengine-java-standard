@@ -160,7 +160,9 @@ abstract class DatastoreServiceGlobalConfig {
       }
       ApiProxy.Environment env = requireNonNull(ApiProxy.getCurrentEnvironment());
       env.getAttributes()
-          .put(DataTypeTranslator.ADDITIONAL_APP_IDS_MAP_ATTRIBUTE_KEY, projectIdToAppId.build());
+          .put(
+              DataTypeTranslator.ADDITIONAL_APP_IDS_MAP_ATTRIBUTE_KEY,
+              projectIdToAppId.buildOrThrow());
     }
   }
 

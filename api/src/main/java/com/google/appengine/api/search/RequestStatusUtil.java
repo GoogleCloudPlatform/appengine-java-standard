@@ -35,20 +35,23 @@ import java.util.Set;
 @AppEngineInternal
 public final class RequestStatusUtil {
 
-  /**
-   * Mapping of search service error to general Canonical Errors.
-   */
+  /** Mapping of search service error to general Canonical Errors. */
   private static final ImmutableMap<SearchServicePb.SearchServiceError.ErrorCode, Code>
       REQUEST_STATUS_TO_CANONICAL_ERROR_MAPPING =
-      ImmutableMap.<SearchServicePb.SearchServiceError.ErrorCode, Code>builder()
-      .put(SearchServicePb.SearchServiceError.ErrorCode.OK, Code.OK)
-      .put(SearchServicePb.SearchServiceError.ErrorCode.INVALID_REQUEST, Code.INVALID_ARGUMENT)
-      .put(SearchServicePb.SearchServiceError.ErrorCode.TRANSIENT_ERROR, Code.UNAVAILABLE)
-      .put(SearchServicePb.SearchServiceError.ErrorCode.INTERNAL_ERROR, Code.INTERNAL)
-      .put(SearchServicePb.SearchServiceError.ErrorCode.PERMISSION_DENIED, Code.PERMISSION_DENIED)
-      .put(SearchServicePb.SearchServiceError.ErrorCode.TIMEOUT, Code.DEADLINE_EXCEEDED)
-      .put(SearchServicePb.SearchServiceError.ErrorCode.CONCURRENT_TRANSACTION, Code.ABORTED)
-      .build();
+          ImmutableMap.<SearchServicePb.SearchServiceError.ErrorCode, Code>builder()
+              .put(SearchServicePb.SearchServiceError.ErrorCode.OK, Code.OK)
+              .put(
+                  SearchServicePb.SearchServiceError.ErrorCode.INVALID_REQUEST,
+                  Code.INVALID_ARGUMENT)
+              .put(SearchServicePb.SearchServiceError.ErrorCode.TRANSIENT_ERROR, Code.UNAVAILABLE)
+              .put(SearchServicePb.SearchServiceError.ErrorCode.INTERNAL_ERROR, Code.INTERNAL)
+              .put(
+                  SearchServicePb.SearchServiceError.ErrorCode.PERMISSION_DENIED,
+                  Code.PERMISSION_DENIED)
+              .put(SearchServicePb.SearchServiceError.ErrorCode.TIMEOUT, Code.DEADLINE_EXCEEDED)
+              .put(
+                  SearchServicePb.SearchServiceError.ErrorCode.CONCURRENT_TRANSACTION, Code.ABORTED)
+              .buildOrThrow();
 
   /**
    * Converts SearchServicePb.SearchServiceError.ErrorCode to canonical error code.

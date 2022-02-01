@@ -171,11 +171,12 @@ class DevAppServerImpl implements DevAppServer {
         externalResourceDir, address, this);
     DelegatingModulesFilterHelper modulesFilterHelper =
         new DelegatingModulesFilterHelper(backendContainer, modules);
-    this.containerConfigProperties = ImmutableMap.<String, Object>builder()
-        .putAll(requestedContainerConfigProperties)
-        .put(MODULES_FILTER_HELPER_PROPERTY, modulesFilterHelper)
-        .put(AbstractContainerService.PORT_MAPPING_PROVIDER_PROP, backendContainer)
-        .build();
+    this.containerConfigProperties =
+        ImmutableMap.<String, Object>builder()
+            .putAll(requestedContainerConfigProperties)
+            .put(MODULES_FILTER_HELPER_PROPERTY, modulesFilterHelper)
+            .put(AbstractContainerService.PORT_MAPPING_PROVIDER_PROP, backendContainer)
+            .buildOrThrow();
     backendContainer.init(address,
         applicationConfigurationManager.getPrimaryModuleConfigurationHandle(),
         externalResourceDir, this.containerConfigProperties, this);

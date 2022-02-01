@@ -720,7 +720,7 @@ public abstract class AbstractBackendServers implements BackendContainer,
               .putAll(containerConfigProperties)
               .put(BackendService.BACKEND_ID_ENV_ATTRIBUTE, serverEntry.getName())
               .put(BackendService.INSTANCE_ID_ENV_ATTRIBUTE, serverInstance)
-              .build();
+              .buildOrThrow();
       getContainer().configure(ContainerUtils.getServerInfo(),
           address,
           port,

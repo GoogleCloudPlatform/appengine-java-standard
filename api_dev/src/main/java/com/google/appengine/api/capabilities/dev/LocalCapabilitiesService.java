@@ -58,7 +58,7 @@ public class LocalCapabilitiesService extends AbstractLocalRpcService {
               .put(CapabilityStatus.SCHEDULED_MAINTENANCE, CapabilityConfig.Status.SCHEDULED)
               .put(CapabilityStatus.DISABLED, CapabilityConfig.Status.DISABLED)
               .put(CapabilityStatus.UNKNOWN, CapabilityConfig.Status.UNKNOWN)
-              .build();
+              .buildOrThrow();
 
   private LocalCapabilitiesEnvironment localCapabilitiesEnvironment = null;
 

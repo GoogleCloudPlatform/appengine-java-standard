@@ -59,6 +59,6 @@ public final class DatastoreErrorsTest {
     for (E v : values) {
       o.put(v.name(), v.getNumber());
     }
-    return o.build();
+    return o.buildOrThrow();
   }
 }

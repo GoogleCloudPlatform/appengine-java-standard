@@ -81,7 +81,7 @@ public class GrpcPlugin extends AnyRpcPlugin {
         ServerInterceptors.intercept(cloneControllerServer, exceptionInterceptor);
     server =
         NettyServerBuilder.forPort(optionalServerPort.get())
-            .maxMessageSize(MAX_REQUEST_BODY_SIZE)
+            .maxInboundMessageSize(MAX_REQUEST_BODY_SIZE)
             .addService(evaluationRuntimeService)
             .addService(cloneControllerService)
             .build();

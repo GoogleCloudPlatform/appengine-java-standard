@@ -49,7 +49,7 @@ public class EarInfo {
       builder.put(webModule.getModuleName(), webModule);
     }
     try {
-      moduleMap = builder.build();
+      moduleMap = builder.buildOrThrow();
     } catch (IllegalArgumentException iae) {
       if (iae.getMessage().startsWith("duplicate key: ")) {
         String msg = "Invalid EAR - Duplicate module name";

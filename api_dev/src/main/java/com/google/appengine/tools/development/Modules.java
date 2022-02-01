@@ -133,7 +133,7 @@ public class Modules implements ModulesController, ModulesFilterHelper {
     for (Module module : this.modules) {
       mapBuilder.put(module.getModuleName(), module);
     }
-    moduleNameToModuleMap = mapBuilder.build();
+    moduleNameToModuleMap = mapBuilder.buildOrThrow();
   }
 
   public LocalServerEnvironment getLocalServerEnvironment() {

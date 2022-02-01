@@ -56,7 +56,7 @@ final class BinaryNumericExpression extends NumericExpression {
           .put(ExpressionLexer.EQ, (a, b) -> truth(a == b))
           .put(ExpressionLexer.NE, (a, b) -> truth(a != b))
           .put(ExpressionLexer.GE, (a, b) -> truth(a >= b))
-          .build();
+          .buildOrThrow();
 
   private static double truth(boolean b) {
     return b ? 1 : 0;

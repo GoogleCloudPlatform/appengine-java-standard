@@ -2644,7 +2644,7 @@ public abstract class LocalDatastoreService {
           versionsBuilder.put(key, versions.get(key));
         }
       }
-      this.versions = versionsBuilder.build();
+      this.versions = versionsBuilder.buildOrThrow();
 
       // Apply cursors
       DecompiledCursor startCursor =
