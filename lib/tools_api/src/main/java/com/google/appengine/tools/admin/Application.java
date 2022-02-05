@@ -130,10 +130,15 @@ public class Application implements GenericApplication {
   private static final String GOOGLE_RUNTIME_ID = "google";
   private static final String GOOGLE_LEGACY_RUNTIME_ID = "googlelegacy";
   private static final String JAVA_11_RUNTIME_ID = "java11";
+  private static final String JAVA_17_RUNTIME_ID = "java17";
 
   private static final ImmutableSet<String> ALLOWED_RUNTIME_IDS =
       ImmutableSet.of(
-          JAVA_8_RUNTIME_ID, JAVA_11_RUNTIME_ID, GOOGLE_RUNTIME_ID, GOOGLE_LEGACY_RUNTIME_ID);
+          JAVA_8_RUNTIME_ID,
+          JAVA_11_RUNTIME_ID,
+          JAVA_17_RUNTIME_ID,
+          GOOGLE_RUNTIME_ID,
+          GOOGLE_LEGACY_RUNTIME_ID);
 
   // Beta settings keys
   private static final String BETA_SOURCE_REFERENCE_KEY = "source_reference";
@@ -933,6 +938,7 @@ public class Application implements GenericApplication {
   private boolean isJava8OrAbove() {
     return (appEngineWebXml.getRuntime().startsWith(JAVA_8_RUNTIME_ID)
         || appEngineWebXml.getRuntime().equals(JAVA_11_RUNTIME_ID)
+        || appEngineWebXml.getRuntime().equals(JAVA_17_RUNTIME_ID)
         || appEngineWebXml.getRuntime().startsWith(GOOGLE_LEGACY_RUNTIME_ID));
   }
 
@@ -1311,7 +1317,9 @@ public class Application implements GenericApplication {
     if (runtime.startsWith(JAVA_8_RUNTIME_ID)) {
       optionList.addAll(Arrays.asList("-source", "8"));
       optionList.addAll(Arrays.asList("-target", "8"));
-    } else if (runtime.startsWith(GOOGLE_LEGACY_RUNTIME_ID) || runtime.equals(JAVA_11_RUNTIME_ID)) {
+    } else if (runtime.startsWith(GOOGLE_LEGACY_RUNTIME_ID)
+        || runtime.equals(JAVA_11_RUNTIME_ID)
+        || runtime.equals(JAVA_17_RUNTIME_ID)) {
       // TODO(b/115569833): for now, it's still possible to use a JDK8 to compile and deploy Java11
       // apps.
       optionList.addAll(Arrays.asList("-source", "8"));
