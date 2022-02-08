@@ -114,21 +114,4 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
-
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <configuration>
-          <systemPropertyVariables>
-            <appengine.runtime.dir>../deployment/target/runtime-deployment-${project.version}</appengine.runtime.dir>
-            <use.jetty94>true</use.jetty94>
-            <use.mavenjars>true</use.mavenjars>
-            <com.google.apphosting.runtime.jetty94.LEGACY_MODE>true</com.google.apphosting.runtime.jetty94.LEGACY_MODE>
-          </systemPropertyVariables>
-        </configuration>
-      </plugin>
-    </plugins>
-  </build>
 </project>
