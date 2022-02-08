@@ -249,6 +249,7 @@ public abstract class JavaRuntimeViaHttpBase {
       if (!JAVA_VERSION.value().startsWith("1.8")) {
         return ImmutableList.of(
             "-showversion",
+            "--add-opens",
             "java.base/java.lang=ALL-UNNAMED",
             "--add-opens",
             "java.base/java.nio.charset=ALL-UNNAMED",
