@@ -17,6 +17,7 @@
 package com.google.apphosting.runtime.jetty9;
 
 import static com.google.common.base.StandardSystemProperty.FILE_SEPARATOR;
+import static com.google.common.base.StandardSystemProperty.JAVA_VERSION;
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
@@ -243,6 +244,20 @@ public abstract class JavaRuntimeViaHttpBase {
       }
     }
 
+    /** JVM flags needed for JDK above JDK8 */
+    private static ImmutableList<String> optionalFlags() {
+      if (!JAVA_VERSION.value().startsWith("1.8")) {
+        return ImmutableList.of(
+            "-showversion",
+            "java.base/java.lang=ALL-UNNAMED",
+            "--add-opens",
+            "java.base/java.nio.charset=ALL-UNNAMED",
+            "--add-opens",
+            "java.logging/java.util.logging=ALL-UNNAMED");
+      }
+      return ImmutableList.of("-showversion"); // Just so that the list is not empty.
+    }
+
     static <ApiServerT extends Closeable> RuntimeContext<ApiServerT> create(
         Config<ApiServerT> config) throws IOException, InterruptedException {
       PortPicker portPicker = PortPicker.create();
@@ -266,12 +281,12 @@ public abstract class JavaRuntimeViaHttpBase {
                       javaHome + "/bin/java",
                       "-Dcom.google.apphosting.runtime.jetty94.LEGACY_MODE="
                           + useJetty94LegacyMode(),
-                     "-Duse.mavenjars="
-                          + useMavenJars(),
+                      "-Duse.mavenjars=" + useMavenJars(),
                       "-cp",
                       useMavenJars()
                           ? new File(runtimeDir, "jars/runtime-main.jar").getAbsolutePath()
                           : new File(runtimeDir, "runtime-main.jar").getAbsolutePath())
+                  .addAll(optionalFlags())
                   .addAll(jvmFlagsFromEnvironment(config.environmentEntries()))
                   .add(
                       "com.google.apphosting.runtime.JavaRuntimeMainWithDefaults",
