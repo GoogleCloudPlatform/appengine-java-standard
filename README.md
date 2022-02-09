@@ -18,7 +18,7 @@
 
 
 This repository contains the Java Source Code for [Google App Engine
-standard environment][ae-docs], the production runtime, the AppEngine APIs, and local SDK.
+standard environment][ae-docs], the production runtime, the AppEngine APIs, and the local SDK.
 
 [ae-docs]: https://cloud.google.com/appengine/docs/standard/java
 
