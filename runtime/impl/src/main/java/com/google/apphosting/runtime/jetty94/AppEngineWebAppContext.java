@@ -17,6 +17,7 @@
 package com.google.apphosting.runtime.jetty94;
 
 import static com.google.common.base.StandardSystemProperty.JAVA_IO_TMPDIR;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.apphosting.api.ApiProxy;
 import com.google.apphosting.api.ApiProxy.LogRecord;
@@ -31,6 +32,7 @@ import com.google.apphosting.utils.servlet.SnapshotServlet;
 import com.google.apphosting.utils.servlet.WarmupServlet;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -40,6 +42,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.Scanner;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import javax.servlet.Filter;
@@ -83,8 +86,13 @@ public class AppEngineWebAppContext extends WebAppContext {
 
   private static final String JETTY_PACKAGE = "org.eclipse.jetty.";
 
+  // The optional file path that contains AppIds that need to ignore content length for response.
+  private static final String IGNORE_CONTENT_LENGTH =
+      "/base/java8_runtime/appengine.ignore-content-length";
+
   private final String serverInfo;
   private final List<RequestListener> requestListeners = new CopyOnWriteArrayList<>();
+  private final boolean ignoreContentLength;
 
   // These are deprecated filters and servlets
   private static final ImmutableSet<HolderMatcher> DEPRECATED_SERVLETS_FILTERS =
@@ -158,6 +166,24 @@ public class AppEngineWebAppContext extends WebAppContext {
     setMaxFormContentSize(MAX_RESPONSE_SIZE);
 
     insertHandler(new ParseBlobUploadHandler());
+    ignoreContentLength = isAppIdForNonContentLength();
+  }
+
+  private static boolean isAppIdForNonContentLength() {
+    String projectId = System.getenv("GOOGLE_CLOUD_PROJECT");
+    if (projectId == null) {
+      return false;
+    }
+    try (Scanner s = new Scanner(new File(IGNORE_CONTENT_LENGTH), UTF_8.name())) {
+      while (s.hasNext()) {
+        if (projectId.equals(s.next())) {
+          return true;
+        }
+      }
+    } catch (FileNotFoundException ignore) {
+      return false;
+    }
+    return false;
   }
 
   @Override
@@ -246,6 +272,9 @@ public class AppEngineWebAppContext extends WebAppContext {
       iter.next().requestReceived(this, baseRequest);
     }
     try {
+      if (ignoreContentLength) {
+        response = new IgnoreContentLengthResponseWrapper(response);
+      }
       super.doHandle(target, baseRequest, request, response);
     } finally {
       // TODO: this finally approach is ok until async request handling is supported
