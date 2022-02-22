@@ -418,8 +418,8 @@ public class TaskOptionsTest extends TestCase {
     // We don't test the actual content of the string, since the API doesn't really
     // define a contract about what it should be, and we don't want to make the tests that
     // fragile. But we'll make sure toString() doesn't npe in the presence of absent properties.
-    withTaskName("someTask").toString();
-    withMethod(TaskOptions.Method.POST).toString();
+    String unused = withTaskName("someTask").toString();
+    String unused2 = withMethod(TaskOptions.Method.POST).toString();
 
     // We also test that it contains parameter values (hopefully something like
     // params=[StringParam(foo=bar)] rather than

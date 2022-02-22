@@ -102,6 +102,7 @@ public class LeaseOptionsTest extends TestCase {
         withLeasePeriod(60, TimeUnit.HOURS).deadlineInSeconds(50.0));
   }
 
+  @SuppressWarnings("ReturnValueIgnored")
   public void testHashCode() {
     // Make sure hashCode() doesn't npe in the presence of absent properties.
     withLeasePeriod(10, TimeUnit.SECONDS).hashCode();
@@ -143,6 +144,7 @@ public class LeaseOptionsTest extends TestCase {
         withLeasePeriod(60, TimeUnit.HOURS).deadlineInSeconds(50.0).hashCode());
   }
 
+  @SuppressWarnings("ReturnValueIgnored")
   public void testToString() {
     // We don't test the actual content of the string, since the API doesn't really
     // define a contract about what it should be, and we don't want to make the tests that
