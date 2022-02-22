@@ -19,6 +19,7 @@ package com.google.appengine.api.datastore;
 import com.google.appengine.api.datastore.Entity.UnindexedValue;
 import com.google.appengine.api.datastore.Entity.WrappedValue;
 import com.google.appengine.api.datastore.Entity.WrappedValueImpl;
+import com.google.errorprone.annotations.CheckReturnValue;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -46,6 +47,7 @@ public abstract class PropertyContainer implements Serializable, Cloneable {
    *
    * @return the property corresponding to {@code propertyName}.
    */
+  @CheckReturnValue
   public @Nullable Object getProperty(String propertyName) {
     return unwrapValue(getPropertyMap().get(propertyName));
   }
