@@ -55,7 +55,7 @@ def open_java_proto_library(
         jar="$$(pwd)"/$(location //third_party/java/jdk/jar)
         rewrite_script="$$(pwd)"/$(location <internal12>)
         srcs=({srcs})
-        $(location //third_party/protobuf/compiler:protoc) \
+        $(location //third_party/protobuf_legacy_opensource:protoc) \
             -I third_party/java_src/appengine_standard/protobuf -I third_party/java_src/appengine_standard/protobuf/api \
             --java_out="$${{out_dir}}" "$${{srcs[@]}}"
         cd "$${{out_dir}}"
@@ -66,7 +66,7 @@ def open_java_proto_library(
         tools = [
             "<internal12>",
             "//third_party/java/jdk/jar",
-            "//third_party/protobuf/compiler:protoc",
+            "//third_party/protobuf_legacy_opensource:protoc",
         ],
         compatible_with = compatible_with,
     )
