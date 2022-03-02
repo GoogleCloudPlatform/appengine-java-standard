@@ -147,7 +147,7 @@ public class LocalLogServiceTest {
 
       LocalLogService logService = getLocalLogService();
 
-      logService.registerResponseSize((int) log.getResponseSize());
+      logService.registerResponseSize(log.getResponseSize());
       logService.addRequestInfo(
           log.getAppId(),
           log.getVersionId(),
