@@ -21,7 +21,7 @@
   <parent>
     <groupId>com.google.appengine</groupId>
     <artifactId>parent</artifactId>
-    <version>2.0.4-SNAPSHOT</version>
+    <version>2.0.5-SNAPSHOT</version>
   </parent>
   <properties>
     <maven.deploy.skip>true</maven.deploy.skip>
@@ -223,10 +223,10 @@
         <docletName>java-docfx-doclet-1.5.0</docletName>
         <outputpath>${project.build.directory}/docfx-yml</outputpath>
         <projectname>${project.artifactId}</projectname>
-        <excludeclasses></excludeclasses>
+        <excludeclasses />
         <excludePackages>com\.google\.storage\.onestore:com\.google\.api\.client\.findbugs:com\.google\.apphosting\.utils</excludePackages>
         <source>8</source>
-        <sourceFileExclude></sourceFileExclude>
+        <sourceFileExclude />
         <!-- Filed https://github.com/googleapis/java-docfx-doclet/issues/105 -->
         <docletPath>${user.home}/Downloads/java-docfx-doclet-1.5.0.jar:${user.home}/Downloads/java-docfx-doclet-1.5.0-jar-with-dependencies.jar</docletPath>
       </properties>
