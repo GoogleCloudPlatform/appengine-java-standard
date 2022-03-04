@@ -14,7 +14,7 @@
  limitations under the License.
 -->
 
-# Google App Engine Standard Environment Source Code for Java 8 and Java11.
+# Google App Engine Standard Environment Source Code for Java8, Java11 and Java17.
 
 
 This repository contains the Java Source Code for [Google App Engine
@@ -38,6 +38,12 @@ client libraries.
 ### Use a JDK8 environment so it can build the Java8 GAE runtime.
 
 [jdk8](https://adoptium.net/)
+
+The shared code base is also used for Java11 and Jav17 build and test targets, using github actions:
+
+- [Java8 Continuous Integration](https://github.com/GoogleCloudPlatform/appengine-java-standard/actions/workflows/maven_java8.yml)
+- [Java11 Continuous Integration](https://github.com/GoogleCloudPlatform/appengine-java-standard/actions/workflows/maven_java11.yml)
+- [Java17 Continuous Integration](https://github.com/GoogleCloudPlatform/appengine-java-standard/actions/workflows/maven_java17.yml)
 
 ## Modules
 
