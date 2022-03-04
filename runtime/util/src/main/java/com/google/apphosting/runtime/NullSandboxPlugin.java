@@ -33,9 +33,6 @@ import java.util.logging.Logger;
  */
 public class NullSandboxPlugin {
   private static final Logger rootLogger = Logger.getLogger("");
-  // TODO remove soon. See b/183240857 temporary property to do tests in QA and probers first.
-  private static final String DO_NOT_USE_BUNDLED_JDBC_DRIVER = "gae.do_not_use_bundled_jdbc_driver";
-  private static final String DO_NOT_USE_BUNDLED_CONSCRYPT = "gae.do_not_use_bundled_conscrypt";
 
   static final String ALWAYS_SCAN_CLASS_DIRS_PROPERTY =
       "com.google.appengine.always.scan.class.dirs";
@@ -130,20 +127,16 @@ public class NullSandboxPlugin {
    */
   protected ClassLoader doCreateApplicationClassLoader(
       URL[] userUrls, File contextRoot, ApplicationEnvironment environment) {
-    if (!Boolean.getBoolean(DO_NOT_USE_BUNDLED_CONSCRYPT)) {
       // Add prebundled jars at the end of the application class path. This code and its helper
       // methods were copied from UserClassLoaderFactory.createClassLoader.
       URL[] prebundledUrls = getClassPathUtils().getPrebundledUrls();
       userUrls = append(userUrls, prebundledUrls);
-    }
-    if (!Boolean.getBoolean(DO_NOT_USE_BUNDLED_JDBC_DRIVER)) {
       // Add the j-connector class path at the front. Also copied from
       // UserClassLoaderFactory.createClassLoader.
       if (environment.getRuntimeConfiguration().getCloudSqlJdbcConnectivityEnabled()
           && environment.getUseGoogleConnectorJ()) {
         URL[] urls = getClassPathUtils().getConnectorJUrls();
         userUrls = append(urls, userUrls);
-      }
     }
     URL[] legacyUrls = getClassPathUtils().getLegacyJarUrls();
     boolean alwaysScanClassDirs = "true".equalsIgnoreCase(

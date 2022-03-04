@@ -20,7 +20,6 @@
   <dependencySets>
     <dependencySet>
       <useProjectArtifact>true</useProjectArtifact>
-      <outputDirectory>jars</outputDirectory>
       <!-- outputFileMapping produces for example "runtime-impl.jar" -->
       <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
      <includes>

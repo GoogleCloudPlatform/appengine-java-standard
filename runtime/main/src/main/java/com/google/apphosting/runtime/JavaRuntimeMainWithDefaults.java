@@ -160,7 +160,6 @@ public class JavaRuntimeMainWithDefaults {
         "--use_clone_controller_for_deadlines=true",
         "--use_env_vars_from_app_info=true",
         "--use_jetty_http_proxy=true",
-        "--use_mavenJars=" + useMavenJars(),
         "--wait_for_daemon_request_threads=false",
         "--log_json_to_var_log=true");
   }

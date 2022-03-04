@@ -23,11 +23,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -55,14 +51,24 @@ public class ClassPathUtils {
   private static final String PATH_SEPARATOR = System.getProperty("path.separator");
 
   private final File root;
-  private final Map<String, File> apiVersionMap;
-  private Collection<File> runtimeProvidedFiles;
+  private File apiJarFile;
 
   public ClassPathUtils() {
     this(null);
   }
 
   public ClassPathUtils(File root) {
+
+    String runtimeBase = System.getProperty(RUNTIME_BASE_PROPERTY);
+    if (runtimeBase == null) {
+      throw new RuntimeException("System property not defined: " + RUNTIME_BASE_PROPERTY);
+    }
+    this.root = root;
+
+    if (!new File(runtimeBase, "java_runtime_launcher").exists()) {
+      initForJava11OrAbove(runtimeBase);
+      return;
+    }
 
     boolean useJetty93 = Boolean.getBoolean(USE_JETTY93);
     boolean useJetty94 = Boolean.getBoolean(USE_JETTY94);
@@ -76,10 +82,6 @@ public class ClassPathUtils {
       System.setProperty(USE_JETTY94, "false");
     }
     boolean useMavenJars = Boolean.getBoolean(USE_MAVENJARS);
-    String runtimeBase = System.getProperty(RUNTIME_BASE_PROPERTY);
-    if (runtimeBase == null) {
-      throw new RuntimeException("System property not defined: " + RUNTIME_BASE_PROPERTY);
-    }
     String runtimeImplJar = null;
     String cloudDebuggerJar = null;
     // This is only for Java11 or later runtime:
@@ -130,18 +132,50 @@ public class ClassPathUtils {
     if (useJetty94 && useMavenJars) {
       System.setProperty(RUNTIME_SHARED_PROPERTY, runtimeBase + "/jars/runtime-shared.jar");
       System.setProperty(API_PROPERTY, "1.0=" + runtimeBase + "/jars/appengine-api-1.0-sdk.jar");
-      System.setProperty(APPENGINE_API_LEGACY_PROPERTY, runtimeBase + "/jars/appengine-api-legacy.jar");
+      apiJarFile = new File(new File(root, runtimeBase), "/jars/appengine-api-1.0-sdk.jar");
+      System.setProperty(
+          APPENGINE_API_LEGACY_PROPERTY, runtimeBase + "/jars/appengine-api-legacy.jar");
     } else {
       System.setProperty(RUNTIME_SHARED_PROPERTY, runtimeBase + "/runtime-shared.jar");
       System.setProperty(API_PROPERTY, "1.0=" + runtimeBase + "/appengine-api.jar");
+      apiJarFile = new File(new File(root, runtimeBase), "/appengine-api.jar");
     }
     System.setProperty(CONNECTOR_J_PROPERTY, runtimeBase + "/jdbc-mysql-connector.jar");
     System.setProperty(PREBUNDLED_PROPERTY, runtimeBase + "/conscrypt.jar");
     System.setProperty(LEGACY_PROPERTY, runtimeBase + "/legacy.jar");
+  }
 
-    this.root = root;
-    apiVersionMap = new HashMap<String, File>();
-    initRuntimeProvidedFiles();
+  private void initForJava11OrAbove(String runtimeBase) {
+    // No native launcher means gen2 java11 or java17, not java8.
+    /*
+        New content is very simple now (from maven jars):
+        ls blaze-bin/java/com/google/apphosting/runtime_java11/deployment_java11
+        appengine-api-1.0-sdk.jar
+        runtime-impl.jar
+        runtime-main.jar
+        runtime-shared.jar
+    */
+    List<String> runtimeClasspathEntries =
+        Arrays.asList("runtime-impl.jar", "appengine-api-1.0-sdk.jar");
+
+    String runtimeClasspath =
+        runtimeClasspathEntries.stream()
+            .filter(t -> t != null)
+            .map(s -> runtimeBase + "/" + s)
+            .collect(joining(PATH_SEPARATOR));
+
+    if (System.getProperty(RUNTIME_IMPL_PROPERTY) != null) {
+      // Prepend existing value, only used in our tests.
+      runtimeClasspath =
+          System.getProperty(RUNTIME_IMPL_PROPERTY) + PATH_SEPARATOR + runtimeClasspath;
+    }
+
+    // Keep old properties for absolute compatibility if ever some public apps depend on them:
+    System.setProperty(RUNTIME_IMPL_PROPERTY, runtimeClasspath);
+    logger.log(Level.INFO, "Using runtime classpath: " + runtimeClasspath);
+
+    System.setProperty(RUNTIME_SHARED_PROPERTY, runtimeBase + "/runtime-shared.jar");
+    apiJarFile = new File(runtimeBase, "/appengine-api-1.0-sdk.jar");
   }
 
   public URL[] getRuntimeImplUrls() {
@@ -153,11 +187,21 @@ public class ClassPathUtils {
   }
 
   public URL[] getPrebundledUrls() {
-    return parseClasspath(System.getProperty(PREBUNDLED_PROPERTY));
+    String path = System.getProperty(PREBUNDLED_PROPERTY);
+    if (path == null) {
+      return new URL[0];
+    } else {
+      return parseClasspath(path);
+    }
   }
 
   public URL[] getConnectorJUrls() {
-    return parseClasspath(System.getProperty(CONNECTOR_J_PROPERTY));
+    String path = System.getProperty(CONNECTOR_J_PROPERTY);
+    if (path == null) {
+      return new URL[0];
+    } else {
+      return parseClasspath(path);
+    }
   }
 
   /**
@@ -181,23 +225,13 @@ public class ClassPathUtils {
    * Returns a {@link File} for the API jar that corresponds to the specified version, or {@code
    * null} if no jar for this version is available.
    */
-  public File getApiJarForVersion(String apiVersion) {
-    return apiVersionMap.get(apiVersion);
+  public File getApiJarForVersion(String /* apiVersion */ unused) {
+    return apiJarFile;
   }
-
 
   public File getAppengineApiLegacyJar() {
-     String filename = System.getProperty(APPENGINE_API_LEGACY_PROPERTY);
-     return filename == null ? null : new File(root, filename);
-  }
-
-  /**
-   * Returns all runtime-provided files which are loaded in the UserClassLoader as unprivileged user
-   * code. This includes code like the appengine API as well as bits of the JRE that we implement at
-   * the user-level.
-   */
-  public Collection<File> getRuntimeProvidedFiles() {
-    return Collections.unmodifiableCollection(runtimeProvidedFiles);
+    String filename = System.getProperty(APPENGINE_API_LEGACY_PROPERTY);
+    return filename == null ? null : new File(root, filename);
   }
 
   /**
@@ -220,48 +254,5 @@ public class ClassPathUtils {
     }
 
     return urls.toArray(new URL[0]);
-  }
-
-  private void initRuntimeProvidedFiles() {
-    runtimeProvidedFiles = new ArrayList<File>();
-    addJars(runtimeProvidedFiles, getPrebundledUrls());
-    addJars(runtimeProvidedFiles, getConnectorJUrls());
-
-    // We consider API jars to also be prebundled.
-    addApiJars(runtimeProvidedFiles);
-  }
-
-  private void addJars(Collection<File> files, URL[] urls) {
-    for (URL url : urls) {
-      File f = new File(url.getPath());
-      files.add(f);
-    }
-  }
-
-  private void addApiJars(Collection<File> files) {
-    // The string for the api mapping follows the grammar:
-    // <single-mapping>     is <version>=<path>
-    // <additional-mapping> is :<version>=<path>
-    // <mappings>           is <single-mapping> <additional-mapping>+
-    String apiMapping = System.getProperty(API_PROPERTY);
-
-    if (apiMapping != null && !apiMapping.isEmpty()) {
-      StringTokenizer tokenizer = new StringTokenizer(apiMapping, File.pathSeparator);
-      while (tokenizer.hasMoreTokens()) {
-        String token = tokenizer.nextToken();
-        int equals = token.indexOf('=');
-        if (equals != -1) {
-          String apiVersion = token.substring(0, equals);
-          String filename = token.substring(equals + 1);
-          File file = new File(root, filename);
-          apiVersionMap.put(apiVersion, file);
-          files.add(file);
-        } else {
-          logger.warning("Could not parse " + token + " as api-version=jar, ignoring.");
-        }
-      }
-    } else {
-      logger.severe("Property " + API_PROPERTY + " not set, no API versions available.");
-    }
   }
 }

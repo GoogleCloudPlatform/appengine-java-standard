@@ -42,8 +42,6 @@ public class JavaRuntimeMainTest {
   public void setUp() {
     System.clearProperty("use.jetty94");
     System.clearProperty("disable_api_call_logging_in_apiproxy");
-    System.clearProperty("gae.do_not_use_bundled_jdbc_driver");
-    System.clearProperty("gae.do_not_use_bundled_conscrypt");
     main = new JavaRuntimeMain();
   }
 
@@ -82,8 +80,6 @@ public class JavaRuntimeMainTest {
     main.processOptionalProperties(args);
     assertThat(main.getApplicationPath(args)).isEqualTo(appRoot);
     assertThat(System.getProperty("use.jetty94")).isNull();
-    assertThat(System.getProperty("gae.do_not_use_bundled_jdbc_driver")).isNull();
-    assertThat(System.getProperty("gae.do_not_use_bundled_conscrypt")).isNull();
     assertThat(System.getProperty("disable_api_call_logging_in_apiproxy")).isNull();
   }
 
@@ -94,16 +90,13 @@ public class JavaRuntimeMainTest {
     try (PrintWriter writer = new PrintWriter(properties, UTF_8.name())) {
       writer.println("use.jetty94=true");
       writer.println("disable_api_call_logging_in_apiproxy=true");
-      writer.println("gae.do_not_use_bundled_jdbc_driver=true");
-      writer.println("gae.do_not_use_bundled_conscrypt=true");
+
     }
     String appRoot = temporaryFolder.getRoot().toString();
     String[] optionalProperties = {"--fixed_application_path=" + appRoot};
     main.processOptionalProperties(optionalProperties);
     assertThat(main.getApplicationPath(optionalProperties)).isEqualTo(appRoot);
     assertThat(System.getProperty("use.jetty94")).isEqualTo("true");
-    assertThat(System.getProperty("gae.do_not_use_bundled_jdbc_driver")).isEqualTo("true");
-    assertThat(System.getProperty("gae.do_not_use_bundled_conscrypt")).isEqualTo("true");
     assertThat(System.getProperty("disable_api_call_logging_in_apiproxy")).isEqualTo("true");
   }
 }
