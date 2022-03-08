@@ -272,7 +272,8 @@ public abstract class JavaRuntimeViaHttpBase {
               ? new File(RUNTIME_LOCATION_ROOT, "runtime_java8/deployment_java8")
               : new File(runtimeDirProperty);
       assertWithMessage("Runtime directory %s should exist and be a directory", runtimeDir)
-          .that(runtimeDir.isDirectory()).isTrue();
+          .that(runtimeDir.isDirectory())
+          .isTrue();
       InetSocketAddress apiSocketAddress = new InetSocketAddress(apiPort);
 
       ImmutableList<String> runtimeArgs =
@@ -314,9 +315,7 @@ public abstract class JavaRuntimeViaHttpBase {
                       "--trusted_host="
                           + HostAndPort.fromParts(apiSocketAddress.getHostString(), apiPort),
                       "--max_jvm_heap_size=128",
-                      "--verify_sandbox=false",
-                      "--allow_vfs_open_failure=true",
-                      "--vm_type=server")
+                      "--allow_vfs_open_failure=true")
                   .addAll(config.launcherFlags())
                   .build();
 
@@ -369,14 +368,13 @@ public abstract class JavaRuntimeViaHttpBase {
           urlPath);
     }
 
-    void executeHttpGet(
-        String url, String expectedResponseBody, int expectedReturnCode) throws Exception {
+    void executeHttpGet(String url, String expectedResponseBody, int expectedReturnCode)
+        throws Exception {
       executeHttpGetWithRetries(
           url, expectedResponseBody, expectedReturnCode, /* numberOfRetries= */ 1);
     }
 
-    String executeHttpGet(String urlPath, int expectedReturnCode)
-        throws Exception {
+    String executeHttpGet(String urlPath, int expectedReturnCode) throws Exception {
       HttpGet get = new HttpGet(jettyUrl(urlPath));
       HttpResponse response = httpClient.execute(get);
       HttpEntity entity = response.getEntity();
@@ -473,8 +471,7 @@ public abstract class JavaRuntimeViaHttpBase {
       }
     }
 
-    void awaitOutputLineMatching(String pattern, long timeoutSeconds)
-        throws InterruptedException {
+    void awaitOutputLineMatching(String pattern, long timeoutSeconds) throws InterruptedException {
       long timeoutMillis = MILLISECONDS.convert(timeoutSeconds, SECONDS);
       long deadline = System.currentTimeMillis() + timeoutMillis;
       while (true) {
@@ -491,8 +488,8 @@ public abstract class JavaRuntimeViaHttpBase {
   }
 
   /**
-   * Make a copy of the JRE in a temporary directory. This ensures that it is all real files,
-   * and not symbolic links.
+   * Make a copy of the JRE in a temporary directory. This ensures that it is all real files, and
+   * not symbolic links.
    */
   private static String copyJavaHome(String originalJavaHome) throws Exception {
     Path tmpJre = temporaryFolder.newFolder("jre").toPath();
@@ -502,10 +499,11 @@ public abstract class JavaRuntimeViaHttpBase {
       for (Path path : paths) {
         Path targetPath = tmpJre.resolve(sourceJre.relativize(path));
         Files.copy(path, targetPath, StandardCopyOption.REPLACE_EXISTING);
-        ImmutableSet<PosixFilePermission> perms = ImmutableSet.<PosixFilePermission>builder()
-            .addAll(Files.getPosixFilePermissions(targetPath))
-            .add(PosixFilePermission.OWNER_WRITE)
-            .build();
+        ImmutableSet<PosixFilePermission> perms =
+            ImmutableSet.<PosixFilePermission>builder()
+                .addAll(Files.getPosixFilePermissions(targetPath))
+                .add(PosixFilePermission.OWNER_WRITE)
+                .build();
         Files.setPosixFilePermissions(targetPath, perms);
       }
     }
@@ -687,9 +685,7 @@ public abstract class JavaRuntimeViaHttpBase {
           exchange.sendResponseHeaders(HTTP_INTERNAL_ERROR, 0);
           return;
         }
-        RemoteApiPb.Response responsePb = newResponseBuilder()
-            .setResponse(responsePayload)
-            .build();
+        RemoteApiPb.Response responsePb = newResponseBuilder().setResponse(responsePayload).build();
         exchange.sendResponseHeaders(HTTP_OK, responsePb.getSerializedSize());
         responsePb.writeTo(out);
       }
