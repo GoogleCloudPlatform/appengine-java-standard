@@ -34,20 +34,22 @@ cd $src_dir
 
 # Make sure `JAVA_HOME` is set.
 echo "JAVA_HOME = $JAVA_HOME"
+echo "SONATYPE_USERNAME = $SONATYPE_USERNAME"
+
 curl -fsSL --retry 10 -o /tmp/jar1.jar https://github.com/googleapis/java-docfx-doclet/releases/download/1.5.0/java-docfx-doclet-1.5.0-jar-with-dependencies.jar
 curl -fsSL --retry 10 -o /tmp/jar2.jar https://github.com/googleapis/java-docfx-doclet/releases/download/1.5.0/java-docfx-doclet-1.5.0.jar
 # install docuploader package
 echo "Trying to install gcp-docuploader."
-
 python3 -m pip install gcp-docuploader --user
 
 # compile all packages
 echo "compiling all packages."
-
 ./mvnw clean install -B -q -DskipTests=true
 
-export NAME={{ metadata['repo']['distribution_name'].split(':')|last }}
-export VERSION=$(grep ${NAME}: versions.txt | cut -d: -f3)
+# export NAME={{ metadata['repo']['distribution_name'].split(':')|last }}
+# export VERSION=$(grep ${NAME}: versions.txt | cut -d: -f3)
+export NAME=appengine-java11-bundled-services
+export VERSION=11
 
 # cloud RAD generation
 cd api
