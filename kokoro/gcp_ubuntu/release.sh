@@ -52,7 +52,7 @@ export VERSION=11
 
 # cloud RAD generation
 cd api
-../mwnw javadoc:aggregate -B -q -P docFX -DdocletPath=/tmp/jar1.jar:/tmp/jar2.jar
+./mvnw javadoc:aggregate -B -q -P docFX -DdocletPath=/tmp/jar1.jar:/tmp/jar2.jar
 
 # include CHANGELOG
 #cp CHANGELOG.md target/docfx-yml/history.md
