@@ -37,9 +37,13 @@ echo "JAVA_HOME = $JAVA_HOME"
 curl -fsSL --retry 10 -o /tmp/jar1.jar https://github.com/googleapis/java-docfx-doclet/releases/download/1.5.0/java-docfx-doclet-1.5.0-jar-with-dependencies.jar
 curl -fsSL --retry 10 -o /tmp/jar2.jar https://github.com/googleapis/java-docfx-doclet/releases/download/1.5.0/java-docfx-doclet-1.5.0.jar
 # install docuploader package
-python3 -m pip install gcp-docuploader
+echo "Trying to install gcp-docuploader."
+
+python3 -m pip install gcp-docuploader --user
 
 # compile all packages
+echo "compiling all packages."
+
 ./mvnw clean install -B -q -DskipTests=true
 
 export NAME={{ metadata['repo']['distribution_name'].split(':')|last }}
