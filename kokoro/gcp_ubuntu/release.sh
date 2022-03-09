@@ -25,7 +25,7 @@ fi
 
 if [[ -z "${STAGING_BUCKET_V2}" ]]; then
   echo "Need to set STAGING_BUCKET_V2 environment variable"
-  STAGING_BUCKET_V=
+  STAGING_BUCKET_V2=docs-staging-v2
   # exit 1
 fi
 
