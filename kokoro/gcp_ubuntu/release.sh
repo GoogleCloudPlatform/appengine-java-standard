@@ -37,6 +37,8 @@ echo "JAVA_HOME = $JAVA_HOME"
 
 curl -fsSL --retry 10 -o /tmp/jar1.jar https://github.com/googleapis/java-docfx-doclet/releases/download/1.5.0/java-docfx-doclet-1.5.0-jar-with-dependencies.jar
 curl -fsSL --retry 10 -o /tmp/jar2.jar https://github.com/googleapis/java-docfx-doclet/releases/download/1.5.0/java-docfx-doclet-1.5.0.jar
+# By default Ubuntu 16.04 uses Python 3.5.
+pyenv global 3.6.1
 # install docuploader package
 echo "Trying to install gcp-docuploader."
 python3 -m pip install gcp-docuploader --user
