@@ -50,6 +50,11 @@ echo "compiling all packages."
 export NAME=appengine-java11-bundled-services
 export VERSION=11
 
+# Use Java 11 for javadoc plugin usage.
+sudo update-java-alternatives --set java-1.11.0-openjdk-amd64
+export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
+echo "JAVA_HOME = $JAVA_HOME"
+
 # cloud RAD generation
 cd api
 ../mvnw javadoc:aggregate -B -q -P docFX -DdocletPath=/tmp/jar1.jar:/tmp/jar2.jar
