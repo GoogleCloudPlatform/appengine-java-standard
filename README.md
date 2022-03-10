@@ -16,6 +16,7 @@
 [![Java8](https://github.com/GoogleCloudPlatform/appengine-java-standard/actions/workflows/maven_java8.yml/badge.svg)](https://github.com/GoogleCloudPlatform/appengine-java-standard/actions/workflows/maven_java8.yml)
 [![Java11](https://github.com/GoogleCloudPlatform/appengine-java-standard/actions/workflows/maven_java11.yml/badge.svg)](https://github.com/GoogleCloudPlatform/appengine-java-standard/actions/workflows/maven_java11.yml)
 [![Java17](https://github.com/GoogleCloudPlatform/appengine-java-standard/actions/workflows/maven_java17.yml/badge.svg)](https://github.com/GoogleCloudPlatform/appengine-java-standard/actions/workflows/maven_java17.yml)
+[![Maven][maven-version-image]][maven-version-link]
 
 # Google App Engine Standard Environment Source Code for Java 8, Java 11 and Java 17.
 
@@ -118,3 +119,7 @@ Source code for the App Engine production application server and utilities. It i
 Check out the [contributing guide](CONTRIBUTING.md) to learn how you can report issues and help make changes.
 
 Always be sure to follow the [Code of Conduct](CODE_OF_CONDUCT.md).
+
+[maven-version-image]: https://img.shields.io/maven-central/v/com.google.appengine/appengine-api-1.0-sdk.svg
+[maven-version-link]: https://search.maven.org/search?q=g:com.google.appengine%20AND%20a:appengine-api-1.0-sdk&core=gav
+
