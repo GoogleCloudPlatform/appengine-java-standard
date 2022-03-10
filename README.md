@@ -13,8 +13,11 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 -->
+[![Java8](https://github.com/GoogleCloudPlatform/appengine-java-standard/actions/workflows/maven_java8.yml/badge.svg)](https://github.com/GoogleCloudPlatform/appengine-java-standard/actions/workflows/maven_java8.yml)
+[![Java11](https://github.com/GoogleCloudPlatform/appengine-java-standard/actions/workflows/maven_java11.yml/badge.svg)](https://github.com/GoogleCloudPlatform/appengine-java-standard/actions/workflows/maven_java11.yml)
+[![Java17](https://github.com/GoogleCloudPlatform/appengine-java-standard/actions/workflows/maven_java17.yml/badge.svg)](https://github.com/GoogleCloudPlatform/appengine-java-standard/actions/workflows/maven_java17.yml)
 
-# Google App Engine Standard Environment Source Code for Java8, Java11 and Java17.
+# Google App Engine Standard Environment Source Code for Java 8, Java 11 and Java 17.
 
 
 This repository contains the Java Source Code for [Google App Engine
