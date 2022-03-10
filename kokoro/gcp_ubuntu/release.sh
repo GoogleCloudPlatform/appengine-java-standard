@@ -52,7 +52,7 @@ export VERSION=11
 
 # cloud RAD generation
 cd api
-./mvnw javadoc:aggregate -B -q -P docFX -DdocletPath=/tmp/jar1.jar:/tmp/jar2.jar
+../mvnw javadoc:aggregate -B -q -P docFX -DdocletPath=/tmp/jar1.jar:/tmp/jar2.jar
 
 # include CHANGELOG
 #cp CHANGELOG.md target/docfx-yml/history.md
@@ -64,6 +64,7 @@ python3 -m docuploader create-metadata \
  --name ${NAME} \
  --version ${VERSION} \
  --language java
+echo "Done creating metadata."
 
 # upload yml to production bucket
 python3 -m docuploader upload . \
