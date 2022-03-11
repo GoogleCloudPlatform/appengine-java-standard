@@ -42,6 +42,7 @@ pyenv global 3.6.1
 # install docuploader package
 echo "Trying to install gcp-docuploader."
 python3 -m pip install gcp-docuploader --user
+python3 -m pip install --upgrade protobuf  --user
 
 # compile all packages
 echo "compiling all packages."
