@@ -41,8 +41,9 @@ curl -fsSL --retry 10 -o /tmp/jar2.jar https://github.com/googleapis/java-docfx-
 pyenv global 3.6.1
 # install docuploader package
 echo "Trying to install gcp-docuploader."
-sudo python3 -m pip install gcp-docuploader
-sudo python3 -m pip install --upgrade protobuf
+python3 -m pip install --upgrade pip --user
+python3 -m pip install gcp-docuploader --user
+python3 -m pip install --upgrade protobuf --user
 
 # compile all packages
 echo "compiling all packages."
