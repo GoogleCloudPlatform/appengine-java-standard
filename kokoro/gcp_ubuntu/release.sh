@@ -21,7 +21,7 @@ shopt -s globstar
 # Get secrets from keystore and set and environment variables
 setup_environment_secrets() {
   export GPG_TTY=$(tty)
-  export GPG_HOMEDIR=/gpg
+  export GPG_HOMEDIR=/tmp/gpg
   mkdir $GPG_HOMEDIR
   mv ${KOKORO_KEYSTORE_DIR}/70247_maven-gpg-pubkeyring $GPG_HOMEDIR/pubring.gpg
   mv ${KOKORO_KEYSTORE_DIR}/70247_maven-gpg-keyring $GPG_HOMEDIR/secring.gpg
@@ -100,8 +100,8 @@ echo "compiling all packages."
 export RELEASE_VERSION=2.0.999
 
 git checkout -b v${RELEASE_VERSION}
-./mvnw release:prepare --settings=../settings.xml -Dtag=v${RELEASE_VERSION} -DreleaseVersion=${RELEASE_VERSION} -DdevelopmentVersion=${RELEASE_VERSION}-SNAPSHOT
-./mvnw release:perform --settings=../settings.xml -Dtag=v${RELEASE_VERSION} -DreleaseVersion=${RELEASE_VERSION} -DdevelopmentVersion=${RELEASE_VERSION}-SNAPSHOT
+./mvnw release:prepare --settings=../settings.xml -Dgpg.homedir=${GPG_HOMEDIR} -Dtag=v${RELEASE_VERSION} -DreleaseVersion=${RELEASE_VERSION} -DdevelopmentVersion=${RELEASE_VERSION}-SNAPSHOT
+./mvnw release:perform --settings=../settings.xml -Dgpg.homedir=${GPG_HOMEDIR} -Dtag=v${RELEASE_VERSION} -DreleaseVersion=${RELEASE_VERSION} -DdevelopmentVersion=${RELEASE_VERSION}-SNAPSHOT
 git push origin v${RELEASE_VERSION}
 
 # export NAME={{ metadata['repo']['distribution_name'].split(':')|last }}
