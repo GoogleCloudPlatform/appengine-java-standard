@@ -21,9 +21,15 @@ shopt -s globstar
 # Get secrets from keystore and set and environment variables
 setup_environment_secrets() {
   export GPG_HOMEDIR=/tmp/gpg
+  export GNUPGHOME=/tmp/gpg
   mkdir $GPG_HOMEDIR
   mv ${KOKORO_KEYSTORE_DIR}/70247_maven-gpg-pubkeyring $GPG_HOMEDIR/pubring.gpg
   mv ${KOKORO_KEYSTORE_DIR}/70247_maven-gpg-keyring $GPG_HOMEDIR/secring.gpg
+  # See https://linuxhint.com/solve-gpg-decryption-failed-no-secret-key-error/
+  gpgconfig --kill gpg-agent
+  gpg-connect-agent reloadagent /bye
+  gpg -k
+  gpg -h
 }
 
 create_settings_xml_file() {
@@ -98,9 +104,8 @@ echo "compiling all packages."
 # 1 Create tag for release and prepare branch for next development version
 export RELEASE_VERSION=2.0.999
 
-git checkout -b v${RELEASE_VERSION}
-./mvnw release:prepare -B -q --settings=../settings.xml -Dgpg.homedir=${GPG_HOMEDIR} -Dtag=v${RELEASE_VERSION} -DreleaseVersion=${RELEASE_VERSION} -DdevelopmentVersion=${RELEASE_VERSION}-SNAPSHOT
-./mvnw release:perform -B -q --settings=../settings.xml -Dgpg.homedir=${GPG_HOMEDIR} -Dtag=v${RELEASE_VERSION} -DreleaseVersion=${RELEASE_VERSION} -DdevelopmentVersion=${RELEASE_VERSION}-SNAPSHOT
+./mvnw release:prepare -B -q --settings=../settings.xml -Dgpg.homedir=${GPG_HOMEDIR} -Dgpg.passphrase=${GPG_PASSPHRASE} -Dtag=v${RELEASE_VERSION} -DreleaseVersion=${RELEASE_VERSION} -DdevelopmentVersion=${RELEASE_VERSION}-SNAPSHOT
+./mvnw release:perform -B -q --settings=../settings.xml -Dgpg.homedir=${GPG_HOMEDIR} -Dgpg.passphrase=${GPG_PASSPHRASE} -Dtag=v${RELEASE_VERSION} -DreleaseVersion=${RELEASE_VERSION} -DdevelopmentVersion=${RELEASE_VERSION}-SNAPSHOT
 git push origin v${RELEASE_VERSION}
 
 # export NAME={{ metadata['repo']['distribution_name'].split(':')|last }}
