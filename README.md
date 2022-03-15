@@ -49,6 +49,14 @@ The shared code base is also used for Java11 and Jav17 build and test targets, u
 - [Java11 Continuous Integration](https://github.com/GoogleCloudPlatform/appengine-java-standard/actions/workflows/maven_java11.yml)
 - [Java17 Continuous Integration](https://github.com/GoogleCloudPlatform/appengine-java-standard/actions/workflows/maven_java17.yml)
 
+## Releases
+
+This repository is the open source mirror of the Google App Engine Java source code that was used to produce Maven artifacts and runtime jars.
+On Maven Central, the released artifacts from the internal source repository are using the versions like 1.9.xx.
+The open source release mechanism used with this github repository is using the version starting at 2.0.x.
+Soon we will stop entirely pushing internal 1.9.xx artifacts and encourage all App Engine customers to use the new artifacts built from the github project.
+
+
 ## Modules
 
 Orange items are public modules artifacts and yellow are internal ones.
