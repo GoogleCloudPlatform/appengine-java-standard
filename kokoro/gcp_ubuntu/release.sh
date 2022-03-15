@@ -26,8 +26,7 @@ setup_environment_secrets() {
   mv ${KOKORO_KEYSTORE_DIR}/70247_maven-gpg-pubkeyring $GPG_HOMEDIR/pubring.gpg
   mv ${KOKORO_KEYSTORE_DIR}/70247_maven-gpg-keyring $GPG_HOMEDIR/secring.gpg
   # See https://linuxhint.com/solve-gpg-decryption-failed-no-secret-key-error/
-  gpgconfig --kill gpg-agent
-  gpg-connect-agent reloadagent /bye
+  which gpg-connect-agent
   gpg -k
   gpg -h
 }
