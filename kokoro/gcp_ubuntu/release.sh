@@ -28,14 +28,6 @@ setup_environment_secrets() {
 
 create_settings_xml_file() {
   echo "<settings>
-   <mirrors>
-     <mirror>
-       <id>google-maven-central</id>
-       <name>GCS Maven Central mirror</name>
-       <url>https://maven-central.storage.googleapis.com</url>
-       <mirrorOf>central</mirrorOf>
-     </mirror>
-   </mirrors>
    <profiles>
      <profile>
          <activation>
