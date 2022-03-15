@@ -18,6 +18,46 @@
 set -e
 shopt -s globstar
 
+# Get secrets from keystore and set and environment variables
+setup_environment_secrets() {
+  export GPG_TTY=$(tty)
+  export GPG_HOMEDIR=/gpg
+  mkdir $GPG_HOMEDIR
+  mv ${KOKORO_KEYSTORE_DIR}/70247_maven-gpg-pubkeyring $GPG_HOMEDIR/pubring.gpg
+  mv ${KOKORO_KEYSTORE_DIR}/70247_maven-gpg-keyring $GPG_HOMEDIR/secring.gpg
+}
+
+create_settings_xml_file() {
+  echo "<settings>
+   <profiles>
+     <profile>
+         <activation>
+             <activeByDefault>true</activeByDefault>
+         </activation>
+         <properties>
+             <gpg.passphrase>${GPG_PASSPHRASE}</gpg.passphrase>
+         </properties>
+     </profile>
+  </profiles>
+  <servers>
+    <server>
+      <id>ossrh</id>
+      <username>${SONATYPE_USERNAME}</username>
+      <password>${SONATYPE_PASSWORD}</password>
+    </server>
+    <server>
+      <id>sonatype-nexus-staging</id>
+      <username>${SONATYPE_USERNAME}</username>
+      <password>${SONATYPE_PASSWORD}</password>
+    </server>
+    <server>
+      <id>sonatype-nexus-snapshots</id>
+      <username>${SONATYPE_USERNAME}</username>
+      <password>${SONATYPE_PASSWORD}</password>
+    </server>
+  </servers>
+</settings>" > $1
+}
 
 if [[ -z "${CREDENTIALS}" ]]; then
   CREDENTIALS=${KOKORO_KEYSTORE_DIR}/73713_docuploader_service_account
@@ -29,8 +69,11 @@ if [[ -z "${STAGING_BUCKET_V2}" ]]; then
   # exit 1
 fi
 
-src_dir="${KOKORO_ARTIFACTS_DIR}/git/appengine-java-standard"
-cd $src_dir
+setup_environment_secrets
+create_settings_xml_file "settings.xml"
+
+git clone https://github.com/GoogleCloudPlatform/appengine-java-standard.git
+cd appengine-java-standard
 
 # Make sure `JAVA_HOME` is set.
 echo "JAVA_HOME = $JAVA_HOME"
@@ -48,6 +91,18 @@ python3 -m pip install --upgrade protobuf --user
 # compile all packages
 echo "compiling all packages."
 ./mvnw clean install -B -q -DskipTests=true
+
+
+
+
+# TODO: fix this sequence of commands.
+# 1 Create tag for release and prepare branch for next development version
+export RELEASE_VERSION=2.0.999
+
+git checkout -b v${RELEASE_VERSION}
+./mvnw release:prepare --settings=../settings.xml -Dtag=v${RELEASE_VERSION} -DreleaseVersion=${RELEASE_VERSION} -DdevelopmentVersion=${RELEASE_VERSION}-SNAPSHOT
+./mvnw release:perform --settings=../settings.xml -Dtag=v${RELEASE_VERSION} -DreleaseVersion=${RELEASE_VERSION} -DdevelopmentVersion=${RELEASE_VERSION}-SNAPSHOT
+git push origin v${RELEASE_VERSION}
 
 # export NAME={{ metadata['repo']['distribution_name'].split(':')|last }}
 # export VERSION=$(grep ${NAME}: versions.txt | cut -d: -f3)
