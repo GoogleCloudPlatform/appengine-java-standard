@@ -224,7 +224,7 @@
         <outputpath>${project.build.directory}/docfx-yml</outputpath>
         <projectname>${project.artifactId}</projectname>
         <excludeclasses />
-        <excludePackages>com\.google\.storage\.onestore:com\.google\.api\.client\.findbugs:com\.google\.apphosting\.utils</excludePackages>
+        <excludePackages>com\.google\.appengine\.api\.search:com\.google\.appengine\.httpapiproxy:com\.google\.appengine\.api\.internal:com\.google\.appengine\.api\.internal:com\.google\.storage\.onestore:com\.google\.api\.client\.findbugs:com\.google\.apphosting\.utils</excludePackages>
         <source>8</source>
         <sourceFileExclude />
         <!-- Filed https://github.com/googleapis/java-docfx-doclet/issues/105 -->
