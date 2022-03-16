@@ -18,6 +18,7 @@ package com.google.appengine.api.blobstore;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -46,28 +47,32 @@ public class FileInfoTest {
                                   "md5-hash", null);
   }
 
-  @Test(expected = NullPointerException.class)
+  @Test
   public void testConstructorNullContentType() {
-      new FileInfo(null, this.creationDate, "file-0.jpg", 5,
-                   "md5-hash", null);
+    assertThrows(
+        NullPointerException.class,
+        () -> new FileInfo(null, this.creationDate, "file-0.jpg", 5, "md5-hash", null));
   }
 
-  @Test(expected = NullPointerException.class)
+  @Test
   public void testConstructorNullCreation() {
-      new FileInfo("image/jpeg", null, "file-0.jpg", 5,
-                   "md5-hash", null);
+    assertThrows(
+        NullPointerException.class,
+        () -> new FileInfo("image/jpeg", null, "file-0.jpg", 5, "md5-hash", null));
   }
 
-  @Test(expected = NullPointerException.class)
+  @Test
   public void testConstructorNullFilename() {
-      new FileInfo("image/jpeg", this.creationDate, null, 5,
-                   "md5-hash", null);
+    assertThrows(
+        NullPointerException.class,
+        () -> new FileInfo("image/jpeg", this.creationDate, null, 5, "md5-hash", null));
   }
 
-  @Test(expected = NullPointerException.class)
+  @Test
   public void testConstructorNullMd5() {
-      new FileInfo("image/jpeg", this.creationDate, "file-0.jpg", 5,
-                   null, null);
+    assertThrows(
+        NullPointerException.class,
+        () -> new FileInfo("image/jpeg", this.creationDate, "file-0.jpg", 5, null, null));
   }
 
   @Test
