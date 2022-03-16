@@ -20,11 +20,10 @@ shopt -s globstar
 
 # Get secrets from keystore and set and environment variables
 setup_environment_secrets() {
-  export GPG_HOMEDIR=/tmp/gpg
   export GNUPGHOME=/tmp/gpg
-  mkdir $GPG_HOMEDIR
-  mv ${KOKORO_KEYSTORE_DIR}/70247_maven-gpg-pubkeyring $GPG_HOMEDIR/pubring.gpg
-  mv ${KOKORO_KEYSTORE_DIR}/70247_maven-gpg-keyring $GPG_HOMEDIR/secring.gpg
+  mkdir $GNUPGHOME
+  mv ${KOKORO_KEYSTORE_DIR}/70247_maven-gpg-pubkeyring $GNUPGHOME/pubring.gpg
+  mv ${KOKORO_KEYSTORE_DIR}/70247_maven-gpg-keyring $GNUPGHOME/secring.gpg
   # See https://linuxhint.com/solve-gpg-decryption-failed-no-secret-key-error/
   gpg -k
   gpg -h
@@ -62,12 +61,24 @@ create_settings_xml_file() {
 </settings>" > $1
 }
 
+setup_docuploader() {
+ curl -fsSL --retry 10 -o /tmp/jar1.jar https://github.com/googleapis/java-docfx-doclet/releases/download/1.5.0/java-docfx-doclet-1.5.0-jar-with-dependencies.jar
+ curl -fsSL --retry 10 -o /tmp/jar2.jar https://github.com/googleapis/java-docfx-doclet/releases/download/1.5.0/java-docfx-doclet-1.5.0.jar
+ # By default Ubuntu 16.04 uses Python 3.5 which is too old.
+ pyenv global 3.6.1
+ # install docuploader package with upgrade to get latest correct versions.
+ echo "Trying to install gcp-docuploader."
+ python3 -m pip install --upgrade pip --user
+ python3 -m pip install gcp-docuploader --user
+ python3 -m pip install --upgrade protobuf --user
+}
+
 if [[ -z "${CREDENTIALS}" ]]; then
   CREDENTIALS=${KOKORO_KEYSTORE_DIR}/73713_docuploader_service_account
 fi
 
 if [[ -z "${STAGING_BUCKET_V2}" ]]; then
-  echo "Need to set STAGING_BUCKET_V2 environment variable"
+  echo "Setting STAGING_BUCKET_V2 environment variable to default value."
   STAGING_BUCKET_V2=docs-staging-v2
   # exit 1
 fi
@@ -77,37 +88,26 @@ create_settings_xml_file "settings.xml"
 
 git clone https://github.com/GoogleCloudPlatform/appengine-java-standard.git
 cd appengine-java-standard
+# Work in a release branch, not main.
+git checkout -b release_branch
 
 # Make sure `JAVA_HOME` is set.
 echo "JAVA_HOME = $JAVA_HOME"
-
-curl -fsSL --retry 10 -o /tmp/jar1.jar https://github.com/googleapis/java-docfx-doclet/releases/download/1.5.0/java-docfx-doclet-1.5.0-jar-with-dependencies.jar
-curl -fsSL --retry 10 -o /tmp/jar2.jar https://github.com/googleapis/java-docfx-doclet/releases/download/1.5.0/java-docfx-doclet-1.5.0.jar
-# By default Ubuntu 16.04 uses Python 3.5.
-pyenv global 3.6.1
-# install docuploader package
-echo "Trying to install gcp-docuploader."
-python3 -m pip install --upgrade pip --user
-python3 -m pip install gcp-docuploader --user
-python3 -m pip install --upgrade protobuf --user
-
 # compile all packages
-echo "compiling all packages."
-./mvnw clean install -B -q -DskipTests=true
+echo "Calling release:prepare"
+./mvnw release:prepare -B -q --settings=../settings.xml -DskipTests=true -Dgpg.homedir=${GNUPGHOME} -Dgpg.passphrase=${GPG_PASSPHRASE}
+echo "Calling release:perform"
+./mvnw release:perform -B -q --settings=../settings.xml -DskipTests=true -Dgpg.homedir=${GNUPGHOME} -Dgpg.passphrase=${GPG_PASSPHRASE}
 
+# Not ready, need to get the credentials first from keystorep
+# git config user.email gae-java-bot@google.com
+# git config user.name gae-java-bot
+# git push origin--repo https://gae-java-bot:${PASS}@github.com/GoogleCloudPlatform/appengine-java-standard
+# git push origin v${RELEASE_VERSION}
 
+# Now create the API docs and upload it for processing.
+setup_docuploader
 
-
-# TODO: fix this sequence of commands.
-# 1 Create tag for release and prepare branch for next development version
-export RELEASE_VERSION=2.0.999
-
-./mvnw release:prepare -B -q --settings=../settings.xml -Dgpg.homedir=${GPG_HOMEDIR} -Dgpg.passphrase=${GPG_PASSPHRASE} -Dtag=v${RELEASE_VERSION} -DreleaseVersion=${RELEASE_VERSION} -DdevelopmentVersion=${RELEASE_VERSION}-SNAPSHOT
-./mvnw release:perform -B -q --settings=../settings.xml -Dgpg.homedir=${GPG_HOMEDIR} -Dgpg.passphrase=${GPG_PASSPHRASE} -Dtag=v${RELEASE_VERSION} -DreleaseVersion=${RELEASE_VERSION} -DdevelopmentVersion=${RELEASE_VERSION}-SNAPSHOT
-git push origin v${RELEASE_VERSION}
-
-# export NAME={{ metadata['repo']['distribution_name'].split(':')|last }}
-# export VERSION=$(grep ${NAME}: versions.txt | cut -d: -f3)
 export NAME=appengine-java11-bundled-services
 export VERSION=11
 
@@ -137,6 +137,6 @@ python3 -m docuploader upload . \
  --credentials ${CREDENTIALS} \
  --staging-bucket ${STAGING_BUCKET_V2} \
  --destination-prefix docfx
- 
+
 echo "Done doing a release."
 
