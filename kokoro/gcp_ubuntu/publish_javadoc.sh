@@ -52,8 +52,10 @@ export VERSION=11
 sudo update-java-alternatives --set java-1.11.0-openjdk-amd64
 export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
 echo "JAVA_HOME = $JAVA_HOME"
+# Do a build of all dependent modules first.
+../mvnw install -B -q -DskipTests=true
 
-# cloud RAD generation
+# Then do a build in api/ for cloud RAD generation.
 cd api
 ../mvnw javadoc:aggregate -B -q -P docFX -DdocletPath=/tmp/jar1.jar:/tmp/jar2.jar
 
