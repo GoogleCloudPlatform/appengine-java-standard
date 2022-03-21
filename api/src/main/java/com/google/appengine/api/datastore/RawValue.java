@@ -180,7 +180,7 @@ public final class RawValue implements Serializable {
         throw new InvalidProtocolBufferException("Could not parse PropertyValue");
       }
     } else if (version == 2) {
-      valueV1 = Value.parser().parseFrom(in);
+      valueV1 = Value.parseFrom(in);
     } else {
       throw new IllegalArgumentException("unknown RawValue format");
     }

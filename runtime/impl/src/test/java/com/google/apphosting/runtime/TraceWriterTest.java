@@ -81,8 +81,7 @@ public class TraceWriterTest {
     writer.endRequestSpan();
     writer.flushTrace();
 
-    TraceEventsProto traceEvents =
-        TraceEventsProto.parser().parseFrom(upResponse.getSerializedTrace());
+    TraceEventsProto traceEvents = TraceEventsProto.parseFrom(upResponse.getSerializedTrace());
 
     assertThat(traceEvents.getSpanEventsList()).hasSize(2);
 
@@ -153,8 +152,7 @@ public class TraceWriterTest {
     writer.endRequestSpan();
     writer.flushTrace();
 
-    TraceEventsProto traceEvents =
-        TraceEventsProto.parser().parseFrom(upResponse.getSerializedTrace());
+    TraceEventsProto traceEvents = TraceEventsProto.parseFrom(upResponse.getSerializedTrace());
 
     assertThat(traceEvents.getSpanEventsCount()).isEqualTo(3);
 
@@ -232,8 +230,7 @@ public class TraceWriterTest {
     writer.endRequestSpan();
     writer.flushTrace();
 
-    TraceEventsProto traceEvents =
-        TraceEventsProto.parser().parseFrom(upResponse.getSerializedTrace());
+    TraceEventsProto traceEvents = TraceEventsProto.parseFrom(upResponse.getSerializedTrace());
     // 1 request span, 2 API spans before the loop, MAX_DICTIONARY_SIZE API spans in the loop,
     // and 1 API span after the loop.
     assertThat(traceEvents.getSpanEventsList()).hasSize(MAX_DICTIONARY_SIZE + 4);
@@ -287,8 +284,7 @@ public class TraceWriterTest {
     writer.endRequestSpan();
     writer.flushTrace();
 
-    TraceEventsProto traceEvents =
-        TraceEventsProto.parser().parseFrom(upResponse.getSerializedTrace());
+    TraceEventsProto traceEvents = TraceEventsProto.parseFrom(upResponse.getSerializedTrace());
 
     assertThat(traceEvents.getSpanEventsCount()).isEqualTo(3);
 
@@ -328,8 +324,7 @@ public class TraceWriterTest {
     writer.endRequestSpan();
     writer.flushTrace();
 
-    TraceEventsProto traceEvents =
-        TraceEventsProto.parser().parseFrom(upResponse.getSerializedTrace());
+    TraceEventsProto traceEvents = TraceEventsProto.parseFrom(upResponse.getSerializedTrace());
 
     assertThat(traceEvents.getSpanEventsCount()).isEqualTo(3);
 

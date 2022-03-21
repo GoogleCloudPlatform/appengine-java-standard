@@ -508,8 +508,7 @@ public class RequestManagerTest {
     upResponse.setErrorMessage("Error message");
     requestManager.finishRequest(token);
 
-    TraceEventsProto traceEvents =
-        TraceEventsProto.parser().parseFrom(upResponse.getSerializedTrace());
+    TraceEventsProto traceEvents = TraceEventsProto.parseFrom(upResponse.getSerializedTrace());
 
     assertThat(traceEvents.getSpanEventsCount()).isEqualTo(1);
 
@@ -546,8 +545,7 @@ public class RequestManagerTest {
             appVersion, rpc, upRequest, upResponse, new ThreadGroup("test"));
     requestManager.finishRequest(token);
 
-    TraceEventsProto traceEvents =
-        TraceEventsProto.parser().parseFrom(upResponse.getSerializedTrace());
+    TraceEventsProto traceEvents = TraceEventsProto.parseFrom(upResponse.getSerializedTrace());
     StartSpanProto startSpan = traceEvents.getSpanEvents(0).getEvent(0).getStartSpan();
     assertThat(startSpan.getName()).isEqualTo("Unparsable URL");
   }

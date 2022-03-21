@@ -523,8 +523,7 @@ public class ApiProxyImplTest {
                 environment, "google.math", "LookupSymbol", request3.toByteArray()));
 
     environment.getTraceWriter().flushTrace();
-    TraceEventsProto traceEvents =
-        TraceEventsProto.parser().parseFrom(upResponse.getSerializedTrace());
+    TraceEventsProto traceEvents = TraceEventsProto.parseFrom(upResponse.getSerializedTrace());
 
     assertThat(traceEvents.getSpanEventsCount()).isEqualTo(3);
 
@@ -607,8 +606,7 @@ public class ApiProxyImplTest {
 
     environment.getTraceWriter().flushTrace();
     // Verify traces.
-    TraceEventsProto traceEvents =
-        TraceEventsProto.parser().parseFrom(upResponse.getSerializedTrace());
+    TraceEventsProto traceEvents = TraceEventsProto.parseFrom(upResponse.getSerializedTrace());
 
     assertThat(traceEvents.getSpanEventsCount()).isEqualTo(1);
 
@@ -1147,8 +1145,7 @@ public class ApiProxyImplTest {
 
     environment.getTraceWriter().flushTrace();
     // Verify traces.
-    TraceEventsProto traceEvents =
-        TraceEventsProto.parser().parseFrom(upResponse.getSerializedTrace());
+    TraceEventsProto traceEvents = TraceEventsProto.parseFrom(upResponse.getSerializedTrace());
 
     assertThat(traceEvents.getSpanEventsCount()).isEqualTo(3);
 
@@ -1208,8 +1205,7 @@ public class ApiProxyImplTest {
 
     environment.getTraceWriter().flushTrace();
     // Verify traces.
-    TraceEventsProto traceEvents =
-        TraceEventsProto.parser().parseFrom(upResponse.getSerializedTrace());
+    TraceEventsProto traceEvents = TraceEventsProto.parseFrom(upResponse.getSerializedTrace());
 
     assertThat(traceEvents.getSpanEventsCount()).isEqualTo(1);
 
