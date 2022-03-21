@@ -18,6 +18,9 @@
 name: Java 11 CI with Maven
 
 on:
+  pull_request:
+    branches:
+      - main
   push:
     branches-ignore:
       - 'dependabot/**'
