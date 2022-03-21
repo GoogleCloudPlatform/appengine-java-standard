@@ -17,6 +17,7 @@
 [![Java11](https://github.com/GoogleCloudPlatform/appengine-java-standard/actions/workflows/maven_java11.yml/badge.svg)](https://github.com/GoogleCloudPlatform/appengine-java-standard/actions/workflows/maven_java11.yml)
 [![Java17](https://github.com/GoogleCloudPlatform/appengine-java-standard/actions/workflows/maven_java17.yml/badge.svg)](https://github.com/GoogleCloudPlatform/appengine-java-standard/actions/workflows/maven_java17.yml)
 [![Maven][maven-version-image]][maven-version-link]
+[![Code of conduct](https://img.shields.io/badge/%E2%9D%A4-code%20of%20conduct-blue.svg)](https://github.com/GoogleCloudPlatform/appengine-java-standard/blob/main/CODE_OF_CONDUCT.md)
 
 # Google App Engine Standard Environment Source Code for Java 8, Java 11 and Java 17.
 
@@ -68,59 +69,165 @@ Modules ending with * are only used on the production server side.
 
 Source code for all public APIs for com.google.appengine.api.* packages.
 
-- [Documentation][ae-docs]
+- [Public Documentation][ae-docs]
 - [Javadocs](https://cloud.google.com/appengine/docs/standard/java/javadoc)
-- [Code](https://github.com/GoogleCloudPlatform/appengine-java-standard/tree/master/api)
-- [Code for repackaged API jar](https://github.com/GoogleCloudPlatform/appengine-java-standard/tree/master/appengine-api-1.0-sdk)
+- [Source Code](https://github.com/GoogleCloudPlatform/appengine-java-standard/tree/master/api)
+- [Source Code for repackaged API jar](https://github.com/GoogleCloudPlatform/appengine-java-standard/tree/master/appengine-api-1.0-sdk)
 
+*  Maven pom.xml
 
-#### User Visible Changes With Maven Builds
-- Moved com.google.appengine.api.memcache.stdimpl and its dependancy
-  javax.cache from appengine-api-1.0-sdk.jar to 
-  appengine-api-legacy.jar. Users who depend on the
-  moved classes will need to include appengine-api-legacy.jar when
-  they build/deploy. Separating these classes allows
-  appengine-api-1.0-sdk users to choose any version of javax.cache
-  rather than being constrained by an obsolete included version.
+    ```
+    <packaging>war</packaging><!-- Servlet 3.1 WAR packaging-->
+ ...
+    <dependencies>
+        <dependency>
+            <groupId>com.google.appengine</groupId>
+            <artifactId>appengine-api-1.0-sdk</artifactId>
+            <version>2.0.4</version><!-- or later-->
+        </dependency>
+        <dependency>
+          <groupId>javax.servlet</groupId>
+          <artifactId>javax.servlet-api</artifactId>
+          <version>3.1</version>
+          <scope>provided</scope>
+    </dependency>
+        ...
+    ```
 
-### App Engine Java local development implementation of the APIs
+*  Java 17 appengine-web.xml
 
-Implementation of all the App Engine APIs for local environment (devappserver)
-and local testing of an application before deployment.
+    ```
+    <?xml version="1.0" encoding="utf-8"?>
+    <appengine-web-app xmlns="http://appengine.google.com/ns/1.0">
+      <runtime>java17</runtime>
+      <app-engine-apis>true</app-engine-apis>
+    </appengine-web-app>
+    ```
 
-- [Documentation][ae-docs]
-- [Code](https://github.com/GoogleCloudPlatform/appengine-java-standard/tree/master/api_dev)
-- [Code for repackaged APIs stubs jar](https://github.com/GoogleCloudPlatform/appengine-java-standard/tree/master/appengine-api-stubs)
+*  Java 11  appengine-web.xml
 
+    ```
+    <?xml version="1.0" encoding="utf-8"?>
+    <appengine-web-app xmlns="http://appengine.google.com/ns/1.0">
+      <runtime>java11</runtime>
+      <app-engine-apis>true</app-engine-apis>
+    </appengine-web-app>
+    ```
 
 ### App Engine Java Remote APIs
 
 Source code for remote APIs for App Engine.
 
 - [Public Documentation](https://cloud.google.com/appengine/docs/standard/java/tools/remoteapi)
-- [Code](https://github.com/GoogleCloudPlatform/appengine-java-standard/tree/master/remoteapi)
+- [Public Sample remote server](https://github.com/GoogleCloudPlatform/java-docs-samples/tree/main/appengine-java8/remote-server)
+- [Public Sample remote client](https://github.com/GoogleCloudPlatform/java-docs-samples/tree/main/appengine-java8/remote-client)
+- [Source Code](https://github.com/GoogleCloudPlatform/appengine-java-standard/tree/master/remoteapi)
+
+* Servlet web.xml
+
+```
+   <servlet>
+     <display-name>Remote API Servlet</display-name>
+     <servlet-name>RemoteApiServlet</servlet-name>
+     <servlet-class>com.google.apphosting.utils.remoteapi.RemoteApiServlet</servlet-class>
+     <load-on-startup>1</load-on-startup>
+   </servlet>
+   <servlet-mapping>
+     <servlet-name>RemoteApiServlet</servlet-name>
+     <url-pattern>/remote_api</url-pattern>
+   </servlet-mapping>
+```
+
+*  Maven pom.xml
+
+```
+    <dependency>
+       <groupId>com.google.appengine</groupId>
+       <artifactId>appengine-remote-api</artifactId>
+       <version>2.0.4</version><!-- Or later-->
+    </dependency>
+```
+
+#### User Visible Changes With Maven Builds
+
+We moved `com.google.appengine.api.memcache.stdimpl` and its old dependency
+`javax.cache` from `appengine-api-1.0-sdk.jar` to  a new jar `appengine-api-legacy.jar`.
+  
+  Users who depend on the
+  moved classes will need to also include `appengine-api-legacy.jar` when
+  they build/deploy. Separating these classes allows
+  `appengine-api-1.0-sdk` users to choose any version of `javax.cache`
+  rather than being constrained by an obsolete included version.
+ 
+  *  Maven pom.xml
+  
+```
+    <dependency>
+       <groupId>com.google.appengine</groupId>
+       <artifactId>appengine-api-legacy.jar/artifactId>
+       <version>2.0.4</version><!-- Or later-->
+    </dependency>
+```
+
+###  Local Unit Testing for Java 8, 11, 17
+
+[Code Sample](https://github.com/GoogleCloudPlatform/java-docs-samples/tree/main/unittests)
+
+  *  Maven pom.xml
+  
+```
+    <dependency>
+      <groupId>com.google.appengine</groupId>
+      <artifactId>appengine-testing</artifactId>
+       <version>2.0.4</version><!-- Or later-->
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.google.appengine</groupId>
+      <artifactId>appengine-api-stubs</artifactId>
+       <version>2.0.4</version><!-- Or later-->
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.google.appengine</groupId>
+      <artifactId>appengine-tools-sdk</artifactId>
+       <version>2.0.4</version><!-- Or later-->
+      <scope>test</scope>
+    </dependency>
+```
+
+
+### App Engine Java local development implementation of the APIs
+
+Implementation of all the App Engine APIs for local environment (devappserver)
+and local testing of an application before deployment.
+
+- [Public Documentation][ae-docs]
+- [Source Code](https://github.com/GoogleCloudPlatform/appengine-java-standard/tree/master/api_dev)
+- [Source Code for repackaged APIs stubs jar](https://github.com/GoogleCloudPlatform/appengine-java-standard/tree/master/appengine-api-stubs)
+
 
 ### App Engine Java various local development utilities and devappserver
 
 Source code for the App Engine local dev application server and local utilities.
 
 - [Public Documentation](https://cloud.google.com/appengine/docs/standard/java/tools/using-local-server)
-- [Code for tools APIs (appcfg)](https://github.com/GoogleCloudPlatform/appengine-java-standard/tree/master/lib/tools_api)
-- [Code for XML validator (appcfg)](https://github.com/GoogleCloudPlatform/appengine-java-standard/tree/master/lib/xml_validator)
-- [Code for shared utilities (appcfg)](https://github.com/GoogleCloudPlatform/appengine-java-standard/tree/master/shared_sdk)
-- [Code for shared utilities (config)](https://github.com/GoogleCloudPlatform/appengine-java-standard/tree/master/utils)
-- [Code for local devappserver](https://github.com/GoogleCloudPlatform/appengine-java-standard/tree/master/runtime/local)
+- [Source Code for tools APIs (appcfg)](https://github.com/GoogleCloudPlatform/appengine-java-standard/tree/master/lib/tools_api)
+- [Source Code for XML validator (appcfg)](https://github.com/GoogleCloudPlatform/appengine-java-standard/tree/master/lib/xml_validator)
+- [Source Code for local devappserver](https://github.com/GoogleCloudPlatform/appengine-java-standard/tree/master/runtime/local)
+- [Source Code for shared utilities (appcfg)](https://github.com/GoogleCloudPlatform/appengine-java-standard/tree/master/shared_sdk)
+- [Source Code for shared utilities (config)](https://github.com/GoogleCloudPlatform/appengine-java-standard/tree/master/utils)
 
 ### App Engine Java production runtime execution environment
 
 Source code for the App Engine production application server and utilities. It is based on the Jetty9.4 Web Server.
 
-- [Documentation][ae-docs]
-- [Code for the runtime implementation](https://github.com/GoogleCloudPlatform/appengine-java-standard/tree/master/runtime/impl)
-- [Code for the Java Main](https://github.com/GoogleCloudPlatform/appengine-java-standard/tree/master/runtime/main)
-- [End to End test Applications](https://github.com/GoogleCloudPlatform/appengine-java-standard/tree/master/runtime/testapps)
+- [Public Documentation][ae-docs]
+- [Source Code for the runtime implementation](https://github.com/GoogleCloudPlatform/appengine-java-standard/tree/master/runtime/impl)
+- [Source Code for the Java Main](https://github.com/GoogleCloudPlatform/appengine-java-standard/tree/master/runtime/main)
+- [End to End test Web Applications](https://github.com/GoogleCloudPlatform/appengine-java-standard/tree/master/runtime/testapps)
 - [End to End tests](https://github.com/GoogleCloudPlatform/appengine-java-standard/tree/master/runtime/test)
-- [Code for runtime utilities](https://github.com/GoogleCloudPlatform/appengine-java-standard/tree/master/runtime/util)
+- [Source Code for runtime utilities](https://github.com/GoogleCloudPlatform/appengine-java-standard/tree/master/runtime/util)
 
 ## Default entrypoint used by Java11 and Java17
 
