@@ -156,6 +156,11 @@ public abstract class SharedMain {
    */
   private static void recordTimeZone() {
     originalTimeZone = System.getProperty("user.timezone");
+    // For some reasons, java8/11 default to "" and Java17 to null, so we keep default to empty
+    // which is the value handled later.
+    if (originalTimeZone == null) {
+      originalTimeZone = "";
+    }
   }
 
   protected abstract void printHelp(PrintStream out);
