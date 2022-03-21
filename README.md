@@ -29,17 +29,6 @@ standard environment][ae-docs], the production runtime, the AppEngine APIs, and 
 
 ## Prerequisites
 
-### Download Maven
-
-The source code use the [Apache Maven][maven] build system. Before getting
-started, be sure to [download][maven-download] and [install][maven-install] it.
-When you use Maven as described here, it will automatically download the needed
-client libraries.
-
-[maven]: https://maven.apache.org
-[maven-download]: https://maven.apache.org/download.cgi
-[maven-install]: https://maven.apache.org/install.html
-
 ### Use a JDK8 environment so it can build the Java8 GAE runtime.
 
 [jdk8](https://adoptium.net/)
