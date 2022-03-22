@@ -103,7 +103,8 @@ echo "Calling release:prepare and perform."
 
 git config user.email gae-java-bot@google.com
 git config user.name gae-java-bot
-git remote add origin https://gae-java-bot:${GAE_JAVA_BOT_GITHUB_TOKEN}@github.com/GoogleCloudPlatform/appengine-java-standard
+git remote set-url origin https://gae-java-bot:${GAE_JAVA_BOT_GITHUB_TOKEN}@github.com/GoogleCloudPlatform/appengine-java-standard
+echo "Doing git push."
 git push --set-upstream origin $RELEASE_NUMBER
 git tag -a $RELEASE_NUMBER -m $RELEASE_NUMBER
 
