@@ -33,9 +33,7 @@ standard environment][ae-docs], the production runtime, the AppEngine APIs, and 
 
 The shared code base is also used for Java11 and Jav17 build and test targets, using github actions:
 
-- [Java8 Continuous Integration](https://github.com/GoogleCloudPlatform/appengine-java-standard/actions/workflows/maven_java8.yml)
-- [Java11 Continuous Integration](https://github.com/GoogleCloudPlatform/appengine-java-standard/actions/workflows/maven_java11.yml)
-- [Java17 Continuous Integration](https://github.com/GoogleCloudPlatform/appengine-java-standard/actions/workflows/maven_java17.yml)
+- [Java 8/11/17 Continuous Integration](https://github.com/GoogleCloudPlatform/appengine-java-standard/actions/workflows/maven.yml)
 
 ## Releases
 
