@@ -66,8 +66,34 @@ create_settings_xml_file "settings.xml"
 
 git clone https://github.com/GoogleCloudPlatform/appengine-java-standard.git
 cd appengine-java-standard
-# Work in a release branch, not main.
-git checkout -b release_branch
+# Get the current version from pom.xml
+POM_VERSION=$(
+ awk '
+  /<dependenc/{exit}
+  /<parent>/{parent++};
+  /<version>/{
+    if (parent == 1) {
+      sub(/.*<version>/, "");
+      sub(/<.*/, "");
+      parent_version = $0;
+    } else {
+      sub(/.*<version>/, "");
+      sub(/<.*/, "");
+      version = $0;
+      exit
+    }
+  }
+  /<\/parent>/{parent--};
+  END {
+    print (version == "") ? parent_version : version
+  }' pom.xml
+)
+
+# Remove trailing -SNAPSHOT
+RELEASE_NUMBER=$(echo "$POM_VERSION" | sed 's/-SNAPSHOT//g')
+echo "Using release number="$RELEASE_NUMBER
+# Work in a $RELEASE_NUMBER branch, not main.
+git checkout -b $RELEASE_NUMBER
 
 # Make sure `JAVA_HOME` is set.
 echo "JAVA_HOME = $JAVA_HOME"
@@ -75,11 +101,11 @@ echo "JAVA_HOME = $JAVA_HOME"
 echo "Calling release:prepare and perform."
 ./mvnw release:prepare release:perform -B -q --settings=../settings.xml -DskipTests -Darguments=-DskipTests -Dgpg.homedir=${GNUPGHOME} -Dgpg.passphrase=${GPG_PASSPHRASE}
 
-# Not ready, need to get the credentials first from keystorep
-# git config user.email gae-java-bot@google.com
-# git config user.name gae-java-bot
-# git push origin--repo https://gae-java-bot:${PASS}@github.com/GoogleCloudPlatform/appengine-java-standard
-# git push origin v${RELEASE_VERSION}
+git config user.email gae-java-bot@google.com
+git config user.name gae-java-bot
+git remote add origin https://gae-java-bot:${GAE_JAVA_BOT_GITHUB_TOKEN}@github.com/GoogleCloudPlatform/appengine-java-standard
+git push --set-upstream origin $RELEASE_NUMBER
+git tag -a $RELEASE_NUMBER -m $RELEASE_NUMBER
 
 echo "Done doing a release."
 
