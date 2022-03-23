@@ -107,6 +107,8 @@ git remote set-url origin https://gae-java-bot:${GAE_JAVA_BOT_GITHUB_TOKEN}@gith
 echo "Doing git push."
 git push --set-upstream origin $RELEASE_NUMBER
 git tag -a $RELEASE_NUMBER -m $RELEASE_NUMBER
+# Push the tag.
+git push origin $RELEASE_NUMBER
 
 echo "Done doing a release."
 
