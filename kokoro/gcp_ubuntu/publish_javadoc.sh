@@ -64,12 +64,22 @@ cd api
 
 pushd target/docfx-yml
 
-# create metadata
+# create metadata for Java11
 python3 -m docuploader create-metadata \
- --name ${NAME} \
- --version ${VERSION} \
+ --name appengine-java11-bundled-services \
+ --version 11 \
+ --stem appengine/docs/standard/java11/reference \
  --language java
-echo "Done creating metadata."
+
+# create metadata for Java17
+python3 -m docuploader create-metadata \
+ --name appengine-java17-bundled-services \
+ --version 17 \
+ --stem appengine/docs/standard/java17/reference \
+ --language java
+
+
+ echo "Done creating metadata."
 
 # upload yml to production bucket
 python3 -m docuploader upload . \
