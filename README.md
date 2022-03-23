@@ -29,9 +29,9 @@ standard environment][ae-docs], the production runtime, the AppEngine APIs, and 
 
 ### Use a JDK8 environment so it can build the Java8 GAE runtime.
 
-[jdk8](https://adoptium.net/)
+[jdk8](https://adoptium.net/), but using a JDK11 or JDK17 is also possible.
 
-The shared code base is also used for Java11 and Jav17 build and test targets, using github actions:
+The shared code base is also used for GAE Java 11 and Java 17 build and test targets, using github actions:
 
 - [Java 8/11/17 Continuous Integration](https://github.com/GoogleCloudPlatform/appengine-java-standard/actions/workflows/maven.yml)
 
