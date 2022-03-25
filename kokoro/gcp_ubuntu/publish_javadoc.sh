@@ -36,7 +36,7 @@ fi
 
 if [[ -z "${STAGING_BUCKET_V2}" ]]; then
   echo "Setting STAGING_BUCKET_V2 environment variable to default value."
-  STAGING_BUCKET_V2=docs-staging-v2
+  STAGING_BUCKET_V2=docs-staging-v2-dev
 fi
 
 git clone https://github.com/GoogleCloudPlatform/appengine-java-standard.git
@@ -64,18 +64,11 @@ cd api
 
 pushd target/docfx-yml
 
-# create metadata for Java11
+# create metadata for Java11/17
 python3 -m docuploader create-metadata \
- --name appengine-java11-bundled-services \
- --version 11 \
- --stem appengine/docs/standard/java11/reference \
- --language java
-
-# create metadata for Java17
-python3 -m docuploader create-metadata \
- --name appengine-java17-bundled-services \
- --version 17 \
- --stem appengine/docs/standard/java17/reference \
+ --name appengine-java-gen2-bundled-services \
+ --version 2.0.0 \
+ --stem appengine/docs/standard/java-gen2/reference/services/bundled \
  --language java
 
 
