@@ -33,13 +33,13 @@ public class GeoPointTest {
 
   @Test
   public void testRanges() throws Exception {
-    new GeoPoint(0.0, 0.0);
-    new GeoPoint(-90.0, 0.0);
-    new GeoPoint(-90.0, 180.0);
-    new GeoPoint(-90.0, -180.0);
-    new GeoPoint(90.0, 0.0);
-    new GeoPoint(90.0, 180.0);
-    new GeoPoint(90.0, -180.0);
+    GeoPoint unused1 = new GeoPoint(0.0, 0.0);
+    GeoPoint unused2 = new GeoPoint(-90.0, 0.0);
+    GeoPoint unused3 = new GeoPoint(-90.0, 180.0);
+    GeoPoint unused4 = new GeoPoint(-90.0, -180.0);
+    GeoPoint unused5 = new GeoPoint(90.0, 0.0);
+    GeoPoint unused6 = new GeoPoint(90.0, 180.0);
+    GeoPoint unused7 = new GeoPoint(90.0, -180.0);
 
     assertThrows(IllegalArgumentException.class, () -> new GeoPoint(-90.1, 0.0));
     assertThrows(IllegalArgumentException.class, () -> new GeoPoint(90.1, 0.0));

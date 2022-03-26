@@ -287,9 +287,9 @@ public class QueryTest {
   @Test
   public void testQueryCtor() {
     // Null is acceptable in all cases
-    new Query((String) null);
-    new Query((Key) null);
-    new Query(null, null);
+    Query unused1 = new Query((String) null);
+    Query unused2 = new Query((Key) null);
+    Query unused3 = new Query(null, null);
 
     Key incomplete = new Key("yam");
     assertThrows(IllegalArgumentException.class, () -> new Query(incomplete));
@@ -298,8 +298,9 @@ public class QueryTest {
   @Test
   public void testINFilterPredicate() {
     // testing that IN works both with arrays and lists
-    new Query.FilterPredicate(
-        "p1", Query.FilterOperator.IN, Arrays.<Object>asList(null, 3.14, 41, "good"));
+    Query.FilterPredicate unused =
+        new Query.FilterPredicate(
+            "p1", Query.FilterOperator.IN, Arrays.<Object>asList(null, 3.14, 41, "good"));
 
     // Testing that IN on a single value is valid
     assertThat(

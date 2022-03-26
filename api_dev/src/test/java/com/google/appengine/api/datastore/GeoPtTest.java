@@ -57,8 +57,8 @@ public class GeoPtTest {
 
   @Test
   public void testConstructor() {
-    new GeoPt(-90.00f, -180.00f);
-    new GeoPt(90.00f, 180.00f);
+    GeoPt unused1 = new GeoPt(-90.00f, -180.00f);
+    GeoPt unused2 = new GeoPt(90.00f, 180.00f);
     assertThrowsIAE(-90.01f, 0f);
     assertThrowsIAE(0, -180.01f);
     assertThrowsIAE(0, 180.01f);

@@ -478,8 +478,10 @@ public class PreparedMultiQueryTest {
         () -> new PreparedMultiQuery(query1, makeMultiQuery(query1, 1, 2), null, queryRunner));
 
     Query query2 = new Query("k").setKeysOnly().addSort(Entity.KEY_RESERVED_PROPERTY);
-    new PreparedMultiQuery(new Query(), makeMultiQuery(1, 2), null, queryRunner);
-    new PreparedMultiQuery(query2, makeMultiQuery(query2, 1, 2), null, queryRunner);
+    PreparedMultiQuery unused1 =
+        new PreparedMultiQuery(new Query(), makeMultiQuery(1, 2), null, queryRunner);
+    PreparedMultiQuery unused2 =
+        new PreparedMultiQuery(query2, makeMultiQuery(query2, 1, 2), null, queryRunner);
   }
 
   @Test

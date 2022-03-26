@@ -44,6 +44,7 @@ import com.google.common.util.concurrent.ForwardingFuture;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.ExtensionRegistry;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -796,6 +797,7 @@ public class ApiProxyImpl implements ApiProxy.Delegate<ApiProxyImpl.EnvironmentI
   private static final class CloudTraceImpl extends CloudTrace {
     private final TraceWriter writer;
 
+    @CanIgnoreReturnValue
     CloudTraceImpl(EnvironmentImpl env) {
       super(env);
       this.writer = env.getTraceWriter();
@@ -841,6 +843,7 @@ public class ApiProxyImpl implements ApiProxy.Delegate<ApiProxyImpl.EnvironmentI
 
     private final EnvironmentImpl env;
 
+    @CanIgnoreReturnValue
     ApiStatsImpl(EnvironmentImpl env) {
       super(env);
       this.env = env;

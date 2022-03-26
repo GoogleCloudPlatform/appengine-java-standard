@@ -30,6 +30,7 @@ import com.google.apphosting.utils.config.WebModule;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -82,6 +83,7 @@ public class AppCfg {
     new AppCfg(args);
   }
 
+  @CanIgnoreReturnValue
   protected AppCfg(String[] cmdLineArgs) {
     this(new AppAdminFactory(), cmdLineArgs);
   }

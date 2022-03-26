@@ -234,8 +234,8 @@ public class KeyTest {
     Key pk1 = new Key("kind", null, 3, null, appid1);
     Key pk2 = new Key("kind", null, 3, null, appid2);
     if (appid1.equals(appid2)) {
-      new Key("kind", pk1, 3, null, appid2);
-      new Key("kind", pk2, 3, null, appid1);
+      Key unused1 = new Key("kind", pk1, 3, null, appid2);
+      Key unused2 = new Key("kind", pk2, 3, null, appid1);
     } else {
       assertThrows(IllegalArgumentException.class, () -> new Key("kind", pk1, 3, null, appid2));
       assertThrows(IllegalArgumentException.class, () -> new Key("kind", pk2, 3, null, appid1));

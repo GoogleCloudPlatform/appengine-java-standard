@@ -35,6 +35,6 @@ public class CategoryTest {
 
   @Test
   public void testGoodConstructorInput() {
-    new Category("whatever");
+    Category unused = new Category("whatever");
   }
 }

@@ -26,6 +26,7 @@ import com.google.apphosting.utils.config.AppEngineWebXmlReader;
 import com.google.common.base.Ascii;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -125,6 +126,7 @@ public class KickStart {
     new KickStart(args);
   }
 
+  @CanIgnoreReturnValue
   private KickStart(String[] args) {
     String entryClass = null;
 

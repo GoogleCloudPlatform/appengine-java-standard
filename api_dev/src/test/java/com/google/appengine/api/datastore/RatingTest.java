@@ -37,9 +37,9 @@ public class RatingTest {
 
   @Test
   public void testGoodConstructorInput() {
-    new Rating(Rating.MIN_VALUE);
-    new Rating(Rating.MAX_VALUE);
-    new Rating(Rating.MIN_VALUE + 1);
-    new Rating(Rating.MAX_VALUE - 1);
+    Rating unused1 = new Rating(Rating.MIN_VALUE);
+    Rating unused2 = new Rating(Rating.MAX_VALUE);
+    Rating unused3 = new Rating(Rating.MIN_VALUE + 1);
+    Rating unused4 = new Rating(Rating.MAX_VALUE - 1);
   }
 }
