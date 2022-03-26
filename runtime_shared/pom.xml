@@ -58,7 +58,11 @@
             <groupId>org.mortbay.jasper</groupId>
             <artifactId>apache-el</artifactId>
         </dependency>
-    </dependencies>
+        <dependency>
+          <groupId>com.google.errorprone</groupId>
+          <artifactId>error_prone_annotations</artifactId>
+        </dependency>
+  </dependencies>
 
     <build>
         <plugins>
