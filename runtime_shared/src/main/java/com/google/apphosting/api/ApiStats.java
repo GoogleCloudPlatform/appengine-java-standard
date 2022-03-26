@@ -16,8 +16,6 @@
 
 package com.google.apphosting.api;
 
-import com.google.errorprone.annotations.CanIgnoreReturnValue;
-
 /**
  * Represents automatic statistics collected by the ApiProxy. If present, this
  * object will be stored under the KEY-variable in an Environment's property.
@@ -55,7 +53,6 @@ public abstract class ApiStats {
    * @param env the Environment object to bind this object to.
    * @exception IllegalStateException if an object is already bound
    */
-  @CanIgnoreReturnValue
   protected ApiStats(ApiProxy.Environment env){
     bind(env);
   }
