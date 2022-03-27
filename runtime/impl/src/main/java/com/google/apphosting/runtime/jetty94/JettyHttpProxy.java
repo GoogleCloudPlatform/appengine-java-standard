@@ -265,7 +265,7 @@ public class JettyHttpProxy {
     private final AppInfoFactory appInfoFactory;
     private final EvaluationRuntimeServerInterface evaluationRuntimeServerInterface;
 
-    ForwardingHandler(ServletEngineAdapter.Config runtimeOptions, Map<String, String> env)
+    public ForwardingHandler(ServletEngineAdapter.Config runtimeOptions, Map<String, String> env)
         throws ExecutionException, InterruptedException, IOException {
       this.applicationRoot = runtimeOptions.applicationRoot();
       this.fixedApplicationPath = runtimeOptions.fixedApplicationPath();
