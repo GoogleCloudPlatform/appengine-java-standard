@@ -410,8 +410,15 @@ public class AppVersionFactory {
     // WEB-INF/classes (to avoid violating the servlet spec) but
     // before other WEB-INF/lib jars (in case the user is including
     // appengine-tools-api.jar or something else superfluous).
+    // Old apps would still use an ApiVersion of 1.0 (inside manifest of old api jar) and would
+    // not bundled the api jar.
+    // Newer apps are now using "user_defined" and they bundle the api jar, so no need to add it.
+    // App not using the api jar would have "none" or empty.
+    // Read ../runtime/jetty94/AppInfoFactory.java to see where it is setup.
     String apiVersion = appInfo.getApiVersion();
-    if (!apiVersion.isEmpty() && !Ascii.equalsIgnoreCase(apiVersion, "none")) {
+    if (!apiVersion.isEmpty()
+        && !Ascii.equalsIgnoreCase(apiVersion, "none")
+        && !Ascii.equalsIgnoreCase(apiVersion, "user_defined")) {
       // For now, the only valid version has been "1.0" since the beginning of App Engine.
 
       if (classPathUtils == null) {

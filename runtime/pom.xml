@@ -34,6 +34,7 @@
     <module>impl</module>
     <module>deployment</module>
     <module>local</module>
+    <module>nogaeapiswebapp</module>
     <module>test</module>
     <module>testapps</module>
   </modules>
