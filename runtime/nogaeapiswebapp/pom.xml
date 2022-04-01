@@ -24,6 +24,7 @@
 
     <groupId>com.google.appengine.demos</groupId>
     <artifactId>nogaeapiswebapp</artifactId>
+    <name>AppEngine :: nogaeapiswebapp</name>
 
     <properties>
         <appengine.app.version>1</appengine.app.version>

@@ -23,7 +23,7 @@
     <version>2.0.5-SNAPSHOT</version>
   </parent>
   <packaging>jar</packaging>
-  <name>appengine-remote-api</name>
+  <name>AppEngine :: appengine-remote-api</name>
   <dependencies>
      <dependency>
        <groupId>com.google.api-client</groupId>

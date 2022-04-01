@@ -142,7 +142,7 @@
                                     <overWrite>true</overWrite>
                                     <includes>**</includes>
                                     <outputDirectory>${assembly-directory}/lib/impl</outputDirectory>
-                                    <destFileName>appengine-stubs.jar</destFileName>
+                                    <destFileName>appengine-api-stubs.jar</destFileName>
                                 </artifactItem>
                                 <artifactItem>
                                     <groupId>com.google.appengine</groupId>
@@ -162,7 +162,7 @@
                                     <type>jar</type>
                                     <overWrite>true</overWrite>
                                     <includes>**</includes>
-                                    <outputDirectory>${assembly-directory}/quickstart</outputDirectory>
+                                    <outputDirectory>${assembly-directory}/lib/tools/quickstart</outputDirectory>
                                     <destFileName>quickstartgenerator.jar</destFileName>
                                 </artifactItem>
                                 <artifactItem>
@@ -172,7 +172,7 @@
                                     <type>jar</type>
                                     <overWrite>true</overWrite>
                                     <includes>**</includes>
-                                    <outputDirectory>${assembly-directory}/testing</outputDirectory>
+                                    <outputDirectory>${assembly-directory}/lib/testing</outputDirectory>
                                     <destFileName>appengine-testing.jar</destFileName>
                                 </artifactItem>
                                 <artifactItem>

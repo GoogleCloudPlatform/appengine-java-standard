@@ -27,7 +27,7 @@
   </parent>
 
   <packaging>jar</packaging>
-  <name>quickstartgenerator</name>
+  <name>AppEngine :: quickstartgenerator</name>
   <dependencies>
     <dependency>
       <groupId>org.eclipse.jetty</groupId>

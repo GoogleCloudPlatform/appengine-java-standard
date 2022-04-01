@@ -27,7 +27,7 @@
   </parent>
 
   <packaging>jar</packaging>
-  <name>sessiondata</name>
+  <name>AppEngine :: sessiondata</name>
   <properties>
     <maven.deploy.skip>true</maven.deploy.skip>
   </properties>

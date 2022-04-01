@@ -25,7 +25,7 @@
     </parent>
 
     <packaging>jar</packaging>
-    <name>shared-sdk</name>
+    <name>AppEngine :: shared-sdk</name>
     <url>http://maven.apache.org</url>
     <properties>
       <maven.deploy.skip>true</maven.deploy.skip>

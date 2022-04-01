@@ -27,7 +27,7 @@
   </parent>
 
   <packaging>jar</packaging>
-  <name>runtime-main</name>
+  <name>AppEngine :: runtime-main</name>
 
   <dependencies>
     <dependency>

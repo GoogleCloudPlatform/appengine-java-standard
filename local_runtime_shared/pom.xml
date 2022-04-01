@@ -24,7 +24,7 @@
     <version>2.0.5-SNAPSHOT</version>
   </parent>
   <packaging>jar</packaging>
-  <name>appengine-local-runtime-shared</name>
+  <name>AppEngine :: appengine-local-runtime-shared</name>
   <dependencies>
     <dependency>
       <groupId>com.google.appengine</groupId>

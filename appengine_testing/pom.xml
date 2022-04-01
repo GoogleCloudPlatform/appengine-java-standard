@@ -27,7 +27,7 @@
   </parent>
 
   <packaging>jar</packaging>
-  <name>appengine-testing</name>
+  <name>AppEngine :: appengine-testing</name>
   <description>Testing support for Google App Engine standard environment application code</description>
 
 

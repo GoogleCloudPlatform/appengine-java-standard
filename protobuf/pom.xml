@@ -27,7 +27,7 @@
   </parent>
 
   <packaging>jar</packaging>
-  <name>protos</name>
+  <name>AppEngine :: protos</name>
 
   <dependencies>
     <dependency>

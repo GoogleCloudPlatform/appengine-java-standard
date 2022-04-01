@@ -27,7 +27,7 @@
   </parent>
 
   <packaging>jar</packaging>
-  <name>appengine-api-stubs</name>
+  <name>AppEngine :: appengine-api-stubs</name>
   <description>
     SDK for dev_appserver (local development) with some of the dependencies shaded (repackaged)
   </description>

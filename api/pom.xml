@@ -27,7 +27,7 @@
     <maven.deploy.skip>true</maven.deploy.skip>
   </properties>
   <packaging>jar</packaging>
-  <name>appengine-apis</name>
+  <name>AppEngine :: appengine-apis</name>
   <description>API for Google App Engine standard environment</description>
   <dependencies>
     <dependency>

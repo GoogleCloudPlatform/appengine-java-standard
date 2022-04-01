@@ -27,7 +27,7 @@
   </parent>
 
   <packaging>jar</packaging>
-  <name>appengine-local-runtime</name>
+  <name>AppEngine :: appengine-local-runtime</name>
   <description>App Engine Local devappserver.</description>
 
   <dependencies>

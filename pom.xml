@@ -21,6 +21,7 @@
   <artifactId>parent</artifactId>
   <version>2.0.5-SNAPSHOT</version>
   <packaging>pom</packaging>
+  <name>AppEngine :: Parent project</name>
   <modules>
     <module>third_party/geronimo_javamail</module>
     <module>protobuf</module>

@@ -26,7 +26,7 @@
   </parent>
 
   <packaging>jar</packaging>
-  <name>runtime-test</name>
+  <name>AppEngine :: runtime-test</name>
 
   <properties>
     <maven.deploy.skip>true</maven.deploy.skip>

@@ -28,7 +28,7 @@
 
     <artifactId>geronimo-javamail_1.4_spec</artifactId>
     <packaging>jar</packaging>
-    <name>JavaMail 1.4</name>
+    <name>AppEngine :: JavaMail 1.4</name>
     <version>1.4.4-SNAPSHOT</version>
 
     <description>Javamail 1.4 Specification with AppEngine updates.</description>

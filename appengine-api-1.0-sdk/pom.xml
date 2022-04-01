@@ -23,7 +23,7 @@
     <version>2.0.5-SNAPSHOT</version>
   </parent>
   <packaging>jar</packaging>
-  <name>appengine-api-1.0-sdk</name>
+  <name>AppEngine :: appengine-api-1.0-sdk</name>
   <description>API for Google App Engine standard environment with some of the dependencies shaded (repackaged)</description>
   <dependencies>
     <dependency>

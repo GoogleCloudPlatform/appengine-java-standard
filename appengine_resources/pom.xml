@@ -24,7 +24,7 @@
     <version>2.0.5-SNAPSHOT</version>
   </parent>
   <packaging>jar</packaging>
-  <name>appengine-resources</name>
+  <name>AppEngine :: appengine-resources</name>
   <properties>
     <maven.deploy.skip>true</maven.deploy.skip>
   </properties>

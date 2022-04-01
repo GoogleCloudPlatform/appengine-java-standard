@@ -27,7 +27,7 @@
     <maven.deploy.skip>true</maven.deploy.skip>
   </properties>
   <packaging>jar</packaging>
-  <name>appengine-utils</name>
+  <name>AppEngine :: appengine-utils</name>
   <dependencies>
     <dependency>
       <groupId>com.google.auto.service</groupId>
