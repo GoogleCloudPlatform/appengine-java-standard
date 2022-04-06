@@ -424,7 +424,7 @@ public class AppVersionFactory {
       if (classPathUtils == null) {
         logger.atInfo().log("Ignoring API version setting %s", apiVersion);
       } else {
-        File apiJar = classPathUtils.getApiJarForVersion(apiVersion);
+        File apiJar = classPathUtils.getFrozenApiJar();
         if (apiJar != null) {
           logger.atInfo().log("Adding API jar %s for version %s", apiJar, apiVersion);
           try {

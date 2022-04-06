@@ -75,7 +75,7 @@ public final class ClassPathUtilsTest {
     assertThat(System.getProperty("classpath.connector-j"))
         .isEqualTo(runtimeLocation + "/jdbc-mysql-connector.jar");
 
-    assertThat(cpu.getApiJarForVersion("1.0").getAbsolutePath())
+    assertThat(cpu.getFrozenApiJar().getAbsolutePath())
         .isEqualTo(runtimeLocation + "/appengine-api.jar");
   }
 
@@ -96,7 +96,7 @@ public final class ClassPathUtilsTest {
         .isEqualTo(runtimeLocation + "/runtime-shared.jar");
     assertThat(System.getProperty("classpath.connector-j")).isNull();
 
-    assertThat(cpu.getApiJarForVersion("1.0").getAbsolutePath())
+    assertThat(cpu.getFrozenApiJar().getAbsolutePath())
         .isEqualTo(runtimeLocation + "/appengine-api-1.0-sdk.jar");
   }
 
@@ -125,7 +125,7 @@ public final class ClassPathUtilsTest {
     assertThat(System.getProperty("classpath.connector-j"))
         .isEqualTo(runtimeLocation + "/jdbc-mysql-connector.jar");
 
-    assertThat(cpu.getApiJarForVersion("1.0").getAbsolutePath())
+    assertThat(cpu.getFrozenApiJar().getAbsolutePath())
         .isEqualTo(runtimeLocation + "/appengine-api.jar");
   }
 
@@ -159,7 +159,7 @@ public final class ClassPathUtilsTest {
     assertThat(System.getProperty("classpath.connector-j"))
         .isEqualTo(runtimeLocation + "/jdbc-mysql-connector.jar");
 
-    assertThat(cpu.getApiJarForVersion("1.0").getAbsolutePath())
+    assertThat(cpu.getFrozenApiJar().getAbsolutePath())
         .isEqualTo(runtimeLocation + "/appengine-api.jar");
   }
 
@@ -195,7 +195,7 @@ public final class ClassPathUtilsTest {
     assertThat(System.getProperty("classpath.connector-j"))
         .isEqualTo(runtimeLocation + "/jdbc-mysql-connector.jar");
 
-    assertThat(cpu.getApiJarForVersion("1.0").getAbsolutePath())
+    assertThat(cpu.getFrozenApiJar().getAbsolutePath())
         .isEqualTo(runtimeLocation + "/appengine-api.jar");
   }
 
@@ -223,15 +223,13 @@ public final class ClassPathUtilsTest {
     assertThat(System.getProperty("classpath.connector-j"))
         .isEqualTo(runtimeLocation + "/jdbc-mysql-connector.jar");
 
-    assertThat(cpu.getApiJarForVersion("1.0").getAbsolutePath())
-        .isEqualTo("/my_app_root" + runtimeLocation + "/jars/appengine-api-1.0-sdk.jar");
+    assertThat(cpu.getFrozenApiJar().getAbsolutePath())
+        .isEqualTo("/my_app_root" + runtimeLocation + "/appengine-api.jar");
     assertThat(System.getProperty("classpath.appengine-api-legacy"))
         .isEqualTo(runtimeLocation + "/jars/appengine-api-legacy.jar");
 
     assertThat(cpu.getAppengineApiLegacyJar().getAbsolutePath())
         .isEqualTo("/my_app_root" + runtimeLocation + "/jars/appengine-api-legacy.jar");
-    assertThat(cpu.getApiJarForVersion("1.0").getAbsolutePath())
-        .isEqualTo("/my_app_root" + runtimeLocation + "/jars/appengine-api-1.0-sdk.jar");
   }
 
   @Test
@@ -261,7 +259,7 @@ public final class ClassPathUtilsTest {
     assertThat(System.getProperty("classpath.connector-j"))
         .isEqualTo(runtimeLocation + "/jdbc-mysql-connector.jar");
 
-    assertThat(cpu.getApiJarForVersion("1.0").getAbsolutePath())
+    assertThat(cpu.getFrozenApiJar().getAbsolutePath())
         .isEqualTo(runtimeLocation + "/appengine-api.jar");
 
     assertThat(System.getProperty("classpath.appengine-api-legacy")).isNull();

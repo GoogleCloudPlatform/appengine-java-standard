@@ -51,7 +51,7 @@ public class ClassPathUtils {
   private static final String PATH_SEPARATOR = System.getProperty("path.separator");
 
   private final File root;
-  private File apiJarFile;
+  private File frozenApiJarFile;
 
   public ClassPathUtils() {
     this(null);
@@ -129,16 +129,18 @@ public class ClassPathUtils {
     System.setProperty(RUNTIME_IMPL_PROPERTY, runtimeClasspath);
     logger.log(Level.INFO, "Using runtime classpath: " + runtimeClasspath);
 
+    // The frozen API jar we must use for ancient customers still relying on the obsolete feature
+    // that when deploying with api_version: 1.0 in generated app.yaml
+    // we need to add our own legacy jar.
+    frozenApiJarFile = new File(new File(root, runtimeBase), "/appengine-api.jar");
     if (useJetty94 && useMavenJars) {
       System.setProperty(RUNTIME_SHARED_PROPERTY, runtimeBase + "/jars/runtime-shared.jar");
       System.setProperty(API_PROPERTY, "1.0=" + runtimeBase + "/jars/appengine-api-1.0-sdk.jar");
-      apiJarFile = new File(new File(root, runtimeBase), "/jars/appengine-api-1.0-sdk.jar");
       System.setProperty(
           APPENGINE_API_LEGACY_PROPERTY, runtimeBase + "/jars/appengine-api-legacy.jar");
     } else {
       System.setProperty(RUNTIME_SHARED_PROPERTY, runtimeBase + "/runtime-shared.jar");
       System.setProperty(API_PROPERTY, "1.0=" + runtimeBase + "/appengine-api.jar");
-      apiJarFile = new File(new File(root, runtimeBase), "/appengine-api.jar");
     }
     System.setProperty(CONNECTOR_J_PROPERTY, runtimeBase + "/jdbc-mysql-connector.jar");
     System.setProperty(PREBUNDLED_PROPERTY, runtimeBase + "/conscrypt.jar");
@@ -175,7 +177,7 @@ public class ClassPathUtils {
     logger.log(Level.INFO, "Using runtime classpath: " + runtimeClasspath);
 
     System.setProperty(RUNTIME_SHARED_PROPERTY, runtimeBase + "/runtime-shared.jar");
-    apiJarFile = new File(runtimeBase, "/appengine-api-1.0-sdk.jar");
+    frozenApiJarFile = new File(runtimeBase, "/appengine-api-1.0-sdk.jar");
   }
 
   public URL[] getRuntimeImplUrls() {
@@ -222,11 +224,10 @@ public class ClassPathUtils {
   }
 
   /**
-   * Returns a {@link File} for the API jar that corresponds to the specified version, or {@code
-   * null} if no jar for this version is available.
+   * Returns a {@link File} for the frozen old API jar,
    */
-  public File getApiJarForVersion(String /* apiVersion */ unused) {
-    return apiJarFile;
+  public File getFrozenApiJar() {
+    return frozenApiJarFile;
   }
 
   public File getAppengineApiLegacyJar() {
