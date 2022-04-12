@@ -69,7 +69,6 @@ import org.eclipse.jetty.webapp.WebAppContext;
 /**
  * {@code AppEngineWebAppContext} is a customization of Jetty's {@link WebAppContext} that is aware
  * of the {@link ApiProxy} and can provide custom logging and authentication.
- *
  */
 // This class is different than the one for Jetty 9.3 as it the new way we want to use only
 // for Jetty 9.4 to define the default servlets and filters, outside of webdefault.xml. Doing so
@@ -91,6 +90,7 @@ public class AppEngineWebAppContext extends WebAppContext {
       "/base/java8_runtime/appengine.ignore-content-length";
 
   private final String serverInfo;
+  private final boolean extractWar;
   private final List<RequestListener> requestListeners = new CopyOnWriteArrayList<>();
   private final boolean ignoreContentLength;
 
@@ -123,31 +123,42 @@ public class AppEngineWebAppContext extends WebAppContext {
   }
 
   public AppEngineWebAppContext(File appDir, String serverInfo) {
+    this(appDir, serverInfo, /*extractWar=*/ true);
+  }
+
+  public AppEngineWebAppContext(File appDir, String serverInfo, boolean extractWar) {
     // We set the contextPath to / for all applications.
     super(appDir.getPath(), URIUtil.SLASH);
+
+    this.extractWar = extractWar;
 
     // If the application fails to start, we throw so the JVM can exit.
     setThrowUnavailableOnStartupException(true);
 
-    Resource webApp = null;
-    try {
-      webApp = Resource.newResource(appDir.getAbsolutePath());
+    if (extractWar) {
+      Resource webApp = null;
+      try {
+        webApp = Resource.newResource(appDir.getAbsolutePath());
 
-      if (appDir.isDirectory()) {
-        setWar(appDir.getPath());
-        setBaseResource(webApp);
-      } else {
-        // Real war file, not exploded , so we explode it in tmp area.
-        File extractedWebAppDir = createTempDir();
-        extractedWebAppDir.mkdir();
-        extractedWebAppDir.deleteOnExit();
-        Resource jarWebWpp = JarResource.newJarResource(webApp);
-        jarWebWpp.copyTo(extractedWebAppDir);
-        setBaseResource(Resource.newResource(extractedWebAppDir.getAbsolutePath()));
-        setWar(extractedWebAppDir.getPath());
+        if (appDir.isDirectory()) {
+          setWar(appDir.getPath());
+          setBaseResource(webApp);
+        } else {
+          // Real war file, not exploded , so we explode it in tmp area.
+          File extractedWebAppDir = createTempDir();
+          extractedWebAppDir.mkdir();
+          extractedWebAppDir.deleteOnExit();
+          Resource jarWebWpp = JarResource.newJarResource(webApp);
+          jarWebWpp.copyTo(extractedWebAppDir);
+          setBaseResource(Resource.newResource(extractedWebAppDir.getAbsolutePath()));
+          setWar(extractedWebAppDir.getPath());
+        }
+      } catch (Exception e) {
+        throw new IllegalStateException("cannot create AppEngineWebAppContext:", e);
       }
-    } catch (Exception e) {
-      throw new IllegalStateException("cannot create AppEngineWebAppContext:", e);
+    } else {
+      // Let Jetty serve directly from the war file (or directory, if it's already extracted):
+      setWar(appDir.getPath());
     }
 
     this.serverInfo = serverInfo;
@@ -328,7 +339,11 @@ public class AppEngineWebAppContext extends WebAppContext {
    */
   @Override
   public File getTempDirectory() {
-    return new File(getWar());
+    if (extractWar) {
+      return new File(getWar());
+    }
+
+    return super.getTempDirectory();
   }
 
   /**
