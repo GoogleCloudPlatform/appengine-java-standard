@@ -68,7 +68,7 @@ pushd target/docfx-yml
 python3 -m docuploader create-metadata \
  --name appengine-java-gen2-bundled-services \
  --version 2.0.0 \
- --stem appengine/docs/standard/java-gen2/reference/services/bundled \
+ --stem /appengine/docs/standard/java-gen2/reference/services/bundled \
  --language java
 
 
