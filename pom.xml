@@ -357,7 +357,7 @@
       <dependency>
         <groupId>com.google.appengine</groupId>
         <artifactId>proto1</artifactId>
-        <version>0.3</version>
+        <version>0.5</version>
       </dependency>
       <dependency>
         <groupId>com.google.cloud.datastore</groupId>
