@@ -220,7 +220,7 @@
       </activation>
       <properties>
         <!-- default config values -->
-        <docletName>java-docfx-doclet-1.5.0</docletName>
+        <docletName>java-docfx-doclet-1.6.0</docletName>
         <outputpath>${project.build.directory}/docfx-yml</outputpath>
         <projectname>${project.artifactId}</projectname>
         <excludeclasses />
@@ -228,7 +228,7 @@
         <source>8</source>
         <sourceFileExclude />
         <!-- Filed https://github.com/googleapis/java-docfx-doclet/issues/105 -->
-        <docletPath>${user.home}/Downloads/java-docfx-doclet-1.5.0.jar:${user.home}/Downloads/java-docfx-doclet-1.5.0-jar-with-dependencies.jar</docletPath>
+        <docletPath>${user.home}/Downloads/java-docfx-doclet-1.6.0-jar-with-dependencies.jar</docletPath>
       </properties>
       <build>
         <plugins>
@@ -241,13 +241,14 @@
               <useStandardDocletOptions>false</useStandardDocletOptions>
                <!-- custom config with -Dproperty=value -->
                <!-- for ex:
-              mvn javadoc:aggregate -B -q -P docFX -DdocletPath=/Users/ludo/Downloads/java-docfx-doclet-1.5.0.jar:/Users/ludo/Downloads/java-docfx-doclet-1.5.0-jar-with-dependencies.jar
+              mvn javadoc:aggregate -B -q -P docFX -DdocletPath=/Users/ludo/Downloads/java-docfx-doclet-1.6.0-jar-with-dependencies.jar
                -->
               <!--docletPath>${env.KOKORO_GFILE_DIR}/${docletName}.jar</docletPath-->
               <docletPath>${docletPath}</docletPath>
             <additionalOptions>
                 -outputpath ${outputpath}
                 -projectname ${projectname}
+                -disable-changelog true
                 -excludeclasses ${excludeclasses}:
                 -excludepackages ${excludePackages}:
               </additionalOptions>
