@@ -167,7 +167,24 @@
             <groupId>commons-codec</groupId>
             <artifactId>commons-codec</artifactId>
         </dependency>
-
+        <dependency>
+          <groupId>com.google.api.grpc</groupId>
+          <artifactId>proto-google-cloud-datastore-v1</artifactId>
+        </dependency>
+        <dependency>
+          <groupId>com.google.api.grpc</groupId>
+          <artifactId>proto-google-common-protos</artifactId>
+        </dependency>
+        <dependency>
+          <groupId>com.google.cloud.datastore</groupId>
+          <artifactId>datastore-v1-proto-client</artifactId>
+          <exclusions>
+            <exclusion>
+              <groupId>com.google.guava</groupId>
+              <artifactId>guava-jdk5</artifactId>
+            </exclusion>
+          </exclusions>
+        </dependency>
         <!-- Test dependencies. -->
         <dependency>
             <groupId>com.google.appengine</groupId>
@@ -255,14 +272,7 @@
                                         <include>com/google/storage/onestore/v3/proto2api/*</include>
                                   </includes>
                                 </filter>
-                                <filter>
-                                    <artifact>com.google.appengine:proto1</artifact>
-                                    <includes>
-                                        <include>com/google/**</include>
-                                    </includes>
-                                </filter>
-
-                                      <filter>
+                                  <filter>
                                     <artifact>com.google.appengine:appengine-apis</artifact>
                                     <includes>
                                         <include>com/google/appengine/api/*</include>
@@ -316,6 +326,8 @@
                             </filters>
                             <artifactSet>
                                 <includes>
+                                    <include>com.google.api.grpc:proto-google-cloud-datastore-v1</include>
+                                    <include>com.google.cloud.datastore:datastore-v1-proto-client</include>
                                     <include>javax.activation:activation</include>
                                     <include>org.apache.tomcat:juli</include>
                                     <include>com.beust:jcommander</include>
