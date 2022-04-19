@@ -26,7 +26,7 @@
   </parent>
 
   <packaging>pom</packaging>
-  <name>runtime-deployment</name>
+  <name>AppEngine :: runtime-deployment</name>
   <description>Produces an output directory in the format expected by the Java runtime.</description>
 
   <dependencies>
@@ -41,10 +41,6 @@
     <dependency>
       <groupId>com.google.appengine</groupId>
       <artifactId>runtime-shared</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.google.appengine</groupId>
-      <artifactId>appengine-api-1.0-sdk</artifactId>
     </dependency>
   </dependencies>
 

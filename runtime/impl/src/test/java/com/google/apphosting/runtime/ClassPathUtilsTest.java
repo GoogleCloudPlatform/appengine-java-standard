@@ -85,12 +85,7 @@ public final class ClassPathUtilsTest {
     ClassPathUtils cpu = new ClassPathUtils();
     assertThat(cpu.getConnectorJUrls()).hasLength(0);
     assertThat(System.getProperty("classpath.runtime-impl"))
-        .isEqualTo(
-            runtimeLocation
-                + "/runtime-impl.jar"
-                + PATH_SEPARATOR
-                + runtimeLocation
-                + "/appengine-api-1.0-sdk.jar");
+        .isEqualTo(runtimeLocation + "/runtime-impl.jar");
 
     assertThat(System.getProperty("classpath.runtime-shared"))
         .isEqualTo(runtimeLocation + "/runtime-shared.jar");
@@ -185,9 +180,6 @@ public final class ClassPathUtilsTest {
                 + "/runtime-impl-third-party-jetty94.jar"
                 + PATH_SEPARATOR
                 + runtimeLocation
-                + "/appengine-api-1.0-sdk.jar"
-                + PATH_SEPARATOR
-                + runtimeLocation
                 + "/runtime-appengine-api.jar");
 
     assertThat(System.getProperty("classpath.runtime-shared"))
@@ -211,9 +203,6 @@ public final class ClassPathUtilsTest {
         .isEqualTo(
             runtimeLocation
                 + "/jars/runtime-impl.jar"
-                + PATH_SEPARATOR
-                + runtimeLocation
-                + "/jars/appengine-api-1.0-sdk.jar"
                 + PATH_SEPARATOR
                 + runtimeLocation
                 + "/frozen_debugger.jar");

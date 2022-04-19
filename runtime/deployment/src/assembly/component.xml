@@ -26,7 +26,6 @@
         <include>com.google.appengine:runtime-impl</include>
         <include>com.google.appengine:runtime-main</include>
         <include>com.google.appengine:runtime-shared</include>
-        <include>com.google.appengine:appengine-api-1.0-sdk</include>
       </includes>
     </dependencySet>
   </dependencySets>

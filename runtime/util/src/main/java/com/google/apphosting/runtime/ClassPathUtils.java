@@ -95,14 +95,12 @@ public class ClassPathUtils {
     List<String> runtimeClasspathEntries =
         useJetty94
             ? (useMavenJars
-                ? Arrays.asList(
-                    "jars/runtime-impl.jar", "jars/appengine-api-1.0-sdk.jar", cloudDebuggerJar)
+                ? Arrays.asList("jars/runtime-impl.jar", cloudDebuggerJar)
                 : Arrays.asList(
                     runtimeImplJar,
                     "runtime-impl-jetty94.jar",
                     cloudDebuggerJar,
                     "runtime-impl-third-party-jetty94.jar",
-                    "appengine-api-1.0-sdk.jar",
                     "runtime-appengine-api.jar"))
             : Arrays.asList(
                 runtimeImplJar,
@@ -157,8 +155,7 @@ public class ClassPathUtils {
         runtime-main.jar
         runtime-shared.jar
     */
-    List<String> runtimeClasspathEntries =
-        Arrays.asList("runtime-impl.jar", "appengine-api-1.0-sdk.jar");
+    List<String> runtimeClasspathEntries = Arrays.asList("runtime-impl.jar");
 
     String runtimeClasspath =
         runtimeClasspathEntries.stream()

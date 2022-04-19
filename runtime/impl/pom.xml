@@ -48,8 +48,8 @@
         </dependency>
         <dependency>
             <groupId>com.google.appengine</groupId>
-            <artifactId>appengine-api-1.0-sdk</artifactId>
-            <scope>provided</scope>
+            <artifactId>appengine-apis</artifactId>
+            <scope>optional</scope>
         </dependency>
         <dependency>
             <groupId>com.google.appengine</groupId>
@@ -58,6 +58,16 @@
         <dependency>
             <groupId>com.google.appengine</groupId>
             <artifactId>runtime-shared</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.google.appengine</groupId>
+                    <artifactId>appengine-api-1.0-sdk</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+           <groupId>com.google.appengine</groupId>
+           <artifactId>geronimo-javamail_1.4_spec</artifactId>
         </dependency>
         <dependency>
             <groupId>com.google.auto.value</groupId>
@@ -161,11 +171,6 @@
         <!-- Test dependencies. -->
         <dependency>
             <groupId>com.google.appengine</groupId>
-            <artifactId>appengine-apis</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.google.appengine</groupId>
             <artifactId>appengine-tools-sdk</artifactId>
             <scope>test</scope>
         </dependency>
@@ -217,6 +222,12 @@
                         </goals>
                         <configuration>
                           <createSourcesJar>true</createSourcesJar>
+                          <relocations>
+                            <relocation>
+                              <pattern>com.google.io</pattern>
+                              <shadedPattern>com.google.appengine.repackaged.com.google.io</shadedPattern>
+                            </relocation>
+                          </relocations>
                           <filters>
                                 <filter>
                                     <artifact>com.google.appengine:protos</artifact>
@@ -227,26 +238,80 @@
                                         <include>com/google/apphosting/datastore/proto2api/**</include>
                                         <include>com/google/cloud/datastore/logs/*</include>
                                         <include>com/google/storage/onestore/v3/proto2api/*</include>
-                                    </includes>
+                                        <include>com/google/appengine/api/appidentity/*</include>
+                                        <include>com/google/appengine/api/datastore/*</include>
+                                        <include>com/google/appengine/api/memcache/*</include>
+                                        <include>com/google/appengine/api/oauth/*</include>
+                                        <include>com/google/appengine/api/taskqueue/*</include>
+                                        <include>com/google/appengine/api/urlfetch/*</include>
+                                        <include>com/google/appengine/api/users/*</include>
+                                        <include>com/google/appengine/api/utils/*</include>
+                                        <include>com/google/apphosting/datastore/proto2api/**</include>
+                                        <include>com/google/apphosting/base/protos/Codes*</include>
+                                        <include>com/google/apphosting/base/protos/SourcePb*</include>
+                                        <include>com/google/apphosting/base/protos/api/ApiBasePb*</include>
+                                        <include>com/google/apphosting/base/protos/api/RemoteApiPb*</include>
+                                        <include>com/google/protos/proto2/bridge/*</include>
+                                        <include>com/google/storage/onestore/v3/proto2api/*</include>
+                                  </includes>
                                 </filter>
                                 <filter>
                                     <artifact>com.google.appengine:proto1</artifact>
                                     <includes>
-                                        <include>com/google/apphosting/datastore/proto2api/*</include>
-                                        <include>com/google/apphosting/executor/*</include>
-                                        <include>com/google/apphosting/executor/proto2api/*</include>
-                                        <include>com/google/apphosting/utils/remoteapi</include>
+                                        <include>com/google/**</include>
+                                    </includes>
+                                </filter>
+
+                                      <filter>
+                                    <artifact>com.google.appengine:appengine-apis</artifact>
+                                    <includes>
+                                        <include>com/google/appengine/api/*</include>
+                                        <include>com/google/appengine/api/appidentity/*</include>
+                                        <include>com/google/appengine/api/blobstore/BlobKey*</include>
+                                        <include>com/google/appengine/api/datastore/*</include>
+                                        <include>com/google/appengine/api/memcache/*</include>
+                                        <include>com/google/appengine/api/memcache/stdimpl/*</include>
+                                        <include>com/google/appengine/api/internal/*</include>
+                                        <include>com/google/appengine/api/oauth/*</include>
+                                        <include>com/google/appengine/api/taskqueue/*</include>
+                                        <include>com/google/appengine/api/urlfetch/*</include>
+                                        <include>com/google/appengine/api/users/*</include>
+                                        <include>com/google/appengine/api/utils/*</include>
+                                        <include>com/google/appengine/spi/*</include>
+                                        <include>com/google/apphosting/api/*</include>
+                                        <include>com/google/apphosting/utils/servlet/*</include>
+                                        <include>com/google/apphosting/utils/security/urlfetch/**</include>
+                                        <include>com/google/apphosting/api/ApiBasePb*</include>
+                                        <include>com/google/apphosting/api/ApiProxy*</include>
+                                        <include>com/google/apphosting/api/ApiStats*</include>
+                                        <include>com/google/apphosting/api/AppEngineInternal.class</include>
+                                        <include>com/google/apphosting/api/CloudTrace.class</include>
+                                        <include>com/google/apphosting/api/CloudTraceContext.class</include>
+                                        <include>com/google/apphosting/api/DeadlineExceededException*</include>
+                                        <include>com/google/apphosting/api/NamespaceResources.class</include>
+                                        <include>com/google/apphosting/api/UserServicePb*</include>
+                                        <include>com/google/apphosting/api/logservice/LogServicePb*</include>
+                                        <include>com/google/apphosting/api/proto2api/*</include>
+                                        <include>com/google/apphosting/utils/remoteapi/RemoteApiServlet*</include>
+                                        <include>com/google/apphosting/utils/security/urlfetch/*</include>
+                                        <include>com/google/apphosting/utils/servlet/DeferredTaskServlet*</include>
+                                        <include>com/google/apphosting/utils/servlet/JdbcMySqlConnectionCleanupFilter*</include>
+                                        <include>com/google/apphosting/utils/servlet/MultipartMimeUtils*</include>
+                                        <include>com/google/apphosting/utils/servlet/ParseBlobUploadFilter*</include>
+                                        <include>com/google/apphosting/utils/servlet/SessionCleanupServlet*</include>
+                                        <include>com/google/apphosting/utils/servlet/SnapshotServlet*</include>
+                                        <include>com/google/apphosting/utils/servlet/TransactionCleanupFilter*</include>
+                                        <include>com/google/apphosting/utils/servlet/WarmupServlet*</include>
+                                        <include>com/google/storage/onestore/PropertyType*</include>
+                                        <include>javax/cache/LICENSE</include>
+                                        <include>javax/mail/LICENSE</include>
+                                        <include>org/apache/geronimo/mail/LICENSE</include>
+                                        <include>META-INF/javamail.*</include>
                                     </includes>
                                     <excludes>
-                                        <exclude>com/google/apphosting/executor/ExecutorPb*</exclude>
-                                        <exclude>com/google/apphosting/executor/ScannerPb*</exclude>
+                                        <exclude>com/google/appengine/api/datastore/FriendHacks.class</exclude>
+                                        <exclude>com/google/appengine/api/internal/package-info.class</exclude>
                                     </excludes>
-                                </filter>
-                                <filter>
-                                    <artifact>com.google.appengine:appengine-api-1.0-sdk</artifact>
-                                    <includes>
-                                        <include>com/google/apphosting/utils/security/urlfetch/**</include>
-                                    </includes>
                                 </filter>
                             </filters>
                             <artifactSet>
@@ -262,7 +327,8 @@
                                     <include>com.google.appengine:proto1</include>
                                     <include>com.google.appengine:protos</include>
                                     <include>com.google.appengine:runtime-util</include>
-                                    <include>com.google.appengine:appengine-api-1.0-sdk</include>
+                                    <include>com.google.appengine:appengine-apis</include>
+                                    <include>com.google.appengine:geronimo-javamail_1.4_spec:*</include>
                                     <include>com.google.appengine:shared-sdk</include>
                                     <include>com.google.auto.value:auto-value-annotations</include>
                                     <include>com.google.code.findbugs:jsr305</include>
