@@ -98,7 +98,6 @@ public class JavaRuntimeMainWithDefaults {
         "--default_to_builtin_url_stream_handler=true",
         "--default_use_google_connectorj=true",
         "--enable_gae_cloud_sql_jdbc_connectivity=true",
-        "--enable_hotspot_performance_metrics=false",
         "--enable_synchronized_app_logs_writer=true",
         "--external_datacenter_name=MARS",
         // This flag must be given in this Main.
