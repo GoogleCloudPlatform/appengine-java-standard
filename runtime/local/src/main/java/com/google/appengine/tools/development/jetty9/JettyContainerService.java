@@ -177,17 +177,12 @@ public class JettyContainerService extends AbstractContainerService {
         new ContextHandler.ContextScopeListener() {
           @Override
           public void enterScope(ContextHandler.Context context, Request request, Object reason) {
-            // Either we will have a request, in which case we use its associated environment,
-            // or we have no request, which means we are likely flushing a session as the request
-            // count is going to zero, so we can pick any known environment (there should only be
-            // one).
-            // TODO: It is possible that a future session manager may try to save
-            // a cached session after a pause, in which case there will be no environment available
-            // to use.  In that case another environment not associated with a request will need to
-            // be created for such flushes.
+            // We should have a request that use its associated environment, if there is no request
+            // we cannot select a local environment as picking the wrong one could result in
+            // waiting on the LocalEnvironment API call semaphore forever.
             LocalEnvironment env =
                 request == null
-                    ? environments.stream().findAny().orElse(null)
+                    ? null
                     : (LocalEnvironment) request.getAttribute(LocalEnvironment.class.getName());
             if (env != null) {
               ApiProxy.setEnvironmentForCurrentThread(env);
