@@ -16,7 +16,7 @@
 
 # How to test the latest App Engine Java runtime in prod.
 
-The Google App engine Java runtime is pushed almost every 2 weeks in production
+The Google App Engine Java runtime is pushed almost every 2 weeks in production
 after an internal QA validation. The runtime jars come from this github repository.
 Since all the runtime code is now in open source, what if you could add the runtime jars
 somewhere in your App Engine Application and use these jars instead of the one in prod?
@@ -26,8 +26,16 @@ without being impacted with a scheduled new runtime push.
 Well, it is possible, but changing just a little bit your application configuration and your
 pom.xml file.
 
-First, you need to decide with App Engine Java runtime jars version you want to use.
-Let's say you want the latest from head in this github repository.
+First, you need to decide which App Engine Java runtime jars version you want to use. There are 3 runtime jars that
+are bundled as a Maven assembly under `<artifactId>runtime-deployment</artifactId>`:
+
+  * runtime-impl.jar
+  * runtime-shared.jar
+  * runtime-main.jar
+
+Let's say you want the latest from head in this github repository. You could built the 3 jars, add them at the
+top of your web application and change the entrypoint to boot with these jars instead of the one maintained in production.
+
 
 ```
  git clone https://github.com/GoogleCloudPlatform/appengine-java-standard.git
