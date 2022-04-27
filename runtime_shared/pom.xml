@@ -32,14 +32,17 @@
         <dependency>
             <groupId>com.google.appengine</groupId>
             <artifactId>sessiondata</artifactId>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>javax.servlet-api</artifactId>
+             <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>javax.servlet.jsp.jstl</groupId>
             <artifactId>javax.servlet.jsp.jstl-api</artifactId>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.checkerframework</groupId>
@@ -49,19 +52,23 @@
         <dependency>
             <groupId>org.eclipse.jetty.toolchain</groupId>
             <artifactId>jetty-schemas</artifactId>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.mortbay.jasper</groupId>
             <artifactId>apache-jsp</artifactId>
-        </dependency>
+            <optional>true</optional>
+       </dependency>
         <dependency>
             <groupId>org.mortbay.jasper</groupId>
             <artifactId>apache-el</artifactId>
+            <optional>true</optional>
         </dependency>
         <dependency>
           <groupId>com.google.errorprone</groupId>
           <artifactId>error_prone_annotations</artifactId>
-        </dependency>
+           <optional>true</optional>
+       </dependency>
   </dependencies>
 
     <build>

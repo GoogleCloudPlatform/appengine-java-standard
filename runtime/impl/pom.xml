@@ -33,27 +33,32 @@
         <dependency>
             <groupId>com.beust</groupId>
             <artifactId>jcommander</artifactId>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>com.esotericsoftware.yamlbeans</groupId>
             <artifactId>yamlbeans</artifactId>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>com.google.appengine</groupId>
             <artifactId>appengine-utils</artifactId>
-        </dependency>
+            <optional>true</optional>
+       </dependency>
         <dependency>
             <groupId>com.google.appengine</groupId>
             <artifactId>protos</artifactId>
-        </dependency>
+            <optional>true</optional>
+       </dependency>
         <dependency>
             <groupId>com.google.appengine</groupId>
             <artifactId>appengine-apis</artifactId>
-            <scope>optional</scope>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>com.google.appengine</groupId>
             <artifactId>runtime-util</artifactId>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>com.google.appengine</groupId>
@@ -64,8 +69,9 @@
                     <artifactId>appengine-api-1.0-sdk</artifactId>
                 </exclusion>
             </exclusions>
+            <optional>true</optional>
         </dependency>
-        <dependency>
+      <dependency>
            <groupId>com.google.appengine</groupId>
            <artifactId>geronimo-javamail_1.4_spec</artifactId>
         </dependency>
@@ -86,22 +92,27 @@
         <dependency>
             <groupId>com.google.flogger</groupId>
             <artifactId>google-extensions</artifactId>
-        </dependency>
+             <optional>true</optional>
+       </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>com.google.protobuf</groupId>
             <artifactId>protobuf-java</artifactId>
-        </dependency>
+            <optional>true</optional>
+       </dependency>
         <dependency>
             <groupId>com.google.protobuf</groupId>
             <artifactId>protobuf-java-util</artifactId>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-client</artifactId>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
@@ -112,10 +123,12 @@
                     <artifactId>javax.transaction-api</artifactId>
                 </exclusion>
             </exclusions>
+          <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-servlets</artifactId>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>javax.servlet</groupId>
@@ -130,50 +143,62 @@
         <dependency>
             <groupId>com.google.appengine</groupId>
             <artifactId>shared-sdk</artifactId>
-        </dependency>
+            <optional>true</optional>
+       </dependency>
         <dependency>
             <groupId>io.grpc</groupId>
             <artifactId>grpc-api</artifactId>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>io.grpc</groupId>
             <artifactId>grpc-stub</artifactId>
-        </dependency>
+            <optional>true</optional>
+       </dependency>
         <dependency>
             <groupId>io.grpc</groupId>
             <artifactId>grpc-protobuf</artifactId>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>io.grpc</groupId>
             <artifactId>grpc-netty</artifactId>
+            <optional>true</optional>
         </dependency>
        <dependency>
             <groupId>org.apache.tomcat</groupId>
             <artifactId>juli</artifactId>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-core</artifactId>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>joda-time</groupId>
             <artifactId>joda-time</artifactId>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.json</groupId>
             <artifactId>json</artifactId>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>commons-codec</groupId>
             <artifactId>commons-codec</artifactId>
+            <optional>true</optional>
         </dependency>
         <dependency>
           <groupId>com.google.api.grpc</groupId>
           <artifactId>proto-google-cloud-datastore-v1</artifactId>
-        </dependency>
+            <optional>true</optional>
+       </dependency>
         <dependency>
           <groupId>com.google.api.grpc</groupId>
           <artifactId>proto-google-common-protos</artifactId>
+            <optional>true</optional>
         </dependency>
         <dependency>
           <groupId>com.google.cloud.datastore</groupId>
@@ -184,6 +209,7 @@
               <artifactId>guava-jdk5</artifactId>
             </exclusion>
           </exclusions>
+            <optional>true</optional>
         </dependency>
         <!-- Test dependencies. -->
         <dependency>
@@ -194,6 +220,7 @@
         <dependency>
             <groupId>com.google.appengine</groupId>
             <artifactId>proto1</artifactId>
+            <optional>true</optional>
         </dependency>
         <dependency>
            <groupId>javax.activation</groupId>
