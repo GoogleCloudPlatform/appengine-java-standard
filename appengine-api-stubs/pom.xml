@@ -52,6 +52,10 @@
       <artifactId>httpcore-nio</artifactId>
       <optional>true</optional>
     </dependency>
+     <dependency>
+      <groupId>com.google.appengine</groupId>
+      <artifactId>appengine-api-1.0-sdk</artifactId>
+    </dependency>
   </dependencies>
   <build>
     <plugins>
@@ -313,13 +317,6 @@
                   </excludes>
                 </filter>
                 <filter>
-                  <artifact>com.google.appengine:protos</artifact>
-                  <includes>
-                    <include>com/google/apphosting/base/protos/api/ApiBasePb*</include>
-                    <include>com/google/storage/onestore/v3/proto2api/*</include>
-                  </includes>
-                </filter>
-                <filter>
                   <artifact>com.google.appengine:mediautil</artifact>
                   <includes>
                     <include>mediautil/**</include>
@@ -337,31 +334,7 @@
                     <include>com/google/common/geometry/**</include>
                   </includes>
                 </filter>
-                <filter>
-                  <artifact>commons-logging:commons-logging</artifact>
-                  <includes>
-                    <include>org/apache/commons/logging/**</include>
-                  </includes>
-                </filter>
-                <filter>
-                  <artifact>org.apache.httpcomponents:httpclient</artifact>
-                  <includes>
-                    <include>org/apache/http/**</include>
-                  </includes>
-                </filter>
 
-                <filter>
-                  <artifact>org.apache.httpcomponents:httpcore-nio</artifact>
-                  <includes>
-                    <include>org/apache/http/**</include>
-                  </includes>
-                </filter>
-                <filter>
-                  <artifact>org.apache.httpcomponents:httpmime</artifact>
-                  <includes>
-                    <include>org/apache/http/**</include>
-                  </includes>
-                </filter>
                 <filter>
                   <artifact>org.apache.lucene:lucene-analyzers</artifact>
                   <includes>
@@ -391,16 +364,10 @@
                 <includes>
                   <include>com.esotericsoftware.yamlbeans:yamlbeans</include>
                   <include>com.google.appengine:appengine-apis-dev</include>
-                  <include>com.google.appengine:protos</include>
                   <include>com.google.appengine:mediautil</include>
                   <include>com.google.appengine:shared-sdk</include>
                   <include>com.google.geometry:s2-geometry</include>
-                  <include>commons-logging:commons-logging</include>
-                  <include>org.apache.httpcomponents:httpclient</include>
-                  <include>org.apache.httpcomponents:httpmime</include>
-                  <include>org.apache.httpcomponents:httpcore</include>
-                  <include>org.apache.httpcomponents:httpcore-nio</include>
-                  <include>org.apache.lucene:lucene-analyzers</include>
+                   <include>org.apache.lucene:lucene-analyzers</include>
                   <include>org.apache.lucene:lucene-core</include>
                   <include>org.jsoup:jsoup</include>
                   <include>quartz:quartz</include>

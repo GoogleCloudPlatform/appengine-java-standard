@@ -55,6 +55,10 @@
       <artifactId>javax.servlet-api</artifactId>
       <optional>true</optional>
     </dependency>
+     <dependency>
+      <groupId>com.google.appengine</groupId>
+      <artifactId>appengine-api-1.0-sdk</artifactId>
+    </dependency>
   </dependencies>
   <build>
     <plugins>
@@ -131,29 +135,9 @@
               </relocations>
               <filters>
                 <filter>
-                  <artifact>com.fasterxml.jackson.core:jackson-core</artifact>
-                  <includes>
-                    <include>com/fasterxml/jackson/**</include>
-                  </includes>
-                </filter>
-                <filter>
                   <artifact>com.google.appengine:proto1</artifact>
                   <includes>
                     <include>com/google/common/util/concurrent/internal/**</include>
-                  </includes>
-                </filter>
-                <filter>
-                  <artifact>com.google.guava:guava</artifact>
-                  <includes>
-                    <include>com/google/common/annotations/**</include>
-                    <include>com/google/common/base/**</include>
-                    <include>com/google/common/collect/**</include>
-                    <include>com/google/common/graph/**</include>
-                    <include>com/google/common/hash/**</include>
-                    <include>com/google/common/io/**</include>
-                    <include>com/google/common/math/**</include>
-                    <include>com/google/common/primitives/**</include>
-                    <include>com/google/common/util/concurrent/**</include>
                   </includes>
                 </filter>
                 <filter>
@@ -165,12 +149,9 @@
               </filters>
               <artifactSet>
                 <includes>
-                  <include>com.fasterxml.jackson.core:jackson-core:*</include>
                   <include>com.google.api-client:google-api-client:*</include>
                   <include>com.google.appengine:proto1:*</include>
                   <include>com.google.appengine:utils:*</include>
-                  <include>com.google.errorprone:error_prone_annotations:*</include>
-                  <include>com.google.guava:guava:*</include>
                   <include>com.google.http-client:google-http-client-apache-v2:*</include>
                   <include>com.google.http-client:google-http-client-appengine:*</include>
                   <include>com.google.http-client:google-http-client-gson:*</include>
@@ -178,11 +159,6 @@
                   <include>com.google.http-client:google-http-client-jackson:*</include>
                   <include>com.google.http-client:google-http-client:*</include>
                   <include>com.google.oauth-client:google-oauth-client:*</include>
-                  <include>commons-codec:commons-codec:*</include>
-                  <include>commons-logging:commons-logging:*</include>
-                  <include>org.apache.httpcomponents:httpclient:*</include>
-                  <include>org.apache.httpcomponents:httpcore:*</include>
-                  <include>org.codehaus.jackson:jackson-core-asl:*</include>
                   <include>com.google.api-client:google-api-client-appengine:*</include>
                 </includes>
               </artifactSet>

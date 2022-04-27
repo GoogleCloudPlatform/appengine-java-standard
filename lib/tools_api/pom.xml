@@ -27,7 +27,7 @@
   </parent>
 
   <packaging>jar</packaging>
-  <name>appengine-tools-sdk</name>
+  <name>AppEngine :: appengine-tools-sdk (aka appengine-tools-api)</name>
 
   <dependencies>
     <dependency>
