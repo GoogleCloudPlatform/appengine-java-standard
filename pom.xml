@@ -42,6 +42,7 @@
     <module>utils</module>
     <module>quickstartgenerator</module>
     <module>sdk_assembly</module>
+    <module>applications</module>
   </modules>
 
   <properties>
