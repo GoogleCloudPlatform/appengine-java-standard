@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!--
  Copyright 2021 Google LLC
 
@@ -19,12 +19,12 @@
    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
    xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd"
    version="2.5">
-  <servlet>
-        <servlet-name>NoGaeApisServlet</servlet-name>
-        <servlet-class>NoGaeApisServlet</servlet-class>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>NoGaeApisServlet</servlet-name>
-        <url-pattern>/</url-pattern>
-    </servlet-mapping>
+    <filter>
+        <filter-name>FailInitializationFilter</filter-name>
+        <filter-class>FailInitializationFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>FailInitializationFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
 </web-app>

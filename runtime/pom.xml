@@ -35,6 +35,7 @@
     <module>deployment</module>
     <module>local</module>
     <module>nogaeapiswebapp</module>
+    <module>failinitfilterwebapp</module>
     <module>test</module>
     <module>testapps</module>
   </modules>
