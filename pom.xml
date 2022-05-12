@@ -32,6 +32,7 @@
     <module>api_dev</module>
     <module>appengine-api-1.0-sdk</module>
     <module>api_legacy</module>
+    <module>appengine_jsr107</module>
     <module>appengine-api-stubs</module>
     <module>local_runtime_shared</module>
     <module>lib</module>
