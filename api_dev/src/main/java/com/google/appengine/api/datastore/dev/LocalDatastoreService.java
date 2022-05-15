@@ -1201,7 +1201,7 @@ public abstract class LocalDatastoreService {
   static Transaction toProto1(
       com.google.apphosting.datastore.proto2api.DatastoreV3Pb.Transaction txn) {
     Transaction txnProto = new Transaction();
-    txnProto.mergeFrom(txn.toByteArray());
+    boolean unused = txnProto.mergeFrom(txn.toByteArray());
     return txnProto;
   }
 

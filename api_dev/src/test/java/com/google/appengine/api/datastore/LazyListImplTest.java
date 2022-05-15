@@ -96,11 +96,11 @@ public class LazyListImplTest {
       if (packageName.equals("datastore_v3")) {
         if (methodName.equals("RunQuery")) {
           DatastoreV3Pb.Query query = new DatastoreV3Pb.Query();
-          query.parseFrom(request);
+          boolean unused = query.parseFrom(request);
           runQueryCalls.add(query);
         } else if (methodName.equals("Next")) {
           DatastoreV3Pb.NextRequest next = new DatastoreV3Pb.NextRequest();
-          next.parseFrom(request);
+          boolean unused = next.parseFrom(request);
           nextCalls.add(next);
         }
       }
