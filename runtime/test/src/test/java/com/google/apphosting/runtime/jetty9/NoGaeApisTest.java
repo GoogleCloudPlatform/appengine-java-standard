@@ -48,4 +48,16 @@ public final class NoGaeApisTest extends JavaRuntimeViaHttpBase {
       runtime.executeHttpGet("/", 200);
     }
   }
+
+  @Test
+  public void testServletFailedInitialization() throws Exception {
+    try (RuntimeContext<DummyApiServer> runtime = runtimeContext()) {
+      // Initialization exceptions propagate up so they are logged properly.
+      assertThat(runtime.executeHttpGet("/failInit", 500))
+          .contains("javax.servlet.ServletException: Intentionally failing to initialize.");
+
+      // A second request will attempt initialization again.
+      assertThat(runtime.executeHttpGet("/failInit", 404)).contains("404 Not Found");
+    }
+  }
 }

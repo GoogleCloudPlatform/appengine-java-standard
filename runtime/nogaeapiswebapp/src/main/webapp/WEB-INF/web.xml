@@ -27,4 +27,13 @@
         <servlet-name>NoGaeApisServlet</servlet-name>
         <url-pattern>/</url-pattern>
     </servlet-mapping>
+
+  <servlet>
+    <servlet-name>failInit</servlet-name>
+    <servlet-class>FailInitializationServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>failInit</servlet-name>
+    <url-pattern>/failInit</url-pattern>
+  </servlet-mapping>
 </web-app>
