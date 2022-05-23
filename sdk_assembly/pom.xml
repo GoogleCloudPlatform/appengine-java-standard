@@ -111,7 +111,7 @@
                                      <type>jar</type>
                                      <excludes>META-INF/**
                                      </excludes>
-                                     <includes>**/webdefault.xml</includes>
+                                     <includes>com/google/apphosting/runtime/jetty94/webdefault.xml</includes>
                                     <fileMappers>
                                         <org.codehaus.plexus.components.io.filemappers.RegExpFileMapper>
                                             <pattern>^\Qcom/google/apphosting/runtime/jetty94/\E</pattern>
