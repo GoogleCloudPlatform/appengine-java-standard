@@ -35,7 +35,7 @@ fi
 
 if [[ -z "${STAGING_BUCKET_V2}" ]]; then
   echo "Setting STAGING_BUCKET_V2 environment variable to default value."
-  STAGING_BUCKET_V2=docs-staging-v2-dev
+  STAGING_BUCKET_V2=docs-staging-v2
 fi
 
 git clone https://github.com/GoogleCloudPlatform/appengine-java-standard.git
