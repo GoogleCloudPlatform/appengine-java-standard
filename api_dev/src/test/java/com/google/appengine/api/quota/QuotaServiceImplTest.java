@@ -51,12 +51,16 @@ public class QuotaServiceImplTest {
     // Setup the environment, stats, and quota service
     environment = new MockEnvironment("some-app", "v1");
     ApiProxy.setEnvironmentForCurrentThread(environment);
-    // TODO(b/226203690): the unused capture shouldn't be necessary
+
+    // We capture the result to avoid tripping a compile-time check, but we don't
+    // need to do anything with this result, as ApiStats's constructor is
+    // side-effecting (it binds this to the environment).
     ApiStats unused = new ApiStats(environment) {
       @Override
       public long getApiTimeInMegaCycles() {
         return 13;
       }
+
       @Override
       public long getCpuTimeInMegaCycles() {
         return 14;
