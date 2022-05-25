@@ -421,7 +421,7 @@ public class GCacheTest {
     ImmutableMap<String, Object> customProperties =
         ImmutableMap.of(GCacheFactory.MEMCACHE_SERVICE, service, GCacheFactory.NAMESPACE, "ns");
 
-    new GCache(customProperties);
+    GCache unused = new GCache(customProperties);
     verifyNoMoreInteractions(service);
   }
 

@@ -20,7 +20,6 @@ import com.google.appengine.api.memcache.Expiration;
 import com.google.appengine.api.memcache.MemcacheService;
 import com.google.appengine.api.memcache.MemcacheServiceFactory;
 import com.google.appengine.api.memcache.Stats;
-import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -49,7 +48,6 @@ public class GCache implements Cache {
    *
    * @param properties Properties for this cache.
    */
-  @CanIgnoreReturnValue
   public GCache(Map<?, ?> properties) {
     listeners = new ArrayList<CacheListener>();
     if (properties != null) {
