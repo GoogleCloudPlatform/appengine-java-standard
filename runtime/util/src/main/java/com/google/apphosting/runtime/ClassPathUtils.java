@@ -72,16 +72,19 @@ public class ClassPathUtils {
 
     boolean useJetty93 = Boolean.getBoolean(USE_JETTY93);
     boolean useJetty94 = Boolean.getBoolean(USE_JETTY94);
+    boolean useMavenJars = Boolean.getBoolean(USE_MAVENJARS);
     // The jetty9.4 boolean is now set via the native launcher, the only way to undo this flag
     // at this level of the code is to test if the customer is now using the use.jetty93 as true in
     // their app, so we can overwrite the default instance definition flag.
     // The jetty9.3 boolean should override any value set for jetty9.4.
     // TODO remove when we are %100 on Jetty9.4 in prod.
+    /// NOMUTANTS-- jetty93 wins over maven jars.
     if (useJetty93) {
       useJetty94 = false;
       System.setProperty(USE_JETTY94, "false");
+      useMavenJars = false;
+      System.setProperty(USE_MAVENJARS, "false");
     }
-    boolean useMavenJars = Boolean.getBoolean(USE_MAVENJARS);
     String runtimeImplJar = null;
     String cloudDebuggerJar = null;
     // This is only for Java11 or later runtime:

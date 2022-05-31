@@ -129,12 +129,15 @@ public final class ClassPathUtilsTest {
     createJava8Environment();
     // Set both of them and verify that 9.3 is winning:
     System.setProperty("use.jetty93", "true");
+    System.setProperty("use.mavenjars", "true");
     System.setProperty("use.jetty94", "true");
     assertThat(Boolean.getBoolean("use.jetty94")).isTrue();
+    assertThat(Boolean.getBoolean("use.mavenjars")).isTrue();
     ClassPathUtils cpu = new ClassPathUtils();
     assertThat(cpu.getConnectorJUrls()).hasLength(1);
     // Check that the jetty94 property is correctly resetted to false.
     assertThat(Boolean.getBoolean("use.jetty94")).isFalse();
+    assertThat(Boolean.getBoolean("use.mavenjars")).isFalse();
     assertThat(System.getProperty("classpath.runtime-impl"))
         .isEqualTo(
             runtimeLocation
