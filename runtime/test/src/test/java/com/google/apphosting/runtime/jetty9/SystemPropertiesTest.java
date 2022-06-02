@@ -59,7 +59,7 @@ public class SystemPropertiesTest extends JavaRuntimeViaHttpBase {
                         line -> line.substring(0, line.indexOf(" = ")),
                         line -> line.substring(line.indexOf(" = ") + 3)));
       }
-      String expectedRelease = Boolean.getBoolean("use.jetty94") ? "mainwithdefaults" : "unknown";
+      String expectedRelease = "mainwithdefaults";
       assertThat(propertyMap).containsAtLeast(
           // Set by flags, see JavaRuntimeFactory.startRuntime.
           "appengine.jetty.also_log_to_apiproxy", "true",

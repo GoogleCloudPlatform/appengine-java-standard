@@ -75,7 +75,7 @@ class ClassicSdk extends AppengineSdk {
   }
 
   @Override
-  public String getQuickStartClasspath(WebDefaultXmlType jettyVersion) {
+  public String getQuickStartClasspath() {
     List<String> list = new ArrayList<>();
     File quickstart = new File(getSdkRoot(), "lib/tools/quickstart/quickstartgenerator.jar");
     File jettyDir = new File(getSdkRoot(), SdkInfo.JETTY9_HOME_LIB_PATH);
@@ -101,13 +101,8 @@ class ClassicSdk extends AppengineSdk {
   }
 
   @Override
-  public String getWebDefaultXml(WebDefaultXmlType jettyVersion) {
-    switch (jettyVersion) {
-      case JETTY93_STANDARD:
+  public String getWebDefaultXml() {
         return getSdkRoot() + "/docs/webdefault.xml";
-      default:
-        throw new IllegalArgumentException("Invalid Jetty version: " + jettyVersion);
-    }
   }
 
   public String getSdkRoot() {

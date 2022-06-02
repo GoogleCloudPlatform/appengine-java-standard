@@ -40,7 +40,6 @@ public class JavaRuntimeMainTest {
 
   @Before
   public void setUp() {
-    System.clearProperty("use.jetty94");
     System.clearProperty("disable_api_call_logging_in_apiproxy");
     main = new JavaRuntimeMain();
   }
@@ -79,7 +78,6 @@ public class JavaRuntimeMainTest {
     String[] args = {"--fixed_application_path=" + appRoot};
     main.processOptionalProperties(args);
     assertThat(main.getApplicationPath(args)).isEqualTo(appRoot);
-    assertThat(System.getProperty("use.jetty94")).isNull();
     assertThat(System.getProperty("disable_api_call_logging_in_apiproxy")).isNull();
   }
 
@@ -88,7 +86,6 @@ public class JavaRuntimeMainTest {
     File webInf = temporaryFolder.newFolder("WEB-INF");
     File properties = new File(webInf, "appengine_optional.properties");
     try (PrintWriter writer = new PrintWriter(properties, UTF_8.name())) {
-      writer.println("use.jetty94=true");
       writer.println("disable_api_call_logging_in_apiproxy=true");
 
     }
@@ -96,7 +93,6 @@ public class JavaRuntimeMainTest {
     String[] optionalProperties = {"--fixed_application_path=" + appRoot};
     main.processOptionalProperties(optionalProperties);
     assertThat(main.getApplicationPath(optionalProperties)).isEqualTo(appRoot);
-    assertThat(System.getProperty("use.jetty94")).isEqualTo("true");
     assertThat(System.getProperty("disable_api_call_logging_in_apiproxy")).isEqualTo("true");
   }
 }

@@ -26,10 +26,8 @@ import static java.net.HttpURLConnection.HTTP_INTERNAL_ERROR;
 import static java.net.HttpURLConnection.HTTP_OK;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
-import static java.util.Comparator.reverseOrder;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static java.util.stream.Collectors.toList;
 
 import com.google.apphosting.base.protos.api.RemoteApiPb;
 import com.google.apphosting.testing.PortPicker;
@@ -62,8 +60,6 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.nio.file.attribute.PosixFilePermission;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Executors;
@@ -72,7 +68,6 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Stream;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -80,7 +75,6 @@ import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
-import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.rules.TemporaryFolder;
@@ -97,34 +91,12 @@ public abstract class JavaRuntimeViaHttpBase {
   private static final String JAVA_HOME = "third_party/java/jdk/jdk8-64/jre";
 
   private static String javaHome;
-  private static boolean deleteJavaHomeAfterTest;
 
   @BeforeClass
   public static void initJavaHome() throws Exception {
     javaHome = JAVA_HOME;
     if (!Files.exists(Paths.get(javaHome))) {
       javaHome = System.getProperty("java.home");
-    }
-    if (!useJetty94()) {
-      // With the old launcher, we'll run into problems if we run using $JAVA_HOME, because that
-      // points to a symlink forest. It works fine if you run the `java` command from there, but if
-      // you try to start a JVM from within an already-running C++ process using JNI, you hit
-      // problems trying to load libjava.so, because the JVM code resolves some path using
-      // realpath(3) and that ends up trying to load /build/cas/libjava.so.
-      javaHome = copyJavaHome(javaHome);
-      deleteJavaHomeAfterTest = true;
-    }
-  }
-
-  @AfterClass
-  public static void deleteJavaHome() throws Exception {
-    if (deleteJavaHomeAfterTest) {
-      try (Stream<Path> stream = Files.walk(Paths.get(javaHome))) {
-        List<Path> paths = stream.sorted(reverseOrder()).collect(toList());
-        for (Path path : paths) {
-          Files.delete(path);
-        }
-      }
     }
   }
 
@@ -263,7 +235,6 @@ public abstract class JavaRuntimeViaHttpBase {
         Config<ApiServerT> config) throws IOException, InterruptedException {
       PortPicker portPicker = PortPicker.create();
       int jettyPort = portPicker.pickUnusedPort();
-      int runtimePort = portPicker.pickUnusedPort();
       int apiPort = portPicker.pickUnusedPort();
 
       String runtimeDirProperty = System.getProperty("appengine.runtime.dir");
@@ -277,62 +248,36 @@ public abstract class JavaRuntimeViaHttpBase {
       InetSocketAddress apiSocketAddress = new InetSocketAddress(apiPort);
 
       ImmutableList<String> runtimeArgs =
-          useJetty94()
-              ? ImmutableList.<String>builder()
-                  .add(
-                      javaHome + "/bin/java",
-                      "-Dcom.google.apphosting.runtime.jetty94.LEGACY_MODE="
-                          + useJetty94LegacyMode(),
-                      "-Duse.mavenjars=" + useMavenJars(),
-                      "-cp",
-                      useMavenJars()
-                          ? new File(runtimeDir, "jars/runtime-main.jar").getAbsolutePath()
-                          : new File(runtimeDir, "runtime-main.jar").getAbsolutePath())
-                  .addAll(optionalFlags())
-                  .addAll(jvmFlagsFromEnvironment(config.environmentEntries()))
-                  .add(
-                      "com.google.apphosting.runtime.JavaRuntimeMainWithDefaults",
-                      "--jetty_http_port=" + jettyPort,
-                      "--port=" + apiPort,
-                      "--trusted_host="
-                          + HostAndPort.fromParts(apiSocketAddress.getHostString(), apiPort),
-                      runtimeDir.getAbsolutePath())
-                  .addAll(config.launcherFlags())
-                  .build()
-              : ImmutableList.<String>builder()
-                  .add(
-                      new File(runtimeDir, "java_runtime_launcher").getAbsolutePath(),
-                      "--use_java_8=true",
-                      "--use_jetty94=" + useJetty94(),
-                      "--use_null_sandbox=true",
-                      "--use_java_8=true",
-                      "--use_null_sandbox=true",
-                      "--use_grpc=true",
-                      "--java_home=" + javaHome,
-                      "--port=" + runtimePort,
-                      "--jetty_http_port=" + jettyPort,
-                      "--use_jetty_http_proxy=true",
-                      "--trusted_host="
-                          + HostAndPort.fromParts(apiSocketAddress.getHostString(), apiPort),
-                      "--max_jvm_heap_size=128",
-                      "--allow_vfs_open_failure=true")
-                  .addAll(config.launcherFlags())
-                  .build();
+          ImmutableList.<String>builder()
+              .add(
+                  javaHome + "/bin/java",
+                  "-Dcom.google.apphosting.runtime.jetty94.LEGACY_MODE=" + useJetty94LegacyMode(),
+                  "-Duse.mavenjars=" + useMavenJars(),
+                  "-cp",
+                  useMavenJars()
+                      ? new File(runtimeDir, "jars/runtime-main.jar").getAbsolutePath()
+                      : new File(runtimeDir, "runtime-main.jar").getAbsolutePath())
+              .addAll(optionalFlags())
+              .addAll(jvmFlagsFromEnvironment(config.environmentEntries()))
+              .add(
+                  "com.google.apphosting.runtime.JavaRuntimeMainWithDefaults",
+                  "--jetty_http_port=" + jettyPort,
+                  "--port=" + apiPort,
+                  "--trusted_host="
+                      + HostAndPort.fromParts(apiSocketAddress.getHostString(), apiPort),
+                  runtimeDir.getAbsolutePath())
+              .addAll(config.launcherFlags())
+              .build();
 
       Process runtimeProcess = launchRuntime(runtimeArgs, config.environmentEntries());
       OutputPump outPump = new OutputPump(runtimeProcess.getInputStream(), "[stdout] ");
       OutputPump errPump = new OutputPump(runtimeProcess.getErrorStream(), "[stderr] ");
       new Thread(outPump).start();
       new Thread(errPump).start();
-      if (System.getProperty("appengine.runtime.dir") == null) {
-        // Should be via a blaze build.
-        errPump.awaitOutputLineMatching(".*Beginning accept loop.*", SERVER_START_TIMEOUT_SECONDS);
-      } else {
-        // TODO(b/192665275):
-        // For some reason, a Maven build does not emit anymore this log, need to investigate.
-        // For now, just wait a bit so the server is started in tests.
-        Thread.sleep(3000);
-      }
+      // TODO(b/192665275):
+      // For some reason, a Maven build does not emit anymore this log, need to investigate.
+      // For now, just wait a bit so the server is started in tests.
+      Thread.sleep(SERVER_START_TIMEOUT_SECONDS * 100);
 
       int timeoutMillis = 30_000;
       RequestConfig requestConfig =
@@ -436,10 +381,6 @@ public abstract class JavaRuntimeViaHttpBase {
     }
   }
 
-  static boolean useJetty94() {
-    return Boolean.getBoolean("use.jetty94");
-  }
-
   static boolean useMavenJars() {
     return Boolean.getBoolean("use.mavenjars");
   }
@@ -485,29 +426,6 @@ public abstract class JavaRuntimeViaHttpBase {
         }
       }
     }
-  }
-
-  /**
-   * Make a copy of the JRE in a temporary directory. This ensures that it is all real files, and
-   * not symbolic links.
-   */
-  private static String copyJavaHome(String originalJavaHome) throws Exception {
-    Path tmpJre = temporaryFolder.newFolder("jre").toPath();
-    Path sourceJre = Paths.get(originalJavaHome);
-    try (Stream<Path> stream = Files.walk(sourceJre)) {
-      List<Path> paths = stream.collect(toList());
-      for (Path path : paths) {
-        Path targetPath = tmpJre.resolve(sourceJre.relativize(path));
-        Files.copy(path, targetPath, StandardCopyOption.REPLACE_EXISTING);
-        ImmutableSet<PosixFilePermission> perms =
-            ImmutableSet.<PosixFilePermission>builder()
-                .addAll(Files.getPosixFilePermissions(targetPath))
-                .add(PosixFilePermission.OWNER_WRITE)
-                .build();
-        Files.setPosixFilePermissions(targetPath, perms);
-      }
-    }
-    return tmpJre.toString();
   }
 
   private static final Pattern JAR_URL_PATTERN = Pattern.compile("jar:file:(.*)!(.*)");

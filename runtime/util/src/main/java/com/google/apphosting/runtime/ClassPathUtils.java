@@ -37,8 +37,6 @@ public class ClassPathUtils {
   private static final Logger logger = Logger.getLogger(ClassPathUtils.class.getName());
 
   private static final String RUNTIME_BASE_PROPERTY = "classpath.runtimebase";
-  private static final String USE_JETTY93 = "use.jetty93";
-  private static final String USE_JETTY94 = "use.jetty94";
   private static final String USE_MAVENJARS = "use.mavenjars";
   private static final String RUNTIME_IMPL_PROPERTY = "classpath.runtime-impl";
   private static final String RUNTIME_SHARED_PROPERTY = "classpath.runtime-shared";
@@ -70,41 +68,20 @@ public class ClassPathUtils {
       return;
     }
 
-    boolean useJetty93 = Boolean.getBoolean(USE_JETTY93);
-    boolean useJetty94 = Boolean.getBoolean(USE_JETTY94);
     boolean useMavenJars = Boolean.getBoolean(USE_MAVENJARS);
-    // The jetty9.4 boolean is now set via the native launcher, the only way to undo this flag
-    // at this level of the code is to test if the customer is now using the use.jetty93 as true in
-    // their app, so we can overwrite the default instance definition flag.
-    // The jetty9.3 boolean should override any value set for jetty9.4.
-    // TODO remove when we are %100 on Jetty9.4 in prod.
-    /// NOMUTANTS-- jetty93 wins over maven jars.
-    if (useJetty93) {
-      useJetty94 = false;
-      System.setProperty(USE_JETTY94, "false");
-      useMavenJars = false;
-      System.setProperty(USE_MAVENJARS, "false");
-    }
     String runtimeImplJar = null;
     String cloudDebuggerJar = null;
     // This is only for Java11 or later runtime:
-    if (new File(runtimeBase, "runtime-impl11.jar").exists() || Boolean.getBoolean("use.java11")) {
-      runtimeImplJar = "runtime-impl11.jar";
+    if (Boolean.getBoolean("use.java11")) {
+      runtimeImplJar = "runtime-impl.jar";
       // Java11: No need for Cloud Debugger special treatement, we rely on pure open source agent.
     } else {
       runtimeImplJar = "runtime-impl.jar";
       cloudDebuggerJar = "frozen_debugger.jar";
     }
     List<String> runtimeClasspathEntries =
-        useJetty94
-            ? (useMavenJars
-                ? Arrays.asList("jars/runtime-impl.jar", cloudDebuggerJar)
-                : Arrays.asList(
-                    runtimeImplJar,
-                    "runtime-impl-jetty94.jar",
-                    cloudDebuggerJar,
-                    "runtime-impl-third-party-jetty94.jar",
-                    "runtime-appengine-api.jar"))
+        useMavenJars
+            ? Arrays.asList("jars/runtime-impl.jar", cloudDebuggerJar)
             : Arrays.asList(
                 runtimeImplJar,
                 cloudDebuggerJar,
@@ -134,7 +111,7 @@ public class ClassPathUtils {
     // that when deploying with api_version: 1.0 in generated app.yaml
     // we need to add our own legacy jar.
     frozenApiJarFile = new File(new File(root, runtimeBase), "/appengine-api.jar");
-    if (useJetty94 && useMavenJars) {
+    if (useMavenJars) {
       System.setProperty(RUNTIME_SHARED_PROPERTY, runtimeBase + "/jars/runtime-shared.jar");
       System.setProperty(API_PROPERTY, "1.0=" + runtimeBase + "/jars/appengine-api-1.0-sdk.jar");
       System.setProperty(

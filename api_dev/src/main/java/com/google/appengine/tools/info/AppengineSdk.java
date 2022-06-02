@@ -35,21 +35,6 @@ import java.util.List;
 public abstract class AppengineSdk {
 
   /**
-   * For the quickstart annotation processing, we need different weddefault.xml files used by Jetty
-   * to specify system default servlets and filters. For now, we need 3 of them: - the vm:true
-   * Managed VM Java image (based on Jetty92), - the vm:true/flex Managed VM Java image developped
-   * on github (based on Jetty93), - the App Engine standard Java8(g) runtime (based on Jetty93)
-   */
-  public enum WebDefaultXmlType {
-    JETTY93_STANDARD {
-      @Override
-      public String toString() {
-        return "9.3.standard";
-      }
-    }
-  }
-
-  /**
    * Default deployment admin server name.
    */
   public static final String DEFAULT_SERVER = "appengine.google.com";
@@ -146,16 +131,11 @@ public abstract class AppengineSdk {
   /** Returns the list of web api jar URLs for the SDK. */
   public abstract List<URL> getWebApiToolsLibs();
 
-  /**
-   * Returns the classpath of the quickstart process.
-   */
-  public abstract String getQuickStartClasspath(WebDefaultXmlType jettyVersion);
+  /** Returns the classpath of the quickstart process. */
+  public abstract String getQuickStartClasspath();
 
-  /**
-   * Returns the webdefault.xml for the corresponding Jetty version.
-   * Valid versions for now are 9.2 and 9.3 (Standard or Flex).
-   */
-  public abstract String getWebDefaultXml(WebDefaultXmlType jettyVersion);
+  /** Returns the webdefault.xml for the corresponding Jetty version. */
+  public abstract String getWebDefaultXml();
 
   /**
    * Returns the path to SDK resource files like xml or schemas files.

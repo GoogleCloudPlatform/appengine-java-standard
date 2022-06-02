@@ -70,7 +70,7 @@ public class MavenSdk extends AppengineSdk {
   }
 
   @Override
-  public String getQuickStartClasspath(WebDefaultXmlType jettyVersion) {
+  public String getQuickStartClasspath() {
     List<String> classes =
         Lists.transform(
             profileToFiles.get("QuickStart"),
@@ -114,8 +114,8 @@ public class MavenSdk extends AppengineSdk {
   }
 
   @Override
-  public String getWebDefaultXml(WebDefaultXmlType jettyVersion) {
-    return new File(resourceFile, jettyVersion + "/webdefault.xml").toString();
+  public String getWebDefaultXml() {
+    return new File(resourceFile, "aaaaaaa" + "/webdefault.xml").toString();
   }
 
   @Override

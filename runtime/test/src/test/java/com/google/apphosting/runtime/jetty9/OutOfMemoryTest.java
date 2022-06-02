@@ -54,7 +54,7 @@ public class OutOfMemoryTest extends JavaRuntimeViaHttpBase {
         // status we expected.
         // http://google3/third_party/java_src/jdk/openjdk8/u60/trunk/hotspot/src/share/vm/utilities/debug.cpp?l=333&rcl=218939537
         Process process = runtime.runtimeProcess();
-        boolean exited = process.waitFor(10, SECONDS);
+        boolean exited = process.waitFor(20, SECONDS);
         assertThat(exited).isTrue();
         int status = process.exitValue();
         assertThat(status).isEqualTo(3);

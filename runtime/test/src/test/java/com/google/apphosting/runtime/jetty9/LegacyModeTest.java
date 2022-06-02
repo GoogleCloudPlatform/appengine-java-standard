@@ -37,7 +37,6 @@ import org.junit.runners.JUnit4;
 public class LegacyModeTest extends JavaRuntimeViaHttpBase {
   private static RuntimeContext<DummyApiServer> runtime;
 
-  private static final boolean JETTY93 = !Boolean.getBoolean("use.jetty94");
   private static final boolean LEGACY =
       Boolean.getBoolean("com.google.apphosting.runtime.jetty94.LEGACY_MODE");
 
@@ -47,7 +46,6 @@ public class LegacyModeTest extends JavaRuntimeViaHttpBase {
     copyAppToDir("echoapp", appPath);
     File appDir = appPath.toFile();
 
-    System.err.printf("XXXXXXXXXXXXXXXXXXXXXXXXXX JETTY93=%b LEGACY=%b%n", JETTY93, LEGACY);
     RuntimeContext.Config<DummyApiServer> config =
         RuntimeContext.Config.builder()
             .setApplicationPath(appDir.getAbsolutePath())
@@ -127,7 +125,7 @@ public class LegacyModeTest extends JavaRuntimeViaHttpBase {
                 + "\r\n");
     assertThat(response).contains("HTTP/1.1 200 OK");
     assertThat(response).contains("Some: Header");
-    if (JETTY93 || LEGACY) {
+    if (LEGACY) {
       assertThat(response).contains("GET /some/path HTTP/1.0");
     } else {
       assertThat(response).contains("Get /some/path HTTP/1.0");

@@ -59,7 +59,6 @@ public class JavaRuntimeMainWithDefaults {
     System.setProperty("java.security.egd", "file:/dev/urandom");
     System.setProperty("java.util.Arrays.useLegacyMergeSort", "true");
     System.setProperty("user.timezone", "UTC");
-    System.setProperty("use.jetty94", "true");
   }
 
   static boolean useMavenJars() {

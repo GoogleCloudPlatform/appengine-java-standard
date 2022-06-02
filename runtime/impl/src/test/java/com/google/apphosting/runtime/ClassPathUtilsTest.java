@@ -34,8 +34,6 @@ public final class ClassPathUtilsTest {
 
   @Before
   public void setUp() throws Exception {
-    System.clearProperty("use.jetty93");
-    System.clearProperty("use.jetty94");
     System.clearProperty("use.java11");
     System.clearProperty("classpath.runtime-impl");
     System.clearProperty("use.mavenjars");
@@ -96,76 +94,9 @@ public final class ClassPathUtilsTest {
   }
 
   @Test
-  public void verifyJetty93PropertiesAreConfigured() throws Exception {
-    createJava8Environment();
-    System.setProperty("use.jetty93", "true");
-    ClassPathUtils cpu = new ClassPathUtils();
-    assertThat(cpu.getConnectorJUrls()).hasLength(1);
-    assertThat(System.getProperty("classpath.runtime-impl"))
-        .isEqualTo(
-            runtimeLocation
-                + "/runtime-impl.jar"
-                + PATH_SEPARATOR
-                + runtimeLocation
-                + "/frozen_debugger.jar"
-                + PATH_SEPARATOR
-                + runtimeLocation
-                + "/runtime-impl-third-party.jar"
-                + PATH_SEPARATOR
-                + runtimeLocation
-                + "/runtime-appengine-api.jar");
-
-    assertThat(System.getProperty("classpath.runtime-shared"))
-        .isEqualTo(runtimeLocation + "/runtime-shared.jar");
-    assertThat(System.getProperty("classpath.connector-j"))
-        .isEqualTo(runtimeLocation + "/jdbc-mysql-connector.jar");
-
-    assertThat(cpu.getFrozenApiJar().getAbsolutePath())
-        .isEqualTo(runtimeLocation + "/appengine-api.jar");
-  }
-
-  @Test
-  public void verifyJetty93WinsOverJetty94PropertiesAreConfigured() throws Exception {
-    createJava8Environment();
-    // Set both of them and verify that 9.3 is winning:
-    System.setProperty("use.jetty93", "true");
-    System.setProperty("use.mavenjars", "true");
-    System.setProperty("use.jetty94", "true");
-    assertThat(Boolean.getBoolean("use.jetty94")).isTrue();
-    assertThat(Boolean.getBoolean("use.mavenjars")).isTrue();
-    ClassPathUtils cpu = new ClassPathUtils();
-    assertThat(cpu.getConnectorJUrls()).hasLength(1);
-    // Check that the jetty94 property is correctly resetted to false.
-    assertThat(Boolean.getBoolean("use.jetty94")).isFalse();
-    assertThat(Boolean.getBoolean("use.mavenjars")).isFalse();
-    assertThat(System.getProperty("classpath.runtime-impl"))
-        .isEqualTo(
-            runtimeLocation
-                + "/runtime-impl.jar"
-                + PATH_SEPARATOR
-                + runtimeLocation
-                + "/frozen_debugger.jar"
-                + PATH_SEPARATOR
-                + runtimeLocation
-                + "/runtime-impl-third-party.jar"
-                + PATH_SEPARATOR
-                + runtimeLocation
-                + "/runtime-appengine-api.jar");
-
-    assertThat(System.getProperty("classpath.runtime-shared"))
-        .isEqualTo(runtimeLocation + "/runtime-shared.jar");
-    assertThat(System.getProperty("classpath.connector-j"))
-        .isEqualTo(runtimeLocation + "/jdbc-mysql-connector.jar");
-
-    assertThat(cpu.getFrozenApiJar().getAbsolutePath())
-        .isEqualTo(runtimeLocation + "/appengine-api.jar");
-  }
-
-  @Test
   public void verifyJetty94PropertiesAreConfigured() throws Exception {
 
     createJava8Environment();
-    System.setProperty("use.jetty94", "true");
     ClassPathUtils cpu = new ClassPathUtils();
     assertThat(cpu.getConnectorJUrls()).hasLength(1);
     assertThat(System.getProperty("classpath.runtime-impl"))
@@ -174,13 +105,10 @@ public final class ClassPathUtilsTest {
                 + "/runtime-impl.jar"
                 + PATH_SEPARATOR
                 + runtimeLocation
-                + "/runtime-impl-jetty94.jar"
-                + PATH_SEPARATOR
-                + runtimeLocation
                 + "/frozen_debugger.jar"
                 + PATH_SEPARATOR
                 + runtimeLocation
-                + "/runtime-impl-third-party-jetty94.jar"
+                + "/runtime-impl-third-party.jar"
                 + PATH_SEPARATOR
                 + runtimeLocation
                 + "/runtime-appengine-api.jar");
@@ -197,7 +125,6 @@ public final class ClassPathUtilsTest {
   @Test
   public void verifyMavenJarsPropertiesAreConfigured() throws Exception {
     createJava8Environment();
-    System.setProperty("use.jetty94", "true");
     System.setProperty("use.mavenjars", "true");
 
     ClassPathUtils cpu = new ClassPathUtils(new File("/my_app_root"));
@@ -222,38 +149,5 @@ public final class ClassPathUtilsTest {
 
     assertThat(cpu.getAppengineApiLegacyJar().getAbsolutePath())
         .isEqualTo("/my_app_root" + runtimeLocation + "/jars/appengine-api-legacy.jar");
-  }
-
-  @Test
-  public void verifyJetty93WinsOverMavenPropertiesAreConfigured() throws Exception {
-    createJava8Environment();
-    // Set both of them and verify that 9.3 is winning:
-    System.setProperty("use.jetty93", "true");
-    System.setProperty("use.mavenjars", "true");
-    ClassPathUtils cpu = new ClassPathUtils();
-    assertThat(cpu.getConnectorJUrls()).hasLength(1);
-    assertThat(System.getProperty("classpath.runtime-impl"))
-        .isEqualTo(
-            runtimeLocation
-                + "/runtime-impl.jar"
-                + PATH_SEPARATOR
-                + runtimeLocation
-                + "/frozen_debugger.jar"
-                + PATH_SEPARATOR
-                + runtimeLocation
-                + "/runtime-impl-third-party.jar"
-                + PATH_SEPARATOR
-                + runtimeLocation
-                + "/runtime-appengine-api.jar");
-
-    assertThat(System.getProperty("classpath.runtime-shared"))
-        .isEqualTo(runtimeLocation + "/runtime-shared.jar");
-    assertThat(System.getProperty("classpath.connector-j"))
-        .isEqualTo(runtimeLocation + "/jdbc-mysql-connector.jar");
-
-    assertThat(cpu.getFrozenApiJar().getAbsolutePath())
-        .isEqualTo(runtimeLocation + "/appengine-api.jar");
-
-    assertThat(System.getProperty("classpath.appengine-api-legacy")).isNull();
   }
 }

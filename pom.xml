@@ -187,7 +187,6 @@
                       <configuration>
                           <systemPropertyVariables>
                               <appengine.runtime.dir>../deployment/target/runtime-deployment-${project.version}</appengine.runtime.dir>
-                              <use.jetty94>true</use.jetty94>
                               <com.google.apphosting.runtime.jetty94.LEGACY_MODE>true</com.google.apphosting.runtime.jetty94.LEGACY_MODE>
                           </systemPropertyVariables>
                           <!-- Most of these tests were developed with Google's build system, which runs each test
@@ -214,7 +213,6 @@
                       <configuration>
                           <systemPropertyVariables>
                               <appengine.runtime.dir>../deployment/target/runtime-deployment-${project.version}</appengine.runtime.dir>
-                              <use.jetty94>true</use.jetty94>
                               <com.google.apphosting.runtime.jetty94.LEGACY_MODE>true</com.google.apphosting.runtime.jetty94.LEGACY_MODE>
                           </systemPropertyVariables>
                           <argLine>

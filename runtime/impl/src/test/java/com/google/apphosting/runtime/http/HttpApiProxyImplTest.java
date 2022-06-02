@@ -94,8 +94,8 @@ public class HttpApiProxyImplTest extends HttpApiProxyImplTestBase {
         .hasCauseThat()
         .hasMessageThat()
         .isAnyOf(
-            /* jetty 9.3 msg */ "400: Bad chunking",
-            /* jetty 9.4 msg */ "400: Bad Transfer-Encoding, chunked not last");
+            /* jetty 9.4 msg */ "400: Bad Transfer-Encoding, chunked not last",
+            /* jetty 9.4 other msg */ "400: Transfer-Encoding and Content-Length");
   }
 
   @Test

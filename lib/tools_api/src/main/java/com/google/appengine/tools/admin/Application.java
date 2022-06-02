@@ -1742,7 +1742,6 @@ public class Application implements GenericApplication {
   private void createQuickstartWebXml(ApplicationProcessingOptions opts)
       throws IOException, SAXException, ParserConfigurationException, TransformerException {
     String javaCmd = opts.getJavaExecutable().getPath();
-    AppengineSdk.WebDefaultXmlType jettyVersion;
     boolean notGAEStandard = appEngineWebXml.getUseVm() || appEngineWebXml.isFlexible();
     if (notGAEStandard) {
       throw new AppEngineConfigException(
@@ -1754,10 +1753,9 @@ public class Application implements GenericApplication {
             "Servlet 3.1 annotations processing is only supported with Java8 runtime."
                 + " Please downgrade the servlet version to 2.5 in the web.xml file.");
       }
-      jettyVersion = AppengineSdk.WebDefaultXmlType.JETTY93_STANDARD;
     }
-    String quickstartClassPath = AppengineSdk.getSdk().getQuickStartClasspath(jettyVersion);
-    File webDefaultXml = new File(AppengineSdk.getSdk().getWebDefaultXml(jettyVersion));
+    String quickstartClassPath = AppengineSdk.getSdk().getQuickStartClasspath();
+    File webDefaultXml = new File(AppengineSdk.getSdk().getWebDefaultXml());
     String[] args = {
       javaCmd,
       "-cp",

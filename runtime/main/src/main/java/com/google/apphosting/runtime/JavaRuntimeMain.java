@@ -40,12 +40,6 @@ public class JavaRuntimeMain {
   private static final Logger logger = Logger.getLogger(JavaRuntimeMain.class.getName());
   private static final String PROPERTIES_LOCATION = "WEB-INF/appengine_optional.properties";
 
-
-  /** This property will be used in ClassPathUtils processing to determine the correct classpath. */
-  private static final String USE_JETTY93 = "use.jetty93";
-
-  private static final String USE_JETTY94 = "use.jetty94";
-
   /** This property will be used in ClassPathUtils processing to determine the correct classpath. */
   private static final String USE_MAVEN_JARS = "use.mavenjars";
 
@@ -142,8 +136,6 @@ public class JavaRuntimeMain {
 
     for (String flag :
         new String[] {
-          USE_JETTY93,
-          USE_JETTY94,
           USE_MAVEN_JARS,
           DISABLE_API_CALL_LOGGING_IN_APIPROXY,
           ALLOW_NON_RESIDENT_SESSION_ACCESS
