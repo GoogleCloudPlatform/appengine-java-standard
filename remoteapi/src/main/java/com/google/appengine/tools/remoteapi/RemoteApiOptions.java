@@ -22,6 +22,7 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.googleapis.compute.ComputeCredential;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.HttpTransport;
+import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson.JacksonFactory;
 import com.google.apphosting.api.ApiProxy;
 import com.google.common.collect.ImmutableList;
@@ -256,7 +257,7 @@ public class RemoteApiOptions {
   private GoogleCredential.Builder getCredentialBuilder(
       String serviceAccountId) throws GeneralSecurityException, IOException {
     HttpTransport transport = getOrCreateHttpTransportForOAuth();
-    JacksonFactory jsonFactory = new JacksonFactory();
+    JsonFactory jsonFactory = new JacksonFactory();
     return new GoogleCredential.Builder()
         .setTransport(transport)
         .setJsonFactory(jsonFactory)
