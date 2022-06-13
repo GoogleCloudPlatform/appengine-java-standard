@@ -141,6 +141,24 @@ public final class JsonLogHandlerTest {
     verify(out, times(1)).println(expectedJson2);
   }
 
+  /** Verify the log handler still works if the message is null. */
+  @Test
+  public void testPublishNullMessage() throws Exception {
+    PrintStream out = Mockito.mock(PrintStream.class);
+
+    JsonLogHandler handler = new JsonLogHandler(out, true, null, new SimpleFormatter());
+
+    logRecord = new LogRecord(Level.INFO, null);
+    logRecord.setSourceMethodName("testPublishNullMessage");
+
+    handler.publish(logRecord);
+
+    String expectedJson =
+        "{\"logging.googleapis.com/spanId\": \"000000000000004a\", \"severity\": \"INFO\","
+            + " \"message\": \"\"}";
+    verify(out, times(1)).println(expectedJson);
+  }
+
   @Test
   public void testMessageParameters() throws Exception {
     PrintStream out = Mockito.mock(PrintStream.class);

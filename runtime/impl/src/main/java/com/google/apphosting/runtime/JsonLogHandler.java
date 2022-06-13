@@ -95,6 +95,10 @@ public final class JsonLogHandler extends LogHandler {
 
   private void appendMessage(StringBuilder json, LogRecord record) {
     String message = formatter.formatMessage(record);
+    if (message == null) {
+      message = "";
+    }
+
     // This must be the last item in the JSON object, because it has no trailing comma. JSON is
     // unforgiving about commas and you can't have one just before }.
     json.append("\"message\": \"").append(ESCAPER.escape(message));
