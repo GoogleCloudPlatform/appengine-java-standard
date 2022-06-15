@@ -29,10 +29,7 @@ import java.util.List;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-/**
- * Retrieves installation information for the App Engine SDK.
- *
- */
+/** Retrieves installation information for the App Engine SDK. */
 public class SdkInfo {
 
   public static final String SDK_ROOT_PROPERTY = "appengine.sdk.root";
@@ -333,7 +330,15 @@ public class SdkInfo {
     File jettyHomeLib = new File(sdkRoot, JETTY9_HOME_LIB_PATH);
 
     sharedLibs.add(new File(jettyHomeLib, "servlet-api-3.1.jar"));
-    sharedLibs.add(new File(jettyHomeLib, "jetty-schemas-3.1.jar"));
+    File schemas = new File(jettyHomeLib, "servlet-schemas-3.1.jar");
+    if (schemas.exists()) {
+      sharedLibs.add(schemas);
+    } else {
+      schemas = new File(jettyHomeLib, "jetty-schemas-3.1.jar");
+      if (schemas.exists()) {
+        sharedLibs.add(schemas);
+      }
+    }
 
     // We want to match this file: "jetty-util-9.3.8.v20160314.jar"
     // but without hardcoding the Jetty version which is changing from time to time.
