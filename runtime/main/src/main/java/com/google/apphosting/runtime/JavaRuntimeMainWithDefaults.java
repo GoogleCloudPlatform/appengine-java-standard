@@ -31,6 +31,7 @@ import java.util.Map;
  */
 public class JavaRuntimeMainWithDefaults {
   private static final String PORT_ENV_VARIABLE_NAME = "PORT";
+  private static final String GAE_DISABLE_NGINX = "GAE_DISABLE_NGINX";
   private static final String API_HOSTPORT_ENV_VARIABLE_NAME = "LOCAL_API_HOSTPORT";
   private static final String GAE_PARTITION_ENV_VARIABLE_NAME = "GAE_PARTITION";
 
@@ -69,6 +70,12 @@ public class JavaRuntimeMainWithDefaults {
     // Can't use Guava here, as the main class has minimal deps in order to have a small class
     // loader.
     String jettyPort = System.getenv().getOrDefault(PORT_ENV_VARIABLE_NAME, "8080");
+    boolean disableNGinx = "true".equals(System.getenv(GAE_DISABLE_NGINX));
+    if (disableNGinx) {
+      // Having Jetty listening to default nginx port will disable nginx.
+      jettyPort = "8080";
+    }
+
     // By convention, inherited from the managed vm work, when running locally, we should define
     // the GAE_PARTION variable to "dev"... This is used in the runtime image common /serve.
     // In local mode, the API server should be configured on localhost:$LOCAL_API_PORT
