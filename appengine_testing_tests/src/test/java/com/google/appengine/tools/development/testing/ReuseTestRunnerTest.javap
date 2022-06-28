@@ -1,0 +1,52 @@
+/*
+ * Copyright 2021 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.google.appengine.tools.development.testing;
+
+import org.junit.Test;
+import org.junit.runner.JUnitCore;
+import org.junit.runner.Result;
+import org.junit.runner.RunWith;
+import org.junit.runner.notification.Failure;
+import org.junit.runners.JUnit4;
+
+/**
+ * Tests that we can use {@link DevAppServerTestRunner} more than once in the same JVM. By default,
+ * Maven can run independent tests one after another in the same JVM. That means that test runners
+ * need to tear down any static state they have cleanly so that another instance of the same runner
+ * can be used again in the same JVM.
+ */
+@RunWith(JUnit4.class)
+public final class ReuseTestRunnerTest {
+  @Test
+  public void reuseTestRunner() throws Throwable {
+    // This slightly tricky test basically simulates running EndToEndTest twice in a row, by
+    // calling the JUnit API directly.
+    for (int i = 0; i < 2; i++) {
+      Result result = JUnitCore.runClasses(EndToEndTest.class);
+      if (!result.getFailures().isEmpty()) {
+        // At least one test failed. Show details of the failures, then throw the first failure
+        // exception that we got, which will cause *this* test to fail in turn.
+        for (Failure failure : result.getFailures()) {
+          System.err.println(failure);
+          System.err.println(failure.getTrace());
+          System.err.println();
+        }
+        throw result.getFailures().get(0).getException();
+      }
+    }
+  }
+}

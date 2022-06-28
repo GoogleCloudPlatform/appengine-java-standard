@@ -44,6 +44,7 @@
     <module>quickstartgenerator</module>
     <module>sdk_assembly</module>
     <module>applications</module>
+    <module>appengine_testing_tests</module>
   </modules>
 
   <properties>

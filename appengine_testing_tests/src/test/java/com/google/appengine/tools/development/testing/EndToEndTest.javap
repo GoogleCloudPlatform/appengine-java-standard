@@ -1,0 +1,125 @@
+/*
+ * Copyright 2021 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.google.appengine.tools.development.testing;
+
+import static com.google.common.truth.Truth.assertThat;
+import static java.nio.charset.StandardCharsets.UTF_8;
+
+import com.google.appengine.api.urlfetch.HTTPMethod;
+import com.google.appengine.api.urlfetch.HTTPRequest;
+import com.google.appengine.api.urlfetch.HTTPResponse;
+import com.google.appengine.api.urlfetch.URLFetchService;
+import com.google.appengine.api.urlfetch.URLFetchServiceFactory;
+import com.google.testing.util.TestUtil;
+import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
+@RunWith(DevAppServerTestRunner.class)
+@DevAppServerTest(EndToEndTest.TestConfig.class)
+public class EndToEndTest {
+
+  public static class TestConfig extends BaseDevAppServerTestConfig {
+    private final File testDir =
+        new File(
+            TestUtil.getSrcDir()
+                + "/google3/javatests/com/google/appengine/tools/development/testing");
+
+    @Override
+    public File getSdkRoot() {
+      return new File(
+          TestUtil.getSrcDir(),
+          "google3/java/com/google/apphosting/release/"
+              + "internal-sdk-no-javadoc/appengine-java-sdk");
+    }
+
+    @Override
+    public File getAppDir() {
+      return new File(".");
+    }
+
+    @Override
+    public File getWebXml() {
+      return new File(testDir, "web.xml");
+    }
+
+    @Override
+    public File getAppEngineWebXml() {
+      return new File(testDir, "appengine-web.xml");
+    }
+
+    @Override
+    public List<URL> getClasspath() {
+      File testResources = new File(testDir, "test-resources");
+
+      List<URL> urls = new ArrayList<>();
+      for (File f : testResources.listFiles()) {
+        try {
+          urls.add(f.toURI().toURL());
+        } catch (MalformedURLException e) {
+          throw new RuntimeException(e);
+        }
+      }
+      // Make sure we add ourselves to the classpath
+      urls.add(EndToEndTest.class.getProtectionDomain().getCodeSource().getLocation());
+      return urls;
+    }
+  }
+
+  private final LocalServiceTestHelper testHelper =
+      new LocalServiceTestHelper(new LocalURLFetchServiceTestConfig());
+
+  @Before
+  public void setUpHelper() {
+    testHelper.setUp();
+  }
+
+  @After
+  public void tearDownHelper() {
+    testHelper.tearDown();
+  }
+
+  @Test
+  public void testEndToEnd() throws Exception {
+    // Make sure we're running in the isolated classloader
+    assertThat(getClass().getClassLoader().getClass().getName())
+        .isEqualTo("com.google.appengine.tools.development.IsolatedAppClassLoader");
+
+    // Make sure we can issue api calls.
+    URLFetchService fetchService = URLFetchServiceFactory.getURLFetchService();
+    URL testUrl =
+        new URL(
+            "http://localhost:"
+                + System.getProperty(BaseDevAppServerTestConfig.DEFAULT_PORT_SYSTEM_PROPERTY)
+                + "/test");
+    HTTPResponse resp = fetchService.fetch(testUrl);
+    assertThat(resp.getResponseCode()).isEqualTo(200);
+    assertThat(new String(resp.getContent(), UTF_8)).isEqualTo("Hello, World: 1\n");
+
+    // Make sure our servlet is running in the same classloader as our servlet.
+    assertThat(TestServlet.count).isEqualTo(1);
+    // Make sure an invalid response (with a very large header) fails the request with a 500.
+    HTTPResponse postResp = fetchService.fetch(new HTTPRequest(testUrl, HTTPMethod.POST));
+    assertThat(postResp.getResponseCode()).isEqualTo(500);
+  }
+}
