@@ -49,4 +49,9 @@ cp local_runtime_shared/target/appengine-local-runtime-shared*.jar ${KOKORO_ARTI
 cp quickstartgenerator/target/quickstartgenerator*.jar ${KOKORO_ARTIFACTS_DIR}/maven-artifacts/quickstartgenerator.jar
 
 cp -rf sdk_assembly/target/appengine-java-sdk ${KOKORO_ARTIFACTS_DIR}/maven-artifacts/
+# Make binaries executable.
+chmod a+x ${KOKORO_ARTIFACTS_DIR}/maven-artifacts/appengine-java-sdk/bin/*
+# Also create the area for the Cloud SDK deliverable in google_appengine_java_delta.
+mkdir -p ${KOKORO_ARTIFACTS_DIR}/maven-artifacts/google_appengine_java_delta/google/appengine/tools/java/
+cp -pr ${KOKORO_ARTIFACTS_DIR}/maven-artifacts/appengine-java-sdk/* ${KOKORO_ARTIFACTS_DIR}/maven-artifacts/google_appengine_java_delta/google/appengine/tools/java
 
