@@ -219,6 +219,7 @@
                           <argLine>
                               --add-opens java.base/java.lang=ALL-UNNAMED
                               --add-opens java.base/java.nio.charset=ALL-UNNAMED
+                              --add-opens java.base/java.util.concurrent=ALL-UNNAMED
                           </argLine>
                           <!-- Most of these tests were developed with Google's build system, which runs each test
                           in its own process. So they don't always clean up completely after themselves, for

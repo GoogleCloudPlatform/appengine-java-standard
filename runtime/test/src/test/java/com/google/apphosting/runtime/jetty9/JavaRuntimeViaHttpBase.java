@@ -226,6 +226,8 @@ public abstract class JavaRuntimeViaHttpBase {
             "--add-opens",
             "java.base/java.nio.charset=ALL-UNNAMED",
             "--add-opens",
+            "java.base/java.util.concurrent=ALL-UNNAMED",
+            "--add-opens",
             "java.logging/java.util.logging=ALL-UNNAMED");
       }
       return ImmutableList.of("-showversion"); // Just so that the list is not empty.
