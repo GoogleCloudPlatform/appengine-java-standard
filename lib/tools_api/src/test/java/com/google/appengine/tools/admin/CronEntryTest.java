@@ -16,8 +16,12 @@
 
 package com.google.appengine.tools.admin;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.concurrent.TimeUnit;
+
 import junit.framework.TestCase;
 
 public class CronEntryTest extends TestCase {
@@ -35,15 +39,25 @@ public class CronEntryTest extends TestCase {
     assertEquals("description", entry.getDescription());
   }
 
-  public void testUpcomingTimes() {
+  public void testUpcomingTimes() throws Exception {
     CronEntryImpl entry =
         new CronEntryImpl("http://some/url", "description", "every 6 hours", "US/Eastern");
     Iterator<String> iter = entry.getNextTimesIterator(new Date(128 * 60 * 60 * 1000L));
+
+    DateFormat format = new SimpleDateFormat("EEE MMM dd, yyyy HH:mm z (Z)");
+
     assertTrue(iter.hasNext());
-    assertEquals("Tue Jan 06, 1970 09:00 EST (-0500)", iter.next());
-    assertEquals("Tue Jan 06, 1970 15:00 EST (-0500)", iter.next());
-    assertEquals("Tue Jan 06, 1970 21:00 EST (-0500)", iter.next());
-    assertEquals("Wed Jan 07, 1970 03:00 EST (-0500)", iter.next());
+    Date from = format.parse(iter.next());
+
+    for(int i = 0 ; i < 4; i++) {
+      assertTrue(iter.hasNext());
+      Date to = format.parse(iter.next());
+
+      long intervalMs = to.getTime() - from.getTime();
+      assertTrue(intervalMs >= TimeUnit.HOURS.toMillis(6));
+      from = to;
+    }
+
     assertTrue(iter.hasNext());
   }
 }
