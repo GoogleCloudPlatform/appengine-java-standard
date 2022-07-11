@@ -23,7 +23,7 @@ import com.google.api.client.googleapis.compute.ComputeCredential;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.JsonFactory;
-import com.google.api.client.json.jackson.JacksonFactory;
+import com.google.api.client.json.gson.GsonFactory;
 import com.google.apphosting.api.ApiProxy;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
@@ -35,7 +35,7 @@ import java.security.PrivateKey;
 /**
  * A mutable object containing settings for installing the remote API.
  *
- * <p>Example for connecting to a development app server:</p>
+ * <p>Example for connecting to a development app server:
  *
  * <pre>
  * RemoteApiOptions options = new RemoteApiOptions()
@@ -43,7 +43,7 @@ import java.security.PrivateKey;
  *     .useDevelopmentServerCredential();
  * </pre>
  *
- * <p>Example for connecting to a deployed app:</p>
+ * <p>Example for connecting to a deployed app:
  *
  * <pre>
  * RemoteApiOptions options = new RemoteApiOptions()
@@ -51,10 +51,7 @@ import java.security.PrivateKey;
  *     .useApplicationDefaultCredential();
  * </pre>
  *
- * <p>
- * The options should be passed to {@link RemoteApiInstaller#install}.
- * </p>
- *
+ * <p>The options should be passed to {@link RemoteApiInstaller#install}.
  */
 public class RemoteApiOptions {
 
@@ -97,9 +94,7 @@ public class RemoteApiOptions {
     this.httpTransport = original.httpTransport;
   }
 
-  /**
-   * Sets the host and port port where we will connect.
-   */
+  /** Sets the host and port port where we will connect. */
   public RemoteApiOptions server(String newHostname, int newPort) {
     hostname = newHostname;
     port = newPort;
@@ -107,11 +102,11 @@ public class RemoteApiOptions {
   }
 
   /**
-   * Sets a username and password to be used for logging in via the
-   * ClientLogin API. Overrides any previously-provided credentials.
+   * Sets a username and password to be used for logging in via the ClientLogin API. Overrides any
+   * previously-provided credentials.
    *
-   * @deprecated Use {@link #useApplicationDefaultCredential} or
-   * {@link useServiceAccountCredential} instead.
+   * @deprecated Use {@link #useApplicationDefaultCredential} or {@link useServiceAccountCredential}
+   *     instead.
    */
   @Deprecated
   public RemoteApiOptions credentials(String newUserEMail, String newPassword) {
@@ -123,12 +118,12 @@ public class RemoteApiOptions {
   }
 
   /**
-   * Reuses credentials from another AppEngineClient. Credentials can only
-   * be reused from a client with the same hostname and user. Overrides any
-   * previously-provided credentials.
-   * @param newUserEmail  the email address of the user we want to log in as.
-   * @param serializedCredentials a string returned by calling
-   * {@link AppEngineClient#serializeCredentials} on the previous client
+   * Reuses credentials from another AppEngineClient. Credentials can only be reused from a client
+   * with the same hostname and user. Overrides any previously-provided credentials.
+   *
+   * @param newUserEmail the email address of the user we want to log in as.
+   * @param serializedCredentials a string returned by calling {@link
+   *     AppEngineClient#serializeCredentials} on the previous client
    */
   public RemoteApiOptions reuseCredentials(String newUserEmail, String serializedCredentials) {
     userEmail = newUserEmail;
@@ -139,8 +134,8 @@ public class RemoteApiOptions {
   }
 
   /**
-   * Use a Compute Engine credential for authentication. Overrides any
-   * previously-provided credentials.
+   * Use a Compute Engine credential for authentication. Overrides any previously-provided
+   * credentials.
    *
    * @return this {@code RemoteApiOptions} instance
    * @deprecated Use {@link #useApplicationDefaultCredential}.
@@ -153,11 +148,12 @@ public class RemoteApiOptions {
     try {
       HttpTransport transport = getOrCreateHttpTransportForOAuth();
       // Try to connect using Google Compute Engine service account credentials.
-      ComputeCredential credential = new ComputeCredential(transport, new JacksonFactory());
+      ComputeCredential credential =
+          new ComputeCredential(transport, GsonFactory.getDefaultInstance());
       // Force token refresh to verify that we are running on Google Compute Engine.
       credential.refreshToken();
       setOAuthCredential(credential);
-    } catch (IOException|GeneralSecurityException e) {
+    } catch (IOException | GeneralSecurityException e) {
       throw new RuntimeException("Failed to acquire Google Compute Engine credential.", e);
     }
     return this;
@@ -168,8 +164,9 @@ public class RemoteApiOptions {
    * previously-provided credentials.
    *
    * @return this {@code RemoteApiOptions} instance.
-   * @see <a href="https://developers.google.com/identity/protocols/application-default-credentials">
-   * Application Default Credentials</a>
+   * @see <a
+   *     href="https://developers.google.com/identity/protocols/application-default-credentials">
+   *     Application Default Credentials</a>
    */
   public RemoteApiOptions useApplicationDefaultCredential() {
     try {
@@ -178,57 +175,53 @@ public class RemoteApiOptions {
       credential = credential.createScoped(OAUTH_SCOPES);
       credential.refreshToken();
       setOAuthCredential(credential);
-    } catch (IOException|GeneralSecurityException e) {
+    } catch (IOException | GeneralSecurityException e) {
       throw new RuntimeException("Failed to acquire Google Application Default credential.", e);
     }
     return this;
   }
 
   /**
-   * Use a service account credential. Overrides any previously-provided
-   * credentials.
+   * Use a service account credential. Overrides any previously-provided credentials.
    *
    * @param serviceAccountId service account ID (typically an e-mail address)
    * @param p12PrivateKeyFile p12 file containing a private key to use with the service account
-   *
    * @return this {@code RemoteApiOptions} instance
    */
-  public RemoteApiOptions useServiceAccountCredential(String serviceAccountId,
-      String p12PrivateKeyFile) {
+  public RemoteApiOptions useServiceAccountCredential(
+      String serviceAccountId, String p12PrivateKeyFile) {
     // Attempt to eagerly populate the OAuth credential. This simplifies the
     // subsequent process of constructing a client and means we fail fast
     // if there's a problem getting the credential.
     try {
-      Credential credential = getCredentialBuilder(serviceAccountId)
-          .setServiceAccountPrivateKeyFromP12File(new File(p12PrivateKeyFile))
-          .build();
+      Credential credential =
+          getCredentialBuilder(serviceAccountId)
+              .setServiceAccountPrivateKeyFromP12File(new File(p12PrivateKeyFile))
+              .build();
       setOAuthCredential(credential);
-    } catch (IOException|GeneralSecurityException e) {
+    } catch (IOException | GeneralSecurityException e) {
       throw new RuntimeException("Failed to build service account credential.", e);
     }
     return this;
   }
 
   /**
-   * Use a service account credential. Overrides any previously-provided
-   * credentials.
+   * Use a service account credential. Overrides any previously-provided credentials.
    *
    * @param serviceAccountId service account ID (typically an e-mail address)
    * @param privateKey private key to use with the service account
-   *
    * @return this {@code RemoteApiOptions} instance
    */
-  public RemoteApiOptions useServiceAccountCredential(String serviceAccountId,
-      PrivateKey privateKey) {
+  public RemoteApiOptions useServiceAccountCredential(
+      String serviceAccountId, PrivateKey privateKey) {
     // Attempt to eagerly populate the OAuth credential. This simplifies the
     // subsequent process of constructing a client and means we fail fast
     // if there's a problem getting the credential.
     try {
-      Credential credential = getCredentialBuilder(serviceAccountId)
-          .setServiceAccountPrivateKey(privateKey)
-          .build();
+      Credential credential =
+          getCredentialBuilder(serviceAccountId).setServiceAccountPrivateKey(privateKey).build();
       setOAuthCredential(credential);
-    } catch (IOException|GeneralSecurityException e) {
+    } catch (IOException | GeneralSecurityException e) {
       throw new RuntimeException("Failed to build service account credential.", e);
     }
     return this;
@@ -254,10 +247,10 @@ public class RemoteApiOptions {
     return this;
   }
 
-  private GoogleCredential.Builder getCredentialBuilder(
-      String serviceAccountId) throws GeneralSecurityException, IOException {
+  private GoogleCredential.Builder getCredentialBuilder(String serviceAccountId)
+      throws GeneralSecurityException, IOException {
     HttpTransport transport = getOrCreateHttpTransportForOAuth();
-    JsonFactory jsonFactory = new JacksonFactory();
+    JsonFactory jsonFactory = GsonFactory.getDefaultInstance();
     return new GoogleCredential.Builder()
         .setTransport(transport)
         .setJsonFactory(jsonFactory)

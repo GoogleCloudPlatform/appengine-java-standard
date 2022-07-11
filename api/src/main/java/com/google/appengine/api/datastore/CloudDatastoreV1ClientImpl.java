@@ -24,7 +24,7 @@ import com.google.api.client.googleapis.compute.ComputeCredential;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpRequestInitializer;
-import com.google.api.client.json.jackson.JacksonFactory;
+import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.client.util.ExponentialBackOff;
 import com.google.auto.value.AutoValue;
 import com.google.common.base.Preconditions;
@@ -321,7 +321,7 @@ final class CloudDatastoreV1ClientImpl implements CloudDatastoreV1Client {
       // TODO: Remove this special case and defer to Application Default Credentials
       // See b/35156374.
       return new ComputeCredential(
-          GoogleNetHttpTransport.newTrustedTransport(), new JacksonFactory());
+          GoogleNetHttpTransport.newTrustedTransport(), GsonFactory.getDefaultInstance());
     }
     return GoogleCredential.getApplicationDefault().createScoped(DatastoreOptions.SCOPES);
   }
@@ -349,7 +349,7 @@ final class CloudDatastoreV1ClientImpl implements CloudDatastoreV1Client {
       throws GeneralSecurityException, IOException {
     return new GoogleCredential.Builder()
         .setTransport(GoogleNetHttpTransport.newTrustedTransport())
-        .setJsonFactory(new JacksonFactory())
+        .setJsonFactory(GsonFactory.getDefaultInstance())
         .setServiceAccountId(account)
         .setServiceAccountScopes(DatastoreOptions.SCOPES);
   }
