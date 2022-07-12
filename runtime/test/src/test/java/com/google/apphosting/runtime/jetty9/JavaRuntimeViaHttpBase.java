@@ -17,6 +17,7 @@
 package com.google.apphosting.runtime.jetty9;
 
 import static com.google.common.base.StandardSystemProperty.FILE_SEPARATOR;
+import static com.google.common.base.StandardSystemProperty.JAVA_HOME;
 import static com.google.common.base.StandardSystemProperty.JAVA_VERSION;
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
 import static com.google.common.truth.Truth.assertThat;
@@ -75,7 +76,6 @@ import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
-import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.rules.TemporaryFolder;
 
@@ -87,18 +87,6 @@ public abstract class JavaRuntimeViaHttpBase {
   private static final String RUNTIME_LOCATION_ROOT = "java/com/google/apphosting";
 
   static final int RESPONSE_200 = 200;
-
-  private static final String JAVA_HOME = "third_party/java/jdk/jdk8-64/jre";
-
-  private static String javaHome;
-
-  @BeforeClass
-  public static void initJavaHome() throws Exception {
-    javaHome = JAVA_HOME;
-    if (!Files.exists(Paths.get(javaHome))) {
-      javaHome = System.getProperty("java.home");
-    }
-  }
 
   @FunctionalInterface
   interface ApiServerFactory<ApiServerT extends Closeable> {
@@ -252,7 +240,7 @@ public abstract class JavaRuntimeViaHttpBase {
       ImmutableList<String> runtimeArgs =
           ImmutableList.<String>builder()
               .add(
-                  javaHome + "/bin/java",
+                  JAVA_HOME.value() + "/bin/java",
                   "-Dcom.google.apphosting.runtime.jetty94.LEGACY_MODE=" + useJetty94LegacyMode(),
                   "-Duse.mavenjars=" + useMavenJars(),
                   "-cp",
