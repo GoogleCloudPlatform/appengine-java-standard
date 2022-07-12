@@ -16,9 +16,9 @@
 
 package com.google.apphosting.runtime.jetty94;
 
-import java.io.File;
+import com.google.apphosting.runtime.AppVersion;
 
 /** A base interface for factories that create {@link AppEngineWebAppContext}. */
 public interface WebAppContextFactory {
-  AppEngineWebAppContext createContext(File contextRootDir, String serverInfo);
+  AppEngineWebAppContext createContext(AppVersion appVersion, String serverInfo);
 }

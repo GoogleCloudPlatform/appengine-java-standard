@@ -16,13 +16,13 @@
 
 package com.google.apphosting.runtime.jetty94;
 
-import java.io.File;
+import com.google.apphosting.runtime.AppVersion;
 
 /** This factory creates {@link AppEngineWebAppContext}. */
 public class AppEngineWebAppContextFactory implements WebAppContextFactory {
 
   @Override
-  public AppEngineWebAppContext createContext(File contextRootDir, String serverInfo) {
-    return new AppEngineWebAppContext(contextRootDir, serverInfo);
+  public AppEngineWebAppContext createContext(AppVersion appVersion, String serverInfo) {
+    return new AppEngineWebAppContext(appVersion.getRootDirectory(), serverInfo);
   }
 }

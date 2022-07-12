@@ -122,7 +122,7 @@ public class AppVersionHandlerFactory {
     try {
       File contextRoot = appVersion.getRootDirectory();
 
-      final AppEngineWebAppContext context = contextFactory.createContext(contextRoot, serverInfo);
+      final AppEngineWebAppContext context = contextFactory.createContext(appVersion, serverInfo);
       context.setServer(server);
       context.setDefaultsDescriptor(WEB_DEFAULTS_XML);
       context.setClassLoader(appVersion.getClassLoader());
