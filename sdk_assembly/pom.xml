@@ -140,6 +140,14 @@
                                     <destFileName>appengine-local-runtime-shared.jar</destFileName>
                                 </artifactItem>
                                 <artifactItem>
+                                    <groupId>org.eclipse.jetty</groupId>
+                                    <artifactId>apache-jsp</artifactId>
+                                    <overWrite>true</overWrite>
+                                    <classifier>nolog</classifier>
+                                    <outputDirectory>${assembly-directory}/jetty94/jetty-home/lib/apache-jsp</outputDirectory>
+                                    <destFileName>org.eclipse.jetty.apache-jsp-${jetty.version}-nolog.jar</destFileName>
+                                </artifactItem>
+                                <artifactItem>
                                     <groupId>com.google.appengine</groupId>
                                     <artifactId>appengine-api-1.0-sdk</artifactId>
                                     <version>${project.version}</version>
@@ -240,6 +248,9 @@
                             <target>
                                 <chmod dir="${assembly-directory}/bin" perm="755" includes="**/*.sh" />
                             </target>
+                            <tasks>
+                                <delete file="${assembly-directory}/jetty94/jetty-home/lib/apache-jsp/org.eclipse.jetty.apache-jsp-${jetty.version}.jar"/>
+                            </tasks>
                         </configuration>
                     </execution>
                 </executions>
