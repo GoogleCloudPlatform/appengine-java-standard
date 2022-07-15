@@ -215,7 +215,7 @@
                                     <type>jar</type>
                                     <overWrite>true</overWrite>
                                     <includes>**</includes>
-                                    <outputDirectory>${assembly-directory}/lib</outputDirectory>
+                                    <outputDirectory>${assembly-directory}/lib/impl</outputDirectory>
                                     <destFileName>appengine-remote-api.jar</destFileName>
                                 </artifactItem>
                                 <artifactItem>
@@ -227,6 +227,15 @@
                                     <includes>**</includes>
                                     <outputDirectory>${assembly-directory}/lib/impl</outputDirectory>
                                     <destFileName>appengine-local-runtime.jar</destFileName>
+                                </artifactItem>
+                                 <artifactItem>
+                                    <groupId>javax.activation</groupId>
+                                    <artifactId>activation</artifactId>
+                                    <type>jar</type>
+                                    <overWrite>true</overWrite>
+                                    <includes>**</includes>
+                                    <outputDirectory>${assembly-directory}/lib/impl</outputDirectory>
+                                    <destFileName>activation.jar</destFileName>
                                 </artifactItem>
                             </artifactItems>
                         </configuration>
