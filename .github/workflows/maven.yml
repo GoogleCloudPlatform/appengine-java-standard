@@ -50,5 +50,5 @@ jobs:
 
       - name: Build with Maven
         run: |
-          ./mvnw clean install -B -q -T1C
+          ./mvnw clean install -B -q
           echo "done"
