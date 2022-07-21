@@ -302,6 +302,12 @@
       </dependency>
       <dependency>
         <groupId>com.google.appengine</groupId>
+        <artifactId>runtime-deployment</artifactId>
+        <version>${project.version}</version>
+        <type>zip</type>
+      </dependency>
+      <dependency>
+        <groupId>com.google.appengine</groupId>
         <artifactId>shared-sdk</artifactId>
         <version>${project.version}</version>
       </dependency>

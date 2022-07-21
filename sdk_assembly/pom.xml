@@ -336,6 +336,11 @@
         </dependency>
         <dependency>
             <groupId>com.google.appengine</groupId>
+            <artifactId>runtime-deployment</artifactId>
+            <type>zip</type>
+        </dependency>
+        <dependency>
+            <groupId>com.google.appengine</groupId>
             <artifactId>appengine-resources</artifactId>
         </dependency>
         <dependency>
