@@ -221,7 +221,8 @@ public final class ProberApp extends HttpServlet {
     // request not already specified to a servlet, but since our prober configuration makes that
     // difficult to change, we need this safeguard to prevent and infinite loop since this servlet
     // calls itself multiple times.
-    if (request.getRequestURL().toString().contains("favicon.ico")) {
+    if (!request.getServletPath().equals("/")) {
+      logger.log(Level.SEVERE, "Ignoring servlet request for:" + request.getServletPath());
       return;
     }
     response.setContentType("text/plain");
