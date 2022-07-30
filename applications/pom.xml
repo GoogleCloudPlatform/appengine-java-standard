@@ -30,5 +30,6 @@
   </properties>
   <modules>
     <module>proberapp</module>
+    <module>springboot</module>
   </modules>
 </project>

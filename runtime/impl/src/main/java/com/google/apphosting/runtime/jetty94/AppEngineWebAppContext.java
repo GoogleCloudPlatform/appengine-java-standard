@@ -543,6 +543,9 @@ public class AppEngineWebAppContext extends WebAppContext {
           ServletMapping mapping = new ServletMapping();
           mapping.setServletName(name);
           mapping.setPathSpec(pathSpec);
+          if (pathSpec.equals("/")) {
+            mapping.setDefault(true);
+          }
           mappings.add(mapping);
         }
       }
