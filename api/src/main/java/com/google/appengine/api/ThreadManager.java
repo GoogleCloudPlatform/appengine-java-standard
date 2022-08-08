@@ -17,6 +17,7 @@
 package com.google.appengine.api;
 
 import com.google.apphosting.api.ApiProxy;
+import java.util.Optional;
 import java.util.concurrent.ThreadFactory;
 
 /**
@@ -36,30 +37,55 @@ public final class ThreadManager {
       "com.google.appengine.api.ThreadManager.BACKGROUND_THREAD_FACTORY";
 
   /**
-   * Returns a {@link ThreadFactory} that will create threads scoped
-   * to the current request.  These threads will be interrupted at the
-   * end of the current request and must complete within the request
-   * deadline. If they fail to, the instance containing them may be
-   * terminated.
+   * Returns a {@link ThreadFactory} which will create threads scoped to the current request. These
+   * threads will be interrupted at the end of the current request and must complete within the
+   * request deadline. If they fail to, the instance containing them may be terminated.
    *
-   * <p>The principal reason to use this method is so that the created
-   * threads can make App Engine API calls ({@code com.google.appengine.api.*}).
-   * In general, threads not associated with a request cannot make these API calls.
+   * <p>The principal reason to use this method is so that the created threads can make App Engine
+   * API calls ({@code com.google.appengine.api.*}). In general, threads not associated with a
+   * request cannot make these API calls.
    *
-   * <p>The returned factory is typically used with a call like
-   * {@link java.util.concurrent.Executors#newCachedThreadPool(ThreadFactory)}.
-   * Do not use the {@link java.util.concurrent.ExecutorService ExecutorService} returned
-   * by this call after the request that created it has completed.
+   * <p>The returned factory is typically used with a call like {@link
+   * java.util.concurrent.Executors#newCachedThreadPool(ThreadFactory)}. Do not use the {@link
+   * java.util.concurrent.ExecutorService ExecutorService} returned by this call after the request
+   * that created it has completed.
    *
-   * <p>Note that calling {@link ThreadFactory#newThread} on the
-   * returned instance may throw any of the unchecked exceptions
-   * mentioned by {@link #createBackgroundThread}.
+   * <p>Note that calling {@link ThreadFactory#newThread} on the returned instance may throw any of
+   * the unchecked exceptions mentioned by {@link #createBackgroundThread}.
    *
    * @throws NullPointerException if the calling thread is not associated with a request.
    */
   public static ThreadFactory currentRequestThreadFactory() {
     ApiProxy.Environment environment = getCurrentEnvironmentOrThrow();
     return (ThreadFactory) environment.getAttributes().get(REQUEST_THREAD_FACTORY_ATTR);
+  }
+
+  /**
+   * Returns an Optional {@link ThreadFactory} which will create threads scoped to the current
+   * request. These threads will be interrupted at the end of the current request and must complete
+   * within the request deadline. If they fail to, the instance containing them may be terminated.
+   *
+   * <p>If this method is not called from an App Engine request thread, returns an empty Optional
+   * instance.
+   *
+   * <p>The principal reason to use this method is so that the created threads can make App Engine
+   * API calls ({@code com.google.appengine.api.*}). In general, threads not associated with a
+   * request cannot make these API calls.
+   *
+   * <p>The returned factory is typically used with a call like {@link
+   * java.util.concurrent.Executors#newCachedThreadPool(ThreadFactory)}. Do not use the {@link
+   * java.util.concurrent.ExecutorService ExecutorService} returned by this call after the request
+   * that created it has completed.
+   *
+   * <p>Note that calling {@link ThreadFactory#newThread} on the returned instance may throw any of
+   * the unchecked exceptions mentioned by {@link #createBackgroundThread}.
+   */
+  public static Optional<ThreadFactory> currentRequestThreadFactoryOptional() {
+    return Optional.ofNullable(ApiProxy.getCurrentEnvironment())
+        .flatMap(
+            environment ->
+                Optional.ofNullable(
+                    (ThreadFactory) environment.getAttributes().get(REQUEST_THREAD_FACTORY_ATTR)));
   }
 
   /**
