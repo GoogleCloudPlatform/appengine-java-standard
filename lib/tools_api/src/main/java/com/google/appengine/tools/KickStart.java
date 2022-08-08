@@ -16,8 +16,11 @@
 
 package com.google.appengine.tools;
 
+import static com.google.common.base.StandardSystemProperty.JAVA_CLASS_PATH;
 import static com.google.common.base.StandardSystemProperty.JAVA_HOME;
+import static com.google.common.base.StandardSystemProperty.JAVA_SPECIFICATION_VERSION;
 import static com.google.common.base.StandardSystemProperty.OS_NAME;
+import static com.google.common.base.StandardSystemProperty.USER_DIR;
 
 import com.google.appengine.tools.development.DevAppServerMain;
 import com.google.apphosting.utils.config.AppEngineConfigException;
@@ -95,19 +98,6 @@ public class KickStart {
   private static final String SDK_ROOT_FLAG = "--sdk_root";
   private static final String SDK_ROOT_ERROR_MESSAGE = SDK_ROOT_FLAG + "=<path> expected";
 
-  private static final String ENABLE_JACOCO_FLAG = "--enable_jacoco";
-  private static final String ENABLE_JACOCO_ERROR_MESSAGE =
-      ENABLE_JACOCO_FLAG + "=true|false expected.";
-  private static final String JACOCO_AGENT_JAR_FLAG = "--jacoco_agent_jar";
-  private static final String JACOCO_AGENT_JAR_ERROR_MESSAGE =
-      JACOCO_AGENT_JAR_FLAG + "=<path> expected.";
-  private static final String JACOCO_AGENT_ARGS_FLAG = "--jacoco_agent_args";
-  private static final String JACOCO_AGENT_ARGS_ERROR_MESSAGE =
-      JACOCO_AGENT_ARGS_FLAG + "=<jacoco agent args> expected.";
-  private static final String JACOCO_EXEC_FLAG = "--jacoco_exec";
-  private static final String JACOCO_EXEC_ERROR_MESSAGE =
-      JACOCO_EXEC_FLAG + "=<path> expected.";
-
   private Process serverProcess = null;
 
   static class AppEnvironment {
@@ -136,10 +126,6 @@ public class KickStart {
 
     List<String> jvmArgs = new ArrayList<>();
     ArrayList<String> appServerArgs = new ArrayList<>();
-    boolean enableJacoco = false;
-    String jacocoAgentJarArg = null;
-    String jacocoAgentArgs = "";
-    String jacocoExecArg = "jacoco.exec";
 
     List<String> command = builder.command();
     command.add(javaExe);
@@ -160,14 +146,6 @@ public class KickStart {
       } else if (args[i].startsWith(START_ON_FIRST_THREAD_FLAG)) {
         startOnFirstThread =
             Boolean.parseBoolean(extractValue(args[i], START_ON_FIRST_THREAD_ERROR_MESSAGE));
-      } else if (args[i].startsWith(ENABLE_JACOCO_FLAG)) {
-        enableJacoco = "true".equals(extractValue(args[i], ENABLE_JACOCO_ERROR_MESSAGE));
-      } else if (args[i].startsWith(JACOCO_AGENT_JAR_FLAG)) {
-        jacocoAgentJarArg = extractValue(args[i], JACOCO_AGENT_JAR_ERROR_MESSAGE);
-      } else if (args[i].startsWith(JACOCO_AGENT_ARGS_FLAG)) {
-        jacocoAgentArgs = extractValue(args[i], JACOCO_AGENT_ARGS_ERROR_MESSAGE);
-      } else if (args[i].startsWith(JACOCO_EXEC_FLAG)) {
-        jacocoExecArg = extractValue(args[i], JACOCO_EXEC_ERROR_MESSAGE);
       } else if (args[i].equals("--test_mode")) {
         testMode = true;
       } else if (entryClass == null) {
@@ -202,10 +180,19 @@ public class KickStart {
       // For more details, see http://b/issue?id=1709075.
       jvmArgs.add("-XstartOnFirstThread");
     }
+    if (!JAVA_SPECIFICATION_VERSION.value().equals("1.8")) {
+      // Java11 or later need more flags:
+      jvmArgs.add("--add-opens");
+      jvmArgs.add("java.base/java.net=ALL-UNNAMED");
+      jvmArgs.add("--add-opens");
+      jvmArgs.add("java.base/sun.net.www.protocol.http=ALL-UNNAMED");
+      jvmArgs.add("--add-opens");
+      jvmArgs.add("java.base/sun.net.www.protocol.https=ALL-UNNAMED");
+    }
 
     // Whatever classpath we were invoked with might have been relative.
     // We make all paths in the classpath absolute.
-    String classpath = System.getProperty("java.class.path");
+    String classpath = JAVA_CLASS_PATH.value();
     if (classpath == null) {
       throw new IllegalArgumentException("classpath must not be null");
     }
@@ -256,24 +243,13 @@ public class KickStart {
     }
     jvmArgs.add("-Dfile.encoding=" + encoding);
 
-    if (enableJacoco) {
-      jvmArgs.add("-D--enable_all_permissions=true");
-      String jacocoAgentJar = new File(jacocoAgentJarArg).getAbsolutePath();
-      if (!jacocoAgentArgs.isEmpty()) {
-        jacocoAgentArgs = jacocoAgentArgs + ",";
-      }
-      jacocoAgentArgs += "destfile=" + new File(jacocoExecArg).getAbsolutePath();
-      jvmArgs.add("-javaagent:" + jacocoAgentJar + "=" + jacocoAgentArgs);
-    }
-
     // Build up the command
     command.addAll(jvmArgs);
     command.add("-classpath");
     command.add(newClassPath.toString());
     command.add(entryClass);
     // Pass the current working directory so relative files can be interpreted the natural way.
-    command.add("--property=kickstart.user.dir=" + System.getProperty("user.dir"));
-    command.add("--no_java_agent");
+    command.add("--property=kickstart.user.dir=" + USER_DIR.value());
 
     command.addAll(absoluteAppServerArgs);
     // Setup environment variables.
