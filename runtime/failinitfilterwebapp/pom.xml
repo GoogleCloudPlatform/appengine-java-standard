@@ -27,6 +27,7 @@
     <name>AppEngine :: failinitfilterwebapp</name>
 
     <properties>
+        <maven.deploy.skip>true</maven.deploy.skip>
         <appengine.app.version>1</appengine.app.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
