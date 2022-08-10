@@ -156,7 +156,7 @@ public class RequestRunner implements Runnable {
     throw new IllegalArgumentException("Did not receive a background request identifier.");
   }
 
-  /** Creates a thread which does nothing except wait on another, given thread. */
+  /** Creates a thread which does nothing except wait on the thread that spawned it. */
   private static class ThreadProxy extends Thread {
 
     private final Thread proxy;
