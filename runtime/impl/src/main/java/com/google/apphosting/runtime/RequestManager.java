@@ -349,7 +349,6 @@ public class RequestManager {
             rpc,
             rpc.getStartTimeMillis(),
             traceWriter,
-            requestThreadGroup,
             state,
             endAction);
 
@@ -1054,7 +1053,6 @@ public class RequestManager {
 
     private final AnyRpcServerContext rpc;
     private final long startTimeMillis;
-    private final ThreadGroup requestThreadGroup;
 
     private final RequestState state;
 
@@ -1072,7 +1070,6 @@ public class RequestManager {
         AnyRpcServerContext rpc,
         long startTimeMillis,
         @Nullable TraceWriter traceWriter,
-        ThreadGroup requestThreadGroup,
         RequestState state,
         Runnable endAction) {
       this.requestThread = requestThread;
@@ -1088,7 +1085,6 @@ public class RequestManager {
       this.rpc = rpc;
       this.startTimeMillis = startTimeMillis;
       this.traceWriter = traceWriter;
-      this.requestThreadGroup = requestThreadGroup;
       this.state = state;
       this.endAction = endAction;
     }
@@ -1171,10 +1167,6 @@ public class RequestManager {
       upResponse.setError(UPResponse.ERROR.LOG_FATAL_DEATH_VALUE);
       upResponse.setErrorMessage(errorMessage);
       rpc.finishWithResponse(upResponse.build());
-    }
-
-    ThreadGroup getRequestThreadGroup() {
-      return requestThreadGroup;
     }
 
     void runEndAction() {
