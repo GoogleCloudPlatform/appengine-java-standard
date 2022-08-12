@@ -30,7 +30,7 @@
   <properties>
     <maven.deploy.skip>true</maven.deploy.skip>
   </properties>
-  
+
   <dependencies>
     <dependency>
       <groupId>com.google.auto.value</groupId>
@@ -46,6 +46,10 @@
     <dependency>
       <groupId>org.checkerframework</groupId>
       <artifactId>checker-qual</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.google.code.findbugs</groupId>
+      <artifactId>jsr305</artifactId>
       <scope>provided</scope>
     </dependency>
   </dependencies>

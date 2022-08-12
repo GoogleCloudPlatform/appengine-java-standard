@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.StringTokenizer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.annotation.Nullable;
 
 /**
  * {@code ClassPathUtils} provides utility functions that are useful in dealing with class paths.
@@ -71,6 +72,11 @@ public class ClassPathUtils {
     boolean useMavenJars = Boolean.getBoolean(USE_MAVENJARS);
     String runtimeImplJar = null;
     String cloudDebuggerJar = null;
+    String profilerJar = null;
+    if (System.getenv("GAE_PROFILER_MODE") != null) {
+      profilerJar = "profiler.jar"; // Close source, not in Maven.;
+      logger.log(Level.INFO, "AppEngine profiler enabled.");
+    }
     // This is only for Java11 or later runtime:
     if (Boolean.getBoolean("use.java11")) {
       runtimeImplJar = "runtime-impl.jar";
@@ -81,7 +87,7 @@ public class ClassPathUtils {
     }
     List<String> runtimeClasspathEntries =
         useMavenJars
-            ? Arrays.asList("jars/runtime-impl.jar", cloudDebuggerJar)
+            ? Arrays.asList("jars/runtime-impl.jar", cloudDebuggerJar, profilerJar)
             : Arrays.asList(
                 runtimeImplJar,
                 cloudDebuggerJar,
@@ -207,6 +213,7 @@ public class ClassPathUtils {
     return frozenApiJarFile;
   }
 
+  @Nullable
   public File getAppengineApiLegacyJar() {
     String filename = System.getProperty(APPENGINE_API_LEGACY_PROPERTY);
     return filename == null ? null : new File(root, filename);
