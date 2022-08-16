@@ -16,13 +16,16 @@
 
 """Builds Java proto libraries using the open-source proto compiler."""
 
-load("//tools/jdk:not_widely_loaded_public_constants.bzl", "JAVA8_JAVACOPTS")
+def _proto_library_name(name):
+    ret = name.replace("open_java_proto", "open_proto")
+    if ret == name:
+        fail("Name must contain open_java_proto: " + name)
+    return ret
 
 def open_java_proto_library(
         name,
         srcs,
         deps = [],
-        imports = [],
         compatible_with = []):
     """Builds a Java proto library using the open-source proto compiler.
 
@@ -32,54 +35,22 @@ def open_java_proto_library(
     Args:
       name: Name of the output java_library.
       srcs: Relative paths of input .proto files.
-      deps: Java libraries that this one depends on, typically defined by other
-          instances of open_java_proto_library.
-      imports: Other proto files that this one imports.
+      deps: Other open_java_proto_library() rules that we import.
       compatible_with: Clause for the rules used by this macro.
     """
 
-    # First make a jar containing the generated Java source code for the protos.
-    # This will be used in the next step, and is also of interest to check what
-    # the generated code looks like.
-    gensrc = name + "-gensrc"
-    native.genrule(
-        name = gensrc,
-        srcs = srcs + imports,
-        outs = [gensrc + ".srcjar"],
-        cmd = """
-        # The root output directory is blaze-whatever/.../java
-        # but our RULEDIR adds the relative path of the directory containing
-        # the open_java_proto_library invocation.
-        out_dir=$$(sed 's,/java/.*,/java,' <<<$(RULEDIR))
-        target="$$(pwd)"/$@
-        jar="$$(pwd)"/$(location //third_party/java/jdk/jar)
-        rewrite_script="$$(pwd)"/$(location <internal12>)
-        srcs=({srcs})
-        $(location //third_party/protobuf_legacy_opensource:protoc) \
-            -I third_party/java_src/appengine_standard/protobuf -I third_party/java_src/appengine_standard/protobuf/api \
-            --java_out="$${{out_dir}}" "$${{srcs[@]}}"
-        cd "$${{out_dir}}"
-        javasrc=$$(find * -name \\*.java)
-        sed -i -f "$${{rewrite_script}}" $${{javasrc}}
-        "$${{jar}}" cf "$${{target}}" $${{javasrc}}
-        """.format(srcs = " ".join(srcs)),
-        tools = [
-            "<internal12>",
-            "//third_party/java/jdk/jar",
-            "//third_party/protobuf_legacy_opensource:protoc",
-        ],
+    proto_library_name = _proto_library_name(name)
+
+    native.proto_library(
+        name = proto_library_name,
+        srcs = srcs,
+        deps = [_proto_library_name(dep) for dep in deps],
         compatible_with = compatible_with,
+        strip_import_prefix = "/" + native.package_name(),
     )
 
-    native.java_library(
+    native.java_proto_library(
         name = name,
-        srcs = [gensrc],
-        javacopts = [
-            # ErrorProne doesn't like that we implement com.google.protobuf.Internal.EnumLite:
-            "-Xep:ShouldNotSubclass:OFF",
-        ] + JAVA8_JAVACOPTS,
-        deps = deps + [
-            "//java/com/google/protobuf",
-        ],
+        deps = [":" + proto_library_name],
         compatible_with = compatible_with,
     )
