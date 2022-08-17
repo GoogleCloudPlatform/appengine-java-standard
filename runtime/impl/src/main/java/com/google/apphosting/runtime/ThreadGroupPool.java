@@ -119,7 +119,7 @@ public class ThreadGroupPool {
     waitingThreads.add(entry);
   }
 
-  int waitingThreadCount() {
+  public int waitingThreadCount() {
     return waitingThreads.size();
   }
 
