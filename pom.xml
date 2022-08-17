@@ -344,8 +344,13 @@
       <dependency>
          <groupId>com.google.api-client</groupId>
          <artifactId>google-api-client-appengine</artifactId>
-         <version>1.35.2</version>
-     </dependency>
+         <version>2.0.0</version>
+      </dependency>
+      <dependency>
+        <groupId>com.google.api-client</groupId>
+        <artifactId>google-api-client</artifactId>
+        <version>2.0.0</version>
+      </dependency>
       <dependency>
         <groupId>com.google.appengine</groupId>
         <artifactId>jcache-api</artifactId>
@@ -429,11 +434,6 @@
         <groupId>com.esotericsoftware.yamlbeans</groupId>
         <artifactId>yamlbeans</artifactId>
         <version>1.11</version> <!--keep-->
-      </dependency>
-      <dependency>
-        <groupId>com.google.api-client</groupId>
-        <artifactId>google-api-client</artifactId>
-        <version>1.35.2</version>
       </dependency>
       <dependency>
         <groupId>com.google.api.grpc</groupId>
