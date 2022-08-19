@@ -769,7 +769,7 @@
           <configuration>
             <useReleaseProfile>false</useReleaseProfile>
             <goals>deploy</goals>
-            <arguments>-Psonatype-release</arguments>
+            <arguments>-Psonatype-release -DskipTests</arguments>
             <preparationGoals>clean install</preparationGoals>
             <mavenExecutorId>forked-path</mavenExecutorId>
             <pushChanges>false</pushChanges>
