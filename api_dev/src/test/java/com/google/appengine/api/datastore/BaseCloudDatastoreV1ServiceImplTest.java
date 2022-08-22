@@ -155,7 +155,7 @@ public abstract class BaseCloudDatastoreV1ServiceImplTest {
   }
 
   void assertEntityEquals(Entity expected, Entity actual) {
-    assertWithMessage("expected: %s; actual: %s")
+    assertWithMessage("expected: %s; actual: %s", expected.getKey(), actual.getKey())
         .that(expected.getKey().equals(actual.getKey(), false))
         .isTrue();
     assertThat(actual.getProperty("aString")).isEqualTo(expected.getProperty("aString"));
