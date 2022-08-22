@@ -30,10 +30,6 @@
     <version>2.0.8-SNAPSHOT</version>
   </parent>
 
-    <prerequisites>
-        <maven>3.1.0</maven>
-    </prerequisites>
-
     <properties>
         <maven.deploy.skip>true</maven.deploy.skip>
         <!--INSTANCE_CONNECTION_NAME>ludo-in-in:us-central1:mysql-instance</INSTANCE_CONNECTION_NAME-->
@@ -253,6 +249,26 @@
                     <source>1.8</source>
                     <target>1.8</target>
                 </configuration>
+            </plugin>
+            <plugin>
+              <groupId>org.apache.maven.plugins</groupId>
+              <artifactId>maven-enforcer-plugin</artifactId>
+              <version>3.1.0</version>
+              <executions>
+                <execution>
+                  <id>enforce-maven</id>
+                  <goals>
+                    <goal>enforce</goal>
+                  </goals>
+                  <configuration>
+                    <rules>
+                      <requireMavenVersion>
+                        <version>3.1.0</version>
+                      </requireMavenVersion>
+                    </rules>
+                  </configuration>
+                </execution>
+              </executions>
             </plugin>
         </plugins>
     </build>
