@@ -297,6 +297,7 @@
                                         <include>com/google/apphosting/base/protos/api/RemoteApiPb*</include>
                                         <include>com/google/protos/proto2/bridge/*</include>
                                         <include>com/google/storage/onestore/v3/proto2api/*</include>
+                                        <include>com/google/apphosting/executor/*</include>
                                   </includes>
                                 </filter>
                                   <filter>

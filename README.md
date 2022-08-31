@@ -27,11 +27,11 @@ standard environment][ae-docs], the production runtime, the AppEngine APIs, and 
 
 ## Prerequisites
 
-### Use a JDK8 environment so it can build the Java8 GAE runtime.
+### Use a JDK8 environment, so it can build the Java8 GAE runtime.
 
 [jdk8](https://adoptium.net/), but using a JDK11 or JDK17 is also possible.
 
-The shared code base is also used for GAE Java 11 and Java 17 build and test targets, using github actions:
+The shared code base is also used for GAE Java 11 and Java 17 build and test targets, using GitHub actions:
 
 - [Java 8/11/17 Continuous Integration](https://github.com/GoogleCloudPlatform/appengine-java-standard/actions/workflows/maven.yml)
 
@@ -39,8 +39,8 @@ The shared code base is also used for GAE Java 11 and Java 17 build and test tar
 
 This repository is the open source mirror of the Google App Engine Java source code that was used to produce Maven artifacts and runtime jars.
 On Maven Central, the released artifacts from the internal source repository are using the versions like 1.9.xx.
-The open source release mechanism used with this github repository is using the version starting at 2.0.x.
-Soon we will stop entirely pushing internal 1.9.xx artifacts and encourage all App Engine customers to use the new artifacts built from the github project.
+The open source release mechanism used with this GitHub repository is using the version starting at 2.0.x.
+Soon we will stop entirely pushing internal 1.9.xx artifacts and encourage all App Engine customers to use the new artifacts built from the GitHub project.
 
 
 ## Modules
@@ -210,8 +210,8 @@ Source code for the App Engine production application server and utilities. It i
 - [Public Documentation][ae-docs]
 - [Source Code for the runtime implementation](https://github.com/GoogleCloudPlatform/appengine-java-standard/tree/master/runtime/impl)
 - [Source Code for the Java Main](https://github.com/GoogleCloudPlatform/appengine-java-standard/tree/master/runtime/main)
-- [End to End test Web Applications](https://github.com/GoogleCloudPlatform/appengine-java-standard/tree/master/runtime/testapps)
-- [End to End tests](https://github.com/GoogleCloudPlatform/appengine-java-standard/tree/master/runtime/test)
+- [End-to-End test Web Applications](https://github.com/GoogleCloudPlatform/appengine-java-standard/tree/master/runtime/testapps)
+- [End-to-End tests](https://github.com/GoogleCloudPlatform/appengine-java-standard/tree/master/runtime/test)
 - [Source Code for runtime utilities](https://github.com/GoogleCloudPlatform/appengine-java-standard/tree/master/runtime/util)
 
 ## Default entrypoint used by Java11 and Java17
@@ -234,16 +234,16 @@ The entry point for the Java 11, Java 17 runtimes can be customized with user-de
 
 The following table indicates the environment variables that can be used to enable/disable/configure features, and the default values if they are not set:
 
-|Env Var                             | Description         | Type     | Default                                     |
-|------------------------------------|---------------------|----------|---------------------------------------------|
-|`CPROF_ENABLE`                      | Stackdriver Profiler| boolean  | `false`                                     |
-|`GAE_MEMORY_MB`                     | Available memory    | size     | Set by GAE or `/proc/meminfo`-400M          |
-|`HEAP_SIZE_RATIO`                   | Memory for the heap | percent  | 80                                          |
-|`HEAP_SIZE_MB`                      | Available heap      | size     | `${HEAP_SIZE_RATIO}`% of `${GAE_MEMORY_MB}` |
-|`JAVA_HEAP_OPTS`                    | JVM heap args       | JVM args | `-Xms${HEAP_SIZE_MB}M -Xmx${HEAP_SIZE_MB}M` |
-|`JAVA_GC_OPTS`                      | JVM GC args         | JVM args | `-XX:+UseG1GC` plus configuration           |
-|`JAVA_USER_OPTS`                    | JVM other args      | JVM args |                                             |
-|`JAVA_OPTS`                         | JVM args            | JVM args | See below                                   |
+| Env Var           | Description          | Type     | Default                                     |
+|-------------------|----------------------|----------|---------------------------------------------|
+| `CPROF_ENABLE`    | Stackdriver Profiler | boolean  | `false`                                     |
+| `GAE_MEMORY_MB`   | Available memory     | size     | Set by GAE or `/proc/meminfo`-400M          |
+| `HEAP_SIZE_RATIO` | Memory for the heap  | percent  | 80                                          |
+| `HEAP_SIZE_MB`    | Available heap       | size     | `${HEAP_SIZE_RATIO}`% of `${GAE_MEMORY_MB}` |
+| `JAVA_HEAP_OPTS`  | JVM heap args        | JVM args | `-Xms${HEAP_SIZE_MB}M -Xmx${HEAP_SIZE_MB}M` |
+| `JAVA_GC_OPTS`    | JVM GC args          | JVM args | `-XX:+UseG1GC` plus configuration           |
+| `JAVA_USER_OPTS`  | JVM other args       | JVM args |                                             |
+| `JAVA_OPTS`       | JVM args             | JVM args | See below                                   |
 
 If not explicitly set, `JAVA_OPTS` is defaulted to:
 

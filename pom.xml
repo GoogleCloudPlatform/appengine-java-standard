@@ -485,7 +485,7 @@
       <dependency>
         <groupId>com.google.errorprone</groupId>
         <artifactId>error_prone_annotations</artifactId>
-        <version>2.14.0</version>
+        <version>2.15.0</version>
       </dependency>
       <dependency>
         <groupId>com.google.http-client</groupId>
@@ -506,12 +506,12 @@
       <dependency>
         <groupId>com.google.protobuf</groupId>
         <artifactId>protobuf-java</artifactId>
-        <version>3.21.4</version>
+        <version>3.21.5</version>
       </dependency>
       <dependency>
         <groupId>com.google.protobuf</groupId>
         <artifactId>protobuf-java-util</artifactId>
-        <version>3.21.4</version>
+        <version>3.21.5</version>
       </dependency>
       <dependency>
         <groupId>javax.activation</groupId>
@@ -562,7 +562,7 @@
       <dependency>
         <groupId>org.checkerframework</groupId>
         <artifactId>checker-qual</artifactId>
-        <version>3.23.0</version>
+        <version>3.24.0</version>
         <scope>provided</scope>
       </dependency>
       <dependency>
@@ -656,7 +656,7 @@
       <dependency>
         <groupId>joda-time</groupId>
         <artifactId>joda-time</artifactId>
-        <version>2.10.14</version>
+        <version>2.11.1</version>
       </dependency>
       <dependency>
         <groupId>org.json</groupId>
@@ -697,7 +697,7 @@
       <dependency>
         <groupId>org.mockito</groupId>
         <artifactId>mockito-core</artifactId>
-        <version>4.5.1</version>
+        <version>4.7.0</version>
         <scope>test</scope>
       </dependency>
       <dependency>
@@ -800,7 +800,7 @@
                  https://github.com/protocolbuffers/protobuf/blob/master/java/pom.xml#L7
                  Read https://github.com/os72/protoc-jar-maven-plugin/issues/107 for context.
              -->
-             <protocVersion>3.21.4</protocVersion>
+             <protocVersion>3.21.5</protocVersion>
           </configuration>
         </plugin>
         <plugin>
