@@ -41,10 +41,9 @@ import java.util.concurrent.locks.ReentrantLock;
 /**
  * Fake HTTP-based server for APIHost. This is intended to mimic <a
  * href="http://google3/apphosting/sandbox/titanium/http_apihost.cc">this server</a>.
- *
  */
-class FakeHttpApiHost {
-  interface ApiRequestHandler {
+public class FakeHttpApiHost {
+  public interface ApiRequestHandler {
     RemoteApiPb.Response handle(RemoteApiPb.Request request);
   }
 
@@ -69,7 +68,8 @@ class FakeHttpApiHost {
     this.freezeLock = freezeLock;
   }
 
-  static FakeHttpApiHost create(int port, ApiRequestHandler apiRequestHandler) throws IOException {
+  public static FakeHttpApiHost create(int port, ApiRequestHandler apiRequestHandler)
+      throws IOException {
     InetSocketAddress socketAddress = new InetSocketAddress(port);
     HttpServer httpApiHostServer = HttpServer.create(socketAddress, 0);
     ReentrantLock freezeLock = new ReentrantLock();
@@ -88,7 +88,7 @@ class FakeHttpApiHost {
     return httpApiHostUrl;
   }
 
-  void stop() {
+  public void stop() {
     httpApiHostServer.stop(0);
   }
 
