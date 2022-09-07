@@ -32,6 +32,7 @@ mkdir ${KOKORO_ARTIFACTS_DIR}/maven-artifacts
 # Remove jars we do not need in google3.
 ls **/*.jar
 rm **/target/*sources.jar || true
+rm **/target/*tests.jar || true
 
 # LINT.IfChange
 cp api_legacy/target/appengine-api-legacy*.jar ${KOKORO_ARTIFACTS_DIR}/maven-artifacts/appengine-api-legacy.jar
