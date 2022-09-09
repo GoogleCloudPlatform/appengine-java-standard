@@ -16,6 +16,7 @@
 
 package com.google.appengine.tools.development;
 
+import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -29,7 +30,7 @@ import java.util.logging.Logger;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
- * A {@link URLStreamHandlerFactory} which installs 
+ * A {@link URLStreamHandlerFactory} which installs
  * {@link URLStreamHandler URLStreamHandlers} that App Engine needs to support.
  * (For example, the "http" and "https" protocols).  This factory returns
  * handlers that delegate to the
@@ -45,11 +46,21 @@ public class StreamHandlerFactory implements URLStreamHandlerFactory {
   /** Need to access this method via reflection because it is protected on {@link URL}. */
   @Nullable private static final Method GET_URL_STREAM_HANDLER;
 
+  private static void trySetAccessible(AccessibleObject o) {
+    try {
+      AccessibleObject.class.getMethod("trySetAccessible").invoke(o);
+    } catch (NoSuchMethodException e) {
+      o.setAccessible(true);
+    } catch (ReflectiveOperationException e) {
+      throw new LinkageError(e.getMessage(), e);
+    }
+  }
+
   static {
     Method m = null;
     try {
       m = URL.class.getDeclaredMethod("getURLStreamHandler", String.class);
-      m.setAccessible(true);
+      trySetAccessible(m);
     } catch (NoSuchMethodException e) {
       // Don't want to completely hose people if the jvm they're running
       // locally doesn't have this method.
@@ -63,48 +74,48 @@ public class StreamHandlerFactory implements URLStreamHandlerFactory {
   private Map<String, URLStreamHandler> handlers = new HashMap<String, URLStreamHandler>();
 
   /**
-   * Installs this StreamHandlerFactory. 
+   * Installs this StreamHandlerFactory.
    *
    * @throws IllegalStateException if a factory has already been installed, and
    * it is not a StreamHandlerFactory.
-   * @throws RuntimeException if an unexpected, catastrophic failure occurs 
-   * while installing the handler. 
+   * @throws RuntimeException if an unexpected, catastrophic failure occurs
+   * while installing the handler.
    */
   public static void install() {
     synchronized (StreamHandlerFactory.class) {
-      if (!factoryIsInstalled) {        
+      if (!factoryIsInstalled) {
         StreamHandlerFactory factory = new StreamHandlerFactory();
-        
+
         try {
           URL.setURLStreamHandlerFactory(factory);
         } catch (Error e) {
           // Yes, URL.setURLStreamHandlerFactory() does in fact throw Error.
           // That's Java 1.0 code for you.
-          
+
           // It's possible that we were already installed for this JVM, but in a
           // different ClassLoader.
           Object currentFactory;
-          
+
           try {
             Field f = URL.class.getDeclaredField("factory");
-            f.setAccessible(true);
+            trySetAccessible(f);
             currentFactory = f.get(null);
           } catch (Exception ex) {
             throw new RuntimeException("Failed to find the currently installed factory", ex);
           }
 
           if (currentFactory == null) {
-            throw new RuntimeException("The current factory is null, but we were unable " 
+            throw new RuntimeException("The current factory is null, but we were unable "
                 + "to set a new factory", e);
           }
-          
+
           String currentFactoryType = currentFactory.getClass().getName();
           if (currentFactoryType.equals(StreamHandlerFactory.class.getName())) {
             factoryIsInstalled = true;
             return;
           }
-          
-          throw new IllegalStateException("A factory of type " + currentFactoryType + 
+
+          throw new IllegalStateException("A factory of type " + currentFactoryType +
               " has already been installed");
         }
       }
@@ -167,7 +178,7 @@ public class StreamHandlerFactory implements URLStreamHandlerFactory {
   static Method getDeclaredMethod(Class<?> cls, String methodName, Class<?>... args) {
     try {
       Method m = cls.getDeclaredMethod(methodName, args);
-      m.setAccessible(true);
+      trySetAccessible(m);
       return m;
     } catch (NoSuchMethodException e) {
       throw new RuntimeException(e);
