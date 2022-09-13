@@ -106,6 +106,9 @@ public interface ServletEngineAdapter extends UPRequestHandler {
     @Nullable
     public abstract EvaluationRuntimeServerInterface evaluationRuntimeServerInterface();
 
+    /** Whether to pass through all headers to the web app, including X-AppEngine-*. */
+    public abstract boolean passThroughPrivateHeaders();
+
     /** Returns an {@code Config.Builder}. */
     public static Builder builder() {
       return new AutoValue_ServletEngineAdapter_Config.Builder()
@@ -114,7 +117,8 @@ public interface ServletEngineAdapter extends UPRequestHandler {
           .setJettyReusePort(false)
           .setJettyRequestHeaderSize(16384)
           .setJettyResponseHeaderSize(16384)
-          .setApplicationRoot("/base/data/home/apps");
+          .setApplicationRoot("/base/data/home/apps")
+          .setPassThroughPrivateHeaders(false);
     }
 
     /** Builder for {@code Config} instances. */
@@ -136,6 +140,8 @@ public interface ServletEngineAdapter extends UPRequestHandler {
 
       public abstract Builder setEvaluationRuntimeServerInterface(
           EvaluationRuntimeServerInterface server);
+
+      public abstract Builder setPassThroughPrivateHeaders(boolean passThroughPrivateHeaders);
 
       /** Returns a configured {@code Config} instance. */
       public abstract Config build();
