@@ -286,6 +286,21 @@
                             </descriptors>
                         </configuration>
                     </execution>
+                    <execution>
+                        <id>cloud-sdk</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <configuration>
+                            <overrideUid>0</overrideUid>
+                            <overrideGid>0</overrideGid>
+                            <descriptors>
+                                <descriptor>src/main/assembly/cloud-sdk-assembly.xml</descriptor>
+                            </descriptors>
+                              <finalName>google_appengine_java_delta_${project.version}</finalName>
+                        </configuration>
+                    </execution>
                     <!--execution>
                       <id>sources</id>
                       <phase>package</phase>
