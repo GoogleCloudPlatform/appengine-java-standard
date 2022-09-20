@@ -264,7 +264,6 @@ public class JettyHttpProxy {
     private final String fixedApplicationPath;
     private final AppInfoFactory appInfoFactory;
     private final EvaluationRuntimeServerInterface evaluationRuntimeServerInterface;
-    private final boolean passThroughPrivateHeaders;
 
     public ForwardingHandler(ServletEngineAdapter.Config runtimeOptions, Map<String, String> env)
         throws ExecutionException, InterruptedException, IOException {
@@ -272,7 +271,6 @@ public class JettyHttpProxy {
       this.fixedApplicationPath = runtimeOptions.fixedApplicationPath();
       this.appInfoFactory = new AppInfoFactory(env);
       this.evaluationRuntimeServerInterface = runtimeOptions.evaluationRuntimeServerInterface();
-      this.passThroughPrivateHeaders = runtimeOptions.passThroughPrivateHeaders();
     }
 
     private void init() {
@@ -525,7 +523,7 @@ public class JettyHttpProxy {
       }
     }
 
-    private void requestHeader(
+    private static void requestHeader(
         UPRequest.Builder upReqBuilder,
         HttpRequest.Builder httpRequest,
         String name,
@@ -599,7 +597,7 @@ public class JettyHttpProxy {
         default:
           break;
       }
-      if (passThroughPrivateHeaders || !PRIVATE_APPENGINE_HEADERS.contains(lower)) {
+      if (!PRIVATE_APPENGINE_HEADERS.contains(lower)) {
         // Only non AppEngine specific headers are passed to the application.
         httpRequest.addHeadersBuilder().setKey(name).setValue(value);
       }
