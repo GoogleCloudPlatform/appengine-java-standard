@@ -43,6 +43,12 @@ public class JavaRuntimeMain {
   /** This property will be used in ClassPathUtils processing to determine the correct classpath. */
   private static final String USE_MAVEN_JARS = "use.mavenjars";
 
+  /**
+   * This property will be used to enable/disable Annotation Scanning when quickstart-web.xml is not
+   * present.
+   */
+  private static final String USE_ANNOTATION_SCANNING = "use.annotationscanning";
+
   /** Disable logging in ApiProxy */
   private static final String DISABLE_API_CALL_LOGGING_IN_APIPROXY =
       "disable_api_call_logging_in_apiproxy";
@@ -98,6 +104,7 @@ public class JavaRuntimeMain {
    * @return the flag value, if found, otherwise null
    */
   /* @VisibleForTesting */
+  @SuppressWarnings("ReturnMissingNullable")
   String getFlag(String[] args, String flagName, String warningMsgIfAbsent) {
     String target = "--" + flagName;
     for (int i = 0; i < args.length; i++) {
@@ -138,7 +145,8 @@ public class JavaRuntimeMain {
         new String[] {
           USE_MAVEN_JARS,
           DISABLE_API_CALL_LOGGING_IN_APIPROXY,
-          ALLOW_NON_RESIDENT_SESSION_ACCESS
+          ALLOW_NON_RESIDENT_SESSION_ACCESS,
+          USE_ANNOTATION_SCANNING
         }) {
       if ("true".equalsIgnoreCase(optionalProperties.getProperty(flag))) {
         System.setProperty(flag, "true");

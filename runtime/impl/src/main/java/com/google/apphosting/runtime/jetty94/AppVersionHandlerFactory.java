@@ -19,7 +19,9 @@ package com.google.apphosting.runtime.jetty94;
 import com.google.apphosting.base.AppVersionKey;
 import com.google.apphosting.runtime.AppVersion;
 import com.google.apphosting.runtime.SessionsConfig;
+import com.google.apphosting.runtime.jetty9.AppEngineWebInfConfiguration;
 import com.google.apphosting.runtime.jetty9.JettyConstants;
+import com.google.common.collect.ImmutableList;
 import com.google.common.flogger.GoogleLogger;
 import com.google.common.html.HtmlEscapers;
 import java.io.File;
@@ -31,12 +33,16 @@ import javax.servlet.UnavailableException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.jsp.JspFactory;
+import org.eclipse.jetty.annotations.AnnotationConfiguration;
 import org.eclipse.jetty.server.Dispatcher;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ErrorPageErrorHandler;
+import org.eclipse.jetty.webapp.FragmentConfiguration;
+import org.eclipse.jetty.webapp.MetaInfConfiguration;
 import org.eclipse.jetty.webapp.WebAppContext;
+import org.eclipse.jetty.webapp.WebXmlConfiguration;
 
 /**
  * {@code AppVersionHandlerFactory} implements a {@code Handler} for a given {@code AppVersionKey}.
@@ -57,6 +63,12 @@ public class AppVersionHandlerFactory {
       "com/google/apphosting/runtime/jetty94/webdefault.xml";
 
   /**
+   * This property will be used to enable/disable Annotation Scanning when quickstart-web.xml is not
+   * present.
+   */
+  private static final String USE_ANNOTATION_SCANNING = "use.annotationscanning";
+
+  /**
    * Specify which {@link org.eclipse.jetty.webapp.Configuration} objects should be invoked when
    * configuring a web application.
    *
@@ -66,14 +78,10 @@ public class AppVersionHandlerFactory {
    * allows users to use {@code jetty-web.xml} files. We definitely do not want to allow these
    * files, as they allow for arbitrary method invocation.
    */
+
   // List of all the standard Jetty configurations that need to be executed when there
   // is no WEB-INF/quickstart-web.xml file.
-  private static final String[] preconfigurationClasses = {
-    com.google.apphosting.runtime.jetty9.AppEngineWebInfConfiguration.class.getCanonicalName(),
-    org.eclipse.jetty.webapp.WebXmlConfiguration.class.getCanonicalName(),
-    org.eclipse.jetty.webapp.MetaInfConfiguration.class.getCanonicalName(),
-    org.eclipse.jetty.webapp.FragmentConfiguration.class.getCanonicalName()
-  };
+  private final String[] preconfigurationClasses = getPreconfigurationClasses();
 
   // List of Jetty configurations only needed if the quickstart process has been
   // executed, so we do not need the webinf, webxml, fragment and annotation configurations
@@ -115,6 +123,18 @@ public class AppVersionHandlerFactory {
     } finally {
       Thread.currentThread().setContextClassLoader(oldContextClassLoader);
     }
+  }
+
+  private final String[] getPreconfigurationClasses() {
+    ImmutableList.Builder<String> list = new ImmutableList.Builder<>();
+    list.add(AppEngineWebInfConfiguration.class.getCanonicalName());
+    list.add(WebXmlConfiguration.class.getCanonicalName());
+    list.add(MetaInfConfiguration.class.getCanonicalName());
+    list.add(FragmentConfiguration.class.getCanonicalName());
+    if (Boolean.getBoolean(USE_ANNOTATION_SCANNING)) {
+      list.add(AnnotationConfiguration.class.getCanonicalName());
+    }
+    return list.build().stream().toArray(String[]::new);
   }
 
   private Handler doCreateHandler(AppVersion appVersion) throws ServletException {
