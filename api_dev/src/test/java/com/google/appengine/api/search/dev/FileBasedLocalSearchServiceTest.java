@@ -137,6 +137,9 @@ public class FileBasedLocalSearchServiceTest {
       ZipEntry entry;
       while ((entry = zin.getNextEntry()) != null) {
         File f = new File(toDir, entry.getName());
+        if (!f.toPath().normalize().startsWith(toDir.toPath().normalize())) {
+          throw new IOException("Bad zip entry");
+        }
         f.getParentFile().mkdirs();
         try (FileOutputStream out = new FileOutputStream(f)) {
           ByteStreams.copy(zin, out);
