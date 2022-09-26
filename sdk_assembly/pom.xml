@@ -57,6 +57,26 @@
                             </resources>
                         </configuration>
                     </execution>
+                    <execution>
+                        <id>copy-licenses</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${assembly-directory}</outputDirectory>
+                            <encoding>UTF-8</encoding>
+                            <resources>
+                                <resource>
+                                    <directory>${basedir}/..</directory>
+                                    <includes>
+                                        <include>LICENSE</include>
+                                        <include>THIRD-PARTY.txt</include>
+                                    </includes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
             <plugin>

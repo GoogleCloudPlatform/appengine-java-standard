@@ -818,6 +818,29 @@
            <artifactId>javacc-maven-plugin</artifactId>
            <version>2.6</version>
         </plugin>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>license-maven-plugin</artifactId>
+          <version>2.0.0</version>
+          <configuration>
+            <excludedGroups>com.google.appengine</excludedGroups>
+            <useMissingFile>true</useMissingFile>
+            <missingFile>${project.basedir}/licenses/resources/third-party-missing-licenses.properties</missingFile>
+            <licenseMerges>
+              <licenseMerge>Apache License, Version 2.0|The Apache Software License, Version 2.0|Apache Software License - Version 2.0|Apache-2.0|Apache 2.0|Apache 2|The Apache License, Version 2.0|Apache License 2.0|Apache License Version 2.0</licenseMerge>
+              <licenseMerge>Eclipse Public License 1.0|Eclipse Public License - v 1.0|</licenseMerge>
+              <licenseMerge>Eclipse Public License 2.0|Eclipse Public License - v 2.0|Eclipse Public License v2.0|EPL 2.0</licenseMerge>
+              <licenseMerge>CDDL + GPLv2|CDDL + GPLv2 with classpath exception</licenseMerge>
+              <licenseMerge>The MIT License|MIT license|MIT License</licenseMerge>
+              <licenseMerge>GNU General Public License, version 2|GNU General Public License, version 2 (GPL2), with the classpath exception|GPL2 w/ CPE|The GNU General Public License, v2 with FOSS exception|GNU General Public License Version 2</licenseMerge>
+              <licenseMerge>BSD License|BSD|BSD licence</licenseMerge>
+              <licenseMerge>The 3-Clause BSD License|New BSD License|BSD New license|BSD-3-Clause|BSD License 3|BSD 3-clause</licenseMerge>
+              <licenseMerge>Eclipse Distribution License 1.0 (BSD)|Eclipse Distribution License - v 1.0|EDL 1.0</licenseMerge>
+            </licenseMerges>
+            <outputDirectory>${project.basedir}</outputDirectory>
+            <fileTemplate>${project.basedir}/licenses/resources/third-party-file-template.ftl</fileTemplate>
+          </configuration>
+        </plugin>
       </plugins>
     </pluginManagement>
   </build>
