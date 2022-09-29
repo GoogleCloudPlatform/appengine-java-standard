@@ -279,6 +279,7 @@
                             </target>
                             <tasks>
                                 <delete file="${assembly-directory}/jetty94/jetty-home/lib/apache-jsp/org.eclipse.jetty.apache-jsp-${jetty.version}.jar"/>
+                                <delete dir="${assembly-directory}/jetty94/jetty-home/demo-base"/>
                             </tasks>
                         </configuration>
                     </execution>
