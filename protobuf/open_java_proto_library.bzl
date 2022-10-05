@@ -25,6 +25,7 @@ def _proto_library_name(name):
 def open_java_proto_library(
         name,
         srcs,
+        // <internal27>
         deps = [],
         compatible_with = []):
     """Builds a Java proto library using the open-source proto compiler.
@@ -44,6 +45,7 @@ def open_java_proto_library(
     native.proto_library(
         name = proto_library_name,
         srcs = srcs,
+        // <internal26>
         deps = [_proto_library_name(dep) for dep in deps],
         compatible_with = compatible_with,
         strip_import_prefix = "/" + native.package_name(),
