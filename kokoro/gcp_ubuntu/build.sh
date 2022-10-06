@@ -54,4 +54,4 @@ cp -rf sdk_assembly/target/appengine-java-sdk ${KOKORO_ARTIFACTS_DIR}/maven-arti
 # Make binaries executable.
 chmod a+x ${KOKORO_ARTIFACTS_DIR}/maven-artifacts/appengine-java-sdk/bin/*
 # LINT.ThenChange(//depot/google3/third_party/java_src/appengine_standard/check_build.sh)
-cp sdk_assembly/target/google_appengine_java_delta*.zip ${KOKORO_ARTIFACTS_DIR}/maven-artifacts/google_appengine_java_delta.zip
+cp sdk_assembly/target/google_appengine_java_delta*.zip ${KOKORO_ARTIFACTS_DIR}/maven-artifacts/google_appengine_java_delta_from_maven.zip
