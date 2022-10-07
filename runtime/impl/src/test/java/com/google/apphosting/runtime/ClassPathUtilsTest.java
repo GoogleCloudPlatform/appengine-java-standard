@@ -34,9 +34,7 @@ public final class ClassPathUtilsTest {
 
   @Before
   public void setUp() throws Exception {
-    System.clearProperty("use.java11");
     System.clearProperty("classpath.runtime-impl");
-    System.clearProperty("use.mavenjars");
     System.clearProperty("classpath.appengine-api-legacy");
     System.clearProperty("classpath.connector-j");
     runtimeLocation = temporaryFolder.getRoot().getAbsolutePath();
@@ -47,34 +45,6 @@ public final class ClassPathUtilsTest {
     // Only Java8 runtime has the native launcher. This file is used to determine which env
     // must be used.
     temporaryFolder.newFile("java_runtime_launcher");
-  }
-
-  @Test
-  public void verifyDefaultPropertiesAreConfigured() throws Exception {
-    createJava8Environment();
-    ClassPathUtils cpu = new ClassPathUtils();
-    assertThat(cpu.getConnectorJUrls()).hasLength(1);
-    assertThat(System.getProperty("classpath.runtime-impl"))
-        .isEqualTo(
-            runtimeLocation
-                + "/runtime-impl.jar"
-                + PATH_SEPARATOR
-                + runtimeLocation
-                + "/frozen_debugger.jar"
-                + PATH_SEPARATOR
-                + runtimeLocation
-                + "/runtime-impl-third-party.jar"
-                + PATH_SEPARATOR
-                + runtimeLocation
-                + "/runtime-appengine-api.jar");
-
-    assertThat(System.getProperty("classpath.runtime-shared"))
-        .isEqualTo(runtimeLocation + "/runtime-shared.jar");
-    assertThat(System.getProperty("classpath.connector-j"))
-        .isEqualTo(runtimeLocation + "/jdbc-mysql-connector.jar");
-
-    assertThat(cpu.getFrozenApiJar().getAbsolutePath())
-        .isEqualTo(runtimeLocation + "/appengine-api.jar");
   }
 
   @Test
@@ -94,38 +64,8 @@ public final class ClassPathUtilsTest {
   }
 
   @Test
-  public void verifyJetty94PropertiesAreConfigured() throws Exception {
-
-    createJava8Environment();
-    ClassPathUtils cpu = new ClassPathUtils();
-    assertThat(cpu.getConnectorJUrls()).hasLength(1);
-    assertThat(System.getProperty("classpath.runtime-impl"))
-        .isEqualTo(
-            runtimeLocation
-                + "/runtime-impl.jar"
-                + PATH_SEPARATOR
-                + runtimeLocation
-                + "/frozen_debugger.jar"
-                + PATH_SEPARATOR
-                + runtimeLocation
-                + "/runtime-impl-third-party.jar"
-                + PATH_SEPARATOR
-                + runtimeLocation
-                + "/runtime-appengine-api.jar");
-
-    assertThat(System.getProperty("classpath.runtime-shared"))
-        .isEqualTo(runtimeLocation + "/runtime-shared.jar");
-    assertThat(System.getProperty("classpath.connector-j"))
-        .isEqualTo(runtimeLocation + "/jdbc-mysql-connector.jar");
-
-    assertThat(cpu.getFrozenApiJar().getAbsolutePath())
-        .isEqualTo(runtimeLocation + "/appengine-api.jar");
-  }
-
-  @Test
   public void verifyMavenJarsPropertiesAreConfigured() throws Exception {
     createJava8Environment();
-    System.setProperty("use.mavenjars", "true");
 
     ClassPathUtils cpu = new ClassPathUtils(new File("/my_app_root"));
     assertThat(cpu.getConnectorJUrls()).hasLength(1);
