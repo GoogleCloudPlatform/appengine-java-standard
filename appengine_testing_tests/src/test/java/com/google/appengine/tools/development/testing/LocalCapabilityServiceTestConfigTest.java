@@ -26,7 +26,6 @@ import com.google.appengine.tools.development.LocalRpcService;
 import junit.framework.TestCase;
 
 /**
- * @author ludo@google.com (ludovic Champenois)
  */
 public class LocalCapabilityServiceTestConfigTest extends TestCase {
 

@@ -19,7 +19,6 @@ package com.google.appengine.apicompat.testclasses;
 import com.google.apphosting.api.AppEngineInternal;
 
 /**
- * @author ozarov@google.com (Arie Ozarov)
  */
 @SuppressWarnings("unused")
 @AppEngineInternal

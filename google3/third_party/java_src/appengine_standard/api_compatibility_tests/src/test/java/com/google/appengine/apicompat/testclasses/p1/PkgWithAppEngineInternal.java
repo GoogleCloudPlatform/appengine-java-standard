@@ -17,6 +17,5 @@
 package com.google.appengine.apicompat.testclasses.p1;
 
 /**
- * @author ozarov@google.com (Arie Ozarov)
  */
 public class PkgWithAppEngineInternal {}

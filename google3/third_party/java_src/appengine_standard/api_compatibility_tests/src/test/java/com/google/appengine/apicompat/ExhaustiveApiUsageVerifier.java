@@ -37,7 +37,6 @@ import java.util.Set;
  * ExhaustiveApiUsage} implementations are correct, which in turn allows us to depend on them to
  * alert us to any backwards incompatible api changes we might introduce.
  *
- * @author maxr@google.com (Max Ross)
  */
 public class ExhaustiveApiUsageVerifier {
 

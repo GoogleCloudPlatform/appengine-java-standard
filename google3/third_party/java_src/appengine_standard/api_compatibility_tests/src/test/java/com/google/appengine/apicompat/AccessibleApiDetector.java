@@ -43,7 +43,6 @@ import java.util.Set;
  * that is available via inheritance. See the class-level javadoc in {@link
  * ExhaustiveApiUsageVerifier} for an explanation of how this is used.
  *
- * @author maxr@google.com (Max Ross)
  */
 class AccessibleApiDetector {
 

@@ -33,7 +33,6 @@ import junit.framework.TestCase;
  * the unit tests in this classloader.  The goal of this test is to verify that
  * the testing jar we package in the SDK is functioning correctly.
  *
- * @author maxr@google.com (Max Ross)
  */
 public class TestingApiIntegrationTest extends TestCase {
 

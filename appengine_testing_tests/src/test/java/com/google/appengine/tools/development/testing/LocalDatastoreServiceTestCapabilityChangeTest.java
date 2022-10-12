@@ -33,7 +33,6 @@ import junit.framework.TestCase;
 
 
 /**
- * @author ludo@google.com (ludovic Champenois)
  */
 public class LocalDatastoreServiceTestCapabilityChangeTest extends TestCase {
 
