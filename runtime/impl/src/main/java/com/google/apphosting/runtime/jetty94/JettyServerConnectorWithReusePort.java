@@ -33,7 +33,7 @@ import org.eclipse.jetty.util.IO;
  * A wrapper for Jetty to add support for SO_REUSEPORT. (Jetty 9.x does not directly expose it as a
  * setting.) SO_REUSEPORT only works when running with a Java 9+ JDK.
  */
-class JettyServerConnectorWithReusePort extends ServerConnector {
+public class JettyServerConnectorWithReusePort extends ServerConnector {
 
   private final boolean reusePort;
 
