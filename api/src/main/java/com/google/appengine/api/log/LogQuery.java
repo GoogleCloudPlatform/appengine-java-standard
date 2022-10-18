@@ -293,11 +293,11 @@ public final class LogQuery implements Cloneable, Serializable {
     }
 
     /**
-     * Create a {@link LogQuery} with the given end time.
-     * Shorthand for <code>LogQuery.Builder.withDefaults().endTimeMillis(endTimeMillis);</code>.
-     * Please read the {@link LogQuery} class javadoc for an explanation of
-     * how end time is used.
-     * @param endTimeMillis the start time to use, in milliseconds.
+     * Create a {@link LogQuery} with the given end time. Shorthand for <code>
+     * LogQuery.Builder.withDefaults().endTimeMillis(endTimeMillis);</code>. Please read the {@link
+     * LogQuery} class javadoc for an explanation of how end time is used.
+     *
+     * @param endTimeMillis the end time to use, in milliseconds.
      * @return The newly created LogQuery instance.
      */
     public static LogQuery withEndTimeMillis(long endTimeMillis) {
