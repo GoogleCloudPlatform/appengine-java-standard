@@ -40,7 +40,11 @@ public class JavaRuntimeMain {
   private static final Logger logger = Logger.getLogger(JavaRuntimeMain.class.getName());
   private static final String PROPERTIES_LOCATION = "WEB-INF/appengine_optional.properties";
 
-  /** This property will be used in ClassPathUtils processing to determine the correct classpath. */
+  /**
+   * This property will be used in ClassPathUtils processing to determine the correct classpath.
+   * Property must now be true for the Java8 runtime, and is ignored for Java11/17 runtimes which
+   * can only use maven jars.
+   */
   private static final String USE_MAVEN_JARS = "use.mavenjars";
 
   /**
