@@ -500,14 +500,15 @@ public class RequestManager {
   // So at least for the time being we can still achieve the effect of Thread.stop(Throwable) by
   // calling the JNI method. That means we don't get the permission checks and so on that come
   // with Thread.stop, but the code that's calling it is privileged anyway.
-  private static final Method threadStop0;
-
-  static {
-    try {
-      threadStop0 = Thread.class.getDeclaredMethod("stop0", Object.class);
-      threadStop0.setAccessible(true);
-    } catch (NoSuchMethodException e) {
-      throw new RuntimeException(e);
+  private static class ThreadStop0Holder {
+   private static final Method threadStop0;
+    static {
+      try {
+        threadStop0 = Thread.class.getDeclaredMethod("stop0", Object.class);
+        threadStop0.setAccessible(true);
+      } catch (NoSuchMethodException e) {
+        throw new RuntimeException(e);
+      }
     }
   }
 
@@ -611,7 +612,7 @@ public class RequestManager {
         AccessController.doPrivileged(
             (PrivilegedAction<Void>) () -> {
               try {
-                threadStop0.invoke(targetThread, throwable);
+                ThreadStop0Holder.threadStop0.invoke(targetThread, throwable);
               } catch (Exception e) {
                 logger.atWarning().withCause(e).log("Failed to stop thread");
               }
