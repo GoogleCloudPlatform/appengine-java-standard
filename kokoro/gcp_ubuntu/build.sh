@@ -27,31 +27,39 @@ echo "JAVA_HOME = $JAVA_HOME"
 
 ./mvnw -e clean install
 
-# The artifacts under `${KOKORO_ARTIFACTS_DIR}/maven-artifacts` will be uploaded.
-mkdir ${KOKORO_ARTIFACTS_DIR}/maven-artifacts
+# The artifacts under `${KOKORO_ARTIFACTS_DIR}/maven-artifacts` will be uploaded as a zip file named maven_jars.binary
+TMP_STAGING_LOCATION=${KOKORO_ARTIFACTS_DIR}/tmp
+PUBLISHED_LOCATION=${KOKORO_ARTIFACTS_DIR}/maven-artifacts
+mkdir ${TMP_STAGING_LOCATION}
+mkdir ${PUBLISHED_LOCATION}
 # Remove jars we do not need in google3.
 ls **/*.jar
 rm **/target/*sources.jar || true
 rm **/target/*tests.jar || true
 
 # LINT.IfChange
-cp api_legacy/target/appengine-api-legacy*.jar ${KOKORO_ARTIFACTS_DIR}/maven-artifacts/appengine-api-legacy.jar
-cp appengine-api-1.0-sdk/target/appengine-api-1.0-sdk*.jar ${KOKORO_ARTIFACTS_DIR}/maven-artifacts/appengine-api-1.0-sdk.jar
-cp appengine-api-stubs/target/appengine-api-stubs*.jar ${KOKORO_ARTIFACTS_DIR}/maven-artifacts/appengine-api-stubs.jar
-cp appengine_testing/target/appengine-testing*.jar ${KOKORO_ARTIFACTS_DIR}/maven-artifacts/appengine-testing.jar
-cp remoteapi/target/appengine-remote-api*.jar ${KOKORO_ARTIFACTS_DIR}/maven-artifacts/appengine-remote-api.jar
-cp appengine_jsr107/target/appengine-jsr107*.jar ${KOKORO_ARTIFACTS_DIR}/maven-artifacts/appengine-jsr107.jar
-cp runtime_shared/target/runtime-shared*.jar ${KOKORO_ARTIFACTS_DIR}/maven-artifacts/runtime-shared.jar
-cp lib/tools_api/target/appengine-tools-sdk*.jar ${KOKORO_ARTIFACTS_DIR}/maven-artifacts/appengine-tools-api.jar
-cp lib/xml_validator/target/libxmlvalidator*.jar ${KOKORO_ARTIFACTS_DIR}/maven-artifacts/libxmlvalidator.jar
-cp runtime/impl/target/runtime-impl*.jar ${KOKORO_ARTIFACTS_DIR}/maven-artifacts/runtime-impl.jar
-cp runtime/local/target/appengine-local-runtime*.jar ${KOKORO_ARTIFACTS_DIR}/maven-artifacts/appengine-local-runtime.jar
-cp runtime/main/target/runtime-main*.jar ${KOKORO_ARTIFACTS_DIR}/maven-artifacts/runtime-main.jar
-cp local_runtime_shared/target/appengine-local-runtime-shared*.jar ${KOKORO_ARTIFACTS_DIR}/maven-artifacts/appengine-local-runtime-shared.jar
-cp quickstartgenerator/target/quickstartgenerator*.jar ${KOKORO_ARTIFACTS_DIR}/maven-artifacts/quickstartgenerator.jar
+cp api_legacy/target/appengine-api-legacy*.jar ${TMP_STAGING_LOCATION}/appengine-api-legacy.jar
+cp appengine-api-1.0-sdk/target/appengine-api-1.0-sdk*.jar ${TMP_STAGING_LOCATION}/appengine-api-1.0-sdk.jar
+cp appengine-api-stubs/target/appengine-api-stubs*.jar ${TMP_STAGING_LOCATION}/appengine-api-stubs.jar
+cp appengine_testing/target/appengine-testing*.jar ${TMP_STAGING_LOCATION}/appengine-testing.jar
+cp remoteapi/target/appengine-remote-api*.jar ${TMP_STAGING_LOCATION}/appengine-remote-api.jar
+cp appengine_jsr107/target/appengine-jsr107*.jar ${TMP_STAGING_LOCATION}/appengine-jsr107.jar
+cp runtime_shared/target/runtime-shared*.jar ${TMP_STAGING_LOCATION}/runtime-shared.jar
+cp lib/tools_api/target/appengine-tools-sdk*.jar ${TMP_STAGING_LOCATION}/appengine-tools-api.jar
+cp lib/xml_validator/target/libxmlvalidator*.jar ${TMP_STAGING_LOCATION}/libxmlvalidator.jar
+cp runtime/impl/target/runtime-impl*.jar ${TMP_STAGING_LOCATION}/runtime-impl.jar
+cp runtime/local/target/appengine-local-runtime*.jar ${TMP_STAGING_LOCATION}/appengine-local-runtime.jar
+cp runtime/main/target/runtime-main*.jar ${TMP_STAGING_LOCATION}/runtime-main.jar
+cp local_runtime_shared/target/appengine-local-runtime-shared*.jar ${TMP_STAGING_LOCATION}/appengine-local-runtime-shared.jar
+cp quickstartgenerator/target/quickstartgenerator*.jar ${TMP_STAGING_LOCATION}/quickstartgenerator.jar
 
-cp -rf sdk_assembly/target/appengine-java-sdk ${KOKORO_ARTIFACTS_DIR}/maven-artifacts/
+cp -rf sdk_assembly/target/appengine-java-sdk ${TMP_STAGING_LOCATION}/
 # Make binaries executable.
-chmod a+x ${KOKORO_ARTIFACTS_DIR}/maven-artifacts/appengine-java-sdk/bin/*
+chmod a+x ${TMP_STAGING_LOCATION}/appengine-java-sdk/bin/*
 # LINT.ThenChange(//depot/google3/third_party/java_src/appengine_standard/check_build.sh)
-cp sdk_assembly/target/google_appengine_java_delta*.zip ${KOKORO_ARTIFACTS_DIR}/maven-artifacts/google_appengine_java_delta_from_maven.zip
+cp sdk_assembly/target/google_appengine_java_delta*.zip ${TMP_STAGING_LOCATION}/google_appengine_java_delta_from_maven.zip
+cd ${TMP_STAGING_LOCATION}
+zip -r ${PUBLISHED_LOCATION}/maven_jars.binary .
+# cleanup staging area
+cd ..
+rm -rf ${TMP_STAGING_LOCATION}
