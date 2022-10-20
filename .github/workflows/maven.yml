@@ -31,7 +31,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        java: [8, 11, 17]
+        java: [8, 11, 17, 19]
         jdk: [temurin]
       fail-fast: false
 
