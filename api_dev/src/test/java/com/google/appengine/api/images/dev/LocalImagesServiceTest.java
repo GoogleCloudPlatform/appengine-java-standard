@@ -487,12 +487,14 @@ public class LocalImagesServiceTest {
     assertThat(responseImage).isEqualTo(expectedImage);
   }
 
-  private static boolean isJdk11or17() {
-    return StandardSystemProperty.JAVA_SPECIFICATION_VERSION.value().equals("11")
-        || StandardSystemProperty.JAVA_SPECIFICATION_VERSION.value().equals("17");
+  private static boolean isJDK8() {
+    return StandardSystemProperty.JAVA_SPECIFICATION_VERSION.value().equals("1.8");
   }
 
-  private static final String jdk11or17Name(String filename) {
+  /**
+   * We have 2 test files per image: one for jdk8 and the other one (11) used by jdk 11,17 and above
+   */
+  private static final String jdk11(String filename) {
     return filename.replaceAll("(?!-jdk11)\\.(png|jpg)$", "-jdk11.$1");
   }
 
@@ -504,8 +506,8 @@ public class LocalImagesServiceTest {
    */
   private byte[] readImage(String filename) throws IOException {
     URL resource = null;
-    if (isJdk11or17()) {
-      String jdk11Name = jdk11or17Name(filename);
+    if (!isJDK8()) {
+      String jdk11Name = jdk11(filename);
       resource = getClass().getResource("testdata/" + jdk11Name);
     }
     if (resource == null) {
