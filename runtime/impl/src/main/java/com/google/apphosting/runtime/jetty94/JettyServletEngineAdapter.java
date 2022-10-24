@@ -97,7 +97,8 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
     rpcConnector = new RpcConnector(server);
     server.setConnectors(new Connector[] {rpcConnector});
     AppVersionHandlerFactory appVersionHandlerFactory =
-        new AppVersionHandlerFactory(server, serverInfo, contextFactory);
+        new AppVersionHandlerFactory(
+            server, serverInfo, contextFactory, /*useJettyErrorPageHandler=*/ false);
     appVersionHandlerMap = new AppVersionHandlerMap(appVersionHandlerFactory);
     server.setHandler(appVersionHandlerMap);
 
