@@ -94,10 +94,7 @@ public final class UPRequestTranslatorTest {
             "GAE_SERVICE", "mytestservice");
 
     translator =
-        new UPRequestTranslator(
-            new AppInfoFactory(fakeEnv),
-            /*passThroughPrivateHeaders=*/ false,
-            /*skipPostData=*/ false);
+        new UPRequestTranslator(new AppInfoFactory(fakeEnv), /*passThroughPrivateHeaders=*/ false);
   }
 
   @Test

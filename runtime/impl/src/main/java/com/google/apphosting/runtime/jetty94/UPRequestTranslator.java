@@ -112,22 +112,10 @@ public class UPRequestTranslator {
 
   private final AppInfoFactory appInfoFactory;
   private final boolean passThroughPrivateHeaders;
-  private final boolean skipPostData;
 
-  /**
-   * Construct an UPRequestTranslator.
-   *
-   * @param appInfoFactory An {@link AppInfoFactory}.
-   * @param passThroughPrivateHeaders Include internal App Engine headers in translation (mostly
-   *     X-AppEngine-*) instead of eliding them.
-   * @param skipPostData Don't read the request body. This is useful for callers who will read it
-   *     directly, since the read can only happen once.
-   */
-  public UPRequestTranslator(
-      AppInfoFactory appInfoFactory, boolean passThroughPrivateHeaders, boolean skipPostData) {
+  public UPRequestTranslator(AppInfoFactory appInfoFactory, boolean passThroughPrivateHeaders) {
     this.appInfoFactory = appInfoFactory;
     this.passThroughPrivateHeaders = passThroughPrivateHeaders;
-    this.skipPostData = skipPostData;
   }
 
   /**
@@ -222,12 +210,10 @@ public class UPRequestTranslator {
       }
     }
 
-    if (!skipPostData) {
-      try {
-        httpRequest.setPostdata(ByteString.readFrom(realRequest.getInputStream()));
-      } catch (IOException ex) {
-        throw new IllegalStateException("Could not read POST content:", ex);
-      }
+    try {
+      httpRequest.setPostdata(ByteString.readFrom(realRequest.getInputStream()));
+    } catch (IOException ex) {
+      throw new IllegalStateException("Could not read POST content:", ex);
     }
 
     if ("/_ah/background".equals(realRequest.getRequestURI())) {
