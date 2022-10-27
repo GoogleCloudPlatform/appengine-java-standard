@@ -193,7 +193,10 @@ public class JettyHttpProxy {
       this.appInfoFactory = new AppInfoFactory(env);
       this.evaluationRuntimeServerInterface = runtimeOptions.evaluationRuntimeServerInterface();
       this.upRequestTranslator =
-          new UPRequestTranslator(this.appInfoFactory, runtimeOptions.passThroughPrivateHeaders());
+          new UPRequestTranslator(
+              this.appInfoFactory,
+              runtimeOptions.passThroughPrivateHeaders(),
+              /*skipPostData=*/ false);
     }
 
     private void init() {
