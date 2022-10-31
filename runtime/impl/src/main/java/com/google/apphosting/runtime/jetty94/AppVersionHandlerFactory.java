@@ -101,17 +101,12 @@ public class AppVersionHandlerFactory {
   private final Server server;
   private final String serverInfo;
   private final WebAppContextFactory contextFactory;
-  private final boolean useJettyErrorPageHandler;
 
   public AppVersionHandlerFactory(
-      Server server,
-      String serverInfo,
-      WebAppContextFactory contextFactory,
-      boolean useJettyErrorPageHandler) {
+      Server server, String serverInfo, WebAppContextFactory contextFactory) {
     this.server = server;
     this.serverInfo = serverInfo;
     this.contextFactory = contextFactory;
-    this.useJettyErrorPageHandler = useJettyErrorPageHandler;
   }
 
   /**
@@ -151,11 +146,7 @@ public class AppVersionHandlerFactory {
       context.setServer(server);
       context.setDefaultsDescriptor(WEB_DEFAULTS_XML);
       context.setClassLoader(appVersion.getClassLoader());
-      if (useJettyErrorPageHandler) {
-        context.getErrorHandler().setShowStacks(false);
-      } else {
-        context.setErrorHandler(new NullErrorHandler());
-      }
+      context.setErrorHandler(new NullErrorHandler());
       File qswebxml = new File(contextRoot, "WEB-INF/quickstart-web.xml");
       if (qswebxml.exists()) {
         context.setConfigurationClasses(quickstartConfigurationClasses);
