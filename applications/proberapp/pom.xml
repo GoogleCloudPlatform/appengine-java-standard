@@ -41,6 +41,7 @@
 
         <appengine.target.version>${project.version}</appengine.target.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <appengine.runtime.location>target/${project.artifactId}-${project.version}</appengine.runtime.location>
     </properties>
 
     <dependencies>
