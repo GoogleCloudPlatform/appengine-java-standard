@@ -106,6 +106,7 @@ public abstract class CloudDatastoreRemoteServiceConfig {
         .hostOverride(hostOverride())
         .additionalAppIds(additionalAppIdsAsStrings())
         .serviceAccount(serviceAccount())
+        .accessToken(accessToken())
         .privateKey(privateKey())
         .useComputeEngineCredential(useComputeEngineCredential())
         .installApiProxyEnvironment(installApiProxyEnvironment())
@@ -179,6 +180,8 @@ public abstract class CloudDatastoreRemoteServiceConfig {
 
   abstract @Nullable PrivateKey privateKey();
 
+  abstract @Nullable String accessToken();
+
   abstract boolean useComputeEngineCredential();
 
   abstract int maxRetries();
@@ -187,8 +190,7 @@ public abstract class CloudDatastoreRemoteServiceConfig {
 
   abstract boolean asyncStackTraceCaptureEnabled();
 
-  @Nullable
-  ImmutableSet<String> additionalAppIdsAsStrings() {
+  @Nullable ImmutableSet<String> additionalAppIdsAsStrings() {
     if (additionalAppIds() == null) {
       return null;
     }
@@ -253,8 +255,8 @@ public abstract class CloudDatastoreRemoteServiceConfig {
      * If set to true, always use a Compute Engine credential instead of using the Application
      * Default Credentials library to construct the credential.
      *
-     * <p>Cannot be combined with a call to {@link #useServiceAccountCredential(String,
-     * PrivateKey)}.
+     * <p>Cannot be combined with a call to {@link #useServiceAccountCredential(String, PrivateKey)}
+     * or {@link #accessToken(String)}.
      */
     public abstract CloudDatastoreRemoteServiceConfig.Builder useComputeEngineCredential(
         boolean value);
@@ -274,10 +276,18 @@ public abstract class CloudDatastoreRemoteServiceConfig {
         boolean value);
 
     /**
+     * Sets the access token.
+     *
+     * <p>Cannot be combined with a call to {@link #useComputeEngineCredential(boolean)} or {@link
+     * #useServiceAccountCredential(String, PrivateKey)}.
+     */
+    public abstract CloudDatastoreRemoteServiceConfig.Builder accessToken(String accessToken);
+    /**
      * Instructs the client to use a service account credential instead of using the Application
      * Default Credentials library to construct the credential.
      *
-     * <p>Cannot be combined with a call to {@link #useComputeEngineCredential(boolean)}.
+     * <p>Cannot be combined with a call to {@link #useComputeEngineCredential(boolean)} or {@link
+     * #accessToken(String)}.
      */
     public CloudDatastoreRemoteServiceConfig.Builder useServiceAccountCredential(
         String serviceAccountId, PrivateKey privateKey) {

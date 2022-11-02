@@ -202,6 +202,9 @@ abstract class DatastoreServiceGlobalConfig {
   abstract String emulatorHost();
 
   @Nullable
+  abstract String accessToken();
+
+  @Nullable
   abstract String serviceAccount();
 
   @Nullable
@@ -258,6 +261,8 @@ abstract class DatastoreServiceGlobalConfig {
 
     abstract DatastoreServiceGlobalConfig.Builder useApiProxy(boolean value);
 
+    abstract DatastoreServiceGlobalConfig.Builder accessToken(String value);
+
     abstract DatastoreServiceGlobalConfig.Builder serviceAccount(String value);
 
     abstract DatastoreServiceGlobalConfig.Builder privateKey(PrivateKey value);
@@ -301,7 +306,8 @@ abstract class DatastoreServiceGlobalConfig {
         checkState(
             config.additionalAppIds() == null,
             "Cannot specify additional app IDs when using API proxy.");
-
+        checkState(
+            config.accessToken() == null, "Cannot specify access token when using API proxy.");
         checkState(
             config.serviceAccount() == null,
             "Cannot specify service account when using API proxy.");
@@ -346,6 +352,9 @@ abstract class DatastoreServiceGlobalConfig {
           !(config.serviceAccount() != null && config.useComputeEngineCredential()),
           "Must not provide a service account and at the same time require the use of Compute "
               + "Engine credentials.");
+      checkState(
+          config.accessToken() == null || config.serviceAccount() == null,
+          "Must not provide both an access token and a service account.");
 
       return config;
     }

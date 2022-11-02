@@ -323,6 +323,15 @@ final class CloudDatastoreV1ClientImpl implements CloudDatastoreV1Client {
       return new ComputeCredential(
           GoogleNetHttpTransport.newTrustedTransport(), GsonFactory.getDefaultInstance());
     }
+    if (DatastoreServiceGlobalConfig.getConfig().accessToken() != null) {
+      GoogleCredential credential =
+          getCredentialBuilder()
+              .build()
+              .setAccessToken(DatastoreServiceGlobalConfig.getConfig().accessToken())
+              .createScoped(DatastoreOptions.SCOPES);
+      credential.refreshToken();
+      return credential;
+    }
     return GoogleCredential.getApplicationDefault().createScoped(DatastoreOptions.SCOPES);
   }
 
@@ -347,10 +356,15 @@ final class CloudDatastoreV1ClientImpl implements CloudDatastoreV1Client {
 
   private static GoogleCredential.Builder getServiceAccountCredentialBuilder(String account)
       throws GeneralSecurityException, IOException {
-    return new GoogleCredential.Builder()
-        .setTransport(GoogleNetHttpTransport.newTrustedTransport())
-        .setJsonFactory(GsonFactory.getDefaultInstance())
+    return getCredentialBuilder()
         .setServiceAccountId(account)
         .setServiceAccountScopes(DatastoreOptions.SCOPES);
+  }
+
+  private static GoogleCredential.Builder getCredentialBuilder()
+      throws GeneralSecurityException, IOException {
+    return new GoogleCredential.Builder()
+        .setTransport(GoogleNetHttpTransport.newTrustedTransport())
+        .setJsonFactory(GsonFactory.getDefaultInstance());
   }
 }

@@ -228,6 +228,24 @@ public class RemoteApiOptions {
   }
 
   /**
+   * Use an access token credential. Overrides any previously-provided credentials.
+   *
+   * @param accessToken the access token (generally from {@link GoogleCredential#getAccessToken})
+   * @return this {@code RemoteApiOptions} instance
+   */
+  public RemoteApiOptions useAccessToken(String accessToken) {
+    try {
+      GoogleCredential credential = getCredentialBuilder().build().setAccessToken(accessToken);
+      credential = credential.createScoped(OAUTH_SCOPES);
+      credential.refreshToken();
+      setOAuthCredential(credential);
+    } catch (IOException | GeneralSecurityException e) {
+      throw new RuntimeException("Failed to build access token credential.", e);
+    }
+    return this;
+  }
+
+  /**
    * Use credentials appropriate for talking to the Development Server. Overrides any
    * previously-provided credentials.
    *
@@ -247,13 +265,16 @@ public class RemoteApiOptions {
     return this;
   }
 
-  private GoogleCredential.Builder getCredentialBuilder(String serviceAccountId)
+  private GoogleCredential.Builder getCredentialBuilder()
       throws GeneralSecurityException, IOException {
     HttpTransport transport = getOrCreateHttpTransportForOAuth();
     JsonFactory jsonFactory = GsonFactory.getDefaultInstance();
-    return new GoogleCredential.Builder()
-        .setTransport(transport)
-        .setJsonFactory(jsonFactory)
+    return new GoogleCredential.Builder().setTransport(transport).setJsonFactory(jsonFactory);
+  }
+
+  private GoogleCredential.Builder getCredentialBuilder(String serviceAccountId)
+      throws GeneralSecurityException, IOException {
+    return getCredentialBuilder()
         .setServiceAccountId(serviceAccountId)
         .setServiceAccountScopes(OAUTH_SCOPES);
   }
