@@ -381,7 +381,7 @@
       <dependency>
         <groupId>com.google.appengine</groupId>
         <artifactId>proto1</artifactId>
-        <version>0.6</version>
+        <version>0.7</version>
       </dependency>
       <dependency>
         <groupId>com.google.cloud.datastore</groupId>
