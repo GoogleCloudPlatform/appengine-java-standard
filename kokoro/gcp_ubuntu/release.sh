@@ -98,8 +98,8 @@ git checkout -b $RELEASE_NUMBER
 # Make sure `JAVA_HOME` is set.
 echo "JAVA_HOME = $JAVA_HOME"
 # compile all packages
-echo "Calling release:prepare and perform in verbose mode."
-./mvnw release:prepare release:perform -B -X --settings=../settings.xml -DskipTests -Darguments=-DskipTests -Dgpg.homedir=${GNUPGHOME} -Dgpg.passphrase=${GPG_PASSPHRASE}
+echo "Calling release:prepare and perform."
+./mvnw release:prepare release:perform -B -q --settings=../settings.xml -DskipTests -Darguments=-DskipTests -Dgpg.homedir=${GNUPGHOME} -Dgpg.passphrase=${GPG_PASSPHRASE}
 
 git config user.email gae-java-bot@google.com
 git config user.name gae-java-bot
