@@ -299,8 +299,8 @@ public class JavaRuntimeFactory {
             profilerConfigClass.getMethod("setHeapProfilerEnabled", boolean.class);
         setCpuProfilerEnabled.invoke(profilerConfig, params.getEnableCloudCpuProfiler());
         setHeapProfilerEnabled.invoke(profilerConfig, params.getEnableCloudHeapProfiler());
-        Method start = profilerClass.getMethod("start", profilerConfigClass);
-        start.invoke(null, profilerConfig);
+        // Method start = profilerClass.getMethod("start", profilerConfigClass);
+        // TODO (bs/258855140)  start.invoke(null, profilerConfig);
       } catch (Exception e) {
         logger.atWarning().withCause(e).log("Failed to start the profiler");
       }
