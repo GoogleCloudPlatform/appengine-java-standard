@@ -71,6 +71,7 @@ public class JettyHttpProxy {
   private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
   private static final String JETTY_LOG_CLASS = "org.eclipse.jetty.util.log.class";
   private static final String JETTY_STDERRLOG = "org.eclipse.jetty.util.log.StdErrLog";
+  private static final long MAX_REQUEST_SIZE = 32 * 1024 * 1024;
 
   /**
    * Based on the adapter configuration, this will start a new Jetty server in charge of proxying
@@ -110,11 +111,15 @@ public class JettyHttpProxy {
     config.setSendServerVersion(false);
     config.setSendXPoweredBy(false);
 
+    SizeLimitHandler sizeLimitHandler = new SizeLimitHandler(MAX_REQUEST_SIZE, -1);
+    sizeLimitHandler.setHandler(handler);
+
     GzipHandler gzip = new GzipHandler();
     gzip.setIncludedMethods("GET", "POST");
     gzip.setInflateBufferSize(8 * 1024);
+    gzip.setHandler(sizeLimitHandler);
+
     server.setHandler(gzip);
-    gzip.setHandler(handler);
 
     logger.atInfo().log("Starting Jetty http server for Java runtime proxy.");
     return server;

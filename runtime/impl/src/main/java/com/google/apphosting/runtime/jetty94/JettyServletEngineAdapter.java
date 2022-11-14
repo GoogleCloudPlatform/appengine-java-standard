@@ -49,6 +49,7 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
   private static final String DEFAULT_APP_YAML_PATH = "/WEB-INF/appengine-generated/app.yaml";
   private static final int MIN_THREAD_POOL_THREADS = 0;
   private static final int MAX_THREAD_POOL_THREADS = 100;
+  private static final long MAX_RESPONSE_SIZE = 32 * 1024 * 1024;
   private AppVersionKey lastAppVersionKey;
 
   static {
@@ -100,7 +101,9 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
         new AppVersionHandlerFactory(
             server, serverInfo, contextFactory, /*useJettyErrorPageHandler=*/ false);
     appVersionHandlerMap = new AppVersionHandlerMap(appVersionHandlerFactory);
-    server.setHandler(appVersionHandlerMap);
+    SizeLimitHandler sizeLimitHandler = new SizeLimitHandler(-1, MAX_RESPONSE_SIZE);
+    sizeLimitHandler.setHandler(appVersionHandlerMap);
+    server.setHandler(sizeLimitHandler);
 
     if (runtimeOptions.useJettyHttpProxy()) {
       server.setAttribute(
