@@ -46,11 +46,9 @@ public class IsolatedAppClassLoader extends URLClassLoader {
 
   private static final Logger logger = Logger.getLogger(IsolatedAppClassLoader.class.getName());
 
-  // Web-default.xml files for Jetty9 based devappserver1 and devappserver2.
+  // Web-default.xml files for Jetty9 based devappserver1.
   private static final String WEB_DEFAULT_LOCATION_DEVAPPSERVER1 =
       "com/google/appengine/tools/development/jetty9/webdefault.xml";
-  private static final String WEB_DEFAULT_LOCATION_DEVAPPSERVER2 =
-      "com/google/appengine/tools/development/devappserver2/webdefault/jetty9/webdefault.xml";
 
   // This task queue related servlet should be loaded by the application classloader when the
   // api jar is used by the application, and default to the runtime classloader when the application
@@ -84,11 +82,6 @@ public class IsolatedAppClassLoader extends URLClassLoader {
                     IsolatedAppClassLoader.class
                         .getClassLoader()
                         .getResourceAsStream(WEB_DEFAULT_LOCATION_DEVAPPSERVER1)))
-            .addAll(
-                getServletAndFilterClasses(
-                    IsolatedAppClassLoader.class
-                        .getClassLoader()
-                        .getResourceAsStream(WEB_DEFAULT_LOCATION_DEVAPPSERVER2)))
             .build();
   }
 

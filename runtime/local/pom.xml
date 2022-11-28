@@ -183,7 +183,6 @@
                 <filter>
                   <artifact>com.google.appengine:appengine-tools-sdk:*</artifact>
                   <includes>
-                    <include>com/google/appengine/tools/development/devappserver2/**</include>
                     <include>com/google/appengine/tools/development/proto/**</include>
                   </includes>
                 </filter>
