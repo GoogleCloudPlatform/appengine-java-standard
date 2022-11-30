@@ -800,7 +800,7 @@
                  https://github.com/protocolbuffers/protobuf/blob/master/java/pom.xml#L7
                  Read https://github.com/os72/protoc-jar-maven-plugin/issues/107 for context.
              -->
-             <protocVersion>3.21.7</protocVersion>
+             <protocVersion>3.21.9</protocVersion>
           </configuration>
         </plugin>
         <plugin>
