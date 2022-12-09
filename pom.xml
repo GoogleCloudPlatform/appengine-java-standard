@@ -51,7 +51,7 @@
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <jetty.version>9.4.49.v20220914</jetty.version>
+    <jetty.version>9.4.50.v20221201</jetty.version>
     <distributionManagement.snapshot.url>https://oss.sonatype.org/content/repositories/google-snapshots/</distributionManagement.snapshot.url>
     <distributionManagement.snapshot.id>sonatype-nexus-snapshots</distributionManagement.snapshot.id>
     <distributionManagement.release.url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</distributionManagement.release.url>
