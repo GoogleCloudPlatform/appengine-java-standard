@@ -191,10 +191,10 @@
                 <version>1.0</version>
                 <executions>
                     <execution>
-                        <id>rename-file</id>
+                        <id>copy-file</id>
                         <phase>pre-integration-test</phase>
                         <goals>
-                            <goal>rename</goal>
+                            <goal>copy</goal>
                         </goals>
                         <configuration>
                               <fileSets>
