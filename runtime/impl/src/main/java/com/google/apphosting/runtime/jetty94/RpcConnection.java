@@ -78,6 +78,7 @@ public class RpcConnection implements Connection, HttpTransport {
   private final RpcEndPoint endPoint;
   private final MutableUpResponse upResponse;
   private ByteString aggregate = ByteString.EMPTY;
+  private volatile Throwable abortedError;
 
   public RpcConnection(RpcConnector connector, RpcEndPoint endPoint) {
     this.connector = connector;
@@ -277,6 +278,10 @@ public class RpcConnection implements Connection, HttpTransport {
       exception = ex;
     }
 
+    if (exception == null) {
+      exception = abortedError;
+    }
+    
     if (exception != null) {
       Throwable cause = unwrap(exception);
       if (cause instanceof BadMessageException) {
@@ -399,7 +404,8 @@ public class RpcConnection implements Connection, HttpTransport {
   }
 
   @Override
-  public void abort(Throwable thrwbl) {
+  public void abort(Throwable t) {
+    abortedError = t;
     endPoint.close();
   }
 
