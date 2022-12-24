@@ -19,6 +19,9 @@ package com.google.appengine.api.datastore;
 import static com.google.appengine.api.datastore.DatastoreServiceConfig.Builder.withImplicitTransactionManagementPolicy;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
+import static org.mockito.AdditionalMatchers.aryEq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import com.google.appengine.api.datastore.DatastoreAttributes.DatastoreType;
 import com.google.apphosting.api.ApiProxy;
@@ -59,9 +62,10 @@ import java.util.List;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicLong;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.easymock.EasyMock;
 import org.junit.After;
 import org.junit.Before;
+import org.mockito.Mockito;
+import org.mockito.stubbing.OngoingStubbing;
 
 /**
  * Base class for Cloud Datastore v1 service tests. For ease of testing, the create.* and
@@ -75,8 +79,6 @@ public abstract class BaseCloudDatastoreV1ServiceImplTest {
   // Incrementing cursor position to ensure they are unique.
   private final AtomicLong cursorIndex = new AtomicLong(1L);
 
-  private List<Object> mocks;
-
   static final String APP_ID = "s~project-id";
 
   CloudDatastoreV1Client cloudDatastoreV1Client;
@@ -88,13 +90,12 @@ public abstract class BaseCloudDatastoreV1ServiceImplTest {
     DatastoreServiceGlobalConfig.setConfig(
         DatastoreServiceGlobalConfig.builder().appId(APP_ID).build());
 
-    cloudDatastoreV1Client = EasyMock.createMock(CloudDatastoreV1Client.class);
+    cloudDatastoreV1Client = mock(CloudDatastoreV1Client.class);
 
     txnStack = new TransactionStackImpl(new InstanceMemberThreadLocalTransactionStack());
     datastoreServiceConfig =
         withImplicitTransactionManagementPolicy(ImplicitTransactionManagementPolicy.AUTO)
             .readPolicy(new ReadPolicy(ReadPolicy.Consistency.STRONG));
-    resetMocks();
   }
 
   @After
@@ -404,17 +405,28 @@ public abstract class BaseCloudDatastoreV1ServiceImplTest {
   }
 
   ByteString expectBeginTransaction() {
-    ByteString remoteTxn = ByteString.copyFromUtf8(Long.toString(transactionId.getAndIncrement()));
-    EasyMock.expect(
+    return expectBeginTransaction(1).get(0);
+  }
+
+  ImmutableList<ByteString> expectBeginTransaction(int transactionCount) {
+    ImmutableList.Builder<ByteString> builder = ImmutableList.builder();
+    OngoingStubbing<Future<BeginTransactionResponse>> stubbing =
+        when(
             cloudDatastoreV1Client.beginTransaction(
                 BeginTransactionRequest.newBuilder()
                     .setTransactionOptions(
                         com.google.datastore.v1.TransactionOptions.getDefaultInstance())
-                    .build()))
-        .andReturn(
-            Futures.immediateFuture(
-                BeginTransactionResponse.newBuilder().setTransaction(remoteTxn).build()));
-    return remoteTxn;
+                    .build()));
+    for (int i = 0; i < transactionCount; i++) {
+      ByteString remoteTxn =
+          ByteString.copyFromUtf8(Long.toString(transactionId.getAndIncrement()));
+      stubbing =
+          stubbing.thenReturn(
+              Futures.immediateFuture(
+                  BeginTransactionResponse.newBuilder().setTransaction(remoteTxn).build()));
+      builder.add(remoteTxn);
+    }
+    return builder.build();
   }
 
   CommitResponse expectCommit(@Nullable ByteString remoteTxn) {
@@ -454,8 +466,7 @@ public abstract class BaseCloudDatastoreV1ServiceImplTest {
 
   void expectCommitRequest(CommitRequest req, Future<CommitResponse> future) {
     try {
-      EasyMock.expect(cloudDatastoreV1Client.rawCommit(EasyMock.aryEq(req.toByteArray())))
-          .andReturn(future);
+      when(cloudDatastoreV1Client.rawCommit(aryEq(req.toByteArray()))).thenReturn(future);
     } catch (InvalidProtocolBufferException e) {
       throw new RuntimeException(e);
     }
@@ -473,15 +484,14 @@ public abstract class BaseCloudDatastoreV1ServiceImplTest {
   }
 
   void expectLookup(LookupRequest req, Future<LookupResponse> future) {
-    EasyMock.expect(cloudDatastoreV1Client.lookup(req)).andReturn(future);
+    when(cloudDatastoreV1Client.lookup(req)).thenReturn(future);
   }
 
   void expectRollback(@Nullable ByteString remoteTxn) {
     if (remoteTxn != null) {
-      EasyMock.expect(
-              cloudDatastoreV1Client.rollback(
-                  RollbackRequest.newBuilder().setTransaction(remoteTxn).build()))
-          .andReturn(Futures.immediateFuture(RollbackResponse.newBuilder().build()));
+      when(cloudDatastoreV1Client.rollback(
+              RollbackRequest.newBuilder().setTransaction(remoteTxn).build()))
+          .thenReturn(Futures.immediateFuture(RollbackResponse.getDefaultInstance()));
     }
   }
 
@@ -493,7 +503,7 @@ public abstract class BaseCloudDatastoreV1ServiceImplTest {
   }
 
   void expectAllocateIds(AllocateIdsRequest req, Future<AllocateIdsResponse> future) {
-    EasyMock.expect(cloudDatastoreV1Client.allocateIds(req)).andReturn(future);
+    when(cloudDatastoreV1Client.allocateIds(req)).thenReturn(future);
   }
 
   void expectRunQuery(Query query, FetchOptions fetchOptions, RunQueryResponse resp) {
@@ -501,13 +511,12 @@ public abstract class BaseCloudDatastoreV1ServiceImplTest {
   }
 
   void expectRunQuery(RunQueryRequest.Builder req, RunQueryResponse resp) {
-    EasyMock.expect(cloudDatastoreV1Client.runQuery(req.build()))
-        .andReturn(Futures.immediateFuture(resp));
+    when(cloudDatastoreV1Client.runQuery(req.build())).thenReturn(Futures.immediateFuture(resp));
   }
 
   void expectRunQuery(RunQueryRequest req, Code code) {
-    EasyMock.expect(cloudDatastoreV1Client.runQuery(req))
-        .andReturn(
+    when(cloudDatastoreV1Client.runQuery(req))
+        .thenReturn(
             Futures.immediateFailedFuture(
                 DatastoreApiHelper.createV1Exception(code, "message", null)));
   }
@@ -523,16 +532,7 @@ public abstract class BaseCloudDatastoreV1ServiceImplTest {
     return newEntity;
   }
 
-  void replay() {
-    EasyMock.replay(mocks.toArray());
-  }
-
   void resetMocks() {
-    mocks = ImmutableList.of(cloudDatastoreV1Client);
-    EasyMock.reset(mocks.toArray());
-  }
-
-  void verify() {
-    EasyMock.verify(mocks.toArray());
+    Mockito.reset(cloudDatastoreV1Client);
   }
 }

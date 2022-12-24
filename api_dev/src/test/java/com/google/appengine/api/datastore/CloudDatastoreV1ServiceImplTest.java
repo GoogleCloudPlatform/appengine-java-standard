@@ -101,7 +101,6 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
 
     expectRunQuery(
         query, withLimit(3), createRunQueryResponse(NO_MORE_RESULTS, 0, golden1, golden2, golden3));
-    replay();
     List<Entity> entities = newDatastoreService().prepare(query).asList(withLimit(3));
     int unused = entities.size(); // force all results to be pulled back
 
@@ -109,7 +108,6 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
     assertEntityEquals(golden1, entities.get(0));
     assertEntityEquals(golden2, entities.get(1));
     assertEntityEquals(golden3, entities.get(2));
-    verify();
   }
 
   @Test
@@ -128,11 +126,9 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
     expectLookup(lookupRequest, createLookupResponse(golden));
     expectCommit(remoteTxn);
 
-    replay();
     Entity entity = newDatastoreService().get(key);
 
     assertEntityEquals(golden, entity);
-    verify();
   }
 
   @Test
@@ -155,13 +151,11 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
     expectLookup(lookupRequest, createLookupResponse(golden1, golden2));
     expectCommit(remoteTxn);
 
-    replay();
     Map<Key, Entity> entities =
         newDatastoreService().get(Arrays.asList(golden1.getKey(), golden2.getKey()));
 
     assertEntityEquals(golden1, entities.get(golden1.getKey()));
     assertEntityEquals(golden2, entities.get(golden2.getKey()));
-    verify();
   }
 
   @Test
@@ -179,12 +173,10 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
             Collections.singletonList(key), /* missingKeys */
             Collections.<Key>emptyList())); /* deferredKeys */
 
-    replay();
 
     EntityNotFoundException ex =
         assertThrows(EntityNotFoundException.class, () -> newDatastoreService().get(key));
     assertThat(ex.getKey()).isEqualTo(key);
-    verify();
   }
 
   @Test
@@ -208,12 +200,10 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
             Collections.<Key>emptyList())); /* deferredKeys */
     expectCommit(remoteTxn);
 
-    replay();
 
     EntityNotFoundException ex =
         assertThrows(EntityNotFoundException.class, () -> newDatastoreService().get(key));
     assertThat(ex.getKey()).isEqualTo(key);
-    verify();
   }
 
   @Test
@@ -224,13 +214,11 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
 
     ByteString remoteTxn = expectBeginTransaction();
     expectCommit(remoteTxn);
-    replay();
 
     DatastoreService ds = newDatastoreService();
     Transaction txn = ds.beginTransaction();
     txn.commit();
     assertThrows(IllegalStateException.class, () -> ds.get(txn, key));
-    verify();
   }
 
   @Test
@@ -239,13 +227,11 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
 
     ByteString remoteTxn = expectBeginTransaction();
     expectCommit(remoteTxn);
-    replay();
 
     DatastoreService ds = newDatastoreService();
     Transaction txn = ds.beginTransaction();
     txn.commit();
     assertThrows(IllegalStateException.class, () -> ds.put(txn, golden));
-    verify();
   }
 
   @Test
@@ -256,13 +242,11 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
 
     ByteString remoteTxn = expectBeginTransaction();
     expectCommit(remoteTxn);
-    replay();
 
     DatastoreService ds = newDatastoreService();
     Transaction txn = ds.beginTransaction();
     txn.commit();
     assertThrows(IllegalStateException.class, () -> ds.delete(txn, key));
-    verify();
   }
 
   @Test
@@ -300,7 +284,6 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
     expectRunQuery(req, createRunQueryResponse(NO_MORE_RESULTS, 0));
     expectCommit(txn);
 
-    replay();
 
     DatastoreService ds = newDatastoreService();
     Transaction started = ds.beginTransaction();
@@ -310,7 +293,6 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
     assertEntityEquals(iterator.next(), golden1);
     started.commit();
     assertThrows(IllegalStateException.class, iterator::next);
-    verify();
   }
 
   @Test
@@ -333,7 +315,6 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
     }
     assertThat(golden.getKey().isComplete()).isFalse();
 
-    replay();
     Key newKey = newDatastoreService().put(golden);
 
     assertThat(newKey.isComplete()).isTrue();
@@ -341,7 +322,6 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
     // Also make sure that it updated the existing Key in place.
     assertThat(golden.getKey()).isSameInstanceAs(newKey);
     assertThat(golden.getProperty("aNull")).isEqualTo(null);
-    verify();
   }
 
   @Test
@@ -359,14 +339,12 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
     assertThat(golden.getKey().isComplete()).isTrue();
 
     String keyToString = golden.getKey().toString();
-    replay();
     Key newKey = newDatastoreService().put(golden);
 
     assertThat(golden.getKey().isComplete()).isTrue();
     assertThat(golden.getKey()).isSameInstanceAs(newKey);
     // Easy way to check that golden.getKey() didn't change.
     assertThat(golden.getKey().toString()).isEqualTo(keyToString);
-    verify();
   }
 
   @Test
@@ -416,7 +394,6 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
     assertThat(golden3.getKey().isComplete()).isFalse();
     assertThat(golden4.getKey().isComplete()).isFalse();
 
-    replay();
     List<Key> keys = datastore.put(golden);
 
     assertThat(golden1.getKey().isComplete()).isTrue();
@@ -432,7 +409,6 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
     assertThat(golden2.getKey().getId()).isEqualTo(6789L);
     assertThat(golden3.getKey().getId()).isEqualTo(42L);
     assertThat(golden4.getKey().getId()).isEqualTo(43L);
-    verify();
   }
 
   @Test
@@ -463,9 +439,7 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
       expectCommit(createDeleteCommitRequest(remoteTxn, golden1, golden2, golden3, golden4));
     }
 
-    replay();
     datastore.delete(golden);
-    verify();
   }
 
   @Test
@@ -535,7 +509,6 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
     }
     expectCommit(remoteTxn);
 
-    replay();
     Map<Key, Entity> entities = datastore.get(golden);
 
     assertThat(entities).hasSize(5);
@@ -544,7 +517,6 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
     assertEntityEquals(golden3, entities.get(golden3.getKey()));
     assertEntityEquals(golden4, entities.get(golden4.getKey()));
     assertEntityEquals(golden5, entities.get(golden5.getKey()));
-    verify();
   }
 
   @Test
@@ -589,7 +561,6 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
     assertThat(golden2.getKey().isComplete()).isFalse();
     assertThat(golden3.getKey().isComplete()).isFalse();
 
-    replay();
     List<Key> keys = datastore.put(golden);
 
     assertThat(golden1.getKey().isComplete()).isTrue();
@@ -599,7 +570,6 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
     assertThat(golden1.getKey()).isEqualTo(keys.get(0));
     assertThat(golden2.getKey()).isEqualTo(keys.get(1));
     assertThat(golden3.getKey()).isEqualTo(keys.get(2));
-    verify();
   }
 
   @Test
@@ -635,9 +605,7 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
       expectCommit(createDeleteCommitRequest(remoteTxn, golden));
     }
 
-    replay();
     datastore.delete(golden);
-    verify();
   }
 
   @Test
@@ -671,14 +639,12 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
     expectLookup(remoteTxn, golden1, golden2);
     expectLookup(remoteTxn, golden3);
 
-    replay();
     Map<Key, Entity> entities = datastore.get(golden);
 
     assertThat(entities).hasSize(3);
     assertEntityEquals(golden1, entities.get(golden1.getKey()));
     assertEntityEquals(golden2, entities.get(golden2.getKey()));
     assertEntityEquals(golden3, entities.get(golden3.getKey()));
-    verify();
   }
 
   @Test
@@ -731,9 +697,7 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
       assertThat(entity.getKey().isComplete()).isFalse();
     }
 
-    replay();
     List<Key> keys = datastore.put(golden);
-    verify();
 
     for (Entity entity : golden) {
       assertThat(entity.getKey().isComplete()).isTrue();
@@ -766,9 +730,7 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
       expectCommit(createPutCommitRequest(remoteTxn, golden1, golden2, golden3));
     }
 
-    replay();
     datastore.put(golden);
-    verify();
   }
 
   @Test
@@ -812,9 +774,7 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
     } else {
       expectCommit(createDeleteCommitRequest(remoteTxn, golden1, golden2, golden3));
     }
-    replay();
     datastore.delete(golden);
-    verify();
 
     resetMocks();
 
@@ -837,9 +797,7 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
       expectCommit(createDeleteCommitRequest(remoteTxn, golden1, golden2, golden3));
     }
 
-    replay();
     datastore.delete(golden);
-    verify();
   }
 
   @Test
@@ -851,11 +809,9 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
     expectCommit(createDeleteCommitRequest(maybeExpectBeginTransaction()));
 
     // No calls besides transactions are actually made
-    replay();
     datastore.get(Arrays.<Key>asList());
     datastore.put(Arrays.<Entity>asList());
     datastore.delete(Arrays.<Key>asList());
-    verify();
   }
 
   @Test
@@ -899,9 +855,7 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
     expectLookup(lookupRequest1, createLookupResponse(golden1));
     expectLookup(lookupRequest2, createLookupResponse(golden2, golden3));
 
-    replay();
     Map<Key, Entity> entities = datastore.get(golden);
-    verify();
 
     assertThat(entities).hasSize(3);
     assertEntityEquals(golden1, entities.get(golden1.getKey()));
@@ -929,14 +883,12 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
     expectLookup(lookupRequest1, createLookupResponse(golden1, golden2));
     expectLookup(lookupRequest2, createLookupResponse(golden3));
 
-    replay();
     entities = datastore.get(golden);
 
     assertThat(entities).hasSize(3);
     assertEntityEquals(golden1, entities.get(golden1.getKey()));
     assertEntityEquals(golden2, entities.get(golden2.getKey()));
     assertEntityEquals(golden3, entities.get(golden3.getKey()));
-    verify();
   }
 
   @Test
@@ -944,12 +896,12 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
     datastoreServiceConfig.maxRpcSizeBytes(0);
     DatastoreService datastore = newDatastoreService();
 
-    Entity golden1 = new Entity("Foo");
+    Entity golden1 = new Entity("Foo1");
     golden1.setProperty("aString", "test");
     golden1.setProperty("anInteger", 41);
     golden1.setProperty("aFloat", 61.3);
 
-    Entity golden2 = new Entity("Foo");
+    Entity golden2 = new Entity("Foo2");
     golden2.setProperty("aString", "test");
     golden2.setProperty("anInteger", 42);
     golden2.setProperty("aFloat", 62.3);
@@ -971,7 +923,6 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
     assertThat(golden1.getKey().isComplete()).isFalse();
     assertThat(golden2.getKey().isComplete()).isFalse();
 
-    replay();
     List<Key> keys = datastore.put(golden);
 
     assertThat(golden1.getKey().isComplete()).isTrue();
@@ -979,7 +930,6 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
     assertThat(keys).hasSize(2);
     assertThat(golden1.getKey()).isEqualTo(keys.get(0));
     assertThat(golden2.getKey()).isEqualTo(keys.get(1));
-    verify();
   }
 
   @Test
@@ -1009,9 +959,7 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
       expectCommit(createDeleteCommitRequest(remoteTxn, golden));
     }
 
-    replay();
     datastore.delete(golden);
-    verify();
   }
 
   @Test
@@ -1041,13 +989,11 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
     expectLookup(lookupRequest1, createLookupResponse(golden1));
     expectLookup(lookupRequest2, createLookupResponse(golden2));
 
-    replay();
     Map<Key, Entity> entities = datastore.get(golden);
 
     assertThat(entities).hasSize(2);
     assertEntityEquals(golden1, entities.get(golden1.getKey()));
     assertEntityEquals(golden2, entities.get(golden2.getKey()));
-    verify();
   }
 
   @Test
@@ -1075,7 +1021,6 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
     assertThat(golden1.getKey().isComplete()).isFalse();
     assertThat(golden2.getKey().isComplete()).isFalse();
 
-    replay();
     List<Key> keys = newDatastoreService().put(Arrays.asList(golden1, golden2));
 
     assertThat(golden1.getKey().isComplete()).isTrue();
@@ -1083,25 +1028,21 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
     assertThat(keys).hasSize(2);
     assertThat(golden1.getKey()).isEqualTo(keys.get(0));
     assertThat(golden2.getKey()).isEqualTo(keys.get(1));
-    verify();
   }
 
   @Test
   public void testPutThrowsBadRequestException() throws Exception {
     assertThrows(IllegalArgumentException.class, () -> putAndReturnError(Code.INVALID_ARGUMENT));
-    verify();
   }
 
   @Test
   public void testPutThrowsGeneralError() throws Exception {
     assertThrows(DatastoreFailureException.class, () -> putAndReturnError(Code.INTERNAL));
-    verify();
   }
 
   @Test
   public void testPutThrowsTimeoutException() throws Exception {
     assertThrows(DatastoreTimeoutException.class, () -> putAndReturnError(Code.DEADLINE_EXCEEDED));
-    verify();
   }
 
   private void putAndReturnError(Code code) throws Exception {
@@ -1115,7 +1056,6 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
     ByteString remoteTxn = maybeExpectBeginTransaction();
     CommitRequest putRequest = createPutCommitRequest(remoteTxn, golden).build();
     expectCommit(putRequest, code);
-    replay();
     newDatastoreService().put(golden);
     throw new AssertionError("should have thrown an exception");
   }
@@ -1134,9 +1074,7 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
 
     expectCommit(createDeleteCommitRequest(remoteTxn, ImmutableList.of(key)));
 
-    replay();
     newDatastoreService().delete(key);
-    verify();
   }
 
   @Test
@@ -1155,9 +1093,7 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
 
     expectCommit(createDeleteCommitRequest(maybeExpectBeginTransaction(), golden, silver));
 
-    replay();
     newDatastoreService().delete(golden.getKey(), silver.getKey());
-    verify();
   }
 
   @Test
@@ -1166,9 +1102,7 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
     Key key = new Key("Foo", "name");
     expectCommit(createDeleteCommitRequest(remoteTxn, ImmutableList.of(key)));
 
-    replay();
     newDatastoreService().delete(key);
-    verify();
   }
 
   @Test
@@ -1193,16 +1127,13 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
     expectRunQuery(
         query, withLimit(3), createRunQueryResponse(NO_MORE_RESULTS, 0, golden1, golden2, golden3));
 
-    replay();
     List<Entity> entities = newDatastoreService().prepare(query).asList(withLimit(3));
     int unused = entities.size(); // force all results to be pulled back
-    verify();
 
     assertThat(entities).hasSize(3);
     assertEntityEquals(golden1, entities.get(0));
     assertEntityEquals(golden2, entities.get(1));
     assertEntityEquals(golden3, entities.get(2));
-    verify();
   }
 
   @Test
@@ -1226,7 +1157,6 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
     }
     expectRunQueryReq(query, withChunkSize(20).startCursor(cursor), NO_MORE_RESULTS, 0);
 
-    replay();
     Iterator<Entity> iterator = newDatastoreService().prepare(query).asIterator(withChunkSize(20));
 
     for (Entity[] entitiesArr : entities) {
@@ -1238,7 +1168,6 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
 
     assertThat(iterator.hasNext()).isFalse();
     assertThrows(NoSuchElementException.class, iterator::next);
-    verify();
   }
 
   @Test
@@ -1257,7 +1186,6 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
 
     Cursor cursor = expectRunQueryReq(query, withLimit(2), NOT_FINISHED, 0, golden1);
     expectRunQueryReq(query, withLimit(1).startCursor(cursor), NO_MORE_RESULTS, 0, golden2);
-    replay();
 
     Iterator<Entity> iterator = newDatastoreService().prepare(query).asIterator(withLimit(2));
 
@@ -1297,7 +1225,6 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
     // We do another query even though we have already returned the requested results. Huh.
     expectRunQueryReq(query, withLimit(0).startCursor(cursor3).chunkSize(1), NO_MORE_RESULTS, 0);
 
-    replay();
 
     FetchOptions fs = withLimit(2).chunkSize(1);
     Iterator<Entity> iterator = newDatastoreService().prepare(query).asIterator(fs);
@@ -1310,7 +1237,6 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
 
     assertThat(iterator.hasNext()).isFalse();
     assertThrows(NoSuchElementException.class, iterator::next);
-    verify();
   }
 
   @Test
@@ -1330,7 +1256,6 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
     Cursor cursor1 = expectRunQueryReq(query, withOffset(1), NOT_FINISHED, 1);
     expectRunQueryReq(query, withStartCursor(cursor1), NO_MORE_RESULTS, 0, golden1, golden2);
 
-    replay();
 
     Iterator<Entity> iterator = newDatastoreService().prepare(query).asIterator(withOffset(1));
 
@@ -1342,7 +1267,6 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
 
     assertThat(iterator.hasNext()).isFalse();
     assertThrows(NoSuchElementException.class, iterator::next);
-    verify();
   }
 
   @Test
@@ -1365,7 +1289,6 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
         expectRunQueryReq(
             query, withOffset(1).limit(3).startCursor(cursor1), NOT_FINISHED, 1, golden1);
     expectRunQueryReq(query, withLimit(2).startCursor(cursor2), NO_MORE_RESULTS, 1, golden2);
-    replay();
 
     Iterator<Entity> iterator =
         newDatastoreService().prepare(query).asIterator(withOffset(1).limit(3));
@@ -1378,7 +1301,6 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
 
     assertThat(iterator.hasNext()).isFalse();
     assertThrows(NoSuchElementException.class, iterator::next);
-    verify();
   }
 
   @Test
@@ -1402,11 +1324,9 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
     expectRunQuery(
         createRunQueryRequest(query, withStartCursor(cursor)).build(), Code.DEADLINE_EXCEEDED);
 
-    replay();
     Iterator<Entity> itr = ds.prepare(query).asIterator();
     itr.next();
     assertThrows(DatastoreTimeoutException.class, itr::next);
-    verify();
   }
 
   @Test
@@ -1427,13 +1347,11 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
         new Entity("Foo"),
         new Entity("Foo"));
 
-    replay();
     QueryResultIteratorImpl itr =
         (QueryResultIteratorImpl)
             newDatastoreService().prepare(query).asQueryResultIterator(withOffset(6));
     assertThat(itr.getNumSkipped()).isEqualTo(6);
     assertThat(Lists.newArrayList(itr)).hasSize(3);
-    verify();
   }
 
   @Test
@@ -1457,11 +1375,9 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
     expectRunQueryReq(
         query, withLimit(2).startCursor(cursor3), NO_MORE_RESULTS, 3, new Entity("Foo"));
 
-    replay();
     QueryResultList<Entity> list =
         newDatastoreService().prepare(query).asQueryResultList(withOffset(6).limit(5));
     assertThat(list).hasSize(4);
-    verify();
   }
 
   @Test
@@ -1475,13 +1391,11 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
     Cursor cursor3 = expectRunQueryReq(query, withOffset(3).startCursor(cursor2), NOT_FINISHED, 0);
     expectRunQueryReq(query, withOffset(3).startCursor(cursor3), NO_MORE_RESULTS, 0);
 
-    replay();
     QueryResultIteratorImpl itr =
         (QueryResultIteratorImpl)
             newDatastoreService().prepare(query).asQueryResultIterator(withOffset(6));
     assertThat(itr.getNumSkipped()).isEqualTo(3);
     assertThat(Lists.newArrayList(itr)).isEmpty();
-    verify();
   }
 
   @Test
@@ -1504,14 +1418,12 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
             new Entity("Foo"));
     expectRunQueryReq(query, withStartCursor(cursor3).compile(true), NO_MORE_RESULTS, 3);
 
-    replay();
     QueryResultIteratorImpl itr =
         (QueryResultIteratorImpl)
             newDatastoreService().prepare(query).asQueryResultIterator(withOffset(6));
     assertThat(itr.getNumSkipped()).isEqualTo(6);
     assertThat(Lists.newArrayList(itr)).hasSize(3);
     assertThat(itr.getNumSkipped()).isEqualTo(9);
-    verify();
   }
 
   @Test
@@ -1521,9 +1433,7 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
     query.addFilter("prop2", Query.FilterOperator.EQUAL, "value2");
 
     expectRunQuery(query, withOffset(1000).limit(0), createRunQueryResponse(NO_MORE_RESULTS, 3));
-    replay();
     assertThat(newDatastoreService().prepare(query).countEntities()).isEqualTo(3);
-    verify();
   }
 
   @Test
@@ -1534,9 +1444,7 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
 
     expectRunQuery(
         query, withOffset(Integer.MAX_VALUE).limit(0), createRunQueryResponse(NO_MORE_RESULTS, 3));
-    replay();
     assertThat(newDatastoreService().prepare(query).countEntities(withDefaults())).isEqualTo(3);
-    verify();
   }
 
   @Test
@@ -1547,9 +1455,7 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
 
     expectRunQuery(
         query, withOffset(Integer.MAX_VALUE).limit(0), createRunQueryResponse(NO_MORE_RESULTS, 8));
-    replay();
     assertThat(newDatastoreService().prepare(query).countEntities(withOffset(5))).isEqualTo(3);
-    verify();
   }
 
   @Test
@@ -1559,9 +1465,7 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
     query.addFilter("prop2", Query.FilterOperator.EQUAL, "value2");
 
     expectRunQuery(query, withOffset(5).limit(0), createRunQueryResponse(NO_MORE_RESULTS, 3));
-    replay();
     assertThat(newDatastoreService().prepare(query).countEntities(withLimit(5))).isEqualTo(3);
-    verify();
   }
 
   @Test
@@ -1573,14 +1477,12 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
     expectRunQuery(query, withOffset(9).limit(0), createRunQueryResponse(NO_MORE_RESULTS, 3));
     expectRunQuery(query, withOffset(9).limit(0), createRunQueryResponse(NO_MORE_RESULTS, 3));
     expectRunQuery(query, withOffset(9).limit(0), createRunQueryResponse(NO_MORE_RESULTS, 3));
-    replay();
     assertThat(newDatastoreService().prepare(query).countEntities(withLimit(5).offset(4)))
         .isEqualTo(0);
     assertThat(newDatastoreService().prepare(query).countEntities(withLimit(6).offset(3)))
         .isEqualTo(0);
     assertThat(newDatastoreService().prepare(query).countEntities(withLimit(7).offset(2)))
         .isEqualTo(1);
-    verify();
   }
 
   @Test
@@ -1594,7 +1496,6 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
         withOffset(Integer.MAX_VALUE).limit(0),
         // causes (skipped - offset) to overflow
         createRunQueryResponse(NO_MORE_RESULTS, -10));
-    replay();
     assertThat(
             newDatastoreService()
                 .prepare(query)
@@ -1602,7 +1503,6 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
                     // causes (offset + limit) to overflow
                     withLimit(Integer.MAX_VALUE - 2).offset(Integer.MAX_VALUE - 2)))
         .isEqualTo(0);
-    verify();
   }
 
   @Test
@@ -1646,7 +1546,6 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
             golden1,
             golden2);
     expectRunQueryReq(query, withStartCursor(cursor2).chunkSize(chunkSize), NO_MORE_RESULTS, 0);
-    replay();
 
     DatastoreService ds = newDatastoreService();
     Transaction started = ds.beginTransaction();
@@ -1661,7 +1560,6 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
     assertThat(iterator.hasNext()).isFalse();
     assertThrows(NoSuchElementException.class, iterator::next);
     started.commit();
-    verify();
   }
 
   @Test
@@ -1670,10 +1568,8 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
     query.setAncestor(KeyFactory.createKey("Foo", "name"));
 
     expectRunQuery(query, withOffset(100).limit(0), createRunQueryResponse(NO_MORE_RESULTS, 3));
-    replay();
     DatastoreService ds = newDatastoreService();
     assertThat(ds.prepare(query).countEntities(withLimit(100))).isEqualTo(3);
-    verify();
   }
 
   @Test
@@ -1683,12 +1579,10 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
 
     ByteString txn = expectBeginTransaction();
     expectCommit(txn);
-    replay();
     DatastoreService ds = newDatastoreService();
     Transaction started = ds.beginTransaction();
     started.commit();
     assertThrows(IllegalStateException.class, () -> ds.prepare(started, query));
-    verify();
   }
 
   @Test
@@ -1698,12 +1592,10 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
 
     ByteString txn = expectBeginTransaction();
     expectRollback(txn);
-    replay();
     DatastoreService ds = newDatastoreService();
     Transaction started = ds.beginTransaction();
     started.rollback();
     assertThrows(IllegalStateException.class, () -> ds.prepare(started, query));
-    verify();
   }
 
   @Test
@@ -1712,9 +1604,7 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
 
     expectRunQuery(query, withLimit(2), createRunQueryResponse(NO_MORE_RESULTS, 0));
 
-    replay();
     assertThat(newDatastoreService().prepare(query).asSingleEntity()).isNull();
-    verify();
   }
 
   @Test
@@ -1770,14 +1660,12 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
     Cursor cursor4 = expectRunQueryReq(query, withStartCursor(cursor3), NOT_FINISHED, 0);
     expectRunQueryReq(query, withStartCursor(cursor4), NO_MORE_RESULTS, 0);
 
-    replay();
     List<Entity> entities = newDatastoreService().prepare(query).asList(withDefaults());
     int unused = entities.size(); // force all results to get pulled back
 
     assertThat(entities).hasSize(2);
     assertEntityEquals(golden1, entities.get(0));
     assertEntityEquals(golden1, entities.get(1));
-    verify();
   }
 
   @Test
@@ -1793,11 +1681,9 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
     batch2.setEndCursor(cursor1.toByteString());
     expectRunQuery(query, withStartCursor(cursor1), createRunQueryResponse(batch2));
 
-    replay();
     List<Entity> entities = newDatastoreService().prepare(query).asList(withDefaults());
     // force all results to get pulled back
     assertThrows(DatastoreTimeoutException.class, entities::size);
-    verify();
   }
 
   @Test
@@ -1815,11 +1701,9 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
     batch1.clearEndCursor();
     expectRunQuery(query, withDefaults(), createRunQueryResponse(batch1));
 
-    replay();
     List<Entity> entities = newDatastoreService().prepare(query).asList(withDefaults());
     // force all results to get pulled back
     assertThrows(IllegalStateException.class, entities::size);
-    verify();
   }
 
   @Test
@@ -1834,11 +1718,9 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
     batch2.clearEndCursor();
     expectRunQuery(query, withStartCursor(cursor1), createRunQueryResponse(batch2));
 
-    replay();
     List<Entity> entities = newDatastoreService().prepare(query).asList(withDefaults());
     // force all results to get pulled back
     assertThrows(IllegalStateException.class, entities::size);
-    verify();
   }
 
   @Test
@@ -1851,10 +1733,8 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
     Query query = new Query("Foo");
 
     expectRunQuery(query, withLimit(2), createRunQueryResponse(NO_MORE_RESULTS, 0, golden1));
-    replay();
 
     assertEntityEquals(golden1, newDatastoreService().prepare(query).asSingleEntity());
-    verify();
   }
 
   @Test
@@ -1874,11 +1754,9 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
     expectRunQuery(
         query, withLimit(2), createRunQueryResponse(NO_MORE_RESULTS, 0, golden1, golden2));
 
-    replay();
     assertThrows(
         PreparedQuery.TooManyResultsException.class,
         () -> newDatastoreService().prepare(query).asSingleEntity());
-    verify();
   }
 
   Future<BeginTransactionResponse> newTxnFuture(ByteString txHandle) {
@@ -1895,7 +1773,6 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
     RunQueryRequest.Builder runQueryReq = createRunQueryRequest(query, withLimit(2));
     runQueryReq.getReadOptionsBuilder().setTransaction(txHandle);
     expectRunQuery(runQueryReq, createRunQueryResponse(NO_MORE_RESULTS, 0, entity));
-    replay();
 
     DatastoreService ds = newDatastoreService();
 
@@ -1905,7 +1782,6 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
 
     Transaction txn = new TransactionImpl(APP_ID.toString(), null, null, true, internalTransaction);
     assertThat(ds.prepare(txn, query).asSingleEntity().getKey()).isEqualTo(entity.getKey());
-    verify();
   }
 
   @Test
@@ -1913,24 +1789,22 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
     ByteString remoteTxn = expectBeginTransaction();
     expectCommit(remoteTxn);
 
-    replay();
     DatastoreService ds = newDatastoreService();
     Transaction txn = ds.beginTransaction();
     assertThat(ds.getCurrentTransaction()).isEqualTo(txn);
     txn.commit();
     assertThat(ds.getCurrentTransaction(null)).isNull();
-    verify();
   }
 
   @Test
   public void testCurrentTransaction_Nested_CommitCommit() {
-    ByteString remoteTxn1 = expectBeginTransaction();
-    ByteString remoteTxn2 = expectBeginTransaction();
+    ImmutableList<ByteString> transactions = expectBeginTransaction(2);
+    ByteString remoteTxn1 = transactions.get(0);
+    ByteString remoteTxn2 = transactions.get(1);
 
     expectCommit(remoteTxn1);
     expectCommit(remoteTxn2);
 
-    replay();
     DatastoreService ds = newDatastoreService();
     Transaction txn1 = ds.beginTransaction();
     assertThat(ds.getCurrentTransaction()).isEqualTo(txn1);
@@ -1940,18 +1814,17 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
     assertThat(ds.getCurrentTransaction()).isEqualTo(txn1);
     txn1.commit();
     assertThat(ds.getCurrentTransaction(null)).isNull();
-    verify();
   }
 
   @Test
   public void testCurrentTransaction_Nested_CommitRollback() {
-    ByteString remoteTxn1 = expectBeginTransaction();
-    ByteString remoteTxn2 = expectBeginTransaction();
+    ImmutableList<ByteString> transactions = expectBeginTransaction(2);
+    ByteString remoteTxn1 = transactions.get(0);
+    ByteString remoteTxn2 = transactions.get(1);
 
     expectRollback(remoteTxn1);
     expectCommit(remoteTxn2);
 
-    replay();
     DatastoreService ds = newDatastoreService();
     Transaction txn1 = ds.beginTransaction();
     assertThat(ds.getCurrentTransaction()).isEqualTo(txn1);
@@ -1961,18 +1834,17 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
     assertThat(ds.getCurrentTransaction()).isEqualTo(txn1);
     txn1.rollback();
     assertThat(ds.getCurrentTransaction(null)).isNull();
-    verify();
   }
 
   @Test
   public void testCurrentTransaction_Nested_RollbackCommit() {
-    ByteString remoteTxn1 = expectBeginTransaction();
-    ByteString remoteTxn2 = expectBeginTransaction();
+    ImmutableList<ByteString> transactions = expectBeginTransaction(2);
+    ByteString remoteTxn1 = transactions.get(0);
+    ByteString remoteTxn2 = transactions.get(1);
 
     expectCommit(remoteTxn1);
     expectRollback(remoteTxn2);
 
-    replay();
     DatastoreService ds = newDatastoreService();
     Transaction txn1 = ds.beginTransaction();
     assertThat(ds.getCurrentTransaction()).isEqualTo(txn1);
@@ -1982,18 +1854,17 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
     assertThat(ds.getCurrentTransaction()).isEqualTo(txn1);
     txn1.commit();
     assertThat(ds.getCurrentTransaction(null)).isNull();
-    verify();
   }
 
   @Test
   public void testCurrentTransaction_Nested_RollbackRollback() {
-    ByteString remoteTxn1 = expectBeginTransaction();
-    ByteString remoteTxn2 = expectBeginTransaction();
+    ImmutableList<ByteString> transactions = expectBeginTransaction(2);
+    ByteString remoteTxn1 = transactions.get(0);
+    ByteString remoteTxn2 = transactions.get(1);
 
     expectRollback(remoteTxn1);
     expectRollback(remoteTxn2);
 
-    replay();
     DatastoreService ds = newDatastoreService();
     Transaction txn1 = ds.beginTransaction();
     assertThat(ds.getCurrentTransaction()).isEqualTo(txn1);
@@ -2003,18 +1874,17 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
     assertThat(ds.getCurrentTransaction()).isEqualTo(txn1);
     txn1.rollback();
     assertThat(ds.getCurrentTransaction(null)).isNull();
-    verify();
   }
 
   @Test
   public void testCurrentTransaction_Nested_CommitOutOfOrder() {
-    ByteString remoteTxn1 = expectBeginTransaction();
-    ByteString remoteTxn2 = expectBeginTransaction();
+    ImmutableList<ByteString> transactions = expectBeginTransaction(2);
+    ByteString remoteTxn1 = transactions.get(0);
+    ByteString remoteTxn2 = transactions.get(1);
 
     expectCommit(remoteTxn1);
     expectCommit(remoteTxn2);
 
-    replay();
     DatastoreService ds = newDatastoreService();
     Transaction txn1 = ds.beginTransaction();
     assertThat(ds.getCurrentTransaction()).isEqualTo(txn1);
@@ -2024,7 +1894,6 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
     assertThat(ds.getCurrentTransaction()).isEqualTo(txn2);
     txn2.commit();
     assertThat(ds.getCurrentTransaction(null)).isNull();
-    verify();
   }
 
   @Test
@@ -2034,14 +1903,12 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
     query.addFilter("p2", Query.FilterOperator.GREATER_THAN, 33);
 
     expectRunQuery(createRunQueryRequest(query, withLimit(2)).build(), Code.FAILED_PRECONDITION);
-    replay();
 
     DatastoreService ds = newDatastoreService();
     DatastoreNeedIndexException e =
         assertThrows(DatastoreNeedIndexException.class, () -> ds.prepare(query).asSingleEntity());
     // Cloud Datastore v1 does not currently add missing index info.
     assertThat(e.getMissingIndexDefinitionXml()).isEqualTo(null);
-    verify();
   }
 
   @Test
@@ -2052,13 +1919,11 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
 
     expectRunQuery(createRunQueryRequest(query, withLimit(2)).build(), Code.FAILED_PRECONDITION);
 
-    replay();
 
     DatastoreService ds = newDatastoreService();
     DatastoreNeedIndexException e =
         assertThrows(DatastoreNeedIndexException.class, () -> ds.prepare(query).asSingleEntity());
     assertThat(e.getMissingIndexDefinitionXml()).isNull();
-    verify();
   }
 
   @Test
@@ -2072,10 +1937,7 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
     lookupRespBldr.addMissingBuilder().setEntity(DataTypeTranslator.toV1Entity(new Entity(key)));
     expectLookup(lookupBldr.build(), lookupRespBldr.build());
 
-    replay();
-
     assertThrows(EntityNotFoundException.class, () -> newDatastoreService().get(key));
-    verify();
   }
 
   @Test
@@ -2086,10 +1948,8 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
     v1Query.getReadOptionsBuilder().setReadConsistency(ReadConsistency.EVENTUAL);
     expectRunQuery(v1Query, createRunQueryResponse(NO_MORE_RESULTS, 0));
 
-    replay();
     DatastoreService ds = newDatastoreService();
     assertThat(ds.prepare(query).asSingleEntity()).isNull();
-    verify();
   }
 
   @Test
@@ -2098,9 +1958,7 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
     Query query = new Query("blarg");
     expectRunQuery(
         createRunQueryRequest(query, withDefaults()), createRunQueryResponse(NO_MORE_RESULTS, 0));
-    replay();
     assertThat(newDatastoreService().prepare(query).asIterator().hasNext()).isFalse();
-    verify();
   }
 
   @Test
@@ -2110,11 +1968,9 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
     LookupResponse.Builder lookupRespBldr = LookupResponse.newBuilder();
     lookupRespBldr.addMissingBuilder().setEntity(DataTypeTranslator.toV1Entity(new Entity(key)));
     expectLookup(createLookupRequest(key).build(), lookupRespBldr.build());
-    replay();
 
     DatastoreService ds = newDatastoreService();
     assertThrows(EntityNotFoundException.class, () -> ds.get(key));
-    verify();
   }
 
   @Test
@@ -2126,17 +1982,13 @@ public class CloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Service
     ByteString remoteTxn = maybeExpectBeginTransaction();
     expectCommit(createPutCommitRequest(remoteTxn, golden), 12345L);
 
-    replay();
     newDatastoreService().put(golden);
-    verify();
   }
 
   @Test
   public void testMultipleEgTransaction() {
     expectBeginTransaction();
-    replay();
     newDatastoreService().beginTransaction(TransactionOptions.Builder.withXG(true));
-    verify();
   }
 
   @Test

@@ -22,6 +22,7 @@ import static com.google.appengine.api.datastore.ImplicitTransactionManagementPo
 import static com.google.appengine.api.datastore.ImplicitTransactionManagementPolicy.NONE;
 import static com.google.appengine.api.datastore.ReadPolicy.Consistency.EVENTUAL;
 import static com.google.common.truth.Truth.assertThat;
+import static org.mockito.Mockito.when;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
@@ -29,6 +30,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
+import com.google.common.util.concurrent.Futures;
 import com.google.datastore.v1.AllocateIdsRequest;
 import com.google.datastore.v1.AllocateIdsResponse;
 import com.google.datastore.v1.CommitRequest;
@@ -94,14 +96,12 @@ public class AsyncCloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Se
     expectCommit(createCommitRequest(remoteTxn));
     expectLookup(remoteTxn, golden);
 
-    replay();
     AsyncCloudDatastoreV1ServiceImpl ads = newAsyncDatastoreService();
     Future<Transaction> txn = ads.beginTransaction();
     @SuppressWarnings({"unused", "nullness"}) // go/futurereturn-lsc
     Future<?> possiblyIgnoredError = ads.get(key);
 
     txn.get().commit();
-    verify();
   }
 
   @Test
@@ -120,20 +120,23 @@ public class AsyncCloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Se
 
     // [B] We're going to store the new entity. A transaction should be implicitly started and
     // committed. The entity is assigned an ID.
-    ByteString remoteTxn = expectBeginTransaction();
+    ImmutableList<ByteString> transactions = expectBeginTransaction(5);
+    ByteString remoteTxn1 = transactions.get(0);
+    ByteString remoteTxn2 = transactions.get(1);
+    ByteString remoteTxn3 = transactions.get(2);
+    ByteString remoteTxn4 = transactions.get(3);
+    ByteString remoteTxn5 = transactions.get(4);
     expectAllocateIds(Arrays.asList(golden.getKey()), 123L);
     golden.getKey().simulatePutForTesting(123L);
-    expectCommit(createPutCommitRequest(remoteTxn, golden));
+    expectCommit(createPutCommitRequest(remoteTxn1, golden));
 
     // [C] Next, we're going to fetch the entity asynchronously, without blocking. We expect that a
     // transaction will be started, but not completed.
-    ByteString remoteTxn2 = expectBeginTransaction();
     expectLookup(remoteTxn2, golden);
 
     // [D] Next, we're going to fetch the entity and block on the result, so that we can get a copy
     // of the entity that has the right ID. This time, we expect that a transaction will be both
     // started and committed.
-    ByteString remoteTxn3 = expectBeginTransaction();
     expectLookup(remoteTxn3, golden);
     expectCommit(createCommitRequest(remoteTxn3));
 
@@ -142,12 +145,10 @@ public class AsyncCloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Se
 
     // [F] Next, we're going to update the stored version of the entity. Again, we expect that a
     // tranasction will be both started and committed.
-    ByteString remoteTxn4 = expectBeginTransaction();
     expectCommit(createPutCommitRequest(remoteTxn4, golden));
 
     // [G] Next, we're going to fetch the entity again. We expect to see the new version of the
     // entity, because the transaction that updated the entity has been committed.
-    ByteString remoteTxn5 = expectBeginTransaction();
     expectLookup(remoteTxn5, golden);
     expectCommit(remoteTxn5);
 
@@ -156,8 +157,6 @@ public class AsyncCloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Se
     // happened.
     expectCommit(remoteTxn2);
 
-    // Now, we get to do it all again. :)
-    replay();
     AsyncCloudDatastoreV1ServiceImpl ads = newAsyncDatastoreService();
     // [A] Create the entity.
     Entity e = new Entity("Foo");
@@ -235,8 +234,6 @@ public class AsyncCloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Se
     // happened.
     expectCommit(remoteTxn2);
 
-    // Now, we get to do it all again. :)
-    replay();
     datastoreServiceConfig.implicitTransactionManagementPolicy(
         ImplicitTransactionManagementPolicy.NONE);
     AsyncCloudDatastoreV1ServiceImpl adsNone = newAsyncDatastoreService();
@@ -310,8 +307,6 @@ public class AsyncCloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Se
     expectLookup(expectedLookupRequest, trackingLookupResponseFuture);
     expectCommitRequest(expectedPutRequest, trackingPutResponseFuture);
 
-    replay();
-
     AsyncCloudDatastoreV1ServiceImpl ads = newAsyncDatastoreService();
 
     // Begin a transaction.
@@ -358,8 +353,6 @@ public class AsyncCloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Se
     assertThat(trackingAllocIdRespFuture2.getNumCallsToGet()).isEqualTo(1);
     assertThat(trackingPutResponseFuture.getNumCallsToGet()).isEqualTo(1);
     assertThat(trackingLookupResponseFuture.getNumCallsToGet()).isEqualTo(2);
-
-    verify();
   }
 
   @Test
@@ -456,8 +449,6 @@ public class AsyncCloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Se
     expectLookup(createLookupRequest(null, requestKeys22).build(), response22);
     expectLookup(createLookupRequest(null, requestKeys13).build(), response13);
 
-    replay();
-
     // childKey21 was missing, so it does not appear in the result map.
     Map<Key, Entity> expectedResults =
         ImmutableMap.<Key, Entity>builder()
@@ -477,8 +468,6 @@ public class AsyncCloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Se
     Entity returnedEntityWithDifferentAppId = actualResults.get(keyWithOtherAppId);
     assertThat(returnedEntityWithDifferentAppId.getKey()).isEqualTo(keyWithOneAppId);
     assertThat(keyWithOneAppId.equals(keyWithOtherAppId)).isFalse();
-
-    verify();
   }
 
   @Test
@@ -497,8 +486,6 @@ public class AsyncCloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Se
     expectLookup(remoteTxn, golden2);
     expectCommit(remoteTxn);
 
-    replay();
-
     AsyncCloudDatastoreV1ServiceImpl ads = newAsyncDatastoreService();
     Future<Transaction> txn = ads.beginTransaction();
     Future<Entity> future1 = ads.get(key1);
@@ -509,7 +496,6 @@ public class AsyncCloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Se
     // commit will resolve the other.
     future1.get();
     txn.get().commit();
-    verify();
   }
 
   @Test
@@ -531,8 +517,6 @@ public class AsyncCloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Se
 
     expectLookup(null, golden1, golden2);
 
-    replay();
-
     AsyncCloudDatastoreV1ServiceImpl ads = newAsyncDatastoreService();
     List<Key> keys = Lists.newArrayList(key1, key2);
     Future<Map<Key, Entity>> future = ads.get(keys);
@@ -543,7 +527,6 @@ public class AsyncCloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Se
     assertThat(future.get()).isSameInstanceAs(result);
     result.clear();
     assertThat(future.get()).isEmpty();
-    verify();
   }
 
   @Test
@@ -565,12 +548,9 @@ public class AsyncCloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Se
     lookupReq.getReadOptionsBuilder().setReadConsistency(ReadOptions.ReadConsistency.EVENTUAL);
     expectLookup(lookupReq.build(), createLookupResponse(golden1, golden2));
 
-    replay();
-
     AsyncCloudDatastoreV1ServiceImpl ads = newAsyncDatastoreService(HIGH_REPLICATION);
     Future<Map<Key, Entity>> future1 = ads.get(Arrays.asList(key1, key2));
     future1.get();
-    verify();
   }
 
   private void doMultiGet_MaxEntityGroupsPerRpcDefault_HighRep_StrongConsistency()
@@ -585,12 +565,10 @@ public class AsyncCloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Se
 
     // Test that more than one entity group per get is used.
     expectLookup(null, golden1, golden2);
-    replay();
 
     AsyncCloudDatastoreV1ServiceImpl ads = newAsyncDatastoreService(HIGH_REPLICATION);
     Future<Map<Key, Entity>> future1 = ads.get(Arrays.asList(key1, key2));
     future1.get();
-    verify();
   }
 
   @Test
@@ -620,15 +598,12 @@ public class AsyncCloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Se
     ByteString remoteTxn = expectBeginTransaction();
     expectCommit(createDeleteCommitRequest(remoteTxn, golden));
 
-    replay();
-
     AsyncCloudDatastoreV1ServiceImpl ads = newAsyncDatastoreService();
     Future<Transaction> txn = ads.beginTransaction();
     @SuppressWarnings({"unused", "nullness"}) // go/futurereturn-lsc
     Future<?> possiblyIgnoredError = ads.delete(key);
 
     txn.get().commit();
-    verify();
   }
 
   @Test
@@ -644,7 +619,6 @@ public class AsyncCloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Se
     key2.simulatePutForTesting(456L);
 
     expectCommit(createDeleteCommitRequest(remoteTxn, golden1, golden2));
-    replay();
 
     AsyncCloudDatastoreV1ServiceImpl ads = newAsyncDatastoreService();
     Future<Transaction> txn = ads.beginTransaction();
@@ -655,8 +629,6 @@ public class AsyncCloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Se
     Future<?> possiblyIgnoredError1 = ads.delete(key2);
 
     txn.get().commit();
-
-    verify();
   }
 
   @Test
@@ -679,14 +651,12 @@ public class AsyncCloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Se
 
     expectCommit(createDeleteCommitRequest(null, golden1, golden2));
 
-    replay();
     AsyncCloudDatastoreV1ServiceImpl ads = newAsyncDatastoreService();
 
     List<Key> keys = Lists.newArrayList(key1, key2);
     Future<Void> future = ads.delete(keys);
     keys.clear(); // Should not affect results;
     future.get();
-    verify();
   }
 
   @Test
@@ -706,12 +676,9 @@ public class AsyncCloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Se
     expectCommit(createDeleteCommitRequest(null, golden1));
     expectCommit(createDeleteCommitRequest(null, golden2));
 
-    replay();
     AsyncCloudDatastoreV1ServiceImpl ads = newAsyncDatastoreService();
     Future<Void> future1 = ads.delete(key1, key2);
     future1.get();
-
-    verify();
   }
 
   @Test
@@ -723,14 +690,12 @@ public class AsyncCloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Se
     expectAllocateIds(Arrays.asList(golden.getKey()), 123L);
     expectCommit(createPutCommitRequest(remoteTxn, copyWithNewId(golden, 123L)));
 
-    replay();
     AsyncCloudDatastoreV1ServiceImpl ads = newAsyncDatastoreService();
     Future<Transaction> txn = ads.beginTransaction();
     @SuppressWarnings({"unused", "nullness"}) // go/futurereturn-lsc
     Future<?> possiblyIgnoredError = newAsyncDatastoreService().put(golden);
 
     txn.get().commit();
-    verify();
   }
 
   @Test
@@ -745,7 +710,6 @@ public class AsyncCloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Se
         createPutCommitRequest(
             remoteTxn, copyWithNewId(golden1, 123L), copyWithNewId(golden2, 456L)));
 
-    replay();
     AsyncCloudDatastoreV1ServiceImpl ads = newAsyncDatastoreService();
     Future<Transaction> txn = ads.beginTransaction();
 
@@ -757,8 +721,6 @@ public class AsyncCloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Se
     // commit will resolve the other.
     future1.get();
     txn.get().commit();
-
-    verify();
   }
 
   @Test
@@ -779,8 +741,12 @@ public class AsyncCloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Se
       entities[i].setProperty("entName", "e" + i);
     }
 
-    expectAllocateIds(Arrays.asList(baseKey), 12L);
-    expectAllocateIds(Arrays.asList(baseKey), 34L);
+    AllocateIdsRequest allocIdsReq = createAllocateIdsRequest(ImmutableList.of(baseKey));
+    AllocateIdsResponse allocIdsResp1 = createAllocateIdsResponse(allocIdsReq, 12L);
+    AllocateIdsResponse allocIdsResp2 = createAllocateIdsResponse(allocIdsReq, 34L);
+    when(cloudDatastoreV1Client.allocateIds(allocIdsReq))
+        .thenReturn(Futures.immediateFuture(allocIdsResp1))
+        .thenReturn(Futures.immediateFuture(allocIdsResp2));
 
     Entity putEnt0 = copyWithNewId(entities[0], 12L);
     Entity putEnt2 = copyWithNewId(entities[2], 34L);
@@ -790,7 +756,6 @@ public class AsyncCloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Se
     expectLookup(null, putEnt0);
     expectLookup(null, putEnt2);
 
-    replay();
     AsyncCloudDatastoreV1ServiceImpl ads = newAsyncDatastoreService();
 
     Future<Transaction> txn = ads.beginTransaction();
@@ -812,8 +777,6 @@ public class AsyncCloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Se
     assertThat(baseKey).isEqualTo(putEnt0.getKey());
     assertThat(ads.get(putEnt0.getKey()).get().getProperty("entName")).isEqualTo("e0");
     assertThat(ads.get(putEnt2.getKey()).get().getProperty("entName")).isEqualTo("e2");
-
-    verify();
   }
 
   @Test
@@ -823,7 +786,6 @@ public class AsyncCloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Se
 
     expectCommit(createPutCommitRequest(null, golden1, golden2), 123L, 456L);
 
-    replay();
     AsyncCloudDatastoreV1ServiceImpl ads = newAsyncDatastoreService();
     List<Entity> mutableList = Lists.newArrayList(golden1, golden2);
     Future<List<Key>> future = ads.put(mutableList);
@@ -853,7 +815,6 @@ public class AsyncCloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Se
 
     AsyncCloudDatastoreV1ServiceImpl ads = newAsyncDatastoreService();
 
-    replay();
     Future<List<Key>> future1 =
         ads.put(Arrays.asList(golden1, golden2, golden3, golden4, golden5, golden6));
     assertThat(future1.get())
@@ -865,7 +826,6 @@ public class AsyncCloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Se
             golden5.getKey(),
             golden6.getKey())
         .inOrder();
-    verify();
   }
 
   @Test
@@ -878,7 +838,6 @@ public class AsyncCloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Se
     expectCommit(createPutCommitRequest(null, golden2), 456L);
     expectCommit(createPutCommitRequest(null, golden3), 789L);
 
-    replay();
     AsyncCloudDatastoreV1ServiceImpl ads =
         newAsyncDatastoreService(
             DatastoreServiceConfig.Builder.withDefaults().maxBatchWriteEntities(1), txnStack, null);
@@ -886,7 +845,6 @@ public class AsyncCloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Se
     assertThat(future1.get())
         .containsExactly(golden1.getKey(), golden2.getKey(), golden3.getKey())
         .inOrder();
-    verify();
   }
 
   @Test
@@ -905,7 +863,6 @@ public class AsyncCloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Se
     expectCommit(createPutCommitRequest(null, golden2, golden5), 2L, 5L);
     expectCommit(createPutCommitRequest(null, golden3), 3L);
 
-    replay();
     AsyncCloudDatastoreV1ServiceImpl ads =
         newAsyncDatastoreService(
             withDefaults().maxBatchWriteEntities(2).maxEntityGroupsPerRpc(1), txnStack, null);
@@ -925,12 +882,9 @@ public class AsyncCloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Se
     ByteString remoteTxn = expectBeginTransaction();
     expectCommit(remoteTxn);
 
-    replay();
     AsyncCloudDatastoreV1ServiceImpl ads = newAsyncDatastoreService();
     Future<Transaction> txn = ads.beginTransaction();
     txn.get().commit();
-
-    verify();
   }
 
   @Test
@@ -938,12 +892,9 @@ public class AsyncCloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Se
     ByteString remoteTxn = expectBeginTransaction();
     expectCommit(remoteTxn);
 
-    replay();
     AsyncCloudDatastoreV1ServiceImpl ads = newAsyncDatastoreService();
     Future<Transaction> txn = ads.beginTransaction(TransactionOptions.Builder.withXG(true));
     txn.get().commit();
-
-    verify();
   }
 
   @Test
@@ -959,7 +910,6 @@ public class AsyncCloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Se
     expectLookup(remoteTxn, golden);
     expectCommit(remoteTxn);
 
-    replay();
     // Start and commit the txn with the async service but perform the get with
     // the synchronous service.
     AsyncCloudDatastoreV1ServiceImpl ads = newAsyncDatastoreService();
@@ -969,7 +919,6 @@ public class AsyncCloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Se
     assertThat(ds.getCurrentTransaction()).isEqualTo(txn.get());
     assertThat(ads.getCurrentTransaction()).isEqualTo(txn.get());
     txn.get().commitAsync().get();
-    verify();
   }
 
   @Test
@@ -979,7 +928,6 @@ public class AsyncCloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Se
     ImmutableList<Key> incompleteKeys = ImmutableList.of(rootKey, childKey);
 
     expectAllocateIds(incompleteKeys, 123L, 456L);
-    replay();
 
     AsyncCloudDatastoreV1ServiceImpl ads = newAsyncDatastoreService();
     List<com.google.datastore.v1.Key> allocatedKeys = ads.allocateIds(incompleteKeys).get();
@@ -990,8 +938,6 @@ public class AsyncCloudDatastoreV1ServiceImplTest extends BaseCloudDatastoreV1Se
     assertThat(rootKeyV1.getPath(0).getId()).isEqualTo(123L);
     assertThat(childKeyV1.getPathCount()).isEqualTo(2);
     assertThat(childKeyV1.getPath(1).getId()).isEqualTo(456L);
-
-    verify();
   }
 
   private static void assertDedupedByKey(
