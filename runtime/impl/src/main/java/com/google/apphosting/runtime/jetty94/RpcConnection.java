@@ -278,10 +278,11 @@ public class RpcConnection implements Connection, HttpTransport {
       exception = ex;
     }
 
-    if (exception == null) {
-      exception = abortedError;
-    }
-    
+//    TODO(b/263341977) this is a correct behavior, but customers depend on this bug.
+//    if (exception == null) {
+//      exception = abortedError;
+//    }
+
     if (exception != null) {
       Throwable cause = unwrap(exception);
       if (cause instanceof BadMessageException) {
