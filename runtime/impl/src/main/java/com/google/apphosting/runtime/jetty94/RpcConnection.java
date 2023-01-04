@@ -278,10 +278,14 @@ public class RpcConnection implements Connection, HttpTransport {
       exception = ex;
     }
 
-//    TODO(b/263341977) this is a correct behavior, but customers depend on this bug.
-//    if (exception == null) {
-//      exception = abortedError;
-//    }
+    // TODO(b/263341977) this is a correct behavior, but customers depend on this bug, so we
+    // enable it only for non java8 runtimes.
+    if ((exception == null)
+        && (abortedError != null)
+        && !"java8".equals(System.getenv("GAE_RUNTIME"))) {
+        exception = abortedError;
+      }
+
 
     if (exception != null) {
       Throwable cause = unwrap(exception);
