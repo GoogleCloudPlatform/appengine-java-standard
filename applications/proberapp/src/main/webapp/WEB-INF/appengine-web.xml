@@ -15,16 +15,19 @@
  limitations under the License.
 -->
 <appengine-web-app xmlns="http://appengine.google.com/ns/1.0">
-   <runtime>java8</runtime>
-   <app-engine-apis>true</app-engine-apis>
-   <threadsafe>true</threadsafe>
-   <system-properties>
+    <runtime>java8</runtime>
+    <app-engine-apis>true</app-engine-apis>
+    <threadsafe>true</threadsafe>
+    <system-properties>
         <property name="java.util.logging.config.file" value="WEB-INF/logging.properties"/>
         <property name="appengine.file.encoding" value="US-ASCII" />
-  </system-properties>
+    </system-properties>
     <sessions-enabled>true</sessions-enabled>
     <async-session-persistence enabled="true" />
     <instance-class>F4</instance-class>
+    <automatic-scaling>
+        <max-instances>5</max-instances>
+    </automatic-scaling>
     <env-variables>
         <env-var name="FROM_APP_YAML" value="from_app_yaml" />
         <!-- these values need to be set up in the pom.xml or better as properties in the mvn install command line:
@@ -39,6 +42,4 @@
     <staging>
         <enable-jar-classes>true</enable-jar-classes>
     </staging>
-
-
 </appengine-web-app>
