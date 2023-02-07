@@ -97,6 +97,13 @@ git checkout -b $RELEASE_NUMBER
 
 # Make sure `JAVA_HOME` is set.
 echo "JAVA_HOME = $JAVA_HOME"
+
+# Install Maven.
+sudo apt-get -qq update && sudo apt-get -qq install -y maven
+
+# Setting up maven wrapper for the project. https://maven.apache.org/wrapper/ 
+mvn wrapper:wrapper
+
 # compile all packages
 echo "Calling release:prepare and release:perform."
 ./mvnw release:prepare release:perform -B -q --settings=../settings.xml -DskipTests -Darguments=-DskipTests -Dgpg.homedir=${GNUPGHOME} -Dgpg.passphrase=${GPG_PASSPHRASE}
