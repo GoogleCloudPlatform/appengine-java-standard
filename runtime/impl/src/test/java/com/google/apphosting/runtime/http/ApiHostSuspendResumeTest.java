@@ -106,7 +106,9 @@ public class ApiHostSuspendResumeTest {
           "0100007F",
           "0000000000000000FFFF00000100007F",
           localHexAddress(),
-          String.format("0000000000000000FFFF0000%s", localHexAddress()));
+          String.format("0000000000000000FFFF0000%s", localHexAddress()),
+          // This is the IPv6 loopback address, ::1, as it appears in /proc/self/net/tcp.
+          middleEndianHexAddress(new byte[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}));
 
   // Figure out the connections to localhost:<port> by parsing /proc/self/net/tcp.
   // The poorly-documented format is here:
@@ -148,23 +150,27 @@ public class ApiHostSuspendResumeTest {
   }
 
   // Return the local address as it appears in /proc/self/net/tcp.
-  // This funky middle-endian handling of IPv6 addresses is what we observe on little-endian boxes.
-  // Also see
-  // http://google3/java/com/google/common/unix/FileDescriptorUtils.java?l=204&rcl=144790929
   private static String localHexAddress() {
+    InetAddress local;
     try {
-      InetAddress local = InetAddress.getLocalHost();
-      StringBuilder sb = new StringBuilder();
-      byte[] bytes = local.getAddress();
-      for (int i = 0; i < bytes.length; i += 4) {
-        for (int j = 3; j >= 0; j--) {
-          sb.append(Ascii.toUpperCase(String.format("%02x", bytes[i + j] & 255)));
-        }
-      }
-      return sb.toString();
+      local = InetAddress.getLocalHost();
     } catch (UnknownHostException e) {
       throw new AssertionError(e);
     }
+    return middleEndianHexAddress(local.getAddress());
+  }
+
+  // This funky middle-endian handling of IPv6 addresses is what we observe on little-endian boxes.
+  // Also see
+  // http://google3/java/com/google/common/unix/FileDescriptorUtils.java?l=204&rcl=144790929
+  private static String middleEndianHexAddress(byte[] bytes) {
+    StringBuilder sb = new StringBuilder();
+    for (int i = 0; i < bytes.length; i += 4) {
+      for (int j = 3; j >= 0; j--) {
+        sb.append(Ascii.toUpperCase(String.format("%02x", bytes[i + j] & 255)));
+      }
+    }
+    return sb.toString();
   }
 
   private ApiProxyImpl.EnvironmentImpl newEnvironmentImpl(ApiProxyImpl apiProxyImpl) {
