@@ -101,12 +101,9 @@ echo "JAVA_HOME = $JAVA_HOME"
 # Install Maven.
 sudo apt-get -qq update && sudo apt-get -qq install -y maven
 
-# Setting up maven wrapper for the project. https://maven.apache.org/wrapper/ 
-mvn wrapper:wrapper
-
 # compile all packages
 echo "Calling release:prepare and release:perform."
-./mvnw release:prepare release:perform -B -q --settings=../settings.xml -DskipTests -Darguments=-DskipTests -Dgpg.homedir=${GNUPGHOME} -Dgpg.passphrase=${GPG_PASSPHRASE}
+mvn release:prepare release:perform -B -q --settings=../settings.xml -DskipTests -Darguments=-DskipTests -Dgpg.homedir=${GNUPGHOME} -Dgpg.passphrase=${GPG_PASSPHRASE}
 
 git config user.email gae-java-bot@google.com
 git config user.name gae-java-bot
