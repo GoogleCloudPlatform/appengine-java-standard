@@ -20,7 +20,7 @@
     <parent>
         <groupId>com.google.appengine</groupId>
         <artifactId>parent</artifactId>
-        <version>2.0.11-SNAPSHOT</version>
+        <version>2.0.11</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>appengine-java-sdk</artifactId>
@@ -278,8 +278,8 @@
                                 <chmod dir="${assembly-directory}/bin" perm="755" includes="**/*.sh" />
                             </target>
                             <tasks>
-                                <delete file="${assembly-directory}/jetty94/jetty-home/lib/apache-jsp/org.eclipse.jetty.apache-jsp-${jetty.version}.jar"/>
-                                <delete dir="${assembly-directory}/jetty94/jetty-home/demo-base"/>
+                                <delete file="${assembly-directory}/jetty94/jetty-home/lib/apache-jsp/org.eclipse.jetty.apache-jsp-${jetty.version}.jar" />
+                                <delete dir="${assembly-directory}/jetty94/jetty-home/demo-base" />
                             </tasks>
                         </configuration>
                     </execution>
