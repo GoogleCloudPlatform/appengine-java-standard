@@ -16,7 +16,6 @@
 
 package com.google.appengine.apicompat.usage;
 
-import com.google.appengine.api.datastore.Link;
 import static org.junit.Assert.assertTrue;
 
 import com.google.appengine.apicompat.ApiComparison;
@@ -34,7 +33,6 @@ import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Collections;
-import java.util.Enumeration;
 import java.util.List;
 import java.util.Set;
 import java.util.jar.JarEntry;
@@ -54,11 +52,9 @@ public abstract class ApiExhaustiveUsageTestCase {
     private static final String USAGE_JAR_PATH
             = "/google3/javatests/com/google/appengine/apicompat/usage/";
 
-    /**
-     * The path to the sdk api jar.
-     */
-    private static final String API_JAR_PATH
-            = "/tmp/check_build/appengine-api-1.0-sdk/target/appengine-api-1.0-sdk-2.0.11-SNAPSHOT.jar";
+  /** The path to the sdk api jar. */
+  private static final String API_JAR_PATH =
+      "/tmp/check_build/appengine-api-1.0-sdk/target/appengine-api-1.0-sdk-2.0.12-SNAPSHOT.jar";
 
     private boolean isExhaustiveUsageClass(String clsName) {
         return clsName.startsWith("com.google.appengine.apicompat.usage");

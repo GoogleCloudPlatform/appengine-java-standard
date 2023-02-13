@@ -84,7 +84,9 @@ public class NoSerializeImmutableTest {
    */
   @Test
   public void serializableCollectionFieldsAreNotGuavaImmutable() throws Exception {
-    File appengineApiJar = new File("/tmp/check_build/appengine-api-1.0-sdk/target/appengine-api-1.0-sdk-2.0.11-SNAPSHOT.jar");
+    File appengineApiJar =
+        new File(
+            "/tmp/check_build/appengine-api-1.0-sdk/target/appengine-api-1.0-sdk-2.0.12-SNAPSHOT.jar");
     assertThat(appengineApiJar.exists()).isTrue();
     ClassLoader apiJarClassLoader = new URLClassLoader(new URL[] {appengineApiJar.toURI().toURL()});
     Class<?> messageLite =
