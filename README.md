@@ -55,6 +55,7 @@ Modules ending with * are only used on the production server side.
 Source code for all public APIs for com.google.appengine.api.* packages.
 
 - [Public Documentation][ae-docs]
+- [Latest javadoc.io API Javadocs from this repository](https://javadoc.io/doc/com.google.appengine/appengine-apis/latest/index.html)
 - [Javadocs](https://cloud.google.com/appengine/docs/standard/java/javadoc)
 - [Source Code](https://github.com/GoogleCloudPlatform/appengine-java-standard/tree/master/api)
 - [Source Code for repackaged API jar](https://github.com/GoogleCloudPlatform/appengine-java-standard/tree/master/appengine-api-1.0-sdk)
@@ -104,6 +105,7 @@ Source code for all public APIs for com.google.appengine.api.* packages.
 Source code for remote APIs for App Engine.
 
 - [Public Documentation](https://cloud.google.com/appengine/docs/standard/java/tools/remoteapi)
+- [Latest javadoc.io Javadocs from this repository](https://javadoc.io/doc/com.google.appengine/appengine-remote-api)
 - [Public Sample remote server](https://github.com/GoogleCloudPlatform/java-docs-samples/tree/main/appengine-java8/remote-server)
 - [Public Sample remote client](https://github.com/GoogleCloudPlatform/java-docs-samples/tree/main/appengine-java8/remote-client)
 - [Source Code](https://github.com/GoogleCloudPlatform/appengine-java-standard/tree/master/remoteapi)
@@ -137,15 +139,17 @@ Source code for remote APIs for App Engine.
 
 We moved `com.google.appengine.api.memcache.stdimpl` and its old dependency
 `javax.cache` from `appengine-api-1.0-sdk.jar` to  a new jar `appengine-api-legacy.jar`.
-  
+
+- [Latest javadoc.io Javadocs from this repository](https://javadoc.io/doc/com.google.appengine/appengine-api-legacy)
+
   Users who depend on the
   moved classes will need to also include `appengine-api-legacy.jar` when
   they build/deploy. Separating these classes allows
   `appengine-api-1.0-sdk` users to choose any version of `javax.cache`
   rather than being constrained by an obsolete included version.
- 
+
   *  Maven pom.xml
-  
+
 ```
     <dependency>
        <groupId>com.google.appengine</groupId>
@@ -156,10 +160,11 @@ We moved `com.google.appengine.api.memcache.stdimpl` and its old dependency
 
 ###  Local Unit Testing for Java 8, 11, 17
 
-[Code Sample](https://github.com/GoogleCloudPlatform/java-docs-samples/tree/main/unittests)
+- [Code Sample](https://github.com/GoogleCloudPlatform/java-docs-samples/tree/main/unittests)
+- [Latest javadoc.io Javadocs from this repository](https://javadoc.io/doc/com.google.appengine/appengine-testing)
 
   *  Maven pom.xml
-  
+
 ```
     <dependency>
       <groupId>com.google.appengine</groupId>
