@@ -220,15 +220,15 @@
       </activation>
       <properties>
         <!-- default config values -->
-        <docletName>java-docfx-doclet-1.6.0</docletName>
+        <docletName>java-docfx-doclet-1.8.0</docletName>
         <outputpath>${project.build.directory}/docfx-yml</outputpath>
         <projectname>${project.artifactId}</projectname>
         <excludeclasses />
-        <excludePackages>com\.google\.appengine\.api\.search.*:com\.google\.appengine\.httpapiproxy.*:com\.google\.appengine\.api\.internal.*:com\.google\.storage\.onestore.*:com\.google\.api\.client\.findbugs.*:com\.google\.apphosting\.utils.*</excludePackages>
+        <excludePackages>com\.google\.appengine\.httpapiproxy.*:com\.google\.appengine\.api\.internal.*:com\.google\.storage\.onestore.*:com\.google\.api\.client\.findbugs.*:com\.google\.apphosting\.utils.*</excludePackages>
         <source>8</source>
         <sourceFileExclude />
         <!-- Filed https://github.com/googleapis/java-docfx-doclet/issues/105 -->
-        <docletPath>${user.home}/Downloads/java-docfx-doclet-1.6.0-jar-with-dependencies.jar</docletPath>
+        <docletPath>${user.home}/Downloads/java-docfx-doclet-1.8.0-jar-with-dependencies.jar</docletPath>
       </properties>
       <build>
         <plugins>
