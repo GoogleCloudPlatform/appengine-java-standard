@@ -20,8 +20,9 @@ shopt -s globstar
 
 setup_docuploader() {
  curl -fsSL --retry 10 -o /tmp/jar1.jar https://github.com/googleapis/java-docfx-doclet/releases/download/1.8.0/java-docfx-doclet-1.8.0-jar-with-dependencies.jar
- # By default Ubuntu 16.04 uses Python 3.5 which is too old.
- pyenv global 3.6.1
+ # Update Python 3
+ sudo apt-get update
+ sudo apt-get install -y python3 python3-pip
  # install docuploader package with upgrade to get latest correct versions.
  echo "Trying to install gcp-docuploader."
  python3 -m pip install --upgrade pip --user
