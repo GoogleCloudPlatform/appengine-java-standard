@@ -20,9 +20,9 @@ shopt -s globstar
 
 setup_docuploader() {
  curl -fsSL --retry 10 -o /tmp/jar1.jar https://github.com/googleapis/java-docfx-doclet/releases/download/1.8.0/docfx-doclet-1.8.0-jar-with-dependencies.jar
- # Update Python 3
+ # Update Python 3 and Maven
  sudo apt-get update
- sudo apt-get install -y python3 python3-pip
+ sudo apt-get install -y python3 python3-pip maven
  # install docuploader package with upgrade to get latest correct versions.
  echo "Trying to install gcp-docuploader."
  python3 -m pip install --upgrade pip --user
@@ -52,6 +52,8 @@ export VERSION=11
 sudo update-java-alternatives --set java-1.11.0-openjdk-amd64
 export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
 echo "JAVA_HOME = $JAVA_HOME"
+ # Setting up maven wrapper for the project. https://maven.apache.org/wrapper/
+ mvn wrapper:wrapper
 # Do a build of all dependent modules first.
 ./mvnw install -B -q -DskipTests=true
 
