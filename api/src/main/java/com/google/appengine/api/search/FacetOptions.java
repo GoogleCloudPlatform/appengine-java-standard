@@ -28,13 +28,13 @@ import com.google.appengine.api.search.proto.SearchServicePb.SearchParams;
  * Note that discovery is disabled when {@code discoveryLimit} is zero.
  * <p>
  * For example, to discover 10 facets with 5 values each over 1000 extended results:
- * <pre>
+ * <pre>{@code
  *   FacetOptions facetOption = FacetOptions.newBuilder()
  *       .setDiscoverLimit(10)
  *       .setDiscoverValueLimit(5)
  *       .setDepth(1000)
  *       .build();
- * </pre>
+ * }</pre>
  */
 public final class FacetOptions {
 

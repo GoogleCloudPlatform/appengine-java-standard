@@ -24,7 +24,7 @@ import com.google.appengine.api.search.proto.SearchServicePb;
  * the index you want to retrieve from the {@link SearchService}.
  * To build an instance use the {@link #newBuilder()} method and set
  * all required parameters, plus optional values different than the defaults.
- * <pre>
+ * <pre>{@code
  *   SearchService searchService = SearchServiceFactory.getSearchService();
  *
  *   IndexSpec spec = IndexSpec.newBuilder()
@@ -32,6 +32,7 @@ import com.google.appengine.api.search.proto.SearchServicePb;
  *       .build();
  *
  *   Index index = searchService.getIndex(spec);
+ * }
  * </pre>
  *
  */

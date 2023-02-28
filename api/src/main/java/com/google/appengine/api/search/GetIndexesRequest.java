@@ -31,13 +31,13 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * be used.  Only the indexes defined in the namespace, default or
  * otherwise, will be returned.
  *
- * <pre>
+ * <pre>{@code
  *   GetIndexesRequest request = GetIndexesRequest.newBuilder()
  *       .setIndexNamePrefix("a")
  *       .setOffset(100)
  *       .setLimit(10)
  *       .build();
- * </pre>
+ * }</pre>
  *
  */
 public final class GetIndexesRequest {

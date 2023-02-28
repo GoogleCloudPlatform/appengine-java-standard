@@ -221,14 +221,14 @@ public class KeyFactory {
    *
    * <p>Examples:<br>
    *
-   * <pre>
+   * <pre>{@code
    * import com.google.appengine.api.datastore.KeyFactory.Builder;
    *
    * ...
    *
    * Key key = new Builder("Person", 88).addChild("Address", 24).getKey();
    * String keyStr = new Builder("Photo Album", "Vacation").addChild("Photo", 1424).getString();
-   * </pre>
+   * }</pre>
    */
   public static final class Builder {
     private Key current;

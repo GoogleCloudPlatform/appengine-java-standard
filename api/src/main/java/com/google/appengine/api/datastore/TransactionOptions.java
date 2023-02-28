@@ -28,13 +28,13 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * {@link Builder}.* and invoke a static creation method followed by an instance mutator (if
  * needed):
  *
- * <pre>
+ * <pre>{@code
  * import static com.google.appengine.api.datastore.TransactionOptions.Builder.*;
  *
  * ...
  *
  * datastoreService.beginTransaction(withXG(true));
- * </pre>
+ * }</pre>
  *
  */
 public final class TransactionOptions {

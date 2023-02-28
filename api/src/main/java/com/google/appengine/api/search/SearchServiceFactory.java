@@ -22,17 +22,17 @@ import com.google.appengine.spi.ServiceFactoryFactory;
 /**
  * An factory that creates default implementation of {@link SearchService}.
  *
- * <pre>
+ * <pre>{@code
  *   SearchService search = SearchServiceFactory.getSearchService();
- * </pre>
+ * }</pre>
  *
  * Optionally, you may pass a {@link SearchServiceConfig} instance to customize
  * the search service. e.g, setting deadline and namespace:
  *
- * <pre>
+ * <pre>{@code
  *   SearchServiceFactory.getSearchService(
  *       SearchServiceConfig.newBuilder().setDeadline(10.0).setNamespace("acme").build())
- * </pre>
+ * }</pre>
  *
  */
 public final class SearchServiceFactory {

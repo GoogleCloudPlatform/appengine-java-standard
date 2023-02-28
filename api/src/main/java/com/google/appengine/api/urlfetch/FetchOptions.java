@@ -58,7 +58,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * statically import {@link Builder}.* and invoke a static
  * creation method followed by an instance mutator (if needed):
  *
- * <pre>
+ * <pre>{@code
  * import static com.google.appengine.api.urlfetch.FetchOptions.Builder.*;
  *
  * ...
@@ -68,7 +68,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  * urlFetchService.fetch(new HTTPRequest(url, HTTPMethod.GET,
  *     allowTruncate().doNotFollowRedirects()));
- * </pre>
+ * }</pre>
  *
  */
 public final class FetchOptions implements Serializable {

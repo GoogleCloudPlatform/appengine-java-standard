@@ -29,12 +29,12 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * The recommended way to instantiate a {@link LeaseOptions} object is to statically import {@link
  * Builder}.* and invoke a static creation method followed by instance mutators:
  *
- * <pre>
+ * <pre>{@code
  * import static com.google.appengine.api.taskqueue.LeaseOptions.Builder.*;
  *
  * ...
  * tasks = pullQueue.leaseTasks(withLeasePeriod(2, TimeUnit.HOURS).countLimit(1000));
- * </pre>
+ * }</pre>
  *
  */
 public final class LeaseOptions {

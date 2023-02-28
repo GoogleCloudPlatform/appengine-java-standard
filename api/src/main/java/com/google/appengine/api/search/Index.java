@@ -26,7 +26,7 @@ import java.util.concurrent.Future;
  *
  * <p>
  *
- * <pre>
+ * <pre>{@code
  *  // Get the SearchService for the default namespace
  *  SearchService searchService = SearchServiceFactory.getSearchService();
  *  // Get the index. If not yet created, create it.
@@ -38,7 +38,7 @@ import java.util.concurrent.Future;
  *      .setId("documentId")
  *      .addField(Field.newBuilder().setName("subject").setText("my first email"))
  *      .addField(Field.newBuilder().setName("body")
- *           .setHTML("&lt;html&gt;some content here&lt;/html&gt;")
+ *           .setHTML(<html>some content here</html>")
  *      .build();
  *
  *  // Put the document.
@@ -52,7 +52,7 @@ import java.util.concurrent.Future;
  *
  *  // Query the index.
  *  try {
- *    Results&lt;ScoredDocument&gt; results =
+ *    Results<ScoredDocument> results =
  *        index.search(Query.newBuilder().build("subject:first body:here"));
  *
  *    // Iterate through the search results.
@@ -64,6 +64,7 @@ import java.util.concurrent.Future;
  *      // retry
  *    }
  *  }
+ * }
  * </pre>
  */
 public interface Index {

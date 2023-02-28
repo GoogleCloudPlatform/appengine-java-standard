@@ -31,10 +31,10 @@ import java.util.List;
  *
  * <p>For example, to request a facet with a name and specific values:
  *
- * <pre>
+ * <pre>{@code
  *   FacetRequest request = FacetRequest.newBuilder().setName("wine_type")
  *       .addValueConstraint("white").addValueConstraint("red").build();
- * </pre>
+ * } </pre>
  *
  * and to request ranges:
  *

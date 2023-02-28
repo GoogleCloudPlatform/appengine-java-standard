@@ -32,19 +32,19 @@ import java.util.List;
  * This class splits a query with a not-equal filter as follows:
  * <p>Create n + 1 queries components that restrict the queries
  * range to values outside the given value. Consider the example:
- * <pre>
+ * <pre>{@code
  *   select from Person where age != 33
- * </pre>
+ * }</pre>
  * this class would turn this into:
- * <pre>
+ * <pre>{@code
  *   select from Person where age < 33
  *   select from Person where age > 33
- * <pre>
+ * }<pre>
  *
  * <p>This class can also work for multiple inequality filters. For example:
- * <pre>
+ * <pre>{@code
  *   select from Person where age != 33 and age != 40 order by age desc
- * </pre>
+ * }</pre>
  * we would turn this into:
  * <pre>{@code
  *   select from Person where age > 40

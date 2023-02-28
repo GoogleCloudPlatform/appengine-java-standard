@@ -49,7 +49,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * The recommended way to instantiate a {@code FetchOptions} object is to import {@link
  * FetchOptions} and invoke a static creation method followed by an instance mutator (if needed):
  *
- * <pre>
+ * <pre>{@code
  * import com.google.appengine.api.datastore.FetchOptions;
  *
  * Cursor cursor = ...
@@ -61,7 +61,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  * // limit 10, start cursor
  * datastoreService.prepare(query).asList(FetchOptions.Builder.withLimit(10).startCursor(cursor));
- * </pre>
+ * }</pre>
  *
  */
 public final class FetchOptions {

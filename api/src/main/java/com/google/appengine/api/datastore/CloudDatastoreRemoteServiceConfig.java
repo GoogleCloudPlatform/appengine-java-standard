@@ -34,7 +34,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * call to {@link #setConfig} before accessing any other classes from {@link
  * com.google.appengine.api}. For example:
  *
- * <pre>
+ * <pre>{@code
  * public static void main(Strings[] args) {
  *   CloudDatastoreRemoteServiceConfig config = CloudDatastoreRemoteServiceConfig.builder()
  *       .appId(AppId.create(Location.US_CENTRAL, "my-project-id"))
@@ -43,12 +43,12 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *   DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
  *   ...
  * }
- * </pre>
+ * }</pre>
  *
  * Outside of tests, the config should not be cleared once it has been set. In tests, the config can
  * be cleared by calling {@link #clear}:
  *
- * <pre>
+ * <pre>{@code
  * {@literal @}Before
  * public void before() {
  *   CloudDatastoreRemoteServiceConfig config = CloudDatastoreRemoteServiceConfig.builder()
@@ -62,7 +62,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * public void after() {
  *   CloudDatastoreRemoteServiceConfig.clear();
  * }
- * </pre>
+ * }</pre>
  *
  * By default, this configuration uses <a
  * href="https://developers.google.com/identity/protocols/application-default-credentials">application-default

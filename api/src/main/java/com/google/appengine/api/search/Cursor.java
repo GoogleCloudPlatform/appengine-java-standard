@@ -29,14 +29,14 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * For example, the following code shows how to use a cursor to get the
  * next page of results
  * <p>
- * <pre>
+ * <pre>{@code
  * Index index = ...
  * Cursor cursor = Cursor.newBuilder().build();
  * Query query = Query.newBuilder().setOptions(
  *     QueryOptions.newBuilder().setCursor(cursor).build("some query"));
  *
  * // Get the first page of results
- * Results&lt;ScoredDocument&gt; results = index.search(query);
+ * Results<ScoredDocument> results = index.search(query);
  *
  * // process results
  * ...
@@ -47,18 +47,18 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *         results.getCursor()).build("some query"));
  *
  * results = index.search(query);
- * </pre>
+ * }</pre>
  * <p>
  * Alternatively, you can get a cursor to continue from each of the returned
  * results.
- * <pre>
+ * <pre>{@code
  * Cursor cursor =
  *     Cursor.newBuilder().setPerResult(true).build();
  * Query query = Query.newBuilder().setOptions(
  *     QueryOptions.newBuilder().setCursor(cursor).build("some query"));
  *
  * // Get the first page of results
- * Results&lt;ScoredDocument&gt; results = index.search(query);
+ * Results<ScoredDocument> results = index.search(query);
  *
  * // process results
  * for (ScoredDocument result : results) {
@@ -71,7 +71,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *     QueryOptions.newBuilder().setCursor(cursor).build("some query"));
  *
  * results = index.search(query);
- * </pre>
+ * }</pre>
  */
 public final class Cursor implements Serializable {
   private static final long serialVersionUID = 5983232584697220044L;

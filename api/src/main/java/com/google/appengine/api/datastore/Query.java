@@ -486,7 +486,7 @@ public final class Query implements Serializable {
    *
    * <p>Projection queries are similar to SQL statements of the form:
    *
-   * <pre>SELECT prop1, prop2, ...</pre>
+   * <pre>{@code SELECT prop1, prop2, ... }</pre>
    *
    * As they return partial entities, which only contain the properties specified in the projection.
    * However, these entities will only contain a single value for any multi-valued property and, if

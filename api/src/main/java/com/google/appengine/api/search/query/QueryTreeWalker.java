@@ -28,24 +28,24 @@ import org.antlr.runtime.tree.Tree;
  * of a node, before visiting the node. The visit is done by calling
  * an appropriate method of the visitor. Typical code should match
  * the following pattern:
- * <pre>
+ * <pre>{@code
  * class MyVisitor implements QueryTreeVisitor {
  *   ...
  * }
- * class MyContext extends QueryTreeContext&lt;MyContext&gt; {
+ * class MyContext extends QueryTreeContext<MyContext> {
  *   ...
- *   &#64;Override
+ *   @Override
  *   protected MyContext newChildContext() {
  *     return new MyContext();
  *   }
  * }
  *
  * MyContext context = new MyContext();
- * QueryTreeWalker&lt;MyContext&gt; walker = new QueryTreeWalker&lt;MyContext&gt;(new MyVisitor());
+ * QueryTreeWalker<MyContext> walker = new QueryTreeWalker<MyContext>(new MyVisitor());
  * Tree root = parser.query(queryStr);
  * walker.walk(root, context);
  * // retrieve whatever information you need from context
- * </pre>
+ * }</pre>
  *
  * @param <T> the context used by the visitor
  */
@@ -226,21 +226,21 @@ public class QueryTreeWalker<T extends QueryTreeContext<T>> {
   /**
    * Flattens the tree by pushing down the field name. For example, if
    * the tree looks like this:
-   * <pre>
+   * <pre>{@code
    *                EQ
    *             /      \
    *        VALUE         EQ
    *        /    \      /    \
    *      TEXT  field GLOBAL (N)
-   * </pre>
+   * }</pre>
    * Then we will output tree that looks like this:
-   * <pre>
+   * <pre>{@code
    *                EQ
    *             /      \
    *        VALUE       (N)
    *        /    \
    *      TEXT  field
-   * </pre>
+   * }</pre>
    * Here <code>(N)</code> is an arbitrary node. We also drop EQ if it
    * is in front of conjunction or disjunction. We do not drop it for
    * other comparators, as we want parsing to fail for foo &lt; (1 2).

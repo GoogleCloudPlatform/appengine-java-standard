@@ -38,7 +38,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * back a single cursor in the {@link Results} to get the next
  * batch of results after this.
  * <p>
- * <pre>
+ * <pre>{@code
  * QueryOptions options = QueryOptions.newBuilder()
  *     .setLimit(20)
  *     .setFieldsToSnippet("subject", "body")
@@ -52,6 +52,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * Query query = Query.newBuilder()
  *     .setOptions(options)
  *     .build("good story");
+ * }
  * </pre>
  *
  * The following query will return facet information with the query result:

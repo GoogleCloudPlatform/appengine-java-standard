@@ -23,16 +23,16 @@ import com.google.appengine.api.search.proto.SearchServicePb;
  *
  * <p>If you add a MatchScorer to a SortOptions as in the following code:
  *
- * <pre>
+ * <pre>{@code
  *  SortOptions sortOptions = SortOptions.newBuilder()
  *      .setMatchScorer(MatchScorer.newBuilder())
  *      .build();
- * </pre>
+ * }</pre>
  *
  * then this will sort the documents in descending score order. The scores will be positive. If you
  * want to sort in ascending order, then use the following code:
  *
- * <pre>
+ * <pre>{@code
  *   SortOptions sortOptions = SortOptions.newBuilder()
  *       .setMatchScorer(MatchScorer.newBuilder())
  *       .addSortExpression(
@@ -41,7 +41,7 @@ import com.google.appengine.api.search.proto.SearchServicePb;
  *               .setDirection(SortExpression.SortDirection.ASCENDING)
  *               .setDefaultValueNumeric(0.0))
  *       .build();
- * </pre>
+ * }</pre>
  *
  * In this example, the score will be negative.
  *
@@ -53,9 +53,9 @@ public class MatchScorer {
    * A MatchScorer will invoke a scorer on each search result. The
    * following code illustrates building a match scorer to score documents:
    * <p>
-   * <pre>
+   * <pre>{@code
    *   MatchScorer scorer = MatchScorer.newBuilder().build();
-   * </pre>
+   * }</pre>
    */
   public static class Builder {
 

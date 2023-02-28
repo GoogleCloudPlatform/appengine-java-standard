@@ -23,12 +23,12 @@ import com.google.appengine.api.search.proto.SearchServicePb;
  * Represents an expression bound to a returned Field with the given
  * name. FieldExpressions are added to a {@link QueryOptions}, to request an
  * expression computed and returned as the named Field value. For example,
- * <pre>
+ * <pre>{@code
  *   FieldExpression.newBuilder()
  *       .setName("snippet")
  *       .setExpression("snippet(\"good story\", content)")
  *       .build()
- * </pre>
+ * }</pre>
  * binds a snippet expression to a Field named "snippet", which will
  * be returned in each search result. In this case the returned "snippet"
  * Field will contain a HTML value containing text snippets of the

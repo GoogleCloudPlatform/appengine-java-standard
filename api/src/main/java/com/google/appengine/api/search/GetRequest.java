@@ -26,13 +26,13 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * restrictions, such as the number of objects to return, the id of the
  * first object to return, whether to only return keys, etc.
  *
- * <pre>
+ * <pre>{@code
  *   GetRequest request = GetRequest.newBuilder()
  *       .setLimit(500)
  *       .setStartId("some-id")
  *       .setReturningIdsOnly(true)
  *       .build();
- * </pre>
+ * }</pre>
  *
  */
 public class GetRequest {

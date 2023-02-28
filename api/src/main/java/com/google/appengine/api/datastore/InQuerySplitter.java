@@ -33,17 +33,17 @@ import java.util.List;
  * attributes as the original, except we replace the IN filter with an EQUALS filter for one element
  * in the list of predicate values. So say we're given:
  *
- * <pre>
+ * <pre>{@code
  *  select from Person where age IN (33, 44, 55)
- * </pre>
+ * }</pre>
  *
  * <p>We would turn this into:
  *
- * <pre>
+ * <pre>{@code
  *  select from Person where age == 33
  *  select from Person where age == 44
  *  select from Person where age == 55
- * </pre>
+ * }</pre>
  *
  */
 class InQuerySplitter extends BaseQuerySplitter {

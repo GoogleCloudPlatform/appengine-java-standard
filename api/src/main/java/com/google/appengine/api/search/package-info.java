@@ -27,7 +27,7 @@
  * index. Finally, index is searched and matching documents, or their snippets are returned to the
  * user.
  *
- * <pre>
+ * <pre>{@code
  * public List&lt;ScoredDocument&gt; indexAndSearch(
  *     String query, Document... documents) {
  *     SearchService searchService = SearchServiceFactory.getSearchService();
@@ -45,6 +45,7 @@
  *       matched.add(result);
  *     }
  *     return matched;
+ * }
  * }</pre>
  *
  * @see com.google.appengine.api.search.SearchServiceFactory

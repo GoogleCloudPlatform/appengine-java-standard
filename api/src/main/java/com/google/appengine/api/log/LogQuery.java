@@ -81,7 +81,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * statically import {@link Builder}.* and invoke a static
  * creation method followed by an instance mutator (if needed):
  *
- * <pre>
+ * <pre>{@code
  * import static com.google.appengine.api.log.LogQuery.Builder.*;
  *
  * ...
@@ -94,7 +94,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * cal.add(Calendar.DAY_OF_MONTH, -1);
  * iter = logService.fetch(withEndTimeMillis(cal.time())
  *     .includeIncomplete(true).minimumLogLevel(LogService.INFO));
- * </pre>
+ * }</pre>
  *
  * There are a couple of ways to configure {@link LogQuery} to limit
  * {@link LogService#fetch(LogQuery)} to only return log records for specific

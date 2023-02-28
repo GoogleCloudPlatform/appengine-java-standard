@@ -224,18 +224,18 @@ public interface MemcacheService extends BaseMemcacheService {
    *
    * <p>Note that, because an object may be removed from cache at any time, the
    * following is not sound code:
-   * <pre>
+   * <pre>{@code
    *   if (memcache.contains("key")) {
    *     foo = memcache.get("key");
    *     if (foo == null) {
    *       // continue, assuming foo had the real value null
    *     }
    *   }
-   *  </pre>
+   *  }</pre>
    *  The problem is that the cache could have dropped the entry between the
    *  call to {@link #contains} and {@link #get(Object)}.  This is
    *  a sounder pattern:
-   *  <pre>
+   * <pre>{@code
    *   foo = memcache.get("key");
    *   if (foo == null) {
    *     if (memcache.contains("key")) {
@@ -244,7 +244,7 @@ public interface MemcacheService extends BaseMemcacheService {
    *       // continue; foo may have had a real null, but has been dropped now
    *     }
    *   }
-   *  </pre>
+   *  }</pre>
    *  Another alternative is to prefer {@link #getAll(Collection)}, although
    *  it requires making an otherwise-unneeded {@code Collection} of some sort.
    *

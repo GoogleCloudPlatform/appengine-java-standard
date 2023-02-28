@@ -32,7 +32,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * import {@link Builder}.* and invoke a static creation method followed by an instance mutator (if
  * needed):
  *
- * <pre>
+ * <pre>{@code
  * import static com.google.appengine.api.datastore.DatastoreServiceConfig.Builder.*;
  * import com.google.appengine.api.datastore.ReadPolicy.Consistency;
  *
@@ -44,7 +44,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * // eventually consistent reads with a 5 second deadline
  * DatastoreServiceConfig config =
  *   withReadPolicy(new ReadPolicy(Consistency.EVENTUAL)).deadline(5.0);
- * </pre>
+ * }</pre>
  *
  */
 public final class DatastoreServiceConfig {

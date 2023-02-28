@@ -22,12 +22,12 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * Global system properties which are set by App Engine.
  * <p>
  * Example code:
- * <pre>
+ * <pre>{@code
  * if (SystemProperty.environment.value() == SystemProperty.Environment.Value.Production) {
  *   // do something that's production-only
  * }
  * String version = SystemProperty.version.get();
- * </pre>
+ * }</pre>
  *
  */
 public class SystemProperty {

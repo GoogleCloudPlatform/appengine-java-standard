@@ -23,24 +23,24 @@ import java.util.concurrent.Future;
  * queried about their metadata or have index/delete/search operations
  * performed on them.  For example:
  *
- * <pre>
+ * <pre>{@code
  * SearchService searchService = SearchServiceFactory.getSearchService();
- * GetResponse&lt;Index&gt; response = searchService.getIndexes(
+ * GetResponse<Index> response = searchService.getIndexes(
  *     GetIndexesRequest.newBuilder());
  * for (Index index : response) {
  *   index.getName();
  *   index.getNamespace();
  *   index.search("query");
  * }
- * </pre>
+ * }</pre>
  *
  * SearchService is also responsible for creating new indexes.  For
  * example:
  *
- * <pre>
+ * <pre>{@code
  * SearchService searchService = SearchServiceFactory.getSearchService();
  * Index index = searchService.getIndex(IndexSpec.newBuilder().setName("myindex"));
- * </pre>
+ * }</pre>
  *
  */
 public interface SearchService {

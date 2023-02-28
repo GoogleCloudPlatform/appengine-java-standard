@@ -44,7 +44,7 @@ public final class SortOptions {
    * rating showing cheapest products based on price plus tax,
    * sorting at most 2000 documents.
    * <p>
-   * <pre>
+   * <pre>{@code
    *   SortOptions sortOptions = SortOptions.newBuilder()
    *       .addSortExpression(SortExpression.newBuilder()
    *           .setExpression("rating")
@@ -56,12 +56,12 @@ public final class SortOptions {
    *           .setDefaultValueNumeric(99999999.00))
    *       .setLimit(1000)
    *       .build();
-   * </pre>
+   * }</pre>
    *
    * The following code fragment shows how the score from a {@link MatchScorer}
    * can be used in an expression that combines the score with one thousandth of
    * an "importance" field. At most 1000 documents are scored and sorted.
-   * <pre>
+   * <pre>{@code
    *   SortOptions sortOptions = SortOptions.newBuilder()
    *       .setMatchScorer(MatchScorer.newBuilder())
    *       .addSortExpression(SortExpression.newBuilder()
@@ -71,7 +71,7 @@ public final class SortOptions {
    *           .setDefaultValueNumeric(0))
    *       .setLimit(1000)
    *       .build();
-   * </pre>
+   * }</pre>
    */
   public static final class Builder {
     // Optional

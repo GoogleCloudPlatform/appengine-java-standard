@@ -51,12 +51,12 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * The recommended way to instantiate a {@link TaskOptions} object is to statically import {@link
  * Builder}.* and invoke a static creation method followed by an instance mutator (if needed):
  *
- * <pre>
+ * <pre>{@code
  * import static com.google.appengine.api.taskqueue.TaskOptions.Builder.*;
  *
  * ...
  * {@link QueueFactory#getDefaultQueue()}.add(withUrl(url).etaMillis(eta));
- * </pre>
+ * }</pre>
  *
  */
 public final class TaskOptions implements Serializable {

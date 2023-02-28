@@ -40,7 +40,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * Represents a user generated document. The following example shows how to
  * create a document consisting of a set of fields, some with plain text and
  * some in HTML; it also adds facets to the document.
- * <pre>
+ * <pre>{@code
  *    Document document = Document.newBuilder().setId("document id")
  *       .setLocale(Locale.UK)
  *       .addField(Field.newBuilder()
@@ -48,7 +48,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *           .setText("going for dinner"))
  *       .addField(Field.newBuilder()
  *           .setName("body")
- *           .setHTML("&lt;html&gt;I found a restaurant.&lt;/html&gt;"))
+ *           .setHTML("<html>I found a restaurant.</html>"))
  *       .addField(Field.newBuilder()
  *           .setName("signature")
  *           .setText("ten post jest przeznaczony dla odbiorcy")
@@ -56,10 +56,10 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *       .addFacet(Facet.withAtom("tag", "food"))
  *       .addFacet(Facet.withNumber("priority", 5.0))
  *       .build();
- * </pre>
+ * }</pre>
  *
  * The following example shows how to access the fields within a document:
- * <pre>
+ * <pre>{@code
  *    Document document = ...
  *
  *    for (Field field : document.getFields()) {
@@ -70,10 +70,10 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *        case DATE: use(field.getDate()); break;
  *      }
  *    }
- * </pre>
+ * }</pre>
  *
  * And this example shows how to access the facets within a document:
- * <pre>
+ * <pre>{@code
  *    Document document = ...
  *
  *    for (Facet facet : document.getFacets()) {
@@ -82,7 +82,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *        case NUMBER: use(facet.getNumber()); break;
  *      }
  *    }
- * </pre>
+ * }</pre>
  */
 public class Document implements Serializable {
 

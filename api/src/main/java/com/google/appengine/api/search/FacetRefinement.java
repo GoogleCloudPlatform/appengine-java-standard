@@ -37,10 +37,10 @@ import java.io.IOException;
  * <p>
  * Example: Request to only return documents that have a number facet named "rating" with a value
  * between one and two:
- * <pre>
+ * <pre>{@code
  * FacetRefinement lowRating = FacetRefinement.withRange("rating", FacetRange.startEnd(1.0, 2.0));
  * query.addFacetRefinement(lowRating);
- * </pre>
+ * }</pre>
  */
 public final class FacetRefinement {
 

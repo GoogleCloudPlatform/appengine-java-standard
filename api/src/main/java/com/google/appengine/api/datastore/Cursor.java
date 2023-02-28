@@ -40,10 +40,10 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  * <blockquote>
  *
- * <pre>
+ * <pre>{@code
  * Cursor originalCursor = preparedQuery.asQueryResultList(withLimit(20)).getCursor();
  * String encodedCursor = original.toWebSafeString();
- * </pre>
+ * }</pre>
  *
  * </blockquote>
  *

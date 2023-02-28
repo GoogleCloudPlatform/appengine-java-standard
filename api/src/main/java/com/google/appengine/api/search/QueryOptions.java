@@ -38,7 +38,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * getting the next 20 results from the responseCursor in the previously returned results, giving
  * back a single cursor in the {@link Results} to get the next batch of results after this.
  *
- * <pre>
+ * <pre>{@code
  * QueryOptions request = QueryOptions.newBuilder()
  *      .setLimit(20)
  *      .setFieldsToReturn("author", "date-sent")
@@ -51,7 +51,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  *      .setCursor(Cursor.newBuilder().build())
  *      .build();
- * </pre>
+ * }</pre>
  */
 public final class QueryOptions {
 
@@ -67,8 +67,8 @@ public final class QueryOptions {
     private List<FieldExpression> expressionsToReturn = new ArrayList<FieldExpression>();
 
     // Optional
-    @Nullable private SortOptions sortOptions;
-    @Nullable private Cursor cursor;
+    private @Nullable SortOptions sortOptions;
+    private @Nullable Cursor cursor;
     @Nullable private Integer numberFoundAccuracy;
     @Nullable private Integer offset;
     @Nullable private Boolean idsOnly;
@@ -111,7 +111,7 @@ public final class QueryOptions {
      *
      * This is illustrated from the following code fragment:
      * <p>
-     * <pre>
+     * <pre>{@code
      * Cursor cursor = Cursor.newBuilder().build();
      *
      * SearchResults results = index.search(
@@ -131,7 +131,7 @@ public final class QueryOptions {
      *     // If you set Cursor.newBuilder().setPerResult(true)
      *     // then a cursor is returned with each result.
      *     result.getCursor();
-     * </pre>
+     * }}</pre>
      *
      * @param cursor use a cursor returned from a
      * previous set of search results as a starting point to retrieve

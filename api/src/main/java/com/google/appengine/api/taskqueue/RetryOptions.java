@@ -26,14 +26,14 @@ import java.io.Serializable;
  * The recommended way to instantiate a {@link RetryOptions} object is to statically import {@link
  * Builder}.* and invoke a static creation method followed by an instance mutator (if needed):
  *
- * <pre>
+ * <pre>{@code
  * import static com.google.appengine.api.taskqueue.RetryOptions.Builder.*;
  *
  * ...
  * RetryOptions retry = withTaskRetryLimit(10).taskAgeLimitSeconds("4d")
  *     .minBackoffSeconds(120).maxBackoffSeconds(3600).maxDoublings(5);
  * {@link QueueFactory#getDefaultQueue()}.add(retryOptions(retry));
- * </pre>
+ * }</pre>
  *
  */
 public final class RetryOptions implements Serializable {

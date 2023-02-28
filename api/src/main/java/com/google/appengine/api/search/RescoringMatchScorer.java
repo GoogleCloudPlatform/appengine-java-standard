@@ -22,14 +22,14 @@ import com.google.appengine.api.search.proto.SearchServicePb;
  * Assigns a document score based on term frequency weighted on document parts.
  *
  * If you add a MatchScorer to a SortOptions as in the following code:
- * <pre>
+ * <pre>{@code
  *  SortOptions sortOptions = SortOptions.newBuilder()
  *      .setMatchScorer(RescoringMatchScorer.newBuilder())
  *      .build();
- * </pre>
+ * }</pre>
  * then this will sort the documents in descending score order. The scores will be
  * positive. If you want to sort in ascending order, then use the following code:
- * <pre>
+ * <pre>{@code
  *   SortOptions sortOptions = SortOptions.newBuilder()
  *       .setMatchScorer(RescoringMatchScorer.newBuilder())
  *       .addSortExpression(
@@ -38,7 +38,7 @@ import com.google.appengine.api.search.proto.SearchServicePb;
  *               .setDirection(SortExpression.SortDirection.ASCENDING)
  *               .setDefaultValueNumeric(0.0))
  *       .build();
- * </pre>
+ * }</pre>
  * The scores in this case will be negative.
  *
  */

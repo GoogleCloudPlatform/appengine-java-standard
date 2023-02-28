@@ -22,7 +22,7 @@
  *
  * <p>A common pattern of usage is:
  *
- * <pre>
+ * <pre>{@code
  * // Get a handle on the datastore itself
  * DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
  *
@@ -40,7 +40,7 @@
  *     datastore.put(taskEntity);
  *   }
  * }
- * </pre>
+ * }</pre>
  *
  * <p>This illustrates several basic points:
  *

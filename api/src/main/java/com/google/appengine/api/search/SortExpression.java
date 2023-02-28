@@ -32,12 +32,12 @@ public final class SortExpression {
    * The expression to be used if you wish to sort by document id field
    * {@link Document#getId()}.
    * You need to create a sort expression as
-   * <pre>
+   * <pre>{@code
    * SortExpression expr = SortExpression.newBuilder()
    *     .setExpression(SortExpression.DOCUMENT_ID_FIELD_NAME)
    *     .setDefaultValue("")
    *     .build();
-   * </pre>
+   * }</pre>
    */
   public static final String DOCUMENT_ID_FIELD_NAME = "_doc_id";
 
@@ -45,12 +45,12 @@ public final class SortExpression {
    * The expression to be used if you wish to sort by language
    * code associated with the locale field {@link Document#getLocale()}.
    * You need to create a sort expression as
-   * <pre>
+   * <pre>{@code
    * SortExpression expr = SortExpression.newBuilder()
    *     .setExpression(SortExpression.LANGUAGE_FIELD_NAME)
    *     .setDefaultValue("")
    *     .build();
-   * </pre>
+   * }</pre>
    */
   public static final String LANGUAGE_FIELD_NAME = "_lang";
 
@@ -58,27 +58,27 @@ public final class SortExpression {
    * The expression to be used if you wish to sort by rank field.
    * By default, results are sorted in descending value of rank.
    * To sort in ascending order, you need to create a sort expression as
-   * <pre>
+   * <pre>{@code
    * SortExpression expr = SortExpression.newBuilder()
    *     .setExpression(SortExpression.RANK_FIELD_NAME)
    *     .setDirection(SortExpression.SortDirection.ASCENDING)
    *     .setDefaultValueNumeric(0)
    *     .build();
-   * </pre>
+   * }</pre>
    */
   public static final String RANK_FIELD_NAME = "_rank";
 
   /**
    * The expression to be used if you wish to sort by document score.
    * You need to create a sort expression as
-   * <pre>
+   * <pre>{@code
    * SortExpression expr = SortExpression.newBuilder()
    *     .setExpression(String.format(
    *         "%s + rating * 0.01", SortExpression.SCORE_FIELD_NAME))
    *     .setDirection(SortExpression.SortDirection.DESCENDING)
    *     .setDefaultValueNumeric(0)
    *     .build();
-   * </pre>
+   * }</pre>
    */
   public static final String SCORE_FIELD_NAME = "_score";
 
@@ -86,12 +86,12 @@ public final class SortExpression {
    * The expression to be used if you wish to sort by
    * seconds since EPOCH that the document was written.
    * You need to create a sort expression as
-   * <pre>
+   * <pre>{@code
    * SortExpression expr = SortExpression.newBuilder()
    *     .setExpression(SortExpression.TIMESTAMP_FIELD_NAME)
    *     .setDefaultValueNumeric(0)
    *     .build();
-   * </pre>
+   * }</pre>
    */
   public static final String TIMESTAMP_FIELD_NAME = "_timestamp";
 
@@ -120,14 +120,14 @@ public final class SortExpression {
    * of the number of likes values times 0.1. A default value must be specified
    * for the expression.
    * <p>
-   * <pre>
+   * <pre>{@code
    *   SortExpression expr = SortExpression.newBuilder()
    *       .setExpression(String.format(
    *           "%s + count(likes) * 0.1", SortExpression.SCORE_FIELD_NAME))
    *       .setDirection(SortExpression.SortDirection.ASCENDING)
    *       .setDefaultValueNumeric(0.0)
    *       .build()
-   * </pre>
+   * }</pre>
    */
   public static final class Builder {
     // Optional
