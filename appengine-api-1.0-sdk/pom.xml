@@ -269,6 +269,10 @@
                   <pattern>io.opencensus</pattern>
                   <shadedPattern>com.google.appengine.repackaged.io.opencensus</shadedPattern>
                 </relocation>
+                <relocation> <!-- from google-http-client then opencensus-->
+                  <pattern>io.grpc</pattern>
+                  <shadedPattern>com.google.appengine.repackaged.io.grpc</shadedPattern>
+                </relocation>
               </relocations>
               <filters>
                 <filter>
@@ -496,7 +500,8 @@
                   <include>org.codehaus.jackson:jackson-core-asl:*</include>
                   <include>io.opencensus:opencensus-api:*</include>
                   <include>io.opencensus:opencensus-contrib-http-util:*</include>
-                </includes>
+                   <include>io.grpc:grpc-context:*</include>
+               </includes>
               </artifactSet>
             </configuration>
           </execution>
