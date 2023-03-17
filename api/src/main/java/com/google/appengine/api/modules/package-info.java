@@ -14,4 +14,21 @@
  * limitations under the License.
  */
 
+/**
+ * Utility functions for working with App Engine services (previously known as modules).
+ *
+ * <p> A common pattern of usage is:
+ *
+ * <pre>
+ * // Get a handle of the ModulesService.
+ * ModulesService modules = ModulesServiceFactory.getModulesService();
+ *
+ * // Lookup the versions associated with the current service/module.
+ * for (String version : modules.getVersions(modules.getCurrentModule())) {
+ *   // Process version.
+ * }
+ * </pre>
+ *
+ * @see com.google.appengine.api.modules.ModulesService
+ */
 package com.google.appengine.api.modules;
