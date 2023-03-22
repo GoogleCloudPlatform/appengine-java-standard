@@ -115,9 +115,11 @@ public class JettyHttpProxy {
     sizeLimitHandler.setHandler(handler);
 
     GzipHandler gzip = new GzipHandler();
-    gzip.setIncludedMethods("GET", "POST");
     gzip.setInflateBufferSize(8 * 1024);
     gzip.setHandler(sizeLimitHandler);
+
+    // Include all methods for the GzipHandler.
+    gzip.setIncludedMethods();
 
     server.setHandler(gzip);
 
