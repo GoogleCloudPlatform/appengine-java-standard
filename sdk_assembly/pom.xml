@@ -93,11 +93,11 @@
                             <artifactItems>
                                 <artifactItem>
                                     <groupId>org.eclipse.jetty</groupId>
-                                    <artifactId>jetty-distribution</artifactId>
+                                    <artifactId>jetty-home</artifactId>
                                     <type>zip</type>
                                     <fileMappers>
                                         <org.codehaus.plexus.components.io.filemappers.RegExpFileMapper>
-                                            <pattern>^\Qjetty-distribution-${jetty.version}\E</pattern>
+                                            <pattern>^\Qjetty-home-${jetty.version}\E</pattern>
                                             <replacement>./</replacement>
                                         </org.codehaus.plexus.components.io.filemappers.RegExpFileMapper>
                                     </fileMappers>
