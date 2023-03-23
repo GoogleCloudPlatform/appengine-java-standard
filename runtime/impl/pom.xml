@@ -115,8 +115,8 @@
             <optional>true</optional>
         </dependency>
         <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-quickstart</artifactId>
+            <groupId>org.eclipse.jetty.ee8</groupId>
+            <artifactId>jetty-ee8-quickstart</artifactId>
             <exclusions>
                 <exclusion>
                     <groupId>javax.transaction</groupId>
@@ -126,8 +126,8 @@
           <optional>true</optional>
         </dependency>
         <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-servlets</artifactId>
+            <groupId>org.eclipse.jetty.ee8</groupId>
+            <artifactId>jetty-ee8-servlets</artifactId>
             <optional>true</optional>
         </dependency>
         <dependency>
@@ -406,22 +406,22 @@
                                     <include>joda-time:joda-time</include>
                                     <include>org.checkerframework:checker-compat-qual</include>
                                     <include>org.codehaus.mojo:animal-sniffer-annotations</include>
-                                    <include>org.eclipse.jetty:jetty-annotations</include>
+                                    <include>org.eclipse.jetty.ee8:jetty-ee8-annotations</include>
+                                    <include>org.eclipse.jetty.ee8:jetty-ee8-jndi</include>
+                                    <include>org.eclipse.jetty.ee8:jetty-ee8-plus</include>
+                                    <include>org.eclipse.jetty.ee8:jetty-ee8-quickstart</include>
+                                    <include>org.eclipse.jetty.ee8:jetty-ee8-security</include>
+                                    <include>org.eclipse.jetty.ee8:jetty-ee8-servlet</include>
+                                    <include>org.eclipse.jetty.ee8:jetty-ee8-servlets</include>
+                                    <include>org.eclipse.jetty.ee8:jetty-ee8-webapp</include>
                                     <include>org.eclipse.jetty:jetty-client</include>
                                     <include>org.eclipse.jetty:jetty-continuation</include>
                                     <include>org.eclipse.jetty:jetty-http</include>
                                     <include>org.eclipse.jetty:jetty-io</include>
                                     <include>org.eclipse.jetty:jetty-jmx</include>
-                                    <include>org.eclipse.jetty:jetty-jndi</include>
-                                    <include>org.eclipse.jetty:jetty-plus</include>
-                                    <include>org.eclipse.jetty:jetty-quickstart</include>
-                                    <include>org.eclipse.jetty:jetty-security</include>
                                     <include>org.eclipse.jetty:jetty-server</include>
-                                    <include>org.eclipse.jetty:jetty-servlet</include>
-                                    <include>org.eclipse.jetty:jetty-servlets</include>
                                     <include>org.eclipse.jetty:jetty-util-ajax</include>
                                     <include>org.eclipse.jetty:jetty-util</include>
-                                    <include>org.eclipse.jetty:jetty-webapp</include>
                                     <include>org.eclipse.jetty:jetty-xml</include>
                                     <include>org.json:json</include>
                                     <include>org.ow2.asm:asm-analysis</include>

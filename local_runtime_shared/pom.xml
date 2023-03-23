@@ -45,8 +45,8 @@
       <artifactId>runtime-shared</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.eclipse.jetty</groupId>
-      <artifactId>apache-jsp</artifactId>
+      <groupId>org.eclipse.jetty.ee8</groupId>
+      <artifactId>jetty-ee8-apache-jsp</artifactId>
     </dependency>
     <dependency>
       <groupId>org.mortbay.jasper</groupId>
@@ -60,8 +60,8 @@
   <build>
     <plugins>
       <plugin>
-        <groupId>org.eclipse.jetty</groupId>
-        <artifactId>jetty-jspc-maven-plugin</artifactId>
+        <groupId>org.eclipse.jetty.ee8</groupId>
+        <artifactId>jetty-ee8-jspc-maven-plugin</artifactId>
         <executions>
           <execution>
             <id>jspc</id>

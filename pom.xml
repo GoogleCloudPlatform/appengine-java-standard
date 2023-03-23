@@ -51,7 +51,7 @@
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <jetty.version>9.4.50.v20221201</jetty.version>
+    <jetty.version>12.0.0.beta0</jetty.version>
     <distributionManagement.snapshot.url>https://oss.sonatype.org/content/repositories/google-snapshots/</distributionManagement.snapshot.url>
     <distributionManagement.snapshot.id>sonatype-nexus-snapshots</distributionManagement.snapshot.id>
     <distributionManagement.release.url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</distributionManagement.release.url>
@@ -573,6 +573,24 @@
         <scope>import</scope>
       </dependency>
       <dependency>
+        <groupId>org.eclipse.jetty.ee8</groupId>
+        <artifactId>jetty-ee8-bom</artifactId>
+        <version>${jetty.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <!-- TODO: remove this when it is added to ee8 bom -->
+        <groupId>org.eclipse.jetty.ee8</groupId>
+        <artifactId>jetty-ee8-apache-jsp</artifactId>
+        <version>${jetty.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.eclipse.jetty</groupId>
+        <artifactId>jetty-home</artifactId>
+        <version>${jetty.version}</version>
+      </dependency>
+      <dependency>
         <groupId>org.eclipse.jetty.toolchain</groupId>
         <artifactId>jetty-schemas</artifactId>
         <version>3.1</version>
@@ -809,8 +827,8 @@
           <version>3.5.3</version>
         </plugin>
         <plugin>
-          <groupId>org.eclipse.jetty</groupId>
-          <artifactId>jetty-jspc-maven-plugin</artifactId>
+          <groupId>org.eclipse.jetty.ee8</groupId>
+          <artifactId>jetty-ee8-jspc-maven-plugin</artifactId>
           <version>${jetty.version}</version>
         </plugin>
         <plugin>
