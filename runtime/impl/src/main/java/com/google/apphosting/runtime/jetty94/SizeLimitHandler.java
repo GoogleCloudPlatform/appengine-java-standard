@@ -25,10 +25,10 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletResponseWrapper;
 import org.eclipse.jetty.http.BadMessageException;
 import org.eclipse.jetty.http.HttpHeader;
-import org.eclipse.jetty.server.HttpInput;
-import org.eclipse.jetty.server.HttpOutput;
+import org.eclipse.jetty.ee8.nested.HttpInput;
+import org.eclipse.jetty.ee8.nested.HttpOutput;
 import org.eclipse.jetty.server.Request;
-import org.eclipse.jetty.server.handler.HandlerWrapper;
+import org.eclipse.jetty.ee8.nested.HandlerWrapper;
 import org.eclipse.jetty.util.Callback;
 
 /**
@@ -54,7 +54,7 @@ public class SizeLimitHandler extends HandlerWrapper {
     this.requestLimit = requestLimit;
     this.responseLimit = responseLimit;
   }
-
+  /*
   protected void checkRequestLimit(long size) {
     if (requestLimit >= 0 && size > requestLimit) {
       throw new BadMessageException(413, "Request body is too large: " + size + ">" + requestLimit);
@@ -198,4 +198,5 @@ public class SizeLimitHandler extends HandlerWrapper {
       super.addIntHeader(name, value);
     }
   }
+  */
 }

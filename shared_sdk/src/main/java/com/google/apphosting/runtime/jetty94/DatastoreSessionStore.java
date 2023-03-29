@@ -37,10 +37,12 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
-import org.eclipse.jetty.server.session.AbstractSessionDataStore;
-import org.eclipse.jetty.server.session.SessionData;
-import org.eclipse.jetty.server.session.UnreadableSessionDataException;
-import org.eclipse.jetty.server.session.UnwriteableSessionDataException;
+import org.eclipse.jetty.session.AbstractSessionDataStore;
+import org.eclipse.jetty.session.SessionData;
+import org.eclipse.jetty.session.SessionDataMap;
+import org.eclipse.jetty.session.SessionDataStore;
+import org.eclipse.jetty.session.UnreadableSessionDataException;
+import org.eclipse.jetty.session.UnwriteableSessionDataException;
 import org.eclipse.jetty.util.ClassLoadingObjectInputStream;
 
 /**
@@ -104,12 +106,40 @@ class DatastoreSessionStore implements SessionStore {
 
     /**
      * Scavenging is not performed by the Jetty session setup, so this method will never be called.
-     *
-     * @see org.eclipse.jetty.server.session.AbstractSessionDataStore#doGetExpired(java.util.Set)
      */
     @Override
-    public Set<String> doGetExpired(Set<String> candidates) {
-      return ImmutableSet.of();
+    public Set<String> doCheckExpired(Set<String> candidates, long time) {
+      return null;
+    }
+
+    /**
+     * Scavenging is not performed by the Jetty session setup, so this method will never be called.
+     */
+    @Override
+    public Set<String> doGetExpired(long before) {
+      return null;
+    }
+
+    @Override
+    public void doCleanOrphans(long time) {
+    }
+
+    /**
+     * Check if the session matching the given key exists in datastore.
+     *
+     * @see SessionDataStore#exists(java.lang.String)
+     */
+    @Override
+    public boolean doExists(String id) throws Exception {
+      try {
+        Entity entity = datastore.get(createKeyForSession(id));
+
+        logger.atFinest().log("Session %s %s", id, (entity != null) ? "exists" : "does not exist");
+        return true;
+      } catch (EntityNotFoundException ex) {
+        logger.atFine().log("Session %s does not exist", id);
+        return false;
+      }
     }
 
     /** Save a session to Appengine datastore. */
@@ -139,7 +169,7 @@ class DatastoreSessionStore implements SessionStore {
      * Even though this is a passivating store, we return false because no passivation/activation
      * listeners are called in Appengine.
      *
-     * @see org.eclipse.jetty.server.session.SessionDataStore#isPassivating()
+     * @see SessionDataStore#isPassivating()
      */
     @Override
     public boolean isPassivating() {
@@ -147,27 +177,9 @@ class DatastoreSessionStore implements SessionStore {
     }
 
     /**
-     * Check if the session matching the given key exists in datastore.
-     *
-     * @see org.eclipse.jetty.server.session.SessionDataStore#exists(java.lang.String)
-     */
-    @Override
-    public boolean exists(String id) throws Exception {
-      try {
-        Entity entity = datastore.get(createKeyForSession(id));
-
-        logger.atFinest().log("Session %s %s", id, (entity != null) ? "exists" : "does not exist");
-        return true;
-      } catch (EntityNotFoundException ex) {
-        logger.atFine().log("Session %s does not exist", id);
-        return false;
-      }
-    }
-
-    /**
      * Remove the Entity for the given session key.
      *
-     * @see org.eclipse.jetty.server.session.SessionDataMap#delete(java.lang.String)
+     * @see SessionDataMap#delete(java.lang.String)
      */
     @Override
     public boolean delete(String id) throws IOException {
@@ -178,7 +190,7 @@ class DatastoreSessionStore implements SessionStore {
     /**
      * Read in data for a session from datastore.
      *
-     * @see org.eclipse.jetty.server.session.SessionDataMap#load(java.lang.String)
+     * @see SessionDataMap#load(java.lang.String)
      */
     @Override
     public SessionData doLoad(String id) throws Exception {
@@ -292,7 +304,7 @@ class DatastoreSessionStore implements SessionStore {
               time,
               time,
               time,
-              (1000L * _context.getSessionHandler().getMaxInactiveInterval()));
+              (1000L * _context.getSessionManager().getMaxInactiveInterval()));
       session.setExpiry(expiry);
 
       try (ClassLoadingObjectInputStream ois =

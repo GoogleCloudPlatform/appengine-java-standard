@@ -28,9 +28,9 @@ import java.util.logging.Logger;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.eclipse.jetty.security.ConstraintMapping;
-import org.eclipse.jetty.security.ConstraintSecurityHandler;
-import org.eclipse.jetty.server.Request;
+import org.eclipse.jetty.ee8.security.ConstraintMapping;
+import org.eclipse.jetty.ee8.security.ConstraintSecurityHandler;
+import org.eclipse.jetty.ee8.nested.Request;
 import org.eclipse.jetty.util.resource.Resource;
 
 /**
@@ -71,15 +71,17 @@ public class DevAppEngineWebAppContext extends AppEngineWebAppContext {
     // dev console for example) to get access to this resource even in the
     // presence of libraries that install their own custom Delegates (like
     // Remote api and Appstats for example).
-    _scontext.setAttribute("com.google.appengine.devappserver.ApiProxyLocal", apiProxyDelegate);
+    getServletContext().setAttribute("com.google.appengine.devappserver.ApiProxyLocal", apiProxyDelegate);
 
     // Make the dev appserver available via the servlet context as well.
-    _scontext.setAttribute("com.google.appengine.devappserver.Server", devAppServer);
+    getServletContext().setAttribute("com.google.appengine.devappserver.Server", devAppServer);
   }
 
   /**
-   * By default, the context is created with alias checkers for symlinks:
-   * {@link org.eclipse.jetty.server.handler.AllowSymLinkAliasChecker}.
+   * <p>By default, the context is created with alias checkers for symlinks:
+   * {@link org.eclipse.jetty.server.SymlinkAllowedResourceAliasChecker}.</p>
+   *
+   * <p>Note: this is a dangerous configuration and should not be used in production.</p>
    */
   @Override
   public boolean checkAlias(String path, Resource resource) {

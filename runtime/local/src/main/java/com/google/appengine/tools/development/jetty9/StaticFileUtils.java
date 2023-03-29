@@ -32,7 +32,8 @@ import javax.servlet.http.HttpServletResponse;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.io.WriterOutputStream;
-import org.eclipse.jetty.server.handler.ContextHandler;
+import org.eclipse.jetty.ee8.nested.ContextHandler;
+import org.eclipse.jetty.util.IO;
 import org.eclipse.jetty.util.URIUtil;
 import org.eclipse.jetty.util.resource.Resource;
 
@@ -44,9 +45,9 @@ import org.eclipse.jetty.util.resource.Resource;
 public class StaticFileUtils {
   private static final String DEFAULT_CACHE_CONTROL_VALUE = "public, max-age=600";
 
-  private final ContextHandler.Context servletContext;
+  private final ContextHandler.APIContext servletContext;
 
-  public StaticFileUtils(ContextHandler.Context servletContext) {
+  public StaticFileUtils(ContextHandler.APIContext servletContext) {
     this.servletContext = servletContext;
   }
 
@@ -80,7 +81,7 @@ public class StaticFileUtils {
       throws IOException, ServletException {
     // If the user didn't specify a slash but we know we want a
     // welcome file, redirect them to add the slash now.
-    if (!included && !request.getRequestURI().endsWith(URIUtil.SLASH)) {
+    if (!included && !request.getRequestURI().endsWith("/")) {
       redirectToAddSlash(request, response);
       return true;
     }
@@ -132,7 +133,7 @@ public class StaticFileUtils {
           // Ignore bad date formats.
         }
         if (ifmsl != -1) {
-          if (resource.lastModified() <= ifmsl) {
+          if (resource.lastModified().toEpochMilli() <= ifmsl) {
             response.reset();
             response.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
             response.flushBuffer();
@@ -149,7 +150,7 @@ public class StaticFileUtils {
         // Ignore bad date formats.
       }
       if (date != -1) {
-        if (resource.lastModified() > date) {
+        if (resource.lastModified().toEpochMilli() > date) {
           response.sendError(HttpServletResponse.SC_PRECONDITION_FAILED);
           return false;
         }
@@ -177,7 +178,8 @@ public class StaticFileUtils {
     } catch (IllegalStateException e) {
       out = new WriterOutputStream(response.getWriter());
     }
-    resource.writeTo(out, 0, contentLength);
+
+    IO.copy(resource.newInputStream(), out, contentLength);
   }
 
   /**
@@ -207,7 +209,7 @@ public class StaticFileUtils {
 
     // Set Last-Modified.
     if (!headersApplied.contains("last-modified")) {
-      response.setDateHeader(HttpHeader.LAST_MODIFIED.asString(), resource.lastModified());
+      response.setDateHeader(HttpHeader.LAST_MODIFIED.asString(), resource.lastModified().toEpochMilli());
     }
 
     // Set Cache-Control to the default value if it was not explicitly set.

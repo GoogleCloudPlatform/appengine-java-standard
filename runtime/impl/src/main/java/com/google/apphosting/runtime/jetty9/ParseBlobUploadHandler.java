@@ -40,8 +40,7 @@ import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
-import org.eclipse.jetty.server.Request;
-import org.eclipse.jetty.server.handler.HandlerWrapper;
+import org.eclipse.jetty.ee8.nested.HandlerWrapper;
 
 /**
  * {@code ParseBlobUploadHandler} is responsible for the parsing multipart/form-data or
@@ -78,10 +77,8 @@ public class ParseBlobUploadHandler extends HandlerWrapper {
   static final String CONTENT_LENGTH_HEADER = "Content-Length";
 
   @Override
-  public void handle(
-      String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response)
-      throws IOException, ServletException {
-    if (baseRequest.getDispatcherType() == DispatcherType.REQUEST
+  public void handle(String target, org.eclipse.jetty.ee8.nested.Request baseRequest, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
+    if (request.getDispatcherType() == DispatcherType.REQUEST
         && request.getHeader(UPLOAD_HEADER) != null) {
       Map<String, List<String>> blobKeys = new HashMap<>();
       Map<String, List<Map<String, String>>> blobInfos = new HashMap<>();
@@ -118,8 +115,7 @@ public class ParseBlobUploadHandler extends HandlerWrapper {
         logger.atWarning().withCause(ex).log("Could not parse multipart message:");
       }
 
-      super.handle(
-          target, baseRequest, new ParameterServletWrapper(request, otherParams), response);
+      super.handle(target, baseRequest, new ParameterServletWrapper(request, otherParams), response);
     } else {
       super.handle(target, baseRequest, request, response);
     }

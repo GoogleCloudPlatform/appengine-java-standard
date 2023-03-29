@@ -94,6 +94,11 @@ public class RpcEndPoint implements EndPoint {
   }
 
   @Override
+  public void close(Throwable throwable) {
+    closed = true;
+  }
+
+  @Override
   public int fill(ByteBuffer buffer) throws IOException {
     throw new UnsupportedOperationException();
   }
@@ -152,7 +157,7 @@ public class RpcEndPoint implements EndPoint {
   public void onOpen() {}
 
   @Override
-  public void onClose() {}
+  public void onClose(Throwable throwable) {}
 
   @Override
   public void upgrade(Connection a) {}
@@ -161,11 +166,4 @@ public class RpcEndPoint implements EndPoint {
   public boolean isFillInterested() {
     return false;
   }
-
-  @Override
-  public boolean isOptimizedForDirectBuffers() {
-    return false;
-  }
-
-
 }

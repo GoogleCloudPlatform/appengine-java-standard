@@ -19,9 +19,9 @@ package com.google.appengine.tools.development.jetty9;
 import java.util.ArrayList;
 import java.util.List;
 import javax.servlet.ServletContainerInitializer;
-import org.eclipse.jetty.annotations.AnnotationConfiguration;
-import org.eclipse.jetty.apache.jsp.JettyJasperInitializer;
-import org.eclipse.jetty.webapp.WebAppContext;
+import org.eclipse.jetty.ee8.annotations.AnnotationConfiguration;
+import org.eclipse.jetty.ee8.apache.jsp.JettyJasperInitializer;
+import org.eclipse.jetty.ee8.webapp.WebAppContext;
 
 /**
  * Customization of AnnotationConfiguration which correctly configures the JSP Jasper initializer.

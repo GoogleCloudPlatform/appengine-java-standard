@@ -25,15 +25,17 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.servlet.http.HttpServletRequest;
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.session.CachingSessionDataStore;
-import org.eclipse.jetty.server.session.DefaultSessionIdManager;
-import org.eclipse.jetty.server.session.HouseKeeper;
-import org.eclipse.jetty.server.session.NullSessionCache;
-import org.eclipse.jetty.server.session.Session;
-import org.eclipse.jetty.server.session.SessionData;
-import org.eclipse.jetty.server.session.SessionDataStore;
-import org.eclipse.jetty.server.session.SessionHandler;
-import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.session.CachingSessionDataStore;
+import org.eclipse.jetty.session.DefaultSessionIdManager;
+import org.eclipse.jetty.session.HouseKeeper;
+import org.eclipse.jetty.session.ManagedSession;
+import org.eclipse.jetty.session.NullSessionCache;
+import org.eclipse.jetty.server.Session;
+import org.eclipse.jetty.session.SessionData;
+import org.eclipse.jetty.session.SessionDataStore;
+import org.eclipse.jetty.ee8.nested.SessionHandler;
+import org.eclipse.jetty.ee8.servlet.ServletContextHandler;
+import org.eclipse.jetty.session.SessionManager;
 
 /**
  * Utility that configures the new Jetty 9.4 Servlet Session Manager in App Engine. It is used both
@@ -60,7 +62,7 @@ public class SessionManagerHandler {
     ServletContextHandler context = config.servletContextHandler();
     Server server = context.getServer();
     AppEngineSessionIdManager idManager = new AppEngineSessionIdManager(server);
-    server.setSessionIdManager(idManager);
+    context.getSessionHandler().setSessionIdManager(idManager);
     HouseKeeper houseKeeper = new HouseKeeper();
     // Do not scavenge. This can throw a generic Exception, not sure why.
     try {
@@ -153,8 +155,7 @@ public class SessionManagerHandler {
   }
 
   /**
-   * This is the replacement for {@link org.eclipse.jetty.server.session.NoOpSessionManager}. It
-   * does no caching, and is a factory for the new NullSession class.
+   * This does no caching, and is a factory for the new NullSession class.
    */
   private static class AppEngineNullSessionCache extends NullSessionCache {
 
@@ -164,20 +165,15 @@ public class SessionManagerHandler {
      * @param handler the SessionHandler to which this cache belongs
      */
     AppEngineNullSessionCache(SessionHandler handler) {
-      super(handler);
+      super(handler.getSessionManager());
       // Saves a call to the SessionDataStore.
       setSaveOnCreate(false);
       setRemoveUnloadableSessions(false);
     }
 
     @Override
-    public Session newSession(SessionData data) {
-      return new NullSession(getSessionHandler(), data);
-    }
-
-    @Override
-    public Session newSession(HttpServletRequest request, SessionData data) {
-      return new NullSession(getSessionHandler(), request, data);
+    public ManagedSession newSession(SessionData data) {
+      return new NullSession(getSessionManager(), data);
     }
   }
 
@@ -186,27 +182,16 @@ public class SessionManagerHandler {
    * This is a replacement for the NoOpSession.
    */
   @VisibleForTesting
-  static class NullSession extends Session {
+  static class NullSession extends ManagedSession {
 
     /**
      * Create a new NullSession.
      *
-     * @param handler the SessionHandler to which this session belongs
+     * @param sessionManager the SessionManager to which this session belongs
      * @param data the info of the session
      */
-    private NullSession(SessionHandler handler, SessionData data) {
-      super(handler, data);
-    }
-
-    /**
-     * Create a new NullSession.
-     *
-     * @param handler the SessionHandler to which this session belongs
-     * @param request the request initiating the session
-     * @param data the info of the session
-     */
-    private NullSession(SessionHandler handler, HttpServletRequest request, SessionData data) {
-      super(handler, request, data);
+    private NullSession(SessionManager sessionManager, SessionData data) {
+      super(sessionManager, data);
     }
 
     @Override
@@ -225,20 +210,22 @@ public class SessionManagerHandler {
     }
 
     @Override
-    public void removeAttribute(String name) {
+    public Object removeAttribute(String name) {
+      return null;
     }
 
     @Override
-    public void setAttribute(String name, Object value) {
+    public Object setAttribute(String name, Object value) {
       if ("org.eclipse.jetty.security.sessionCreatedSecure".equals(name)) {
         // This attribute gets set when generated JSP pages call HttpServletRequest.getSession(),
         // which creates a session if one does not exist. If HttpServletRequest.isSecure() is true,
         // meaning this is an https request, then Jetty wants to record that fact by setting this
         // attribute in the new session.
         // Possibly we should just ignore all setAttribute calls.
-        return;
+        return null;
       }
       throwException(name, value);
+      return null;
     }
 
     // This code path will be tested when we hook up the new session manager in the GAE
@@ -276,18 +263,13 @@ public class SessionManagerHandler {
      * @param handler the SessionHandler to which this cache pertains
      */
     AppEngineSessionCache(SessionHandler handler) {
-      super(handler);
+      super(handler.getSessionManager());
       setSaveOnCreate(true);
     }
 
     @Override
-    public Session newSession(SessionData data) {
-      return new AppEngineSession(getSessionHandler(), data);
-    }
-
-    @Override
-    public Session newSession(HttpServletRequest request, SessionData data) {
-      return new AppEngineSession(getSessionHandler(), request, data);
+    public ManagedSession newSession(SessionData data) {
+      return new AppEngineSession(getSessionManager(), data);
     }
   }
 
@@ -317,7 +299,7 @@ public class SessionManagerHandler {
     /**
      * Generate a new session id.
      *
-     * @see org.eclipse.jetty.server.session.DefaultSessionIdManager#newSessionId(long)
+     * @see org.eclipse.jetty.session.DefaultSessionIdManager#newSessionId(long)
      */
     @Override
     public synchronized String newSessionId(long seedTerm) {

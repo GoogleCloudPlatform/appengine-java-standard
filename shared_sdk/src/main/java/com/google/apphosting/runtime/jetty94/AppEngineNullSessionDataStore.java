@@ -16,11 +16,11 @@
 
 package com.google.apphosting.runtime.jetty94;
 
-import org.eclipse.jetty.server.session.NullSessionDataStore;
-import org.eclipse.jetty.server.session.SessionData;
+import org.eclipse.jetty.session.NullSessionDataStore;
+import org.eclipse.jetty.session.SessionData;
 
 /**
- * An extended {@link NullSessionDataStore} that uses the extended {@link AppEngineSesssionData}
+ * An extended {@link NullSessionDataStore} that uses the extended {@link AppEngineSessionData}
  */
 class AppEngineNullSessionDataStore extends NullSessionDataStore {
   @Override

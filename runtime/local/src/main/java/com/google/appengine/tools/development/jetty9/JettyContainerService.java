@@ -43,6 +43,7 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.file.Path;
 import java.security.Permissions;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -59,17 +60,21 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.eclipse.jetty.server.HttpChannel;
+
 import org.eclipse.jetty.server.HttpConnectionFactory;
-import org.eclipse.jetty.server.Request;
+import org.eclipse.jetty.server.NetworkTrafficServerConnector;
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.handler.ContextHandler;
-import org.eclipse.jetty.server.handler.HandlerWrapper;
-import org.eclipse.jetty.server.nio.NetworkTrafficSelectChannelConnector;
-import org.eclipse.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.ee8.nested.Request;
+import org.eclipse.jetty.ee8.nested.ContextHandler;
+import org.eclipse.jetty.ee8.nested.HandlerWrapper;
+import org.eclipse.jetty.ee8.nested.HttpChannel;
+import org.eclipse.jetty.ee8.servlet.ServletHolder;
+import org.eclipse.jetty.ee8.webapp.Configuration;
+import org.eclipse.jetty.ee8.webapp.JettyWebXmlConfiguration;
+import org.eclipse.jetty.ee8.webapp.WebAppContext;
 import org.eclipse.jetty.util.Scanner;
+import org.eclipse.jetty.util.component.LifeCycle;
 import org.eclipse.jetty.util.resource.Resource;
-import org.eclipse.jetty.webapp.WebAppContext;
 
 /**
  * Implements a Jetty backed {@link ContainerService}.
@@ -99,15 +104,15 @@ public class JettyContainerService extends AbstractContainerService {
    *
    * <p>This is a subset of: org.mortbay.jetty.webapp.WebAppContext.__dftConfigurationClasses
    *
-   * <p>Specifically, we've removed {@link org.eclipse.jetty.webapp.JettyWebXmlConfiguration} which
+   * <p>Specifically, we've removed {@link JettyWebXmlConfiguration} which
    * allows users to use {@code jetty-web.xml} files.
    */
   private static final String[] CONFIG_CLASSES =
       new String[] {
-        org.eclipse.jetty.webapp.WebInfConfiguration.class.getCanonicalName(),
-        org.eclipse.jetty.webapp.WebXmlConfiguration.class.getCanonicalName(),
-        org.eclipse.jetty.webapp.MetaInfConfiguration.class.getCanonicalName(),
-        org.eclipse.jetty.webapp.FragmentConfiguration.class.getCanonicalName(),
+        org.eclipse.jetty.ee8.webapp.WebInfConfiguration.class.getCanonicalName(),
+        org.eclipse.jetty.ee8.webapp.WebXmlConfiguration.class.getCanonicalName(),
+        org.eclipse.jetty.ee8.webapp.MetaInfConfiguration.class.getCanonicalName(),
+        org.eclipse.jetty.ee8.webapp.FragmentConfiguration.class.getCanonicalName(),
         // Special annotationConfiguration to deal with Jasper ServletContainerInitializer.
         AppEngineAnnotationConfiguration.class.getCanonicalName()
       };
@@ -176,7 +181,7 @@ public class JettyContainerService extends AbstractContainerService {
     context.addEventListener(
         new ContextHandler.ContextScopeListener() {
           @Override
-          public void enterScope(ContextHandler.Context context, Request request, Object reason) {
+          public void enterScope(ContextHandler.APIContext context, Request request, Object reason) {
             // We should have a request that use its associated environment, if there is no request
             // we cannot select a local environment as picking the wrong one could result in
             // waiting on the LocalEnvironment API call semaphore forever.
@@ -192,7 +197,7 @@ public class JettyContainerService extends AbstractContainerService {
           }
 
           @Override
-          public void exitScope(ContextHandler.Context context, Request request) {
+          public void exitScope(ContextHandler.APIContext context, Request request) {
             ApiProxy.clearEnvironmentForCurrentThread();
           }
         });
@@ -315,8 +320,8 @@ public class JettyContainerService extends AbstractContainerService {
 
     server = new Server();
     try {
-      NetworkTrafficSelectChannelConnector connector =
-          new NetworkTrafficSelectChannelConnector(
+      NetworkTrafficServerConnector connector =
+          new NetworkTrafficServerConnector(
               server,
               null,
               null,
@@ -328,7 +333,7 @@ public class JettyContainerService extends AbstractContainerService {
       connector.setHost(address);
       connector.setPort(port);
       // Linux keeps the port blocked after shutdown if we don't disable this.
-      connector.setSoLingerTime(0);
+      // TODO: WHAT IS THIS connector.setSoLingerTime(0);
       connector.open();
 
       server.addConnector(connector);
@@ -356,7 +361,10 @@ public class JettyContainerService extends AbstractContainerService {
       // Wrap context in a handler that manages the ApiProxy ThreadLocal.
       ApiProxyHandler apiHandler = new ApiProxyHandler(appEngineWebXml);
       apiHandler.setHandler(context);
-      server.setHandler(apiHandler);
+
+      ContextHandler contextHandler = new ContextHandler("/");
+      contextHandler.setHandler(apiHandler);
+      server.setHandler(contextHandler);
       SessionManagerHandler.create(
           SessionManagerHandler.Config.builder()
               .setEnableSession(isSessionsEnabled())
@@ -406,7 +414,7 @@ public class JettyContainerService extends AbstractContainerService {
     scanner = new Scanner();
     scanner.setReportExistingFilesOnStartup(false);
     scanner.setScanInterval(SCAN_INTERVAL_SECONDS);
-    scanner.setScanDirs(ImmutableList.of(getScanTarget()));
+    scanner.setScanDirs(ImmutableList.of(getScanTarget().toPath()));
     scanner.setFilenameFilter(
         new FilenameFilter() {
           @Override
@@ -461,36 +469,32 @@ public class JettyContainerService extends AbstractContainerService {
       // by this point, we know the WEB-INF must exist
       // TODO: consider scanning the whole web-inf
       return new File(
-          context.getWebInf().getFile().getPath() + File.separator + "appengine-web.xml");
+          context.getWebInf().getPath() + File.separator + "appengine-web.xml");
     }
   }
 
   private void fullWebAppScanner(int interval) throws IOException {
-    String webInf = context.getWebInf().getFile().getPath();
-    List<File> scanList = new ArrayList<>();
+    String webInf = context.getWebInf().getPath().toString();
+    List<Path> scanList = new ArrayList<>();
     Collections.addAll(
         scanList,
-        new File(webInf, "classes"),
-        new File(webInf, "lib"),
-        new File(webInf, "web.xml"),
-        new File(webInf, "appengine-web.xml"));
+        new File(webInf, "classes").toPath(),
+        new File(webInf, "lib").toPath(),
+        new File(webInf, "web.xml").toPath(),
+        new File(webInf, "appengine-web.xml").toPath());
 
     scanner = new Scanner();
     scanner.setScanInterval(interval);
     scanner.setScanDirs(scanList);
     scanner.setReportExistingFilesOnStartup(false);
-    scanner.setRecursive(true);
+    scanner.setScanDepth(3);
 
-    scanner.addListener(
-        new Scanner.BulkListener() {
-          @Override
-          public void filesChanged(List<String> changedFiles) throws Exception {
-            log.info("A file has changed, reloading the web application.");
-            reloadWebApp();
-          }
-        });
+    scanner.addListener((Scanner.BulkListener) filenames -> {
+      log.info("A file has changed, reloading the web application.");
+      reloadWebApp();
+    });
 
-    scanner.doStart();
+    LifeCycle.start(scanner);
   }
 
   /**
@@ -500,7 +504,8 @@ public class JettyContainerService extends AbstractContainerService {
   protected void reloadWebApp() throws Exception {
     // Tell Jetty to stop caching jar files, because the changed app may invalidate that
     // caching.
-    Resource.setDefaultUseCaches(false);
+    // TODO: Resource.setDefaultUseCaches(false);
+
     // stop the context
     server.getHandler().stop();
     server.stop();
@@ -523,7 +528,10 @@ public class JettyContainerService extends AbstractContainerService {
       // reset the handler
       ApiProxyHandler apiHandler = new ApiProxyHandler(appEngineWebXml);
       apiHandler.setHandler(context);
-      server.setHandler(apiHandler);
+
+      ContextHandler contextHandler = new ContextHandler();
+      contextHandler.setHandler(apiHandler);
+      server.setHandler(contextHandler);
       SessionManagerHandler.create(
           SessionManagerHandler.Config.builder()
               .setEnableSession(isSessionsEnabled())
@@ -562,7 +570,7 @@ public class JettyContainerService extends AbstractContainerService {
       }
       return appDir;
     }
-    return webInf.getFile().getParentFile();
+    return webInf.getPath().toFile().getParentFile();
   }
 
   /**
@@ -579,12 +587,7 @@ public class JettyContainerService extends AbstractContainerService {
     }
 
     @Override
-    public void handle(
-        String target,
-        Request baseRequest,
-        HttpServletRequest request,
-        HttpServletResponse response)
-        throws IOException, ServletException {
+    public void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
       if (baseRequest.getDispatcherType() == DispatcherType.REQUEST) {
         Semaphore semaphore = new Semaphore(MAX_SIMULTANEOUS_API_CALLS);
 

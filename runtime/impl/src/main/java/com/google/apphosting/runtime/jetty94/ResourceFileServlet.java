@@ -30,12 +30,13 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.eclipse.jetty.http.pathmap.MappedResource;
-import org.eclipse.jetty.server.handler.ContextHandler;
-import org.eclipse.jetty.servlet.ServletHandler;
-import org.eclipse.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.ee8.nested.ContextHandler;
+import org.eclipse.jetty.ee8.servlet.ServletHandler;
+import org.eclipse.jetty.ee8.servlet.ServletHolder;
 import org.eclipse.jetty.util.StringUtil;
 import org.eclipse.jetty.util.URIUtil;
 import org.eclipse.jetty.util.resource.Resource;
+import org.eclipse.jetty.util.resource.ResourceFactory;
 
 /**
  * {@code ResourceFileServlet} is a copy of {@code org.mortbay.jetty.servlet.DefaultServlet} that
@@ -45,7 +46,7 @@ import org.eclipse.jetty.util.resource.Resource;
  * API's, use of {@code ByteArrayBuffer} instead of Strings, etc.).
  *
  * <p>A few remaining Jetty-centric details remain, such as use of the {@link
- * ContextHandler.Context} class, and Jetty-specific request attributes, but these are specific
+ * ContextHandler.APIContext} class, and Jetty-specific request attributes, but these are specific
  * cases where there is no servlet-engine-neutral API available. This class also uses Jetty's {@link
  * Resource} class as a convenience, but could be converted to use {@link
  * ServletContext#getResource(String)} instead.
@@ -69,7 +70,7 @@ public class ResourceFileServlet extends HttpServlet {
     context = getServletContext();
     AppVersion appVersion =
         (AppVersion) context.getAttribute(JettyConstants.APP_VERSION_CONTEXT_ATTR);
-    chandler = ((ContextHandler.Context) context).getContextHandler();
+    chandler = ContextHandler.getContextHandler(context);
 
     AppYaml appYaml =
         (AppYaml) chandler.getServer().getAttribute(Jetty94Constants.APP_YAML_ATTRIBUTE_TARGET);
@@ -79,8 +80,8 @@ public class ResourceFileServlet extends HttpServlet {
     welcomeFiles = chandler.getWelcomeFiles();
 
     try {
-      resourceBase =
-          Resource.newResource(context.getResource(URIUtil.SLASH + appVersion.getPublicRoot()));
+      // TODO: review use of root factory.
+      resourceBase = ResourceFactory.root().newResource(context.getResource("/" + appVersion.getPublicRoot()));
     } catch (Exception ex) {
       throw new ServletException(ex);
     }
@@ -126,7 +127,7 @@ public class ResourceFileServlet extends HttpServlet {
       return;
     }
 
-    if (pathInContext.endsWith(URIUtil.SLASH)) {
+    if (pathInContext.endsWith("/")) {
       // N.B.: Resource.addPath() trims off trailing
       // slashes, which may result in us serving files for strange
       // paths (e.g. "/index.html/").  Since we already took care of
@@ -185,7 +186,8 @@ public class ResourceFileServlet extends HttpServlet {
       }
     } finally {
       if (resource != null) {
-        resource.release();
+        // TODO: do we need to release.
+        // resource.release();
       }
     }
   }
@@ -216,7 +218,7 @@ public class ResourceFileServlet extends HttpServlet {
   private Resource getResource(String pathInContext) {
     try {
       if (resourceBase != null) {
-        return resourceBase.addPath(pathInContext);
+        return resourceBase.resolve(pathInContext);
       }
     } catch (Exception ex) {
       logger.atWarning().withCause(ex).log("Could not find: %s", pathInContext);
@@ -245,15 +247,15 @@ public class ResourceFileServlet extends HttpServlet {
     // Add a slash for matching purposes.  If we needed this slash, we
     // are not doing an include, and we're not going to redirect
     // somewhere else we'll redirect the user to add it later.
-    if (!path.endsWith(URIUtil.SLASH)) {
-      path += URIUtil.SLASH;
+    if (!path.endsWith("/")) {
+      path += "/";
     }
 
     AppVersion appVersion =
         (AppVersion) getServletContext().getAttribute(JettyConstants.APP_VERSION_CONTEXT_ATTR);
     ServletHandler handler = chandler.getChildHandlerByClass(ServletHandler.class);
 
-    MappedResource<ServletHolder> defaultEntry = handler.getHolderEntry("/");
+    MappedResource<ServletHandler.MappedServlet> defaultEntry = handler.getHolderEntry("/");
 
     for (String welcomeName : welcomeFiles) {
       String welcomePath = path + welcomeName;
@@ -307,7 +309,7 @@ public class ResourceFileServlet extends HttpServlet {
       throws IOException, ServletException {
     // If the user didn't specify a slash but we know we want a
     // welcome file, redirect them to add the slash now.
-    if (!included && !request.getRequestURI().endsWith(URIUtil.SLASH)) {
+    if (!included && !request.getRequestURI().endsWith("/")) {
       redirectToAddSlash(request, response);
       return true;
     }

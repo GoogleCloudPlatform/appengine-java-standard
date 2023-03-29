@@ -18,9 +18,12 @@ package com.google.appengine.tools.development.jetty9;
 
 import java.io.File;
 import java.lang.reflect.Method;
-import org.eclipse.jetty.quickstart.QuickStartWebApp;
+
+import org.eclipse.jetty.ee8.quickstart.QuickStartConfiguration;
+import org.eclipse.jetty.ee8.webapp.WebAppContext;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.util.IO;
+import org.eclipse.jetty.util.resource.ResourceFactory;
 
 /**
  * Simple generator of the Jetty quickstart-web.xml based on an exploded War
@@ -76,21 +79,10 @@ public class QuickStartGenerator {
     }
     try {
       final Server server = new Server();
-      QuickStartWebApp webapp = new QuickStartWebApp();
-      webapp.setResourceBase(appDir);
-      webapp.setPreconfigure(true);
-      try {
-        // Tricky: we compile the code with the latest Jetty 9.3.18 which has the new
-        // setGenerateOrigin(boolean) API.
-        // But we used the compiled class with 2 different Jetty versions (9.2 for the deprecated
-        // Managed VMs, and 9.3.18 for the new Jetty9/Java 8 standard runtime).
-        // See https://github.com/eclipse/jetty.project/issues/877 for context, fixed for us.
-        Method setGenerateOrigin =
-            QuickStartWebApp.class.getMethod("setGenerateOrigin", boolean.class);
-        setGenerateOrigin.invoke(webapp, true);
-      } catch (ReflectiveOperationException e) {
-        // Ignore, the GAE SDK has been called with the vm:true Jetty 9.2 classpath.
-      }
+      WebAppContext webapp = new WebAppContext();
+      webapp.setBaseResource(ResourceFactory.root().newResource(appDir));
+      webapp.addConfiguration(new QuickStartConfiguration());
+      webapp.setAttribute(QuickStartConfiguration.MODE, QuickStartConfiguration.Mode.QUICKSTART);
       webapp.setDefaultsDescriptor(webDefault.getCanonicalPath());
       server.setHandler(webapp);
       server.start();

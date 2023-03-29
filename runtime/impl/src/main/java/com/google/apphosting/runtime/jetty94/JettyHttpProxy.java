@@ -37,17 +37,25 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import org.eclipse.jetty.ee8.nested.AbstractHandler;
+import org.eclipse.jetty.ee8.nested.ContextHandler;
 import org.eclipse.jetty.http.HttpCompliance;
 import org.eclipse.jetty.server.Connector;
+import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.Request;
+import org.eclipse.jetty.server.Response;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
-import org.eclipse.jetty.server.handler.AbstractHandler;
+import org.eclipse.jetty.server.Handler.Abstract;
+import org.eclipse.jetty.server.handler.ConnectHandler;
 import org.eclipse.jetty.server.handler.gzip.GzipHandler;
+import org.eclipse.jetty.util.Callback;
 
 /**
  * A Jetty web server handling HTTP requests on a given port and forwarding them via gRPC to the
@@ -94,15 +102,16 @@ public class JettyHttpProxy {
       ServletEngineAdapter.Config runtimeOptions, ForwardingHandler handler) {
     Server server = new Server();
 
-    ServerConnector c =
-        new JettyServerConnectorWithReusePort(server, runtimeOptions.jettyReusePort());
+    ServerConnector c = new JettyServerConnectorWithReusePort(server, runtimeOptions.jettyReusePort());
     c.setHost(runtimeOptions.jettyHttpAddress().getHost());
     c.setPort(runtimeOptions.jettyHttpAddress().getPort());
     server.setConnectors(new Connector[] {c});
 
     HttpConnectionFactory factory = c.getConnectionFactory(HttpConnectionFactory.class);
+    /* TODO: fix HttpCompliance
     factory.setHttpCompliance(
         RpcConnector.LEGACY_MODE ? HttpCompliance.RFC7230_LEGACY : HttpCompliance.RFC7230);
+    */
 
     HttpConfiguration config = factory.getHttpConfiguration();
     config.setRequestHeaderSize(runtimeOptions.jettyRequestHeaderSize());
@@ -111,12 +120,17 @@ public class JettyHttpProxy {
     config.setSendServerVersion(false);
     config.setSendXPoweredBy(false);
 
-    SizeLimitHandler sizeLimitHandler = new SizeLimitHandler(MAX_REQUEST_SIZE, -1);
-    sizeLimitHandler.setHandler(handler);
+    // Wrap the ee8 Forwarding Handler as a Core Handler.
+    ContextHandler next = new ContextHandler("/");
+    next.setHandler(handler);
+
+    // SizeLimitHandler sizeLimitHandler = new SizeLimitHandler(MAX_REQUEST_SIZE, -1);
+    // sizeLimitHandler.setHandler(handler);
 
     GzipHandler gzip = new GzipHandler();
     gzip.setInflateBufferSize(8 * 1024);
-    gzip.setHandler(sizeLimitHandler);
+    gzip.setHandler(next);
+    // gzip.setHandler(sizeLimitHandler);
 
     // Include all methods for the GzipHandler.
     gzip.setIncludedMethods();
@@ -226,11 +240,7 @@ public class JettyHttpProxy {
      * HttpServletResponse.
      */
     @Override
-    public void handle(
-        String target,
-        Request baseRequest,
-        HttpServletRequest request,
-        HttpServletResponse response) {
+    public void handle(String target, org.eclipse.jetty.ee8.nested.Request baseRequest, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
       baseRequest.setHandled(true);
 
       // build the request object

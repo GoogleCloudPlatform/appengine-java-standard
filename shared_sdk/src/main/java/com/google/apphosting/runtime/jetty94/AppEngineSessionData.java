@@ -17,7 +17,7 @@
 package com.google.apphosting.runtime.jetty94;
 
 import java.util.Map;
-import org.eclipse.jetty.server.session.SessionData;
+import org.eclipse.jetty.session.SessionData;
 
 /**
  * A specialization of the jetty SessionData class to allow direct access to the mutable attribute

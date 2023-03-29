@@ -28,6 +28,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.io.WriterOutputStream;
+import org.eclipse.jetty.util.IO;
 import org.eclipse.jetty.util.resource.Resource;
 
 /** Cass that sends data with headers. */
@@ -59,7 +60,7 @@ public class FileSender {
     } catch (IllegalStateException e) {
       out = new WriterOutputStream(response.getWriter());
     }
-    resource.writeTo(out, 0, contentLength);
+    IO.copy(resource.newInputStream(), out, contentLength);
   }
 
   /** Writes the headers that should accompany the specified resource. */
@@ -83,7 +84,7 @@ public class FileSender {
       }
     }
 
-    response.setDateHeader(HttpHeader.LAST_MODIFIED.asString(), resource.lastModified());
+    response.setDateHeader(HttpHeader.LAST_MODIFIED.asString(), resource.lastModified().toEpochMilli());
     if (appYaml != null) {
       // Add user specific static headers
       Optional<AppYaml.Handler> maybeHandler =
@@ -133,7 +134,7 @@ public class FileSender {
           // Ignore bad date formats.
         }
         if (ifmsl != -1) {
-          if (resource.lastModified() <= ifmsl) {
+          if (resource.lastModified().toEpochMilli() <= ifmsl) {
             response.reset();
             response.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
             response.flushBuffer();
@@ -150,7 +151,7 @@ public class FileSender {
         // Ignore bad date formats.
       }
       if (date != -1) {
-        if (resource.lastModified() > date) {
+        if (resource.lastModified().toEpochMilli() > date) {
           response.sendError(HttpServletResponse.SC_PRECONDITION_FAILED);
           return true;
         }

@@ -19,18 +19,21 @@ package com.google.apphosting.runtime.jetty94;
 import java.io.NotSerializableException;
 import java.io.Serializable;
 import javax.servlet.http.HttpServletRequest;
-import org.eclipse.jetty.server.session.Session;
-import org.eclipse.jetty.server.session.SessionData;
-import org.eclipse.jetty.server.session.SessionHandler;
-import org.eclipse.jetty.util.thread.Locker.Lock;
+
+import org.checkerframework.checker.units.qual.A;
+import org.eclipse.jetty.server.Session;
+import org.eclipse.jetty.session.ManagedSession;
+import org.eclipse.jetty.session.SessionData;
+import org.eclipse.jetty.session.SessionManager;
+import org.eclipse.jetty.util.thread.AutoLock;
 
 /**
  * This subclass exists to prevent a call to setMaxInactiveInterval(int) marking the session as
  * dirty and thus requiring it to be written out: in AppEngine the maxInactiveInterval of a session
  * is not persisted. It also keeps the Jetty 9.3 behavior for setAttribute calls which is to throw a
- * RuntimeException for non serializable values.
+ * RuntimeException for non-serializable values.
  */
-class AppEngineSession extends Session {
+class AppEngineSession extends ManagedSession {
   /**
    * To reduce our datastore put time, we only consider a session dirty on access if it is at least
    * 25% of the way to its expiration time. So a session that expires in 1 hr will only be re-stored
@@ -41,28 +44,17 @@ class AppEngineSession extends Session {
   /**
    * Create a new session object. Usually after the data has been loaded.
    *
-   * @param handler the SessionHandler to which the session pertains
+   * @param manager the SessionManager to which the session pertains
    * @param data the info of the session
    */
-  AppEngineSession(SessionHandler handler, SessionData data) {
-    super(handler, data);
+  AppEngineSession(SessionManager manager, SessionData data) {
+    super(manager, data);
   }
 
-  /**
-   * Create a new session object. Usually called by a request asking for a new session.
-   *
-   * @param handler the SessionHandler to which the session pertains
-   * @param request the request asking for the session creation
-   * @param data the info of the session
-   */
-  public AppEngineSession(SessionHandler handler, HttpServletRequest request, SessionData data) {
-    super(handler, request, data);
-  }
-
-  /** @see org.eclipse.jetty.server.session.Session#setMaxInactiveInterval(int) */
+  /** @see Session#setMaxInactiveInterval(int) */
   @Override
   public void setMaxInactiveInterval(int secs) {
-    try (Lock lock = _lock.lockIfNotHeld()) {
+    try (AutoLock lock = _lock.lock()) {
       boolean savedDirty = _sessionData.isDirty();
       super.setMaxInactiveInterval(secs);
       // Ensure it is unchanged by call to setMaxInactiveInterval
@@ -71,13 +63,13 @@ class AppEngineSession extends Session {
   }
 
   /**
-   * If the session is nearing its expiry time, we mark it as dirty whether or not any attributes
+   * If the session is nearing its expiry time, we mark it as dirty whether any attributes
    * change during this access. The default Jetty implementation does not handle the AppEngine
    * specific dirty state.
    */
   @Override
-  protected boolean access(long time) {
-    try (Lock lock = _lock.lock()) {
+  public boolean access(long time) {
+    try (AutoLock lock = _lock.lock()) {
       if (isValid()) {
         long timeRemaining = _sessionData.getExpiry() - time;
         if (timeRemaining < (_sessionData.getMaxInactiveMs() * UPDATE_TIMESTAMP_RATIO)) {
@@ -89,18 +81,18 @@ class AppEngineSession extends Session {
   }
 
   @Override
-  public void setAttribute(String name, Object value) {
+  public Object setAttribute(String name, Object value) {
     // We want to keep the previous Jetty 9 App Engine implementation that emits a
     // NotSerializableException wrapped in a RuntimeException, and do the check as soon as possible.
     if ((value != null) && !(value instanceof Serializable)) {
       throw new RuntimeException(new NotSerializableException(value.getClass().getName()));
     }
-    super.setAttribute(name, value);
+    return super.setAttribute(name, value);
   }
 
   @Override
   public boolean isResident() {
-    // Are accesses to non resident sessions allowed?  This flag preserves GAE on jetty-9.3
+    // Are accesses to non-resident sessions allowed?  This flag preserves GAE on jetty-9.3
     // behaviour. May be set in JavaRuntimeMain. If set will pretend to always be resident
     return super.isResident() || Boolean.getBoolean("gae.allow_non_resident_session_access");
   }

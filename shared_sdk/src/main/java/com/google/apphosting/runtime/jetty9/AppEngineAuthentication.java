@@ -31,17 +31,19 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import org.eclipse.jetty.security.ConstraintSecurityHandler;
-import org.eclipse.jetty.security.DefaultIdentityService;
-import org.eclipse.jetty.security.IdentityService;
-import org.eclipse.jetty.security.LoginService;
-import org.eclipse.jetty.security.SecurityHandler;
-import org.eclipse.jetty.security.ServerAuthException;
-import org.eclipse.jetty.security.UserAuthentication;
-import org.eclipse.jetty.security.authentication.DeferredAuthentication;
-import org.eclipse.jetty.security.authentication.LoginAuthenticator;
-import org.eclipse.jetty.server.Authentication;
-import org.eclipse.jetty.server.UserIdentity;
+
+import org.eclipse.jetty.ee8.security.Authenticator;
+import org.eclipse.jetty.ee8.security.ConstraintSecurityHandler;
+import org.eclipse.jetty.ee8.security.DefaultIdentityService;
+import org.eclipse.jetty.ee8.security.IdentityService;
+import org.eclipse.jetty.ee8.security.LoginService;
+import org.eclipse.jetty.ee8.security.SecurityHandler;
+import org.eclipse.jetty.ee8.security.ServerAuthException;
+import org.eclipse.jetty.ee8.security.UserAuthentication;
+import org.eclipse.jetty.ee8.security.authentication.DeferredAuthentication;
+import org.eclipse.jetty.ee8.security.authentication.LoginAuthenticator;
+import org.eclipse.jetty.ee8.nested.Authentication;
+import org.eclipse.jetty.ee8.nested.UserIdentity;
 import org.eclipse.jetty.util.URIUtil;
 
 /**
@@ -136,11 +138,11 @@ public class AppEngineAuthentication {
      * @param servletResponse The response
      * @param mandatory True if authentication is mandatory.
      * @return An Authentication. If Authentication is successful, this will be a
-     *         {@link org.eclipse.jetty.server.Authentication.User}. If a response has been sent by
+     *         {@link Authentication.User}. If a response has been sent by
      *         the Authenticator (which can be done for both successful and unsuccessful
      *         authentications), then the result will implement
-     *         {@link org.eclipse.jetty.server.Authentication.ResponseSent}. If Authentication is
-     *         not mandatory, then a {@link org.eclipse.jetty.server.Authentication.Deferred} may be
+     *         {@link Authentication.ResponseSent}. If Authentication is
+     *         not mandatory, then a {@link Authentication.Deferred} may be
      *         returned.
      *
      * @throws ServerAuthException
@@ -161,7 +163,7 @@ public class AppEngineAuthentication {
       String uri = URIUtil.addPaths(request.getServletPath(), request.getPathInfo());
 
       if (uri == null) {
-        uri = URIUtil.SLASH;
+        uri = "/";
       }
       // Check this before checking if there is a user logged in, so
       // that we can log out properly.  Specifically, watch out for

@@ -39,11 +39,11 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.HttpResponseException;
-import org.eclipse.jetty.client.api.Request;
-import org.eclipse.jetty.client.api.Response;
-import org.eclipse.jetty.client.api.Response.CompleteListener;
-import org.eclipse.jetty.client.api.Result;
-import org.eclipse.jetty.client.util.BytesContentProvider;
+import org.eclipse.jetty.client.Request;
+import org.eclipse.jetty.client.Response;
+import org.eclipse.jetty.client.Response.CompleteListener;
+import org.eclipse.jetty.client.Result;
+import org.eclipse.jetty.client.BytesRequestContent;
 import org.eclipse.jetty.http.HttpFields;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpMethod;
@@ -219,13 +219,21 @@ class JettyHttpApiHostClient extends HttpApiHostClient {
     Request request = httpClient
         .newRequest(url)
         .method(HttpMethod.POST)
-        .content(new BytesContentProvider(requestBytes), CONTENT_TYPE_VALUE);
-    for (Map.Entry<String, String> header : HEADERS.entrySet()) {
-      request.header(header.getKey(), header.getValue());
-    }
+        .body(new BytesRequestContent(CONTENT_TYPE_VALUE, requestBytes));
+
+    request = request.headers(headers ->
+    {
+      for (Map.Entry<String, String> header : HEADERS.entrySet()) {
+        headers.add(header.getKey(), header.getValue());
+      }
+    });
+
     if (context.getDeadlineNanos().isPresent()) {
       double deadlineSeconds = context.getDeadlineNanos().get() / 1e9;
-      request.header(DEADLINE_HEADER, Double.toString(deadlineSeconds));
+
+      request = request.headers(headers ->
+              headers.add(DEADLINE_HEADER, Double.toString(deadlineSeconds)));
+
       // If the request exceeds the deadline, one of two things can happen: (1) the API server
       // returns with a deadline-exceeded status; (2) ApiProxyImpl will time out because of the
       // TimedFuture class that it uses. The only purpose of this fallback deadline is to ensure

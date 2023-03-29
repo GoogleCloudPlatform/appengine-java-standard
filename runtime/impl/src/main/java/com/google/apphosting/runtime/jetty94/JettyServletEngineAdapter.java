@@ -25,7 +25,8 @@ import com.google.apphosting.base.protos.RuntimePb.UPResponse;
 import com.google.apphosting.runtime.AppVersion;
 import com.google.apphosting.runtime.MutableUpResponse;
 import com.google.apphosting.runtime.ServletEngineAdapter;
-import com.google.apphosting.runtime.jetty9.JettyLogger;
+import com.google.apphosting.runtime.jetty94.delegate.DelegateConnector;
+import com.google.apphosting.runtime.jetty94.delegate.impl.DelegateRpcExchange;
 import com.google.apphosting.utils.config.AppEngineConfigException;
 import com.google.apphosting.utils.config.AppYaml;
 import com.google.common.flogger.GoogleLogger;
@@ -35,6 +36,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 import javax.servlet.ServletException;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
@@ -56,14 +58,15 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
     // Tell Jetty to use our custom logging class (that forwards to
     // java.util.logging) instead of writing to System.err
     // Documentation: http://www.eclipse.org/jetty/documentation/current/configuring-logging.html
-    System.setProperty("org.eclipse.jetty.util.log.class", JettyLogger.class.getName());
+    // TODO: re-enable logging.
+    // System.setProperty("org.eclipse.jetty.util.log.class", JettyLogger.class.getName());
     // Remove internal URLs.
     System.setProperty("java.vendor.url", "");
     System.setProperty("java.vendor.url.bug", "");
   }
 
   private Server server;
-  private RpcConnector rpcConnector;
+  private DelegateConnector rpcConnector;
   private AppVersionHandlerMap appVersionHandlerMap;
   private final WebAppContextFactory contextFactory;
   private final Optional<AppYaml> appYaml;
@@ -95,13 +98,16 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
   @Override
   public void start(String serverInfo, ServletEngineAdapter.Config runtimeOptions) {
     server = new Server(new QueuedThreadPool(MAX_THREAD_POOL_THREADS, MIN_THREAD_POOL_THREADS));
-    rpcConnector = new RpcConnector(server);
+    rpcConnector = new DelegateConnector(server, "RPC");
+
     server.setConnectors(new Connector[] {rpcConnector});
     AppVersionHandlerFactory appVersionHandlerFactory =
         new AppVersionHandlerFactory(
             server, serverInfo, contextFactory, /*useJettyErrorPageHandler=*/ false);
     appVersionHandlerMap = new AppVersionHandlerMap(appVersionHandlerFactory);
 
+    /*
+    TODO: Adapt SizeLimitHandler.
     if (!"java8".equals(System.getenv("GAE_RUNTIME"))) {
       SizeLimitHandler sizeLimitHandler = new SizeLimitHandler(-1, MAX_RESPONSE_SIZE);
       sizeLimitHandler.setHandler(appVersionHandlerMap);
@@ -109,6 +115,7 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
     } else {
       server.setHandler(appVersionHandlerMap);
     }
+     */
 
     if (runtimeOptions.useJettyHttpProxy()) {
       server.setAttribute(
@@ -181,6 +188,15 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
       lastAppVersionKey = appVersionKey;
     }
 
-    rpcConnector.serviceRequest(appVersionKey, upRequest, upResponse);
+    // TODO: lots of compliance modes to handle.
+    DelegateRpcExchange rpcExchange = new DelegateRpcExchange(upRequest, upResponse);
+    rpcConnector.service(rpcExchange);
+    try {
+      rpcExchange.awaitResponse();
+    } catch (Throwable t) {
+      // TODO: review this error handling.
+      upResponse.setError(UPResponse.ERROR.UNEXPECTED_ERROR_VALUE);
+      upResponse.setErrorMessage("Unexpected Error: " + t);
+    }
   }
 }

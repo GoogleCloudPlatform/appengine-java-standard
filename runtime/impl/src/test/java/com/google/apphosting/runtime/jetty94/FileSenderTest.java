@@ -25,6 +25,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.google.apphosting.utils.config.AppYaml;
+
+import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -33,6 +35,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpMethod;
+import org.eclipse.jetty.util.IO;
 import org.eclipse.jetty.util.resource.Resource;
 import org.junit.Before;
 import org.junit.Rule;
@@ -79,7 +82,9 @@ public class FileSenderTest {
     verify(mockResponse).setContentType("fake_content_type");
     verify(mockResponse).setContentLength(1);
     verify(mockResponse).setHeader(HttpHeader.CACHE_CONTROL.asString(), "public, max-age=600");
-    verify(mockResource, times(1)).writeTo(any(), eq(0L), eq(1L));
+
+    Resource r = verify(mockResource, times(1));
+    IO.copy(r.newInputStream(), any());
   }
 
   @Test
@@ -99,8 +104,9 @@ public class FileSenderTest {
 
     verify(mockResponse).setHeader(HttpHeader.CACHE_CONTROL.asString(), "public, max-age=93780");
     verify(mockResponse).addHeader("fake_name", "fake_value");
-    verify(mockResource, times(1)).writeTo(any(), eq(0L), eq(1L));
-  }
+
+    Resource r = verify(mockResource, times(1));
+    IO.copy(r.newInputStream(), any());  }
 
   @Test
   public void shouldNotAddBasicHeaders_appYamlIncluded() throws Exception {
@@ -124,7 +130,9 @@ public class FileSenderTest {
     verify(mockResponse, never())
         .setHeader(HttpHeader.CACHE_CONTROL.asString(), "public, max-age=93780");
     verify(mockResponse, never()).addHeader("fake_name", "fake_value");
-    verify(mockResource, times(1)).writeTo(any(), eq(0L), eq(1L));
+
+    Resource r = verify(mockResource, times(1));
+    IO.copy(r.newInputStream(), any());
   }
 
   @Test
@@ -143,7 +151,7 @@ public class FileSenderTest {
     when(mockRequest.getHeader(HttpHeader.IF_UNMODIFIED_SINCE.asString()))
         .thenReturn("Thu, 1 Jan 1970 00:00:01 GMT");
     when(mockRequest.getDateHeader(HttpHeader.IF_UNMODIFIED_SINCE.asString())).thenReturn(1000L);
-    when(mockResource.lastModified()).thenReturn(100L);
+    when(mockResource.lastModified().toEpochMilli()).thenReturn(100L);
 
     assertThat(testInstance.checkIfUnmodified(mockRequest, mockResponse, mockResource)).isFalse();
   }
@@ -154,7 +162,7 @@ public class FileSenderTest {
     when(mockRequest.getHeader(HttpHeader.IF_MODIFIED_SINCE.asString()))
         .thenReturn("Thu, 1 Jan 1970 00:00:01 GMT");
     when(mockRequest.getDateHeader(HttpHeader.IF_MODIFIED_SINCE.asString())).thenReturn(1000L);
-    when(mockResource.lastModified()).thenReturn(100L);
+    when(mockResource.lastModified().toEpochMilli()).thenReturn(100L);
 
     assertThat(testInstance.checkIfUnmodified(mockRequest, mockResponse, mockResource)).isTrue();
   }
@@ -168,7 +176,7 @@ public class FileSenderTest {
     when(mockRequest.getHeader(HttpHeader.IF_UNMODIFIED_SINCE.asString()))
         .thenReturn("Thu, 1 Jan 1970 00:00:00 GMT");
     when(mockRequest.getDateHeader(HttpHeader.IF_UNMODIFIED_SINCE.asString())).thenReturn(0L);
-    when(mockResource.lastModified()).thenReturn(100L);
+    when(mockResource.lastModified().toEpochMilli()).thenReturn(100L);
 
     assertThat(testInstance.checkIfUnmodified(mockRequest, mockResponse, mockResource)).isTrue();
   }

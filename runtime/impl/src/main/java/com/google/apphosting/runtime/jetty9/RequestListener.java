@@ -19,8 +19,10 @@ package com.google.apphosting.runtime.jetty9;
 import java.io.IOException;
 import java.util.EventListener;
 import javax.servlet.ServletException;
-import org.eclipse.jetty.server.Request;
-import org.eclipse.jetty.webapp.WebAppContext;
+
+import com.google.apphosting.runtime.jetty94.AppEngineWebAppContext;
+import org.eclipse.jetty.ee8.nested.Request;
+import org.eclipse.jetty.ee8.webapp.WebAppContext;
 
 /**
  * {@code RequestListener} is called for new request and request completion events. It is abstracted
@@ -38,7 +40,7 @@ public interface RequestListener extends EventListener {
    *
    * @param context The jetty context of the request
    * @param request The jetty request object.
-   * @throws IOExecption if a problem with IO
+   * @throws IOException if a problem with IO
    * @throws ServletException for all other problems
    */
   void requestReceived(WebAppContext context, Request request)

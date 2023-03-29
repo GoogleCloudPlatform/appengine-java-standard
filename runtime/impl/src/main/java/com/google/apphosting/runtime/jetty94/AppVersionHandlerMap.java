@@ -28,10 +28,12 @@ import java.util.Map;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.eclipse.jetty.server.Handler;
-import org.eclipse.jetty.server.Request;
+
+import org.eclipse.jetty.ee8.nested.Request;
+import org.eclipse.jetty.ee8.nested.Handler;
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.handler.AbstractHandlerContainer;
+import org.eclipse.jetty.ee8.nested.AbstractHandlerContainer;
+import org.eclipse.jetty.session.SessionManager;
 
 /**
  * {@code AppVersionHandlerMap} is a {@code HandlerContainer} that identifies each child {@code
@@ -91,9 +93,7 @@ public class AppVersionHandlerMap extends AbstractHandlerContainer {
    * version.
    */
   @Override
-  public void handle(
-      String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response)
-      throws IOException, ServletException {
+  public void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
     AppVersionKey appVersionKey =
         (AppVersionKey) request.getAttribute(JettyConstants.APP_VERSION_KEY_REQUEST_ATTR);
     if (appVersionKey == null) {

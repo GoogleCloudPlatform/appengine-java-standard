@@ -29,7 +29,7 @@ import com.google.apphosting.runtime.SessionStore.Retryable;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.util.Optional;
-import org.eclipse.jetty.server.session.SessionData;
+import org.eclipse.jetty.session.SessionData;
 
 /**
  * A {@link DatastoreSessionStore.SessionDataStoreImpl} extension that defers all datastore writes

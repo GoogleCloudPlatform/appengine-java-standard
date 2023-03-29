@@ -18,14 +18,14 @@ package com.google.apphosting.runtime.jetty9;
 
 import java.io.File;
 import org.eclipse.jetty.util.IO;
-import org.eclipse.jetty.webapp.WebAppContext;
-import org.eclipse.jetty.webapp.WebInfConfiguration;
+import org.eclipse.jetty.ee8.webapp.WebAppContext;
+import org.eclipse.jetty.ee8.webapp.WebInfConfiguration;
 
 /**
  * Replace the default handling of temp directories in WebInfConfiguration.
  **/
 public class AppEngineWebInfConfiguration extends WebInfConfiguration {
-
+  /* TODO: Review, this has been changed by https://github.com/eclipse/jetty.project/pull/9153
   @Override
   public void configureTempDirectory(File dir, WebAppContext context) {
     if (dir == null) {
@@ -52,4 +52,5 @@ public class AppEngineWebInfConfiguration extends WebInfConfiguration {
       throw new IllegalStateException("Temp dir " + dir + " not directory");
     }
   }
+   */
 }

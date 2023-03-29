@@ -21,14 +21,13 @@ import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.eclipse.jetty.server.Request;
-import org.eclipse.jetty.webapp.WebAppContext;
+import org.eclipse.jetty.ee8.webapp.WebAppContext;
 
 /**
  * {@code TransactionCleanupListener} looks for datastore transactions that are still active when
  * request processing is finished. The filter attempts to roll back any transactions that are found,
- * and swallows any exceptions that are thrown while trying to perform roll backs. This ensures that
- * any problems we encounter while trying to perform roll backs do not have any impact on the result
+ * and swallows any exceptions that are thrown while trying to perform rollbacks. This ensures that
+ * any problems we encounter while trying to perform rollbacks do not have any impact on the result
  * returned the user.
  *
  */
@@ -73,10 +72,10 @@ public class TransactionCleanupListener implements RequestListener {
   }
 
   @Override
-  public void requestReceived(WebAppContext context, Request request) {}
+  public void requestReceived(WebAppContext context, org.eclipse.jetty.ee8.nested.Request request) {}
 
   @Override
-  public void requestComplete(WebAppContext context, Request request) {
+  public void requestComplete(WebAppContext context, org.eclipse.jetty.ee8.nested.Request request) {
     if (transactionGetId == null) {
       // No datastore service found in webapp
       return;

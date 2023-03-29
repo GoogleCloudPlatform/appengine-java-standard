@@ -32,9 +32,11 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
-import org.eclipse.jetty.server.handler.ContextHandler;
+import org.eclipse.jetty.ee8.nested.ContextHandler;
+import org.eclipse.jetty.ee8.servlet.ServletContextHandler;
 import org.eclipse.jetty.util.URIUtil;
 import org.eclipse.jetty.util.resource.Resource;
+import org.eclipse.jetty.util.resource.ResourceFactory;
 
 /**
  * {@code StaticFileFilter} is a {@link Filter} that replicates the
@@ -53,11 +55,11 @@ public class StaticFileFilter implements Filter {
   private Resource resourceBase;
   private String[] welcomeFiles;
   private String resourceRoot;
-  private ContextHandler.Context servletContext;
+  private ContextHandler.APIContext servletContext;
 
   @Override
   public void init(FilterConfig filterConfig) throws ServletException {
-    servletContext = (ContextHandler.Context) filterConfig.getServletContext();
+    servletContext = ServletContextHandler.getServletContextHandler(servletContext).getServletContext();
     staticFileUtils = new StaticFileUtils(servletContext);
 
     // AFAICT, there is no real API to retrieve this information, so
@@ -70,13 +72,13 @@ public class StaticFileFilter implements Filter {
 
     try {
       String base;
-      if (resourceRoot.startsWith(URIUtil.SLASH)) {
+      if (resourceRoot.startsWith("/")) {
         base = resourceRoot;
       } else {
-        base = URIUtil.SLASH + resourceRoot;
+        base = "/" + resourceRoot;
       }
       // in Jetty 9 "//public" is not seen as "/public".
-      resourceBase = Resource.newResource(servletContext.getResource(base));
+      resourceBase = ResourceFactory.root().newResource(servletContext.getResource(base));
     } catch (MalformedURLException ex) {
       logger.log(Level.WARNING, "Could not initialize:", ex);
       throw new ServletException(ex);
@@ -132,7 +134,8 @@ public class StaticFileFilter implements Filter {
       }
     } finally {
       if (resource != null) {
-        resource.release();
+        // TODO: how to release
+        // resource.release();
       }
     }
     chain.doFilter(request, response);
@@ -146,10 +149,8 @@ public class StaticFileFilter implements Filter {
   private Resource getResource(String pathInContext) {
     try {
       if (resourceBase != null) {
-        return resourceBase.addPath(pathInContext);
+        return resourceBase.resolve(pathInContext);
       }
-    } catch (IOException ex) {
-      logger.log(Level.WARNING, "Could not find: " + pathInContext, ex);
     } catch (InvalidPathException ex) {
       // Do not warn for Windows machines for trying to access invalid paths like
       // "hello/po:tato/index.html" that gives a InvalidPathException: Illegal char <:> error.
@@ -157,6 +158,8 @@ public class StaticFileFilter implements Filter {
       if (!System.getProperty("os.name").toLowerCase().contains("windows")) {
         logger.log(Level.WARNING, "Could not find: " + pathInContext, ex);
       }
+    } catch (Throwable t) {
+      logger.log(Level.WARNING, "Could not find: " + pathInContext, t);
     }
     return null;
   }
@@ -184,8 +187,8 @@ public class StaticFileFilter implements Filter {
     // Add a slash for matching purposes.  If we needed this slash, we
     // are not doing an include, and we're not going to redirect
     // somewhere else we'll redirect the user to add it later.
-    if (!path.endsWith(URIUtil.SLASH)) {
-      path += URIUtil.SLASH;
+    if (!path.endsWith("/")) {
+      path += "/";
     }
 
     // First search for static welcome files.

@@ -33,16 +33,16 @@ import javax.servlet.UnavailableException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.jsp.JspFactory;
-import org.eclipse.jetty.annotations.AnnotationConfiguration;
-import org.eclipse.jetty.server.Dispatcher;
-import org.eclipse.jetty.server.Handler;
+import org.eclipse.jetty.ee8.annotations.AnnotationConfiguration;
+import org.eclipse.jetty.ee8.nested.Dispatcher;
+import org.eclipse.jetty.ee8.nested.Handler;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.servlet.ErrorPageErrorHandler;
-import org.eclipse.jetty.webapp.FragmentConfiguration;
-import org.eclipse.jetty.webapp.MetaInfConfiguration;
-import org.eclipse.jetty.webapp.WebAppContext;
-import org.eclipse.jetty.webapp.WebXmlConfiguration;
+import org.eclipse.jetty.ee8.servlet.ErrorPageErrorHandler;
+import org.eclipse.jetty.ee8.webapp.FragmentConfiguration;
+import org.eclipse.jetty.ee8.webapp.MetaInfConfiguration;
+import org.eclipse.jetty.ee8.webapp.WebAppContext;
+import org.eclipse.jetty.ee8.webapp.WebXmlConfiguration;
 
 /**
  * {@code AppVersionHandlerFactory} implements a {@code Handler} for a given {@code AppVersionKey}.
@@ -69,12 +69,12 @@ public class AppVersionHandlerFactory {
   private static final String USE_ANNOTATION_SCANNING = "use.annotationscanning";
 
   /**
-   * Specify which {@link org.eclipse.jetty.webapp.Configuration} objects should be invoked when
+   * Specify which {@link org.eclipse.jetty.ee8.webapp.Configuration} objects should be invoked when
    * configuring a web application.
    *
    * <p>This is a subset of: org.mortbay.jetty.webapp.WebAppContext.__dftConfigurationClasses
    *
-   * <p>Specifically, we've removed {@link org.mortbay.jetty.webapp.JettyWebXmlConfiguration} which
+   * <p>Specifically, we've removed {@code org.mortbay.jetty.webapp.JettyWebXmlConfiguration} which
    * allows users to use {@code jetty-web.xml} files. We definitely do not want to allow these
    * files, as they allow for arbitrary method invocation.
    */
@@ -236,13 +236,7 @@ public class AppVersionHandlerFactory {
   private static class NullErrorHandler extends ErrorPageErrorHandler {
 
     @Override
-    public void handle(
-        String target,
-        Request baseRequest,
-        HttpServletRequest request,
-        HttpServletResponse response)
-        throws IOException {
-
+    public void handle(String target, org.eclipse.jetty.ee8.nested.Request baseRequest, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
       logger.atFine().log("Custom Jetty ErrorHandler received an error notification.");
       mayHandleByErrorPage(request, response);
       // We don't want Jetty to do anything further.

@@ -16,14 +16,11 @@
 
 package com.google.apphosting.runtime.jetty9;
 
-import java.io.File;
-import org.eclipse.jetty.quickstart.QuickStartConfiguration;
-import org.eclipse.jetty.util.IO;
-import org.eclipse.jetty.webapp.WebAppContext;
+import org.eclipse.jetty.ee8.quickstart.QuickStartConfiguration;
 
 /** Replace the default handling of temp directories in QuickStartConfiguration. */
 public class AppEngineQuickStartConfiguration extends QuickStartConfiguration {
-
+  /* TODO: Fix
   @Override
   public void configureTempDirectory(File dir, WebAppContext context) {
     if (dir == null) {
@@ -50,4 +47,5 @@ public class AppEngineQuickStartConfiguration extends QuickStartConfiguration {
       throw new IllegalStateException("Temp dir " + dir + " not directory");
     }
   }
+   */
 }

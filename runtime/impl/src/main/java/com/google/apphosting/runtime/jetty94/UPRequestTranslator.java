@@ -32,13 +32,16 @@ import com.google.common.html.HtmlEscapers;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.TextFormat;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PrintStream;
 import java.util.Collections;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.eclipse.jetty.http.HttpField;
-import org.eclipse.jetty.server.Request;
-import org.eclipse.jetty.server.Response;
+import org.eclipse.jetty.io.Content;
+import org.eclipse.jetty.ee8.nested.Request;
+import org.eclipse.jetty.ee8.nested.Response;
 
 /** Translates HttpServletRequest to the UPRequest proto, and vice versa for the response. */
 public class UPRequestTranslator {
@@ -47,8 +50,8 @@ public class UPRequestTranslator {
   private static final String DEFAULT_SECRET_KEY = "secretkey";
 
   /**
-   * The HTTP headers that are handled specially by this proxy are defined in lowercae because HTTP
-   * headers are case insensitive and we look then up in a set or switch after converting to
+   * The HTTP headers that are handled specially by this proxy are defined in lowercase because HTTP
+   * headers are case-insensitive, and we look then up in a set or switch after converting to
    * lower-case.
    */
   private static final String X_FORWARDED_PROTO = "x-forwarded-proto";

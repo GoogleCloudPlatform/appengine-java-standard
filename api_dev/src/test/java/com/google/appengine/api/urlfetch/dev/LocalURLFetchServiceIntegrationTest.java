@@ -60,9 +60,11 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import org.eclipse.jetty.ee8.nested.ContextHandler;
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.servlet.ServletHandler;
-import org.eclipse.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.ee8.servlet.ServletHandler;
+import org.eclipse.jetty.ee8.servlet.ServletHolder;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -98,7 +100,10 @@ public class LocalURLFetchServiceIntegrationTest {
     port = portPicker.pickUnusedPort();
     server = new Server(port);
     servletHandler = new ServletHandler();
-    server.setHandler(servletHandler);
+
+    ContextHandler contextHandler = new ContextHandler();
+    contextHandler.setHandler(servletHandler);
+    server.setHandler(contextHandler);
   }
 
   @After

@@ -22,15 +22,14 @@ import com.google.apphosting.runtime.jetty9.AppEngineAuthentication;
 import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import org.eclipse.jetty.security.ConstraintSecurityHandler;
-import org.eclipse.jetty.security.RoleInfo;
-import org.eclipse.jetty.security.SecurityHandler;
-import org.eclipse.jetty.security.UserDataConstraint;
-import org.eclipse.jetty.server.Request;
-import org.eclipse.jetty.util.URIUtil;
-import org.eclipse.jetty.util.resource.JarResource;
+import org.eclipse.jetty.ee8.security.ConstraintSecurityHandler;
+import org.eclipse.jetty.ee8.security.RoleInfo;
+import org.eclipse.jetty.ee8.security.SecurityHandler;
+import org.eclipse.jetty.ee8.security.UserDataConstraint;
+import org.eclipse.jetty.ee8.nested.Request;
 import org.eclipse.jetty.util.resource.Resource;
-import org.eclipse.jetty.webapp.WebAppContext;
+import org.eclipse.jetty.ee8.webapp.WebAppContext;
+import org.eclipse.jetty.util.resource.ResourceFactory;
 
 /**
  * {@code AppEngineWebAppContext} is a customization of Jetty's {@link WebAppContext} that is aware
@@ -48,10 +47,10 @@ public class AppEngineWebAppContext extends WebAppContext {
 
   public AppEngineWebAppContext(File appDir, String serverInfo) {
     // We set the contextPath to / for all applications.
-    super(appDir.getPath(), URIUtil.SLASH);
+    super(appDir.getPath(), "/");
     Resource webApp = null;
     try {
-      webApp = Resource.newResource(appDir.getAbsolutePath());
+      webApp = ResourceFactory.root().newResource(appDir.getAbsolutePath());
 
       if (appDir.isDirectory()) {
         setWar(appDir.getPath());
@@ -61,9 +60,9 @@ public class AppEngineWebAppContext extends WebAppContext {
         File extractedWebAppDir = createTempDir();
         extractedWebAppDir.mkdir();
         extractedWebAppDir.deleteOnExit();
-        Resource jarWebWpp = JarResource.newJarResource(webApp);
-        jarWebWpp.copyTo(extractedWebAppDir);
-        setBaseResource(Resource.newResource(extractedWebAppDir.getAbsolutePath()));
+        Resource jarWebWpp = ResourceFactory.root().newJarFileResource(webApp.getURI());
+        jarWebWpp.copyTo(extractedWebAppDir.toPath());
+        setBaseResource(ResourceFactory.root().newResource(extractedWebAppDir.getAbsolutePath()));
         setWar(extractedWebAppDir.getPath());
       }
     } catch (Exception e) {
@@ -72,15 +71,19 @@ public class AppEngineWebAppContext extends WebAppContext {
 
     this.serverInfo = serverInfo;
 
-    // Override the default HttpServletContext implementation.
-    _scontext = new AppEngineServletContext();
-
     // Configure the Jetty SecurityHandler to understand our method of
     // authentication (via the UserService).
     AppEngineAuthentication.configureSecurityHandler(
         (ConstraintSecurityHandler) getSecurityHandler());
 
     setMaxFormContentSize(MAX_RESPONSE_SIZE);
+  }
+
+  @Override
+  public APIContext getServletContext() {
+    // TODO: Override the default HttpServletContext implementation (for logging)?.
+    AppEngineServletContext appEngineServletContext = new AppEngineServletContext();
+    return super.getServletContext();
   }
 
   private static File createTempDir() {

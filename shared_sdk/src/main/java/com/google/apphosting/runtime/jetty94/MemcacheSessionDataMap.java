@@ -18,9 +18,9 @@ package com.google.apphosting.runtime.jetty94;
 
 import com.google.apphosting.runtime.MemcacheSessionStore;
 import java.util.concurrent.atomic.AtomicReference;
-import org.eclipse.jetty.server.session.SessionContext;
-import org.eclipse.jetty.server.session.SessionData;
-import org.eclipse.jetty.server.session.SessionDataMap;
+import org.eclipse.jetty.session.SessionContext;
+import org.eclipse.jetty.session.SessionData;
+import org.eclipse.jetty.session.SessionDataMap;
 import org.eclipse.jetty.util.component.AbstractLifeCycle;
 
 /**
@@ -42,7 +42,7 @@ class MemcacheSessionDataMap extends AbstractLifeCycle implements SessionDataMap
 
   /**
    * @see
-   *     org.eclipse.jetty.server.session.SessionDataMap#initialize(org.eclipse.jetty.server.session.SessionContext)
+   *     SessionDataMap#initialize(org.eclipse.jetty.session.SessionContext)
    */
   @Override
   public void initialize(SessionContext context) throws Exception {
@@ -52,7 +52,7 @@ class MemcacheSessionDataMap extends AbstractLifeCycle implements SessionDataMap
   /**
    * Load an App Engine session data from memcache service and transform it to a Jetty session data
    *
-   * @see org.eclipse.jetty.server.session.SessionDataMap#load(java.lang.String)
+   * @see SessionDataMap#load(java.lang.String)
    */
   @Override
   public SessionData load(String id) throws Exception {
@@ -85,7 +85,7 @@ class MemcacheSessionDataMap extends AbstractLifeCycle implements SessionDataMap
   /**
    * Save a Jetty session data as an AppEngine session data to memcache service
    *
-   * @see org.eclipse.jetty.server.session.SessionDataMap #store(java.lang.String,
+   * @see SessionDataMap #store(java.lang.String,
    *     org.eclipse.jetty.server.session.SessionData)
    */
   @Override
@@ -108,7 +108,7 @@ class MemcacheSessionDataMap extends AbstractLifeCycle implements SessionDataMap
   /**
    * Delete session data out of memcache service.
    *
-   * @see org.eclipse.jetty.server.session.SessionDataMap#delete(java.lang.String)
+   * @see SessionDataMap#delete(java.lang.String)
    */
   @Override
   public boolean delete(String id) throws Exception {
@@ -129,7 +129,7 @@ class MemcacheSessionDataMap extends AbstractLifeCycle implements SessionDataMap
     // Keep this System.currentTimeMillis API, and do not use the close source suggested one.
     @SuppressWarnings("NowMillis")
     long now = System.currentTimeMillis();
-    long maxInactiveMs = 1000L * this.context.getSessionHandler().getMaxInactiveInterval();
+    long maxInactiveMs = 1000L * this.context.getSessionManager().getMaxInactiveInterval();
     SessionData jettySession =
         new AppEngineSessionData(
             id,

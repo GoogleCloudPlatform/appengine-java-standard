@@ -50,21 +50,19 @@ import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.eclipse.jetty.security.ConstraintMapping;
-import org.eclipse.jetty.security.ConstraintSecurityHandler;
-import org.eclipse.jetty.server.Request;
-import org.eclipse.jetty.servlet.FilterHolder;
-import org.eclipse.jetty.servlet.FilterMapping;
-import org.eclipse.jetty.servlet.Holder;
-import org.eclipse.jetty.servlet.ListenerHolder;
-import org.eclipse.jetty.servlet.ServletHandler;
-import org.eclipse.jetty.servlet.ServletHolder;
-import org.eclipse.jetty.servlet.ServletMapping;
-import org.eclipse.jetty.util.URIUtil;
-import org.eclipse.jetty.util.resource.JarResource;
+import org.eclipse.jetty.ee8.security.ConstraintMapping;
+import org.eclipse.jetty.ee8.security.ConstraintSecurityHandler;
+import org.eclipse.jetty.ee8.servlet.FilterHolder;
+import org.eclipse.jetty.ee8.servlet.FilterMapping;
+import org.eclipse.jetty.ee8.servlet.Holder;
+import org.eclipse.jetty.ee8.servlet.ListenerHolder;
+import org.eclipse.jetty.ee8.servlet.ServletHandler;
+import org.eclipse.jetty.ee8.servlet.ServletHolder;
+import org.eclipse.jetty.ee8.servlet.ServletMapping;
 import org.eclipse.jetty.util.resource.Resource;
+import org.eclipse.jetty.util.resource.ResourceFactory;
 import org.eclipse.jetty.util.security.Constraint;
-import org.eclipse.jetty.webapp.WebAppContext;
+import org.eclipse.jetty.ee8.webapp.WebAppContext;
 
 /**
  * {@code AppEngineWebAppContext} is a customization of Jetty's {@link WebAppContext} that is aware
@@ -80,8 +78,8 @@ public class AppEngineWebAppContext extends WebAppContext {
   // constant.  If it's much larger than this we may need to
   // restructure the code a bit.
   private static final int MAX_RESPONSE_SIZE = 32 * 1024 * 1024;
-  private static final boolean APP_IS_ASYNC =
-      Boolean.getBoolean(RpcConnection.ASYNC_ENABLE_PPROPERTY);
+  private static final String ASYNC_ENABLE_PPROPERTY = "enable_async_PROPERTY"; // TODO
+  private static final boolean APP_IS_ASYNC = Boolean.getBoolean(ASYNC_ENABLE_PPROPERTY);
 
   private static final String JETTY_PACKAGE = "org.eclipse.jetty.";
 
@@ -128,7 +126,7 @@ public class AppEngineWebAppContext extends WebAppContext {
 
   public AppEngineWebAppContext(File appDir, String serverInfo, boolean extractWar) {
     // We set the contextPath to / for all applications.
-    super(appDir.getPath(), URIUtil.SLASH);
+    super(appDir.getPath(), "/");
 
     this.extractWar = extractWar;
 
@@ -138,7 +136,7 @@ public class AppEngineWebAppContext extends WebAppContext {
     if (extractWar) {
       Resource webApp = null;
       try {
-        webApp = Resource.newResource(appDir.getAbsolutePath());
+        webApp = ResourceFactory.root().newResource(appDir.getAbsolutePath());
 
         if (appDir.isDirectory()) {
           setWar(appDir.getPath());
@@ -148,9 +146,9 @@ public class AppEngineWebAppContext extends WebAppContext {
           File extractedWebAppDir = createTempDir();
           extractedWebAppDir.mkdir();
           extractedWebAppDir.deleteOnExit();
-          Resource jarWebWpp = JarResource.newJarResource(webApp);
-          jarWebWpp.copyTo(extractedWebAppDir);
-          setBaseResource(Resource.newResource(extractedWebAppDir.getAbsolutePath()));
+          Resource jarWebWpp = ResourceFactory.root().newJarFileResource(webApp.getURI());
+          jarWebWpp.copyTo(extractedWebAppDir.toPath());
+          setBaseResource(ResourceFactory.root().newResource(extractedWebAppDir.getAbsolutePath()));
           setWar(extractedWebAppDir.getPath());
         }
       } catch (Exception e) {
@@ -163,16 +161,9 @@ public class AppEngineWebAppContext extends WebAppContext {
 
     this.serverInfo = serverInfo;
 
-    // Override the default HttpServletContext implementation.
-    // TODO: maybe not needed when there is no securrity manager.
-    // see
-    // https://github.com/GoogleCloudPlatform/appengine-java-vm-runtime/commit/43c37fd039fb619608cfffdc5461ecddb4d90ebc
-    _scontext = new AppEngineServletContext();
-
     // Configure the Jetty SecurityHandler to understand our method of
     // authentication (via the UserService).
-    AppEngineAuthentication.configureSecurityHandler(
-        (ConstraintSecurityHandler) getSecurityHandler());
+    AppEngineAuthentication.configureSecurityHandler((ConstraintSecurityHandler) getSecurityHandler());
 
     setMaxFormContentSize(MAX_RESPONSE_SIZE);
 
@@ -180,7 +171,21 @@ public class AppEngineWebAppContext extends WebAppContext {
     ignoreContentLength = isAppIdForNonContentLength();
   }
 
-  private static boolean isAppIdForNonContentLength() {
+    @Override
+    public APIContext getServletContext()
+    {
+        /* TODO only does this for logging?
+        // Override the default HttpServletContext implementation.
+        // TODO: maybe not needed when there is no securrity manager.
+        // see
+        // https://github.com/GoogleCloudPlatform/appengine-java-vm-runtime/commit/43c37fd039fb619608cfffdc5461ecddb4d90ebc
+        _scontext = new AppEngineServletContext();
+        */
+
+        return super.getServletContext();
+    }
+
+    private static boolean isAppIdForNonContentLength() {
     String projectId = System.getenv("GOOGLE_CLOUD_PROJECT");
     if (projectId == null) {
       return false;
@@ -198,19 +203,25 @@ public class AppEngineWebAppContext extends WebAppContext {
   }
 
   @Override
-  public void addEventListener(EventListener listener) {
-    super.addEventListener(listener);
-    if (listener instanceof RequestListener) {
-      requestListeners.add((RequestListener) listener);
+  public boolean addEventListener(EventListener listener) {
+    if (super.addEventListener(listener)) {
+        if (listener instanceof RequestListener) {
+            requestListeners.add((RequestListener)listener);
+        }
+        return true;
     }
+    return false;
   }
 
   @Override
-  public void removeEventListener(EventListener listener) {
-    super.removeEventListener(listener);
-    if (listener instanceof RequestListener) {
-      requestListeners.remove((RequestListener) listener);
+  public boolean removeEventListener(EventListener listener) {
+    if (super.removeEventListener(listener)) {
+        if (listener instanceof RequestListener) {
+            requestListeners.remove((RequestListener)listener);
+        }
+        return true;
     }
+    return false;
   }
 
   @Override
@@ -219,10 +230,9 @@ public class AppEngineWebAppContext extends WebAppContext {
     addEventListener(new TransactionCleanupListener(getClassLoader()));
   }
 
-  @Override
-  protected void startWebapp() throws Exception {
-
-    // startWebapp is called after the web.xml meta data has been resolved, so we can
+    @Override
+    protected void startContext() throws Exception {
+    // startWebapp is called after the web.xml metadata has been resolved, so we can
     // clean configuration here:
     //  - Removed deprecated filters and servlets
     //  - Ensure known runtime filters/servlets are instantiated from this classloader
@@ -271,28 +281,26 @@ public class AppEngineWebAppContext extends WebAppContext {
     security.addConstraintMapping(cm);
 
     // continue starting the webapp
-    super.startWebapp();
+    super.startContext();
   }
 
-  @Override
-  public void doHandle(
-      String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response)
-      throws IOException, ServletException {
-    ListIterator<RequestListener> iter = requestListeners.listIterator();
-    while (iter.hasNext()) {
-      iter.next().requestReceived(this, baseRequest);
-    }
-    try {
-      if (ignoreContentLength) {
-        response = new IgnoreContentLengthResponseWrapper(response);
+    @Override
+    public void doHandle(String target, org.eclipse.jetty.ee8.nested.Request baseRequest, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
+      ListIterator<RequestListener> iter = requestListeners.listIterator();
+      while (iter.hasNext()) {
+        iter.next().requestReceived(this, baseRequest);
       }
-      super.doHandle(target, baseRequest, request, response);
-    } finally {
-      // TODO: this finally approach is ok until async request handling is supported
-      while (iter.hasPrevious()) {
-        iter.previous().requestComplete(this, baseRequest);
+      try {
+        if (ignoreContentLength) {
+          response = new IgnoreContentLengthResponseWrapper(response);
+        }
+        super.doHandle(target, baseRequest, request, response);
+      } finally {
+        // TODO: this finally approach is ok until async request handling is supported
+        while (iter.hasPrevious()) {
+          iter.previous().requestComplete(this, baseRequest);
+        }
       }
-    }
   }
 
   @Override
@@ -544,7 +552,7 @@ public class AppEngineWebAppContext extends WebAppContext {
           mapping.setServletName(name);
           mapping.setPathSpec(pathSpec);
           if (pathSpec.equals("/")) {
-            mapping.setDefault(true);
+            mapping.setFromDefaultDescriptor(true);
           }
           mappings.add(mapping);
         }
