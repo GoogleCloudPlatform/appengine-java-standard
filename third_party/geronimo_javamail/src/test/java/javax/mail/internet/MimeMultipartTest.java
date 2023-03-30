@@ -64,7 +64,6 @@ public class MimeMultipartTest extends TestCase {
     public void testPreamble() throws MessagingException, IOException {
         Properties props = new Properties();
         Session session = Session.getDefaultInstance(props);
-        session.setDebug(true);
         MimeMessage message = new MimeMessage(session);
         message.setFrom(new InternetAddress("rickmcg@gmail.com"));
         message.setRecipients(Message.RecipientType.TO, InternetAddress.parse("rick@us.ibm.com"));
