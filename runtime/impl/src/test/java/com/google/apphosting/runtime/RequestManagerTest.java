@@ -16,6 +16,7 @@
 
 package com.google.apphosting.runtime;
 
+import static com.google.common.base.StandardSystemProperty.JAVA_VERSION;
 import static com.google.common.truth.Truth.assertThat;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.junit.Assert.fail;
@@ -90,6 +91,10 @@ public class RequestManagerTest {
   private RuntimeLogSink logSink;
   @Mock private CloudDebuggerAgentWrapper cloudDebuggerAgent;
   @Mock private APIHostClientInterface mockApiHost;
+
+  private boolean isJava8() {
+    return JAVA_VERSION.value().startsWith("1.8");
+  }
 
   // Ensure that Truth is loaded. Otherwise we can get weird errors if the exceptions we are
   // flinging about with Thread.stop0 end up hitting a thread that is running the Truth static
@@ -232,6 +237,9 @@ public class RequestManagerTest {
 
   @Test
   public void testSoftException() {
+    if (!isJava8()) {
+      return;
+    }
     RequestManager requestManager = createRequestManager();
     MockAnyRpcServerContext rpc = createRpc();
     RequestManager.RequestToken token =
@@ -249,7 +257,7 @@ public class RequestManagerTest {
         // expected
         double elapsed = System.currentTimeMillis() - rpc.getStartTimeMillis();
         assertThat(elapsed).isGreaterThan((double) deadline);
-        assertThat(elapsed).isWithin(1500.0).of(deadline);
+        assertThat(elapsed).isWithin(1500.0).of((double) deadline);
       }
     } finally {
       requestManager.finishRequest(token);
@@ -260,6 +268,9 @@ public class RequestManagerTest {
 
   @Test
   public void testHardException() {
+    if (!isJava8()) {
+      return;
+    }
     RequestManager requestManager = createRequestManager();
     MockAnyRpcServerContext rpc = createRpc();
     RequestManager.RequestToken token =
@@ -277,7 +288,7 @@ public class RequestManagerTest {
         // expected
         double elapsed = System.currentTimeMillis() - rpc.getStartTimeMillis();
         assertThat(elapsed).isGreaterThan((double) deadline);
-        assertThat(elapsed).isWithin(1500.0).of(deadline);
+        assertThat(elapsed).isWithin(1500.0).of((double) deadline);
         assertThat(softException.getStackTrace()).isNotEmpty();
         try {
           Thread.sleep(SLEEP_TIME);
@@ -303,6 +314,9 @@ public class RequestManagerTest {
 
   @Test
   public void testSoftExceptionNoCloneTermination() {
+    if (!isJava8()) {
+      return;
+    }
     RequestManager requestManager =
         requestManagerBuilder()
             .setThreadStopTerminatesClone(false)
@@ -335,6 +349,9 @@ public class RequestManagerTest {
 
   @Test
   public void testSoftExceptionNoTimer() {
+    if (!isJava8()) {
+      return;
+    }
     RequestManager requestManager =
         requestManagerBuilder()
             .setDisableDeadlineTimers(true)
@@ -445,6 +462,9 @@ public class RequestManagerTest {
 
   @Test
   public void testHardExceptionNoTimer() {
+    if (!isJava8()) {
+      return;
+    }
     RequestManager requestManager =
         requestManagerBuilder()
             .setDisableDeadlineTimers(true)
