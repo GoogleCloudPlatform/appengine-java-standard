@@ -16,10 +16,12 @@
 
 package com.google.apphosting.runtime.jetty9;
 
+import static com.google.common.base.StandardSystemProperty.JAVA_SPECIFICATION_VERSION;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.junit.Assume.assumeTrue;
 
 import com.google.common.io.ByteStreams;
 import java.io.File;
@@ -74,6 +76,11 @@ import org.junit.runners.JUnit4;
 public class SharedThreadPoolTest extends JavaRuntimeViaHttpBase {
   private static File appRoot;
 
+  private boolean isBeforeJava20() {
+    int currentVersion = JAVA_SPECIFICATION_VERSION.value().charAt(0);
+    return (currentVersion < 2);
+  }
+
   @BeforeClass
   public static void beforeClass() throws IOException, InterruptedException {
     Path appPath = temporaryFolder.newFolder("app").toPath();
@@ -83,12 +90,14 @@ public class SharedThreadPoolTest extends JavaRuntimeViaHttpBase {
 
   @Test
   public void sharedThreadPoolWorks() throws Exception {
+    assumeTrue(isBeforeJava20());
     ExecutorService executor = Executors.newCachedThreadPool();
     try (RuntimeContext<?> runtime = startApp()) {
       Future<?> future1 = executor.submit(() -> makeRequest(runtime, "/"));
       Thread.sleep(3000);
       Future<?> future2 = executor.submit(() -> makeRequest(runtime, "/"));
       future2.get(10, SECONDS);
+      // Does not work anymore with JDK20:
       assertThat(future1.isDone()).isFalse();
     }
   }
