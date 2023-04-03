@@ -214,7 +214,7 @@
       <profile>
           <id>surefire-java-above8</id>
           <activation>
-              <jdk>[11,20)</jdk>
+              <jdk>[11,)</jdk>
           </activation>
           <build>
               <plugins>
