@@ -48,7 +48,7 @@ Soon we will stop entirely pushing internal 1.9.xx artifacts and encourage all A
 Orange items are public modules artifacts and yellow are internal ones.
 Modules ending with * are only used on the production server side.
 
-<img width="964" alt="pom_dependencies" src="https://github.com/GoogleCloudPlatform/appengine-java-standard/blob/main/pom%20dependencies.png">
+<img width="964" alt="pom_dependencies" src="https://github.com/GoogleCloudPlatform/appengine-java-standard/blob/main/pom_dependencies.png">
 
 ### App Engine Java APIs
 
