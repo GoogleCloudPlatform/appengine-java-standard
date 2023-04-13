@@ -69,19 +69,20 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nullable;
 
 /**
- * {@code RequestManager} is responsible for setting up and tearing
- * down any state associated with each request.
+ * {@code RequestManager} is responsible for setting up and tearing down any state associated with
+ * each request.
  *
- * At the moment, this includes:
+ * <p>At the moment, this includes:
+ *
  * <ul>
- *  <li>Injecting an {@code Environment} implementation for the
- *  request's thread into {@code ApiProxy}.
- *  <li>Scheduling any future actions that must occur while the
- *  request is executing (e.g. deadline exceptions), and cleaning up
- *  any scheduled actions that do not occur.
+ *   <li>Injecting an {@code Environment} implementation for the request's thread into {@code
+ *       ApiProxy}.
+ *   <li>Scheduling any future actions that must occur while the request is executing (e.g. deadline
+ *       exceptions), and cleaning up any scheduled actions that do not occur.
  * </ul>
  *
  * It is expected that clients will use it like this:
+ *
  * <pre>
  * RequestManager.RequestToken token =
  *     requestManager.startRequest(...);
@@ -91,9 +92,8 @@ import javax.annotation.Nullable;
  *   requestManager.finishRequest(token);
  * }
  * </pre>
- *
  */
-public class RequestManager {
+public class RequestManager implements RequestThreadManager {
   private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
 
   /**
@@ -929,7 +929,8 @@ public class RequestManager {
     response.setHttpResponseCodeAndResponse(200, "OK");
   }
 
-  List<Thread> getRequestThreads(AppVersionKey appVersionKey) {
+  @Override
+  public List<Thread> getRequestThreads(AppVersionKey appVersionKey) {
     List<Thread> threads = new ArrayList<Thread>();
     synchronized (requests) {
       for (RequestToken token : requests.values()) {
