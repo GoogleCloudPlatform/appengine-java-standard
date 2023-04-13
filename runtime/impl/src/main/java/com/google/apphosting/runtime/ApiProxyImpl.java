@@ -161,7 +161,7 @@ public class ApiProxyImpl implements ApiProxy.Delegate<ApiProxyImpl.EnvironmentI
   private final int maxLogLineSize;
   private final Duration maxLogFlushTime;
   private final BackgroundRequestCoordinator coordinator;
-  private RequestManager requestManager;
+  private RequestThreadManager requestThreadManager;
   private final boolean cloudSqlJdbcConnectivityEnabled;
   private final boolean disableApiCallLogging;
   private final AtomicBoolean enabled = new AtomicBoolean(true);
@@ -247,8 +247,8 @@ public class ApiProxyImpl implements ApiProxy.Delegate<ApiProxyImpl.EnvironmentI
   // environments, and ApiProxyImpl needs the RequestManager so it can
   // get the request threads. We should find a better way to
   // modularize this.
-  public void setRequestManager(RequestManager requestManager) {
-    this.requestManager = requestManager;
+  public void setRequestManager(RequestThreadManager requestThreadManager) {
+    this.requestThreadManager = requestThreadManager;
   }
 
   void disable() {
@@ -741,7 +741,7 @@ public class ApiProxyImpl implements ApiProxy.Delegate<ApiProxyImpl.EnvironmentI
     if (environment == null) {
       return Collections.emptyList();
     }
-    return requestManager.getRequestThreads(environment.getAppVersion().getKey());
+    return requestThreadManager.getRequestThreads(environment.getAppVersion().getKey());
   }
 
   /** Creates an {@link Environment} instance that is suitable for use with this class. */
