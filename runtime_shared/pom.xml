@@ -35,9 +35,9 @@
             <optional>true</optional>
         </dependency>
         <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>javax.servlet-api</artifactId>
-             <optional>true</optional>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>javax.servlet.jsp.jstl</groupId>
@@ -93,7 +93,7 @@
                                     <include>org.mortbay.jasper:apache-jsp</include>
                                     <include>org.mortbay.jasper:apache-el</include>
                                     <include>com.google.appengine:sessiondata</include>
-                                    <include>javax.servlet:javax.servlet-api</include>
+                                    <include>jakarta.servlet:jakarta.servlet-api</include>
                                     <include>javax.servlet.jsp.jstl:javax.servlet.jsp.jstl-api</include>
                                 </includes>
                             </artifactSet>

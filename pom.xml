@@ -524,9 +524,9 @@
         <version>1.4.4-2.0.10</version>
       </dependency>
       <dependency>
-        <groupId>javax.servlet</groupId>
-        <artifactId>javax.servlet-api</artifactId>
-        <version>3.1.0</version>
+        <groupId>jakarta.servlet</groupId>
+        <artifactId>jakarta.servlet-api</artifactId>
+        <version>4.0.3</version>
       </dependency>
       <dependency>
         <groupId>javax.servlet.jsp.jstl</groupId>
@@ -593,7 +593,7 @@
       <dependency>
         <groupId>org.eclipse.jetty.toolchain</groupId>
         <artifactId>jetty-schemas</artifactId>
-        <version>3.1</version>
+        <version>4.0.3</version>
       </dependency>
       <dependency>
         <groupId>org.glassfish.web</groupId>

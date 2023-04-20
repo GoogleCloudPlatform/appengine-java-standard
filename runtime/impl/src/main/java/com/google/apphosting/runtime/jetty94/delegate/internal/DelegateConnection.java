@@ -149,6 +149,9 @@ public class DelegateConnection implements Connection
 
             // Invoke the HttpChannel.
             Runnable runnable = httpChannel.onRequest(requestMetadata);
+            for (String name : delegateExchange.getAttributeNameSet()) {
+                httpChannel.getRequest().setAttribute(name, delegateExchange.getAttribute(name));
+            }
             if (LOG.isDebugEnabled())
                 LOG.debug("executing channel {}", httpChannel);
             _connector.getExecutor().execute(runnable);

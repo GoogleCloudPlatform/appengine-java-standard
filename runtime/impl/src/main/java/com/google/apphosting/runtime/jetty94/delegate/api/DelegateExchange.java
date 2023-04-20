@@ -18,11 +18,12 @@ package com.google.apphosting.runtime.jetty94.delegate.api;
 
 import org.eclipse.jetty.http.HttpFields;
 import org.eclipse.jetty.io.Content;
+import org.eclipse.jetty.util.Attributes;
 import org.eclipse.jetty.util.Callback;
 
 import java.net.InetSocketAddress;
 
-public interface DelegateExchange extends Content.Source, Content.Sink, Callback
+public interface DelegateExchange extends Content.Source, Content.Sink, Callback, Attributes
 {
     // Request Methods.
 

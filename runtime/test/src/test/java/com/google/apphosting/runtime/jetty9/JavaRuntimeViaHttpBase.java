@@ -243,6 +243,7 @@ public abstract class JavaRuntimeViaHttpBase {
                   JAVA_HOME.value() + "/bin/java",
                   "-Dcom.google.apphosting.runtime.jetty94.LEGACY_MODE=" + useJetty94LegacyMode(),
                   "-Duse.mavenjars=" + useMavenJars(),
+                  // "-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:5005",
                   "-cp",
                   useMavenJars()
                       ? new File(runtimeDir, "jars/runtime-main.jar").getAbsolutePath()

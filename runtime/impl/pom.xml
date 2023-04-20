@@ -131,8 +131,8 @@
             <optional>true</optional>
         </dependency>
         <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>javax.servlet-api</artifactId>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -414,12 +414,17 @@
                                     <include>org.eclipse.jetty.ee8:jetty-ee8-servlet</include>
                                     <include>org.eclipse.jetty.ee8:jetty-ee8-servlets</include>
                                     <include>org.eclipse.jetty.ee8:jetty-ee8-webapp</include>
+                                    <include>org.eclipse.jetty.ee8:jetty-ee8-nested</include>
+                                    <include>org.eclipse.jetty:jetty-ee</include>
                                     <include>org.eclipse.jetty:jetty-client</include>
                                     <include>org.eclipse.jetty:jetty-continuation</include>
                                     <include>org.eclipse.jetty:jetty-http</include>
                                     <include>org.eclipse.jetty:jetty-io</include>
                                     <include>org.eclipse.jetty:jetty-jmx</include>
                                     <include>org.eclipse.jetty:jetty-server</include>
+                                    <include>org.eclipse.jetty:jetty-session</include>
+                                    <include>org.eclipse.jetty:jetty-slf4j-impl</include>
+                                    <include>org.slf4j:slf4j-api</include>
                                     <include>org.eclipse.jetty:jetty-util-ajax</include>
                                     <include>org.eclipse.jetty:jetty-util</include>
                                     <include>org.eclipse.jetty:jetty-xml</include>
@@ -430,7 +435,7 @@
                                     <include>org.ow2.asm:asm-tree</include>
                                 </includes>
                                 <excludes>
-                                    <exclude>javax.servlet:javax.servlet-api</exclude>
+                                    <exclude>jakarta.servlet:jakarta.servlet-api</exclude>
                                 </excludes>
                             </artifactSet>
                         </configuration>

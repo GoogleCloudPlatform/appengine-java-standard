@@ -25,6 +25,7 @@ import com.google.apphosting.base.protos.RuntimePb.UPResponse;
 import com.google.apphosting.runtime.AppVersion;
 import com.google.apphosting.runtime.MutableUpResponse;
 import com.google.apphosting.runtime.ServletEngineAdapter;
+import com.google.apphosting.runtime.jetty9.JettyConstants;
 import com.google.apphosting.runtime.jetty94.delegate.DelegateConnector;
 import com.google.apphosting.runtime.jetty94.delegate.impl.DelegateRpcExchange;
 import com.google.apphosting.utils.config.AppEngineConfigException;
@@ -38,6 +39,8 @@ import java.io.InputStreamReader;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import javax.servlet.ServletException;
+
+import org.eclipse.jetty.ee8.nested.ContextHandler;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
@@ -117,6 +120,11 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
     }
      */
 
+    ContextHandler contextHandler = new ContextHandler("/");
+    contextHandler.setHandler(appVersionHandlerMap);
+    server.setHandler(contextHandler);
+
+
     if (runtimeOptions.useJettyHttpProxy()) {
       server.setAttribute(
           "com.google.apphosting.runtime.jetty94.appYaml",
@@ -190,6 +198,7 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
 
     // TODO: lots of compliance modes to handle.
     DelegateRpcExchange rpcExchange = new DelegateRpcExchange(upRequest, upResponse);
+    rpcExchange.setAttribute(JettyConstants.APP_VERSION_KEY_REQUEST_ATTR, appVersionKey);
     rpcConnector.service(rpcExchange);
     try {
       rpcExchange.awaitResponse();

@@ -22,12 +22,15 @@ import com.google.apphosting.runtime.MutableUpResponse;
 import com.google.apphosting.runtime.jetty94.delegate.api.DelegateExchange;
 import com.google.protobuf.ByteString;
 import org.eclipse.jetty.http.HttpFields;
+import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.io.ByteBufferAccumulator;
 import org.eclipse.jetty.io.Content;
+import org.eclipse.jetty.util.Attributes;
 import org.eclipse.jetty.util.Callback;
 
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicReference;
@@ -35,17 +38,27 @@ import java.util.concurrent.atomic.AtomicReference;
 public class DelegateRpcExchange implements DelegateExchange
 {
     private static final Content.Chunk EOF = Content.Chunk.EOF;
+    static final boolean LEGACY_MODE = Boolean.getBoolean("com.google.apphosting.runtime.jetty94.LEGACY_MODE");
+
     private final HttpPb.HttpRequest _request;
     private final AtomicReference<Content.Chunk> _content = new AtomicReference<>();
     private final MutableUpResponse _response;
     private final ByteBufferAccumulator accumulator = new ByteBufferAccumulator();
     private final CompletableFuture<Void> _completion = new CompletableFuture<>();
+    private final Attributes _attributes = new Attributes.Lazy();
+    private final String _httpMethod;
 
     public DelegateRpcExchange(RuntimePb.UPRequest request, MutableUpResponse response)
     {
         _request = request.getRequest();
         _response = response;
         _content.set(new ContentChunk(_request.getPostdata().toByteArray()));
+
+        String protocol = _request.getProtocol();
+        HttpMethod method = LEGACY_MODE
+                ? HttpMethod.INSENSITIVE_CACHE.get(protocol)
+                : HttpMethod.CACHE.get(protocol);
+        _httpMethod = method != null ? method.asString() : protocol;
     }
 
     @Override
@@ -63,7 +76,7 @@ public class DelegateRpcExchange implements DelegateExchange
     @Override
     public String getMethod()
     {
-        return _request.getOriginalRequestMethod();
+        return _httpMethod;
     }
 
     @Override
@@ -124,7 +137,8 @@ public class DelegateRpcExchange implements DelegateExchange
     @Override
     public void write(boolean last, ByteBuffer content, Callback callback)
     {
-        accumulator.copyBuffer(content);
+        if (content != null)
+            accumulator.copyBuffer(content);
         callback.succeeded();
     }
 
@@ -144,5 +158,29 @@ public class DelegateRpcExchange implements DelegateExchange
     public void awaitResponse() throws ExecutionException, InterruptedException
     {
         _completion.get();
+    }
+
+    @Override
+    public Object removeAttribute(String name)
+    {
+        return _attributes.removeAttribute(name);
+    }
+
+    @Override
+    public Object setAttribute(String name, Object attribute)
+    {
+        return _attributes.setAttribute(name, attribute);
+    }
+
+    @Override
+    public Object getAttribute(String name)
+    {
+        return _attributes.getAttribute(name);
+    }
+
+    @Override
+    public Set<String> getAttributeNameSet()
+    {
+        return _attributes.getAttributeNameSet();
     }
 }
