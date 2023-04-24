@@ -37,9 +37,8 @@ public class ParameterFactory implements IStringConverterFactory {
           Boolean.class, BooleanConverter.class);
 
   @Override
-  @SuppressWarnings("unchecked")
-  public <T> Class<? extends IStringConverter<T>> getConverter(Class<T> type) {
-    return (Class<? extends IStringConverter<T>>) CONVERTERS.get(type);
+  public Class<? extends IStringConverter<?>> getConverter(Class<?> type) {
+    return CONVERTERS.get(type);
   }
 
   /**
