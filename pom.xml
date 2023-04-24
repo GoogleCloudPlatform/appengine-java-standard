@@ -416,7 +416,7 @@
       <dependency>
         <groupId>com.beust</groupId>
         <artifactId>jcommander</artifactId>
-        <version>1.48</version><!-- pick only 1.48,  unique version that works-->
+        <version>1.82</version>
       </dependency>
       <dependency>
         <groupId>com.google.auto.service</groupId>
