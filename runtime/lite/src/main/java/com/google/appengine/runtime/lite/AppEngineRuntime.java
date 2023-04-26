@@ -25,7 +25,6 @@ import com.google.apphosting.runtime.ApiDeadlineOracle;
 import com.google.apphosting.runtime.ApiProxyImpl;
 import com.google.apphosting.runtime.AppVersion;
 import com.google.apphosting.runtime.ApplicationEnvironment;
-import com.google.apphosting.runtime.RequestManager;
 import com.google.apphosting.runtime.SessionsConfig;
 import com.google.apphosting.runtime.anyrpc.APIHostClientInterface;
 import com.google.apphosting.runtime.http.HttpApiHostClientFactory;
@@ -178,7 +177,6 @@ public class AppEngineRuntime {
     apiProxyImpl = makeApiProxyImplBuilder(apiHostAddress, backgroundRequestDispatcher).build();
 
     RequestManager requestManager = makeRequestManagerBuilder(apiProxyImpl).build();
-
     apiProxyImpl.setRequestManager(requestManager);
 
     AppInfoFactory appInfoFactory = new AppInfoFactory(System.getenv());

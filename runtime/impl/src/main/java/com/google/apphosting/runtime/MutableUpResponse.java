@@ -80,11 +80,11 @@ public class MutableUpResponse {
     builder.setErrorMessage(message);
   }
 
-  synchronized boolean hasSerializedTrace() {
+  public synchronized boolean hasSerializedTrace() {
     return builder.hasSerializedTrace();
   }
 
-  synchronized ByteString getSerializedTrace() {
+  public synchronized ByteString getSerializedTrace() {
     return builder.getSerializedTrace();
   }
 
@@ -111,27 +111,27 @@ public class MutableUpResponse {
     builder.addAppLog(line);
   }
 
-  synchronized void addAppLog(AppLogsPb.AppLogLine.Builder line) {
+  public synchronized void addAppLog(AppLogsPb.AppLogLine.Builder line) {
     builder.addAppLog(line);
   }
 
-  synchronized void setPendingCloudDebuggerActionBreakpointUpdates(boolean x) {
+  public synchronized void setPendingCloudDebuggerActionBreakpointUpdates(boolean x) {
     builder.getPendingCloudDebuggerActionBuilder().setBreakpointUpdates(x);
   }
 
-  synchronized void setPendingCloudDebuggerActionDebuggeeRegistration(boolean x) {
+  public synchronized void setPendingCloudDebuggerActionDebuggeeRegistration(boolean x) {
     builder.getPendingCloudDebuggerActionBuilder().setDebuggeeRegistration(x);
   }
 
-  synchronized boolean hasPendingCloudDebuggerAction() {
+  public synchronized boolean hasPendingCloudDebuggerAction() {
     return builder.hasPendingCloudDebuggerAction();
   }
 
-  synchronized RuntimePb.PendingCloudDebuggerAction getPendingCloudDebuggerAction() {
+  public synchronized RuntimePb.PendingCloudDebuggerAction getPendingCloudDebuggerAction() {
     return builder.getPendingCloudDebuggerAction();
   }
 
-  synchronized void setUserMcycles(long cycles) {
+  public synchronized void setUserMcycles(long cycles) {
     builder.setUserMcycles(cycles);
   }
 
@@ -139,31 +139,31 @@ public class MutableUpResponse {
     builder.addAllRuntimeLogLine(lines);
   }
 
-  synchronized int getRuntimeLogLineCount() {
+  public synchronized int getRuntimeLogLineCount() {
     return builder.getRuntimeLogLineCount();
   }
 
-  synchronized UPResponse.RuntimeLogLine getRuntimeLogLine(int i) {
+  public synchronized UPResponse.RuntimeLogLine getRuntimeLogLine(int i) {
     return builder.getRuntimeLogLine(i);
   }
 
-  synchronized boolean getTerminateClone() {
+  public synchronized boolean getTerminateClone() {
     return builder.getTerminateClone();
   }
 
-  synchronized void setTerminateClone(boolean terminate) {
+  public synchronized void setTerminateClone(boolean terminate) {
     builder.setTerminateClone(terminate);
   }
 
-  synchronized boolean hasCloneIsInUncleanState() {
+  public synchronized boolean hasCloneIsInUncleanState() {
     return builder.hasCloneIsInUncleanState();
   }
 
-  synchronized boolean getCloneIsInUncleanState() {
+  public synchronized boolean getCloneIsInUncleanState() {
     return builder.getCloneIsInUncleanState();
   }
 
-  synchronized void setCloneIsInUncleanState(boolean unclean) {
+  public synchronized void setCloneIsInUncleanState(boolean unclean) {
     builder.setCloneIsInUncleanState(unclean);
   }
 
