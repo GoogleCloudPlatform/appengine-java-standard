@@ -251,7 +251,7 @@ public class ApiProxyImpl implements ApiProxy.Delegate<ApiProxyImpl.EnvironmentI
     this.requestThreadManager = requestThreadManager;
   }
 
-  void disable() {
+  public void disable() {
     // We're just using the AtomicBoolean as a boolean object we can synchronize on. We don't use
     // getAndSet or the like, because we want these properties:
     // (1) The first thread to call enable() is the one that calls apiHost.enable(), and every
@@ -265,7 +265,7 @@ public class ApiProxyImpl implements ApiProxy.Delegate<ApiProxyImpl.EnvironmentI
     }
   }
 
-  void enable() {
+  public void enable() {
     synchronized (enabled) {
       if (!enabled.get()) {
         apiHost.enable();
@@ -1132,6 +1132,7 @@ public class ApiProxyImpl implements ApiProxy.Delegate<ApiProxyImpl.EnvironmentI
      * Get the trace id of the current request, which can be used to correlate log messages
      * belonging to that request.
      */
+    @Override
     public Optional<String> getTraceId() {
       return traceId;
     }
@@ -1139,6 +1140,7 @@ public class ApiProxyImpl implements ApiProxy.Delegate<ApiProxyImpl.EnvironmentI
     /**
      * Get the span id of the current request, which can be used to identify a span within a trace.
      */
+    @Override
     public Optional<String> getSpanId() {
       return spanId;
     }
@@ -1244,7 +1246,7 @@ public class ApiProxyImpl implements ApiProxy.Delegate<ApiProxyImpl.EnvironmentI
   /**
    * A thread created by {@code ThreadManager.currentRequestThreadFactory().
    */
-  static class CurrentRequestThread extends Thread {
+  public static class CurrentRequestThread extends Thread {
     private final Runnable userRunnable;
     private final RequestState requestState;
     private final ApiProxy.Environment environment;
@@ -1262,10 +1264,10 @@ public class ApiProxyImpl implements ApiProxy.Delegate<ApiProxyImpl.EnvironmentI
     }
 
     /**
-     * Returns the original Runnable that was supplied to the thread factory, before any wrapping
-     * we may have done.
+     * Returns the original Runnable that was supplied to the thread factory, before any wrapping we
+     * may have done.
      */
-    Runnable userRunnable() {
+    public Runnable userRunnable() {
       return userRunnable;
     }
 

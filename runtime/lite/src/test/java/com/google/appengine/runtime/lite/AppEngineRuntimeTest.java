@@ -35,7 +35,6 @@ import com.google.apphosting.runtime.ApiDeadlineOracle;
 import com.google.apphosting.runtime.ApiProxyImpl;
 import com.google.apphosting.runtime.AppVersion;
 import com.google.apphosting.runtime.ApplicationEnvironment;
-import com.google.apphosting.runtime.RequestManager;
 import com.google.apphosting.runtime.SessionsConfig;
 import com.google.apphosting.runtime.http.FakeHttpApiHost;
 import com.google.apphosting.runtime.jetty94.AppInfoFactory;

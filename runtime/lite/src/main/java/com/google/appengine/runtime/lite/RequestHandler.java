@@ -18,7 +18,6 @@ package com.google.appengine.runtime.lite;
 
 import com.google.apphosting.runtime.AppVersion;
 import com.google.apphosting.runtime.MutableUpResponse;
-import com.google.apphosting.runtime.RequestManager;
 import com.google.apphosting.runtime.anyrpc.AnyRpcServerContext;
 import com.google.apphosting.runtime.jetty94.AppInfoFactory;
 import com.google.apphosting.runtime.jetty94.AppVersionHandlerFactory;
