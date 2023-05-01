@@ -16,6 +16,7 @@
 
 package com.google.apphosting.runtime.jetty94.delegate.internal;
 
+import com.google.apphosting.api.ApiProxy;
 import com.google.apphosting.runtime.jetty94.delegate.DelegateConnector;
 import com.google.apphosting.runtime.jetty94.delegate.api.DelegateExchange;
 import org.eclipse.jetty.http.HttpFields;
@@ -154,7 +155,17 @@ public class DelegateConnection implements Connection
             }
             if (LOG.isDebugEnabled())
                 LOG.debug("executing channel {}", httpChannel);
-            _connector.getExecutor().execute(runnable);
+
+            ApiProxy.Environment currentEnvironment = ApiProxy.getCurrentEnvironment();
+            _connector.getExecutor().execute(() -> {
+                try {
+                    ApiProxy.setEnvironmentForCurrentThread(currentEnvironment);
+                    runnable.run();
+                }
+                finally {
+                    ApiProxy.clearEnvironmentForCurrentThread();
+                }
+            });
         }
         catch (Throwable t)
         {
