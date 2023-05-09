@@ -19,8 +19,6 @@ package com.google.appengine.runtime.lite;
 import static com.google.common.truth.Truth.assertThat;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.junit.Assert.fail;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import com.google.apphosting.api.ApiProxy;
 import com.google.apphosting.api.DeadlineExceededException;
@@ -37,9 +35,7 @@ import com.google.apphosting.base.protos.TracePb.TraceContextProto;
 import com.google.apphosting.runtime.ApiProxyImpl;
 import com.google.apphosting.runtime.AppVersion;
 import com.google.apphosting.runtime.ApplicationEnvironment;
-import com.google.apphosting.runtime.CloudDebuggerAgentWrapper;
 import com.google.apphosting.runtime.MutableUpResponse;
-import com.google.apphosting.runtime.RuntimeLogSink;
 import com.google.apphosting.runtime.SessionsConfig;
 import com.google.apphosting.runtime.anyrpc.APIHostClientInterface;
 import com.google.apphosting.runtime.anyrpc.AnyRpcServerContext;
@@ -56,20 +52,16 @@ import java.nio.file.Files;
 import java.time.Duration;
 import java.util.ArrayDeque;
 import java.util.Deque;
-import java.util.Optional;
 import java.util.concurrent.CancellationException;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
 /** Unit tests for the RequestManager. */
@@ -81,7 +73,6 @@ public class RequestManagerTest {
   private static final long SLEEP_TIME = 5000;
   private static final long SOFT_DEADLINE_DELAY = 750;
   private static final long HARD_DEADLINE_DELAY = 250;
-  private static final long MAX_RUNTIME_LOG_PER_REQUEST = 3000L * 1024L;
   private static final String APP_ID = "app123";
   private static final String ENGINE_ID = "engine";
   private static final String VERSION_ID = "v456";
@@ -92,52 +83,7 @@ public class RequestManagerTest {
   private AppVersion appVersion;
   private UPRequest upRequest;
   private MutableUpResponse upResponse;
-  private RuntimeLogSink logSink;
-  @Mock private CloudDebuggerAgentWrapper cloudDebuggerAgent;
   @Mock private APIHostClientInterface mockApiHost;
-
-  // Ensure that Truth is loaded. Otherwise we can get weird errors if the exceptions we are
-  // flinging about with Thread.stop0 end up hitting a thread that is running the Truth static
-  // initializer. Likewise for Mockito.
-  @BeforeClass
-  public static void initClasses() {
-    assertThat(true).isTrue();
-    Mockito.mock(CloudDebuggerAgentWrapper.class).hasBreakpointUpdates();
-  }
-
-  private static class DeadlineThread extends Thread {
-    private final RequestManager requestManager;
-    private final RequestManager.RequestToken token;
-    private final boolean isUncatchable;
-    private final CountDownLatch started = new CountDownLatch(1);
-
-    private DeadlineThread(
-        RequestManager requestManager, RequestManager.RequestToken token, boolean isUncatchable) {
-      this.requestManager = requestManager;
-      this.token = token;
-      this.isUncatchable = isUncatchable;
-    }
-
-    static void startAndWait(
-        RequestManager requestManager, RequestManager.RequestToken token, boolean isUncatchable) {
-      DeadlineThread thread = new DeadlineThread(requestManager, token, isUncatchable);
-      thread.start();
-      try {
-        // Wait for the thread's run() method to start.
-        thread.started.await();
-        // Further small sleep to allow the run() method to progress before we return.
-        Thread.sleep(1);
-      } catch (InterruptedException e) {
-        throw new RuntimeException(e);
-      }
-    }
-
-    @Override
-    public void run() {
-      started.countDown();
-      requestManager.sendDeadline(token, isUncatchable);
-    }
-  }
 
   @Before
   public void setUp() throws Exception {
@@ -152,7 +98,6 @@ public class RequestManagerTest {
             .buildPartial();
 
     upResponse = new MutableUpResponse();
-    logSink = new RuntimeLogSink(MAX_RUNTIME_LOG_PER_REQUEST);
 
     File rootDirectory = Files.createTempDirectory("appengine").toFile();
     ApplicationEnvironment appEnv =
@@ -178,16 +123,11 @@ public class RequestManagerTest {
     return RequestManager.builder()
         .setSoftDeadlineDelay(SOFT_DEADLINE_DELAY)
         .setHardDeadlineDelay(HARD_DEADLINE_DELAY)
-        .setRuntimeLogSink(Optional.of(logSink))
         .setApiProxyImpl(ApiProxyImpl.builder().setApiHost(mockApiHost).build())
         .setMaxOutstandingApiRpcs(10)
-        .setCloudDebuggerAgent(cloudDebuggerAgent)
         .setCyclesPerSecond(CYCLES_PER_SECOND)
-        .setWaitForDaemonRequestThreads(true)
         .setDisableDeadlineTimers(false)
-        .setThreadStopTerminatesClone(true)
-        .setInterruptFirstOnSoftDeadline(false)
-        .setEnableCloudDebugger(true);
+        .setInterruptFirstOnSoftDeadline(false);
   }
 
   private RequestManager createRequestManager() {
@@ -260,7 +200,6 @@ public class RequestManagerTest {
     RequestManager requestManager =
         requestManagerBuilder()
             .setInterruptFirstOnSoftDeadline(true)
-            .setEnableCloudDebugger(false)
             .build();
     MockAnyRpcServerContext rpc = createRpc();
     ThreadGroup threadGroup = new ThreadGroup("test-interruption");
@@ -437,124 +376,6 @@ public class RequestManagerTest {
         assertThat(upResponse.getRuntimeLogLine(i).getSeverity())
             .isEqualTo(((int) levels.removeFirst()));
       }
-    }
-  }
-
-  @Test
-  public void testCloudDebugger() {
-    RequestManager requestManager = createRequestManager();
-    ApiProxy.Delegate<?> delegate = mock(ApiProxy.Delegate.class);
-    ApiProxy.setDelegate(delegate);
-
-    try {
-      // Prepare return values of 3 calls to hasBreakpointUpdates()
-      // as we simulate 3 sequential requests.
-      when(cloudDebuggerAgent.hasBreakpointUpdates())
-          .thenReturn(false)
-          .thenReturn(false)
-          .thenReturn(true);
-
-      // 1st request
-      MockAnyRpcServerContext rpc = createRpc();
-      MutableUpResponse upResponse1 = new MutableUpResponse();
-      RequestManager.RequestToken token =
-          requestManager.startRequest(
-              appVersion, rpc, upRequest, upResponse1, new ThreadGroup("test"));
-      requestManager.finishRequest(token);
-
-      // Validation of PendingCloudDebuggerAction in UPResponse
-      // - debuggee initialization is set
-      // - no breakpoint updates from hasBreakpointUpdates()
-      Mockito.verifyNoMoreInteractions(delegate);
-      assertThat(upResponse1.hasPendingCloudDebuggerAction()).isTrue();
-      assertThat(upResponse1.getPendingCloudDebuggerAction().getDebuggeeRegistration()).isTrue();
-      assertThat(upResponse1.getPendingCloudDebuggerAction().getBreakpointUpdates()).isFalse();
-
-      // 2nd request
-      rpc = createRpc();
-      MutableUpResponse upResponse2 = new MutableUpResponse();
-      token =
-          requestManager.startRequest(
-              appVersion, rpc, upRequest, upResponse2, new ThreadGroup("test"));
-      requestManager.finishRequest(token);
-
-      // Validation of PendingCloudDebuggerAction in UPResponse
-      // - no PendingCloudDebuggerAction since
-      //   - no debuggee initialization (this is not 1st request)
-      //   - no breakpoint updates from hasBreakpointUpdates()
-      Mockito.verifyNoMoreInteractions(delegate);
-      assertThat(upResponse2.hasPendingCloudDebuggerAction()).isFalse();
-
-      // 3rd request
-      rpc = createRpc();
-      MutableUpResponse upResponse3 = new MutableUpResponse();
-      token =
-          requestManager.startRequest(
-              appVersion, rpc, upRequest, upResponse3, new ThreadGroup("test"));
-      requestManager.finishRequest(token);
-
-      // Validation of PendingCloudDebuggerAction in UPResponse
-      // - no debuggee initialization (this is not 1st request)
-      // - pending breakpoint updates from hasBreakpointUpdates()
-      Mockito.verifyNoMoreInteractions(delegate);
-      assertThat(upResponse3.hasPendingCloudDebuggerAction()).isTrue();
-      assertThat(upResponse3.getPendingCloudDebuggerAction().getDebuggeeRegistration()).isFalse();
-      assertThat(upResponse3.getPendingCloudDebuggerAction().getBreakpointUpdates()).isTrue();
-
-    } finally {
-      ApiProxy.setDelegate(null);
-    }
-  }
-
-  @Test
-  public void testCloudDebuggerDisabled() {
-    RequestManager requestManager = requestManagerBuilder().setEnableCloudDebugger(false).build();
-
-    ApiProxy.Delegate<?> delegate = mock(ApiProxy.Delegate.class);
-    ApiProxy.setDelegate(delegate);
-
-    try {
-      MockAnyRpcServerContext rpc = createRpc();
-      RequestManager.RequestToken token =
-          requestManager.startRequest(
-              appVersion, rpc, upRequest, upResponse, new ThreadGroup("test"));
-      requestManager.finishRequest(token);
-
-      // Validate there's no PendingCloudDebuggerAction in UPResponse
-      Mockito.verifyNoMoreInteractions(cloudDebuggerAgent);
-      Mockito.verifyNoMoreInteractions(delegate);
-      assertThat(upResponse.hasPendingCloudDebuggerAction()).isFalse();
-    } finally {
-      ApiProxy.setDelegate(null);
-    }
-  }
-
-  @Test
-  public void testCloudDebuggerApplicationDisabled() {
-    // Cloud debugger is initially enabled.
-    RequestManager.Builder builder = requestManagerBuilder();
-    assertThat(builder.enableCloudDebugger()).isTrue();
-    RequestManager requestManager = builder.build();
-
-    // Now programmatically disable Cloud Debugger.
-    requestManager.disableCloudDebugger();
-
-    // Verify that the Cloud Debugger is indeed disabled on RequestManager.
-    ApiProxy.Delegate<?> delegate = mock(ApiProxy.Delegate.class);
-    ApiProxy.setDelegate(delegate);
-
-    try {
-      MockAnyRpcServerContext rpc = createRpc();
-      RequestManager.RequestToken token =
-          requestManager.startRequest(
-              appVersion, rpc, upRequest, upResponse, new ThreadGroup("test"));
-      requestManager.finishRequest(token);
-
-      Mockito.verifyNoMoreInteractions(cloudDebuggerAgent);
-      Mockito.verifyNoMoreInteractions(delegate);
-      assertThat(upResponse.hasPendingCloudDebuggerAction()).isFalse();
-    } finally {
-      ApiProxy.setDelegate(null);
     }
   }
 

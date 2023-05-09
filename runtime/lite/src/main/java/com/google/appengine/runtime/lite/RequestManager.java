@@ -20,7 +20,6 @@ import static com.google.apphosting.base.protos.RuntimePb.UPRequest.Deadline.RPC
 import static java.lang.Math.max;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
-import com.google.appengine.api.LifecycleManager;
 import com.google.apphosting.api.ApiProxy;
 import com.google.apphosting.api.ApiProxy.LogRecord.Level;
 import com.google.apphosting.api.DeadlineExceededException;
@@ -31,12 +30,10 @@ import com.google.apphosting.base.protos.RuntimePb.UPRequest;
 import com.google.apphosting.base.protos.RuntimePb.UPResponse;
 import com.google.apphosting.runtime.ApiProxyImpl;
 import com.google.apphosting.runtime.AppVersion;
-import com.google.apphosting.runtime.CloudDebuggerAgentWrapper;
 import com.google.apphosting.runtime.HardDeadlineExceededError;
 import com.google.apphosting.runtime.MutableUpResponse;
 import com.google.apphosting.runtime.RequestState;
 import com.google.apphosting.runtime.RequestThreadManager;
-import com.google.apphosting.runtime.RuntimeLogSink;
 import com.google.apphosting.runtime.TraceWriter;
 import com.google.apphosting.runtime.anyrpc.AnyRpcServerContext;
 import com.google.apphosting.runtime.timer.CpuRatioTimer;
@@ -46,12 +43,12 @@ import com.google.apphosting.runtime.timer.TimerFactory;
 import com.google.auto.value.AutoBuilder;
 import com.google.common.base.Ascii;
 import com.google.common.base.Strings;
+import com.google.common.base.VerifyException;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.flogger.GoogleLogger;
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -70,14 +67,11 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.Semaphore;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nullable;
 
 /**
@@ -117,16 +111,10 @@ public class RequestManager implements RequestThreadManager {
   private final boolean disableDeadlineTimers;
   private final ScheduledThreadPoolExecutor executor;
   private final TimerFactory timerFactory;
-  private final Optional<RuntimeLogSink> runtimeLogSink;
   private final ApiProxyImpl apiProxyImpl;
-  private final boolean threadStopTerminatesClone;
   private final Map<String, RequestToken> requests;
   private final boolean interruptFirstOnSoftDeadline;
   private int maxOutstandingApiRpcs;
-  @Nullable private final CloudDebuggerAgentWrapper cloudDebuggerAgent;
-  private final AtomicBoolean enableCloudDebugger;
-  private final boolean waitForDaemonRequestThreads;
-  private final AtomicBoolean debugletStartNotified = new AtomicBoolean(false);
   private final ImmutableMap<String, String> environmentVariables;
 
   /** Make a partly-initialized builder for a RequestManager. */
@@ -150,37 +138,19 @@ public class RequestManager implements RequestThreadManager {
     public abstract Builder setDisableDeadlineTimers(boolean x);
 
     public abstract boolean disableDeadlineTimers();
-
-    public abstract Builder setRuntimeLogSink(Optional<RuntimeLogSink> x);
-
     public abstract Builder setApiProxyImpl(ApiProxyImpl x);
 
     public abstract Builder setMaxOutstandingApiRpcs(int x);
 
     public abstract int maxOutstandingApiRpcs();
 
-    public abstract Builder setThreadStopTerminatesClone(boolean x);
-
-    public abstract boolean threadStopTerminatesClone();
-
     public abstract Builder setInterruptFirstOnSoftDeadline(boolean x);
 
     public abstract boolean interruptFirstOnSoftDeadline();
 
-    public abstract Builder setCloudDebuggerAgent(@Nullable CloudDebuggerAgentWrapper x);
-
-    public abstract Builder setEnableCloudDebugger(boolean x);
-
-    public abstract boolean enableCloudDebugger();
-
     public abstract Builder setCyclesPerSecond(long x);
 
     public abstract long cyclesPerSecond();
-
-    public abstract Builder setWaitForDaemonRequestThreads(boolean x);
-
-    public abstract boolean waitForDaemonRequestThreads();
-
     public abstract Builder setEnvironment(Map<String, String> x);
 
     public abstract RequestManager build();
@@ -190,15 +160,10 @@ public class RequestManager implements RequestThreadManager {
       long softDeadlineDelay,
       long hardDeadlineDelay,
       boolean disableDeadlineTimers,
-      Optional<RuntimeLogSink> runtimeLogSink,
       ApiProxyImpl apiProxyImpl,
       int maxOutstandingApiRpcs,
-      boolean threadStopTerminatesClone,
       boolean interruptFirstOnSoftDeadline,
-      @Nullable CloudDebuggerAgentWrapper cloudDebuggerAgent,
-      boolean enableCloudDebugger,
       long cyclesPerSecond,
-      boolean waitForDaemonRequestThreads,
       ImmutableMap<String, String> environment) {
 
     this.softDeadlineDelay = softDeadlineDelay;
@@ -207,30 +172,15 @@ public class RequestManager implements RequestThreadManager {
     this.executor = new ScheduledThreadPoolExecutor(SCHEDULER_THREADS);
     this.timerFactory =
         new TimerFactory(cyclesPerSecond, new JmxHotspotTimerSet(), new JmxGcTimerSet());
-    this.runtimeLogSink = runtimeLogSink;
     this.apiProxyImpl = apiProxyImpl;
     this.maxOutstandingApiRpcs = maxOutstandingApiRpcs;
-    this.threadStopTerminatesClone = threadStopTerminatesClone;
     this.interruptFirstOnSoftDeadline = interruptFirstOnSoftDeadline;
-    this.cloudDebuggerAgent = cloudDebuggerAgent;
-    this.enableCloudDebugger = new AtomicBoolean(enableCloudDebugger);
-    this.waitForDaemonRequestThreads = waitForDaemonRequestThreads;
     this.requests = Collections.synchronizedMap(new HashMap<String, RequestToken>());
     this.environmentVariables = environment;
   }
 
   public void setMaxOutstandingApiRpcs(int maxOutstandingApiRpcs) {
     this.maxOutstandingApiRpcs = maxOutstandingApiRpcs;
-  }
-
-  /**
-   * Disables Cloud Debugger.
-   *
-   * <p>If called before the first request has been processed, the Cloud Debugger will not be even
-   * activated.
-   */
-  public void disableCloudDebugger() {
-    enableCloudDebugger.set(false);
   }
 
   /**
@@ -342,8 +292,6 @@ public class RequestManager implements RequestThreadManager {
     // logged-in user.
     ApiProxy.setEnvironmentForCurrentThread(environment);
 
-    // Let the appserver know that we're up and running.
-    setPendingStartCloudDebugger(upResponse);
 
     // Start counting CPU cycles used by this thread.
     timer.start();
@@ -380,12 +328,6 @@ public class RequestManager implements RequestThreadManager {
       logger.atWarning().log("Interrupting %s", thread);
       thread.interrupt();
     }
-
-    // Send any pending breakpoint updates from Cloud Debugger.
-    if (enableCloudDebugger.get() && cloudDebuggerAgent.hasBreakpointUpdates()) {
-      setPendingCloudDebuggerBreakpointUpdates(requestToken.getUpResponse());
-    }
-
     // Now wait for any async API calls and all request threads to complete.
     waitForUserCodeToComplete(requestToken);
 
@@ -442,7 +384,6 @@ public class RequestManager implements RequestThreadManager {
     // for leakage.
     ApiProxy.clearEnvironmentForCurrentThread();
 
-    runtimeLogSink.ifPresent(x -> x.flushLogs(requestToken.getUpResponse()));
   }
 
   private static boolean isSnapshotRequest(UPRequest request) {
@@ -483,7 +424,7 @@ public class RequestManager implements RequestThreadManager {
         threadStop0 = Thread.class.getDeclaredMethod("stop0", Object.class);
         threadStop0.setAccessible(true);
       } catch (NoSuchMethodException e) {
-        throw new RuntimeException(e);
+        throw new VerifyException(e);
       }
     }
   }
@@ -491,11 +432,6 @@ public class RequestManager implements RequestThreadManager {
   private static class NullAction implements Runnable {
     @Override
     public void run() {}
-  }
-
-  public void sendDeadline(String securityTicket, boolean isUncatchable) {
-    logger.atInfo().log("Looking up token for security ticket %s", securityTicket);
-    sendDeadline(requests.get(securityTicket), isUncatchable);
   }
 
   // Although Thread.stop(Throwable) is deprecated due to being
@@ -576,57 +512,21 @@ public class RequestManager implements RequestThreadManager {
       // cause us to terminate either too many or two few clones.  Too
       // many is merely wasteful, and too few is no worse than it was
       // without this change.
-      boolean terminateClone = false;
       StackTraceElement[] stackTrace = targetThread.getStackTrace();
-      if (threadStopTerminatesClone || isUncatchable || inClassInitialization(stackTrace)) {
-        // If we bypassed catch blocks or interrupted class
-        // initialization, don't reuse this clone.
-        terminateClone = true;
-      }
 
       throwable.setStackTrace(stackTrace);
 
       // Check again, since calling Thread.stop is so harmful.
       if (!token.isFinished()) {
-        // Only set this if we're absolutely determined to call Thread.stop.
-        token.getUpResponse().setTerminateClone(terminateClone);
-        if (terminateClone) {
-          token.getUpResponse().setCloneIsInUncleanState(true);
-        }
         logger.atInfo().log("Stopping request thread.");
         // Throw the exception in targetThread.
-        AccessController.doPrivileged(
-            (PrivilegedAction<Void>)
-                () -> {
-                  try {
-                    ThreadStop0Holder.threadStop0.invoke(targetThread, throwable);
-                  } catch (Exception e) {
-                    logger.atWarning().withCause(e).log("Failed to stop thread");
-                  }
-                  return null;
-                });
+        try {
+          ThreadStop0Holder.threadStop0.invoke(targetThread, throwable);
+        } catch (Exception e) {
+          logger.atWarning().withCause(e).log("Failed to stop thread");
+        }
       }
     }
-  }
-
-  private void setPendingStartCloudDebugger(MutableUpResponse upResponse) {
-    if (!enableCloudDebugger.get()) {
-      return;
-    }
-
-    // First time ever we need to set "DebugletStarted" flag. This will trigger
-    // debuggee initialization sequence on AppServer.
-    if (debugletStartNotified.compareAndSet(false, true)) {
-      upResponse.setPendingCloudDebuggerActionDebuggeeRegistration(true);
-    }
-  }
-
-  private void setPendingCloudDebuggerBreakpointUpdates(MutableUpResponse upResponse) {
-    if (!enableCloudDebugger.get()) {
-      return;
-    }
-
-    upResponse.setPendingCloudDebuggerActionBreakpointUpdates(true);
   }
 
   private String threadDump(Collection<Thread> threads, String prefix) {
@@ -683,9 +583,6 @@ public class RequestManager implements RequestThreadManager {
             for (Thread thread : threads) {
               thread.interrupt();
             }
-            if (Boolean.getBoolean("com.google.appengine.force.thread.pool.shutdown")) {
-              attemptThreadPoolShutdown(threads);
-            }
             for (Thread thread : threads) {
               logger.atInfo().log("Waiting for completion of thread: %s", thread);
               // Initially wait up to 10 seconds. If the interrupted thread takes longer than that
@@ -714,46 +611,6 @@ public class RequestManager implements RequestThreadManager {
       }
       logger.atWarning().withCause(ex).log(
           "Exception thrown while waiting for background work to complete:");
-    }
-  }
-
-  /**
-   * Scans the given threads to see if any of them looks like a ThreadPoolExecutor thread that was
-   * created using {@link com.google.appengine.api.ThreadManager#currentRequestThreadFactory()}, and
-   * if so attempts to shut down the owning ThreadPoolExecutor.
-   */
-  private void attemptThreadPoolShutdown(Collection<Thread> threads) {
-    for (Thread t : threads) {
-      if (t instanceof ApiProxyImpl.CurrentRequestThread) {
-        // This thread was made by ThreadManager.currentRequestThreadFactory. Check what Runnable
-        // it was given.
-        Runnable runnable = ((ApiProxyImpl.CurrentRequestThread) t).userRunnable();
-        if (runnable
-            .getClass()
-            .getName()
-            .equals("java.util.concurrent.ThreadPoolExecutor$Worker")) {
-          // This is the class that ThreadPoolExecutor threads use as their Runnable.
-          // This check depends on implementation details of the JDK, and could break in the future.
-          // In that case we have tests that should fail.
-          // Assuming it is indeed a ThreadPoolExecutor.Worker, and given that that is an inner
-          // class, we should be able to access the enclosing ThreadPoolExecutor instance by
-          // accessing the synthetic this$0 field. That is again dependent on the JDK
-          // implementation.
-          try {
-            Field outerField = runnable.getClass().getDeclaredField("this$0");
-            outerField.setAccessible(true);
-            Object outer = outerField.get(runnable);
-            if (outer instanceof ThreadPoolExecutor) {
-              ThreadPoolExecutor executor = (ThreadPoolExecutor) outer;
-              executor.shutdown();
-              // We might already have seen this executor via another thread in the loop, but
-              // there's no harm in telling it more than once to shut down.
-            }
-          } catch (ReflectiveOperationException e) {
-            logger.atInfo().withCause(e).log("ThreadPoolExecutor reflection failed");
-          }
-        }
-      }
     }
   }
 
@@ -821,14 +678,8 @@ public class RequestManager implements RequestThreadManager {
    * have not yet terminated.
    */
   private Set<Thread> getActiveThreads(RequestToken token) {
-    Set<Thread> threads;
-    if (waitForDaemonRequestThreads) {
-      // Join all request threads created using the current request ThreadFactory, including
-      // daemon ones.
-      threads = token.getState().requestThreads();
-    } else {
-      // Join all live non-daemon request threads created using the current request ThreadFactory.
-      Set<Thread> nonDaemonThreads = new LinkedHashSet<>();
+    // Join all live non-daemon request threads created using the current request ThreadFactory.
+    Set<Thread> nonDaemonThreads = new LinkedHashSet<>();
       for (Thread thread : token.getState().requestThreads()) {
         if (thread.isDaemon()) {
           logger.atInfo().log("Ignoring daemon thread: %s", thread);
@@ -838,11 +689,8 @@ public class RequestManager implements RequestThreadManager {
           nonDaemonThreads.add(thread);
         }
       }
-      threads = nonDaemonThreads;
-    }
-    Set<Thread> activeThreads = new LinkedHashSet<>(threads);
-    activeThreads.remove(Thread.currentThread());
-    return activeThreads;
+    nonDaemonThreads.remove(Thread.currentThread());
+    return nonDaemonThreads;
   }
 
   /**
@@ -898,16 +746,6 @@ public class RequestManager implements RequestThreadManager {
     logger.atInfo().log("Calling shutdown hooks for %s", token.getAppVersionKey());
     // TODO what if there's other app/versions in this VM?
     MutableUpResponse response = token.getUpResponse();
-
-    // Set the context classloader to the UserClassLoader while invoking the
-    // shutdown hooks.
-    ClassLoader oldClassLoader = Thread.currentThread().getContextClassLoader();
-    Thread.currentThread().setContextClassLoader(token.getAppVersion().getClassLoader());
-    try {
-      LifecycleManager.getInstance().beginShutdown(token.getDeadline());
-    } finally {
-      Thread.currentThread().setContextClassLoader(oldClassLoader);
-    }
 
     logMemoryStats();
 
@@ -993,15 +831,6 @@ public class RequestManager implements RequestThreadManager {
     } else {
       return new DeadlineExceededException(message);
     }
-  }
-
-  private boolean inClassInitialization(StackTraceElement[] stackTrace) {
-    for (StackTraceElement element : stackTrace) {
-      if (element.getMethodName().equals("<clinit>")) {
-        return true;
-      }
-    }
-    return false;
   }
 
   /**

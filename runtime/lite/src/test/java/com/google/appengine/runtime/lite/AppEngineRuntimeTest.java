@@ -852,11 +852,8 @@ public final class AppEngineRuntimeTest {
     assertThat(builder.hardDeadlineDelay()).isEqualTo(10200);
     assertThat(builder.disableDeadlineTimers()).isTrue();
     assertThat(builder.maxOutstandingApiRpcs()).isEqualTo(100);
-    assertThat(builder.threadStopTerminatesClone()).isTrue();
     assertThat(builder.interruptFirstOnSoftDeadline()).isTrue();
-    assertThat(builder.enableCloudDebugger()).isFalse();
     assertThat(builder.cyclesPerSecond()).isEqualTo(1000000000L);
-    assertThat(builder.waitForDaemonRequestThreads()).isFalse();
   }
 
   private static void validateDeadline(
