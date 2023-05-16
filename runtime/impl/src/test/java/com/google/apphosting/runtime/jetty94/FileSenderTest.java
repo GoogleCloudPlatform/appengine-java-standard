@@ -18,6 +18,7 @@ package com.google.apphosting.runtime.jetty94;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -26,6 +27,7 @@ import static org.mockito.Mockito.when;
 import com.google.apphosting.utils.config.AppYaml;
 
 import java.io.OutputStream;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -74,18 +76,19 @@ public class FileSenderTest {
   @Test
   public void shouldAddBasicHeaders_noAppYaml() throws Exception {
     when(mockResource.length()).thenReturn(1L);
+    when(mockResource.lastModified()).thenReturn(Instant.now());
     when(mockServletContext.getMimeType(any())).thenReturn("fake_content_type");
     testInstance = new FileSender(/* appYaml= */ null);
 
-    MockedStatic<IO> io = Mockito.mockStatic(IO.class);
+    try (MockedStatic<IO> io = Mockito.mockStatic(IO.class)) {
+      testInstance.sendData(
+              mockServletContext, mockResponse, /* include= */ false, mockResource, FAKE_URL_PATH);
 
-    testInstance.sendData(
-        mockServletContext, mockResponse, /* include= */ false, mockResource, FAKE_URL_PATH);
-
-    verify(mockResponse).setContentType("fake_content_type");
-    verify(mockResponse).setContentLength(1);
-    verify(mockResponse).setHeader(HttpHeader.CACHE_CONTROL.asString(), "public, max-age=600");
-    io.verify(() -> IO.copy(any(), (OutputStream)any(), 1L), times(1));
+      verify(mockResponse).setContentType("fake_content_type");
+      verify(mockResponse).setContentLength(1);
+      verify(mockResponse).setHeader(HttpHeader.CACHE_CONTROL.asString(), "public, max-age=600");
+      io.verify(() -> IO.copy(any(), (OutputStream)any(), eq(1L)), times(1));
+    }
   }
 
   @Test
