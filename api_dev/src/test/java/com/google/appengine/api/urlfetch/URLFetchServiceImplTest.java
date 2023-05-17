@@ -60,6 +60,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.eclipse.jetty.ee8.nested.ContextHandler;
+import org.eclipse.jetty.ee8.servlet.ServletContextHandler;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.ee8.servlet.ServletHandler;
 import org.eclipse.jetty.ee8.servlet.ServletHolder;
@@ -1044,8 +1045,8 @@ public class URLFetchServiceImplTest {
     Server server = new Server(port);
     ServletHandler handler = new ServletHandler();
 
-    ContextHandler contextHandler = new ContextHandler();
-    contextHandler.setHandler(handler);
+    ServletContextHandler contextHandler = new ServletContextHandler();
+    contextHandler.setServletHandler(handler);
     server.setHandler(contextHandler);
 
     HttpServlet setCookieServlet = new HttpServlet() {

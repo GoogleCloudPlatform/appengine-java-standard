@@ -62,6 +62,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.eclipse.jetty.ee8.nested.ContextHandler;
+import org.eclipse.jetty.ee8.servlet.ServletContextHandler;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.ee8.servlet.ServletHandler;
 import org.eclipse.jetty.ee8.servlet.ServletHolder;
@@ -101,8 +102,8 @@ public class LocalURLFetchServiceIntegrationTest {
     server = new Server(port);
     servletHandler = new ServletHandler();
 
-    ContextHandler contextHandler = new ContextHandler();
-    contextHandler.setHandler(servletHandler);
+    ServletContextHandler contextHandler = new ServletContextHandler();
+    contextHandler.setServletHandler(servletHandler);
     server.setHandler(contextHandler);
   }
 
