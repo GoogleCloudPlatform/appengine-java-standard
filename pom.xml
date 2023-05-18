@@ -624,12 +624,12 @@
       <dependency>
         <groupId>org.mortbay.jasper</groupId>
         <artifactId>apache-jsp</artifactId>
-        <version>8.5.70</version>
+        <version>9.0.52</version>
       </dependency>
       <dependency>
         <groupId>org.mortbay.jasper</groupId>
         <artifactId>apache-el</artifactId>
-        <version>8.5.70</version>
+        <version>9.0.52</version>
       </dependency>
       <dependency>
         <groupId>com.google.http-client</groupId>

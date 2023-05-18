@@ -41,7 +41,10 @@ import java.util.concurrent.ExecutionException;
 import javax.servlet.ServletException;
 
 import org.eclipse.jetty.ee8.nested.ContextHandler;
+import org.eclipse.jetty.http.CookieCompliance;
+import org.eclipse.jetty.http.UriCompliance;
 import org.eclipse.jetty.server.Connector;
+import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
 
@@ -55,6 +58,13 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
   private static final int MIN_THREAD_POOL_THREADS = 0;
   private static final int MAX_THREAD_POOL_THREADS = 100;
   private static final long MAX_RESPONSE_SIZE = 32 * 1024 * 1024;
+
+  /**
+   * If Legacy Mode is tunred on, then Jetty is configured to be more forgiving of bad requests
+   * and to act more in the style of Jetty-9.3
+   */
+  static final boolean LEGACY_MODE = Boolean.getBoolean("com.google.apphosting.runtime.jetty94.LEGACY_MODE");
+
   private AppVersionKey lastAppVersionKey;
 
   static {
@@ -101,7 +111,13 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
   @Override
   public void start(String serverInfo, ServletEngineAdapter.Config runtimeOptions) {
     server = new Server(new QueuedThreadPool(MAX_THREAD_POOL_THREADS, MIN_THREAD_POOL_THREADS));
-    rpcConnector = new DelegateConnector(server, "RPC");
+    rpcConnector = new DelegateConnector(server, "RPC") {
+      @Override
+      public void run(Runnable runnable) {
+        // Override this so it doesn't execute the runnable.
+        runnable.run();
+      }
+    };
 
     server.setConnectors(new Connector[] {rpcConnector});
     AppVersionHandlerFactory appVersionHandlerFactory =
@@ -197,6 +213,13 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
     }
 
     // TODO: lots of compliance modes to handle.
+    HttpConfiguration httpConfiguration = rpcConnector.getHttpConfiguration();
+    if (LEGACY_MODE) {
+      httpConfiguration.setRequestCookieCompliance(CookieCompliance.RFC2965);
+      httpConfiguration.setResponseCookieCompliance(CookieCompliance.RFC2965);
+      httpConfiguration.setUriCompliance(UriCompliance.LEGACY);
+    }
+
     DelegateRpcExchange rpcExchange = new DelegateRpcExchange(upRequest, upResponse);
     rpcExchange.setAttribute(JettyConstants.APP_VERSION_KEY_REQUEST_ATTR, appVersionKey);
     rpcConnector.service(rpcExchange);

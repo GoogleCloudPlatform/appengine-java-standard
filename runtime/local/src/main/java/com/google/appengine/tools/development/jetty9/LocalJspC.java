@@ -17,9 +17,11 @@
 package com.google.appengine.tools.development.jetty9;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
@@ -28,6 +30,7 @@ import org.apache.jasper.JasperException;
 import org.apache.jasper.JspC;
 import org.apache.jasper.compiler.AntCompiler;
 import org.apache.jasper.compiler.Localizer;
+import org.apache.jasper.compiler.SmapStratum;
 
 /**
  * Simple wrapper around the Apache JSP compiler. It defines a Java compiler only to compile the
@@ -73,7 +76,7 @@ public class LocalJspC {
     static JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
 
     @Override
-    protected void generateClass(String[] smap) {
+    protected void generateClass(Map<String, SmapStratum> smaps) {
       // Lazily check for the existence of the compiler:
       if (compiler == null) {
         throw new RuntimeException(

@@ -68,4 +68,9 @@ public class DelegateConnector extends AbstractConnector
     {
         throw new UnsupportedOperationException("Accept not supported by this Connector");
     }
+
+    public void run(Runnable runnable)
+    {
+        getExecutor().execute(runnable);
+    }
 }

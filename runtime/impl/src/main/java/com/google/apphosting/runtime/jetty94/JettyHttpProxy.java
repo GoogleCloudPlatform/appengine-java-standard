@@ -43,7 +43,9 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.eclipse.jetty.ee8.nested.AbstractHandler;
 import org.eclipse.jetty.ee8.nested.ContextHandler;
+import org.eclipse.jetty.http.CookieCompliance;
 import org.eclipse.jetty.http.HttpCompliance;
+import org.eclipse.jetty.http.UriCompliance;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.HttpConfiguration;
@@ -108,12 +110,17 @@ public class JettyHttpProxy {
     server.setConnectors(new Connector[] {c});
 
     HttpConnectionFactory factory = c.getConnectionFactory(HttpConnectionFactory.class);
-    /* TODO: fix HttpCompliance
-    factory.setHttpCompliance(
-        RpcConnector.LEGACY_MODE ? HttpCompliance.RFC7230_LEGACY : HttpCompliance.RFC7230);
-    */
+
 
     HttpConfiguration config = factory.getHttpConfiguration();
+    if (JettyServletEngineAdapter.LEGACY_MODE)
+    {
+      config.setHttpCompliance(HttpCompliance.RFC7230_LEGACY);
+      config.setRequestCookieCompliance(CookieCompliance.RFC2965);
+      config.setResponseCookieCompliance(CookieCompliance.RFC2965);
+      config.setUriCompliance(UriCompliance.LEGACY);
+    }
+
     config.setRequestHeaderSize(runtimeOptions.jettyRequestHeaderSize());
     config.setResponseHeaderSize(runtimeOptions.jettyResponseHeaderSize());
     config.setSendDateHeader(false);
@@ -124,6 +131,7 @@ public class JettyHttpProxy {
     ContextHandler next = new ContextHandler("/");
     next.setHandler(handler);
 
+    // TODO: fix sizeLimitHandler
     // SizeLimitHandler sizeLimitHandler = new SizeLimitHandler(MAX_REQUEST_SIZE, -1);
     // sizeLimitHandler.setHandler(handler);
 

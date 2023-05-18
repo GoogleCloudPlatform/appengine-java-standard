@@ -157,7 +157,7 @@ public class DelegateConnection implements Connection
                 LOG.debug("executing channel {}", httpChannel);
 
             ApiProxy.Environment currentEnvironment = ApiProxy.getCurrentEnvironment();
-            _connector.getExecutor().execute(() -> {
+            _connector.run(() -> {
                 try {
                     ApiProxy.setEnvironmentForCurrentThread(currentEnvironment);
                     runnable.run();
