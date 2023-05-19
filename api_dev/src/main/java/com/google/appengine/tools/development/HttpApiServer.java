@@ -24,15 +24,13 @@ import java.net.SocketException;
 import java.net.URL;
 import java.util.logging.Logger;
 
-import org.eclipse.jetty.ee8.nested.ContextHandler;
-import org.eclipse.jetty.ee8.nested.HandlerList;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.handler.ContextHandlerCollection;
 import org.eclipse.jetty.server.handler.ShutdownHandler;
 import org.eclipse.jetty.ee8.servlet.ErrorPageErrorHandler;
 import org.eclipse.jetty.ee8.servlet.ServletHandler;
 import org.eclipse.jetty.ee8.servlet.ServletHolder;
+import org.eclipse.jetty.ee8.servlet.ServletContextHandler;
 
 /**
  * Google App Engine API HTTP server, using the SDK API stubs for local testing of API calls.
@@ -99,7 +97,6 @@ public class HttpApiServer implements Closeable {
     server = new Server(apiServerPort);
     this.apiServerPort = apiServerPort;
 
-    Handler.Sequence handlers = new Handler.Sequence();
     ServletHandler servletHandler = new ServletHandler();
     ServletHolder servletHolder = servletHandler.addServletWithMapping(ApiServlet.class, REQUEST_ENDPOINT);
     servletHolder.setInitParameter("java_runtime_port", Integer.toString(appEngineServerPort));
@@ -111,14 +108,13 @@ public class HttpApiServer implements Closeable {
     error.setServer(server);
     server.addBean(error);
 
-    ContextHandler contextHandler = new ContextHandler("/");
-    contextHandler.setHandler(servletHandler);
-    handlers.addHandler(contextHandler);
+    ServletContextHandler contextHandler = new ServletContextHandler();
+    contextHandler.setContextPath("/");
+    contextHandler.setServletHandler(servletHandler);
 
-    // TODO: REVIEW
     shutdownHandler = new ShutdownHandler(null, "stop", false);
-    handlers.addHandler(shutdownHandler);
-    server.setHandler(handlers);
+    shutdownHandler.setHandler(contextHandler);
+    server.setHandler(shutdownHandler);
   }
 
   /**
