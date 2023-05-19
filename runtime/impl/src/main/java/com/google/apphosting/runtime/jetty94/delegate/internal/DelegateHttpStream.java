@@ -89,7 +89,7 @@ public class DelegateHttpStream implements HttpStream
         if (response != null)
         {
             delegateExchange.setStatus(response.getStatus());
-            for (HttpField field : response.getFields())
+            for (HttpField field : response.getHttpFields())
             {
                 delegateExchange.addHeader(field.getName(), field.getValue());
             }

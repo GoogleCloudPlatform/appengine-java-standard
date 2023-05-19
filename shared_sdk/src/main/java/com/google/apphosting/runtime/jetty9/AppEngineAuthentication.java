@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.security.Principal;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.function.Function;
 import javax.security.auth.Subject;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
@@ -34,16 +35,18 @@ import javax.servlet.http.HttpSession;
 
 import org.eclipse.jetty.ee8.security.Authenticator;
 import org.eclipse.jetty.ee8.security.ConstraintSecurityHandler;
-import org.eclipse.jetty.ee8.security.DefaultIdentityService;
-import org.eclipse.jetty.ee8.security.IdentityService;
-import org.eclipse.jetty.ee8.security.LoginService;
 import org.eclipse.jetty.ee8.security.SecurityHandler;
 import org.eclipse.jetty.ee8.security.ServerAuthException;
 import org.eclipse.jetty.ee8.security.UserAuthentication;
 import org.eclipse.jetty.ee8.security.authentication.DeferredAuthentication;
 import org.eclipse.jetty.ee8.security.authentication.LoginAuthenticator;
 import org.eclipse.jetty.ee8.nested.Authentication;
-import org.eclipse.jetty.ee8.nested.UserIdentity;
+import org.eclipse.jetty.security.DefaultIdentityService;
+import org.eclipse.jetty.security.IdentityService;
+import org.eclipse.jetty.security.LoginService;
+import org.eclipse.jetty.security.UserIdentity;
+import org.eclipse.jetty.server.Request;
+import org.eclipse.jetty.server.Session;
 import org.eclipse.jetty.util.URIUtil;
 
 /**
@@ -191,7 +194,7 @@ public class AppEngineAuthentication {
         // If the user is authenticated already, just create a
         // AppEnginePrincipal or AppEngineFederatedPrincipal for them.
         if (userService.isUserLoggedIn()) {
-          UserIdentity user = _loginService.login(null, null, null);
+          UserIdentity user = _loginService.login(null, null, null, null);
           logger.atFine().log("authenticate() returning new principal for %s", user);
           if (user != null) {
             return new UserAuthentication(getAuthMethod(), user);
@@ -271,16 +274,8 @@ public class AppEngineAuthentication {
       return REALM_NAME;
     }
 
-    /**
-     * Login a user.
-     *
-     * @param unusedUsername Not used, the username is fetched using the UserService.
-     * @param unusedCredentials Not used, the credentials are verified before the request gets here.
-     * @return A UserIdentity if the user is logged in, otherwise null
-     */
     @Override
-    public UserIdentity login(
-        String unusedUsername, Object unusedCredentials, ServletRequest unusedRequest) {
+    public UserIdentity login(String s, Object o, Request request, Function<Boolean, Session> function) {
       return loadUser();
     }
 
@@ -402,7 +397,7 @@ public class AppEngineAuthentication {
     }
 
     @Override
-    public boolean isUserInRole(String role, Scope unusedScope) {
+    public boolean isUserInRole(String role) {
       UserService userService = UserServiceFactory.getUserService();
       logger.atFine().log("Checking if principal %s is in role %s", userPrincipal, role);
       if (userPrincipal == null) {

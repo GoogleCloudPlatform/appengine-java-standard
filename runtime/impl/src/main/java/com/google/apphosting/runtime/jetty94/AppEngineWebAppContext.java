@@ -50,6 +50,8 @@ import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import org.eclipse.jetty.ee8.nested.ServletConstraint;
 import org.eclipse.jetty.ee8.security.ConstraintMapping;
 import org.eclipse.jetty.ee8.security.ConstraintSecurityHandler;
 import org.eclipse.jetty.ee8.servlet.FilterHolder;
@@ -61,7 +63,6 @@ import org.eclipse.jetty.ee8.servlet.ServletHolder;
 import org.eclipse.jetty.ee8.servlet.ServletMapping;
 import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.util.resource.ResourceFactory;
-import org.eclipse.jetty.util.security.Constraint;
 import org.eclipse.jetty.ee8.webapp.WebAppContext;
 
 /**
@@ -273,10 +274,8 @@ public class AppEngineWebAppContext extends WebAppContext {
 
     // Protect deferred task queue with constraint
     ConstraintSecurityHandler security = getChildHandlerByClass(ConstraintSecurityHandler.class);
-    Constraint c = new Constraint("deferred_queue", "admin");
-    c.setAuthenticate(true);
     ConstraintMapping cm = new ConstraintMapping();
-    cm.setConstraint(c);
+    cm.setConstraint(new ServletConstraint("deferred_queue", "admin"));
     cm.setPathSpec("/_ah/queue/__deferred__");
     security.addConstraintMapping(cm);
 

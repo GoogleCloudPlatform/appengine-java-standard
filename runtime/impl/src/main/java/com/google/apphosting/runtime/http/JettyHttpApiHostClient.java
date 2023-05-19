@@ -105,7 +105,7 @@ class JettyHttpApiHostClient extends HttpApiHostClient {
     return new JettyHttpApiHostClient(url, httpClient, config);
   }
 
-  private class Listener extends Response.Listener.Adapter {
+  private class Listener implements Response.Listener {
 
     private static final int MAX_LENGTH = MAX_PAYLOAD + EXTRA_CONTENT_BYTES;
 
