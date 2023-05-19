@@ -44,13 +44,17 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutionException;
 import javax.servlet.Filter;
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.eclipse.jetty.ee8.nested.HttpChannel;
+import org.eclipse.jetty.ee8.nested.Request;
 import org.eclipse.jetty.ee8.nested.ServletConstraint;
 import org.eclipse.jetty.ee8.security.ConstraintMapping;
 import org.eclipse.jetty.ee8.security.ConstraintSecurityHandler;
@@ -61,6 +65,8 @@ import org.eclipse.jetty.ee8.servlet.ListenerHolder;
 import org.eclipse.jetty.ee8.servlet.ServletHandler;
 import org.eclipse.jetty.ee8.servlet.ServletHolder;
 import org.eclipse.jetty.ee8.servlet.ServletMapping;
+import org.eclipse.jetty.server.Response;
+import org.eclipse.jetty.server.handler.ContextResponse;
 import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.util.resource.ResourceFactory;
 import org.eclipse.jetty.ee8.webapp.WebAppContext;
@@ -285,6 +291,7 @@ public class AppEngineWebAppContext extends WebAppContext {
 
     @Override
     public void doHandle(String target, org.eclipse.jetty.ee8.nested.Request baseRequest, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
+
       ListIterator<RequestListener> iter = requestListeners.listIterator();
       while (iter.hasNext()) {
         iter.next().requestReceived(this, baseRequest);
@@ -293,7 +300,26 @@ public class AppEngineWebAppContext extends WebAppContext {
         if (ignoreContentLength) {
           response = new IgnoreContentLengthResponseWrapper(response);
         }
-        super.doHandle(target, baseRequest, request, response);
+
+        // TODO: The Jetty implementation should be doing this for us.
+        HttpChannel httpChannel = (HttpChannel)request.getAttribute(HttpChannel.class.getName());
+        org.eclipse.jetty.server.Request coreRequest = httpChannel.getCoreRequest();
+        HttpServletResponse capturedResponse = response;
+        CompletableFuture<Void> completableFuture = new CompletableFuture<>();
+        getCoreContextHandler().getContext().run(() -> {
+          try {
+            super.doHandle(target, baseRequest, request, capturedResponse);
+            completableFuture.complete(null);
+          }
+          catch (IOException | ServletException e) {
+            completableFuture.completeExceptionally(e);
+          }
+        }, coreRequest);
+        completableFuture.get();
+      } catch (ExecutionException e) {
+        throw new ServletException(e.getCause());
+      } catch (InterruptedException e) {
+        throw new ServletException(e);
       } finally {
         // TODO: this finally approach is ok until async request handling is supported
         while (iter.hasPrevious()) {
