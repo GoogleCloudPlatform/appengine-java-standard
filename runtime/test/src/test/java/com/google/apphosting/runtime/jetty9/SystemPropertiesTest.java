@@ -71,7 +71,7 @@ public class SystemPropertiesTest extends JavaRuntimeViaHttpBase {
           "com.google.appengine.runtime.version", "Google App Engine/" + expectedRelease,
           // Set from appengine-web.xml.
           "sysprops.test.foo", "bar",
-          "javax.xml.parsers.DocumentBuilderFactory", "foobar",
+          "javax.xml.parsers.DocumentBuilderFactoryTest", "foobar",
           // Should be set by default.
           "user.dir", appRoot.toString(),
           // Also check that SystemProperty.environment.value() returns the right thing.
