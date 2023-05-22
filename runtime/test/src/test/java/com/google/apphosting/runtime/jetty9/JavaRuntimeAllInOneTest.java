@@ -23,6 +23,9 @@ import com.google.appengine.tools.development.HttpApiServer;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import org.junit.After;
 import org.junit.Before;
@@ -130,36 +133,30 @@ public final class JavaRuntimeAllInOneTest extends JavaRuntimeViaHttpBase {
 
   @Test
   public void servletAttributes() throws Exception {
-    /* TODO: re-enable and fix
     // Send a request that should be forwarded. The forwarded request will set some servlet
     // attributes, then list each servlet attribute on a line of its own like {@code foo = bar}.
     // So we decode those lines and ensure that the attributes we set are listed.
     // The forwarding is needed to tickle b/169727154.
-    String response =
-        runtime
-            .executeHttpGet("/?forward=set_servlet_attributes=foo=bar:baz=buh", RESPONSE_200)
-            .trim();
-    Splitter eq = Splitter.on('=');
-    Map<String, String> attributes =
-        Splitter.on('\n')
-            .splitToStream(response)
-            .map(eq::splitToList)
-            .collect(toMap(list -> list.get(0).trim(), list -> list.get(1).trim()));
+    String response = runtime
+        .executeHttpGet("/?forward=set_servlet_attributes=foo=bar:baz=buh", RESPONSE_200)
+        .trim();
+    Map<String, String> attributes = Arrays.stream(response.split("\n"))
+        .map(s -> Arrays.asList(s.split("=", 2)))
+        .collect(toMap(list -> list.get(0).trim(), list -> list.get(1).trim()));
+
     // Because the request is forwarded, it acquires these javax.servlet.forward attributes.
     // (They are specified by constants in javax.servlet.RequestDispatcher, but using those runs
     // into hassles with Servlet API 2.5 vs 3.1.)
     // The "forwarded" attribute is set by our servlet and the APP_VERSION_KEY_REQUEST_ATTR one is
     // set by our infrastructure.
-    assertThat(attributes)
-        .containsExactly(
-            "foo", "bar",
-            "baz", "buh",
-            "forwarded", "true",
-            "javax.servlet.forward.query_string", "forward",
-            "javax.servlet.forward.request_uri", "/",
-            "javax.servlet.forward.servlet_path", "/",
-            "javax.servlet.forward.context_path", "",
-            "com.google.apphosting.runtime.jetty9.APP_VERSION_REQUEST_ATTR", "s~testapp/allinone");
-     */
+    assertThat(attributes).containsAtLeast(
+        "foo", "bar",
+        "baz", "buh",
+        "forwarded", "true",
+        "javax.servlet.forward.query_string", "forward=set_servlet_attributes=foo=bar:baz=buh",
+        "javax.servlet.forward.request_uri", "/",
+        "javax.servlet.forward.servlet_path", "/",
+        "javax.servlet.forward.context_path", "",
+        "com.google.apphosting.runtime.jetty9.APP_VERSION_REQUEST_ATTR", "s~testapp/allinone");
   }
 }
