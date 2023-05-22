@@ -113,7 +113,8 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
     rpcConnector = new DelegateConnector(server, "RPC") {
       @Override
       public void run(Runnable runnable) {
-        // Override this so it doesn't execute the runnable.
+        // Override this so that it does the initial run in the same thread.
+        // Currently, we block until completion in serviceRequest() so no point starting new thread.
         runnable.run();
       }
     };
