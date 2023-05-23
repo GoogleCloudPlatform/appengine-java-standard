@@ -27,7 +27,6 @@ import org.eclipse.jetty.http.BadMessageException;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.ee8.nested.HttpInput;
 import org.eclipse.jetty.ee8.nested.HttpOutput;
-import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.ee8.nested.HandlerWrapper;
 import org.eclipse.jetty.util.Callback;
 
@@ -54,7 +53,7 @@ public class SizeLimitHandler extends HandlerWrapper {
     this.requestLimit = requestLimit;
     this.responseLimit = responseLimit;
   }
-  /*
+
   protected void checkRequestLimit(long size) {
     if (requestLimit >= 0 && size > requestLimit) {
       throw new BadMessageException(413, "Request body is too large: " + size + ">" + requestLimit);
@@ -69,9 +68,7 @@ public class SizeLimitHandler extends HandlerWrapper {
   }
 
   @Override
-  public void handle(
-      String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response)
-      throws IOException, ServletException {
+  public void handle(String target, org.eclipse.jetty.ee8.nested.Request baseRequest, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
     if (requestLimit >= 0 || responseLimit >= 0) {
       HttpOutput httpOutput = baseRequest.getResponse().getHttpOutput();
       HttpOutput.Interceptor interceptor = httpOutput.getInterceptor();
@@ -106,11 +103,6 @@ public class SizeLimitHandler extends HandlerWrapper {
     @Override
     public HttpOutput.Interceptor getNextInterceptor() {
       return nextOutput;
-    }
-
-    @Override
-    public boolean isOptimizedForDirectBuffers() {
-      return nextOutput.isOptimizedForDirectBuffers();
     }
 
     @Nullable
@@ -198,5 +190,4 @@ public class SizeLimitHandler extends HandlerWrapper {
       super.addIntHeader(name, value);
     }
   }
-  */
 }
