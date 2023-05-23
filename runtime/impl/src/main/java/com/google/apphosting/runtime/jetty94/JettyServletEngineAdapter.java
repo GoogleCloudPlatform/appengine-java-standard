@@ -26,8 +26,8 @@ import com.google.apphosting.runtime.AppVersion;
 import com.google.apphosting.runtime.MutableUpResponse;
 import com.google.apphosting.runtime.ServletEngineAdapter;
 import com.google.apphosting.runtime.jetty9.JettyConstants;
-import com.google.apphosting.runtime.jetty94.delegate.DelegateConnector;
-import com.google.apphosting.runtime.jetty94.delegate.impl.DelegateRpcExchange;
+import com.google.apphosting.runtime.delegate.DelegateConnector;
+import com.google.apphosting.runtime.delegate.impl.DelegateRpcExchange;
 import com.google.apphosting.utils.config.AppEngineConfigException;
 import com.google.apphosting.utils.config.AppYaml;
 import com.google.common.flogger.GoogleLogger;
@@ -37,7 +37,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
 import javax.servlet.ServletException;
 
 import org.eclipse.jetty.ee8.nested.ContextHandler;

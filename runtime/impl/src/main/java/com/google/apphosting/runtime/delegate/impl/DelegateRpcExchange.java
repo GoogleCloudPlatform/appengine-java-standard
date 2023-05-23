@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package com.google.apphosting.runtime.jetty94.delegate.impl;
+package com.google.apphosting.runtime.delegate.impl;
 
 import com.google.apphosting.base.protos.HttpPb;
 import com.google.apphosting.base.protos.RuntimePb;
 import com.google.apphosting.runtime.MutableUpResponse;
-import com.google.apphosting.runtime.jetty94.delegate.api.DelegateExchange;
+import com.google.apphosting.runtime.delegate.api.DelegateExchange;
 import com.google.protobuf.ByteString;
 import org.eclipse.jetty.http.HttpFields;
 import org.eclipse.jetty.http.HttpMethod;

@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package com.google.apphosting.runtime.jetty94.delegate;
+package com.google.apphosting.runtime.delegate;
 
-import com.google.apphosting.runtime.jetty94.delegate.api.DelegateExchange;
-import com.google.apphosting.runtime.jetty94.delegate.internal.DelegateConnection;
-import com.google.apphosting.runtime.jetty94.delegate.internal.DelegateConnectionFactory;
-import com.google.apphosting.runtime.jetty94.delegate.internal.DelegateEndpoint;
+import com.google.apphosting.runtime.delegate.api.DelegateExchange;
+import com.google.apphosting.runtime.delegate.internal.DelegateConnection;
+import com.google.apphosting.runtime.delegate.internal.DelegateConnectionFactory;
+import com.google.apphosting.runtime.delegate.internal.DelegateEndpoint;
 import org.eclipse.jetty.server.AbstractConnector;
 import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.Server;

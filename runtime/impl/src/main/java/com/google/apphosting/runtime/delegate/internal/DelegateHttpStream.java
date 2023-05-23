@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package com.google.apphosting.runtime.jetty94.delegate.internal;
+package com.google.apphosting.runtime.delegate.internal;
 
-import com.google.apphosting.runtime.jetty94.delegate.api.DelegateExchange;
+import com.google.apphosting.runtime.delegate.api.DelegateExchange;
 import org.eclipse.jetty.http.HttpField;
 import org.eclipse.jetty.http.HttpFields;
 import org.eclipse.jetty.http.MetaData;
