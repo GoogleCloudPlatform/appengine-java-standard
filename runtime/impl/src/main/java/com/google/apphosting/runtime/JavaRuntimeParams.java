@@ -161,12 +161,6 @@ final class JavaRuntimeParams {
       names = {"--default_max_api_request_size"})
   private int maxApiRequestSize = 1048576;
 
-  // TODO: this flag is no longer used and should be deleted
-  @Parameter(
-      description = "Deprecated.",
-      names = {"--max_api_request_size_map"})
-  private String maxApiRequestSizeMap = "";
-
   @Parameter(
       description = "Flush application logs when they grow to this size.",
       names = {"--byte_count_before_flushing"})
@@ -543,10 +537,6 @@ final class JavaRuntimeParams {
 
   int getMaxApiRequestSize() {
     return maxApiRequestSize;
-  }
-
-  String getMaxApiRequestSizeMap() {
-    return maxApiRequestSizeMap;
   }
 
   long getByteCountBeforeFlushing() {
