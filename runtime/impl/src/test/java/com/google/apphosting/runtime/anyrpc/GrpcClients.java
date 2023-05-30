@@ -143,29 +143,5 @@ class GrpcClients {
           req,
           streamObserver);
     }
-
-    @Override
-    public void updateActiveBreakpoints(
-        AnyRpcClientContext ctx,
-        ClonePb.CloudDebuggerBreakpoints req,
-        AnyRpcCallback<ClonePb.CloudDebuggerBreakpoints> callback) {
-      GrpcClientContext grpcContext = (GrpcClientContext) ctx;
-      StreamObserver<ClonePb.CloudDebuggerBreakpoints> streamObserver =
-          CallbackStreamObserver.of(grpcContext, callback);
-      grpcContext.call(
-          channel, CloneControllerGrpc.getUpdateActiveBreakpointsMethod(), req, streamObserver);
-    }
-
-    @Override
-    public void getDebuggeeInfo(
-        AnyRpcClientContext ctx,
-        ClonePb.DebuggeeInfoRequest req,
-        AnyRpcCallback<ClonePb.DebuggeeInfoResponse> callback) {
-      GrpcClientContext grpcContext = (GrpcClientContext) ctx;
-      StreamObserver<ClonePb.DebuggeeInfoResponse> streamObserver =
-          CallbackStreamObserver.of(grpcContext, callback);
-      grpcContext.call(
-          channel, CloneControllerGrpc.getGetDebuggeeInfoMethod(), req, streamObserver);
-    }
   }
 }

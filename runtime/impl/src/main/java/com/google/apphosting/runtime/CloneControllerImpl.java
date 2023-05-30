@@ -18,9 +18,6 @@ package com.google.apphosting.runtime;
 
 import com.google.apphosting.base.protos.ClonePb.ApiPackageDeadlines;
 import com.google.apphosting.base.protos.ClonePb.CloneSettings;
-import com.google.apphosting.base.protos.ClonePb.CloudDebuggerBreakpoints;
-import com.google.apphosting.base.protos.ClonePb.DebuggeeInfoRequest;
-import com.google.apphosting.base.protos.ClonePb.DebuggeeInfoResponse;
 import com.google.apphosting.base.protos.ClonePb.PerformanceData;
 import com.google.apphosting.base.protos.EmptyMessage;
 import com.google.apphosting.base.protos.ModelClonePb.DeadlineInfo;
@@ -42,19 +39,16 @@ public class CloneControllerImpl implements CloneControllerServerInterface {
   private final ApiDeadlineOracle deadlineOracle;
   private final RequestManager requestManager;
   private final ByteBuffer hotspotPerformanceData;
-  private final CloudDebuggerAgentWrapper cloudDebuggerAgent;
 
   public CloneControllerImpl(
       Callback callback,
       ApiDeadlineOracle deadlineOracle,
       RequestManager requestManager,
-      ByteBuffer hotspotPerformanceData,
-      CloudDebuggerAgentWrapper cloudDebuggerAgent) {
+      ByteBuffer hotspotPerformanceData) {
     this.callback = callback;
     this.deadlineOracle = deadlineOracle;
     this.requestManager = requestManager;
     this.hotspotPerformanceData = hotspotPerformanceData;
-    this.cloudDebuggerAgent = cloudDebuggerAgent;
   }
 
   /**
@@ -139,49 +133,6 @@ public class CloneControllerImpl implements CloneControllerServerInterface {
       data.addEntries(entry);
     }
     rpc.finishWithResponse(data.build());
-  }
-
-  @Override
-  public void updateActiveBreakpoints(AnyRpcServerContext rpc, CloudDebuggerBreakpoints request) {
-    // Give the updated list of breakpoints to the debuglet.
-    // TODO: make this a List<ByteString> to avoid copying. That will require
-    // updating JNI code in gae_jvmti_agent.cc.
-    byte[][] requestData = new byte[request.getBreakpointDataCount()][];
-    for (int i = 0; i < requestData.length; ++i) {
-      requestData[i] = request.getBreakpointData(i).toByteArray();
-    }
-
-    cloudDebuggerAgent.setActiveBreakpoints(requestData);
-
-    // Query any breakpoint updates it might have (typically that would be errors for invalid
-    // breakpoints).
-    CloudDebuggerBreakpoints.Builder response = CloudDebuggerBreakpoints.newBuilder();
-    byte[][] responseData = cloudDebuggerAgent.dequeueBreakpointUpdates();
-    if (responseData != null) {
-      for (byte[] breakpointData : responseData) {
-        response.addBreakpointData(ByteString.copyFrom(breakpointData));
-      }
-    }
-
-    rpc.finishWithResponse(response.build());
-  }
-
-  @Override
-  public void getDebuggeeInfo(AnyRpcServerContext rpc, DebuggeeInfoRequest request) {
-    DebuggeeInfoResponse.Builder response = DebuggeeInfoResponse.newBuilder();
-
-    // AppVersionId is required and expected to have AppId and VersionId separated by '/'
-    String[] parts = request.getAppVersionId().split("/");
-    if (parts.length == 2) {
-      SourceContext sourceContext = getSourceContext(parts[0], parts[1]);
-      if (sourceContext != null) {
-        response.getDebuggeeInfoBuilder().setSourceContext(sourceContext);
-      }
-    } else {
-      logger.atWarning().log("invalid AppVersionId : %s", request.getAppVersionId());
-    }
-
-    rpc.finishWithResponse(response.build());
   }
 
   SourceContext getSourceContext(String appId, String versionId) {

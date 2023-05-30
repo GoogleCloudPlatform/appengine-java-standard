@@ -19,8 +19,6 @@ package com.google.apphosting.runtime.grpc;
 import com.google.apphosting.base.protos.AppinfoPb;
 import com.google.apphosting.base.protos.CloneControllerGrpc.CloneControllerImplBase;
 import com.google.apphosting.base.protos.ClonePb;
-import com.google.apphosting.base.protos.ClonePb.DebuggeeInfoRequest;
-import com.google.apphosting.base.protos.ClonePb.DebuggeeInfoResponse;
 import com.google.apphosting.base.protos.EmptyMessage;
 import com.google.apphosting.base.protos.EvaluationRuntimeGrpc.EvaluationRuntimeImplBase;
 import com.google.apphosting.base.protos.ModelClonePb;
@@ -257,23 +255,6 @@ public class GrpcPlugin extends AnyRpcPlugin {
       GrpcServerContext<ClonePb.PerformanceData> serverContext =
           new GrpcServerContext<>(ClonePb.PerformanceData.class, streamObserver);
       cloneController.getPerformanceData(serverContext, request);
-    }
-
-    @Override
-    public void updateActiveBreakpoints(
-        ClonePb.CloudDebuggerBreakpoints cloudDebuggerBreakpoints,
-        StreamObserver<ClonePb.CloudDebuggerBreakpoints> streamObserver) {
-      GrpcServerContext<ClonePb.CloudDebuggerBreakpoints> serverContext =
-          new GrpcServerContext<>(ClonePb.CloudDebuggerBreakpoints.class, streamObserver);
-      cloneController.updateActiveBreakpoints(serverContext, cloudDebuggerBreakpoints);
-    }
-
-    @Override
-    public void getDebuggeeInfo(
-        DebuggeeInfoRequest request, StreamObserver<DebuggeeInfoResponse> streamObserver) {
-      GrpcServerContext<ClonePb.DebuggeeInfoResponse> serverContext =
-          new GrpcServerContext<>(ClonePb.DebuggeeInfoResponse.class, streamObserver);
-      cloneController.getDebuggeeInfo(serverContext, request);
     }
   }
 }

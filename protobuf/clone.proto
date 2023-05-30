@@ -429,23 +429,3 @@ message SupervisorSettings {
   // this.
   optional int32 clone_reducer_min_clones = 67;
 }
-
-// List of active Cloud Debugger breakpoints that AppServer sends to the clone.
-message CloudDebuggerBreakpoints {
-  // Serialized "google.cloud.debugger.v1.Breakpoint" messages. We can't use
-  // it directly here because this file is build with proto1 and "Breakpoint"
-  // seems to be incompatible.
-  repeated bytes breakpoint_data = 1;
-}
-
-message DebuggeeInfo {
-  optional google.devtools.source.v1.SourceContext source_context = 1;
-}
-
-message DebuggeeInfoRequest {
-  required string app_version_id = 1;
-}
-
-message DebuggeeInfoResponse {
-  optional DebuggeeInfo debuggee_info = 1;
-}

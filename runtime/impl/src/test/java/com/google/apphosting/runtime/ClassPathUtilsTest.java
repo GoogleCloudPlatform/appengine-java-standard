@@ -28,7 +28,6 @@ import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
 public final class ClassPathUtilsTest {
-  private static final String PATH_SEPARATOR = System.getProperty("path.separator");
   private String runtimeLocation = null;
   @Rule public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
@@ -72,10 +71,7 @@ public final class ClassPathUtilsTest {
     assertThat(System.getProperty("classpath.runtime-impl"))
         .isEqualTo(
             runtimeLocation
-                + "/jars/runtime-impl.jar"
-                + PATH_SEPARATOR
-                + runtimeLocation
-                + "/frozen_debugger.jar");
+                + "/jars/runtime-impl.jar");
 
     assertThat(System.getProperty("classpath.runtime-shared"))
         .isEqualTo(runtimeLocation + "/jars/runtime-shared.jar");

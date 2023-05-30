@@ -68,14 +68,13 @@ public class ClassPathUtils {
       return;
     }
 
-    String cloudDebuggerJar = "frozen_debugger.jar";
     String profilerJar = null;
     if (System.getenv("GAE_PROFILER_MODE") != null) {
       profilerJar = "profiler.jar"; // Close source, not in Maven.;
       logger.log(Level.INFO, "AppEngine profiler enabled.");
     }
     List<String> runtimeClasspathEntries =
-        Arrays.asList("jars/runtime-impl.jar", cloudDebuggerJar, profilerJar);
+        Arrays.asList("jars/runtime-impl.jar", profilerJar);
 
     String runtimeClasspath =
         runtimeClasspathEntries.stream()

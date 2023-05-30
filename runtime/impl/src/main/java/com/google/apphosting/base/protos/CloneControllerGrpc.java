@@ -213,104 +213,6 @@ public final class CloneControllerGrpc {
     return getGetPerformanceDataMethod;
   }
 
-  private static volatile io.grpc.MethodDescriptor<
-          com.google.apphosting.base.protos.ClonePb.CloudDebuggerBreakpoints,
-          com.google.apphosting.base.protos.ClonePb.CloudDebuggerBreakpoints>
-      getUpdateActiveBreakpointsMethod;
-
-  @io.grpc.stub.annotations.RpcMethod(
-      fullMethodName = SERVICE_NAME + '/' + "UpdateActiveBreakpoints",
-      requestType = com.google.apphosting.base.protos.ClonePb.CloudDebuggerBreakpoints.class,
-      responseType = com.google.apphosting.base.protos.ClonePb.CloudDebuggerBreakpoints.class,
-      methodType = io.grpc.MethodDescriptor.MethodType.UNARY)
-  public static io.grpc.MethodDescriptor<
-          com.google.apphosting.base.protos.ClonePb.CloudDebuggerBreakpoints,
-          com.google.apphosting.base.protos.ClonePb.CloudDebuggerBreakpoints>
-      getUpdateActiveBreakpointsMethod() {
-    io.grpc.MethodDescriptor<
-            com.google.apphosting.base.protos.ClonePb.CloudDebuggerBreakpoints,
-            com.google.apphosting.base.protos.ClonePb.CloudDebuggerBreakpoints>
-        getUpdateActiveBreakpointsMethod;
-    if ((getUpdateActiveBreakpointsMethod = CloneControllerGrpc.getUpdateActiveBreakpointsMethod)
-        == null) {
-      synchronized (CloneControllerGrpc.class) {
-        if ((getUpdateActiveBreakpointsMethod =
-                CloneControllerGrpc.getUpdateActiveBreakpointsMethod)
-            == null) {
-          CloneControllerGrpc.getUpdateActiveBreakpointsMethod =
-              getUpdateActiveBreakpointsMethod =
-                  io.grpc.MethodDescriptor
-                      .<com.google.apphosting.base.protos.ClonePb.CloudDebuggerBreakpoints,
-                          com.google.apphosting.base.protos.ClonePb.CloudDebuggerBreakpoints>
-                          newBuilder()
-                      .setType(io.grpc.MethodDescriptor.MethodType.UNARY)
-                      .setFullMethodName(
-                          generateFullMethodName(SERVICE_NAME, "UpdateActiveBreakpoints"))
-                      .setSampledToLocalTracing(true)
-                      .setRequestMarshaller(
-                          io.grpc.protobuf.ProtoUtils.marshaller(
-                              com.google.apphosting.base.protos.ClonePb.CloudDebuggerBreakpoints
-                                  .getDefaultInstance()))
-                      .setResponseMarshaller(
-                          io.grpc.protobuf.ProtoUtils.marshaller(
-                              com.google.apphosting.base.protos.ClonePb.CloudDebuggerBreakpoints
-                                  .getDefaultInstance()))
-                      .setSchemaDescriptor(
-                          new CloneControllerMethodDescriptorSupplier("UpdateActiveBreakpoints"))
-                      .build();
-        }
-      }
-    }
-    return getUpdateActiveBreakpointsMethod;
-  }
-
-  private static volatile io.grpc.MethodDescriptor<
-          com.google.apphosting.base.protos.ClonePb.DebuggeeInfoRequest,
-          com.google.apphosting.base.protos.ClonePb.DebuggeeInfoResponse>
-      getGetDebuggeeInfoMethod;
-
-  @io.grpc.stub.annotations.RpcMethod(
-      fullMethodName = SERVICE_NAME + '/' + "GetDebuggeeInfo",
-      requestType = com.google.apphosting.base.protos.ClonePb.DebuggeeInfoRequest.class,
-      responseType = com.google.apphosting.base.protos.ClonePb.DebuggeeInfoResponse.class,
-      methodType = io.grpc.MethodDescriptor.MethodType.UNARY)
-  public static io.grpc.MethodDescriptor<
-          com.google.apphosting.base.protos.ClonePb.DebuggeeInfoRequest,
-          com.google.apphosting.base.protos.ClonePb.DebuggeeInfoResponse>
-      getGetDebuggeeInfoMethod() {
-    io.grpc.MethodDescriptor<
-            com.google.apphosting.base.protos.ClonePb.DebuggeeInfoRequest,
-            com.google.apphosting.base.protos.ClonePb.DebuggeeInfoResponse>
-        getGetDebuggeeInfoMethod;
-    if ((getGetDebuggeeInfoMethod = CloneControllerGrpc.getGetDebuggeeInfoMethod) == null) {
-      synchronized (CloneControllerGrpc.class) {
-        if ((getGetDebuggeeInfoMethod = CloneControllerGrpc.getGetDebuggeeInfoMethod) == null) {
-          CloneControllerGrpc.getGetDebuggeeInfoMethod =
-              getGetDebuggeeInfoMethod =
-                  io.grpc.MethodDescriptor
-                      .<com.google.apphosting.base.protos.ClonePb.DebuggeeInfoRequest,
-                          com.google.apphosting.base.protos.ClonePb.DebuggeeInfoResponse>
-                          newBuilder()
-                      .setType(io.grpc.MethodDescriptor.MethodType.UNARY)
-                      .setFullMethodName(generateFullMethodName(SERVICE_NAME, "GetDebuggeeInfo"))
-                      .setSampledToLocalTracing(true)
-                      .setRequestMarshaller(
-                          io.grpc.protobuf.ProtoUtils.marshaller(
-                              com.google.apphosting.base.protos.ClonePb.DebuggeeInfoRequest
-                                  .getDefaultInstance()))
-                      .setResponseMarshaller(
-                          io.grpc.protobuf.ProtoUtils.marshaller(
-                              com.google.apphosting.base.protos.ClonePb.DebuggeeInfoResponse
-                                  .getDefaultInstance()))
-                      .setSchemaDescriptor(
-                          new CloneControllerMethodDescriptorSupplier("GetDebuggeeInfo"))
-                      .build();
-        }
-      }
-    }
-    return getGetDebuggeeInfoMethod;
-  }
-
   /** Creates a new async stub that supports all call types for the service */
   public static CloneControllerStub newStub(io.grpc.Channel channel) {
     io.grpc.stub.AbstractStub.StubFactory<CloneControllerStub> factory =
@@ -418,37 +320,6 @@ public final class CloneControllerGrpc {
           getGetPerformanceDataMethod(), responseObserver);
     }
 
-    /**
-     *
-     *
-     * <pre>
-     * Updates a list of Cloud Debugger breakpoints on a clone.
-     * </pre>
-     */
-    public void updateActiveBreakpoints(
-        com.google.apphosting.base.protos.ClonePb.CloudDebuggerBreakpoints request,
-        io.grpc.stub.StreamObserver<
-                com.google.apphosting.base.protos.ClonePb.CloudDebuggerBreakpoints>
-            responseObserver) {
-      io.grpc.stub.ServerCalls.asyncUnimplementedUnaryCall(
-          getUpdateActiveBreakpointsMethod(), responseObserver);
-    }
-
-    /**
-     *
-     *
-     * <pre>
-     * Gets source context of the clone app.
-     * </pre>
-     */
-    public void getDebuggeeInfo(
-        com.google.apphosting.base.protos.ClonePb.DebuggeeInfoRequest request,
-        io.grpc.stub.StreamObserver<com.google.apphosting.base.protos.ClonePb.DebuggeeInfoResponse>
-            responseObserver) {
-      io.grpc.stub.ServerCalls.asyncUnimplementedUnaryCall(
-          getGetDebuggeeInfoMethod(), responseObserver);
-    }
-
     @java.lang.Override
     public final io.grpc.ServerServiceDefinition bindService() {
       return io.grpc.ServerServiceDefinition.builder(getServiceDescriptor())
@@ -480,20 +351,6 @@ public final class CloneControllerGrpc {
                       com.google.apphosting.base.protos.ModelClonePb.PerformanceDataRequest,
                       com.google.apphosting.base.protos.ClonePb.PerformanceData>(
                       this, METHODID_GET_PERFORMANCE_DATA)))
-          .addMethod(
-              getUpdateActiveBreakpointsMethod(),
-              io.grpc.stub.ServerCalls.asyncUnaryCall(
-                  new MethodHandlers<
-                      com.google.apphosting.base.protos.ClonePb.CloudDebuggerBreakpoints,
-                      com.google.apphosting.base.protos.ClonePb.CloudDebuggerBreakpoints>(
-                      this, METHODID_UPDATE_ACTIVE_BREAKPOINTS)))
-          .addMethod(
-              getGetDebuggeeInfoMethod(),
-              io.grpc.stub.ServerCalls.asyncUnaryCall(
-                  new MethodHandlers<
-                      com.google.apphosting.base.protos.ClonePb.DebuggeeInfoRequest,
-                      com.google.apphosting.base.protos.ClonePb.DebuggeeInfoResponse>(
-                      this, METHODID_GET_DEBUGGEE_INFO)))
           .build();
     }
   }
@@ -580,41 +437,6 @@ public final class CloneControllerGrpc {
           request,
           responseObserver);
     }
-
-    /**
-     *
-     *
-     * <pre>
-     * Updates a list of Cloud Debugger breakpoints on a clone.
-     * </pre>
-     */
-    public void updateActiveBreakpoints(
-        com.google.apphosting.base.protos.ClonePb.CloudDebuggerBreakpoints request,
-        io.grpc.stub.StreamObserver<
-                com.google.apphosting.base.protos.ClonePb.CloudDebuggerBreakpoints>
-            responseObserver) {
-      io.grpc.stub.ClientCalls.asyncUnaryCall(
-          getChannel().newCall(getUpdateActiveBreakpointsMethod(), getCallOptions()),
-          request,
-          responseObserver);
-    }
-
-    /**
-     *
-     *
-     * <pre>
-     * Gets source context of the clone app.
-     * </pre>
-     */
-    public void getDebuggeeInfo(
-        com.google.apphosting.base.protos.ClonePb.DebuggeeInfoRequest request,
-        io.grpc.stub.StreamObserver<com.google.apphosting.base.protos.ClonePb.DebuggeeInfoResponse>
-            responseObserver) {
-      io.grpc.stub.ClientCalls.asyncUnaryCall(
-          getChannel().newCall(getGetDebuggeeInfoMethod(), getCallOptions()),
-          request,
-          responseObserver);
-    }
   }
 
   /** */
@@ -683,33 +505,6 @@ public final class CloneControllerGrpc {
         com.google.apphosting.base.protos.ModelClonePb.PerformanceDataRequest request) {
       return io.grpc.stub.ClientCalls.blockingUnaryCall(
           getChannel(), getGetPerformanceDataMethod(), getCallOptions(), request);
-    }
-
-    /**
-     *
-     *
-     * <pre>
-     * Updates a list of Cloud Debugger breakpoints on a clone.
-     * </pre>
-     */
-    public com.google.apphosting.base.protos.ClonePb.CloudDebuggerBreakpoints
-        updateActiveBreakpoints(
-            com.google.apphosting.base.protos.ClonePb.CloudDebuggerBreakpoints request) {
-      return io.grpc.stub.ClientCalls.blockingUnaryCall(
-          getChannel(), getUpdateActiveBreakpointsMethod(), getCallOptions(), request);
-    }
-
-    /**
-     *
-     *
-     * <pre>
-     * Gets source context of the clone app.
-     * </pre>
-     */
-    public com.google.apphosting.base.protos.ClonePb.DebuggeeInfoResponse getDebuggeeInfo(
-        com.google.apphosting.base.protos.ClonePb.DebuggeeInfoRequest request) {
-      return io.grpc.stub.ClientCalls.blockingUnaryCall(
-          getChannel(), getGetDebuggeeInfoMethod(), getCallOptions(), request);
     }
   }
 
@@ -785,43 +580,12 @@ public final class CloneControllerGrpc {
       return io.grpc.stub.ClientCalls.futureUnaryCall(
           getChannel().newCall(getGetPerformanceDataMethod(), getCallOptions()), request);
     }
-
-    /**
-     *
-     *
-     * <pre>
-     * Updates a list of Cloud Debugger breakpoints on a clone.
-     * </pre>
-     */
-    public com.google.common.util.concurrent.ListenableFuture<
-            com.google.apphosting.base.protos.ClonePb.CloudDebuggerBreakpoints>
-        updateActiveBreakpoints(
-            com.google.apphosting.base.protos.ClonePb.CloudDebuggerBreakpoints request) {
-      return io.grpc.stub.ClientCalls.futureUnaryCall(
-          getChannel().newCall(getUpdateActiveBreakpointsMethod(), getCallOptions()), request);
-    }
-
-    /**
-     *
-     *
-     * <pre>
-     * Gets source context of the clone app.
-     * </pre>
-     */
-    public com.google.common.util.concurrent.ListenableFuture<
-            com.google.apphosting.base.protos.ClonePb.DebuggeeInfoResponse>
-        getDebuggeeInfo(com.google.apphosting.base.protos.ClonePb.DebuggeeInfoRequest request) {
-      return io.grpc.stub.ClientCalls.futureUnaryCall(
-          getChannel().newCall(getGetDebuggeeInfoMethod(), getCallOptions()), request);
-    }
   }
 
   private static final int METHODID_WAIT_FOR_SANDBOX = 0;
   private static final int METHODID_APPLY_CLONE_SETTINGS = 1;
   private static final int METHODID_SEND_DEADLINE = 2;
   private static final int METHODID_GET_PERFORMANCE_DATA = 3;
-  private static final int METHODID_UPDATE_ACTIVE_BREAKPOINTS = 4;
-  private static final int METHODID_GET_DEBUGGEE_INFO = 5;
 
   private static final class MethodHandlers<Req, Resp>
       implements io.grpc.stub.ServerCalls.UnaryMethod<Req, Resp>,
@@ -863,20 +627,6 @@ public final class CloneControllerGrpc {
               (com.google.apphosting.base.protos.ModelClonePb.PerformanceDataRequest) request,
               (io.grpc.stub.StreamObserver<
                       com.google.apphosting.base.protos.ClonePb.PerformanceData>)
-                  responseObserver);
-          break;
-        case METHODID_UPDATE_ACTIVE_BREAKPOINTS:
-          serviceImpl.updateActiveBreakpoints(
-              (com.google.apphosting.base.protos.ClonePb.CloudDebuggerBreakpoints) request,
-              (io.grpc.stub.StreamObserver<
-                      com.google.apphosting.base.protos.ClonePb.CloudDebuggerBreakpoints>)
-                  responseObserver);
-          break;
-        case METHODID_GET_DEBUGGEE_INFO:
-          serviceImpl.getDebuggeeInfo(
-              (com.google.apphosting.base.protos.ClonePb.DebuggeeInfoRequest) request,
-              (io.grpc.stub.StreamObserver<
-                      com.google.apphosting.base.protos.ClonePb.DebuggeeInfoResponse>)
                   responseObserver);
           break;
         default:
@@ -947,8 +697,6 @@ public final class CloneControllerGrpc {
                       .addMethod(getApplyCloneSettingsMethod())
                       .addMethod(getSendDeadlineMethod())
                       .addMethod(getGetPerformanceDataMethod())
-                      .addMethod(getUpdateActiveBreakpointsMethod())
-                      .addMethod(getGetDebuggeeInfoMethod())
                       .build();
         }
       }

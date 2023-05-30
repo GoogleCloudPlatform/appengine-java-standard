@@ -17,14 +17,9 @@
 package com.google.apphosting.runtime;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.google.apphosting.base.protos.ClonePb.CloudDebuggerBreakpoints;
-import com.google.apphosting.base.protos.ClonePb.DebuggeeInfoRequest;
-import com.google.apphosting.base.protos.ClonePb.DebuggeeInfoResponse;
 import com.google.apphosting.base.protos.ClonePb.PerformanceData;
 import com.google.apphosting.base.protos.GitSourceContext;
 import com.google.apphosting.base.protos.ModelClonePb.PerformanceDataRequest;
@@ -56,9 +51,6 @@ public class CloneControllerImplTest {
   private static final int HSPERFDATA_SIZE = 32768;
   private static final int FAKE_HSPERFDATA_SIZE = 100;
   private static final long CYCLES_PER_SECOND = 2333414000L;
-
-  private final CloudDebuggerAgentWrapper cloudDebuggerAgent =
-      mock(CloudDebuggerAgentWrapper.class);
 
   private final JavaRuntime javaRuntime = mock(JavaRuntime.class);
   private final AppVersion appVersion = mock(AppVersion.class);
@@ -122,69 +114,6 @@ public class CloneControllerImplTest {
         .isEqualTo(new byte[] {(byte) 0xCA, (byte) 0xFE, (byte) 0xC0, (byte) 0xC0});
   }
 
-  @Test
-  public void testUpdateActiveBreakpoints() {
-    CloneControllerImpl cloneController = createCloneController(null);
-
-    MockAnyRpcServerContext rpc = createRpc();
-    cloneController.updateActiveBreakpoints(rpc, CloudDebuggerBreakpoints.getDefaultInstance());
-    rpc.assertSuccess();
-
-    verify(cloudDebuggerAgent).setActiveBreakpoints(any(byte[][].class));
-    verify(cloudDebuggerAgent).dequeueBreakpointUpdates();
-  }
-
-  @Test
-  public void testGetDebuggeeInfoRpc() {
-    CloneControllerImpl cloneController = createCloneController(null);
-
-    // Get source context for valid running application
-    MockAnyRpcServerContext rpc = createRpc();
-    DebuggeeInfoRequest request1 =
-        DebuggeeInfoRequest.newBuilder().setAppVersionId("app1/1.1").build();
-
-    cloneController.getDebuggeeInfo(rpc, request1);
-    DebuggeeInfoResponse response = (DebuggeeInfoResponse) rpc.assertSuccess();
-    assertThat(response.hasDebuggeeInfo()).isTrue();
-    assertThat(response.getDebuggeeInfo().hasSourceContext()).isTrue();
-    assertThat(response.getDebuggeeInfo().getSourceContext().getContextCase())
-        .isEqualTo(SourceContext.ContextCase.GIT);
-    assertThat(response.getDebuggeeInfo().getSourceContext().getGit().getUrl())
-        .isEqualTo("http://foo/bar");
-
-    // Get source context for valid but non running application
-    rpc = createRpc();
-    DebuggeeInfoRequest request2 =
-        DebuggeeInfoRequest.newBuilder().setAppVersionId("someApp/someVersion").build();
-
-    cloneController.getDebuggeeInfo(rpc, request2);
-    response = (DebuggeeInfoResponse) rpc.assertSuccess();
-    assertThat(response.hasDebuggeeInfo()).isFalse();
-
-    // Get source context of application with invalid AppVersionId
-    rpc = createRpc();
-    DebuggeeInfoRequest request3 =
-        DebuggeeInfoRequest.newBuilder().setAppVersionId("Invalid+App-Version?!@").build();
-
-    cloneController.getDebuggeeInfo(rpc, request3);
-    response = (DebuggeeInfoResponse) rpc.assertSuccess();
-    assertThat(response.hasDebuggeeInfo()).isFalse();
-  }
-
-  @Test
-  public void testGetDebuggeeInfo() {
-    CloneControllerImpl cloneController = createCloneController(null);
-
-    // Get source context of valid application
-    SourceContext sourceContext = cloneController.getSourceContext("app1", "1.1");
-    assertThat(sourceContext.getContextCase()).isEqualTo(SourceContext.ContextCase.GIT);
-    assertThat(sourceContext.getGit().getUrl()).isEqualTo("http://foo/bar");
-
-    // Get source context of invalid application
-    sourceContext = cloneController.getSourceContext("someApp", "someVersion");
-    assertThat(sourceContext).isNull();
-  }
-
   private CloneControllerImpl createCloneController(ByteBuffer hotspotPerformanceData) {
     return new CloneControllerImpl(
         javaRuntime.new CloneControllerImplCallback(),
@@ -193,8 +122,7 @@ public class CloneControllerImplTest {
             .initOfflineDeadlineMap(API_DEADLINE, "", 0.0, "")
             .build(),
         createRequestManager(false, true, false),
-        hotspotPerformanceData,
-        cloudDebuggerAgent);
+        hotspotPerformanceData);
   }
 
   private RequestManager createRequestManager(
@@ -208,8 +136,6 @@ public class CloneControllerImplTest {
         .setMaxOutstandingApiRpcs(10)
         .setThreadStopTerminatesClone(terminateClones)
         .setInterruptFirstOnSoftDeadline(interruptOnSoftDeadline)
-        .setCloudDebuggerAgent(cloudDebuggerAgent)
-        .setEnableCloudDebugger(true)
         .setCyclesPerSecond(CYCLES_PER_SECOND)
         .setWaitForDaemonRequestThreads(true)
         .build();

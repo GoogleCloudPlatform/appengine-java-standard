@@ -18,9 +18,6 @@ package com.google.apphosting.runtime.anyrpc;
 
 import com.google.apphosting.base.protos.AppinfoPb.AppInfo;
 import com.google.apphosting.base.protos.ClonePb.CloneSettings;
-import com.google.apphosting.base.protos.ClonePb.CloudDebuggerBreakpoints;
-import com.google.apphosting.base.protos.ClonePb.DebuggeeInfoRequest;
-import com.google.apphosting.base.protos.ClonePb.DebuggeeInfoResponse;
 import com.google.apphosting.base.protos.ClonePb.PerformanceData;
 import com.google.apphosting.base.protos.EmptyMessage;
 import com.google.apphosting.base.protos.ModelClonePb.DeadlineInfo;
@@ -56,12 +53,5 @@ class ClientInterfaces {
 
     void getPerformanceData(
         AnyRpcClientContext ctx, PerformanceDataRequest req, AnyRpcCallback<PerformanceData> cb);
-
-    void updateActiveBreakpoints(
-        AnyRpcClientContext ctx, CloudDebuggerBreakpoints req,
-        AnyRpcCallback<CloudDebuggerBreakpoints> cb);
-
-    void getDebuggeeInfo(
-        AnyRpcClientContext ctx, DebuggeeInfoRequest req, AnyRpcCallback<DebuggeeInfoResponse> cb);
   }
 }

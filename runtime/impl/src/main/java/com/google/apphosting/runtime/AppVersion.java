@@ -34,8 +34,6 @@ import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
@@ -52,7 +50,7 @@ import javax.annotation.Nullable;
  * @see AppVersionKey
  *
  */
-public class AppVersion implements CloudDebuggerCallback {
+public class AppVersion {
   private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
   /**
    * We assume that this string is prepended to the path for any
@@ -198,33 +196,6 @@ public class AppVersion implements CloudDebuggerCallback {
     return threadGroupPool;
   }
 
-  @Override
-  public ClassType getClassType(final Class<?> cls) {
-    return AccessController.doPrivileged(
-        (PrivilegedAction<ClassType>)
-            () -> {
-              ClassLoader testedClassLoader = cls.getClassLoader();
-
-              // TODO: add support for custom class loaders that an application may create.
-              if (testedClassLoader == classLoader) {
-                return ClassType.APPLICATION;
-              }
-
-              if (testedClassLoader == getClass().getClassLoader()) {
-                return ClassType.RUNTIME;
-              }
-
-              ClassLoader systemClassLoader = ClassLoader.getSystemClassLoader();
-              if ((testedClassLoader == systemClassLoader)
-                  || (testedClassLoader
-                      == systemClassLoader.getParent())) { // Bootstrap ClassLoader.
-                return ClassType.SAFE_RUNTIME;
-              }
-
-              return ClassType.UNKNOWN;
-            });
-  }
-
   public synchronized SourceContext getSourceContext() {
     if (!sourceContextLoaded) {
       sourceContext = readSourceContext();
@@ -246,6 +217,7 @@ public class AppVersion implements CloudDebuggerCallback {
   }
 
   // TODO: read source context from binary for google apps running in 'borg' context.
+  @Nullable
   private SourceContext readSourceContextFromJsonFile() {
     SourceContext sourceContext = null;
     try {

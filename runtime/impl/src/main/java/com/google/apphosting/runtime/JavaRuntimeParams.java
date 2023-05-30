@@ -239,13 +239,6 @@ final class JavaRuntimeParams {
   private boolean enableHotspotPerformanceMetrics = false;
 
   @Parameter(
-    description = "Enables Java Cloud Debugger JVMTI agent loaded in the process.",
-    names = {"--enable_cloud_debugger"},
-    arity = 1
-  )
-  private boolean enableCloudDebugger = false;
-
-  @Parameter(
     description = "Enables Java Cloud Profiler CPU usage agent in the process.",
     names = {"--enable_cloud_cpu_profiler"},
     arity = 1
@@ -433,10 +426,6 @@ final class JavaRuntimeParams {
 
   boolean getLogJettyExceptionsToAppLogs() {
     return logJettyExceptionsToAppLogs;
-  }
-
-  boolean getEnableCloudDebugger() {
-    return enableCloudDebugger;
   }
 
   boolean getEnableCloudCpuProfiler() {
