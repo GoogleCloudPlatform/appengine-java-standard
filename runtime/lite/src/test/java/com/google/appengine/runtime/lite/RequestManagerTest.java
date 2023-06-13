@@ -292,7 +292,7 @@ public class RequestManagerTest {
 
     TraceEventsProto traceEvents =
         TraceEventsProto.parseFrom(
-            upResponse.getSerializedTrace(), ExtensionRegistry.getGeneratedRegistry());
+            upResponse.getSerializedTrace(), ExtensionRegistry.getEmptyRegistry());
 
     assertThat(traceEvents.getSpanEventsCount()).isEqualTo(1);
 
@@ -331,7 +331,7 @@ public class RequestManagerTest {
 
     TraceEventsProto traceEvents =
         TraceEventsProto.parseFrom(
-            upResponse.getSerializedTrace(), ExtensionRegistry.getGeneratedRegistry());
+            upResponse.getSerializedTrace(), ExtensionRegistry.getEmptyRegistry());
     StartSpanProto startSpan = traceEvents.getSpanEvents(0).getEvent(0).getStartSpan();
     assertThat(startSpan.getName()).isEqualTo("Unparsable URL");
   }
