@@ -86,15 +86,31 @@ public class GetIndexesRequestTest {
     GetIndexesRequest request = GetIndexesRequest.newBuilder().setSchemaFetched(true).build();
     SearchServicePb.ListIndexesParams listIndexParams = request.copyToProtocolBuffer().build();
     assertThat(listIndexParams.hasFetchSchema()).isTrue();
-    assertThat((Boolean) listIndexParams.getFetchSchema()).isEqualTo(request.isSchemaFetched());
+    assertThat(listIndexParams.getFetchSchema()).isEqualTo(request.isSchemaFetched());
     request = GetIndexesRequest.newBuilder().setSchemaFetched(false).build();
     listIndexParams = request.copyToProtocolBuffer().build();
     assertThat(listIndexParams.hasFetchSchema()).isTrue();
-    assertThat((Boolean) listIndexParams.getFetchSchema()).isEqualTo(request.isSchemaFetched());
+    assertThat(listIndexParams.getFetchSchema()).isEqualTo(request.isSchemaFetched());
 
     request = GetIndexesRequest.newBuilder().build();
     listIndexParams = request.copyToProtocolBuffer().build();
     assertThat(listIndexParams.hasFetchSchema()).isFalse();
+  }
+
+  @Test
+  public void testAllNamespacesIsCopied() {
+    GetIndexesRequest request = GetIndexesRequest.newBuilder().setAllNamespaces(true).build();
+    SearchServicePb.ListIndexesParams listIndexParams = request.copyToProtocolBuffer().build();
+    assertThat(listIndexParams.hasAllNamespaces()).isTrue();
+    assertThat(listIndexParams.getAllNamespaces()).isEqualTo(request.isAllNamespaces());
+    request = GetIndexesRequest.newBuilder().setAllNamespaces(false).build();
+    listIndexParams = request.copyToProtocolBuffer().build();
+    assertThat(listIndexParams.hasAllNamespaces()).isTrue();
+    assertThat(listIndexParams.getAllNamespaces()).isEqualTo(request.isAllNamespaces());
+
+    request = GetIndexesRequest.newBuilder().build();
+    listIndexParams = request.copyToProtocolBuffer().build();
+    assertThat(listIndexParams.hasAllNamespaces()).isFalse();
   }
 
   private SearchServicePb.ListIndexesParams testCopyingIsReflexiveHelper(GetIndexesRequest lhs) {
@@ -107,7 +123,7 @@ public class GetIndexesRequestTest {
 
   @Test
   public void testIncludeStartIndexIsNotCopied() {
-    // If start index index name is not set, the include start index is not copied
+    // If start_index_name is not set, then include_start_index is not copied
     SearchServicePb.ListIndexesParams listIndexParams = testCopyingIsReflexiveHelper(
         GetIndexesRequest.newBuilder().setIncludeStartIndex(true).build());
     assertThat(listIndexParams.hasIncludeStartIndex()).isFalse();
@@ -118,7 +134,7 @@ public class GetIndexesRequestTest {
 
   @Test
   public void testIncludeStartIndexIsCopied() {
-    // If start index index name is not set, the include start index is not copied
+    // If start_index_name is set, then include_start_index is copied
     GetIndexesRequest request = GetIndexesRequest.newBuilder()
         .setIncludeStartIndex(true).setStartIndexName("a").build();
     SearchServicePb.ListIndexesParams listIndexParams = testCopyingIsReflexiveHelper(request);
@@ -148,7 +164,7 @@ public class GetIndexesRequestTest {
     GetIndexesRequest source = GetIndexesRequest.newBuilder()
         .setIncludeStartIndex(false).setIndexNamePrefix("prefix").setLimit(71)
         .setOffset(11).setSchemaFetched(true)
-        .setStartIndexName("startIndexName").build();
+        .setStartIndexName("startIndexName").setAllNamespaces(true).build();
     GetIndexesRequest target = GetIndexesRequest.newBuilder(source).build();
     assertThat(target).isEqualTo(source);
     assertThat(source).isEqualTo(target);

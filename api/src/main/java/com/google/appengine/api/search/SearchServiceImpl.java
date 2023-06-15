@@ -56,8 +56,6 @@ class SearchServiceImpl implements SearchService {
 
   @Override
   public Future<GetResponse<Index>> getIndexesAsync(final GetIndexesRequest request) {
-    Boolean box = request.isSchemaFetched();
-    final boolean fetchSchema = box != null && box.booleanValue();
     SearchServicePb.ListIndexesParams.Builder paramsBuilder = request
         .copyToProtocolBuffer().setNamespace(config.getNamespace());
     Future<SearchServicePb.ListIndexesResponse.Builder> future =
@@ -82,17 +80,19 @@ class SearchServiceImpl implements SearchService {
         for (SearchServicePb.IndexMetadata metadata : response.getIndexMetadataList()) {
           SearchServicePb.IndexSpec indexSpec = metadata.getIndexSpec();
           IndexSpec.Builder builder = IndexSpec.newBuilder().setName(indexSpec.getName());
-          if (indexSpec.hasNamespace()) {
-            Preconditions.checkArgument(
-                indexSpec.getNamespace().equals(config.getNamespace()),
-                "Index with incorrect namespace received '%s' != '%s'",
-                indexSpec.getNamespace(),
-                config.getNamespace());
-          } else if (!config.getNamespace().isEmpty()) {
-            Preconditions.checkArgument(
-                indexSpec.getNamespace().equals(config.getNamespace()),
-                "Index with incorrect namespace received '' != '%s'",
-                config.getNamespace());
+          if (!Util.defaultIfNull(request.isAllNamespaces(), false)) {
+            if (indexSpec.hasNamespace()) {
+              Preconditions.checkArgument(
+                  indexSpec.getNamespace().equals(config.getNamespace()),
+                  "Index with incorrect namespace received '%s' != '%s'",
+                  indexSpec.getNamespace(),
+                  config.getNamespace());
+            } else if (!config.getNamespace().isEmpty()) {
+              Preconditions.checkArgument(
+                  indexSpec.getNamespace().equals(config.getNamespace()),
+                  "Index with incorrect namespace received '' != '%s'",
+                  config.getNamespace());
+            }
           }
           Long amountUsed = null;
           Long limit = null;
@@ -100,7 +100,10 @@ class SearchServiceImpl implements SearchService {
             amountUsed = metadata.getStorage().getAmountUsed();
             limit = metadata.getStorage().getLimit();
           }
-          Schema schema = fetchSchema ? Schema.createSchema(metadata) : null;
+          Schema schema =
+              Util.defaultIfNull(request.isSchemaFetched(), false)
+                  ? Schema.createSchema(metadata)
+                  : null;
           indexes.add(new IndexImpl(apiHelper, config, builder.build(), schema, amountUsed, limit));
         }
         return new GetResponse<Index>(indexes);

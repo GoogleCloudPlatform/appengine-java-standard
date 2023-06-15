@@ -20,16 +20,19 @@ import static com.google.common.io.BaseEncoding.base64Url;
 
 import com.google.appengine.api.search.proto.SearchServicePb;
 import com.google.appengine.api.search.proto.SearchServicePb.IndexSpec.Consistency;
+import com.google.auto.value.AutoValue;
 import com.google.common.base.CharMatcher;
+import com.google.common.base.Splitter;
+import com.google.common.collect.ComparisonChain;
 import com.google.protobuf.TextFormat;
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
+import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentNavigableMap;
@@ -40,12 +43,10 @@ import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.RAMDirectory;
 import org.apache.lucene.store.SimpleFSDirectory;
 
-/**
- * Maintains a map from app ID and index name, to a directory.
- *
- */
+/** Maintains a map from app ID and index name, to a directory. */
 abstract class LuceneDirectoryMap {
   private static final Logger LOG = LocalSearchService.LOG;
+  private static final char APP_ID_NAMESPACE_DELIMETER = '/';
 
   private static SearchServicePb.IndexSpec normalize(SearchServicePb.IndexSpec indexSpec) {
     SearchServicePb.IndexSpec defaultInstance = SearchServicePb.IndexSpec.getDefaultInstance();
@@ -70,7 +71,7 @@ abstract class LuceneDirectoryMap {
   }
 
   private static String getAppNamespaceKey(String appId, String namespace) {
-    return appId + "/" + namespace;
+    return appId + APP_ID_NAMESPACE_DELIMETER + namespace;
   }
 
   /**
@@ -87,7 +88,6 @@ abstract class LuceneDirectoryMap {
    * A directory map that produces file system based directories.
    */
   public static final class FileBased extends LuceneDirectoryMap {
-    private static final String ILLEGAL_CHARS = "*:\\/<>|*?\"'";
 
     private final File rootDir;
 
@@ -232,54 +232,105 @@ abstract class LuceneDirectoryMap {
     return luceneIndexSpec.directory;
   }
 
-  private static class Cmp implements Comparator<Map.Entry<String, LuceneIndexSpec>> {
+  @AutoValue
+  abstract static class AppIdAndNamespace {
+    public abstract String appId();
+
+    public abstract String namespace();
+
+    public static AppIdAndNamespace of(String appId, String namespace) {
+      return new AutoValue_LuceneDirectoryMap_AppIdAndNamespace(appId, namespace);
+    }
+
+    public static AppIdAndNamespace fromAppNamespaceKey(String appNamespaceKey) {
+      List<String> parts = Splitter.on(APP_ID_NAMESPACE_DELIMETER).splitToList(appNamespaceKey);
+      return of(parts.get(0), parts.get(1));
+    }
+  }
+
+  @AutoValue
+  abstract static class NamespaceAndIndexName implements Comparable<NamespaceAndIndexName> {
+    public abstract String namespace();
+
+    public abstract String indexName();
+
+    public static NamespaceAndIndexName of(String namespace, String indexName) {
+      return new AutoValue_LuceneDirectoryMap_NamespaceAndIndexName(namespace, indexName);
+    }
+
     @Override
-    public int compare(
-        Map.Entry<String, LuceneIndexSpec> o1, Map.Entry<String, LuceneIndexSpec> o2) {
-      return o1.getKey().compareTo(o2.getKey());
+    public int compareTo(NamespaceAndIndexName other) {
+      return ComparisonChain.start()
+          .compare(namespace(), other.namespace())
+          .compare(indexName(), other.indexName())
+          .result();
     }
   }
 
   public List<SearchServicePb.IndexMetadata.Builder> listIndexes(
       String appId, SearchServicePb.ListIndexesParams params) {
-    String appNamespaceKey = getAppNamespaceKey(appId, params.getNamespace());
+    String namespace = params.getNamespace();
+    String appNamespaceKey = getAppNamespaceKey(appId, namespace);
 
-    List<SearchServicePb.IndexMetadata.Builder> indexMetadatas =
-        new ArrayList<SearchServicePb.IndexMetadata.Builder>();
-    SortedMap<String, LuceneIndexSpec> appIndexes = appMap.get(appNamespaceKey);
-
-    if (appIndexes == null) {
-      return indexMetadatas;
+    List<SearchServicePb.IndexMetadata.Builder> indexMetadatas = new ArrayList<>();
+    SortedMap<NamespaceAndIndexName, LuceneIndexSpec> appIndexes = new TreeMap<>();
+    if (params.getAllNamespaces()) {
+      // Grab all indexes belonging to this app.
+      for (Map.Entry<String, ConcurrentNavigableMap<String, LuceneIndexSpec>> indexes :
+          appMap.entrySet()) {
+        AppIdAndNamespace appIdAndNamespace =
+            AppIdAndNamespace.fromAppNamespaceKey(indexes.getKey());
+        if (appId.equals(appIdAndNamespace.appId())) {
+          for (Map.Entry<String, LuceneIndexSpec> index : indexes.getValue().entrySet()) {
+            appIndexes.put(
+                NamespaceAndIndexName.of(appIdAndNamespace.namespace(), index.getKey()),
+                index.getValue());
+          }
+        }
+      }
+    } else {
+      // Grab only the indexes in this namespace.
+      Map<String, LuceneIndexSpec> appNamespaceIndexes = appMap.get(appNamespaceKey);
+      if (appNamespaceIndexes == null) {
+        return indexMetadatas;
+      }
+      for (Map.Entry<String, LuceneIndexSpec> index : appNamespaceIndexes.entrySet()) {
+        appIndexes.put(
+            NamespaceAndIndexName.of(params.getNamespace(), index.getKey()), index.getValue());
+      }
     }
 
     int startPos = 0;
-    String prefix = params.getIndexNamePrefix();
+    String indexNamePrefix = params.getIndexNamePrefix();
     String startIndexName = params.getStartIndexName();
-    String start = startIndexName;
+    NamespaceAndIndexName startNamespaceAndIndexName =
+        NamespaceAndIndexName.of(namespace, startIndexName);
 
-    if (start.length() == 0) {
-      start = prefix;
+    NamespaceAndIndexName start = startNamespaceAndIndexName;
+    if (start.indexName().length() == 0) {
+      start = NamespaceAndIndexName.of(namespace, indexNamePrefix);
     }
 
-    if (start.length() > 0) {
-      appIndexes = appIndexes.tailMap(start);
-      if (appIndexes.isEmpty()) {
-        return indexMetadatas;
-      }
-      if (appIndexes.firstKey().equals(startIndexName) && !params.getIncludeStartIndex()) {
-        startPos++;
-      }
+    appIndexes = appIndexes.tailMap(start);
+    if (appIndexes.isEmpty()) {
+      return indexMetadatas;
     }
+    if (appIndexes.firstKey().equals(startNamespaceAndIndexName)
+        && !params.getIncludeStartIndex()) {
+      startPos++;
+    }
+
     @SuppressWarnings({"unchecked", "rawtypes"})
-    Map.Entry<String, LuceneIndexSpec>[] indexes = appIndexes.entrySet().toArray(new Map.Entry[0]);
+    Map.Entry<NamespaceAndIndexName, LuceneIndexSpec>[] indexes =
+        appIndexes.entrySet().toArray(new Map.Entry[0]);
     startPos += params.getOffset();
     int endPos = Math.min(startPos + params.getLimit(), indexes.length);
 
     for (int i = startPos; i < endPos; i++) {
-      Map.Entry<String, LuceneIndexSpec> dirEntry = indexes[i];
-      String indexName = dirEntry.getKey();
+      Map.Entry<NamespaceAndIndexName, LuceneIndexSpec> dirEntry = indexes[i];
+      String indexName = dirEntry.getKey().indexName();
 
-      if (!indexName.startsWith(prefix)) {
+      if (!indexName.startsWith(indexNamePrefix)) {
         break;
       }
       SearchServicePb.IndexMetadata.Builder metadataBuilder =

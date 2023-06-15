@@ -388,6 +388,13 @@ message ListIndexesParams {
 
   // The source of the documents being indexed.
   optional IndexSpec.Source source = 8 [default = SEARCH];
+
+  // Whether to return indexes belonging to all namespaces instead of only
+  // returning indexes belonging to the namespace specified via the namespace
+  // parameter. Cannot be combined with index_name_prefix. If true, the
+  // namespace parameter is used only to determine the first index to be
+  // returned (in conjunction with the start_index_name parameter).
+  optional bool all_namespaces = 9;
 }
 
 // The request to list all known indexes.
@@ -583,7 +590,7 @@ message SearchParams {
   // Use the offset if you want to move to arbitrary result. You can use to
   // move to the location independent of the last returned results. However,
   // this freedom comes at a price, as the backend reads all documents
-  // preceeding the given offset and just does not return them.
+  // preceding the given offset and just does not return them.
   optional int32 offset = 11;
 
   // What sort of cursor should be returned with the results?
