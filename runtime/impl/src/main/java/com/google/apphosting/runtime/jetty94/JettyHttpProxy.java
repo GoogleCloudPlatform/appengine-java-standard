@@ -117,6 +117,7 @@ public class JettyHttpProxy {
     GzipHandler gzip = new GzipHandler();
     gzip.setInflateBufferSize(8 * 1024);
     gzip.setHandler(sizeLimitHandler);
+    gzip.setExcludedAgentPatterns();
 
     // Include all methods for the GzipHandler.
     gzip.setIncludedMethods();
