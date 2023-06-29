@@ -480,7 +480,7 @@
       <dependency>
         <groupId>com.google.guava</groupId>
         <artifactId>guava</artifactId>
-        <version>32.0.0-jre</version>
+        <version>32.0.1-jre</version>
       </dependency>
       <dependency>
         <groupId>com.google.errorprone</groupId>
@@ -672,7 +672,7 @@
       <dependency>
         <groupId>com.google.guava</groupId>
         <artifactId>guava-testlib</artifactId>
-        <version>32.0.0-jre</version>
+        <version>32.0.1-jre</version>
         <scope>test</scope>
       </dependency>
       <dependency>
