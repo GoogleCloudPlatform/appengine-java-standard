@@ -17,7 +17,6 @@
 package com.google.apphosting.runtime;
 
 import static com.google.common.base.StandardSystemProperty.JAVA_SPECIFICATION_VERSION;
-import static java.util.stream.Collectors.toList;
 
 import com.google.apphosting.base.AppVersionKey;
 import com.google.apphosting.base.protos.AppinfoPb.AppInfo;
@@ -31,7 +30,6 @@ import com.google.apphosting.runtime.anyrpc.EvaluationRuntimeServerInterface;
 import com.google.apphosting.utils.config.AppEngineWebXml;
 import com.google.auto.value.AutoBuilder;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Iterables;
 import com.google.common.flogger.GoogleLogger;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -39,14 +37,10 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.InetAddress;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -115,9 +109,6 @@ public class JavaRuntime implements EvaluationRuntimeServerInterface {
 
   private final boolean enableHotspotPerformanceMetrics;
 
-  private final CloudDebuggerAgentWrapper cloudDebuggerAgent;
-  private boolean cloudDebuggerEnabled;
-
   private final boolean pollForNetwork;
 
   private final boolean redirectStdoutStderr;
@@ -146,7 +137,6 @@ public class JavaRuntime implements EvaluationRuntimeServerInterface {
     return new AutoBuilder_JavaRuntime_Builder()
         .setCompressResponse(true)
         .setEnableHotspotPerformanceMetrics(true)
-        .setCloudDebuggerEnabled(false)
         .setPollForNetwork(false)
         .setDefaultToNativeUrlStreamHandler(false)
         .setForceUrlfetchUrlStreamHandler(false)
@@ -204,12 +194,6 @@ public class JavaRuntime implements EvaluationRuntimeServerInterface {
 
     public abstract boolean enableHotspotPerformanceMetrics();
 
-    public abstract Builder setCloudDebuggerAgent(CloudDebuggerAgentWrapper cloudDebuggerAgent);
-
-    public abstract Builder setCloudDebuggerEnabled(boolean cloudDebuggerEnabled);
-
-    public abstract boolean cloudDebuggerEnabled();
-
     public abstract Builder setPollForNetwork(boolean pollForNetwork);
 
     public abstract boolean pollForNetwork();
@@ -264,8 +248,6 @@ public class JavaRuntime implements EvaluationRuntimeServerInterface {
       BackgroundRequestCoordinator coordinator,
       boolean compressResponse,
       boolean enableHotspotPerformanceMetrics,
-      CloudDebuggerAgentWrapper cloudDebuggerAgent,
-      boolean cloudDebuggerEnabled,
       boolean pollForNetwork,
       boolean defaultToNativeUrlStreamHandler,
       boolean forceUrlfetchUrlStreamHandler,
@@ -297,8 +279,6 @@ public class JavaRuntime implements EvaluationRuntimeServerInterface {
     this.coordinator = coordinator;
     this.compressResponse = compressResponse;
     this.enableHotspotPerformanceMetrics = enableHotspotPerformanceMetrics;
-    this.cloudDebuggerAgent = cloudDebuggerAgent;
-    this.cloudDebuggerEnabled = cloudDebuggerEnabled;
     this.pollForNetwork = pollForNetwork;
     this.redirectStdoutStderr = redirectStdoutStderr;
     this.logJsonToFile = logJsonToFile;
@@ -462,11 +442,6 @@ public class JavaRuntime implements EvaluationRuntimeServerInterface {
           appVersionFactory.createAppVersion(appInfo, appEngineWebXml, templateConfiguration);
 
       ApplicationEnvironment env = appVersion.getEnvironment();
-      if (cloudDebuggerEnabled && env.isCloudDebuggerDisabled()) {
-        logger.atInfo().log("Cloud Debugger is disabled through appengine-web.xml");
-        cloudDebuggerEnabled = false;
-        requestManager.disableCloudDebugger();
-      }
 
       if ("1.8".equals(JAVA_SPECIFICATION_VERSION.value())) {
         setEnvironmentVariables(env.getEnvironmentVariables());
@@ -498,20 +473,6 @@ public class JavaRuntime implements EvaluationRuntimeServerInterface {
       // Now notify the servlet engine, so it can do any setup it
       // has to do.
       servletEngine.addAppVersion(appVersion);
-
-      if (cloudDebuggerEnabled) {
-        try {
-          // Runtimes such as Java8/Java8g use gVisor instead of sandboxing (i.e., they use a null
-          // sandbox). It is safe for the debugger to display the internals of these runtimes.
-          // We expect this to always downcast successfully in java8:
-          URLClassLoader urlLoader = (URLClassLoader) appVersion.getClassLoader();
-          cloudDebuggerAgent.setApplication(
-              Iterables.toArray(urlsToPaths(urlLoader.getURLs()), String.class), appVersion);
-        } catch (RuntimeException ex) {
-          // Don't fail the operation if we have a problem with Cloud Debugger.
-          logger.atWarning().withCause(ex).log("Error setting class path for Cloud Debugger:");
-        }
-      }
     } catch (Exception ex) {
       logger.atWarning().withCause(ex).log("Error adding app version:");
       rpc.finishWithAppError(UPAddDelete.ERROR.FAILURE_VALUE, ex.toString());
@@ -550,19 +511,6 @@ public class JavaRuntime implements EvaluationRuntimeServerInterface {
         System.exit(1);
       }
     }
-  }
-
-  private static String urlToPath(URL url) {
-    try {
-      return Paths.get(url.toURI()).toFile().getAbsolutePath();
-    } catch (URISyntaxException ex) {
-      logger.atWarning().withCause(ex).log("Failed to convert URL %s to string: ", url);
-      return null;
-    }
-  }
-
-  private static Iterable<String> urlsToPaths(URL[] urls) {
-    return Arrays.stream(urls).map(JavaRuntime::urlToPath).filter(s -> s != null).collect(toList());
   }
 
   private static void setEnvironmentVariables(Map<String, String> vars) {
@@ -621,7 +569,7 @@ public class JavaRuntime implements EvaluationRuntimeServerInterface {
       CloneControllerImplCallback callback = new CloneControllerImplCallback();
       CloneControllerImpl controller =
           new CloneControllerImpl(
-              callback, deadlineOracle, requestManager, hotspotPerformanceData, cloudDebuggerAgent);
+              callback, deadlineOracle, requestManager, hotspotPerformanceData);
       rpcPlugin.startServer(JavaRuntime.this, controller);
 
       rpcStarted.put(rpcPlugin);

@@ -48,13 +48,14 @@ public final class GetIndexesRequest {
   public static final class Builder {
 
     // Optional
-    @Nullable private Integer offset;
-    @Nullable private String indexNamePrefix;
-    @Nullable private Boolean includeStartIndex;
-    @Nullable private String startIndexName;
-    @Nullable private Integer limit;
-    @Nullable private Boolean schemaFetched;
-    @Nullable private String namespace;
+    private @Nullable Integer offset;
+    private @Nullable String indexNamePrefix;
+    private @Nullable Boolean includeStartIndex;
+    private @Nullable String startIndexName;
+    private @Nullable Integer limit;
+    private @Nullable Boolean schemaFetched;
+    private @Nullable String namespace;
+    private @Nullable Boolean allNamespaces;
 
     private Builder() {
       includeStartIndex = true;
@@ -68,6 +69,7 @@ public final class GetIndexesRequest {
       limit = request.getLimit();
       schemaFetched = request.isSchemaFetched();
       namespace = request.getNamespace();
+      allNamespaces = request.isAllNamespaces();
     }
 
     /**
@@ -160,6 +162,17 @@ public final class GetIndexesRequest {
     }
 
     /**
+     * Sets whether or not to fetch indexes from all namespaces.
+     *
+     * @param allNamespaces whether or not to fetch indexes from all namespaces
+     * @return this builder
+     */
+    public Builder setAllNamespaces(boolean allNamespaces) {
+      this.allNamespaces = allNamespaces;
+      return this;
+    }
+
+    /**
      * @return builds and returns a brand new instance of
      * a {@link GetIndexesRequest} using values set on this builder
      */
@@ -175,6 +188,7 @@ public final class GetIndexesRequest {
   private final Integer limit;
   private final Boolean schemaFetched;
   private final String namespace;
+  private final Boolean allNamespaces;
 
   private GetIndexesRequest(Builder builder) {
     offset = builder.offset;
@@ -184,9 +198,9 @@ public final class GetIndexesRequest {
     limit = Util.defaultIfNull(builder.limit, SearchApiLimits.SEARCH_DEFAULT_LIMIT);
     schemaFetched = builder.schemaFetched;
     namespace = builder.namespace;
+    allNamespaces = builder.allNamespaces;
     checkValid();
   }
-
 
   public static final Builder newBuilder() {
     return new Builder();
@@ -246,6 +260,13 @@ public final class GetIndexesRequest {
     return namespace;
   }
 
+  /**
+   * @return whether or not to return indexes across all namespaces
+   */
+  public Boolean isAllNamespaces() {
+    return allNamespaces;
+  }
+
   private GetIndexesRequest checkValid() {
     if (limit != null) {
       Preconditions.checkArgument(limit > 0, "Limit must be positive");
@@ -277,6 +298,9 @@ public final class GetIndexesRequest {
     if (namespace != null) {
       builder.setNamespace(namespace);
     }
+    if (allNamespaces != null) {
+      builder.setAllNamespaces(allNamespaces);
+    }
     return builder;
   }
 
@@ -290,6 +314,7 @@ public final class GetIndexesRequest {
     result = prime * result + ((offset == null) ? 0 : offset.hashCode());
     result = prime * result + ((schemaFetched == null) ? 0 : schemaFetched.hashCode());
     result = prime * result + ((startIndexName == null) ? 0 : startIndexName.hashCode());
+    result = prime * result + ((allNamespaces == null) ? 0 : allNamespaces.hashCode());
     return result;
   }
 
@@ -310,14 +335,28 @@ public final class GetIndexesRequest {
         && Util.equalObjects(limit, other.limit)
         && Util.equalObjects(offset, other.offset)
         && Util.equalObjects(schemaFetched, other.schemaFetched)
-        && Util.equalObjects(startIndexName, other.startIndexName);
+        && Util.equalObjects(startIndexName, other.startIndexName)
+        && Util.equalObjects(allNamespaces, other.allNamespaces);
   }
 
   @Override
   public String toString() {
-    return "GetIndexesRequest(offset=" + offset + ", indexNamePrefix=" + indexNamePrefix
-        + ", includeStartIndex=" + includeStartIndex + ", startIndexName=" + startIndexName
-        + ", limit=" + limit + ", schemaFetched=" + schemaFetched
+    return "GetIndexesRequest(offset="
+        + offset
+        + ", indexNamePrefix="
+        + indexNamePrefix
+        + ", includeStartIndex="
+        + includeStartIndex
+        + ", startIndexName="
+        + startIndexName
+        + ", limit="
+        + limit
+        + ", schemaFetched="
+        + schemaFetched
+        + ", namespace="
+        + namespace
+        + ", allNamespaces="
+        + allNamespaces
         + ")";
   }
 }

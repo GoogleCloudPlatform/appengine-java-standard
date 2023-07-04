@@ -114,6 +114,9 @@ public class GetIndexesRequestChecker {
       checkStartIndexName(params.getStartIndexName());
     }
     if (params.hasIndexNamePrefix()) {
+      Preconditions.checkArgument(
+          !params.getAllNamespaces(),
+          "all_namespaces cannot be used in conjunction with index_name_prefix");
       checkIndexNamePrefix(params.getIndexNamePrefix());
     }
     if (params.hasOffset()) {

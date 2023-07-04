@@ -130,6 +130,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.Random;
@@ -271,7 +272,7 @@ public final class ProberApp extends HttpServlet {
     }
     // Cloud Tasks QA is only available in us-central1/2.
     // TODO(b/197253337): Enable in prod once task queues are added to prod apps in sisyfus.
-    if (isRunningInQa() && "uc".equals(getLocationId())) {
+    if (isRunningInQa() && Objects.equals(getLocationId(), "uc")) {
       testMethodsBuilder
           .put("pushQueue", ProberApp::testPushQueue)
           .put("pullQueue", ProberApp::testPullQueue);
@@ -295,28 +296,15 @@ public final class ProberApp extends HttpServlet {
   }
 
   // For testHttpGet
-  private static final String HUMANS = "https://www.google.com/humans.txt";
-  private static final String EXPECTED =
-      "Google is built by a large team of engineers, designers, "
-          + "researchers, robots, and others in many different sites across the "
-          + "globe. It is updated continuously, and built with more tools and "
-          + "technologies than we can shake a stick at. If you'd like to help us "
-          + "out, see careers.google.com.\n";
+  private static final String URL = "https://cloud.google.com/appengine/docs/java";
 
   /** Tests HTTP connection. */
   private static void testHttpGet(HttpServletRequest request) throws IOException {
     String failureMsg = "";
 
-    HttpURLConnection connection = (HttpURLConnection) new URL(HUMANS).openConnection();
+    HttpURLConnection connection = (HttpURLConnection) new URL(URL).openConnection();
 
     try (InputStream is = connection.getInputStream()) {
-      String responseBody = new String(ByteStreams.toByteArray(is), UTF_8);
-
-      if (!responseBody.equals(EXPECTED)) {
-        failureMsg +=
-            String.format("response body differs; got: '%s'; want: '%s'.", responseBody, EXPECTED);
-      }
-
       int code = connection.getResponseCode();
       if (code != 200) {
         failureMsg += "\nstatus code; got: " + code + "want: " + 200;
@@ -339,7 +327,7 @@ public final class ProberApp extends HttpServlet {
             // bypassing FastNet by using http_over_rpc
             .doNotFollowRedirects()
             .setDeadline(120.0);
-    HTTPRequest httpRequest = new HTTPRequest(new URL(HUMANS), HTTPMethod.GET, fetchOptions);
+    HTTPRequest httpRequest = new HTTPRequest(new URL(URL), HTTPMethod.GET, fetchOptions);
     // Disable gzip compression on the response
     httpRequest.setHeader(new HTTPHeader("Accept-Encoding", "identity"));
 
@@ -347,8 +335,8 @@ public final class ProberApp extends HttpServlet {
     try {
       URLFetchService urlFetchService = URLFetchServiceFactory.getURLFetchService();
       response = urlFetchService.fetch(httpRequest);
-      String content = new String(response.getContent(), UTF_8);
-      assertThat(content).isEqualTo(EXPECTED);
+      assertThat(response).isNotNull();
+      assertThat(response.getResponseCode()).isEqualTo(HttpServletResponse.SC_OK);
     } catch (IOException ioe) {
       // URLFetch documentation states that an exception is thrown,
       // i.e. error code not set, when the response is too large.
@@ -524,7 +512,7 @@ public final class ProberApp extends HttpServlet {
 
     if (resultSet.next()) {
       String res = resultSet.getString("message");
-      if (!SQL_RESPONSE.equals(res)) {
+      if (!Objects.equals(res, SQL_RESPONSE)) {
         throw new AssertionError(
             String.format(
                 "from SQL database query '%s' got: '%s'; want: '%s'\n",

@@ -41,37 +41,6 @@ public class JavaRuntimeFactory {
 
   private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
 
-  /**
-   * Real implementation of {@code CloudDebuggerAgentWrapper} interface that forwards all the calls
-   * to the actual Cloud Debugger agent.
-   */
-  static class CloudDebuggerAgentWrapperImpl implements CloudDebuggerAgentWrapper {
-    @Override
-    public void bind(ClassLoader debuggerInternalsClassLoader) {
-      CloudDebuggerAgent.bind(debuggerInternalsClassLoader);
-    }
-
-    @Override
-    public void setApplication(String[] classPath, CloudDebuggerCallback callback) {
-      CloudDebuggerAgent.setApplication(classPath, callback);
-    }
-
-    @Override
-    public void setActiveBreakpoints(byte[][] breakpoints) {
-      CloudDebuggerAgent.setActiveBreakpoints(breakpoints);
-    }
-
-    @Override
-    public boolean hasBreakpointUpdates() {
-      return CloudDebuggerAgent.hasBreakpointUpdates();
-    }
-
-    @Override
-    public byte[][] dequeueBreakpointUpdates() {
-      return CloudDebuggerAgent.dequeueBreakpointUpdates();
-    }
-  }
-
   @VisibleForTesting
   JavaRuntimeFactory() {}
 
@@ -146,20 +115,6 @@ public class JavaRuntimeFactory {
 
     BackgroundRequestCoordinator coordinator = new BackgroundRequestCoordinator();
 
-    CloudDebuggerAgentWrapper cloudDebuggerAgent = new CloudDebuggerAgentWrapperImpl();
-    boolean cloudDebuggerEnabled = false;
-    if (params.getEnableCloudDebugger()) {
-      // Initialize Cloud Debugger (if enabled). This initialization is very lightweight:
-      // it only loads a few classes. The bulk of a more expensive initialization is deferred by
-      // the debugger to the moment the first breakpoint is set.
-      try {
-        cloudDebuggerAgent.bind(JavaRuntimeFactory.class.getClassLoader());
-        cloudDebuggerEnabled = true;
-      } catch (Throwable ex) {
-        logger.atWarning().log("Failed to bind to Cloud Debugger agent");
-      }
-    }
-
     ApiProxyImpl apiProxyImpl =
         ApiProxyImpl.builder()
             .setApiHost(
@@ -186,8 +141,6 @@ public class JavaRuntimeFactory {
             .setMaxOutstandingApiRpcs(params.getCloneMaxOutstandingApiRpcs())
             .setThreadStopTerminatesClone(params.getThreadStopTerminatesClone())
             .setInterruptFirstOnSoftDeadline(params.getInterruptThreadsFirstOnSoftDeadline())
-            .setCloudDebuggerAgent(cloudDebuggerAgent)
-            .setEnableCloudDebugger(cloudDebuggerEnabled)
             .setCyclesPerSecond(params.getCyclesPerSecond())
             .setWaitForDaemonRequestThreads(params.getWaitForDaemonRequestThreads());
 
@@ -213,8 +166,6 @@ public class JavaRuntimeFactory {
             .setCoordinator(coordinator)
             .setCompressResponse(params.getRuntimeHttpCompression())
             .setEnableHotspotPerformanceMetrics(params.getEnableHotspotPerformanceMetrics())
-            .setCloudDebuggerAgent(cloudDebuggerAgent)
-            .setCloudDebuggerEnabled(cloudDebuggerEnabled)
             .setPollForNetwork(params.getPollForNetwork())
             .setDefaultToNativeUrlStreamHandler(params.getDefaultToNativeUrlStreamHandler())
             .setForceUrlfetchUrlStreamHandler(params.getForceUrlfetchUrlStreamHandler())

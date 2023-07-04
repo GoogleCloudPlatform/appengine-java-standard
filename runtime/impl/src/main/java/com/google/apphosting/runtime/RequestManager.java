@@ -65,7 +65,6 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nullable;
 
 /**
@@ -138,10 +137,7 @@ public class RequestManager implements RequestThreadManager {
   private final Map<String, RequestToken> requests;
   private final boolean interruptFirstOnSoftDeadline;
   private int maxOutstandingApiRpcs;
-  @Nullable private final CloudDebuggerAgentWrapper cloudDebuggerAgent;
-  private final AtomicBoolean enableCloudDebugger;
   private final boolean waitForDaemonRequestThreads;
-  private final AtomicBoolean debugletStartNotified = new AtomicBoolean(false);
   private final Map<String, String> environmentVariables;
 
   /** Make a partly-initialized builder for a RequestManager. */
@@ -184,12 +180,6 @@ public class RequestManager implements RequestThreadManager {
 
     public abstract boolean interruptFirstOnSoftDeadline();
 
-    public abstract Builder setCloudDebuggerAgent(@Nullable CloudDebuggerAgentWrapper x);
-
-    public abstract Builder setEnableCloudDebugger(boolean x);
-
-    public abstract boolean enableCloudDebugger();
-
     public abstract Builder setCyclesPerSecond(long x);
 
     public abstract long cyclesPerSecond();
@@ -212,8 +202,6 @@ public class RequestManager implements RequestThreadManager {
       int maxOutstandingApiRpcs,
       boolean threadStopTerminatesClone,
       boolean interruptFirstOnSoftDeadline,
-      @Nullable CloudDebuggerAgentWrapper cloudDebuggerAgent,
-      boolean enableCloudDebugger,
       long cyclesPerSecond,
       boolean waitForDaemonRequestThreads,
       ImmutableMap<String, String> environment) {
@@ -228,8 +216,6 @@ public class RequestManager implements RequestThreadManager {
     this.maxOutstandingApiRpcs = maxOutstandingApiRpcs;
     this.threadStopTerminatesClone = threadStopTerminatesClone;
     this.interruptFirstOnSoftDeadline = interruptFirstOnSoftDeadline;
-    this.cloudDebuggerAgent = cloudDebuggerAgent;
-    this.enableCloudDebugger = new AtomicBoolean(enableCloudDebugger);
     this.waitForDaemonRequestThreads = waitForDaemonRequestThreads;
     this.requests = Collections.synchronizedMap(new HashMap<String, RequestToken>());
     this.environmentVariables = environment;
@@ -237,16 +223,6 @@ public class RequestManager implements RequestThreadManager {
 
   public void setMaxOutstandingApiRpcs(int maxOutstandingApiRpcs) {
     this.maxOutstandingApiRpcs = maxOutstandingApiRpcs;
-  }
-
-  /**
-   * Disables Cloud Debugger.
-   *
-   * <p>If called before the first request has been processed, the Cloud Debugger will not be even
-   * activated.
-   */
-  public void disableCloudDebugger() {
-    enableCloudDebugger.set(false);
   }
 
   /**
@@ -359,9 +335,6 @@ public class RequestManager implements RequestThreadManager {
     // logged-in user.
     ApiProxy.setEnvironmentForCurrentThread(environment);
 
-    // Let the appserver know that we're up and running.
-    setPendingStartCloudDebugger(upResponse);
-
     // Start counting CPU cycles used by this thread.
     timer.start();
 
@@ -397,11 +370,6 @@ public class RequestManager implements RequestThreadManager {
     for (Thread thread : getActiveThreads(requestToken)) {
       logger.atWarning().log("Interrupting %s", thread);
       thread.interrupt();
-    }
-
-    // Send any pending breakpoint updates from Cloud Debugger.
-    if (enableCloudDebugger.get() && cloudDebuggerAgent.hasBreakpointUpdates()) {
-      setPendingCloudDebuggerBreakpointUpdates(requestToken.getUpResponse());
     }
 
     // Now wait for any async API calls and all request threads to complete.
@@ -621,26 +589,6 @@ public class RequestManager implements RequestThreadManager {
       }
     }
 
-  }
-
-  private void setPendingStartCloudDebugger(MutableUpResponse upResponse) {
-    if (!enableCloudDebugger.get()) {
-      return;
-    }
-
-    // First time ever we need to set "DebugletStarted" flag. This will trigger
-    // debuggee initialization sequence on AppServer.
-    if (debugletStartNotified.compareAndSet(false, true)) {
-      upResponse.setPendingCloudDebuggerActionDebuggeeRegistration(true);
-    }
-  }
-
-  private void setPendingCloudDebuggerBreakpointUpdates(MutableUpResponse upResponse) {
-    if (!enableCloudDebugger.get()) {
-      return;
-    }
-
-    upResponse.setPendingCloudDebuggerActionBreakpointUpdates(true);
   }
 
   private String threadDump(Collection<Thread> threads, String prefix) {

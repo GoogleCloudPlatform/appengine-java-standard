@@ -32,9 +32,6 @@ import static org.mockito.Mockito.when;
 import com.google.apphosting.base.protos.AppinfoPb;
 import com.google.apphosting.base.protos.AppinfoPb.AppInfo;
 import com.google.apphosting.base.protos.ClonePb.CloneSettings;
-import com.google.apphosting.base.protos.ClonePb.CloudDebuggerBreakpoints;
-import com.google.apphosting.base.protos.ClonePb.DebuggeeInfoRequest;
-import com.google.apphosting.base.protos.ClonePb.DebuggeeInfoResponse;
 import com.google.apphosting.base.protos.ClonePb.PerformanceData;
 import com.google.apphosting.base.protos.Codes.Code;
 import com.google.apphosting.base.protos.EmptyMessage;
@@ -830,11 +827,6 @@ public abstract class AbstractRpcCompatibilityTest {
           .put(
               DeadlineInfo.class,
               DeadlineInfo.newBuilder().setSecurityTicket("tickety boo").setHard(true).build())
-          .put(CloudDebuggerBreakpoints.class, makeCloudDebuggerBreakpoints())
-          .put(
-              DebuggeeInfoRequest.class,
-              DebuggeeInfoRequest.newBuilder().setAppVersionId("app/1.1").build())
-          .put(DebuggeeInfoResponse.class, DebuggeeInfoResponse.getDefaultInstance())
           .build();
 
   private static <T> T implementAsUnsupported(Class<T> interfaceToImplement) {
@@ -864,12 +856,6 @@ public abstract class AbstractRpcCompatibilityTest {
     return PerformanceData.newBuilder()
         .addEntries(
             PerformanceData.Entry.newBuilder().setPayload(ByteString.copyFrom("payload", UTF_8)))
-        .build();
-  }
-
-  private static CloudDebuggerBreakpoints makeCloudDebuggerBreakpoints() {
-    return CloudDebuggerBreakpoints.newBuilder()
-        .addBreakpointData(ByteString.copyFrom("breakpoint", UTF_8))
         .build();
   }
 

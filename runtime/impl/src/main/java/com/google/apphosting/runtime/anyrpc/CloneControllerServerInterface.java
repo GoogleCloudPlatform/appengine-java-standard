@@ -17,8 +17,6 @@
 package com.google.apphosting.runtime.anyrpc;
 
 import com.google.apphosting.base.protos.ClonePb.CloneSettings;
-import com.google.apphosting.base.protos.ClonePb.CloudDebuggerBreakpoints;
-import com.google.apphosting.base.protos.ClonePb.DebuggeeInfoRequest;
 import com.google.apphosting.base.protos.EmptyMessage;
 import com.google.apphosting.base.protos.ModelClonePb.DeadlineInfo;
 import com.google.apphosting.base.protos.ModelClonePb.PerformanceDataRequest;
@@ -37,8 +35,4 @@ public interface CloneControllerServerInterface {
   void sendDeadline(AnyRpcServerContext ctx, DeadlineInfo req);
 
   void getPerformanceData(AnyRpcServerContext ctx, PerformanceDataRequest req);
-
-  void updateActiveBreakpoints(AnyRpcServerContext ctx, CloudDebuggerBreakpoints req);
-
-  void getDebuggeeInfo(AnyRpcServerContext ctx, DebuggeeInfoRequest req);
 }

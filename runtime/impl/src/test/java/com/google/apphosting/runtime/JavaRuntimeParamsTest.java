@@ -278,7 +278,6 @@ public class JavaRuntimeParamsTest {
     // Skipped deprecated params.
     assertThat(params.getInterruptThreadsFirstOnSoftDeadline()).isFalse();
     assertThat(params.getEnableHotspotPerformanceMetrics()).isFalse();
-    assertThat(params.getEnableCloudDebugger()).isFalse();
     assertThat(params.getEnableCloudCpuProfiler()).isFalse();
     assertThat(params.getEnableCloudHeapProfiler()).isFalse();
     assertThat(params.getUrlfetchDeriveResponseMessage()).isTrue();

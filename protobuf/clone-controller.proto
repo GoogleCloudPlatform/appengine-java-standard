@@ -55,12 +55,4 @@ service CloneController {
   // Deprecated.
   rpc GetPerformanceData(PerformanceDataRequest)
       returns (java.apphosting.PerformanceData) {}
-
-  // Updates a list of Cloud Debugger breakpoints on a clone.
-  rpc UpdateActiveBreakpoints(java.apphosting.CloudDebuggerBreakpoints)
-      returns (java.apphosting.CloudDebuggerBreakpoints) {}
-
-  // Gets source context of the clone app.
-  rpc GetDebuggeeInfo(java.apphosting.DebuggeeInfoRequest)
-      returns (java.apphosting.DebuggeeInfoResponse) {}
 }

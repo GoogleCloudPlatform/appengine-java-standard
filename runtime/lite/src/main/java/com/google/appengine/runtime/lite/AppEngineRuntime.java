@@ -45,6 +45,7 @@ import java.time.Duration;
 import java.util.EventListener;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
 import org.eclipse.jetty.server.Connector;
@@ -261,7 +262,7 @@ public class AppEngineRuntime {
       System.setProperty("user.timezone", "UTC");
       if (System.getProperty(SystemProperty.environment.key()) == null) {
         String val;
-        if ("localdev".equals(System.getenv("GAE_ENV"))) {
+        if (Objects.equals(System.getenv("GAE_ENV"), "localdev")) {
           // GAE_ENV=localdev is the documented flag for emulated environments, and best matches
           // legacy expectations of application test code written for DevAppServer (v1) and the
           // AppLauncher.
@@ -344,15 +345,10 @@ public class AppEngineRuntime {
         .setSoftDeadlineDelay(SOFT_DEADLINE_MS)
         .setHardDeadlineDelay(HARD_DEADLINE_MS)
         .setDisableDeadlineTimers(true)
-        .setRuntimeLogSink(Optional.empty())
         .setApiProxyImpl(apiProxyImpl)
         .setMaxOutstandingApiRpcs(CLONE_MAX_OUTSTANDING_API_RPCS)
-        .setThreadStopTerminatesClone(true)
         .setInterruptFirstOnSoftDeadline(true)
-        .setCloudDebuggerAgent(null)
-        .setEnableCloudDebugger(false)
-        .setCyclesPerSecond(CYCLES_PER_SECOND)
-        .setWaitForDaemonRequestThreads(false);
+        .setCyclesPerSecond(CYCLES_PER_SECOND);
   }
 
   static AppVersion createAppVersion(
