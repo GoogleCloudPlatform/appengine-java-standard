@@ -69,10 +69,7 @@ public class CoreSizeLimitHandler extends Handler.Wrapper {
         if (content != null && content.remaining() > 0) {
           _read += content.remaining();
           if (_requestLimit >= 0 && _read > _requestLimit) {
-
-            // TODO: request fail is not even implemented. How do we fail the content source.
             request.fail(new BadMessageException(413, "Request body is too large: " + _read + ">" + _requestLimit));
-
             return null;
           }
         }

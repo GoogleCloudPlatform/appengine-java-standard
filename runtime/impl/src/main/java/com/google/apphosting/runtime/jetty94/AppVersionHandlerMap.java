@@ -150,33 +150,6 @@ public class AppVersionHandlerMap extends AbstractHandlerContainer {
     return handlerMap.values().toArray(new Handler[0]);
   }
 
-  /**
-   * Not supported.
-   *
-   * @throws UnsupportedOperationException
-   */
-  public void setHandlers(Handler[] handlers) {
-    throw new UnsupportedOperationException();
-  }
-
-  /**
-   * Not supported.
-   *
-   * @throws UnsupportedOperationException
-   */
-  public void addHandler(Handler handler) {
-    throw new UnsupportedOperationException();
-  }
-
-  /**
-   * Not supported.
-   *
-   * @throws UnsupportedOperationException
-   */
-  public void removeHandler(Handler handler) {
-    throw new UnsupportedOperationException();
-  }
-
   @Override
   protected void expandChildren(List<Handler> list, Class<?> byClass) {
     for (Handler handler : getHandlers()) {
