@@ -16,13 +16,12 @@
 
 package com.google.apphosting.runtime.jetty9;
 
-import static com.google.common.truth.Truth.assertThat;
-
-import org.apache.http.Header;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.util.EntityUtils;
+import org.eclipse.jetty.client.ContentResponse;
+import org.eclipse.jetty.client.Request;
+import org.eclipse.jetty.client.Response;
+import org.eclipse.jetty.client.StringRequestContent;
+import org.eclipse.jetty.util.Utf8StringBuilder;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -30,27 +29,58 @@ import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.MatcherAssert.assertThat;
+
 @RunWith(JUnit4.class)
 public class SizeLimitHandlerTest extends JavaRuntimeViaHttpBase {
 
+  private static final int MAX_SIZE = 32 * 1024 * 1024;
   @Rule public TemporaryFolder temp = new TemporaryFolder();
+  private final org.eclipse.jetty.client.HttpClient httpClient = new org.eclipse.jetty.client.HttpClient();
 
   @Before
-  public void copyAppToTemp() throws Exception {
-    copyAppToDir("sizelimithandlerapp", temp.getRoot().toPath());
+  public void before() throws Exception {
+    copyAppToDir("sizedresponseapp", temp.getRoot().toPath());
+    httpClient.start();
+  }
+
+  @After
+  public void after() throws Exception {
+    httpClient.stop();
   }
 
   @Test
-  public void testSizeLimitHandler() throws Exception {
+  public void testResponseBody() throws Exception {
     try (RuntimeContext<?> runtime = runtimeContext()) {
-      HttpClient httpClient = runtime.getHttpClient();
-      String url = runtime.jettyUrl("/?size=10");
-      HttpGet get = new HttpGet(url);
-      HttpResponse response = httpClient.execute(get);
+      String url = runtime.jettyUrl("/?size=" + (MAX_SIZE + 1));
+      ContentResponse response = httpClient.GET(url);
 
-      assertThat(response.getStatusLine().getStatusCode()).isEqualTo(RESPONSE_200);
-      String responseContent = EntityUtils.toString(response.getEntity());
-      assertThat(responseContent).isEqualTo("cookieTestServletContent");
+      String responseContent = response.getContentAsString();
+      assertThat(response.getStatus(), equalTo(500));
+      assertThat(responseContent, containsString("Response body is too large"));
+    }
+  }
+
+  @Test
+  public void testRequestBody() throws Exception {
+    try (RuntimeContext<?> runtime = runtimeContext()) {
+      String url = runtime.jettyUrl("/");
+
+      CompletableFuture<Response> responseFuture = new CompletableFuture<>();
+      Utf8StringBuilder responseContent = new Utf8StringBuilder();
+      httpClient.POST(url)
+              .body(getContent(MAX_SIZE + 1))
+              .onResponseContent((response, content) -> responseContent.append(content))
+              .send(result -> responseFuture.complete(result.getResponse()));
+
+      Response response = responseFuture.get(5, TimeUnit.SECONDS);
+      assertThat(response.getStatus(), equalTo(413));
+      assertThat(responseContent.toCompleteString(), containsString("Request body is too large"));
     }
   }
 
@@ -58,5 +88,15 @@ public class SizeLimitHandlerTest extends JavaRuntimeViaHttpBase {
     RuntimeContext.Config<?> config =
             RuntimeContext.Config.builder().setApplicationPath(temp.getRoot().toString()).build();
     return RuntimeContext.create(config);
+  }
+
+  public static Request.Content getContent(int size)
+  {
+    StringBuilder stringBuilder = new StringBuilder(size);
+    for (int i = 0; i < size; i++)
+    {
+      stringBuilder.append('x');
+    }
+    return new StringRequestContent(stringBuilder.toString());
   }
 }

@@ -31,33 +31,27 @@ import com.google.common.flogger.GoogleLogger;
 import com.google.common.primitives.Ints;
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.protobuf.MessageLite;
-import java.io.IOException;
-import java.time.Duration;
-import java.util.Map;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.logging.Level;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.eclipse.jetty.ee8.nested.AbstractHandler;
 import org.eclipse.jetty.ee8.nested.ContextHandler;
 import org.eclipse.jetty.http.CookieCompliance;
 import org.eclipse.jetty.http.HttpCompliance;
 import org.eclipse.jetty.http.UriCompliance;
 import org.eclipse.jetty.server.Connector;
-import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.HttpConnectionFactory;
-import org.eclipse.jetty.server.Request;
-import org.eclipse.jetty.server.Response;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
-import org.eclipse.jetty.server.Handler.Abstract;
-import org.eclipse.jetty.server.handler.ConnectHandler;
 import org.eclipse.jetty.server.handler.gzip.GzipHandler;
-import org.eclipse.jetty.util.Callback;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.time.Duration;
+import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.logging.Level;
 
 /**
  * A Jetty web server handling HTTP requests on a given port and forwarding them via gRPC to the
@@ -101,7 +95,7 @@ public class JettyHttpProxy {
   }
 
   public static Server newServer(
-      ServletEngineAdapter.Config runtimeOptions, ForwardingHandler handler) {
+      ServletEngineAdapter.Config runtimeOptions, ForwardingHandler forwardingHandler) {
     Server server = new Server();
 
     ServerConnector c = new JettyServerConnectorWithReusePort(server, runtimeOptions.jettyReusePort());
@@ -128,22 +122,16 @@ public class JettyHttpProxy {
     config.setSendXPoweredBy(false);
 
     // Wrap the ee8 Forwarding Handler as a Core Handler.
-    ContextHandler next = new ContextHandler("/");
-    next.setHandler(handler);
+    ContextHandler handler = new ContextHandler("/");
+    handler.setHandler(forwardingHandler);
 
-    // TODO: fix sizeLimitHandler
-    // SizeLimitHandler sizeLimitHandler = new SizeLimitHandler(MAX_REQUEST_SIZE, -1);
-    // sizeLimitHandler.setHandler(handler);
+    CoreSizeLimitHandler sizeLimitHandler = new CoreSizeLimitHandler(MAX_REQUEST_SIZE, -1);
+    sizeLimitHandler.setHandler(handler);
 
     GzipHandler gzip = new GzipHandler();
     gzip.setInflateBufferSize(8 * 1024);
-    gzip.setHandler(next);
-    // gzip.setExcludedAgentPatterns();
-    // gzip.setHandler(sizeLimitHandler);
-
-    // Include all methods for the GzipHandler.
-    gzip.setIncludedMethods();
-
+    gzip.setHandler(sizeLimitHandler);
+    gzip.setIncludedMethods(); // Include all methods for the GzipHandler.
     server.setHandler(gzip);
 
     logger.atInfo().log("Starting Jetty http server for Java runtime proxy.");
@@ -258,9 +246,9 @@ public class JettyHttpProxy {
       try {
         UPResponse upResponse = getUpResponse(upRequest);
         upRequestTranslator.translateResponse(baseRequest.getResponse(), upResponse);
-      } catch (Exception ex) {
+      } catch (Throwable t) {
         UPRequestTranslator.populateErrorResponse(
-            response, "Can't make request of app: " + Throwables.getStackTraceAsString(ex));
+            response, "Can't make request of app: " + Throwables.getStackTraceAsString(t));
       }
     }
 

@@ -16,13 +16,17 @@
 
 package com.google.apphosting.runtime.jetty9.sizedresponseapp;
 
+import javax.servlet.ServletException;
+import javax.servlet.ServletInputStream;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintWriter;
 
 @WebServlet(urlPatterns = "/*")
@@ -38,5 +42,20 @@ public class SizedResponseServlet extends HttpServlet {
     {
       outputStream.write((byte)'x');
     }
+  }
+
+  @Override
+  protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+    int length = 0;
+    ServletInputStream inputStream = req.getInputStream();
+    while (true)
+    {
+      int read = inputStream.read();
+      if (read < 0)
+        break;
+      length++;
+    }
+
+    resp.getWriter().print("length=" + length);
   }
 }

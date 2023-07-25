@@ -112,7 +112,7 @@ public class HttpApiServer implements Closeable {
     contextHandler.setContextPath("/");
     contextHandler.setServletHandler(servletHandler);
 
-    shutdownHandler = new ShutdownHandler(null, "stop", false);
+    shutdownHandler = new ShutdownHandler(null, null, "stop", false);
     shutdownHandler.setHandler(contextHandler);
     server.setHandler(shutdownHandler);
   }

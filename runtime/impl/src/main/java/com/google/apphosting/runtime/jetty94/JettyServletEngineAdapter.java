@@ -16,8 +16,6 @@
 
 package com.google.apphosting.runtime.jetty94;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-
 import com.google.apphosting.base.AppVersionKey;
 import com.google.apphosting.base.protos.AppinfoPb;
 import com.google.apphosting.base.protos.RuntimePb.UPRequest;
@@ -25,27 +23,29 @@ import com.google.apphosting.base.protos.RuntimePb.UPResponse;
 import com.google.apphosting.runtime.AppVersion;
 import com.google.apphosting.runtime.MutableUpResponse;
 import com.google.apphosting.runtime.ServletEngineAdapter;
-import com.google.apphosting.runtime.jetty9.JettyConstants;
 import com.google.apphosting.runtime.delegate.DelegateConnector;
 import com.google.apphosting.runtime.delegate.impl.DelegateRpcExchange;
+import com.google.apphosting.runtime.jetty9.JettyConstants;
 import com.google.apphosting.utils.config.AppEngineConfigException;
 import com.google.apphosting.utils.config.AppYaml;
 import com.google.common.flogger.GoogleLogger;
+import org.eclipse.jetty.ee8.nested.ContextHandler;
+import org.eclipse.jetty.http.CookieCompliance;
+import org.eclipse.jetty.http.UriCompliance;
+import org.eclipse.jetty.server.HttpConfiguration;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.util.thread.QueuedThreadPool;
+
+import javax.servlet.ServletException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Optional;
-import javax.servlet.ServletException;
+import java.util.concurrent.ExecutionException;
 
-import org.eclipse.jetty.ee8.nested.ContextHandler;
-import org.eclipse.jetty.http.CookieCompliance;
-import org.eclipse.jetty.http.UriCompliance;
-import org.eclipse.jetty.server.Connector;
-import org.eclipse.jetty.server.HttpConfiguration;
-import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.util.thread.QueuedThreadPool;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * This is an implementation of ServletEngineAdapter that uses the third-party Jetty servlet engine.
@@ -119,18 +119,18 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
       }
     };
 
-    server.setConnectors(new Connector[] {rpcConnector});
+    server.addConnector(rpcConnector);
     AppVersionHandlerFactory appVersionHandlerFactory =
-        new AppVersionHandlerFactory(
-            server, serverInfo, contextFactory, /*useJettyErrorPageHandler=*/ false);
+        new AppVersionHandlerFactory(server, serverInfo, contextFactory, /*useJettyErrorPageHandler=*/ false);
     appVersionHandlerMap = new AppVersionHandlerMap(appVersionHandlerFactory);
 
     if (!"java8".equals(System.getenv("GAE_RUNTIME"))) {
-      SizeLimitHandler sizeLimitHandler = new SizeLimitHandler(-1, MAX_RESPONSE_SIZE);
-      sizeLimitHandler.setHandler(appVersionHandlerMap);
       ContextHandler contextHandler = new ContextHandler("/");
-      contextHandler.setHandler(sizeLimitHandler);
-      server.setHandler(contextHandler);
+      contextHandler.setHandler(appVersionHandlerMap);
+
+      CoreSizeLimitHandler sizeLimitHandler = new CoreSizeLimitHandler(-1, MAX_RESPONSE_SIZE);
+      sizeLimitHandler.setHandler(contextHandler);
+      server.setHandler(sizeLimitHandler);
     } else {
       ContextHandler contextHandler = new ContextHandler("/");
       contextHandler.setHandler(appVersionHandlerMap);
@@ -222,9 +222,13 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
     try {
       rpcExchange.awaitResponse();
     } catch (Throwable t) {
-      // TODO: review this error handling.
+      Throwable error = t;
+      if (error instanceof ExecutionException) {
+        error = error.getCause();
+      }
+
       upResponse.setError(UPResponse.ERROR.UNEXPECTED_ERROR_VALUE);
-      upResponse.setErrorMessage("Unexpected Error: " + t);
+      upResponse.setErrorMessage("Unexpected Error: " + error);
     }
   }
 }
