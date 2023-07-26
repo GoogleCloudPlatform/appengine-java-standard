@@ -31,7 +31,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        java: [17, 20]
+        java: [20]
         jdk: [temurin]
       fail-fast: false
 
@@ -51,4 +51,10 @@ jobs:
       - name: Build with Maven
         run: |
           ./mvnw clean install -B -q
+          cp runtime/deployment/target/runtime-deployment*.tar.gz runtime-deployment.tar.gz
           echo "done"
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: runtime-deployment-jdk${{matrix.java}}.tar.gz
+          path: runtime-deployment.tar.gz
