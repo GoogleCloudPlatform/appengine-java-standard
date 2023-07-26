@@ -22,6 +22,32 @@
   <version>2.0.17-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>AppEngine :: Parent project</name>
+
+  <repositories>
+    <repository>
+      <id>jetty-staging</id>
+      <url>https://oss.sonatype.org/content/groups/jetty-with-staging</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </repository>
+  </repositories>
+  <pluginRepositories>
+    <pluginRepository>
+      <id>jetty-staging</id>
+      <url>https://oss.sonatype.org/content/groups/jetty-with-staging</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </pluginRepository>
+  </pluginRepositories>
+
   <modules>
     <module>external/geronimo_javamail</module>
     <module>protobuf</module>
