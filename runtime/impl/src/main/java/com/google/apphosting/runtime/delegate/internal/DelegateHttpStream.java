@@ -55,12 +55,6 @@ public class DelegateHttpStream implements HttpStream
     }
 
     @Override
-    public long getNanoTime()
-    {
-        return _nanoTimestamp;
-    }
-
-    @Override
     public Content.Chunk read()
     {
         return _endpoint.getDelegateExchange().read();
@@ -102,6 +96,15 @@ public class DelegateHttpStream implements HttpStream
     public void push(MetaData.Request request)
     {
         throw new UnsupportedOperationException("push not supported");
+    }
+
+    @Override
+    public long getIdleTimeout() {
+        return -1;
+    }
+
+    @Override
+    public void setIdleTimeout(long idleTimeoutMs) {
     }
 
     @Override

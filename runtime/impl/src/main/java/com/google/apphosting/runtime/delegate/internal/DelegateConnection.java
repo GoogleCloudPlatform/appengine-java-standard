@@ -34,6 +34,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.EventListener;
+import java.util.concurrent.TimeoutException;
 
 public class DelegateConnection implements Connection
 {
@@ -89,8 +90,7 @@ public class DelegateConnection implements Connection
     }
 
     @Override
-    public boolean onIdleExpired()
-    {
+    public boolean onIdleExpired(TimeoutException timeoutException) {
         return false;
     }
 
