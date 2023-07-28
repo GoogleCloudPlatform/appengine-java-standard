@@ -19,7 +19,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.google.appengine</groupId>
   <artifactId>parent</artifactId>
-  <version>2.0.17-SNAPSHOT</version>
+  <version>3.0.0-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>AppEngine :: Parent project</name>
 
@@ -74,8 +74,8 @@
   </modules>
 
   <properties>
-    <maven.compiler.source>1.8</maven.compiler.source>
-    <maven.compiler.target>1.8</maven.compiler.target>
+    <maven.compiler.source>1.11</maven.compiler.source>
+    <maven.compiler.target>1.11</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <jetty.version>12.0.0.beta4</jetty.version>
     <distributionManagement.snapshot.url>https://oss.sonatype.org/content/repositories/google-snapshots/</distributionManagement.snapshot.url>
@@ -141,12 +141,12 @@
   </distributionManagement>
   <profiles>
       <profile>
-          <id>jdk9+</id>
+          <id>jdk11+</id>
           <activation>
-              <jdk>[9,)</jdk>
+              <jdk>[11,)</jdk>
           </activation>
           <properties>
-              <maven.compiler.release>8</maven.compiler.release>
+              <maven.compiler.release>11</maven.compiler.release>
           </properties>
       </profile>
       <profile>
@@ -207,32 +207,6 @@
                       <nexusUrl>https://oss.sonatype.org/</nexusUrl>
                       <autoReleaseAfterClose>true</autoReleaseAfterClose>
                     </configuration>
-                  </plugin>
-              </plugins>
-          </build>
-      </profile>
-      <profile>
-          <id>surefire-java8</id>
-          <activation>
-              <jdk>1.8</jdk>
-          </activation>
-          <build>
-              <plugins>
-                  <plugin>
-                      <groupId>org.apache.maven.plugins</groupId>
-                      <artifactId>maven-surefire-plugin</artifactId>
-                      <version>3.1.0</version>
-                      <configuration>
-                          <systemPropertyVariables>
-                              <appengine.runtime.dir>../deployment/target/runtime-deployment-${project.version}</appengine.runtime.dir>
-                              <com.google.apphosting.runtime.jetty94.LEGACY_MODE>true</com.google.apphosting.runtime.jetty94.LEGACY_MODE>
-                          </systemPropertyVariables>
-                          <!-- Most of these tests were developed with Google's build system, which runs each test
-                          in its own process. So they don't always clean up completely after themselves, for
-                          example leaving threads running. With reuseForks=false, we get one process per test
-                          from Maven too. -->
-                          <reuseForks>false</reuseForks>
-                      </configuration>
                   </plugin>
               </plugins>
           </build>
