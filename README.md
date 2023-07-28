@@ -17,7 +17,7 @@
 [![Maven][maven-version-image]][maven-version-link]
 [![Code of conduct](https://img.shields.io/badge/%E2%9D%A4-code%20of%20conduct-blue.svg)](https://github.com/GoogleCloudPlatform/appengine-java-standard/blob/main/CODE_OF_CONDUCT.md)
 
-# Google App Engine Standard Environment Source Code for Java 8, Java 11 and Java 17.
+# Google App Engine Standard Environment Source Code for Java 21.
 
 
 This repository contains the Java Source Code for [Google App Engine
@@ -27,20 +27,20 @@ standard environment][ae-docs], the production runtime, the AppEngine APIs, and 
 
 ## Prerequisites
 
-### Use a JDK8 environment, so it can build the Java8 GAE runtime.
+### Use a JDK20 or above environment.
 
-[jdk8](https://adoptium.net/), but using a JDK11 or JDK17 is also possible.
+[jdk20](https://adoptium.net/), but using a JDK11 or JDK17 is also possible.
 
-The shared code base is also used for GAE Java 11 and Java 17 build and test targets, using GitHub actions:
+The shared code base is also used for GAE Java 21 build and test targets, using GitHub actions:
 
-- [Java 8/11/17 Continuous Integration](https://github.com/GoogleCloudPlatform/appengine-java-standard/actions/workflows/maven.yml)
+- [Java 21 Continuous Integration](https://github.com/GoogleCloudPlatform/appengine-java-standard/actions/workflows/maven.yml)
 
 ## Releases
 
 This repository is the open source mirror of the Google App Engine Java source code that was used to produce Maven artifacts and runtime jars.
 On Maven Central, the released artifacts from the internal source repository are using the versions like 1.9.xx.
-The open source release mechanism used with this GitHub repository is using the version starting at 2.0.x.
-Soon we will stop entirely pushing internal 1.9.xx artifacts and encourage all App Engine customers to use the new artifacts built from the GitHub project.
+The open source release mechanism used with this GitHub repository is using the version starting at 2.0.x for Java8, 11, 17 and Jetty 9.4.
+The open source release mechanism used with this GitHub repository is using the version starting at 3.0.x for Java21 and Jetty 12.
 
 
 ## Modules
@@ -69,7 +69,7 @@ Source code for all public APIs for com.google.appengine.api.* packages.
         <dependency>
             <groupId>com.google.appengine</groupId>
             <artifactId>appengine-api-1.0-sdk</artifactId>
-            <version>2.0.16</version><!-- or later-->
+            <version>3.0.0</version><!-- or later-->
         </dependency>
         <dependency>
           <groupId>javax.servlet</groupId>
@@ -80,25 +80,16 @@ Source code for all public APIs for com.google.appengine.api.* packages.
         ...
     ```
 
-*  Java 17 appengine-web.xml
+*  Java 21 appengine-web.xml
 
     ```
     <?xml version="1.0" encoding="utf-8"?>
     <appengine-web-app xmlns="http://appengine.google.com/ns/1.0">
-      <runtime>java17</runtime>
+      <runtime>java21</runtime>
       <app-engine-apis>true</app-engine-apis>
     </appengine-web-app>
     ```
 
-*  Java 11  appengine-web.xml
-
-    ```
-    <?xml version="1.0" encoding="utf-8"?>
-    <appengine-web-app xmlns="http://appengine.google.com/ns/1.0">
-      <runtime>java11</runtime>
-      <app-engine-apis>true</app-engine-apis>
-    </appengine-web-app>
-    ```
 
 ### App Engine Java Remote APIs
 
@@ -131,7 +122,7 @@ Source code for remote APIs for App Engine.
     <dependency>
        <groupId>com.google.appengine</groupId>
        <artifactId>appengine-remote-api</artifactId>
-       <version>2.0.16</version><!-- Or later-->
+       <version>3.0.0</version><!-- Or later-->
     </dependency>
 ```
 
@@ -154,11 +145,11 @@ We moved `com.google.appengine.api.memcache.stdimpl` and its old dependency
     <dependency>
        <groupId>com.google.appengine</groupId>
        <artifactId>appengine-api-legacy.jar/artifactId>
-       <version>2.0.16</version><!-- Or later-->
+       <version>3.0.0</version><!-- Or later-->
     </dependency>
 ```
 
-###  Local Unit Testing for Java 8, 11, 17
+###  Local Unit Testing for Java 21
 
 - [Code Sample](https://github.com/GoogleCloudPlatform/java-docs-samples/tree/main/unittests)
 - [Latest javadoc.io Javadocs from this repository](https://javadoc.io/doc/com.google.appengine/appengine-testing)
@@ -169,19 +160,19 @@ We moved `com.google.appengine.api.memcache.stdimpl` and its old dependency
     <dependency>
       <groupId>com.google.appengine</groupId>
       <artifactId>appengine-testing</artifactId>
-       <version>2.0.16</version><!-- Or later-->
+       <version>3.0.0</version><!-- Or later-->
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>com.google.appengine</groupId>
       <artifactId>appengine-api-stubs</artifactId>
-       <version>2.0.16</version><!-- Or later-->
+       <version>3.0.0</version><!-- Or later-->
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>com.google.appengine</groupId>
       <artifactId>appengine-tools-sdk</artifactId>
-       <version>2.0.16</version><!-- Or later-->
+       <version>3.0.3</version><!-- Or later-->
       <scope>test</scope>
     </dependency>
 ```
@@ -219,9 +210,9 @@ Source code for the App Engine production application server and utilities. It i
 - [End-to-End tests](https://github.com/GoogleCloudPlatform/appengine-java-standard/tree/master/runtime/test)
 - [Source Code for runtime utilities](https://github.com/GoogleCloudPlatform/appengine-java-standard/tree/master/runtime/util)
 
-## Default entrypoint used by Java11 and Java17
+## Default entrypoint used by Java21
 
-The Java 11, Java 17 runtimes can benefit from extra user configuration when starting the JVM for web apps.
+The Java 21 runtime can benefit from extra user configuration when starting the JVM for web apps.
 
 The default entrypoint used to boot the JVM is generated by App Engine Buildpacks.
 Essentially, it is equivalent to define this entrypoint in the `appengine-web.xml` file. For example:
@@ -254,7 +245,6 @@ If not explicitly set, `JAVA_OPTS` is defaulted to:
 
    ```
    JAVA_OPTS:=-showversion \
-              ${DBG_AGENT} \
               ${PROFILER_AGENT} \
               ${JAVA_HEAP_OPTS} \
               ${JAVA_GC_OPTS} \
