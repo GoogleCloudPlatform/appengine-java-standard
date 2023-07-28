@@ -16,9 +16,6 @@
 
 package com.google.apphosting.runtime.jetty94;
 
-import static com.google.common.base.StandardSystemProperty.JAVA_IO_TMPDIR;
-import static java.nio.charset.StandardCharsets.UTF_8;
-
 import com.google.apphosting.api.ApiProxy;
 import com.google.apphosting.api.ApiProxy.LogRecord;
 import com.google.apphosting.runtime.jetty9.AppEngineAuthentication;
@@ -31,6 +28,25 @@ import com.google.apphosting.utils.servlet.SessionCleanupServlet;
 import com.google.apphosting.utils.servlet.SnapshotServlet;
 import com.google.apphosting.utils.servlet.WarmupServlet;
 import com.google.common.collect.ImmutableSet;
+import org.eclipse.jetty.ee8.nested.ServletConstraint;
+import org.eclipse.jetty.ee8.security.ConstraintMapping;
+import org.eclipse.jetty.ee8.security.ConstraintSecurityHandler;
+import org.eclipse.jetty.ee8.servlet.FilterHolder;
+import org.eclipse.jetty.ee8.servlet.FilterMapping;
+import org.eclipse.jetty.ee8.servlet.Holder;
+import org.eclipse.jetty.ee8.servlet.ListenerHolder;
+import org.eclipse.jetty.ee8.servlet.ServletHandler;
+import org.eclipse.jetty.ee8.servlet.ServletHolder;
+import org.eclipse.jetty.ee8.servlet.ServletMapping;
+import org.eclipse.jetty.ee8.webapp.WebAppContext;
+import org.eclipse.jetty.util.resource.Resource;
+import org.eclipse.jetty.util.resource.ResourceFactory;
+
+import javax.servlet.Filter;
+import javax.servlet.Servlet;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -44,32 +60,10 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.ExecutionException;
-import javax.servlet.Filter;
-import javax.servlet.Servlet;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
-import org.eclipse.jetty.ee8.nested.HttpChannel;
-import org.eclipse.jetty.ee8.nested.Request;
-import org.eclipse.jetty.ee8.nested.ServletConstraint;
-import org.eclipse.jetty.ee8.security.ConstraintMapping;
-import org.eclipse.jetty.ee8.security.ConstraintSecurityHandler;
-import org.eclipse.jetty.ee8.servlet.FilterHolder;
-import org.eclipse.jetty.ee8.servlet.FilterMapping;
-import org.eclipse.jetty.ee8.servlet.Holder;
-import org.eclipse.jetty.ee8.servlet.ListenerHolder;
-import org.eclipse.jetty.ee8.servlet.ServletHandler;
-import org.eclipse.jetty.ee8.servlet.ServletHolder;
-import org.eclipse.jetty.ee8.servlet.ServletMapping;
-import org.eclipse.jetty.server.Response;
-import org.eclipse.jetty.server.handler.ContextResponse;
-import org.eclipse.jetty.util.resource.Resource;
-import org.eclipse.jetty.util.resource.ResourceFactory;
-import org.eclipse.jetty.ee8.webapp.WebAppContext;
+import static com.google.common.base.StandardSystemProperty.JAVA_IO_TMPDIR;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * {@code AppEngineWebAppContext} is a customization of Jetty's {@link WebAppContext} that is aware
@@ -301,25 +295,7 @@ public class AppEngineWebAppContext extends WebAppContext {
           response = new IgnoreContentLengthResponseWrapper(response);
         }
 
-        // TODO: The Jetty implementation should be doing this for us.
-        HttpChannel httpChannel = (HttpChannel)request.getAttribute(HttpChannel.class.getName());
-        org.eclipse.jetty.server.Request coreRequest = httpChannel.getCoreRequest();
-        HttpServletResponse capturedResponse = response;
-        CompletableFuture<Void> completableFuture = new CompletableFuture<>();
-        getCoreContextHandler().getContext().run(() -> {
-          try {
-            super.doHandle(target, baseRequest, request, capturedResponse);
-            completableFuture.complete(null);
-          }
-          catch (IOException | ServletException e) {
-            completableFuture.completeExceptionally(e);
-          }
-        }, coreRequest);
-        completableFuture.get();
-      } catch (ExecutionException e) {
-        throw new ServletException(e.getCause());
-      } catch (InterruptedException e) {
-        throw new ServletException(e);
+        super.doHandle(target, baseRequest, request, response);
       } finally {
         // TODO: this finally approach is ok until async request handling is supported
         while (iter.hasPrevious()) {

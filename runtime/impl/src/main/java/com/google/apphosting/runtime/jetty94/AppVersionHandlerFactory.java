@@ -16,6 +16,7 @@
 
 package com.google.apphosting.runtime.jetty94;
 
+import com.google.apphosting.api.ApiProxy;
 import com.google.apphosting.base.AppVersionKey;
 import com.google.apphosting.runtime.AppVersion;
 import com.google.apphosting.runtime.SessionsConfig;
@@ -34,8 +35,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.jsp.JspFactory;
 import org.eclipse.jetty.ee8.annotations.AnnotationConfiguration;
+import org.eclipse.jetty.ee8.nested.ContextHandler;
 import org.eclipse.jetty.ee8.nested.Dispatcher;
 import org.eclipse.jetty.ee8.nested.Handler;
+import org.eclipse.jetty.ee8.webapp.WebAppClassLoader;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.ee8.servlet.ErrorPageErrorHandler;
@@ -43,6 +46,7 @@ import org.eclipse.jetty.ee8.webapp.FragmentConfiguration;
 import org.eclipse.jetty.ee8.webapp.MetaInfConfiguration;
 import org.eclipse.jetty.ee8.webapp.WebAppContext;
 import org.eclipse.jetty.ee8.webapp.WebXmlConfiguration;
+import org.eclipse.jetty.util.resource.Resource;
 
 /**
  * {@code AppVersionHandlerFactory} implements a {@code Handler} for a given {@code AppVersionKey}.
@@ -151,7 +155,28 @@ public class AppVersionHandlerFactory {
       context.getCoreContextHandler().setServer(server);
       context.setServer(server);
       context.setDefaultsDescriptor(WEB_DEFAULTS_XML);
-      context.setClassLoader(appVersion.getClassLoader());
+
+      // Make any add class or JAR a NOOP because the com.google.apphosting.runtime.ApplicationClassLoader
+      // already has these added, and we don't want the WebAppClassLoader re-adding them.
+      ClassLoader classLoader = new WebAppClassLoader(appVersion.getClassLoader(), context)
+      {
+        @Override
+        public void addClassPath(Resource resource) {
+          // NOOP
+        }
+
+        @Override
+        public void addClassPath(String classPathList) {
+          // NOOP
+        }
+
+        @Override
+        public void addJars(Resource libs) {
+          // NOOP
+        }
+      };
+
+      context.setClassLoader(classLoader);
       if (useJettyErrorPageHandler) {
         context.getErrorHandler().setShowStacks(false);
       } else {
@@ -176,16 +201,16 @@ public class AppVersionHandlerFactory {
       try {
         // Use the App Class loader to try to initialize the JSP machinery.
         // Not an issue if it fails: it means the app does not contain the JSP jars in WEB-INF/lib.
-        Class<?> klass = appVersion.getClassLoader().loadClass(TOMCAT_SIMPLE_INSTANCE_MANAGER);
+        Class<?> klass = classLoader.loadClass(TOMCAT_SIMPLE_INSTANCE_MANAGER);
         Object sim = klass.getConstructor().newInstance();
         context.getServletContext().setAttribute(TOMCAT_INSTANCE_MANAGER, sim);
         // Set JSP factory equivalent for:
         // JspFactory jspf = new JspFactoryImpl();
-        klass = appVersion.getClassLoader().loadClass(TOMCAT_JSP_FACTORY);
+        klass = classLoader.loadClass(TOMCAT_JSP_FACTORY);
         JspFactory jspf = (JspFactory) klass.getConstructor().newInstance();
         JspFactory.setDefaultFactory(jspf);
         Class.forName(
-            "org.apache.jasper.compiler.JspRuntimeContext", true, appVersion.getClassLoader());
+            "org.apache.jasper.compiler.JspRuntimeContext", true, classLoader);
       } catch (Throwable t) {
         // No big deal, there are no JSPs in the App since the jsp libraries are not inside the
         // web app classloader.
