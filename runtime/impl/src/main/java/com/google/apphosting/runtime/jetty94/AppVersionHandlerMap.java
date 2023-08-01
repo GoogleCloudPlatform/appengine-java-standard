@@ -55,7 +55,7 @@ public class AppVersionHandlerMap extends AbstractHandlerContainer {
   }
 
   public void addAppVersion(AppVersion appVersion) {
-    if (appVersion != null) {
+    if (this.appVersion != null) {
       throw new IllegalStateException("Already have an AppVersion " + this.appVersion);
     }
     this.appVersion = appVersion;
@@ -149,7 +149,7 @@ public class AppVersionHandlerMap extends AbstractHandlerContainer {
 
   @Override
   public Handler[] getHandlers() {
-    return new Handler[]{ handler };
+    return (handler == null) ? new Handler[0] : new Handler[]{ handler };
   }
 
   @Override
