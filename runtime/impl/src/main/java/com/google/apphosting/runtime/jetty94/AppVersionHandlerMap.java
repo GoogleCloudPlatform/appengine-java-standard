@@ -63,6 +63,14 @@ public class AppVersionHandlerMap extends AbstractHandlerContainer {
     appVersionMap.remove(appVersionKey);
   }
 
+  public int getNumAppVersions() {
+    return appVersionMap.size();
+  }
+
+  public String getAppVersions() {
+    return appVersionMap.keySet().toString();
+  }
+
   /**
    * Sets the {@link SessionStoreFactory} that will be used for generating the list of {@link
    * SessionStore SessionStores} that will be passed to {@link SessionManager} for apps for which
