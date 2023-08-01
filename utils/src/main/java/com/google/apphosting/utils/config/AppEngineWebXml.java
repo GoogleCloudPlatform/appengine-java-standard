@@ -342,7 +342,8 @@ public class AppEngineWebXml implements Cloneable {
     return getRuntime().equals("google")
         || getRuntime().equals("googlelegacy")
         || getRuntime().equals("java11")
-        || getRuntime().equals("java17");
+        || getRuntime().equals("java17")
+        || getRuntime().equals("java21");
   }
 
   public void setRuntime(String runtime) {
