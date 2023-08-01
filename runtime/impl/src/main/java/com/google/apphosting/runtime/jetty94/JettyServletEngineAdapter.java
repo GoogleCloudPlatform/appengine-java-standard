@@ -161,9 +161,6 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
 
   @Override
   public void addAppVersion(AppVersion appVersion) throws FileNotFoundException {
-
-    if (appVersionHandlerMap.getNumAppVersions() > 0)
-      throw new IllegalStateException("Too many AppVersions: " + appVersionHandlerMap.getAppVersions());
     appVersionHandlerMap.addAppVersion(appVersion);
   }
 

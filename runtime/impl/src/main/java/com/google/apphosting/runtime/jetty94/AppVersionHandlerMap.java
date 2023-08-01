@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -46,29 +47,25 @@ import org.eclipse.jetty.session.SessionManager;
  */
 public class AppVersionHandlerMap extends AbstractHandlerContainer {
   private final AppVersionHandlerFactory appVersionHandlerFactory;
-  private final Map<AppVersionKey, AppVersion> appVersionMap;
-  private final Map<AppVersionKey, Handler> handlerMap;
+  private AppVersion appVersion;
+  private Handler handler;
 
   public AppVersionHandlerMap(AppVersionHandlerFactory appVersionHandlerFactory) {
     this.appVersionHandlerFactory = appVersionHandlerFactory;
-    this.appVersionMap = new HashMap<>();
-    this.handlerMap = new HashMap<>();
   }
 
   public void addAppVersion(AppVersion appVersion) {
-    appVersionMap.put(appVersion.getKey(), appVersion);
+    if (appVersion != null) {
+      throw new IllegalStateException("Already have an AppVersion " + this.appVersion);
+    }
+    this.appVersion = appVersion;
   }
 
   public void removeAppVersion(AppVersionKey appVersionKey) {
-    appVersionMap.remove(appVersionKey);
-  }
 
-  public int getNumAppVersions() {
-    return appVersionMap.size();
-  }
-
-  public String getAppVersions() {
-    return appVersionMap.keySet().toString();
+    if (Objects.equals(appVersionKey, appVersion.getKey()))
+      throw new IllegalArgumentException("AppVersionKey does not match AppVersion " + appVersion.getKey());
+    this.appVersion = null;
   }
 
   /**
@@ -85,12 +82,9 @@ public class AppVersionHandlerMap extends AbstractHandlerContainer {
    * Returns the {@code Handler} that will handle requests for the specified application version.
    */
   public synchronized Handler getHandler(AppVersionKey appVersionKey) throws ServletException {
-    Handler handler = handlerMap.get(appVersionKey);
     if (handler == null) {
-      AppVersion appVersion = appVersionMap.get(appVersionKey);
       if (appVersion != null) {
         handler = appVersionHandlerFactory.createHandler(appVersion);
-        handlerMap.put(appVersionKey, handler);
       }
     }
     return handler;
@@ -155,7 +149,7 @@ public class AppVersionHandlerMap extends AbstractHandlerContainer {
 
   @Override
   public Handler[] getHandlers() {
-    return handlerMap.values().toArray(new Handler[0]);
+    return new Handler[]{ handler };
   }
 
   @Override
