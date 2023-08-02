@@ -17,7 +17,6 @@
 package com.google.apphosting.runtime.jetty.ee8;
 
 import com.google.apphosting.runtime.AppVersion;
-import com.google.apphosting.runtime.jetty.Jetty94Constants;
 import com.google.apphosting.runtime.jetty.JettyConstants;
 import com.google.apphosting.utils.config.AppYaml;
 import com.google.common.base.Ascii;
@@ -73,7 +72,7 @@ public class ResourceFileServlet extends HttpServlet {
     chandler = ContextHandler.getContextHandler(context);
 
     AppYaml appYaml =
-        (AppYaml) chandler.getServer().getAttribute(Jetty94Constants.APP_YAML_ATTRIBUTE_TARGET);
+        (AppYaml) chandler.getServer().getAttribute(JettyConstants.APP_YAML_ATTRIBUTE_TARGET);
     fSender = new FileSender(appYaml);
     // AFAICT, there is no real API to retrieve this information, so
     // we access Jetty's internal state.

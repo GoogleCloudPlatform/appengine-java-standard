@@ -36,4 +36,7 @@ public class JettyConstants {
    */
   public static final String APP_VERSION_KEY_REQUEST_ATTR =
       "com.google.apphosting.runtime.jetty9.APP_VERSION_REQUEST_ATTR";
+
+  public static final String APP_YAML_ATTRIBUTE_TARGET =
+      "com.google.apphosting.runtime.jetty94.appYaml";
 }
