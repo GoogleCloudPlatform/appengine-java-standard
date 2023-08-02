@@ -31,7 +31,7 @@ import com.google.appengine.tools.development.LocalEnvironment;
 import com.google.appengine.tools.development.LocalHttpRequestEnvironment;
 import com.google.appengine.tools.info.AppengineSdk;
 import com.google.apphosting.api.ApiProxy;
-import com.google.apphosting.runtime.jetty94.SessionManagerHandler;
+import com.google.apphosting.runtime.jetty.SessionManagerHandler;
 import com.google.apphosting.utils.config.AppEngineConfigException;
 import com.google.apphosting.utils.config.AppEngineWebXml;
 import com.google.apphosting.utils.config.WebModule;
