@@ -42,6 +42,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
@@ -189,17 +190,25 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
 
     // Optimise this adaptor assuming one deployed appVersionKey, so use the last one if it matches
     // and only check the handler is available if we see a new/different key.
-    AppVersionKey appVersionKey = lastAppVersionKey;
-    if (appVersionKey == null
-        || !appVersionKey.getAppId().equals(upRequest.getAppId())
-        || !appVersionKey.getVersionId().equals(upRequest.getVersionId())) {
-      appVersionKey = AppVersionKey.fromUpRequest(upRequest);
-      // Check that a handler exists so we can deal with error condition here
+    AppVersionKey appVersionKey = AppVersionKey.fromUpRequest(upRequest);
+    AppVersionKey lastVersionKey = lastAppVersionKey;
+
+    if (lastVersionKey != null) {
+      // We already have created the handler on the previous request, so no need to do another getHandler().
+      // The two AppVersionKeys must be the same as we only support one app version.
+      if (!Objects.equals(appVersionKey, lastVersionKey)) {
+        upResponse.setError(UPResponse.ERROR.UNKNOWN_APP_VALUE);
+        upResponse.setErrorMessage("Unknown app: " + appVersionKey);
+        return;
+      }
+    }
+    else {
       if (appVersionHandlerMap.getHandler(appVersionKey) == null) {
         upResponse.setError(UPResponse.ERROR.UNKNOWN_APP_VALUE);
         upResponse.setErrorMessage("Unknown app: " + appVersionKey);
         return;
       }
+
       lastAppVersionKey = appVersionKey;
     }
 

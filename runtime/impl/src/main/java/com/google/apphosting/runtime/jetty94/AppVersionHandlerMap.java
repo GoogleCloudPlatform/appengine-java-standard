@@ -61,7 +61,7 @@ public class AppVersionHandlerMap extends org.eclipse.jetty.server.Handler.Abstr
     if (this.appVersion != null) {
       throw new IllegalStateException("Already have an AppVersion " + this.appVersion);
     }
-    this.appVersion = appVersion;
+    this.appVersion = Objects.requireNonNull(appVersion);
   }
 
   public void removeAppVersion(AppVersionKey appVersionKey) {
@@ -85,9 +85,10 @@ public class AppVersionHandlerMap extends org.eclipse.jetty.server.Handler.Abstr
    */
   public synchronized org.eclipse.jetty.server.Handler getHandler(AppVersionKey appVersionKey) throws ServletException {
     if (!Objects.equals(appVersionKey, appVersion.getKey()))
-      throw new IllegalArgumentException("AppVersionKey Error " + appVersion.getKey() + "!=" + appVersionKey);
+      return null;
 
     if (handler == null && appVersion != null) {
+      // TODO: use HotSwapHandler.
       handler = appVersionHandlerFactory.createHandler(appVersion);
     }
     return handler;
