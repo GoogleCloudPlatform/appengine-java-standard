@@ -32,9 +32,12 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.eclipse.jetty.ee8.nested.Request;
 import org.eclipse.jetty.ee8.nested.Handler;
+import org.eclipse.jetty.server.Response;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.ee8.nested.AbstractHandlerContainer;
+import org.eclipse.jetty.server.handler.HotSwapHandler;
 import org.eclipse.jetty.session.SessionManager;
+import org.eclipse.jetty.util.Callback;
 
 /**
  * {@code AppVersionHandlerMap} is a {@code HandlerContainer} that identifies each child {@code
@@ -45,10 +48,10 @@ import org.eclipse.jetty.session.SessionManager;
  * {@code AppVersionKey} that should be used.
  *
  */
-public class AppVersionHandlerMap extends AbstractHandlerContainer {
+public class AppVersionHandlerMap extends org.eclipse.jetty.server.Handler.Abstract {
   private final AppVersionHandlerFactory appVersionHandlerFactory;
   private AppVersion appVersion;
-  private Handler handler;
+  private org.eclipse.jetty.server.Handler handler;
 
   public AppVersionHandlerMap(AppVersionHandlerFactory appVersionHandlerFactory) {
     this.appVersionHandlerFactory = appVersionHandlerFactory;
@@ -62,8 +65,7 @@ public class AppVersionHandlerMap extends AbstractHandlerContainer {
   }
 
   public void removeAppVersion(AppVersionKey appVersionKey) {
-
-    if (Objects.equals(appVersionKey, appVersion.getKey()))
+    if (!Objects.equals(appVersionKey, appVersion.getKey()))
       throw new IllegalArgumentException("AppVersionKey does not match AppVersion " + appVersion.getKey());
     this.appVersion = null;
   }
@@ -81,11 +83,12 @@ public class AppVersionHandlerMap extends AbstractHandlerContainer {
   /**
    * Returns the {@code Handler} that will handle requests for the specified application version.
    */
-  public synchronized Handler getHandler(AppVersionKey appVersionKey) throws ServletException {
-    if (handler == null) {
-      if (appVersion != null) {
-        handler = appVersionHandlerFactory.createHandler(appVersion);
-      }
+  public synchronized org.eclipse.jetty.server.Handler getHandler(AppVersionKey appVersionKey) throws ServletException {
+    if (!Objects.equals(appVersionKey, appVersion.getKey()))
+      throw new IllegalArgumentException("AppVersionKey Error " + appVersion.getKey() + "!=" + appVersionKey);
+
+    if (handler == null && appVersion != null) {
+      handler = appVersionHandlerFactory.createHandler(appVersion);
     }
     return handler;
   }
@@ -95,14 +98,14 @@ public class AppVersionHandlerMap extends AbstractHandlerContainer {
    * version.
    */
   @Override
-  public void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
+  public boolean handle(org.eclipse.jetty.server.Request request, Response response, Callback callback) throws Exception {
     AppVersionKey appVersionKey =
-        (AppVersionKey) request.getAttribute(JettyConstants.APP_VERSION_KEY_REQUEST_ATTR);
+            (AppVersionKey) request.getAttribute(JettyConstants.APP_VERSION_KEY_REQUEST_ATTR);
     if (appVersionKey == null) {
       throw new ServletException("Request did not provide an application version");
     }
 
-    Handler handler = getHandler(appVersionKey);
+    org.eclipse.jetty.server.Handler handler = getHandler(appVersionKey);
     if (handler == null) {
       // If we throw an exception here it'll get caught, logged, and
       // turned into a 500, which is definitely not what we want.
@@ -112,7 +115,7 @@ public class AppVersionHandlerMap extends AbstractHandlerContainer {
     }
 
     try {
-      handler.handle(target, baseRequest, request, response);
+      return handler.handle(request, response, callback);
     } catch (ServletException | IOException ex) {
       throw ex;
     } catch (Exception ex) {
@@ -122,18 +125,16 @@ public class AppVersionHandlerMap extends AbstractHandlerContainer {
 
   @Override
   protected void doStart() throws Exception {
-    for (Handler handler : getHandlers()) {
+    if (handler != null) {
       handler.start();
     }
-
     super.doStart();
   }
 
   @Override
   protected void doStop() throws Exception {
     super.doStop();
-
-    for (Handler handler : getHandlers()) {
+    if (handler != null) {
       handler.stop();
     }
   }
@@ -141,21 +142,8 @@ public class AppVersionHandlerMap extends AbstractHandlerContainer {
   @Override
   public void setServer(Server server) {
     super.setServer(server);
-
-    for (Handler handler : getHandlers()) {
+    if (handler != null) {
       handler.setServer(server);
-    }
-  }
-
-  @Override
-  public Handler[] getHandlers() {
-    return (handler == null) ? new Handler[0] : new Handler[]{ handler };
-  }
-
-  @Override
-  protected void expandChildren(List<Handler> list, Class<?> byClass) {
-    for (Handler handler : getHandlers()) {
-      expandHandler(handler, list, byClass);
     }
   }
 }

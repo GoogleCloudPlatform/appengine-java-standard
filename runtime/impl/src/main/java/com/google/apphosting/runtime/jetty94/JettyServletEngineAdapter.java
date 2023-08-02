@@ -124,14 +124,12 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
         new AppVersionHandlerFactory(server, serverInfo, contextFactory, /*useJettyErrorPageHandler=*/ false);
     appVersionHandlerMap = new AppVersionHandlerMap(appVersionHandlerFactory);
 
-    ContextHandler contextHandler = new ContextHandler("/");
-    contextHandler.setHandler(appVersionHandlerMap);
     if (!"java8".equals(System.getenv("GAE_RUNTIME"))) {
       CoreSizeLimitHandler sizeLimitHandler = new CoreSizeLimitHandler(-1, MAX_RESPONSE_SIZE);
-      sizeLimitHandler.setHandler(contextHandler);
+      sizeLimitHandler.setHandler(appVersionHandlerMap);
       server.setHandler(sizeLimitHandler);
     } else {
-      server.setHandler(contextHandler);
+      server.setHandler(appVersionHandlerMap);
     }
 
     if (runtimeOptions.useJettyHttpProxy()) {

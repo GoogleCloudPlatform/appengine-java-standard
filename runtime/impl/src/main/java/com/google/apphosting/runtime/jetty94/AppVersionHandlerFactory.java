@@ -40,12 +40,15 @@ import org.eclipse.jetty.ee8.nested.Dispatcher;
 import org.eclipse.jetty.ee8.nested.Handler;
 import org.eclipse.jetty.ee8.webapp.WebAppClassLoader;
 import org.eclipse.jetty.server.Request;
+import org.eclipse.jetty.server.Response;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.ee8.servlet.ErrorPageErrorHandler;
 import org.eclipse.jetty.ee8.webapp.FragmentConfiguration;
 import org.eclipse.jetty.ee8.webapp.MetaInfConfiguration;
 import org.eclipse.jetty.ee8.webapp.WebAppContext;
 import org.eclipse.jetty.ee8.webapp.WebXmlConfiguration;
+import org.eclipse.jetty.server.handler.ErrorHandler;
+import org.eclipse.jetty.util.Callback;
 import org.eclipse.jetty.util.resource.Resource;
 
 /**
@@ -121,12 +124,12 @@ public class AppVersionHandlerFactory {
   /**
    * Returns the {@code Handler} that will handle requests for the specified application version.
    */
-  public Handler createHandler(AppVersion appVersion) throws ServletException {
+  public org.eclipse.jetty.server.Handler createHandler(AppVersion appVersion) throws ServletException {
     // Need to set thread context classloader for the duration of the scope.
     ClassLoader oldContextClassLoader = Thread.currentThread().getContextClassLoader();
     Thread.currentThread().setContextClassLoader(this.getClass().getClassLoader());
     try {
-      Handler handler = doCreateHandler(appVersion);
+      org.eclipse.jetty.server.Handler handler = doCreateHandler(appVersion);
       server.addBean(handler);
       return handler;
     } finally {
@@ -143,10 +146,10 @@ public class AppVersionHandlerFactory {
     if (Boolean.getBoolean(USE_ANNOTATION_SCANNING)) {
       list.add(AnnotationConfiguration.class.getCanonicalName());
     }
-    return list.build().stream().toArray(String[]::new);
+    return list.build().toArray(String[]::new);
   }
 
-  private Handler doCreateHandler(AppVersion appVersion) throws ServletException {
+  private org.eclipse.jetty.server.Handler doCreateHandler(AppVersion appVersion) throws ServletException {
     AppVersionKey appVersionKey = appVersion.getKey();
     try {
       File contextRoot = appVersion.getRootDirectory();
@@ -244,7 +247,7 @@ public class AppVersionHandlerFactory {
         }
       }
 
-      return context;
+      return context.get();
     } catch (ServletException ex) {
       logger.atWarning().withCause(ex).log("Exception adding %s", appVersionKey);
       throw ex;
@@ -282,7 +285,7 @@ public class AppVersionHandlerFactory {
     private void mayHandleByErrorPage(HttpServletRequest request, HttpServletResponse response)
         throws IOException {
       // Extract some error handling info from Jetty's proprietary attributes.
-      Class<?> exClass = (Class<?>) request.getAttribute(RequestDispatcher.ERROR_EXCEPTION_TYPE);
+      Throwable error = (Throwable)request.getAttribute(RequestDispatcher.ERROR_EXCEPTION);
       Integer code = (Integer) request.getAttribute(RequestDispatcher.ERROR_STATUS_CODE);
       String message = (String) request.getAttribute(RequestDispatcher.ERROR_MESSAGE);
 
@@ -314,11 +317,10 @@ public class AppVersionHandlerFactory {
         }
       }
 
-      // If we got an error code but not an exception (e.g. this is a
-      // call to HttpServletResponse#sendError), then render our own
-      // HTML.  XFE has logic to do this, but the PFE only invokes it
+      // If we got an error code (e.g. this is a call to HttpServletResponse#sendError),
+      // then render our own HTML.  XFE has logic to do this, but the PFE only invokes it
       // for error conditions that it or the AppServer detect.
-      if (exClass == null && code != null && message != null) {
+      if (code != null && message != null) {
         // This template is based on the default XFE error response.
         response.setContentType("text/html; charset=UTF-8");
 
@@ -332,10 +334,12 @@ public class AppVersionHandlerFactory {
         writer.println("<body text=#000000 bgcolor=#ffffff>");
         writer.println("<h1>Error: " + messageEscaped + "</h1>");
         writer.println("</body></html>");
+        return;
       }
 
       // If we got this far and *did* have an exception, it will be
       // retrieved and thrown at the end of JettyServletEngineAdapter#serviceRequest.
+      throw new IllegalStateException(error);
     }
   }
 }
