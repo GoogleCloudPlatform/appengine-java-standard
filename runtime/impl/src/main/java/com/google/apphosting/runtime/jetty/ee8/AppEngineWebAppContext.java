@@ -18,8 +18,7 @@ package com.google.apphosting.runtime.jetty.ee8;
 
 import com.google.apphosting.api.ApiProxy;
 import com.google.apphosting.api.ApiProxy.LogRecord;
-import com.google.apphosting.runtime.jetty.IgnoreContentLengthResponseWrapper;
-import com.google.apphosting.runtime.jetty9.AppEngineAuthentication;
+import com.google.apphosting.runtime.jetty.AppEngineAuthentication;
 import com.google.apphosting.utils.servlet.DeferredTaskServlet;
 import com.google.apphosting.utils.servlet.JdbcMySqlConnectionCleanupFilter;
 import com.google.apphosting.utils.servlet.SessionCleanupServlet;

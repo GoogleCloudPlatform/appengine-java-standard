@@ -18,7 +18,7 @@ package com.google.appengine.tools.development.jetty9;
 
 import com.google.apphosting.api.ApiProxy;
 import com.google.apphosting.api.ApiProxy.LogRecord;
-import com.google.apphosting.runtime.jetty9.AppEngineAuthentication;
+import com.google.apphosting.runtime.jetty.AppEngineAuthentication;
 import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;

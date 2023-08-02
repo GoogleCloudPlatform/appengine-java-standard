@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.apphosting.runtime.jetty9;
+package com.google.apphosting.runtime.jetty;
 
 import com.google.appengine.api.users.User;
 import com.google.appengine.api.users.UserService;

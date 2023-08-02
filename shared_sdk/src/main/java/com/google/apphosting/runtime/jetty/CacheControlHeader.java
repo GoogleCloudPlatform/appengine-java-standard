@@ -29,7 +29,7 @@ import java.util.regex.Pattern;
  * Wrapper for cache-control header value strings. Also includes logic to parse expiration time
  * strings provided in application config files.
  */
-final class CacheControlHeader {
+public final class CacheControlHeader {
   private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
   private static final String DEFAULT_BASE_VALUE = "public, max-age=";
   // Default max age is 10 minutes, per GAE documentation
@@ -48,7 +48,7 @@ final class CacheControlHeader {
     this.value = value;
   }
 
-  static CacheControlHeader getDefaultInstance() {
+  public static CacheControlHeader getDefaultInstance() {
     return new CacheControlHeader(DEFAULT_BASE_VALUE + DEFAULT_MAX_AGE);
   }
 
@@ -56,7 +56,7 @@ final class CacheControlHeader {
    * Parse formatted expiration time (e.g., "1d 2h 3m") and convert to seconds. If there is no
    * expiration time set, avoid setting max age parameter.
    */
-  static CacheControlHeader fromExpirationTime(String expirationTime) {
+  public static CacheControlHeader fromExpirationTime(String expirationTime) {
     String maxAge = DEFAULT_MAX_AGE;
 
     if (expirationTime != null) {
@@ -81,7 +81,7 @@ final class CacheControlHeader {
     return new CacheControlHeader(output);
   }
 
-  String getValue() {
+  public String getValue() {
     return value;
   }
 

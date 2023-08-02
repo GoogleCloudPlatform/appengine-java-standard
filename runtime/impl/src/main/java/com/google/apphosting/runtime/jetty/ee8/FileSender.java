@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-package com.google.apphosting.runtime.jetty;
+package com.google.apphosting.runtime.jetty.ee8;
 
+import com.google.apphosting.runtime.jetty.CacheControlHeader;
 import com.google.apphosting.utils.config.AppYaml;
 import com.google.common.base.Strings;
 import java.io.IOException;

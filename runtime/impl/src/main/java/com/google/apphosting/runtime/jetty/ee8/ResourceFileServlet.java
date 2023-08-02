@@ -17,7 +17,6 @@
 package com.google.apphosting.runtime.jetty.ee8;
 
 import com.google.apphosting.runtime.AppVersion;
-import com.google.apphosting.runtime.jetty.FileSender;
 import com.google.apphosting.runtime.jetty.Jetty94Constants;
 import com.google.apphosting.runtime.jetty.JettyConstants;
 import com.google.apphosting.utils.config.AppYaml;

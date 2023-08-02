@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.apphosting.runtime.jetty;
+package com.google.apphosting.runtime.jetty.proxy;
 
 import com.google.apphosting.base.protos.AppLogsPb;
 import com.google.apphosting.base.protos.AppinfoPb;
@@ -25,6 +25,9 @@ import com.google.apphosting.base.protos.RuntimePb.UPResponse;
 import com.google.apphosting.runtime.ServletEngineAdapter;
 import com.google.apphosting.runtime.anyrpc.AnyRpcServerContext;
 import com.google.apphosting.runtime.anyrpc.EvaluationRuntimeServerInterface;
+import com.google.apphosting.runtime.jetty.AppInfoFactory;
+import com.google.apphosting.runtime.jetty.CoreSizeLimitHandler;
+import com.google.apphosting.runtime.jetty.JettyServletEngineAdapter;
 import com.google.common.base.Ascii;
 import com.google.common.base.Throwables;
 import com.google.common.flogger.GoogleLogger;
@@ -94,19 +97,15 @@ public class JettyHttpProxy {
     }
   }
 
-  public static Server newServer(
-      ServletEngineAdapter.Config runtimeOptions, ForwardingHandler forwardingHandler) {
+  public static Server newServer(ServletEngineAdapter.Config runtimeOptions, ForwardingHandler forwardingHandler) {
     Server server = new Server();
 
-    ServerConnector c = new JettyServerConnectorWithReusePort(server, runtimeOptions.jettyReusePort());
-    c.setHost(runtimeOptions.jettyHttpAddress().getHost());
-    c.setPort(runtimeOptions.jettyHttpAddress().getPort());
-    server.setConnectors(new Connector[] {c});
+    ServerConnector connector = new JettyServerConnectorWithReusePort(server, runtimeOptions.jettyReusePort());
+    connector.setHost(runtimeOptions.jettyHttpAddress().getHost());
+    connector.setPort(runtimeOptions.jettyHttpAddress().getPort());
+    server.addConnector(connector);
 
-    HttpConnectionFactory factory = c.getConnectionFactory(HttpConnectionFactory.class);
-
-
-    HttpConfiguration config = factory.getHttpConfiguration();
+    HttpConfiguration config = connector.getConnectionFactory(HttpConnectionFactory.class).getHttpConfiguration();
     if (JettyServletEngineAdapter.LEGACY_MODE)
     {
       config.setHttpCompliance(HttpCompliance.RFC7230_LEGACY);

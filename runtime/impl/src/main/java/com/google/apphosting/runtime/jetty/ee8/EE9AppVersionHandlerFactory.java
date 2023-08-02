@@ -21,10 +21,6 @@ import com.google.apphosting.runtime.AppVersion;
 import com.google.apphosting.runtime.SessionsConfig;
 import com.google.apphosting.runtime.jetty.JettyConstants;
 import com.google.apphosting.runtime.jetty.SessionManagerHandler;
-import com.google.apphosting.runtime.jetty.WebAppContextFactory;
-import com.google.apphosting.runtime.jetty.ee8.AppEngineQuickStartConfiguration;
-import com.google.apphosting.runtime.jetty.ee8.AppEngineWebAppContext;
-import com.google.apphosting.runtime.jetty.ee8.AppEngineWebInfConfiguration;
 import com.google.common.collect.ImmutableList;
 import com.google.common.flogger.GoogleLogger;
 import com.google.common.html.HtmlEscapers;
@@ -51,7 +47,7 @@ import org.eclipse.jetty.util.resource.Resource;
 /**
  * {@code AppVersionHandlerFactory} implements a {@code Handler} for a given {@code AppVersionKey}.
  */
-public class AppVersionHandlerFactory {
+public class EE9AppVersionHandlerFactory implements com.google.apphosting.runtime.jetty.AppVersionHandlerFactory {
   private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
   private static final String TOMCAT_SIMPLE_INSTANCE_MANAGER =
       "org.apache.tomcat.SimpleInstanceManager";
@@ -107,11 +103,17 @@ public class AppVersionHandlerFactory {
   private final WebAppContextFactory contextFactory;
   private final boolean useJettyErrorPageHandler;
 
-  public AppVersionHandlerFactory(
-      Server server,
-      String serverInfo,
-      WebAppContextFactory contextFactory,
-      boolean useJettyErrorPageHandler) {
+  public EE9AppVersionHandlerFactory(
+          Server server,
+          String serverInfo) {
+    this(server, serverInfo, new AppEngineWebAppContextFactory(), false);
+  }
+
+  public EE9AppVersionHandlerFactory(
+          Server server,
+          String serverInfo,
+          WebAppContextFactory contextFactory,
+          boolean useJettyErrorPageHandler) {
     this.server = server;
     this.serverInfo = serverInfo;
     this.contextFactory = contextFactory;
@@ -121,6 +123,7 @@ public class AppVersionHandlerFactory {
   /**
    * Returns the {@code Handler} that will handle requests for the specified application version.
    */
+  @Override
   public org.eclipse.jetty.server.Handler createHandler(AppVersion appVersion) throws ServletException {
     // Need to set thread context classloader for the duration of the scope.
     ClassLoader oldContextClassLoader = Thread.currentThread().getContextClassLoader();
@@ -134,7 +137,7 @@ public class AppVersionHandlerFactory {
     }
   }
 
-  private final String[] getPreconfigurationClasses() {
+  private String[] getPreconfigurationClasses() {
     ImmutableList.Builder<String> list = new ImmutableList.Builder<>();
     list.add(AppEngineWebInfConfiguration.class.getCanonicalName());
     list.add(WebXmlConfiguration.class.getCanonicalName());

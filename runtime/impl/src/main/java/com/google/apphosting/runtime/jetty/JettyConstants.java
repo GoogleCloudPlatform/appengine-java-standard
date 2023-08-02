@@ -19,17 +19,12 @@ package com.google.apphosting.runtime.jetty;
 import com.google.apphosting.base.AppVersionKey;
 import com.google.apphosting.runtime.AppVersion;
 
-import javax.servlet.ServletContext;
-
 /**
- * {@code JettyConstants} centralizes some constants that are specific
- * to our use of Jetty.
- *
+ * {@code JettyConstants} centralizes some constants that are specific to our use of Jetty.
  */
 public class JettyConstants {
   /**
-   * This {@link ServletContext} attribute contains the {@link
-   * AppVersion} for the current application.
+   * This context attribute contains the {@link AppVersion} for the current application.
    */
   public static final String APP_VERSION_CONTEXT_ATTR =
       "com.google.apphosting.runtime.jetty9.APP_VERSION_CONTEXT_ATTR";

@@ -17,7 +17,6 @@
 package com.google.apphosting.runtime.jetty.ee8;
 
 import com.google.apphosting.runtime.AppVersion;
-import com.google.apphosting.runtime.jetty.WebAppContextFactory;
 
 /** This factory creates {@link AppEngineWebAppContext}. */
 public class AppEngineWebAppContextFactory implements WebAppContextFactory {

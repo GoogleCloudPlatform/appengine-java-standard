@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.apphosting.runtime.jetty;
+package com.google.apphosting.runtime.jetty.ee8;
 
 import com.google.apphosting.runtime.AppVersion;
 import com.google.apphosting.runtime.jetty.ee8.AppEngineWebAppContext;

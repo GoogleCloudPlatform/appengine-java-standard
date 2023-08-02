@@ -25,8 +25,7 @@ import com.google.apphosting.runtime.MutableUpResponse;
 import com.google.apphosting.runtime.ServletEngineAdapter;
 import com.google.apphosting.runtime.delegate.DelegateConnector;
 import com.google.apphosting.runtime.delegate.impl.DelegateRpcExchange;
-import com.google.apphosting.runtime.jetty.ee8.AppEngineWebAppContextFactory;
-import com.google.apphosting.runtime.jetty.ee8.AppVersionHandlerFactory;
+import com.google.apphosting.runtime.jetty.proxy.JettyHttpProxy;
 import com.google.apphosting.utils.config.AppEngineConfigException;
 import com.google.apphosting.utils.config.AppYaml;
 import com.google.common.flogger.GoogleLogger;
@@ -43,7 +42,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -63,7 +61,7 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
    * If Legacy Mode is tunred on, then Jetty is configured to be more forgiving of bad requests
    * and to act more in the style of Jetty-9.3
    */
-  static final boolean LEGACY_MODE = Boolean.getBoolean("com.google.apphosting.runtime.jetty94.LEGACY_MODE");
+  public static final boolean LEGACY_MODE = Boolean.getBoolean("com.google.apphosting.runtime.jetty94.LEGACY_MODE");
 
   private AppVersionKey lastAppVersionKey;
 
@@ -81,16 +79,8 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
   private Server server;
   private DelegateConnector rpcConnector;
   private AppVersionHandler appVersionHandler;
-  private final WebAppContextFactory contextFactory;
-  private final Optional<AppYaml> appYaml;
 
   public JettyServletEngineAdapter() {
-    this(Optional.empty(), Optional.empty());
-  }
-
-  public JettyServletEngineAdapter(Optional<WebAppContextFactory> contextFactory, Optional<AppYaml> appYaml) {
-    this.contextFactory = contextFactory.orElseGet(AppEngineWebAppContextFactory::new);
-    this.appYaml = appYaml;
   }
 
   private static AppYaml getAppYaml(ServletEngineAdapter.Config runtimeOptions) {
@@ -127,8 +117,7 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
     };
 
     server.addConnector(rpcConnector);
-    AppVersionHandlerFactory appVersionHandlerFactory =
-        new AppVersionHandlerFactory(server, serverInfo, contextFactory, /*useJettyErrorPageHandler=*/ false);
+    AppVersionHandlerFactory appVersionHandlerFactory = AppVersionHandlerFactory.newInstance(server, serverInfo);
     appVersionHandler = new AppVersionHandler(appVersionHandlerFactory);
 
     if (!"java8".equals(System.getenv("GAE_RUNTIME"))) {
@@ -140,9 +129,8 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
     }
 
     if (runtimeOptions.useJettyHttpProxy()) {
-      server.setAttribute(
-          "com.google.apphosting.runtime.jetty94.appYaml",
-          appYaml.orElseGet(() -> JettyServletEngineAdapter.getAppYaml(runtimeOptions)));
+      server.setAttribute("com.google.apphosting.runtime.jetty94.appYaml",
+              JettyServletEngineAdapter.getAppYaml(runtimeOptions));
       JettyHttpProxy.startServer(runtimeOptions);
     }
 

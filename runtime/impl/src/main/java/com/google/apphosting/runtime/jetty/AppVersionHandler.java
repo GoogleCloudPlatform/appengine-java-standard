@@ -20,15 +20,12 @@ import com.google.apphosting.base.AppVersionKey;
 import com.google.apphosting.runtime.AppVersion;
 import com.google.apphosting.runtime.SessionStore;
 import com.google.apphosting.runtime.SessionStoreFactory;
-
-import java.io.IOException;
-import java.util.Objects;
-import javax.servlet.ServletException;
-
-import com.google.apphosting.runtime.jetty.ee8.AppVersionHandlerFactory;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.handler.HotSwapHandler;
 import org.eclipse.jetty.session.SessionManager;
+
+import javax.servlet.ServletException;
+import java.util.Objects;
 
 /**
  * {@code AppVersionHandlerMap} is a {@code HandlerContainer} that identifies each child {@code

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.apphosting.runtime.jetty;
+package com.google.apphosting.runtime.jetty.proxy;
 
 import com.google.apphosting.base.protos.AppinfoPb;
 import com.google.apphosting.base.protos.HttpPb;
@@ -24,6 +24,7 @@ import com.google.apphosting.base.protos.RuntimePb;
 import com.google.apphosting.base.protos.RuntimePb.UPRequest;
 import com.google.apphosting.base.protos.TracePb.TraceContextProto;
 import com.google.apphosting.runtime.TraceContextHelper;
+import com.google.apphosting.runtime.jetty.AppInfoFactory;
 import com.google.common.base.Ascii;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
@@ -409,7 +410,7 @@ public class UPRequestTranslator {
    * @param resp response message to fill with info
    * @param errMsg error text.
    */
-  static void populateErrorResponse(HttpServletResponse resp, String errMsg) {
+  public static void populateErrorResponse(HttpServletResponse resp, String errMsg) {
     resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
     try {
       ServletOutputStream outstr = resp.getOutputStream();

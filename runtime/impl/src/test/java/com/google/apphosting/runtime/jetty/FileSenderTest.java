@@ -24,6 +24,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.google.apphosting.runtime.jetty.ee8.FileSender;
 import com.google.apphosting.utils.config.AppYaml;
 
 import java.io.OutputStream;
