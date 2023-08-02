@@ -20,24 +20,13 @@ import com.google.apphosting.base.AppVersionKey;
 import com.google.apphosting.runtime.AppVersion;
 import com.google.apphosting.runtime.SessionStore;
 import com.google.apphosting.runtime.SessionStoreFactory;
-import com.google.apphosting.runtime.jetty9.JettyConstants;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+
 import java.util.Objects;
 import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
-import org.eclipse.jetty.ee8.nested.Request;
-import org.eclipse.jetty.ee8.nested.Handler;
-import org.eclipse.jetty.server.Response;
-import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.ee8.nested.AbstractHandlerContainer;
+import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.handler.HotSwapHandler;
 import org.eclipse.jetty.session.SessionManager;
-import org.eclipse.jetty.util.Callback;
 
 /**
  * {@code AppVersionHandlerMap} is a {@code HandlerContainer} that identifies each child {@code
@@ -48,12 +37,12 @@ import org.eclipse.jetty.util.Callback;
  * {@code AppVersionKey} that should be used.
  *
  */
-public class AppVersionHandlerMap extends org.eclipse.jetty.server.Handler.Abstract {
+public class AppVersionHandler extends HotSwapHandler {
   private final AppVersionHandlerFactory appVersionHandlerFactory;
   private AppVersion appVersion;
   private org.eclipse.jetty.server.Handler handler;
 
-  public AppVersionHandlerMap(AppVersionHandlerFactory appVersionHandlerFactory) {
+  public AppVersionHandler(AppVersionHandlerFactory appVersionHandlerFactory) {
     this.appVersionHandlerFactory = appVersionHandlerFactory;
   }
 
@@ -83,68 +72,15 @@ public class AppVersionHandlerMap extends org.eclipse.jetty.server.Handler.Abstr
   /**
    * Returns the {@code Handler} that will handle requests for the specified application version.
    */
-  public synchronized org.eclipse.jetty.server.Handler getHandler(AppVersionKey appVersionKey) throws ServletException {
+  public synchronized boolean ensureHandler(AppVersionKey appVersionKey) throws ServletException {
     if (!Objects.equals(appVersionKey, appVersion.getKey()))
-      return null;
+      return false;
 
-    if (handler == null && appVersion != null) {
-      // TODO: use HotSwapHandler.
-      handler = appVersionHandlerFactory.createHandler(appVersion);
-    }
-    return handler;
-  }
-
-  /**
-   * Forward the specified request on to the {@link Handler} associated with its application
-   * version.
-   */
-  @Override
-  public boolean handle(org.eclipse.jetty.server.Request request, Response response, Callback callback) throws Exception {
-    AppVersionKey appVersionKey =
-            (AppVersionKey) request.getAttribute(JettyConstants.APP_VERSION_KEY_REQUEST_ATTR);
-    if (appVersionKey == null) {
-      throw new ServletException("Request did not provide an application version");
-    }
-
-    org.eclipse.jetty.server.Handler handler = getHandler(appVersionKey);
+    Handler handler = getHandler();
     if (handler == null) {
-      // If we throw an exception here it'll get caught, logged, and
-      // turned into a 500, which is definitely not what we want.
-      // Instead, we check for this before calling handle(), so this
-      // should never happen.
-      throw new ServletException("Unknown application: " + appVersionKey);
+      handler = appVersionHandlerFactory.createHandler(appVersion);
+      setHandler(handler);
     }
-
-    try {
-      return handler.handle(request, response, callback);
-    } catch (ServletException | IOException ex) {
-      throw ex;
-    } catch (Exception ex) {
-      throw new ServletException(ex);
-    }
-  }
-
-  @Override
-  protected void doStart() throws Exception {
-    if (handler != null) {
-      handler.start();
-    }
-    super.doStart();
-  }
-
-  @Override
-  protected void doStop() throws Exception {
-    super.doStop();
-    if (handler != null) {
-      handler.stop();
-    }
-  }
-
-  @Override
-  public void setServer(Server server) {
-    super.setServer(server);
-    if (handler != null) {
-      handler.setServer(server);
-    }
+    return (handler != null);
   }
 }

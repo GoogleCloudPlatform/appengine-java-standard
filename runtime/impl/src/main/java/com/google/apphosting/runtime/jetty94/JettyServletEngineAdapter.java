@@ -29,7 +29,6 @@ import com.google.apphosting.runtime.jetty9.JettyConstants;
 import com.google.apphosting.utils.config.AppEngineConfigException;
 import com.google.apphosting.utils.config.AppYaml;
 import com.google.common.flogger.GoogleLogger;
-import org.eclipse.jetty.ee8.nested.ContextHandler;
 import org.eclipse.jetty.http.CookieCompliance;
 import org.eclipse.jetty.http.UriCompliance;
 import org.eclipse.jetty.server.HttpConfiguration;
@@ -80,7 +79,7 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
 
   private Server server;
   private DelegateConnector rpcConnector;
-  private AppVersionHandlerMap appVersionHandlerMap;
+  private AppVersionHandler appVersionHandler;
   private final WebAppContextFactory contextFactory;
   private final Optional<AppYaml> appYaml;
 
@@ -88,8 +87,7 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
     this(Optional.empty(), Optional.empty());
   }
 
-  public JettyServletEngineAdapter(
-      Optional<WebAppContextFactory> contextFactory, Optional<AppYaml> appYaml) {
+  public JettyServletEngineAdapter(Optional<WebAppContextFactory> contextFactory, Optional<AppYaml> appYaml) {
     this.contextFactory = contextFactory.orElseGet(AppEngineWebAppContextFactory::new);
     this.appYaml = appYaml;
   }
@@ -110,7 +108,14 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
 
   @Override
   public void start(String serverInfo, ServletEngineAdapter.Config runtimeOptions) {
-    server = new Server(new QueuedThreadPool(MAX_THREAD_POOL_THREADS, MIN_THREAD_POOL_THREADS));
+    server = new Server(new QueuedThreadPool(MAX_THREAD_POOL_THREADS, MIN_THREAD_POOL_THREADS))
+    {
+      @Override
+      public InvocationType getInvocationType() {
+        return InvocationType.BLOCKING;
+      }
+    };
+
     rpcConnector = new DelegateConnector(server, "RPC") {
       @Override
       public void run(Runnable runnable) {
@@ -123,14 +128,14 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
     server.addConnector(rpcConnector);
     AppVersionHandlerFactory appVersionHandlerFactory =
         new AppVersionHandlerFactory(server, serverInfo, contextFactory, /*useJettyErrorPageHandler=*/ false);
-    appVersionHandlerMap = new AppVersionHandlerMap(appVersionHandlerFactory);
+    appVersionHandler = new AppVersionHandler(appVersionHandlerFactory);
 
     if (!"java8".equals(System.getenv("GAE_RUNTIME"))) {
       CoreSizeLimitHandler sizeLimitHandler = new CoreSizeLimitHandler(-1, MAX_RESPONSE_SIZE);
-      sizeLimitHandler.setHandler(appVersionHandlerMap);
+      sizeLimitHandler.setHandler(appVersionHandler);
       server.setHandler(sizeLimitHandler);
     } else {
-      server.setHandler(appVersionHandlerMap);
+      server.setHandler(appVersionHandler);
     }
 
     if (runtimeOptions.useJettyHttpProxy()) {
@@ -160,23 +165,22 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
 
   @Override
   public void addAppVersion(AppVersion appVersion) throws FileNotFoundException {
-    appVersionHandlerMap.addAppVersion(appVersion);
+    appVersionHandler.addAppVersion(appVersion);
   }
 
   @Override
   public void deleteAppVersion(AppVersion appVersion) {
-    appVersionHandlerMap.removeAppVersion(appVersion.getKey());
+    appVersionHandler.removeAppVersion(appVersion.getKey());
   }
 
   /**
    * Sets the {@link com.google.apphosting.runtime.SessionStoreFactory} that will be used to create
    * the list of {@link com.google.apphosting.runtime.SessionStore SessionStores} to which the HTTP
-   * Session will be stored, if sessions are enabled. This method must be invoked after {@link
-   * #start(String)}.
+   * Session will be stored, if sessions are enabled. This method must be invoked after {@link #start(String, Config)}.
    */
   @Override
   public void setSessionStoreFactory(com.google.apphosting.runtime.SessionStoreFactory factory) {
-    appVersionHandlerMap.setSessionStoreFactory(factory);
+    appVersionHandler.setSessionStoreFactory(factory);
   }
 
   @Override
@@ -203,7 +207,7 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
       }
     }
     else {
-      if (appVersionHandlerMap.getHandler(appVersionKey) == null) {
+      if (!appVersionHandler.ensureHandler(appVersionKey)) {
         upResponse.setError(UPResponse.ERROR.UNKNOWN_APP_VALUE);
         upResponse.setErrorMessage("Unknown app: " + appVersionKey);
         return;
