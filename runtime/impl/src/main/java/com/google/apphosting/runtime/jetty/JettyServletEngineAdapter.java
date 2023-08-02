@@ -61,7 +61,7 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
    * If Legacy Mode is tunred on, then Jetty is configured to be more forgiving of bad requests
    * and to act more in the style of Jetty-9.3
    */
-  public static final boolean LEGACY_MODE = Boolean.getBoolean("com.google.apphosting.runtime.jetty94.LEGACY_MODE");
+  public static final boolean LEGACY_MODE = Boolean.getBoolean("com.google.apphosting.runtime.jetty.LEGACY_MODE");
 
   private AppVersionKey lastAppVersionKey;
 
@@ -129,7 +129,7 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
     }
 
     if (runtimeOptions.useJettyHttpProxy()) {
-      server.setAttribute("com.google.apphosting.runtime.jetty94.appYaml",
+      server.setAttribute("com.google.apphosting.runtime.jetty.appYaml",
               JettyServletEngineAdapter.getAppYaml(runtimeOptions));
       JettyHttpProxy.startServer(runtimeOptions);
     }

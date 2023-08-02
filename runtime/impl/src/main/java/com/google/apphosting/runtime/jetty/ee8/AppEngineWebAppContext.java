@@ -99,12 +99,12 @@ public class AppEngineWebAppContext extends WebAppContext {
               "AbandonedTransactionDetector",
               "com.google.apphosting.utils.servlet.TransactionCleanupFilter"),
           new HolderMatcher(
-              "SaveSessionFilter", "com.google.apphosting.runtime.jetty9.SaveSessionFilter"),
+              "SaveSessionFilter", "com.google.apphosting.runtime.jetty.SaveSessionFilter"),
           new HolderMatcher(
               "_ah_ParseBlobUploadFilter",
               "com.google.apphosting.utils.servlet.ParseBlobUploadFilter"),
           new HolderMatcher(
-              "_ah_default", "com.google.apphosting.runtime.jetty9.ResourceFileServlet"),
+              "_ah_default", "com.google.apphosting.runtime.jetty.ResourceFileServlet"),
           new HolderMatcher("default", "com.google.apphosting.runtime.jetty.ee8.NamedDefaultServlet"),
           new HolderMatcher("jsp", "com.google.apphosting.runtime.jetty.NoJspSerlvet"),
 

@@ -20,6 +20,8 @@ import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
+import org.eclipse.jetty.util.Jetty;
+
 import java.io.File;
 import java.net.URL;
 import java.nio.file.Paths;
@@ -144,7 +146,7 @@ public class MavenSdk extends AppengineSdk {
   }
 
   private static String getJettySuffix() {
-    return "Jetty9";
+    return Jetty.VERSION;
   }
 
   private File getSingletonFile(String profile) {

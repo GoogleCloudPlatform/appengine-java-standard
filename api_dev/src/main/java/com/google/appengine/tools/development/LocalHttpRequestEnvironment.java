@@ -68,7 +68,7 @@ public class LocalHttpRequestEnvironment extends LocalEnvironment {
     if (currentNamespace != null) {
       attributes.put(CURRENT_NAMESPACE_KEY, currentNamespace);
     } else {
-      // Jetty9 request header for CURRENT_NAMESPACE_HEADER is not set
+      // Jetty request header for CURRENT_NAMESPACE_HEADER is not set
       // when CURRENT_NAMESPACE_KEY value should be the default "" namespace, so we set it correctly
       // to default there.
       // See https://dev.eclipse.org/mhonarc/lists/jetty-users/msg03339.html

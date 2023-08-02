@@ -101,7 +101,7 @@
                                             <replacement>./</replacement>
                                         </org.codehaus.plexus.components.io.filemappers.RegExpFileMapper>
                                     </fileMappers>
-                                    <outputDirectory>${assembly-directory}/jetty94/jetty-home</outputDirectory>
+                                    <outputDirectory>${assembly-directory}/jetty/jetty-home</outputDirectory>
                                 </artifactItem>
                                  <artifactItem>
                                     <groupId>com.google.appengine</groupId>
@@ -131,10 +131,10 @@
                                      <type>jar</type>
                                      <excludes>META-INF/**
                                      </excludes>
-                                     <includes>com/google/apphosting/runtime/jetty94/webdefault.xml</includes>
+                                     <includes>com/google/apphosting/runtime/jetty/webdefault.xml</includes>
                                     <fileMappers>
                                         <org.codehaus.plexus.components.io.filemappers.RegExpFileMapper>
-                                            <pattern>^\Qcom/google/apphosting/runtime/jetty94/\E</pattern>
+                                            <pattern>^\Qcom/google/apphosting/runtime/jetty/\E</pattern>
                                             <replacement>./</replacement>
                                         </org.codehaus.plexus.components.io.filemappers.RegExpFileMapper>
                                     </fileMappers>
@@ -164,7 +164,7 @@
                                     <artifactId>jetty-ee8-apache-jsp</artifactId>
                                     <overWrite>true</overWrite>
                                     <classifier>nolog</classifier>
-                                    <outputDirectory>${assembly-directory}/jetty94/jetty-home/lib/apache-jsp</outputDirectory>
+                                    <outputDirectory>${assembly-directory}/jetty/jetty-home/lib/apache-jsp</outputDirectory>
                                     <destFileName>org.eclipse.jetty.apache-jsp-${jetty.version}-nolog.jar</destFileName>
                                 </artifactItem>
                                 <artifactItem>
@@ -278,8 +278,8 @@
                                 <chmod dir="${assembly-directory}/bin" perm="755" includes="**/*.sh" />
                             </target>
                             <tasks>
-                                <delete file="${assembly-directory}/jetty94/jetty-home/lib/apache-jsp/org.eclipse.jetty.apache-jsp-${jetty.version}.jar"/>
-                                <delete dir="${assembly-directory}/jetty94/jetty-home/demo-base"/>
+                                <delete file="${assembly-directory}/jetty/jetty-home/lib/apache-jsp/org.eclipse.jetty.apache-jsp-${jetty.version}.jar"/>
+                                <delete dir="${assembly-directory}/jetty/jetty-home/demo-base"/>
                             </tasks>
                         </configuration>
                     </execution>

@@ -30,7 +30,7 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public final class IsolatedAppClassLoaderTest {
   private static final String WEB_DEFAULT_LOCATION_DEVAPPSERVER1_PATH =
-      "com/google/appengine/tools/development/jetty9/webdefault.xml";
+      "com/google/appengine/tools/development/jetty/webdefault.xml";
 
   @Test
   @org.junit.Ignore
@@ -41,15 +41,15 @@ public final class IsolatedAppClassLoaderTest {
         ImmutableSet.of(
             "com.google.appengine.tools.development.DevAppServerRequestLogFilter",
             "com.google.appengine.tools.development.DevAppServerModulesFilter",
-            "com.google.appengine.tools.development.jetty9.StaticFileFilter",
+            "com.google.appengine.tools.development.jetty.StaticFileFilter",
             "com.google.apphosting.utils.servlet.TransactionCleanupFilter",
             "com.google.appengine.api.blobstore.dev.ServeBlobFilter",
             "com.google.appengine.tools.development.HeaderVerificationFilter",
-            "com.google.appengine.tools.development.jetty9.ResponseRewriterFilterJetty9",
-            "com.google.appengine.tools.development.jetty9.LocalResourceFileServlet",
+            "com.google.appengine.tools.development.jetty.ResponseRewriterFilterJetty9",
+            "com.google.appengine.tools.development.jetty.LocalResourceFileServlet",
             "com.google.appengine.api.blobstore.dev.UploadBlobServlet",
             "com.google.appengine.api.images.dev.LocalBlobImageServlet",
-            "com.google.appengine.tools.development.jetty9.FixupJspServlet",
+            "com.google.appengine.tools.development.jetty.FixupJspServlet",
             "com.google.appengine.api.users.dev.LocalLoginServlet",
             "com.google.appengine.api.users.dev.LocalLogoutServlet",
             "com.google.appengine.api.users.dev.LocalOAuthRequestTokenServlet",

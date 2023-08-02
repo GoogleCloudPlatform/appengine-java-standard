@@ -49,7 +49,7 @@ import java.util.Map;
 @AutoService(LocalRpcService.class)
 public final class LocalUserService extends AbstractLocalRpcService {
   // These URLs need to be kept in sync with:
-  //   java/com/google/appengine/tools/development/jetty9/webdefault.xml
+  //   java/com/google/appengine/tools/development/jetty/webdefault.xml
   private static final String LOGIN_URL = "/_ah/login";
   private static final String LOGOUT_URL = "/_ah/logout";
 

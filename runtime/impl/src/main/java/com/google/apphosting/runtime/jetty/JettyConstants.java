@@ -27,7 +27,7 @@ public class JettyConstants {
    * This context attribute contains the {@link AppVersion} for the current application.
    */
   public static final String APP_VERSION_CONTEXT_ATTR =
-      "com.google.apphosting.runtime.jetty9.APP_VERSION_CONTEXT_ATTR";
+      "com.google.apphosting.runtime.jetty.APP_VERSION_CONTEXT_ATTR";
 
   /**
    * This {@code ServletRequest} attribute contains the {@link
@@ -35,8 +35,8 @@ public class JettyConstants {
    * which application version to use.
    */
   public static final String APP_VERSION_KEY_REQUEST_ATTR =
-      "com.google.apphosting.runtime.jetty9.APP_VERSION_REQUEST_ATTR";
+      "com.google.apphosting.runtime.jetty.APP_VERSION_REQUEST_ATTR";
 
   public static final String APP_YAML_ATTRIBUTE_TARGET =
-      "com.google.apphosting.runtime.jetty94.appYaml";
+      "com.google.apphosting.runtime.jetty.appYaml";
 }
