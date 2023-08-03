@@ -38,7 +38,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public class DelegateRpcExchange implements DelegateExchange
 {
     private static final Content.Chunk EOF = Content.Chunk.EOF;
-    static final boolean LEGACY_MODE = Boolean.getBoolean("com.google.apphosting.runtime.jetty94.LEGACY_MODE");
+    static final boolean LEGACY_MODE = Boolean.getBoolean("com.google.apphosting.runtime.jetty.LEGACY_MODE");
 
     private final HttpPb.HttpRequest _request;
     private final AtomicReference<Content.Chunk> _content = new AtomicReference<>();

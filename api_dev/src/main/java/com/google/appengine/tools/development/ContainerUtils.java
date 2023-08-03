@@ -23,7 +23,7 @@ import com.google.appengine.tools.info.AppengineSdk;
  */
 public class ContainerUtils {
   /**
-   * Load a {@link ContainerService} instance based on the implementation: Jetty9 only for now.
+   * Load a {@link ContainerService} instance based on the implementation: Jetty only for now.
    *
    * @return the deployed {@link ContainerService} instance.
    * @throws IllegalArgumentException if the container cannot be loaded.
@@ -31,9 +31,8 @@ public class ContainerUtils {
   public static ContainerService loadContainer() {
     ContainerService result;
 
-    // Try to load jetty 9.
-
-    String jettyService = "com.google.appengine.tools.development.jetty9.JettyContainerService";
+    // Try to load jetty.
+    String jettyService = "com.google.appengine.tools.development.jetty.JettyContainerService";
 
     try {
       result =

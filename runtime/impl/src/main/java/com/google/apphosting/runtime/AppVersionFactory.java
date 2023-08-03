@@ -414,7 +414,7 @@ public class AppVersionFactory {
     // not bundled the api jar.
     // Newer apps are now using "user_defined" and they bundle the api jar, so no need to add it.
     // App not using the api jar would have "none" or empty.
-    // Read ../runtime/jetty94/AppInfoFactory.java to see where it is setup.
+    // Read ../runtime/jetty/AppInfoFactory.java to see where it is setup.
     String apiVersion = appInfo.getApiVersion();
     if (!apiVersion.isEmpty()
         && !Ascii.equalsIgnoreCase(apiVersion, "none")

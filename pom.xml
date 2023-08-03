@@ -225,7 +225,7 @@
                       <configuration>
                           <systemPropertyVariables>
                               <appengine.runtime.dir>../deployment/target/runtime-deployment-${project.version}</appengine.runtime.dir>
-                              <com.google.apphosting.runtime.jetty94.LEGACY_MODE>true</com.google.apphosting.runtime.jetty94.LEGACY_MODE>
+                              <com.google.apphosting.runtime.jetty.LEGACY_MODE>true</com.google.apphosting.runtime.jetty.LEGACY_MODE>
                           </systemPropertyVariables>
                           <argLine>
                               --add-opens java.base/java.lang=ALL-UNNAMED

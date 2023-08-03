@@ -201,7 +201,7 @@ Source code for the App Engine local dev application server and local utilities.
 
 ### App Engine Java production runtime execution environment
 
-Source code for the App Engine production application server and utilities. It is based on the Jetty9.4 Web Server.
+Source code for the App Engine production application server and utilities. It is based on the Jetty Web Server.
 
 - [Public Documentation][ae-docs]
 - [Source Code for the runtime implementation](https://github.com/GoogleCloudPlatform/appengine-java-standard/tree/master/runtime/impl)

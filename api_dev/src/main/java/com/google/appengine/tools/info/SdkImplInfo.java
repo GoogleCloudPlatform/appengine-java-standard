@@ -56,7 +56,7 @@ public class SdkImplInfo {
   }
 
   private static List<File> getjsp22LibFiles() {
-    return Collections.unmodifiableList(SdkInfo.getJetty9JspJars());
+    return Collections.unmodifiableList(SdkInfo.getJettyJspJars());
   }
 
   /** Returns the paths of all JSP libraries that do not need any special privileges in the SDK. */
@@ -114,7 +114,7 @@ public class SdkImplInfo {
   /** Returns all jar files under the lib directory. */
   public static List<File> getAllLibFiles() {
     List<File> libs = new ArrayList<>(SdkInfo.getLibsRecursive(SdkInfo.getSdkRoot(), ""));
-    libs.add(new File(SdkInfo.getSdkRoot(), "jetty94/jetty-home/lib/servlet-api-3.1.jar"));
+    libs.add(new File(SdkInfo.getSdkRoot(), "jetty/jetty-home/lib/servlet-api-3.1.jar"));
     return Collections.unmodifiableList(libs);
   }
 }

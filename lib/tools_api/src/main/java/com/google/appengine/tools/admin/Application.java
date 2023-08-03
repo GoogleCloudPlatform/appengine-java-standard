@@ -1205,7 +1205,7 @@ public class Application implements GenericApplication {
 
   @VisibleForTesting
   String getJSPCClassName() {
-    return "com.google.appengine.tools.development.jetty9.LocalJspC";
+    return "com.google.appengine.tools.development.jetty.LocalJspC";
   }
 
   private void compileJsps(File stage, ApplicationProcessingOptions opts, String runtime)
@@ -1764,7 +1764,7 @@ public class Application implements GenericApplication {
       javaCmd,
       "-cp",
       quickstartClassPath,
-      "com.google.appengine.tools.development.jetty9.QuickStartGenerator",
+      "com.google.appengine.tools.development.jetty.QuickStartGenerator",
       stageDir.getAbsolutePath(),
       webDefaultXml.getAbsolutePath()
     };

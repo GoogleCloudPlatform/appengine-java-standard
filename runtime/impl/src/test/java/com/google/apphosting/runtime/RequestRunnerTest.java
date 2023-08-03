@@ -29,7 +29,7 @@ import com.google.apphosting.base.protos.HttpPb.HttpRequest;
 import com.google.apphosting.base.protos.HttpPb.ParsedHttpHeader;
 import com.google.apphosting.base.protos.RuntimePb.UPRequest;
 import com.google.apphosting.base.protos.RuntimePb.UPResponse;
-import com.google.apphosting.runtime.jetty94.JettyServletEngineAdapter;
+import com.google.apphosting.runtime.jetty.JettyServletEngineAdapter;
 import com.google.apphosting.runtime.test.MockAnyRpcServerContext;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.Uninterruptibles;
@@ -131,8 +131,7 @@ public final class RequestRunnerTest {
     ServletEngineAdapter servletEngine =
         new JettyServletEngineAdapter() {
           @Override
-          public void serviceRequest(UPRequest upRequest, MutableUpResponse upResponse)
-              throws ServletException, IOException {
+          public void serviceRequest(UPRequest upRequest, MutableUpResponse upResponse) {
             upResponse.setError(UPResponse.ERROR.OK_VALUE);
           }
         };
@@ -182,8 +181,7 @@ public final class RequestRunnerTest {
     ServletEngineAdapter servletEngine =
         new JettyServletEngineAdapter() {
           @Override
-          public void serviceRequest(UPRequest upRequest, MutableUpResponse upResponse)
-              throws ServletException, IOException {
+          public void serviceRequest(UPRequest upRequest, MutableUpResponse upResponse) {
             throw new OutOfMemoryError("this is a simulated OOM in the servletEngine");
           }
         };

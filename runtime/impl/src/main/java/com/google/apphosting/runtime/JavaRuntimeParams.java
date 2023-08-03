@@ -441,7 +441,7 @@ final class JavaRuntimeParams {
   }
 
   private void initServletEngineClass() {
-    String servletEngine = "com.google.apphosting.runtime.jetty94.JettyServletEngineAdapter";
+    String servletEngine = "com.google.apphosting.runtime.jetty.JettyServletEngineAdapter";
     try {
       servletEngineClass = Class.forName(servletEngine).asSubclass(ServletEngineAdapter.class);
     } catch (ClassNotFoundException nfe) {
