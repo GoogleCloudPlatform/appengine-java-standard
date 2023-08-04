@@ -16,17 +16,6 @@
 
 package com.google.apphosting.runtime.jetty;
 
-import static com.google.common.base.Strings.nullToEmpty;
-import static com.google.common.collect.ImmutableMap.toImmutableMap;
-import static com.google.common.collect.ImmutableSet.toImmutableSet;
-import static com.google.common.truth.Truth.assertThat;
-import static java.util.stream.Collectors.toSet;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import com.google.apphosting.base.protos.HttpPb;
 import com.google.apphosting.base.protos.HttpPb.ParsedHttpHeader;
 import com.google.apphosting.base.protos.RuntimePb;
@@ -37,26 +26,49 @@ import com.google.common.base.Ascii;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.protobuf.ExtensionRegistry;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.UncheckedIOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import org.eclipse.jetty.http.HttpFields;
+import org.eclipse.jetty.http.HttpURI;
+import org.eclipse.jetty.http.HttpVersion;
+import org.eclipse.jetty.io.Content;
+import org.eclipse.jetty.server.ConnectionMetaData;
+import org.eclipse.jetty.server.Request;
+import org.eclipse.jetty.server.Response;
+import org.eclipse.jetty.util.BufferUtil;
+import org.eclipse.jetty.util.Callback;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
+import org.mockito.Mockito;
+import org.mockito.stubbing.Answer;
+
 import javax.servlet.ReadListener;
 import javax.servlet.ServletInputStream;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.WriteListener;
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
-import org.mockito.stubbing.Answer;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.net.SocketAddress;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
+
+import static com.google.common.collect.ImmutableMap.toImmutableMap;
+import static com.google.common.collect.ImmutableSet.toImmutableSet;
+import static com.google.common.truth.Truth.assertThat;
+import static java.util.stream.Collectors.toSet;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @RunWith(JUnit4.class)
 public final class UPRequestTranslatorTest {
@@ -103,7 +115,7 @@ public final class UPRequestTranslatorTest {
 
   @Test
   public void translateWithoutAppEngineHeaders() throws Exception {
-    HttpServletRequest httpRequest =
+    Request httpRequest =
         mockServletRequest(
             "http://myapp.appspot.com:80/foo/bar?a=b",
             "127.0.0.1",
@@ -162,7 +174,7 @@ public final class UPRequestTranslatorTest {
 
   @Test
   public void translateWithAppEngineHeaders() throws Exception {
-    HttpServletRequest httpRequest =
+    Request httpRequest =
         mockServletRequest(
             "http://myapp.appspot.com:80/foo/bar?a=b", "127.0.0.1", BASE_APPENGINE_HEADERS);
 
@@ -214,7 +226,7 @@ public final class UPRequestTranslatorTest {
             .putAll(BASE_APPENGINE_HEADERS)
             .put(X_APPENGINE_QUEUENAME, "default")
             .buildOrThrow();
-    HttpServletRequest httpRequest =
+    Request httpRequest =
         mockServletRequest(
             "http://myapp.appspot.com:80/foo/bar?a=b", "127.0.0.1", appengineHeaders);
 
@@ -240,7 +252,7 @@ public final class UPRequestTranslatorTest {
     // that both the app and the user are trusted.
     Map<String, String> appengineHeaders = new HashMap<>(BASE_APPENGINE_HEADERS);
     appengineHeaders.put(X_APPENGINE_TRUSTED_IP_REQUEST, "1");
-    HttpServletRequest httpRequest =
+    Request httpRequest =
         mockServletRequest(
             "http://myapp.appspot.com:80/foo/bar?a=b",
             "127.0.0.1",
@@ -288,7 +300,7 @@ public final class UPRequestTranslatorTest {
 
   @Test
   public void translateEmptyGaiaIdInAppEngineHeaders() throws Exception {
-    HttpServletRequest httpRequest =
+    Request httpRequest =
         mockServletRequest(
             "http://myapp.appspot.com:80/foo/bar?a=b",
             "127.0.0.1",
@@ -299,15 +311,34 @@ public final class UPRequestTranslatorTest {
 
   @Test
   public void translateErrorPageFromHttpResponseError() throws Exception {
-    HttpServletResponse httpResponse = mock(HttpServletResponse.class);
+
     ByteArrayOutputStream out = new ByteArrayOutputStream();
-    when(httpResponse.getOutputStream()).thenReturn(copyingOutputStream(out));
-    UPRequestTranslator.populateErrorResponse(httpResponse, "Expected error during test.");
+    Response httpResponse = mock(Response.class);
+    HttpFields.Mutable httpFields = mock(HttpFields.Mutable.class);
+    when(httpResponse.getHeaders()).thenReturn(httpFields);
+
+    Mockito.doAnswer((Answer<Void>) invocation -> {
+      Object[] args = invocation.getArguments();
+      assertThat(args.length).isEqualTo(3);
+      boolean last = (Boolean)args[0];
+      ByteBuffer content = (ByteBuffer)args[1];
+      Callback callback = (Callback)args[2];
+
+      if (content != null) {
+        BufferUtil.writeTo(content, out);
+      }
+      if (last)
+        out.close();
+      callback.succeeded();
+      return null;
+    }).when(httpResponse).write(anyBoolean(), any(), any());
+
+    UPRequestTranslator.populateErrorResponse(httpResponse, "Expected error during test.", Callback.NOOP);
 
     verify(httpResponse).setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-    verify(httpResponse, never()).addHeader(any(), any());
-    verify(httpResponse, never()).setHeader(any(), any());
-    assertThat(out.toString("UTF-8"))
+    verify(httpFields, never()).add((String)any(), any());
+    verify(httpFields, never()).put((String)any(), (String)any());
+    assertThat(out.toString(StandardCharsets.UTF_8))
         .isEqualTo(
             "<html><head><title>Server Error</title></head>"
                 + "<body>Expected error during test.</body></html>");
@@ -315,7 +346,7 @@ public final class UPRequestTranslatorTest {
 
   @Test
   public void translateSkipAdminCheckInAppEngineHeaders() throws Exception {
-    HttpServletRequest httpRequest =
+    Request httpRequest =
         mockServletRequest(
             "http://myapp.appspot.com:80/foo/bar?a=b",
             "127.0.0.1",
@@ -331,7 +362,7 @@ public final class UPRequestTranslatorTest {
 
   @Test
   public void translateQueueNameSetsSkipAdminCheckInAppEngineHeaders() throws Exception {
-    HttpServletRequest httpRequest =
+    Request httpRequest =
         mockServletRequest(
             "http://myapp.appspot.com:80/foo/bar?a=b",
             "127.0.0.1",
@@ -347,7 +378,7 @@ public final class UPRequestTranslatorTest {
 
   @Test
   public void translateBackgroundURISetsBackgroundRequestType() throws Exception {
-    HttpServletRequest httpRequest =
+    Request httpRequest =
         mockServletRequest(
             "http://myapp.appspot.com:80/_ah/background?a=b",
             "127.0.0.1",
@@ -359,7 +390,7 @@ public final class UPRequestTranslatorTest {
 
   @Test
   public void translateNonBackgroundURIDoesNotSetsBackgroundRequestType() throws Exception {
-    HttpServletRequest httpRequest =
+    Request httpRequest =
         mockServletRequest(
             "http://myapp.appspot.com:80/foo/bar?a=b",
             "127.0.0.1",
@@ -371,7 +402,7 @@ public final class UPRequestTranslatorTest {
 
   @Test
   public void translateRealIpDoesNotSetsBackgroundRequestType() throws Exception {
-    HttpServletRequest httpRequest =
+    Request httpRequest =
         mockServletRequest(
             "http://myapp.appspot.com:80/_ah/background?a=b",
             "127.0.0.1",
@@ -383,7 +414,7 @@ public final class UPRequestTranslatorTest {
 
   @Test
   public void translateCloudContextInAppEngineHeaders() throws Exception {
-    HttpServletRequest httpRequest =
+    Request httpRequest =
         mockServletRequest(
             "http://myapp.appspot.com:80/_ah/background?a=b",
             "127.0.0.1",
@@ -398,7 +429,7 @@ public final class UPRequestTranslatorTest {
     assertThat(contextProto.getTraceMask()).isEqualTo(1L);
   }
 
-  private static HttpServletRequest mockServletRequest(
+  private static Request mockServletRequest(
       String url, String remoteAddr, ImmutableMap<String, String> userHeaders) {
     URI uri;
     try {
@@ -406,34 +437,27 @@ public final class UPRequestTranslatorTest {
     } catch (URISyntaxException e) {
       throw new RuntimeException(e);
     }
-    String urlWithoutQuery =
-        uri.getScheme()
-            + "://"
-            + uri.getHost()
-            + (uri.getPort() > 0 ? (":" + uri.getPort()) : "")
-            + nullToEmpty(uri.getPath());
-    ImmutableMap<String, String> headers =
-        ImmutableMap.<String, String>builder()
-            .putAll(userHeaders)
-            .put("host", uri.getHost())
-            .buildOrThrow();
-    HttpServletRequest httpRequest = mock(HttpServletRequest.class);
-    when(httpRequest.getProtocol()).thenReturn("HTTP/1.0");
-    when(httpRequest.getMethod()).thenReturn("GET");
-    @SuppressWarnings("JdkObsolete") // imposed by the Servlet API
-    Answer<StringBuffer> requestUrlAnswer = invocation -> new StringBuffer(urlWithoutQuery);
-    when(httpRequest.getRequestURL()).thenAnswer(requestUrlAnswer);
-    when(httpRequest.getRequestURI()).thenReturn(uri.getPath());
-    when(httpRequest.getQueryString()).thenReturn(uri.getQuery());
-    when(httpRequest.getRemoteAddr()).thenReturn(remoteAddr);
-    when(httpRequest.getHeaderNames())
-        .thenAnswer(invocation -> Collections.enumeration(headers.keySet()));
-    headers.forEach((k, v) -> when(httpRequest.getHeader(k)).thenReturn(v));
-    try {
-      when(httpRequest.getInputStream()).thenReturn(emptyInputStream());
-    } catch (IOException e) {
-      throw new UncheckedIOException(e);
+
+    HttpFields.Mutable httpFields = HttpFields.build();
+    httpFields.put("host", uri.getHost());
+    for (Map.Entry<String, String> entry : userHeaders.entrySet()) {
+      httpFields.add(entry.getKey(), entry.getValue());
     }
+
+    SocketAddress socketAddress = mock(SocketAddress.class);
+    when(socketAddress.toString()).thenReturn(remoteAddr);
+
+    ConnectionMetaData connectionMetaData = mock(ConnectionMetaData.class);
+    when(connectionMetaData.getRemoteSocketAddress()).thenReturn(socketAddress);
+    when(connectionMetaData.getHttpVersion()).thenReturn(HttpVersion.HTTP_1_0);
+
+    Request httpRequest = mock(Request.class);
+    when(httpRequest.getMethod()).thenReturn("GET");
+    when(httpRequest.getHttpURI()).thenReturn(HttpURI.build(uri).asImmutable());
+    when(httpRequest.getHeaders()).thenReturn(httpFields);
+    when(httpRequest.getConnectionMetaData()).thenReturn(connectionMetaData);
+    when(httpRequest.read()).thenReturn(Content.Chunk.EOF);
+
     return httpRequest;
   }
 
