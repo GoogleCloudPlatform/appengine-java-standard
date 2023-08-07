@@ -98,7 +98,7 @@ public class AppEngineAuthentication {
     DefaultIdentityService identityService = new DefaultIdentityService();
 
     // Set allowed roles.
-    handler.setRoles(new HashSet<String>(Arrays.asList(new String[] {USER_ROLE, ADMIN_ROLE})));
+    handler.setRoles(new HashSet<>(Arrays.asList(USER_ROLE, ADMIN_ROLE)));
     handler.setLoginService(loginService);
     handler.setAuthenticator(authenticator);
     handler.setIdentityService(identityService);

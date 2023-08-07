@@ -33,15 +33,13 @@ import com.google.common.html.HtmlEscapers;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.TextFormat;
 import org.eclipse.jetty.http.HttpField;
+import org.eclipse.jetty.http.HttpStatus;
 import org.eclipse.jetty.http.HttpURI;
 import org.eclipse.jetty.io.Content;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Response;
-import org.eclipse.jetty.util.Blocker;
 import org.eclipse.jetty.util.Callback;
 
-import javax.servlet.ServletOutputStream;
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -138,7 +136,7 @@ public class UPRequestTranslator {
   }
 
   /**
-   * Translate from a response proto to a javax.servlet response.
+   * Translate from a response proto to a Jetty response.
    *
    * @param response the Jetty response object to fill
    * @param rpcResp the proto info available to extract info from
@@ -401,7 +399,7 @@ public class UPRequestTranslator {
    * @param errMsg error text.
    */
   public static void populateErrorResponse(Response resp, String errMsg, Callback callback) {
-    resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+    resp.setStatus(HttpStatus.INTERNAL_SERVER_ERROR_500);
     try (OutputStream outstr = Content.Sink.asOutputStream(resp)) {
       PrintWriter writer = new PrintWriter(outstr);
       writer.print("<html><head><title>Server Error</title></head>");
