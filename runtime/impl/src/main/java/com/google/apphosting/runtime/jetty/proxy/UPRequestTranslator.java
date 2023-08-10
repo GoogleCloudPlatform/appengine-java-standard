@@ -32,14 +32,18 @@ import com.google.common.flogger.GoogleLogger;
 import com.google.common.html.HtmlEscapers;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.TextFormat;
-import java.io.IOException;
-import java.util.Collections;
-import javax.servlet.ServletOutputStream;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import org.eclipse.jetty.http.HttpField;
-import org.eclipse.jetty.ee8.nested.Request;
-import org.eclipse.jetty.ee8.nested.Response;
+import org.eclipse.jetty.http.HttpStatus;
+import org.eclipse.jetty.http.HttpURI;
+import org.eclipse.jetty.io.Content;
+import org.eclipse.jetty.server.Request;
+import org.eclipse.jetty.server.Response;
+import org.eclipse.jetty.util.Callback;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PrintWriter;
 
 /** Translates HttpServletRequest to the UPRequest proto, and vice versa for the response. */
 public class UPRequestTranslator {
@@ -132,38 +136,34 @@ public class UPRequestTranslator {
   }
 
   /**
-   * Translate from a response proto to a javax.servlet response.
+   * Translate from a response proto to a Jetty response.
    *
    * @param response the Jetty response object to fill
    * @param rpcResp the proto info available to extract info from
    */
-  public final void translateResponse(Response response, RuntimePb.UPResponse rpcResp) {
+  public final void translateResponse(Response response, RuntimePb.UPResponse rpcResp, Callback callback) {
     HttpPb.HttpResponse rpcHttpResp = rpcResp.getHttpResponse();
 
     if (rpcResp.getError() != RuntimePb.UPResponse.ERROR.OK.getNumber()) {
-      populateErrorResponse(response, "Request failed: " + rpcResp.getErrorMessage());
+      populateErrorResponse(response, "Request failed: " + rpcResp.getErrorMessage(), callback);
       return;
     }
     response.setStatus(rpcHttpResp.getResponsecode());
     for (HttpPb.ParsedHttpHeader header : rpcHttpResp.getOutputHeadersList()) {
-      response.addHeader(header.getKey(), header.getValue());
+      response.getHeaders().add(header.getKey(), header.getValue());
     }
 
-    try {
-      response.getHttpOutput().sendContent(rpcHttpResp.getResponse().asReadOnlyByteBuffer());
-    } catch (IOException ex) {
-      throw new IllegalStateException(ex);
-    }
+    response.write(true, rpcHttpResp.getResponse().asReadOnlyByteBuffer(), callback);
   }
 
   /**
-   * Makes a UPRequest from an HttpServletRequest
+   * Makes a UPRequest from a Jetty {@link Request}.
    *
-   * @param realRequest the http request object
+   * @param jettyRequest the http request object
    * @return equivalent UPRequest object
    */
   @SuppressWarnings("JdkObsolete")
-  public final RuntimePb.UPRequest translateRequest(HttpServletRequest realRequest) {
+  public final RuntimePb.UPRequest translateRequest(Request jettyRequest) {
     UPRequest.Builder upReqBuilder =
         UPRequest.newBuilder()
             .setAppId(appInfoFactory.getGaeApplication())
@@ -180,17 +180,10 @@ public class UPRequestTranslator {
 
     upReqBuilder.setSecurityTicket(DEFAULT_SECRET_KEY);
     upReqBuilder.setNickname("");
-    if (realRequest instanceof Request) {
-      // user efficient header iteration
-      for (HttpField field : ((Request) realRequest).getHttpFields()) {
-        builderHeader(upReqBuilder, field.getName(), field.getValue());
-      }
-    } else {
-      // slower iteration used for test case fake request only
-      for (String name : Collections.list(realRequest.getHeaderNames())) {
-        String value = realRequest.getHeader(name);
-        builderHeader(upReqBuilder, name, value);
-      }
+
+    // user efficient header iteration
+    for (HttpField field : jettyRequest.getHeaders()) {
+      builderHeader(upReqBuilder, field.getName(), field.getValue());
     }
 
     AppinfoPb.Handler handler =
@@ -205,37 +198,31 @@ public class UPRequestTranslator {
     HttpPb.HttpRequest.Builder httpRequest =
         upReqBuilder
             .getRequestBuilder()
-            .setHttpVersion(realRequest.getProtocol())
-            .setProtocol(realRequest.getMethod())
-            .setUrl(getUrl(realRequest))
-            .setUserIp(realRequest.getRemoteAddr());
+            .setHttpVersion(jettyRequest.getConnectionMetaData().getHttpVersion().asString())
+            .setProtocol(jettyRequest.getMethod())
+            .setUrl(getUrl(jettyRequest))
+            .setUserIp(Request.getRemoteAddr(jettyRequest));
 
-    if (realRequest instanceof Request) {
-      // user efficient header iteration
-      for (HttpField field : ((Request) realRequest).getHttpFields()) {
-        requestHeader(upReqBuilder, httpRequest, field.getName(), field.getValue());
-      }
-    } else {
-      // slower iteration used for test case fake request only
-      for (String name : Collections.list(realRequest.getHeaderNames())) {
-        String value = realRequest.getHeader(name);
-        requestHeader(upReqBuilder, httpRequest, name, value);
-      }
+    // user efficient header iteration
+    for (HttpField field : jettyRequest.getHeaders()) {
+      requestHeader(upReqBuilder, httpRequest, field.getName(), field.getValue());
     }
 
     if (!skipPostData) {
       try {
-        httpRequest.setPostdata(ByteString.readFrom(realRequest.getInputStream()));
+        InputStream inputStream = Content.Source.asInputStream(jettyRequest);
+        httpRequest.setPostdata(ByteString.readFrom(inputStream));
       } catch (IOException ex) {
         throw new IllegalStateException("Could not read POST content:", ex);
       }
     }
 
-    if ("/_ah/background".equals(realRequest.getRequestURI())) {
+    String decodedPath = jettyRequest.getHttpURI().getDecodedPath();
+    if ("/_ah/background".equals(decodedPath)) {
       if (WARMUP_IP.equals(httpRequest.getUserIp())) {
         upReqBuilder.setRequestType(UPRequest.RequestType.BACKGROUND);
       }
-    } else if ("/_ah/start".equals(realRequest.getRequestURI())) {
+    } else if ("/_ah/start".equals(decodedPath)) {
       if (WARMUP_IP.equals(httpRequest.getUserIp())) {
         // This request came from within App Engine via secure internal channels; tell Jetty
         // it's HTTPS to avoid 403 because of web.xml security-constraint checks.
@@ -394,9 +381,10 @@ public class UPRequestTranslator {
     }
   }
 
-  private String getUrl(HttpServletRequest req) {
-    StringBuffer url = req.getRequestURL();
-    String query = req.getQueryString();
+  private String getUrl(Request req) {
+    HttpURI httpURI = req.getHttpURI();
+    StringBuilder url = new StringBuilder(HttpURI.build(httpURI).query(null).asString());
+    String query = httpURI.getQuery();
     // No need to escape, URL retains any %-escaping it might have, which is what we want.
     if (query != null) {
       url.append('?').append(query);
@@ -410,14 +398,16 @@ public class UPRequestTranslator {
    * @param resp response message to fill with info
    * @param errMsg error text.
    */
-  public static void populateErrorResponse(HttpServletResponse resp, String errMsg) {
-    resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-    try {
-      ServletOutputStream outstr = resp.getOutputStream();
-      outstr.print("<html><head><title>Server Error</title></head>");
-      outstr.print("<body>" + HtmlEscapers.htmlEscaper().escape(errMsg) + "</body></html>");
-    } catch (IOException iox) {
-      throw new IllegalStateException(iox);
+  public static void populateErrorResponse(Response resp, String errMsg, Callback callback) {
+    resp.setStatus(HttpStatus.INTERNAL_SERVER_ERROR_500);
+    try (OutputStream outstr = Content.Sink.asOutputStream(resp)) {
+      PrintWriter writer = new PrintWriter(outstr);
+      writer.print("<html><head><title>Server Error</title></head>");
+      writer.print("<body>" + HtmlEscapers.htmlEscaper().escape(errMsg) + "</body></html>");
+      writer.close();
+      callback.succeeded();
+    } catch (Throwable t) {
+      callback.failed(t);
     }
   }
 

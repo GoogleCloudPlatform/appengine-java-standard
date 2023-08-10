@@ -34,21 +34,19 @@ import com.google.common.flogger.GoogleLogger;
 import com.google.common.primitives.Ints;
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.protobuf.MessageLite;
-import org.eclipse.jetty.ee8.nested.AbstractHandler;
-import org.eclipse.jetty.ee8.nested.ContextHandler;
 import org.eclipse.jetty.http.CookieCompliance;
 import org.eclipse.jetty.http.HttpCompliance;
 import org.eclipse.jetty.http.UriCompliance;
-import org.eclipse.jetty.server.Connector;
+import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.HttpConnectionFactory;
+import org.eclipse.jetty.server.Request;
+import org.eclipse.jetty.server.Response;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.handler.gzip.GzipHandler;
+import org.eclipse.jetty.util.Callback;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.Map;
@@ -120,12 +118,8 @@ public class JettyHttpProxy {
     config.setSendServerVersion(false);
     config.setSendXPoweredBy(false);
 
-    // Wrap the ee8 Forwarding Handler as a Core Handler.
-    ContextHandler handler = new ContextHandler("/");
-    handler.setHandler(forwardingHandler);
-
     CoreSizeLimitHandler sizeLimitHandler = new CoreSizeLimitHandler(MAX_REQUEST_SIZE, -1);
-    sizeLimitHandler.setHandler(handler);
+    sizeLimitHandler.setHandler(forwardingHandler);
 
     GzipHandler gzip = new GzipHandler();
     gzip.setInflateBufferSize(8 * 1024);
@@ -193,7 +187,7 @@ public class JettyHttpProxy {
    * app into it, and then forward HTTP requests over gRPC to the runtime and decode the responses.
    */
   // The class has to be public, as it is a Servlet that needs to be loaded by the Jetty server.
-  public static class ForwardingHandler extends AbstractHandler {
+  public static class ForwardingHandler extends Handler.Abstract {
 
     private static final String X_APPENGINE_TIMEOUT_MS = "x-appengine-timeout-ms";
 
@@ -231,24 +225,24 @@ public class JettyHttpProxy {
     }
 
     /**
-     * Forwards a request to the real runtime for handling. We translate the javax.servlet types
+     * Forwards a request to the real runtime for handling. We translate the {@link Request} types
      * into protocol buffers and send the request, then translate the response proto back to a
-     * HttpServletResponse.
+     * {@link Response}.
      */
     @Override
-    public void handle(String target, org.eclipse.jetty.ee8.nested.Request baseRequest, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
-      baseRequest.setHandled(true);
-
+    public boolean handle(Request request, Response response, Callback callback) throws Exception {
       // build the request object
-      RuntimePb.UPRequest upRequest = upRequestTranslator.translateRequest(baseRequest);
+      RuntimePb.UPRequest upRequest = upRequestTranslator.translateRequest(request);
 
       try {
         UPResponse upResponse = getUpResponse(upRequest);
-        upRequestTranslator.translateResponse(baseRequest.getResponse(), upResponse);
+        upRequestTranslator.translateResponse(response, upResponse, callback);
       } catch (Throwable t) {
-        UPRequestTranslator.populateErrorResponse(
-            response, "Can't make request of app: " + Throwables.getStackTraceAsString(t));
+        String errorMsg = "Can't make request of app: " + Throwables.getStackTraceAsString(t);
+        UPRequestTranslator.populateErrorResponse(response, errorMsg, callback);
       }
+
+      return true;
     }
 
     /**
