@@ -19,9 +19,6 @@
 rem Launches the Development AppServer.  This utility allows developers
 rem to test a Google App Engine application on their local workstation.
 
-echo 'The dev_appserver shipped with the standalone Java SDK is deprecated.' 1>&2
-echo 'Please use the java_dev_appserver.sh shipped with the Cloud SDK instead.' 1>&2
-echo 'https://cloud.google.com/appengine/docs/standard/java/download' 1>&2
 
 java -cp "%~dp0\..\lib\appengine-tools-api.jar" ^
     com.google.appengine.tools.KickStart ^
