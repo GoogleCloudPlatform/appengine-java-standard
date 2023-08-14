@@ -78,7 +78,7 @@ class ClassicSdk extends AppengineSdk {
   public String getQuickStartClasspath() {
     List<String> list = new ArrayList<>();
     File quickstart = new File(getSdkRoot(), "lib/tools/quickstart/quickstartgenerator.jar");
-    File jettyDir = new File(getSdkRoot(), SdkInfo.JETTY9_HOME_LIB_PATH);
+    File jettyDir = new File(getSdkRoot(), SdkInfo.JETTY_HOME_LIB_PATH);
     for (File f : jettyDir.listFiles()) {
       if (!f.isDirectory()
           && !(f.getName().startsWith("cdi-") || f.getName().startsWith("jetty-cdi-"))) {

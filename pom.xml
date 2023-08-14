@@ -19,9 +19,35 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.google.appengine</groupId>
   <artifactId>parent</artifactId>
-  <version>2.0.17-SNAPSHOT</version>
+  <version>3.0.0-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>AppEngine :: Parent project</name>
+
+  <repositories>
+    <repository>
+      <id>jetty-staging</id>
+      <url>https://oss.sonatype.org/content/groups/jetty-with-staging</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </repository>
+  </repositories>
+  <pluginRepositories>
+    <pluginRepository>
+      <id>jetty-staging</id>
+      <url>https://oss.sonatype.org/content/groups/jetty-with-staging</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </pluginRepository>
+  </pluginRepositories>
+
   <modules>
     <module>external/geronimo_javamail</module>
     <module>protobuf</module>
@@ -48,10 +74,10 @@
   </modules>
 
   <properties>
-    <maven.compiler.source>1.8</maven.compiler.source>
-    <maven.compiler.target>1.8</maven.compiler.target>
+    <maven.compiler.source>1.11</maven.compiler.source>
+    <maven.compiler.target>1.11</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <jetty.version>9.4.51.v20230217</jetty.version>
+    <jetty.version>12.0.0.beta4</jetty.version>
     <distributionManagement.snapshot.url>https://oss.sonatype.org/content/repositories/google-snapshots/</distributionManagement.snapshot.url>
     <distributionManagement.snapshot.id>sonatype-nexus-snapshots</distributionManagement.snapshot.id>
     <distributionManagement.release.url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</distributionManagement.release.url>
@@ -115,12 +141,12 @@
   </distributionManagement>
   <profiles>
       <profile>
-          <id>jdk9+</id>
+          <id>jdk11+</id>
           <activation>
-              <jdk>[9,)</jdk>
+              <jdk>[11,)</jdk>
           </activation>
           <properties>
-              <maven.compiler.release>8</maven.compiler.release>
+              <maven.compiler.release>11</maven.compiler.release>
           </properties>
       </profile>
       <profile>
@@ -186,32 +212,6 @@
           </build>
       </profile>
       <profile>
-          <id>surefire-java8</id>
-          <activation>
-              <jdk>1.8</jdk>
-          </activation>
-          <build>
-              <plugins>
-                  <plugin>
-                      <groupId>org.apache.maven.plugins</groupId>
-                      <artifactId>maven-surefire-plugin</artifactId>
-                      <version>3.1.2</version>
-                      <configuration>
-                          <systemPropertyVariables>
-                              <appengine.runtime.dir>../deployment/target/runtime-deployment-${project.version}</appengine.runtime.dir>
-                              <com.google.apphosting.runtime.jetty94.LEGACY_MODE>true</com.google.apphosting.runtime.jetty94.LEGACY_MODE>
-                          </systemPropertyVariables>
-                          <!-- Most of these tests were developed with Google's build system, which runs each test
-                          in its own process. So they don't always clean up completely after themselves, for
-                          example leaving threads running. With reuseForks=false, we get one process per test
-                          from Maven too. -->
-                          <reuseForks>false</reuseForks>
-                      </configuration>
-                  </plugin>
-              </plugins>
-          </build>
-      </profile>
-      <profile>
           <id>surefire-java-above8</id>
           <activation>
               <jdk>[11,)</jdk>
@@ -225,7 +225,7 @@
                       <configuration>
                           <systemPropertyVariables>
                               <appengine.runtime.dir>../deployment/target/runtime-deployment-${project.version}</appengine.runtime.dir>
-                              <com.google.apphosting.runtime.jetty94.LEGACY_MODE>true</com.google.apphosting.runtime.jetty94.LEGACY_MODE>
+                              <com.google.apphosting.runtime.jetty.LEGACY_MODE>true</com.google.apphosting.runtime.jetty.LEGACY_MODE>
                           </systemPropertyVariables>
                           <argLine>
                               --add-opens java.base/java.lang=ALL-UNNAMED
@@ -524,9 +524,9 @@
         <version>1.4.4-2.0.10</version>
       </dependency>
       <dependency>
-        <groupId>javax.servlet</groupId>
-        <artifactId>javax.servlet-api</artifactId>
-        <version>3.1.0</version>
+        <groupId>jakarta.servlet</groupId>
+        <artifactId>jakarta.servlet-api</artifactId>
+        <version>4.0.3</version>
       </dependency>
       <dependency>
         <groupId>javax.servlet.jsp.jstl</groupId>
@@ -573,9 +573,32 @@
         <scope>import</scope>
       </dependency>
       <dependency>
+        <groupId>org.eclipse.jetty.ee8</groupId>
+        <artifactId>jetty-ee8-bom</artifactId>
+        <version>${jetty.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <!-- TODO: remove this when it is added to ee8 bom -->
+        <groupId>org.eclipse.jetty.ee8</groupId>
+        <artifactId>jetty-ee8-apache-jsp</artifactId>
+        <version>${jetty.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.eclipse.jetty</groupId>
+        <artifactId>jetty-home</artifactId>
+        <version>${jetty.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.eclipse.jetty</groupId>
+        <artifactId>jetty-security</artifactId>
+        <version>${jetty.version}</version>
+      </dependency>
+      <dependency>
         <groupId>org.eclipse.jetty.toolchain</groupId>
         <artifactId>jetty-schemas</artifactId>
-        <version>3.1</version>
+        <version>4.0.3</version>
       </dependency>
       <dependency>
         <groupId>org.glassfish.web</groupId>
@@ -606,12 +629,12 @@
       <dependency>
         <groupId>org.mortbay.jasper</groupId>
         <artifactId>apache-jsp</artifactId>
-        <version>8.5.70</version>
+        <version>9.0.52</version>
       </dependency>
       <dependency>
         <groupId>org.mortbay.jasper</groupId>
         <artifactId>apache-el</artifactId>
-        <version>8.5.70</version>
+        <version>9.0.52</version>
       </dependency>
       <dependency>
         <groupId>com.google.http-client</groupId>
@@ -694,7 +717,7 @@
         <version>4.13.2</version>
         <scope>test</scope>
       </dependency>
-       <dependency>
+      <dependency>
         <groupId>org.mockito</groupId>
         <artifactId>mockito-bom</artifactId>
         <version>4.11.0</version>
@@ -706,7 +729,7 @@
           <artifactId>mockito-inline</artifactId>
           <version>4.11.0</version>
          <scope>test</scope>
-     </dependency>
+      </dependency>
       <dependency>
         <groupId>com.google.cloud</groupId>
         <artifactId>google-cloud-logging</artifactId>
@@ -805,8 +828,8 @@
           <version>3.5.3</version>
         </plugin>
         <plugin>
-          <groupId>org.eclipse.jetty</groupId>
-          <artifactId>jetty-jspc-maven-plugin</artifactId>
+          <groupId>org.eclipse.jetty.ee8</groupId>
+          <artifactId>jetty-ee8-jspc-maven-plugin</artifactId>
           <version>${jetty.version}</version>
         </plugin>
         <plugin>

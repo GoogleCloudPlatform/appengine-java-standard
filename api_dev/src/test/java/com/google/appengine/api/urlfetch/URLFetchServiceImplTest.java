@@ -58,9 +58,12 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import org.eclipse.jetty.ee8.nested.ContextHandler;
+import org.eclipse.jetty.ee8.servlet.ServletContextHandler;
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.servlet.ServletHandler;
-import org.eclipse.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.ee8.servlet.ServletHandler;
+import org.eclipse.jetty.ee8.servlet.ServletHolder;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -1041,7 +1044,10 @@ public class URLFetchServiceImplTest {
     int port = PortPicker.create().pickUnusedPort();
     Server server = new Server(port);
     ServletHandler handler = new ServletHandler();
-    server.setHandler(handler);
+
+    ServletContextHandler contextHandler = new ServletContextHandler();
+    contextHandler.setServletHandler(handler);
+    server.setHandler(contextHandler);
 
     HttpServlet setCookieServlet = new HttpServlet() {
       @Override

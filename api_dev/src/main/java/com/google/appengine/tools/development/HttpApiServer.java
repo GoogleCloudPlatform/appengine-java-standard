@@ -19,13 +19,18 @@ package com.google.appengine.tools.development;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.net.HttpURLConnection;
+import java.net.SocketException;
+import java.net.URL;
 import java.util.logging.Logger;
+
+import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.handler.HandlerList;
 import org.eclipse.jetty.server.handler.ShutdownHandler;
-import org.eclipse.jetty.servlet.ErrorPageErrorHandler;
-import org.eclipse.jetty.servlet.ServletHandler;
-import org.eclipse.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.ee8.servlet.ErrorPageErrorHandler;
+import org.eclipse.jetty.ee8.servlet.ServletHandler;
+import org.eclipse.jetty.ee8.servlet.ServletHolder;
+import org.eclipse.jetty.ee8.servlet.ServletContextHandler;
 
 /**
  * Google App Engine API HTTP server, using the SDK API stubs for local testing of API calls.
@@ -47,6 +52,7 @@ public class HttpApiServer implements Closeable {
   private static final String REQUEST_ENDPOINT = "/rpc_http";
   private final Server server;
   private final ShutdownHandler shutdownHandler;
+  private final int apiServerPort;
 
   /**
    * Simple command line interface to start an API server locally.
@@ -89,10 +95,10 @@ public class HttpApiServer implements Closeable {
    */
   public HttpApiServer(int apiServerPort, String appEngineServerHost, int appEngineServerPort) {
     server = new Server(apiServerPort);
+    this.apiServerPort = apiServerPort;
 
-    HandlerList handlers = new HandlerList();
-    ServletHandler handler = new ServletHandler();
-    ServletHolder servletHolder = handler.addServletWithMapping(ApiServlet.class, REQUEST_ENDPOINT);
+    ServletHandler servletHandler = new ServletHandler();
+    ServletHolder servletHolder = servletHandler.addServletWithMapping(ApiServlet.class, REQUEST_ENDPOINT);
     servletHolder.setInitParameter("java_runtime_port", Integer.toString(appEngineServerPort));
     servletHolder.setInitParameter("java_runtime_host", appEngineServerHost);
 
@@ -101,11 +107,14 @@ public class HttpApiServer implements Closeable {
     error.setShowStacks(true);
     error.setServer(server);
     server.addBean(error);
-    server.setHandler(handler);
-    handlers.addHandler(handler);
-    shutdownHandler = new ShutdownHandler("stop", false, true);
-    handlers.addHandler(shutdownHandler);
-    server.setHandler(handlers);
+
+    ServletContextHandler contextHandler = new ServletContextHandler();
+    contextHandler.setContextPath("/");
+    contextHandler.setServletHandler(servletHandler);
+
+    shutdownHandler = new ShutdownHandler(null, null, "stop", false);
+    shutdownHandler.setHandler(contextHandler);
+    server.setHandler(shutdownHandler);
   }
 
   /**
@@ -128,9 +137,28 @@ public class HttpApiServer implements Closeable {
   @Override
   public void close() {
     try {
-      shutdownHandler.sendShutdown();
+      sendShutdown();
     } catch (IOException e) {
       throw new UncheckedIOException(e);
+    }
+  }
+
+  public void sendShutdown() throws IOException
+  {
+    URL url = new URL("http://localhost:" + apiServerPort + "/shutdown?token=stop");
+    try
+    {
+      HttpURLConnection connection = (HttpURLConnection)url.openConnection();
+      connection.setRequestMethod("POST");
+      connection.getResponseCode();
+    }
+    catch (SocketException e)
+    {
+      // Okay - the server is not running
+    }
+    catch (IOException e)
+    {
+      throw new RuntimeException(e);
     }
   }
 

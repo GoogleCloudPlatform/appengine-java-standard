@@ -36,8 +36,8 @@ public class SdkInfo {
 
   private static final String DEFAULT_SERVER = "appengine.google.com";
 
-  // Relative path from SDK Root for the Jetty 9.4 Home lib directory.
-  static final String JETTY9_HOME_LIB_PATH = "jetty94/jetty-home/lib";
+  // Relative path from SDK Root for the Jetty Home lib directory.
+  static final String JETTY_HOME_LIB_PATH = "jetty/jetty-home/lib";
 
   private static boolean isInitialized = false;
   private static File sdkRoot = null;
@@ -289,8 +289,8 @@ public class SdkInfo {
     return map;
   }
 
-  private static List<File> getJetty9Jars(String subDir) {
-    File path = new File(sdkRoot, JETTY9_HOME_LIB_PATH + File.separator + subDir);
+  private static List<File> getJettyJars(String subDir) {
+    File path = new File(sdkRoot, JETTY_HOME_LIB_PATH + File.separator + subDir);
 
     if (!path.exists()) {
       throw new IllegalArgumentException("Unable to find " + path.getAbsolutePath());
@@ -308,26 +308,26 @@ public class SdkInfo {
     return jars;
   }
 
-  static List<File> getJetty9JspJars() {
-    List<File> lf = getJetty9Jars("apache-jsp");
-    lf.addAll(getJetty9Jars("apache-jstl"));
+  static List<File> getJettyJspJars() {
+    List<File> lf = getJettyJars("apache-jsp");
+    lf.addAll(getJettyJars("apache-jstl"));
     return lf;
   }
 
   static List<File> getImplJars() {
-    List<File> lf = getJetty9Jars("");
-    lf.addAll(getJetty9JspJars());
+    List<File> lf = getJettyJars("");
+    lf.addAll(getJettyJspJars());
     // We also want the devserver to be able to handle annotated servlet, via ASM:
-    lf.addAll(getJetty9Jars("annotations"));
+    lf.addAll(getJettyJars("annotations"));
     lf.addAll(getLibs(sdkRoot, "impl"));
     return Collections.unmodifiableList(lf);
   }
 
-  static List<File> getJetty9SharedLibFiles() {
+  static List<File> getJettySharedLibFiles() {
     List<File> sharedLibs;
     sharedLibs = new ArrayList<>();
     sharedLibs.add(new File(sdkRoot, "lib/shared/appengine-local-runtime-shared.jar"));
-    File jettyHomeLib = new File(sdkRoot, JETTY9_HOME_LIB_PATH);
+    File jettyHomeLib = new File(sdkRoot, JETTY_HOME_LIB_PATH);
 
     sharedLibs.add(new File(jettyHomeLib, "servlet-api-3.1.jar"));
     File schemas = new File(jettyHomeLib, "servlet-schemas-3.1.jar");
@@ -350,12 +350,12 @@ public class SdkInfo {
     }
     File[] files = jettyHomeLib.listFiles(new JettyVersionFilter());
     sharedLibs.addAll(Arrays.asList(files));
-    sharedLibs.addAll(getJetty9JspJars());
+    sharedLibs.addAll(getJettyJspJars());
     return sharedLibs;
   }
 
   private static List<File> determineSharedLibFiles() {
-    List<File> sharedLibs = getJetty9SharedLibFiles();
+    List<File> sharedLibs = getJettySharedLibFiles();
 
     if (isDevAppServerTest) {
       // If we're running the dev appserver as part of a test, add the testing

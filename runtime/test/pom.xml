@@ -22,7 +22,7 @@
   <parent>
     <groupId>com.google.appengine</groupId>
     <artifactId>runtime-parent</artifactId>
-    <version>2.0.17-SNAPSHOT</version>
+    <version>3.0.0-SNAPSHOT</version>
   </parent>
 
   <packaging>jar</packaging>
@@ -44,9 +44,13 @@
        <groupId>org.eclipse.jetty</groupId>
        <artifactId>jetty-server</artifactId>
      </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-slf4j-impl</artifactId>
+    </dependency>
      <dependency>
-        <groupId>org.eclipse.jetty</groupId>
-        <artifactId>jetty-servlet</artifactId>
+        <groupId>org.eclipse.jetty.ee8</groupId>
+        <artifactId>jetty-ee8-servlet</artifactId>
     </dependency>
     <dependency>
       <groupId>com.google.appengine</groupId>
@@ -106,6 +110,11 @@
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
       <artifactId>httpclient</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-client</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>

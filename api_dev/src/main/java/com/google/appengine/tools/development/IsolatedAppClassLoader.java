@@ -46,9 +46,9 @@ public class IsolatedAppClassLoader extends URLClassLoader {
 
   private static final Logger logger = Logger.getLogger(IsolatedAppClassLoader.class.getName());
 
-  // Web-default.xml files for Jetty9 based devappserver1.
+  // Web-default.xml files for Jetty based devappserver1.
   private static final String WEB_DEFAULT_LOCATION_DEVAPPSERVER1 =
-      "com/google/appengine/tools/development/jetty9/webdefault.xml";
+      "com/google/appengine/tools/development/jetty/webdefault.xml";
 
   // This task queue related servlet should be loaded by the application classloader when the
   // api jar is used by the application, and default to the runtime classloader when the application
@@ -59,7 +59,7 @@ public class IsolatedAppClassLoader extends URLClassLoader {
       "com.google.apphosting.utils.servlet.DeferredTaskServlet";
 
   // Session Data class must be loaded by the runtime classloader, as it is only used by the runtime
-  // servlet session management. For Jetty9.4, the newer session management has a cleaner
+  // servlet session management. The newer Jetty session management has a cleaner
   // classloading implementation.
   private static final String SESSION_DATA_CLASS = "com.google.apphosting.runtime.SessionData";
 
@@ -217,7 +217,7 @@ public class IsolatedAppClassLoader extends URLClassLoader {
 
   /**
    * Returns the set of all servlet and filter class names from the given inputStream xml resource.
-   * Used for example with the /com/google/appengine/tools/development/jetty9/webdefault.xml
+   * Used for example with the /com/google/appengine/tools/development/jetty/webdefault.xml
    * resource.
    */
   @VisibleForTesting
