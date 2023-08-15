@@ -35,7 +35,10 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.jsp.JspFactory;
 import org.eclipse.jetty.ee8.annotations.AnnotationConfiguration;
 import org.eclipse.jetty.ee8.nested.Dispatcher;
+import org.eclipse.jetty.ee8.quickstart.QuickStartConfiguration;
+import org.eclipse.jetty.ee8.webapp.JettyWebXmlConfiguration;
 import org.eclipse.jetty.ee8.webapp.WebAppClassLoader;
+import org.eclipse.jetty.ee8.webapp.WebInfConfiguration;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.ee8.servlet.ErrorPageErrorHandler;
 import org.eclipse.jetty.ee8.webapp.FragmentConfiguration;
@@ -67,30 +70,6 @@ public class EE8AppVersionHandlerFactory implements com.google.apphosting.runtim
    * present.
    */
   private static final String USE_ANNOTATION_SCANNING = "use.annotationscanning";
-
-  /**
-   * Specify which {@link org.eclipse.jetty.ee8.webapp.Configuration} objects should be invoked when
-   * configuring a web application.
-   *
-   * <p>This is a subset of: org.mortbay.jetty.webapp.WebAppContext.__dftConfigurationClasses
-   *
-   * <p>Specifically, we've removed {@code org.mortbay.jetty.webapp.JettyWebXmlConfiguration} which
-   * allows users to use {@code jetty-web.xml} files. We definitely do not want to allow these
-   * files, as they allow for arbitrary method invocation.
-   */
-
-  // List of all the standard Jetty configurations that need to be executed when there
-  // is no WEB-INF/quickstart-web.xml file.
-  private final String[] preconfigurationClasses = getPreconfigurationClasses();
-
-  // List of Jetty configurations only needed if the quickstart process has been
-  // executed, so we do not need the webinf, webxml, fragment and annotation configurations
-  // because they have been executed via the GAE SDK Jetty staging phase that creates the
-  // WEB-INF/quickstart-web.xml file.
-  // You can read more at https://webtide.com/jetty-9-quick-start.
-  private static final String[] quickstartConfigurationClasses = {
-    AppEngineQuickStartConfiguration.class.getCanonicalName(),
-  };
 
   /**
    * A "private" request attribute to indicate if the dispatch to a most recent error page has run
@@ -137,18 +116,6 @@ public class EE8AppVersionHandlerFactory implements com.google.apphosting.runtim
     }
   }
 
-  private String[] getPreconfigurationClasses() {
-    ImmutableList.Builder<String> list = new ImmutableList.Builder<>();
-    list.add(AppEngineWebInfConfiguration.class.getCanonicalName());
-    list.add(WebXmlConfiguration.class.getCanonicalName());
-    list.add(MetaInfConfiguration.class.getCanonicalName());
-    list.add(FragmentConfiguration.class.getCanonicalName());
-    if (Boolean.getBoolean(USE_ANNOTATION_SCANNING)) {
-      list.add(AnnotationConfiguration.class.getCanonicalName());
-    }
-    return list.build().toArray(String[]::new);
-  }
-
   private org.eclipse.jetty.server.Handler doCreateHandler(AppVersion appVersion) throws ServletException {
     AppVersionKey appVersionKey = appVersion.getKey();
     try {
@@ -185,11 +152,20 @@ public class EE8AppVersionHandlerFactory implements com.google.apphosting.runtim
       } else {
         context.setErrorHandler(new NullErrorHandler());
       }
-      File qswebxml = new File(contextRoot, "WEB-INF/quickstart-web.xml");
-      if (qswebxml.exists()) {
-        context.setConfigurationClasses(quickstartConfigurationClasses);
-      } else {
-        context.setConfigurationClasses(preconfigurationClasses);
+
+      /*
+       * Remove JettyWebXmlConfiguration which allows users to use jetty-web.xml files.
+       * We definitely do not want to allow these files, as they allow for arbitrary method invocation.
+       */
+      context.removeConfiguration(new JettyWebXmlConfiguration());
+
+      if (Boolean.getBoolean(USE_ANNOTATION_SCANNING)) {
+        context.addConfiguration(new AnnotationConfiguration());
+      }
+
+      File quickstartXml = new File(contextRoot, "WEB-INF/quickstart-web.xml");
+      if (quickstartXml.exists()) {
+        context.addConfiguration(new QuickStartConfiguration());
       }
 
       // prevent jetty from trying to delete the temp dir
