@@ -47,7 +47,7 @@ import org.eclipse.jetty.util.resource.Resource;
 /**
  * {@code AppVersionHandlerFactory} implements a {@code Handler} for a given {@code AppVersionKey}.
  */
-public class EE9AppVersionHandlerFactory implements com.google.apphosting.runtime.jetty.AppVersionHandlerFactory {
+public class EE8AppVersionHandlerFactory implements com.google.apphosting.runtime.jetty.AppVersionHandlerFactory {
   private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
   private static final String TOMCAT_SIMPLE_INSTANCE_MANAGER =
       "org.apache.tomcat.SimpleInstanceManager";
@@ -103,13 +103,13 @@ public class EE9AppVersionHandlerFactory implements com.google.apphosting.runtim
   private final WebAppContextFactory contextFactory;
   private final boolean useJettyErrorPageHandler;
 
-  public EE9AppVersionHandlerFactory(
+  public EE8AppVersionHandlerFactory(
           Server server,
           String serverInfo) {
     this(server, serverInfo, new AppEngineWebAppContextFactory(), false);
   }
 
-  public EE9AppVersionHandlerFactory(
+  public EE8AppVersionHandlerFactory(
           Server server,
           String serverInfo,
           WebAppContextFactory contextFactory,
