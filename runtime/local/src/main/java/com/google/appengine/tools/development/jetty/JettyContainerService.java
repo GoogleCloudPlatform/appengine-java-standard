@@ -615,7 +615,17 @@ public class JettyContainerService extends AbstractContainerService {
         environments.add(env);
       }
 
-      super.handle(target, baseRequest, request, response);
+      // TODO: why is the ContextScopeListener not working registered in initContext().
+      LocalEnvironment env =
+              (LocalEnvironment) request.getAttribute(LocalEnvironment.class.getName());
+      ApiProxy.Environment oldEnv = ApiProxy.getCurrentEnvironment();
+      try {
+        ApiProxy.setEnvironmentForCurrentThread(env);
+        super.handle(target, baseRequest, request, response);
+      }
+      finally {
+        ApiProxy.setEnvironmentForCurrentThread(oldEnv);
+      }
     }
   }
 
