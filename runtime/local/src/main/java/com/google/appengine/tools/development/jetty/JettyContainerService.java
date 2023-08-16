@@ -221,7 +221,14 @@ public class JettyContainerService extends AbstractContainerService {
     context.setDefaultsDescriptor(webDefaultXml);
 
     // Disable support for jetty-web.xml.
-    context.setConfigurationClasses(CONFIG_CLASSES);
+    ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
+    try {
+      Thread.currentThread().setContextClassLoader(WebAppContext.class.getClassLoader());
+      context.setConfigurationClasses(CONFIG_CLASSES);
+    }
+    finally {
+      Thread.currentThread().setContextClassLoader(contextClassLoader);
+    }
     // Create the webapp ClassLoader.
     // We need to load appengine-web.xml to initialize the class loader.
     File appRoot = determineAppRoot();
