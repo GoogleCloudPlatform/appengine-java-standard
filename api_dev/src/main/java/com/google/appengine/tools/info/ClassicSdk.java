@@ -21,6 +21,7 @@ import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Implementation of the SDK abstraction by the existing GAE SDK distribution, which is composed
@@ -81,7 +82,7 @@ class ClassicSdk extends AppengineSdk {
     File jettyDir = new File(getSdkRoot(), SdkInfo.JETTY_HOME_LIB_PATH);
     for (File f : jettyDir.listFiles()) {
       if (!f.isDirectory()
-          && !(f.getName().startsWith("cdi-") || f.getName().startsWith("jetty-cdi-"))) {
+              && !(f.getName().contains("cdi-") || f.getName().contains("ee9") || f.getName().contains("ee10"))) {
         list.add(f.getAbsolutePath());
       }
     }
@@ -90,7 +91,7 @@ class ClassicSdk extends AppengineSdk {
 
     // Note: Do not put the Apache JSP files in the classpath. If needed, they should be part of
     // the application itself under WEB-INF/lib.
-    for (String subdir : new String[] {"annotations", "jaspi"}) {
+    for (String subdir : new String[] {"ee8-annotations", "ee8-jaspi"}) {
       for (File f : new File(jettyDir, subdir).listFiles()) {
         list.add(f.getAbsolutePath());
       }
