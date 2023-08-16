@@ -153,10 +153,28 @@ public class EE8AppVersionHandlerFactory implements com.google.apphosting.runtim
         context.setErrorHandler(new NullErrorHandler());
       }
 
+        ImmutableList.Builder<String> list = new ImmutableList.Builder<>();
+        list.add(WebInfConfiguration.class.getCanonicalName());
+        list.add(WebXmlConfiguration.class.getCanonicalName());
+        list.add(MetaInfConfiguration.class.getCanonicalName());
+        list.add(FragmentConfiguration.class.getCanonicalName());
+        if (Boolean.getBoolean(USE_ANNOTATION_SCANNING)) {
+          list.add(AnnotationConfiguration.class.getCanonicalName());
+        }
+      String[] strings = list.build().toArray(String[]::new);
+
+      File quickstartXml = new File(contextRoot, "WEB-INF/quickstart-web.xml");
+      if (quickstartXml.exists()) {
+        context.setConfigurationClasses(new String[]{ QuickStartConfiguration.class.getCanonicalName() });
+      }
+      else {
+        context.setConfigurationClasses(strings);
+      }
+
       /*
        * Remove JettyWebXmlConfiguration which allows users to use jetty-web.xml files.
        * We definitely do not want to allow these files, as they allow for arbitrary method invocation.
-       */
+
       context.removeConfiguration(new JettyWebXmlConfiguration());
 
       if (Boolean.getBoolean(USE_ANNOTATION_SCANNING)) {
@@ -169,7 +187,7 @@ public class EE8AppVersionHandlerFactory implements com.google.apphosting.runtim
       File quickstartXml = new File(contextRoot, "WEB-INF/quickstart-web.xml");
       if (quickstartXml.exists()) {
         context.addConfiguration(new QuickStartConfiguration());
-      }
+      }*/
 
       // TODO: review which configurations are added by default.
 
