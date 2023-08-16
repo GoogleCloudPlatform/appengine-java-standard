@@ -162,11 +162,16 @@ public class EE8AppVersionHandlerFactory implements com.google.apphosting.runtim
       if (Boolean.getBoolean(USE_ANNOTATION_SCANNING)) {
         context.addConfiguration(new AnnotationConfiguration());
       }
+      else {
+        context.removeConfiguration(new AnnotationConfiguration());
+      }
 
       File quickstartXml = new File(contextRoot, "WEB-INF/quickstart-web.xml");
       if (quickstartXml.exists()) {
         context.addConfiguration(new QuickStartConfiguration());
       }
+
+      // TODO: review which configurations are added by default.
 
       // prevent jetty from trying to delete the temp dir
       context.setPersistTempDirectory(true);
