@@ -36,6 +36,8 @@ import javax.servlet.jsp.JspFactory;
 import org.eclipse.jetty.ee8.annotations.AnnotationConfiguration;
 import org.eclipse.jetty.ee8.nested.Dispatcher;
 import org.eclipse.jetty.ee8.quickstart.QuickStartConfiguration;
+import org.eclipse.jetty.ee8.webapp.Configuration;
+import org.eclipse.jetty.ee8.webapp.Configurations;
 import org.eclipse.jetty.ee8.webapp.JettyWebXmlConfiguration;
 import org.eclipse.jetty.ee8.webapp.WebAppClassLoader;
 import org.eclipse.jetty.ee8.webapp.WebInfConfiguration;
@@ -45,6 +47,7 @@ import org.eclipse.jetty.ee8.webapp.FragmentConfiguration;
 import org.eclipse.jetty.ee8.webapp.MetaInfConfiguration;
 import org.eclipse.jetty.ee8.webapp.WebAppContext;
 import org.eclipse.jetty.ee8.webapp.WebXmlConfiguration;
+import org.eclipse.jetty.util.component.ClassLoaderDump;
 import org.eclipse.jetty.util.resource.Resource;
 
 /**
@@ -153,29 +156,22 @@ public class EE8AppVersionHandlerFactory implements com.google.apphosting.runtim
         context.setErrorHandler(new NullErrorHandler());
       }
 
-        ImmutableList.Builder<String> list = new ImmutableList.Builder<>();
-        list.add(WebInfConfiguration.class.getCanonicalName());
-        list.add(WebXmlConfiguration.class.getCanonicalName());
-        list.add(MetaInfConfiguration.class.getCanonicalName());
-        list.add(FragmentConfiguration.class.getCanonicalName());
-        if (Boolean.getBoolean(USE_ANNOTATION_SCANNING)) {
-          list.add(AnnotationConfiguration.class.getCanonicalName());
-        }
-      String[] strings = list.build().toArray(String[]::new);
-
-      File quickstartXml = new File(contextRoot, "WEB-INF/quickstart-web.xml");
-      if (quickstartXml.exists()) {
-        context.setConfigurationClasses(new String[]{ QuickStartConfiguration.class.getCanonicalName() });
-      }
-      else {
-        context.setConfigurationClasses(strings);
-      }
+      // TODO: because of the shading we do not have a correct org.eclipse.jetty.ee8.webapp.Configuration file from
+      //  the runtime-impl jar. It failed to merge content from various modules and only contains quickstart.
+      //  Because of this the default configurations are not able to be found by WebAppContext with ServiceLoader.
+      context.setConfigurationClasses(new String[]{
+              WebInfConfiguration.class.getCanonicalName(),
+              WebXmlConfiguration.class.getCanonicalName(),
+              MetaInfConfiguration.class.getCanonicalName(),
+              FragmentConfiguration.class.getCanonicalName()
+      });
 
       /*
        * Remove JettyWebXmlConfiguration which allows users to use jetty-web.xml files.
        * We definitely do not want to allow these files, as they allow for arbitrary method invocation.
-
-      context.removeConfiguration(new JettyWebXmlConfiguration());
+       */
+      // TODO: uncomment when shaded org.eclipse.jetty.ee8.webapp.Configuration is fixed.
+      // context.removeConfiguration(new JettyWebXmlConfiguration());
 
       if (Boolean.getBoolean(USE_ANNOTATION_SCANNING)) {
         context.addConfiguration(new AnnotationConfiguration());
@@ -187,7 +183,10 @@ public class EE8AppVersionHandlerFactory implements com.google.apphosting.runtim
       File quickstartXml = new File(contextRoot, "WEB-INF/quickstart-web.xml");
       if (quickstartXml.exists()) {
         context.addConfiguration(new QuickStartConfiguration());
-      }*/
+      }
+      else {
+        context.removeConfiguration(new QuickStartConfiguration());
+      }
 
       // TODO: review which configurations are added by default.
 
