@@ -34,10 +34,12 @@ import static org.mockito.Mockito.when;
 
 import com.google.appengine.api.NamespaceManager;
 import com.google.appengine.api.memcache.AsyncMemcacheServiceImpl.IdentifiableValueImpl;
+import com.google.appengine.api.memcache.AsyncMemcacheServiceImpl.ItemForPeekImpl;
 import com.google.appengine.api.memcache.MemcacheSerialization.Flag;
 import com.google.appengine.api.memcache.MemcacheSerialization.ValueAndFlags;
 import com.google.appengine.api.memcache.MemcacheService.CasValues;
 import com.google.appengine.api.memcache.MemcacheService.IdentifiableValue;
+import com.google.appengine.api.memcache.MemcacheService.ItemForPeek;
 import com.google.appengine.api.memcache.MemcacheService.SetPolicy;
 import com.google.appengine.api.memcache.MemcacheServicePb.MemcacheBatchIncrementRequest;
 import com.google.appengine.api.memcache.MemcacheServicePb.MemcacheBatchIncrementResponse;
@@ -1974,6 +1976,140 @@ assertThat(result.get(ONE).getValue()).isEqualTo(null);
     multiGetIdentifiableTest(memcache, "ns");
     memcache = new MemcacheServiceImpl("ns2");
     multiGetIdentifiableTest(memcache, "ns2");
+  }
+
+  @Test
+  public void testGetForPeek() {
+    MemcacheServiceImpl memcache = new MemcacheServiceImpl(null);
+    String namespace = "";
+    String[] keys = {ONE, TWO, null, null};
+    String[] values = {ONE, null, TWO, null};
+    for (int i = 0; i < keys.length; i++) {
+      String key = keys[i];
+      String value = values[i];
+      byte[] pbKey = makePbKey(key);
+      MemcacheGetRequest request =
+          MemcacheGetRequest.newBuilder()
+              .setNameSpace(namespace)
+              .setForPeek(true)
+              .addKey(ByteString.copyFrom(pbKey))
+              .build();
+      MemcacheGetResponse response =
+          MemcacheGetResponse.newBuilder()
+              .addItem(
+                  MemcacheGetResponse.Item.newBuilder()
+                      .setFlags(value == null ? Flag.OBJECT.ordinal() : Flag.UTF8.ordinal())
+                      .setKey(ByteString.copyFrom(pbKey))
+                      .setValue(ByteString.copyFrom(serialize(value).value))
+                      .setTimestamps(
+                          MemcacheServicePb.ItemTimestamps.newBuilder()
+                              .setExpirationTimeSec(1)
+                              .setLastAccessTimeSec(2)
+                              .setDeleteLockTimeSec(3)
+                              .build()))
+              .build();
+      expectAsyncCall("Get", request, response);
+      ItemForPeek v = memcache.getItemForPeek(key);
+      assertThat(v.getExpirationTimeSec()).isEqualTo(Long.valueOf(1));
+      assertThat(v.getLastAccessTimeSec()).isEqualTo(Long.valueOf(2));
+      assertThat(v.getDeleteLockTimeSec()).isEqualTo(Long.valueOf(3));
+      assertThat(v.getValue()).isEqualTo(value);
+      verifyAsyncCall("Get", request);
+    }
+  }
+
+  private void multiItemsForPeekTest(MemcacheService memcache, String namespace) {
+    MemcacheGetRequest request =
+        MemcacheGetRequest.newBuilder()
+            .setNameSpace(namespace)
+            .setForPeek(true)
+            .addKey(ByteString.copyFrom(makePbKey(ONE)))
+            .addKey(ByteString.copyFrom(makePbKey(null)))
+            .addKey(ByteString.copyFrom(makePbKey("Missing")))
+            .build();
+    MemcacheGetResponse response =
+        MemcacheGetResponse.newBuilder()
+            .addItem(
+                MemcacheGetResponse.Item.newBuilder()
+                    .setKey(ByteString.copyFrom(makePbKey(ONE)))
+                    .setTimestamps(
+                        MemcacheServicePb.ItemTimestamps.newBuilder()
+                            .setExpirationTimeSec(1)
+                            .setLastAccessTimeSec(2)
+                            .setDeleteLockTimeSec(3)
+                            .build())
+                    .setFlags(Flag.OBJECT.ordinal())
+                    .setValue(ByteString.copyFrom(serialize(null).value)))
+            .addItem(
+                MemcacheGetResponse.Item.newBuilder()
+                    .setKey(ByteString.copyFrom(makePbKey(null)))
+                    .setTimestamps(
+                        MemcacheServicePb.ItemTimestamps.newBuilder()
+                            .setExpirationTimeSec(10)
+                            .setLastAccessTimeSec(20)
+                            .setDeleteLockTimeSec(30)
+                            .build())
+                    .setFlags(Flag.INTEGER.ordinal())
+                    .setValue(ByteString.copyFrom(serialize(456).value)))
+            .build();
+    expectAsyncCall("Get", request, response);
+    ArrayList<String> collection = new ArrayList<>();
+    collection.add(ONE);
+    collection.add(null);
+    collection.add("Missing");
+    Map<String, ItemForPeek> result = memcache.getItemsForPeek(collection);
+    assertThat(result).hasSize(2);
+    assertThat(result.get(ONE).getValue()).isEqualTo(null);
+    assertThat(((ItemForPeekImpl) result.get(ONE)).getExpirationTimeSec()).isEqualTo(1);
+    assertThat(((ItemForPeekImpl) result.get(ONE)).getLastAccessTimeSec()).isEqualTo(2);
+    assertThat(((ItemForPeekImpl) result.get(ONE)).getDeleteLockTimeSec()).isEqualTo(3);
+    assertThat(result.get(null).getValue()).isEqualTo(456);
+    assertThat(((ItemForPeekImpl) result.get(null)).getExpirationTimeSec()).isEqualTo(10);
+    assertThat(((ItemForPeekImpl) result.get(null)).getLastAccessTimeSec()).isEqualTo(20);
+    assertThat(((ItemForPeekImpl) result.get(null)).getDeleteLockTimeSec()).isEqualTo(30);
+    verifyAsyncCall("Get", request);
+  }
+
+  @Test
+  public void testMultiItemForPeek() {
+    MemcacheService memcache = new MemcacheServiceImpl(null);
+    NamespaceManager.set("");
+    multiItemsForPeekTest(memcache, "");
+    NamespaceManager.set("ns");
+    multiItemsForPeekTest(memcache, "ns");
+    memcache = new MemcacheServiceImpl("ns2");
+    multiItemsForPeekTest(memcache, "ns2");
+  }
+
+  @Test
+  public void testGetWithPeekAfterDelete() {
+    MemcacheService memcache = new MemcacheServiceImpl(null);
+    NamespaceManager.set("");
+    byte[] pbKey = makePbKey(ONE);
+    MemcacheGetRequest request =
+        MemcacheGetRequest.newBuilder()
+            .setNameSpace("")
+            .setForPeek(true)
+            .addKey(ByteString.copyFrom(pbKey))
+            .build();
+    MemcacheGetResponse response =
+        MemcacheGetResponse.newBuilder()
+            .addItem(
+                MemcacheGetResponse.Item.newBuilder()
+                    .setFlags(Flag.BOOLEAN.ordinal())
+                    .setKey(ByteString.copyFrom(pbKey))
+                    .setValue(ByteString.copyFromUtf8(""))
+                    .setIsDeleteLocked(true)
+                    .setTimestamps(
+                        MemcacheServicePb.ItemTimestamps.newBuilder()
+                            .setDeleteLockTimeSec(3)
+                            .build()))
+            .build();
+    expectAsyncCall("Get", request, response);
+    ItemForPeek v = memcache.getItemForPeek(ONE);
+    assertThat(v.getDeleteLockTimeSec()).isEqualTo(Long.valueOf(3));
+    assertThat(v.getValue()).isEqualTo(null);
+    verifyAsyncCall("Get", request);
   }
 
   @Test

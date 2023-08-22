@@ -77,6 +77,16 @@ class MemcacheServiceImpl implements MemcacheService {
   public <T> Map<T, Object> getAll(Collection<T> keys) {
     return quietGet(async.getAll(keys));
   }
+  
+  @Override
+  public ItemForPeek getItemForPeek(Object key) {
+    return quietGet(async.getItemForPeek(key));
+  }
+
+  @Override
+  public <T> Map<T, ItemForPeek> getItemsForPeek(Collection<T> keys) {
+   return quietGet(async.getItemsForPeek(keys));
+ }
 
   @Override
   public boolean put(Object key, Object value, Expiration expires, SetPolicy policy) {

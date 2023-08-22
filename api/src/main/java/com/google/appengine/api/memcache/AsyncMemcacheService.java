@@ -18,6 +18,7 @@ package com.google.appengine.api.memcache;
 
 import com.google.appengine.api.memcache.MemcacheService.CasValues;
 import com.google.appengine.api.memcache.MemcacheService.IdentifiableValue;
+import com.google.appengine.api.memcache.MemcacheService.ItemForPeek;
 import com.google.appengine.api.memcache.MemcacheService.SetPolicy;
 import java.util.Collection;
 import java.util.Map;
@@ -45,6 +46,16 @@ public interface AsyncMemcacheService extends BaseMemcacheService {
    * @see MemcacheService#getIdentifiables(Collection)
    */
   <T> Future<Map<T, IdentifiableValue>> getIdentifiables(Collection<T> keys);
+
+  /**
+   * @see MemcacheService#getItemForPeek(Object)
+   */
+  Future<ItemForPeek> getItemForPeek(Object key);
+
+  /**
+   * @see MemcacheService#getItemsForPeek(Collection)
+   */
+  <T> Future<Map<T, ItemForPeek>> getItemsForPeek(Collection<T> keys);
 
   /**
    * @see MemcacheService#contains(Object)
