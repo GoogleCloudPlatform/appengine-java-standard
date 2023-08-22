@@ -251,7 +251,9 @@ public interface MemcacheService extends BaseMemcacheService {
    * @throws IllegalArgumentException if {@code key} is not
    *    {@link Serializable} and is not {@code null}
    */
-   ItemForPeek getItemForPeek(Object key);
+   default ItemForPeek getItemForPeek(Object key) {
+     throw new UnsupportedOperationException();
+   };
 
   /**
    * Performs a getIdentifiable for multiple keys at once.
@@ -287,7 +289,9 @@ public interface MemcacheService extends BaseMemcacheService {
    * @throws IllegalArgumentException if any element of {@code keys} is not
    *    {@link Serializable} and is not {@code null}
    */
-   <T> Map<T, ItemForPeek> getItemsForPeek(Collection<T> keys);
+   default <T> Map<T, ItemForPeek> getItemsForPeek(Collection<T> keys) {
+     throw new UnsupportedOperationException();
+   };
 
   /**
    * Tests whether a given value is in cache, even if its value is {@code null}.
