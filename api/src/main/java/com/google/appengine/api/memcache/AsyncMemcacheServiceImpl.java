@@ -22,6 +22,7 @@ import com.google.appengine.api.NamespaceManager;
 import com.google.appengine.api.memcache.MemcacheSerialization.ValueAndFlags;
 import com.google.appengine.api.memcache.MemcacheService.CasValues;
 import com.google.appengine.api.memcache.MemcacheService.IdentifiableValue;
+import com.google.appengine.api.memcache.MemcacheService.ItemForPeek;
 import com.google.appengine.api.memcache.MemcacheService.SetPolicy;
 import com.google.appengine.api.memcache.MemcacheServiceApiHelper.Provider;
 import com.google.appengine.api.memcache.MemcacheServiceApiHelper.RpcResponseHandler;
@@ -155,7 +156,42 @@ class AsyncMemcacheServiceImpl extends BaseMemcacheServiceImpl implements AsyncM
       return builder.toString();
     }
   }
+ 
+  //@VisibleForTesting
+  static final class ItemForPeekImpl implements MemcacheService.ItemForPeek {
+    private final Object value;
+    private final Long expirationTimeSec;
+    private final Long lastAccessTimeSec;
+    private final Long deleteLockTimeSec;
+    ItemForPeekImpl(Object value, Long expirationTimeSec, Long lastAccessTimeSec, Long deleteLockTimeSec ) {
+      this.value = value;
+      this.expirationTimeSec = expirationTimeSec;
+      this.lastAccessTimeSec = lastAccessTimeSec;
+      this.deleteLockTimeSec = deleteLockTimeSec;
+    }
 
+    @Override
+    public Object getValue() {
+      return value;
+    }
+
+    @Override
+    public Long getExpirationTimeSec() {
+      return expirationTimeSec;
+    }
+
+    @Override
+    public Long getLastAccessTimeSec() {
+      return lastAccessTimeSec;
+    }
+
+    @Override
+    public Long getDeleteLockTimeSec() {
+      return deleteLockTimeSec;
+    }
+
+  }
+  
   //@VisibleForTesting
   static final class IdentifiableValueImpl implements IdentifiableValue {
     private final Object value;
@@ -456,7 +492,8 @@ class AsyncMemcacheServiceImpl extends BaseMemcacheServiceImpl implements AsyncM
   public Future<Boolean> contains(Object key) {
     return doGet(
         key,
-        false,
+        false, // forCas
+        false, // forPeek
         "Memcache contains: exception testing contains (" + key + ")",
         new Transformer<MemcacheGetResponse, Boolean>() {
           @Override
@@ -467,13 +504,16 @@ class AsyncMemcacheServiceImpl extends BaseMemcacheServiceImpl implements AsyncM
         DefaultValueProviders.falseValue());
   }
 
-  private <T> Future<T> doGet(Object key, boolean forCas, String errorText,
+  private <T> Future<T> doGet(Object key, boolean forCas, boolean forPeek, String errorText,
       final Transformer<MemcacheGetResponse, T> responseTransfomer, Provider<T> defaultValue) {
     MemcacheGetRequest.Builder requestBuilder = MemcacheGetRequest.newBuilder();
     requestBuilder.addKey(makePbKey(key));
     requestBuilder.setNameSpace(getEffectiveNamespace());
     if (forCas) {
       requestBuilder.setForCas(true);
+    }
+    if (forPeek) {
+      requestBuilder.setForPeek(true);
     }
     return makeAsyncCall("Get", requestBuilder.build(),
         createRpcResponseHandler(MemcacheGetResponse.getDefaultInstance(), errorText,
@@ -484,7 +524,8 @@ class AsyncMemcacheServiceImpl extends BaseMemcacheServiceImpl implements AsyncM
   public Future<Object> get(final Object key) {
     return doGet(
         key,
-        false,
+        false, // forCas
+        false, // forPeek
         "Memcache get: exception getting 1 key (" + key + ")",
         new Transformer<MemcacheGetResponse, Object>() {
           @Override
@@ -499,7 +540,8 @@ class AsyncMemcacheServiceImpl extends BaseMemcacheServiceImpl implements AsyncM
   public Future<IdentifiableValue> getIdentifiable(final Object key) {
     return doGet(
         key,
-        true,
+        true,  // forCas
+        false, // forPeek
         "Memcache getIdentifiable: exception getting 1 key (" + key + ")",
         new IdentifiableTransformer(key),
         DefaultValueProviders.<IdentifiableValue>nullValue());
@@ -527,7 +569,8 @@ class AsyncMemcacheServiceImpl extends BaseMemcacheServiceImpl implements AsyncM
   public <K> Future<Map<K, IdentifiableValue>> getIdentifiables(Collection<K> keys) {
     return doGetAll(
         keys,
-        true,
+        true,  // forCas
+        false, // forKeep
         "Memcache getIdentifiables: exception getting multiple keys",
         new Transformer<KeyValuePair<K, MemcacheGetResponse.Item>, IdentifiableValue>() {
           @Override
@@ -540,11 +583,82 @@ class AsyncMemcacheServiceImpl extends BaseMemcacheServiceImpl implements AsyncM
         DefaultValueProviders.<K, IdentifiableValue>emptyMap());
   }
 
+  
+  @Override
+  public Future<ItemForPeek> getItemForPeek(final Object key) {
+    return doGet(
+        key,
+        false, // forCas
+        true,  // forPeek
+        "Memcache getItemForPeek: exception getting 1 key (" + key + ")",
+        new ItemForPeekTransformer(key),
+        DefaultValueProviders.<ItemForPeek>nullValue());
+  }
+
+  private class ItemForPeekTransformer
+      implements Transformer<MemcacheGetResponse, ItemForPeek> {
+    private final Object key;
+
+    ItemForPeekTransformer(Object key) {
+      this.key = key;
+    }
+
+    @Override
+    public ItemForPeek transform(MemcacheGetResponse response) {
+      if (response.getItemCount() == 0) {
+        return null;
+      }
+      MemcacheGetResponse.Item item = response.getItem(0);
+      Object value;
+      if (item.hasIsDeleteLocked() && item.getIsDeleteLocked()) {
+        value = null;
+      } else {
+        value = deserializeItem(key, item);
+      }
+
+      return new ItemForPeekImpl(
+          value,
+          item.hasTimestamps() ? item.getTimestamps().getExpirationTimeSec() : null,
+          item.hasTimestamps() ? item.getTimestamps().getLastAccessTimeSec() : null,
+          item.hasTimestamps() ? item.getTimestamps().getDeleteLockTimeSec() : null);
+    }
+  }
+
+  @Override
+  public <K> Future<Map<K, ItemForPeek>> getItemsForPeek(Collection<K> keys) {
+    return doGetAll(
+        keys,
+        false, // forCas
+        true, // forPeek
+        "Memcache getItemsForPeek: exception getting multiple keys",
+        new Transformer<KeyValuePair<K, MemcacheGetResponse.Item>, MemcacheService.ItemForPeek>() {
+          @Override
+          public MemcacheService.ItemForPeek transform(
+              KeyValuePair<K, MemcacheGetResponse.Item> pair) {
+            MemcacheGetResponse.Item item = pair.value;
+            Object value;
+            if (item.hasIsDeleteLocked() && item.getIsDeleteLocked()) {
+              value = null;
+            } else {
+              value = deserializeItem(pair.key, item);
+            }
+
+            return new ItemForPeekImpl(
+                value,
+                item.hasTimestamps() ? item.getTimestamps().getExpirationTimeSec() : null,
+                item.hasTimestamps() ? item.getTimestamps().getLastAccessTimeSec() : null,
+                item.hasTimestamps() ? item.getTimestamps().getDeleteLockTimeSec() : null);
+          }
+        },
+        DefaultValueProviders.<K, MemcacheService.ItemForPeek>emptyMap());
+  }
+
   @Override
   public <K> Future<Map<K, Object>> getAll(Collection<K> keys) {
     return doGetAll(
         keys,
-        false,
+        false, // forCas
+        false, // forPeek
         "Memcache getAll: exception getting multiple keys",
         new Transformer<KeyValuePair<K, MemcacheGetResponse.Item>, Object>() {
           @Override
@@ -555,7 +669,7 @@ class AsyncMemcacheServiceImpl extends BaseMemcacheServiceImpl implements AsyncM
         DefaultValueProviders.<K, Object>emptyMap());
   }
 
-  private <K, V> Future<Map<K, V>> doGetAll(Collection<K> keys, boolean forCas,
+  private <K, V> Future<Map<K, V>> doGetAll(Collection<K> keys, boolean forCas, boolean forPeek,
       String errorText,
       Transformer<KeyValuePair<K, MemcacheGetResponse.Item>, V> responseTransformer,
       Provider<Map<K, V>> defaultValue) {
@@ -569,6 +683,9 @@ class AsyncMemcacheServiceImpl extends BaseMemcacheServiceImpl implements AsyncM
     }
     if (forCas) {
       requestBuilder.setForCas(forCas);
+    }
+    if (forPeek) {
+      requestBuilder.setForPeek(forPeek);
     }
     Transformer<MemcacheGetResponse, Map<K, V>> rpcResponseTransformer =
         new GetAllRpcResponseTransformer<>(byteStringToKey, responseTransformer);

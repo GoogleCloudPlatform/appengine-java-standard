@@ -33,6 +33,9 @@
 //      used as the top level namespace, and name_space is immediately below.
 //      If the name_space field is "", it is mapped to the app's root namespace.
 
+//
+// LINT: ALLOW_GROUPS
+
 syntax = "proto2";
 
 // Some generic_services option(s) added automatically.
@@ -102,6 +105,7 @@ message AppOverride {
   // NB: Can't use 'reserved' in this file, it needs to work with proto1.
 }
 
+// Next tag: 7
 message MemcacheGetRequest {
   repeated bytes key = 1;
   optional string name_space = 2 [default = ""];
@@ -115,8 +119,29 @@ message MemcacheGetRequest {
   optional bool for_cas = 4;
 
   optional AppOverride override = 5;
+
+  // If set true, returned items will include timestamps and indicate whether
+  // the item is delete_locked or not. Peeking at items will update stats, but
+  // will not alter the eviction order of the item.
+  optional bool for_peek = 6;  // default=FALSE
 }
 
+// Timestamps relevant to a memcache item.
+// Next tag: 4
+message ItemTimestamps {
+  // Absolute expiration timestamp of the item. Unset if this item has no
+  // expiration timestamp.
+  optional int64 expiration_time_sec = 1;
+
+  // Absolute last accessed timestamp of the item.
+  optional int64 last_access_time_sec = 2;
+
+  // Absolute delete_time timestamp of the item. Unset if this item is not
+  // delete locked.
+  optional int64 delete_lock_time_sec = 3;
+}
+
+// Next tag: 10
 message MemcacheGetResponse {
   // One item will be returned for each HIT, i.e. where the value was found for
   // the requested key.  Order is not specified.
@@ -136,6 +161,12 @@ message MemcacheGetResponse {
 
     // Relative to now.  Unset if this item has no expiration timestamp.
     optional int32 expires_in_seconds = 6;
+
+    // Item timestamps. Only returned if for_peek is set on the request.
+    optional ItemTimestamps timestamps = 8;
+
+    // Item is delete_locked. Only returned if for_peek is set on the request.
+    optional bool is_delete_locked = 9;
   }
 
   enum GetStatusCode {
@@ -167,6 +198,8 @@ message MemcacheGetResponse {
   }
   // One get_status will be returned for each requested key, in the same order
   // that the requests were in.
+  // TODO(b/290098535) This can return the wrong status code when there's a mix
+  // of hit/miss.
   repeated GetStatusCode get_status = 7;
 }
 

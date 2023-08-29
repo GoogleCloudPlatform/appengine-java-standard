@@ -105,6 +105,40 @@ public interface MemcacheService extends BaseMemcacheService {
   }
 
   /**
+   * ...
+   */
+  interface ItemForPeek {    
+     /**
+     * @return the encapsulated value object.
+     */
+    Object getValue();
+    /**
+     * <pre>
+     * @return the expiration timestamp of the item in unix epoch seconds, or null if
+     *  this item has no expiration timestamp.
+     * </pre>
+     */
+     Long getExpirationTimeSec();
+
+    /**
+     * <pre>
+     * @return the last accessed timestamp of the item in unix epoch seconds, or null if this item has no
+     * last access timestamp.
+     * </pre>
+     *
+     */
+     Long getLastAccessTimeSec();
+
+    /**
+     * <pre>
+     * @return the delete_time timestamp in unix epoch seconds resulting from setting the millisNoReAdd 
+     * parameter of the item, or null if this item is not delete locked.
+     * </pre>
+     */
+    Long getDeleteLockTimeSec();
+  }
+
+  /**
    * A holder for compare and set values.
    * {@link Expiration expiration} and {@code newValue} can be null.
    */
@@ -201,6 +235,26 @@ public interface MemcacheService extends BaseMemcacheService {
    */
   IdentifiableValue getIdentifiable(Object key);
 
+ /**
+   * Similar to {@link #get}, but returns an object that can provide extra timestamp
+   * metadata.
+   *
+   * <p>If an error deserializing the value occurs, this passes
+   * an {@link InvalidValueException} to the service's {@link ErrorHandler}.
+   * If a service error occurs, this passes a {@link MemcacheServiceException}.
+   * See {@link BaseMemcacheService#setErrorHandler(ErrorHandler)}.
+   *
+   * @param key the key object used to store the cache entry
+   * @return an {@link ItemForPeek} object that wraps the
+   * value object stored as well as extra meta data timestamps.
+   *   {@code null} is returned if {@code key} is not present in the cache.
+   * @throws IllegalArgumentException if {@code key} is not
+   *    {@link Serializable} and is not {@code null}
+   */
+   default ItemForPeek getItemForPeek(Object key) {
+     throw new UnsupportedOperationException();
+   };
+
   /**
    * Performs a getIdentifiable for multiple keys at once.
    * This is more efficient than multiple separate calls to
@@ -218,6 +272,26 @@ public interface MemcacheService extends BaseMemcacheService {
    *    {@link Serializable} and is not {@code null}
    */
   <T> Map<T, IdentifiableValue> getIdentifiables(Collection<T> keys);
+
+   /**
+   * Performs a getItemForPeek for multiple keys at once.
+   * This is more efficient than multiple separate calls to
+   * {@link #getItemForPeek(Object)}.
+   *
+   * <p>If an error deserializing the value occurs, this passes
+   * an {@link InvalidValueException} to the service's {@link ErrorHandler}.
+   * If a service error occurs, this passes a {@link MemcacheServiceException}.
+   * See {@link BaseMemcacheService#setErrorHandler(ErrorHandler)}.
+   *
+   * @param keys a collection of keys for which values should be retrieved
+   * @return a mapping from keys to {@link ItemForPeek} of any entries found. If a requested
+   *     key is not found in the cache, the key will not be in the returned Map.
+   * @throws IllegalArgumentException if any element of {@code keys} is not
+   *    {@link Serializable} and is not {@code null}
+   */
+   default <T> Map<T, ItemForPeek> getItemsForPeek(Collection<T> keys) {
+     throw new UnsupportedOperationException();
+   };
 
   /**
    * Tests whether a given value is in cache, even if its value is {@code null}.
