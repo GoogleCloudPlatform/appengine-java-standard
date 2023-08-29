@@ -379,6 +379,9 @@ public class JettyContainerService extends AbstractContainerService {
               .build());
 
       server.start();
+
+
+      reloadWebApp();
     } finally {
       currentThread.setContextClassLoader(previousCcl);
     }
@@ -621,6 +624,8 @@ public class JettyContainerService extends AbstractContainerService {
       ApiProxy.Environment oldEnv = ApiProxy.getCurrentEnvironment();
       try {
         ApiProxy.setEnvironmentForCurrentThread(env);
+        DevAppServerModulesFilter.injectBackendServiceCurrentApiInfo(
+                backendName, backendInstance, portMappingProvider.getPortMapping());
         super.handle(target, baseRequest, request, response);
       }
       finally {
