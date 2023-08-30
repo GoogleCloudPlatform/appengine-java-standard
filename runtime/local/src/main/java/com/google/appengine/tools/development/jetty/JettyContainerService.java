@@ -61,6 +61,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.eclipse.jetty.ee8.webapp.WebAppClassLoader;
 import org.eclipse.jetty.server.Context;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.HttpConnectionFactory;
@@ -77,6 +78,7 @@ import org.eclipse.jetty.ee8.webapp.JettyWebXmlConfiguration;
 import org.eclipse.jetty.ee8.webapp.WebAppContext;
 import org.eclipse.jetty.util.Callback;
 import org.eclipse.jetty.util.Scanner;
+import org.eclipse.jetty.util.component.ClassLoaderDump;
 import org.eclipse.jetty.util.component.LifeCycle;
 import org.eclipse.jetty.util.resource.Resource;
 
@@ -272,9 +274,29 @@ public class JettyContainerService extends AbstractContainerService {
     }
 
     URL[] classPath = getClassPathForApp(appRoot);
-    context.setClassLoader(
-        new IsolatedAppClassLoader(
-            appRoot, externalResourceDir, classPath, JettyContainerService.class.getClassLoader()));
+
+    // TODO: Fix after 12.0.1 is released. See PR #10163.
+    IsolatedAppClassLoader isolatedClassLoader = new IsolatedAppClassLoader(
+            appRoot, externalResourceDir, classPath, JettyContainerService.class.getClassLoader());
+    ClassLoader classLoader = new WebAppClassLoader(isolatedClassLoader, context)
+    {
+      @Override
+      public void addClassPath(Resource resource) {
+        // NOOP
+      }
+
+      @Override
+      public void addClassPath(String classPathList) {
+        // NOOP
+      }
+
+      @Override
+      public void addJars(Resource libs) {
+        // NOOP
+      }
+    };
+
+    context.setClassLoader(classLoader);
     if (Boolean.parseBoolean(System.getProperty("appengine.allowRemoteShutdown"))) {
       context.addServlet(new ServletHolder(new ServerShutdownServlet()), "/_ah/admin/quit");
     }
@@ -392,7 +414,6 @@ public class JettyContainerService extends AbstractContainerService {
               .build());
 
       server.start();
-
 
       reloadWebApp();
     } finally {
