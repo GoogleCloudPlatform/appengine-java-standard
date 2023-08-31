@@ -414,8 +414,6 @@ public class JettyContainerService extends AbstractContainerService {
               .build());
 
       server.start();
-
-      reloadWebApp();
     } finally {
       currentThread.setContextClassLoader(previousCcl);
     }
