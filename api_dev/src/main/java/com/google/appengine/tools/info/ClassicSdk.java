@@ -91,12 +91,17 @@ class ClassicSdk extends AppengineSdk {
 
     // Note: Do not put the Apache JSP files in the classpath. If needed, they should be part of
     // the application itself under WEB-INF/lib.
-    for (String subdir : new String[] {"ee8-annotations", "ee8-jaspi"}) {
+    for (String subdir : new String[] {"ee8-annotations"}) { // TODO: "ee8-jaspi"
       for (File f : new File(jettyDir, subdir).listFiles()) {
         list.add(f.getAbsolutePath());
       }
     }
     list.add(quickstart.getAbsolutePath());
+
+    // Add Jars for logging.
+    for (File f : new File(jettyDir, "logging").listFiles()) {
+      list.add(f.getAbsolutePath());
+    }
 
     return Joiner.on(System.getProperty("path.separator")).join(list);
   }
