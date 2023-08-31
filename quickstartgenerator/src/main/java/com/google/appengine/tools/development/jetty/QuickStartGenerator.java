@@ -81,7 +81,7 @@ public class QuickStartGenerator {
       WebAppContext webapp = new WebAppContext();
       webapp.setBaseResource(ResourceFactory.root().newResource(appDir));
       webapp.addConfiguration(new QuickStartConfiguration());
-      webapp.setAttribute(QuickStartConfiguration.MODE, QuickStartConfiguration.Mode.QUICKSTART);
+      webapp.setAttribute(QuickStartConfiguration.MODE, QuickStartConfiguration.Mode.GENERATE);
       webapp.setDefaultsDescriptor(webDefault.getCanonicalPath());
       server.setHandler(webapp);
       server.start();
