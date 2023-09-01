@@ -207,6 +207,9 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
 
     // TODO: lots of compliance modes to handle.
     HttpConfiguration httpConfiguration = rpcConnector.getHttpConfiguration();
+    httpConfiguration.setSendDateHeader(false);
+    httpConfiguration.setSendServerVersion(false);
+    httpConfiguration.setSendXPoweredBy(false);
     if (LEGACY_MODE) {
       httpConfiguration.setRequestCookieCompliance(CookieCompliance.RFC2965);
       httpConfiguration.setResponseCookieCompliance(CookieCompliance.RFC2965);

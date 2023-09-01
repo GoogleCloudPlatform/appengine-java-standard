@@ -38,9 +38,6 @@ public class DelegateConnector extends AbstractConnector
     public DelegateConnector(Server server, String protocol)
     {
         super(server, null, null, null, 0, new DelegateConnectionFactory(protocol));
-        _httpConfiguration.setSendDateHeader(false);
-        _httpConfiguration.setSendServerVersion(false);
-        _httpConfiguration.setSendXPoweredBy(false);
     }
 
     public HttpConfiguration getHttpConfiguration()

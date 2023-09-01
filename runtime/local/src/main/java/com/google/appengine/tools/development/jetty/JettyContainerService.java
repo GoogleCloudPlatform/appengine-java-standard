@@ -64,6 +64,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.eclipse.jetty.ee8.webapp.WebAppClassLoader;
 import org.eclipse.jetty.server.Context;
 import org.eclipse.jetty.server.Handler;
+import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.NetworkTrafficServerConnector;
 import org.eclipse.jetty.server.Response;
@@ -363,6 +364,10 @@ public class JettyContainerService extends AbstractContainerService {
     Thread currentThread = Thread.currentThread();
     ClassLoader previousCcl = currentThread.getContextClassLoader();
 
+    HttpConfiguration configuration = new HttpConfiguration();
+    configuration.setSendDateHeader(false);
+    configuration.setSendServerVersion(false);
+    configuration.setSendXPoweredBy(false);
     server = new Server();
     try {
       NetworkTrafficServerConnector connector =
@@ -373,7 +378,7 @@ public class JettyContainerService extends AbstractContainerService {
               null,
               0,
               Runtime.getRuntime().availableProcessors(),
-              new HttpConnectionFactory());
+              new HttpConnectionFactory(configuration));
       connector.addBean(new CompletionListener());
       connector.setHost(address);
       connector.setPort(port);
