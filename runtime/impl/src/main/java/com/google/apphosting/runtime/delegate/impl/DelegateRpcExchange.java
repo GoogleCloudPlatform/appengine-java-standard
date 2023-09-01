@@ -87,7 +87,7 @@ public class DelegateRpcExchange implements DelegateExchange
         {
             httpFields.add(header.getKey(), header.getValue());
         }
-        return httpFields.takeAsImmutable();
+        return httpFields.asImmutable();
     }
 
     @Override

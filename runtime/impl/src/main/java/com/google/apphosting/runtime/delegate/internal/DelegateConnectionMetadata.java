@@ -104,13 +104,4 @@ public class DelegateConnectionMetadata extends Attributes.Lazy implements Conne
     {
         return _exchange.getLocalAddr();
     }
-
-    @Override
-    public HostPort getServerAuthority()
-    {
-        HostPort authority = ConnectionMetaData.getServerAuthority(getHttpConfiguration(), this);
-        if (authority == null)
-            authority = new HostPort(getLocalSocketAddress().toString(), -1);
-        return authority;
-    }
 }
