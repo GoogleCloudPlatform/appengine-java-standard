@@ -89,6 +89,12 @@ public class DevAppEngineWebAppContext extends AppEngineWebAppContext {
   }
 
   @Override
+  protected ClassLoader configureClassLoader(ClassLoader loader) {
+    // Avoid wrapping the provided classloader with WebAppClassLoader.
+    return loader;
+  }
+
+  @Override
   public void doScope(
       String target,
       Request baseRequest,

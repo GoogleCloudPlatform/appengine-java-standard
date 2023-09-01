@@ -276,28 +276,9 @@ public class JettyContainerService extends AbstractContainerService {
 
     URL[] classPath = getClassPathForApp(appRoot);
 
-    // TODO: Fix after 12.0.1 is released. See PR #10163.
     IsolatedAppClassLoader isolatedClassLoader = new IsolatedAppClassLoader(
             appRoot, externalResourceDir, classPath, JettyContainerService.class.getClassLoader());
-    ClassLoader classLoader = new WebAppClassLoader(isolatedClassLoader, context)
-    {
-      @Override
-      public void addClassPath(Resource resource) {
-        // NOOP
-      }
-
-      @Override
-      public void addClassPath(String classPathList) {
-        // NOOP
-      }
-
-      @Override
-      public void addJars(Resource libs) {
-        // NOOP
-      }
-    };
-
-    context.setClassLoader(classLoader);
+    context.setClassLoader(isolatedClassLoader);
     if (Boolean.parseBoolean(System.getProperty("appengine.allowRemoteShutdown"))) {
       context.addServlet(new ServletHolder(new ServerShutdownServlet()), "/_ah/admin/quit");
     }

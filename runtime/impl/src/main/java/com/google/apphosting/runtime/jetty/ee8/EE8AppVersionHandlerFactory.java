@@ -128,29 +128,7 @@ public class EE8AppVersionHandlerFactory implements com.google.apphosting.runtim
       context.getCoreContextHandler().setServer(server);
       context.setServer(server);
       context.setDefaultsDescriptor(WEB_DEFAULTS_XML);
-
-      // TODO: Fix after 12.0.1 is released. See PR #10163.
-      // Make any add class or JAR a NOOP because the com.google.apphosting.runtime.ApplicationClassLoader
-      // already has these added, and we don't want the WebAppClassLoader re-adding them.
-      ClassLoader classLoader = new WebAppClassLoader(appVersion.getClassLoader(), context)
-      {
-        @Override
-        public void addClassPath(Resource resource) {
-          // NOOP
-        }
-
-        @Override
-        public void addClassPath(String classPathList) {
-          // NOOP
-        }
-
-        @Override
-        public void addJars(Resource libs) {
-          // NOOP
-        }
-      };
-
-      context.setClassLoader(classLoader);
+      context.setClassLoader(appVersion.getClassLoader());
       if (useJettyErrorPageHandler) {
         context.getErrorHandler().setShowStacks(false);
       } else {

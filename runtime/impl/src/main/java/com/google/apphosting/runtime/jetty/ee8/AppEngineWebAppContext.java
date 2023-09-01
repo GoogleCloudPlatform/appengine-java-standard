@@ -169,7 +169,13 @@ public class AppEngineWebAppContext extends WebAppContext {
     ignoreContentLength = isAppIdForNonContentLength();
   }
 
-    @Override
+  @Override
+  protected ClassLoader configureClassLoader(ClassLoader loader) {
+    // Avoid wrapping the provided classloader with WebAppClassLoader.
+    return loader;
+  }
+
+  @Override
     public APIContext getServletContext()
     {
         /* TODO only does this for logging?
