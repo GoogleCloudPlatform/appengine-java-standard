@@ -21,7 +21,6 @@ import static com.google.apphosting.utils.config.IndexesXml.DIRECTION_VALUE_DESC
 import static com.google.apphosting.utils.config.IndexesXml.MODE_VALUE_GEOSPATIAL;
 
 import com.esotericsoftware.yamlbeans.YamlException;
-import com.esotericsoftware.yamlbeans.YamlReader;
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.ArrayList;
@@ -53,22 +52,47 @@ public class IndexYamlReader {
    */
   public static class IndexYaml {
 
-    public String application;
+    private String application;
+
+    public String getApplication() {
+      return application;
+    }
+
+    public void setApplication(String application) {
+      this.application = application;
+    }
+
     /**
      * JavaBean wrapper for Index entries in IndexesXml.
      */
     public static class Index {
-      public String kind;
-      protected boolean ancestor;
-      public List<Property> properties;
+      private String kind;
+      private String ancestor;
+      private List<Property> properties;
+
+      public String getKind() {
+        return kind;
+      }
+
+      public void setKind(String kind) {
+        this.kind = kind;
+      }
 
       public void setAncestor(String ancestor) {
         // Curse yamlbeans and its noncompliance.
-        this.ancestor = YamlUtils.parseBoolean(ancestor);
+        this.ancestor = String.valueOf(YamlUtils.parseBoolean(ancestor));
       }
 
       public String getAncestor() {
         return "" + ancestor;
+      }
+
+      public List<Property> getProperties() {
+        return properties;
+      }
+
+      public void setProperties(List<Property> properties) {
+        this.properties = properties;
       }
     }
 
@@ -142,7 +166,8 @@ public class IndexYamlReader {
           if (yamlIndex.kind == null) {
             throw new AppEngineConfigException("Index missing required element 'kind'");
           }
-          IndexesXml.Index xmlIndex = xml.addNewIndex(yamlIndex.kind, yamlIndex.ancestor);
+          IndexesXml.Index xmlIndex =
+              xml.addNewIndex(yamlIndex.kind, Boolean.valueOf(yamlIndex.ancestor));
           if (yamlIndex.properties != null) {
             for (Property property : yamlIndex.properties) {
               if (property.getName() == null) {
@@ -242,13 +267,9 @@ public class IndexYamlReader {
    * @throws YamlException If the Yaml parser has trouble parsing.
    */
   private static List<IndexesXml> parseMultiple(Reader yaml, IndexesXml xml) throws YamlException {
-    YamlReader reader = new YamlReader(yaml);
-    reader.getConfig().setPropertyElementType(IndexYaml.class, "indexes", IndexYaml.Index.class);
-    reader.getConfig().setPropertyElementType(
-        IndexYaml.Index.class, "properties", IndexYaml.Property.class);
     List<IndexesXml> list = new ArrayList<IndexesXml>();
     while (true) {
-      IndexYaml indexYaml = reader.read(IndexYaml.class);
+      IndexYaml indexYaml = YamlUtils.parse(yaml, IndexYaml.class);
       if (null == indexYaml) {
         break;
       } else {

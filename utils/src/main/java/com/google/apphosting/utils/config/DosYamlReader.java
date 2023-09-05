@@ -17,7 +17,6 @@
 package com.google.apphosting.utils.config;
 
 import com.esotericsoftware.yamlbeans.YamlException;
-import com.esotericsoftware.yamlbeans.YamlReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -82,12 +81,8 @@ public class DosYamlReader {
   }
 
   public static DosXml parse(Reader yaml) {
-    YamlReader reader = new YamlReader(yaml);
-    reader.getConfig().setPropertyElementType(DosYaml.class,
-                                              "blacklist",
-                                              DosXml.BlacklistEntry.class);
     try {
-      DosYaml dosYaml = reader.read(DosYaml.class);
+      DosYaml dosYaml = YamlUtils.parse(yaml, DosYaml.class);
       if (dosYaml == null) {
         throw new AppEngineConfigException("Empty dos configuration.");
       }
