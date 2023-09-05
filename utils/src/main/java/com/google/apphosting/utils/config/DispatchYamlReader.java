@@ -52,7 +52,6 @@ public class DispatchYamlReader {
   }
 
   public DispatchXml parse() {
-    DispatchXml result = null;
     try {
       return parseImpl(new FileReader(getFilename()));
     } catch (FileNotFoundException ex) {
@@ -63,11 +62,8 @@ public class DispatchYamlReader {
 
   @VisibleForTesting
   static DispatchXml parseImpl(Reader yaml) {
-    YamlReader reader = new YamlReader(yaml);
-    reader.getConfig().setPropertyElementType(DispatchYaml.class, "dispatch",
-        DispatchYamlEntry.class);
     try {
-      DispatchYaml dispatchYaml = reader.read(DispatchYaml.class);
+      DispatchYaml dispatchYaml = YamlUtils.parse(yaml, DispatchYaml.class);
       if (dispatchYaml == null) {
         throw new AppEngineConfigException("Empty dispatch.yaml configuration.");
       }
