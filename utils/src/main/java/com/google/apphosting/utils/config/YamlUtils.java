@@ -16,11 +16,6 @@
 
 package com.google.apphosting.utils.config;
 
-import com.esotericsoftware.yamlbeans.YamlException;
-import com.esotericsoftware.yamlbeans.YamlReader;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.regex.Pattern;
 
 /**
@@ -64,58 +59,6 @@ public class YamlUtils {
   static void validateUrl(String url) {
     if (url.equals("/form")) {
       throw new AppEngineConfigException(String.format(RESERVED_URL, url));
-    }
-  }
-
-  /**
-   * Parse the data into YAML.
-   *
-   * @param data The text to parse as YAML. 
-   * @return The YAML data as a Map.
-   * @throws AppEngineConfigException Throws when the underlying Yaml library
-   * detects bad data of when the data does not parse to a Map.
-   */
-  @SuppressWarnings("unchecked")
-  public static Map<String, Object> genericParse(String data)
-      throws AppEngineConfigException {
-    try {
-      YamlReader reader = new YamlReader(data);
-      return reader.read(Map.class);
-    } catch (YamlException exc) {
-      throw new AppEngineConfigException("Invalid YAML data: " + data, exc);
-    }
-  }
-
-  /**
-   * A utility class that encapsulates conversion between different
-   * types of objects.
-   */
-  public static interface ObjectConverter<T> {
-    T convert(Object obj) throws Exception;
-  }
-
-  /**
-   * Parses the data into YAML and converts the map values.
-   *
-   * @param data The text to parse as YAML. 
-   * @param converter A converter for updating the values of the Map from
-   * the type returned from the underlying Yaml library to the expected type.
-   * @return The YAML data as a Map.
-   * @throws AppEngineConfigException Throws when the underlying Yaml library
-   * detects bad data or when the data does not parse to a Map. Also all
-   * Exceptions from ObjectConverted are encapsulated in an
-   * AppEngineConfigException.
-   */
-  public static <T> Map<String, T> genericParse(String data, 
-      ObjectConverter<T> converter) throws AppEngineConfigException {
-    try {
-      Map<String, T> yaml = new HashMap<String, T>();
-      for (Entry<String, Object> entry : genericParse(data).entrySet()) {
-        yaml.put(entry.getKey(), converter.convert(entry.getValue()));
-      }
-      return yaml;
-    } catch (Exception exc) {
-      throw new AppEngineConfigException(exc);
     }
   }
 }
