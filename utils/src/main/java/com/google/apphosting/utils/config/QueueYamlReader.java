@@ -17,7 +17,6 @@
 package com.google.apphosting.utils.config;
 
 import com.esotericsoftware.yamlbeans.YamlException;
-import com.esotericsoftware.yamlbeans.YamlReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -29,6 +28,7 @@ import java.util.List;
  * Class to parse queue.yaml into a QueueXml object.
  *
  */
+@SuppressWarnings("MemberName") // some methods use snake_case for YAML reflection
 public class QueueYamlReader {
 
   /**
@@ -153,7 +153,7 @@ public class QueueYamlReader {
     }
 
     private List<Queue> entries;
-    public String total_storage_limit;
+    private String total_storage_limit;
 
     public List<Queue> getQueue() {
       return entries;
@@ -161,6 +161,14 @@ public class QueueYamlReader {
 
     public void setQueue(List<Queue> entries) {
       this.entries = entries;
+    }
+
+    public String getTotal_storage_limit() {
+      return total_storage_limit;
+    }
+
+    public void setTotal_storage_limit(String totalStorageLimit) {
+      this.total_storage_limit = totalStorageLimit;
     }
 
     public QueueXml toXml() {
@@ -200,15 +208,8 @@ public class QueueYamlReader {
   }
 
   public static QueueYaml parseYaml(Reader yaml) {
-    YamlReader reader = new YamlReader(yaml);
-    reader.getConfig().setPropertyElementType(QueueYaml.class, "queue", QueueYaml.Queue.class);
-
     try {
-      QueueYaml queueYaml = reader.read(QueueYaml.class);
-      if (queueYaml == null) {
-        throw new AppEngineConfigException("Empty queue configuration.");
-      }
-      return queueYaml;
+      return YamlUtils.parse(yaml, QueueYaml.class);
     } catch (YamlException ex) {
       throw new AppEngineConfigException(ex.getMessage(), ex);
     }

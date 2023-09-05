@@ -17,7 +17,6 @@
 package com.google.apphosting.utils.config;
 
 import com.esotericsoftware.yamlbeans.YamlException;
-import com.esotericsoftware.yamlbeans.YamlReader;
 import com.google.common.base.Joiner;
 import com.google.common.io.CharStreams;
 import java.io.File;
@@ -168,13 +167,9 @@ public class BackendsYamlReader {
     } catch (IOException ex) {
       throw new AppEngineConfigException(ex.getMessage(), ex);
     }
-    YamlReader reader = new YamlReader(hackedYaml);
-    reader.getConfig().setPropertyElementType(BackendsYaml.class,
-                                              "backends",
-                                              BackendsYaml.Entry.class);
-
+    Reader reader = new StringReader(hackedYaml);
     try {
-      BackendsYaml backendsYaml = reader.read(BackendsYaml.class);
+      BackendsYaml backendsYaml = YamlUtils.parse(reader, BackendsYaml.class);
       if (backendsYaml == null) {
         throw new AppEngineConfigException("Empty backends configuration.");
       }

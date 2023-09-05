@@ -17,7 +17,6 @@
 package com.google.apphosting.utils.config;
 
 import com.esotericsoftware.yamlbeans.YamlException;
-import com.esotericsoftware.yamlbeans.YamlReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -208,10 +207,8 @@ public class CronYamlReader {
   }
 
   private static CronYaml parseYaml(Reader yaml) {
-    YamlReader reader = new YamlReader(yaml);
-    reader.getConfig().setPropertyElementType(CronYaml.class, "cron", CronYaml.Cron.class);
     try {
-      CronYaml cronYaml = reader.read(CronYaml.class);
+      CronYaml cronYaml = YamlUtils.parse(yaml, CronYaml.class);
       if (cronYaml == null) {
         throw new AppEngineConfigException("Empty cron configuration.");
       }
