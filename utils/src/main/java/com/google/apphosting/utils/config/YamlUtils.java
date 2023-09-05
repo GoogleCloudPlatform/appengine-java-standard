@@ -261,7 +261,7 @@ public class YamlUtils {
       throws YamlException {
     if (targetType.getRawType().equals(List.class)) {
       Type elementType = targetType.getActualTypeArguments()[0];
-      if (encoded.equals("")) {
+      if (encoded == null || encoded.equals("")) {
         encoded = ImmutableList.of();
       }
       return decodeList((Iterable<?>) encoded, elementType);
