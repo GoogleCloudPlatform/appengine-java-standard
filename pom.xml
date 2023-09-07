@@ -442,9 +442,9 @@
         <version>1.10.2</version>
       </dependency>
       <dependency>
-        <groupId>com.esotericsoftware.yamlbeans</groupId>
+        <groupId>com.contrastsecurity</groupId>
         <artifactId>yamlbeans</artifactId>
-        <version>1.11</version> <!--keep-->
+        <version>1.17</version>
       </dependency>
       <dependency>
         <groupId>com.google.api.grpc</groupId>

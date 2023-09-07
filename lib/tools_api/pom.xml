@@ -274,7 +274,7 @@
               </filters>
               <artifactSet>
                 <includes>
-                  <include>com.esotericsoftware.yamlbeans:yamlbeans</include>
+                  <include>com.contrastsecurity:yamlbeans</include>
                   <include>com.google.appengine:appengine-apis</include>
                   <include>com.google.appengine:appengine-apis-dev</include>
                   <include>com.google.appengine:protos</include>

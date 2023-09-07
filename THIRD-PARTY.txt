@@ -287,7 +287,7 @@ The repository contains 3rd-party code under the following licenses:
         * Protocol Buffers [Util] (com.google.protobuf:protobuf-java-util:3.21.5 - https://developers.google.com/protocol-buffers/protobuf-java-util/)
         * ThreeTen backport (org.threeten:threetenbp:1.5.2 - https://www.threeten.org/threetenbp)
         * ThreeTen-Extra (org.threeten:threeten-extra:1.7.0 - https://www.threeten.org/threeten-extra)
-        * YamlBeans (com.esotericsoftware.yamlbeans:yamlbeans:1.11 - https://github.com/EsotericSoftware/yamlbeans)
+        * YamlBeans (com.contrastsecurity:yamlbeans:1.11 -  https://github.com/Contrast-Security-OSS/yamlbeans)
 
     The JSON License
 
