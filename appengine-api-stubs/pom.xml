@@ -285,7 +285,7 @@
               </relocations>
               <filters>
                 <filter>
-                  <artifact>com.esotericsoftware.yamlbeans:yamlbeans</artifact>
+                  <artifact>com.contrastsecurity:yamlbeans</artifact>
                   <includes>
                     <!-- Used by apphosting/utils/config/QueueYamlReader -->
                     <include>com/esotericsoftware/yamlbeans/**</include>
@@ -362,7 +362,7 @@
               </filters>
               <artifactSet>
                 <includes>
-                  <include>com.esotericsoftware.yamlbeans:yamlbeans</include>
+                  <include>com.contrastsecurity:yamlbeans</include>
                   <include>com.google.appengine:appengine-apis-dev</include>
                   <include>com.google.appengine:mediautil</include>
                   <include>com.google.appengine:shared-sdk</include>

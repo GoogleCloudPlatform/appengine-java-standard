@@ -36,7 +36,7 @@
             <optional>true</optional>
         </dependency>
         <dependency>
-            <groupId>com.esotericsoftware.yamlbeans</groupId>
+            <groupId>com.contrastsecurity</groupId>
             <artifactId>yamlbeans</artifactId>
             <optional>true</optional>
         </dependency>
@@ -359,7 +359,7 @@
                                     <include>javax.activation:activation</include>
                                     <include>org.apache.tomcat:juli</include>
                                     <include>com.beust:jcommander</include>
-                                    <include>com.esotericsoftware.yamlbeans:yamlbeans</include>
+                                    <include>com.contrastsecurity:yamlbeans</include>
                                     <include>com.fasterxml.jackson.core:jackson-core</include>
                                     <include>com.google.android:annotations</include>
                                     <include>com.google.api.grpc:proto-google-common-protos</include>

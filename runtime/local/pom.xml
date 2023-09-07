@@ -228,7 +228,7 @@
                   </includes>
                 </filter>
                 <filter>
-                  <artifact>com.esotericsoftware.yamlbeans:yamlbeans</artifact>
+                  <artifact>com.contrastsecurity:yamlbeans</artifact>
                   <includes>
                     <!-- Used by apphosting/utils/config/QueueYamlReader -->
                     <include>com/esotericsoftware/yamlbeans/**</include>
