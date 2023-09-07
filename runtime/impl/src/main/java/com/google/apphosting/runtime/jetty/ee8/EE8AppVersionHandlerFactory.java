@@ -128,7 +128,8 @@ public class EE8AppVersionHandlerFactory implements com.google.apphosting.runtim
       context.getCoreContextHandler().setServer(server);
       context.setServer(server);
       context.setDefaultsDescriptor(WEB_DEFAULTS_XML);
-      context.setClassLoader(appVersion.getClassLoader());
+      ClassLoader classLoader = appVersion.getClassLoader();
+      context.setClassLoader(classLoader);
       if (useJettyErrorPageHandler) {
         context.getErrorHandler().setShowStacks(false);
       } else {
