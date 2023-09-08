@@ -83,11 +83,6 @@
        <artifactId>activation</artifactId>
     </dependency>
     <dependency>
-      <groupId>com.google.appengine</groupId>
-      <artifactId>appengine-apis-dev</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
       <groupId>com.google.flogger</groupId>
       <artifactId>google-extensions</artifactId>
       <scope>test</scope>
