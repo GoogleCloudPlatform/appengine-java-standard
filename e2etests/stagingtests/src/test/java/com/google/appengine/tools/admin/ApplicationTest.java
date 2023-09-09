@@ -658,7 +658,9 @@ return sdkRoot;
   public void testJspCompilerJava8() throws Exception {
     Application testApp = Application.readApplication(SERVLET3_STANDARD_APP_ROOT);
     assertThat(testApp.getJSPCClassName())
-        .isEqualTo("com.google.appengine.tools.development.jetty9.LocalJspC");
+        .contains("com.google.appengine.tools.development.jetty");
+     assertThat(testApp.getJSPCClassName())
+        .contains("LocalJspC");
   }
 
   @Test
@@ -883,7 +885,7 @@ return sdkRoot;
     File servlet2 = new File(genCodeDir, "org/apache/jsp/tag/web/ui/page_tag.java");
     assertThat(servlet2.exists()).isTrue();
     assertThat(Files.asCharSource(servlet2, UTF_8).read())
-        .contains("* Version: JspC/ApacheTomcat8");
+        .contains("* Version: JspC/ApacheTomcat");
   }
 
   @Test
@@ -1356,10 +1358,14 @@ return sdkRoot;
     // Test that the classes in the generated jar are for Java8.
     assertThat(getJavaJarVersion(jspJar)).isEqualTo(8);
 
-    // See if one of the Jetty9 JSP jars is being added:
+    // See if one of the Jetty9 or Jetty12  JSP jars is being added:
     assertThat(
-            new File(stageDir, "WEB-INF/lib/org.apache.taglibs.taglibs-standard-impl-1.2.5.jar")
-                .exists())
+              new File(stageDir, "WEB-INF/lib/org.apache.taglibs.taglibs-standard-impl-1.2.5.jar")
+                      .exists()
+              // TODO need to extend for Jarkata APIs!
+              || new File(stageDir, "WEB-INF/lib/org.glassfish.web.javax.servlet.jsp.jstl-1.2.5.jar")
+                      .exists())
+            
         .isTrue();
   }
 
