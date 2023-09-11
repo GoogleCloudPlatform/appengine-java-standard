@@ -20,7 +20,7 @@
 
     <groupId>com.google.appengine.demos</groupId>
     <artifactId>sample-error-in-tag-file</artifactId>
-    <version>0.0.1</version>
+    <version>0.0.2-SNAPSHOT</version>
     <packaging>war</packaging>
 
     <name>AppEngine :: sample-error-in-tag-file</name>

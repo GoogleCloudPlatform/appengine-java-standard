@@ -21,7 +21,7 @@
 
   <groupId>com.google.appengine.demos</groupId>
   <artifactId>bundle_standard_with_container_initializer</artifactId>
-  <version>0.0.1</version>
+  <version>0.0.2-SNAPSHOT</version>
   <packaging>war</packaging>
 
   <name>AppEngine :: bundle_standard_with_container_initializer</name>

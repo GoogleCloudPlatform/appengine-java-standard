@@ -20,7 +20,7 @@
 
     <groupId>com.google.appengine.demos</groupId>
     <artifactId>cron-negative-retry-limit</artifactId>
-    <version>0.0.1</version>
+    <version>0.0.2-SNAPSHOT</version>
     <packaging>war</packaging>
 
     <name>AppEngine :: cron-negative-retry-limit</name>
