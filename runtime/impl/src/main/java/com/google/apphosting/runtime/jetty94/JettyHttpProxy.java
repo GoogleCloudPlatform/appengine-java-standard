@@ -47,6 +47,7 @@ import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.handler.AbstractHandler;
+import org.eclipse.jetty.server.handler.SizeLimitHandler;
 import org.eclipse.jetty.server.handler.gzip.GzipHandler;
 
 /**

@@ -38,6 +38,7 @@ import java.util.Optional;
 import javax.servlet.ServletException;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.handler.SizeLimitHandler;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
 
 /**
