@@ -1642,7 +1642,7 @@ return sdkRoot;
     assertThat(testApp.getWebXml().getFallThroughToRuntime()).isFalse();
     String expectedJasperInitializer =
         "\"ContainerInitializer"
-            + "{org.eclipse.jetty.apache.jsp.JettyJasperInitializer"
+            + "{org.eclipse.jetty.ee8.apache.jsp.JettyJasperInitializer"
             + ",interested=[],applicable=[],annotated=[]}\"";
     Map<String, String> trimmedContextParams =
         Maps.transformValues(testApp.getWebXml().getContextParams(), String::trim);

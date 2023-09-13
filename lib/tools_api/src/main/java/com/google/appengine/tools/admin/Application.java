@@ -1078,7 +1078,7 @@ public class Application implements GenericApplication {
     boolean foundJasperInitializer = false;
     while (matcher.find()) {
       String containerInitializer = matcher.group(1);
-      if ("org.eclipse.jetty.apache.jsp.JettyJasperInitializer".equals(containerInitializer)) {
+      if ("org.eclipse.jetty.ee8.apache.jsp.JettyJasperInitializer".equals(containerInitializer)) {
         foundJasperInitializer = true;
       }
       initializers.add(containerInitializer);

@@ -311,7 +311,6 @@ public class SdkInfo {
   static List<File> getJettyJspJars() {
     List<File> lf = getJettyJars("ee8-apache-jsp");
     lf.addAll(getJettyJars("ee8-glassfish-jstl"));
-    lf.addAll(getJettyJars("ee8-apache-jsp"));
     return lf;
   }
 
