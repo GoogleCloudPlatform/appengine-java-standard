@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package com.google.apphosting.runtime.delegate.internal;
+package com.google.apphosting.runtime.jetty.delegate.internal;
 
 import com.google.apphosting.api.ApiProxy;
-import com.google.apphosting.runtime.delegate.DelegateConnector;
-import com.google.apphosting.runtime.delegate.api.DelegateExchange;
+import com.google.apphosting.runtime.jetty.delegate.DelegateConnector;
+import com.google.apphosting.runtime.jetty.delegate.api.DelegateExchange;
 import org.eclipse.jetty.http.HttpFields;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpURI;

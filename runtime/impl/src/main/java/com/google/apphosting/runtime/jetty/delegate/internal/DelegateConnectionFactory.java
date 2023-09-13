@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package com.google.apphosting.runtime.delegate.internal;
+package com.google.apphosting.runtime.jetty.delegate.internal;
 
-import com.google.apphosting.runtime.delegate.DelegateConnector;
+import com.google.apphosting.runtime.jetty.delegate.DelegateConnector;
 import org.eclipse.jetty.io.Connection;
 import org.eclipse.jetty.io.EndPoint;
 import org.eclipse.jetty.server.ConnectionFactory;

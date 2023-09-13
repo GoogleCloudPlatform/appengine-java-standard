@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.apphosting.runtime.delegate.impl;
+package com.google.apphosting.runtime.jetty.delegate.impl;
 
 import org.eclipse.jetty.io.Content;
 import org.eclipse.jetty.util.BufferUtil;
