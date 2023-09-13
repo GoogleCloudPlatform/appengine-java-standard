@@ -56,6 +56,7 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Scanner;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.JarInputStream;
@@ -1510,7 +1511,11 @@ return sdkRoot;
     //  </context-param>
 
     NodeList nodeList = quickstartDoc.getElementsByTagName("context-param");
-    assertThat(nodeList.getLength()).isEqualTo(3);
+
+    // TODO: review. This expectation used to be 3, this is because the Jetty
+    //  QuickStartGeneratorConfiguration.generateQuickStartWebXml will now
+    //  add an empty set if it doesn't have any SCIs instead of not setting the context param.
+    assertThat(nodeList.getLength()).isEqualTo(4);
     for (int i = 0; i < nodeList.getLength(); i++) {
       Node contextParam = nodeList.item(i).getFirstChild();
       int nbParamValue = 0;
