@@ -51,7 +51,7 @@
       <artifactId>jakarta.servlet-api</artifactId>
     </dependency>
     <dependency>
-      <groupId>com.esotericsoftware.yamlbeans</groupId>
+      <groupId>com.contrastsecurity</groupId>
       <artifactId>yamlbeans</artifactId>
     </dependency>
     <dependency>

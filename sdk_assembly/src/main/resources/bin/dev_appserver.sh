@@ -17,11 +17,6 @@
 # Launches the Development AppServer.  This utility allows developers
 # to test a Google App Engine application on their local workstation.
 
-(>&2 echo \
-'The dev_appserver shipped with the standalone Java SDK is deprecated. Please
-use the java_dev_appserver.sh shipped with the Cloud SDK instead.
-https://cloud.google.com/appengine/docs/standard/java/download')
-
 [[ -z "${DEBUG}" ]] || set -x  # trace if $DEBUG env. var. is non-zero
 
 # Construct the absolute name of the SDK bin directory.

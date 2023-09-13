@@ -23,8 +23,8 @@ import com.google.apphosting.base.protos.RuntimePb.UPResponse;
 import com.google.apphosting.runtime.AppVersion;
 import com.google.apphosting.runtime.MutableUpResponse;
 import com.google.apphosting.runtime.ServletEngineAdapter;
-import com.google.apphosting.runtime.delegate.DelegateConnector;
-import com.google.apphosting.runtime.delegate.impl.DelegateRpcExchange;
+import com.google.apphosting.runtime.jetty.delegate.DelegateConnector;
+import com.google.apphosting.runtime.jetty.delegate.impl.DelegateRpcExchange;
 import com.google.apphosting.runtime.jetty.proxy.JettyHttpProxy;
 import com.google.apphosting.utils.config.AppEngineConfigException;
 import com.google.apphosting.utils.config.AppYaml;
@@ -207,6 +207,9 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
 
     // TODO: lots of compliance modes to handle.
     HttpConfiguration httpConfiguration = rpcConnector.getHttpConfiguration();
+    httpConfiguration.setSendDateHeader(false);
+    httpConfiguration.setSendServerVersion(false);
+    httpConfiguration.setSendXPoweredBy(false);
     if (LEGACY_MODE) {
       httpConfiguration.setRequestCookieCompliance(CookieCompliance.RFC2965);
       httpConfiguration.setResponseCookieCompliance(CookieCompliance.RFC2965);

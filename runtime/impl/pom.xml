@@ -36,7 +36,7 @@
             <optional>true</optional>
         </dependency>
         <dependency>
-            <groupId>com.esotericsoftware.yamlbeans</groupId>
+            <groupId>com.contrastsecurity</groupId>
             <artifactId>yamlbeans</artifactId>
             <optional>true</optional>
         </dependency>
@@ -211,7 +211,48 @@
           </exclusions>
             <optional>true</optional>
         </dependency>
-        <!-- Test dependencies. -->
+        <!-- io.netty are transitive deps needed by io.grpc-->
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-buffer</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-codec</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-codec-http</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-codec-http2</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-common</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-handler</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-transport</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-transport-native-unix-common</artifactId>
+            <optional>true</optional>
+        </dependency>
+      <!-- Test dependencies. -->
         <dependency>
             <groupId>com.google.appengine</groupId>
             <artifactId>appengine-tools-sdk</artifactId>
@@ -364,7 +405,7 @@
                                     <include>javax.activation:activation</include>
                                     <include>org.apache.tomcat:juli</include>
                                     <include>com.beust:jcommander</include>
-                                    <include>com.esotericsoftware.yamlbeans:yamlbeans</include>
+                                    <include>com.contrastsecurity:yamlbeans</include>
                                     <include>com.fasterxml.jackson.core:jackson-core</include>
                                     <include>com.google.android:annotations</include>
                                     <include>com.google.api.grpc:proto-google-common-protos</include>

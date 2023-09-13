@@ -164,8 +164,8 @@
                                     <artifactId>jetty-ee8-apache-jsp</artifactId>
                                     <overWrite>true</overWrite>
                                     <classifier>nolog</classifier>
-                                    <outputDirectory>${assembly-directory}/jetty/jetty-home/lib/apache-jsp</outputDirectory>
-                                    <destFileName>org.eclipse.jetty.apache-jsp-${jetty.version}-nolog.jar</destFileName>
+                                    <outputDirectory>${assembly-directory}/jetty/jetty-home/lib/ee8-apache-jsp</outputDirectory>
+                                    <destFileName>org.eclipse.jetty.ee8.apache-jsp-${jetty.version}-nolog.jar</destFileName>
                                 </artifactItem>
                                 <artifactItem>
                                     <groupId>com.google.appengine</groupId>
@@ -276,11 +276,9 @@
                         <configuration>
                             <target>
                                 <chmod dir="${assembly-directory}/bin" perm="755" includes="**/*.sh" />
-                            </target>
-                            <tasks>
                                 <delete file="${assembly-directory}/jetty/jetty-home/lib/apache-jsp/org.eclipse.jetty.apache-jsp-${jetty.version}.jar"/>
                                 <delete dir="${assembly-directory}/jetty/jetty-home/demo-base"/>
-                            </tasks>
+                            </target>
                         </configuration>
                     </execution>
                 </executions>

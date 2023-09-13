@@ -35,6 +35,12 @@
       <artifactId>ant</artifactId>
       <optional>true</optional>
     </dependency>
+     <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+            <optional>true</optional>
+            <version>2.0.7</version>
+    </dependency>
     <dependency>
       <groupId>com.google.appengine</groupId>
       <artifactId>appengine-apis-dev</artifactId>
@@ -268,7 +274,7 @@
               </filters>
               <artifactSet>
                 <includes>
-                  <include>com.esotericsoftware.yamlbeans:yamlbeans</include>
+                  <include>com.contrastsecurity:yamlbeans</include>
                   <include>com.google.appengine:appengine-apis</include>
                   <include>com.google.appengine:appengine-apis-dev</include>
                   <include>com.google.appengine:protos</include>
@@ -284,6 +290,7 @@
                   <include>commons-logging:commons-logging:*</include>
                   <include>org.antlr:antlr-runtime:*</include>
                   <include>org.apache.ant:ant</include>
+                  <include>org.slf4j:slf4j-api</include>
                   <include>org.apache.httpcomponents:httpclient</include>
                   <include>org.apache.httpcomponents:httpcore:*</include>
                   <include>org.eclipse.jetty:jetty-http</include>

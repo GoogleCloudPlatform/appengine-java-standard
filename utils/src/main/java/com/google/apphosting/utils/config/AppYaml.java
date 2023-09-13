@@ -16,9 +16,7 @@
 
 package com.google.apphosting.utils.config;
 
-import com.esotericsoftware.yamlbeans.YamlConfig;
 import com.esotericsoftware.yamlbeans.YamlException;
-import com.esotericsoftware.yamlbeans.YamlReader;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
@@ -1566,10 +1564,8 @@ public class AppYaml {
   }
 
   public static AppYaml parse(Reader reader) {
-    YamlReader yaml = new YamlReader(reader);
-    prepareParser(yaml.getConfig());
     try {
-      AppYaml appYaml = yaml.read(AppYaml.class);
+      AppYaml appYaml = YamlUtils.parse(reader, AppYaml.class);
       if (appYaml == null) {
         throw new YamlException("Unable to parse yaml file");
       }
@@ -1592,23 +1588,6 @@ public class AppYaml {
 
   public static AppYaml parse(String yaml) {
     return parse(new StringReader(yaml));
-  }
-
-  public static void prepareParser(YamlConfig config) {
-    config.setPropertyElementType(AppYaml.class, "handlers", Handler.class);
-    config.setPropertyElementType(AppYaml.class, "static_files", StaticFile.class);
-    config.setPropertyElementType(AppYaml.class, "resource_files", ResourceFile.class);
-    config.setPropertyElementType(AppYaml.class, "system_properties", String.class);
-    config.setPropertyElementType(AppYaml.class, "context_params", String.class);
-    config.setPropertyElementType(AppYaml.class, "env_variables", String.class);
-    config.setPropertyElementType(AppYaml.class, "build_env_variables", String.class);
-    config.setPropertyElementType(AppYaml.class, "beta_settings", String.class);
-    config.setPropertyElementType(AppYaml.class, "welcome_files", String.class);
-    config.setPropertyElementType(AppYaml.class, "listeners", String.class);
-    config.setPropertyElementType(AppYaml.class, "inbound_services", String.class);
-    config.setPropertyElementType(Handler.class, "init_params", String.class);
-    config.setPropertyElementType(AdminConsole.class, "pages", AdminPage.class);
-    config.setPropertyElementType(AppYaml.class, "error_handlers", ErrorHandler.class);
   }
 
   private void generateInclude(StaticFile include, XmlWriter xml) {

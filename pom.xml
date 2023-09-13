@@ -71,13 +71,14 @@
     <module>sdk_assembly</module>
     <module>applications</module>
     <module>appengine_testing_tests</module>
+    <module>e2etests</module>
   </modules>
 
   <properties>
     <maven.compiler.source>1.11</maven.compiler.source>
     <maven.compiler.target>1.11</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <jetty.version>12.0.0.beta4</jetty.version>
+    <jetty.version>12.0.1</jetty.version>
     <distributionManagement.snapshot.url>https://oss.sonatype.org/content/repositories/google-snapshots/</distributionManagement.snapshot.url>
     <distributionManagement.snapshot.id>sonatype-nexus-snapshots</distributionManagement.snapshot.id>
     <distributionManagement.release.url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</distributionManagement.release.url>
@@ -386,7 +387,7 @@
       <dependency>
         <groupId>com.google.cloud.datastore</groupId>
         <artifactId>datastore-v1-proto-client</artifactId>
-        <version>2.16.3</version>
+        <version>2.17.0</version>
       </dependency>
       <dependency>
         <groupId>com.google.geometry</groupId>
@@ -396,7 +397,7 @@
       <dependency>
         <groupId>org.easymock</groupId>
         <artifactId>easymock</artifactId>
-        <version>4.3</version>
+        <version>5.2.0</version>
       </dependency>
       <dependency>
         <groupId>com.google.appengine</groupId>
@@ -433,23 +434,23 @@
       <dependency>
         <groupId>com.google.auto.value</groupId>
         <artifactId>auto-value</artifactId>
-        <version>1.10.2</version>
+        <version>1.10.4</version>
         <scope>provided</scope>
       </dependency>
       <dependency>
         <groupId>com.google.auto.value</groupId>
         <artifactId>auto-value-annotations</artifactId>
-        <version>1.10.2</version>
+        <version>1.10.4</version>
       </dependency>
       <dependency>
-        <groupId>com.esotericsoftware.yamlbeans</groupId>
+        <groupId>com.contrastsecurity</groupId>
         <artifactId>yamlbeans</artifactId>
-        <version>1.11</version> <!--keep-->
+        <version>1.17</version>
       </dependency>
       <dependency>
         <groupId>com.google.api.grpc</groupId>
         <artifactId>proto-google-cloud-datastore-v1</artifactId>
-        <version>0.107.1</version>
+        <version>0.108.0</version>
       </dependency>
       <dependency>
         <groupId>com.google.api.grpc</groupId>
@@ -546,7 +547,7 @@
       <dependency>
         <groupId>org.apache.ant</groupId>
         <artifactId>ant</artifactId>
-        <version>1.10.13</version>
+        <version>1.10.14</version>
       </dependency>
       <dependency>
         <groupId>org.apache.maven.plugin-tools</groupId>
@@ -562,7 +563,7 @@
       <dependency>
         <groupId>org.checkerframework</groupId>
         <artifactId>checker-qual</artifactId>
-        <version>3.37.0</version>
+        <version>3.38.0</version>
         <scope>provided</scope>
       </dependency>
       <dependency>
@@ -649,22 +650,63 @@
       <dependency>
         <groupId>io.grpc</groupId>
         <artifactId>grpc-api</artifactId>
-        <version>1.57.1</version>
+        <version>1.57.2</version>
       </dependency>
       <dependency>
         <groupId>io.grpc</groupId>
         <artifactId>grpc-stub</artifactId>
-        <version>1.57.1</version>
+        <version>1.57.2</version>
       </dependency>
       <dependency>
         <groupId>io.grpc</groupId>
         <artifactId>grpc-protobuf</artifactId>
-        <version>1.57.1</version>
+        <version>1.57.2</version>
       </dependency>
       <dependency>
          <groupId>io.grpc</groupId>
          <artifactId>grpc-netty</artifactId>
-         <version>1.57.1</version>
+         <version>1.57.2</version>
+      </dependency>
+      <!-- io.netty are transitive deps needed by io.grpc-->
+      <dependency>
+          <groupId>io.netty</groupId>
+          <artifactId>netty-buffer</artifactId>
+          <version>4.1.97.Final</version>
+      </dependency>
+      <dependency>
+          <groupId>io.netty</groupId>
+          <artifactId>netty-codec</artifactId>
+          <version>4.1.97.Final</version>
+      </dependency>
+      <dependency>
+          <groupId>io.netty</groupId>
+          <artifactId>netty-codec-http</artifactId>
+          <version>4.1.97.Final</version>
+      </dependency>
+      <dependency>
+          <groupId>io.netty</groupId>
+          <artifactId>netty-codec-http2</artifactId>
+          <version>4.1.97.Final</version>
+      </dependency>
+      <dependency>
+          <groupId>io.netty</groupId>
+          <artifactId>netty-common</artifactId>
+          <version>4.1.94.Final</version>
+      </dependency>
+      <dependency>
+          <groupId>io.netty</groupId>
+          <artifactId>netty-handler</artifactId>
+          <version>4.1.97.Final</version>
+      </dependency>
+      <dependency>
+          <groupId>io.netty</groupId>
+          <artifactId>netty-transport</artifactId>
+          <version>4.1.97.Final</version>
+      </dependency>
+      <dependency>
+          <groupId>io.netty</groupId>
+          <artifactId>netty-transport-native-unix-common</artifactId>
+          <version>4.1.97.Final</version>
       </dependency>
       <dependency>
         <groupId>org.apache.tomcat</groupId>
@@ -733,7 +775,7 @@
       <dependency>
         <groupId>com.google.cloud</groupId>
         <artifactId>google-cloud-logging</artifactId>
-        <version>3.15.7</version>
+        <version>3.15.8</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
@@ -742,7 +784,7 @@
         <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-enforcer-plugin</artifactId>
-            <version>3.3.0</version>
+            <version>3.4.0</version>
             <executions>
                 <execution>
                     <id>enforce-maven</id>
@@ -835,7 +877,7 @@
         <plugin>
            <groupId>org.codehaus.mojo</groupId>
            <artifactId>javacc-maven-plugin</artifactId>
-           <version>2.6</version>
+           <version>3.0.1</version>
         </plugin>
         <plugin>
           <groupId>org.codehaus.mojo</groupId>

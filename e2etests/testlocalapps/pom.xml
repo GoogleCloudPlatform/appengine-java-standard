@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+ Copyright 2021 Google LLC
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     https://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+-->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <artifactId>testlocalapss</artifactId>
+  <name>AppEngine :: Test local applications</name>
+  <parent>
+    <groupId>com.google.appengine</groupId>
+    <artifactId>e2etests</artifactId>
+    <version>3.0.0-SNAPSHOT</version>
+  </parent>
+  <packaging>pom</packaging>
+  <properties>
+       <maven.deploy.skip>true</maven.deploy.skip>
+  </properties>
+  <modules>
+      <module>badcron</module>
+      <module>cron-bad-job-age-limit</module>
+      <module>cron-good-retry-parameters</module>
+      <module>cron-negative-max-backoff</module>
+      <module>cron-negative-retry-limit</module>
+      <module>cron-two-max-doublings</module>
+      <module>http-headers</module>
+      <module>java8-jar</module>
+      <module>java8-no-webxml</module>
+      <module>sampleapp</module>
+      <module>sampleapp-automatic-module</module>
+      <module>sampleapp-backends</module>
+      <module>sampleapp-basic-module</module>
+      <module>sampleapp-manual-module</module>
+      <module>sampleapp-runtime</module>
+      <module>sample-badaeweb</module>
+      <module>sample-badentrypoint</module>
+      <module>sample-badindexes</module>
+      <module>sample-badruntimechannel</module>
+      <module>sample-badweb</module>
+      <module>sample-baddispatch</module>
+      <module>sample-baddispatch-yaml</module>
+      <module>sample-default-auto-ids</module>
+      <module>sample-error-in-tag-file</module>
+      <module>sample-java11</module>
+      <module>sample-java17</module>
+      <module>sample-jsptaglibrary</module>
+      <module>sample-jspx</module>
+      <module>sample-legacy-auto-ids</module>
+      <module>sample-missingappid</module>
+      <module>sample-nojsps</module>
+      <module>sample-unspecified-auto-ids</module>
+      <module>sample-with-classes</module>
+      <module>stage-sampleapp</module>
+      <module>stage-with-staging-options</module>
+      <module>xmlorder</module>
+      <module>bundle_standard</module>
+      <module>bundle_standard_with_container_initializer</module>
+      <module>bundle_standard_with_no_jsp</module>
+      <module>bundle_standard_with_weblistener_memcache</module>
+  </modules>
+</project>

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+ Copyright 2021 Google LLC
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     https://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+-->
+
+<queue-entries>
+  <queue>
+    <name>a-name</name>
+    <rate>5/s</rate>
+    <bucket-size>3</bucket-size>
+  </queue>
+  <queue>
+    <name>b-name</name>
+    <rate>0</rate>
+  </queue>
+  <queue>
+    <name>c-name</name>
+    <rate>10/m</rate>
+  </queue>
+  <queue>
+    <name>d-name</name>
+    <retry-parameters>
+      <task-retry-limit>100</task-retry-limit>
+    </retry-parameters>
+    <mode>pull</mode>
+    <acl>
+      <writer-email>prometheus-eng@googl.com</writer-email>
+    </acl>
+  </queue>
+  <queue>
+    <name>e-name</name>
+    <mode>pull</mode>
+    <acl>
+      <user-email>prometheus-eng@googl.com</user-email>
+      <writer-email>prometheus-eng@googl.com</writer-email>
+      <user-email>prometheus-eng-2@googl.com</user-email>
+      <writer-email>prometheus-eng-2@googl.com</writer-email>
+    </acl>
+  </queue>
+</queue-entries>

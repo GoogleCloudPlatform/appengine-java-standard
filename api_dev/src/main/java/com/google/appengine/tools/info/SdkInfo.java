@@ -300,7 +300,7 @@ public class SdkInfo {
       if (f.getName().endsWith(".jar")) {
         // All but CDI jar. All the tests are still passing without CDI that should not be exposed
         // in our runtime (private Jetty dependency we do not want to expose to the customer).
-        if (!(f.getName().startsWith("jetty-cdi") || f.getName().startsWith("cdi"))) {
+        if (!(f.getName().contains("-cdi-") ||  f.getName().contains("ee9") || f.getName().contains("ee10"))) {
           jars.add(f);
         }
       }
@@ -309,8 +309,8 @@ public class SdkInfo {
   }
 
   static List<File> getJettyJspJars() {
-    List<File> lf = getJettyJars("apache-jsp");
-    lf.addAll(getJettyJars("apache-jstl"));
+    List<File> lf = getJettyJars("ee8-apache-jsp");
+    lf.addAll(getJettyJars("ee8-glassfish-jstl"));
     return lf;
   }
 
@@ -318,7 +318,8 @@ public class SdkInfo {
     List<File> lf = getJettyJars("");
     lf.addAll(getJettyJspJars());
     // We also want the devserver to be able to handle annotated servlet, via ASM:
-    lf.addAll(getJettyJars("annotations"));
+    lf.addAll(getJettyJars("logging"));
+    lf.addAll(getJettyJars("ee8-annotations"));
     lf.addAll(getLibs(sdkRoot, "impl"));
     return Collections.unmodifiableList(lf);
   }
@@ -329,7 +330,7 @@ public class SdkInfo {
     sharedLibs.add(new File(sdkRoot, "lib/shared/appengine-local-runtime-shared.jar"));
     File jettyHomeLib = new File(sdkRoot, JETTY_HOME_LIB_PATH);
 
-    sharedLibs.add(new File(jettyHomeLib, "servlet-api-3.1.jar"));
+    sharedLibs.add(new File(jettyHomeLib, "jetty-servlet-api-4.0.6.jar"));
     File schemas = new File(jettyHomeLib, "servlet-schemas-3.1.jar");
     if (schemas.exists()) {
       sharedLibs.add(schemas);

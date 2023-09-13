@@ -2761,7 +2761,7 @@ public class AppYamlTranslatorTest extends TestCase {
         appEngineWebXml.includeStaticPattern("/my-static-files/*", null);
     Map<String, String> httpHeaders = staticFileInclude.getHttpHeaders();
     httpHeaders.put("foo", "1");
-    httpHeaders.put("bar", "2");
+    httpHeaders.put("bar", "barf");
 
     AppYamlTranslator translator = createTranslator();
     String yaml =
@@ -2778,8 +2778,8 @@ public class AppYamlTranslatorTest extends TestCase {
             + "  login: optional\n"
             + "  secure: optional\n"
             + "  http_headers:\n"
-            + "    foo: '1'\n"
-            + "    bar: '2'\n"
+            + "    foo: 1\n"
+            + "    bar: barf\n"
             + "- url: /\n"
             + "  script: unused\n"
             + "  login: optional\n"
@@ -2793,6 +2793,7 @@ public class AppYamlTranslatorTest extends TestCase {
             + "  login: optional\n"
             + "  secure: optional\n";
     assertEquals(yaml, translator.getYaml());
+    
   }
 
   public void testBackends() {

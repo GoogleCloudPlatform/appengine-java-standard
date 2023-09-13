@@ -61,8 +61,13 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.eclipse.jetty.ee8.webapp.WebAppClassLoader;
+import org.eclipse.jetty.server.Context;
+import org.eclipse.jetty.server.Handler;
+import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.NetworkTrafficServerConnector;
+import org.eclipse.jetty.server.Response;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.ee8.nested.Request;
 import org.eclipse.jetty.ee8.nested.ContextHandler;
@@ -72,7 +77,9 @@ import org.eclipse.jetty.ee8.servlet.ServletHolder;
 import org.eclipse.jetty.ee8.webapp.Configuration;
 import org.eclipse.jetty.ee8.webapp.JettyWebXmlConfiguration;
 import org.eclipse.jetty.ee8.webapp.WebAppContext;
+import org.eclipse.jetty.util.Callback;
 import org.eclipse.jetty.util.Scanner;
+import org.eclipse.jetty.util.component.ClassLoaderDump;
 import org.eclipse.jetty.util.component.LifeCycle;
 import org.eclipse.jetty.util.resource.Resource;
 
@@ -182,23 +189,12 @@ public class JettyContainerService extends AbstractContainerService {
         new ContextHandler.ContextScopeListener() {
           @Override
           public void enterScope(ContextHandler.APIContext context, Request request, Object reason) {
-            // We should have a request that use its associated environment, if there is no request
-            // we cannot select a local environment as picking the wrong one could result in
-            // waiting on the LocalEnvironment API call semaphore forever.
-            LocalEnvironment env =
-                request == null
-                    ? null
-                    : (LocalEnvironment) request.getAttribute(LocalEnvironment.class.getName());
-            if (env != null) {
-              ApiProxy.setEnvironmentForCurrentThread(env);
-              DevAppServerModulesFilter.injectBackendServiceCurrentApiInfo(
-                  backendName, backendInstance, portMappingProvider.getPortMapping());
-            }
+            JettyContainerService.this.enterScope(request);
           }
 
           @Override
           public void exitScope(ContextHandler.APIContext context, Request request) {
-            ApiProxy.clearEnvironmentForCurrentThread();
+            JettyContainerService.this.exitScope(null);
           }
         });
     this.appContext = new JettyAppContext();
@@ -221,7 +217,14 @@ public class JettyContainerService extends AbstractContainerService {
     context.setDefaultsDescriptor(webDefaultXml);
 
     // Disable support for jetty-web.xml.
-    context.setConfigurationClasses(CONFIG_CLASSES);
+    ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
+    try {
+      Thread.currentThread().setContextClassLoader(WebAppContext.class.getClassLoader());
+      context.setConfigurationClasses(CONFIG_CLASSES);
+    }
+    finally {
+      Thread.currentThread().setContextClassLoader(contextClassLoader);
+    }
     // Create the webapp ClassLoader.
     // We need to load appengine-web.xml to initialize the class loader.
     File appRoot = determineAppRoot();
@@ -272,14 +275,38 @@ public class JettyContainerService extends AbstractContainerService {
     }
 
     URL[] classPath = getClassPathForApp(appRoot);
-    context.setClassLoader(
-        new IsolatedAppClassLoader(
-            appRoot, externalResourceDir, classPath, JettyContainerService.class.getClassLoader()));
+
+    IsolatedAppClassLoader isolatedClassLoader = new IsolatedAppClassLoader(
+            appRoot, externalResourceDir, classPath, JettyContainerService.class.getClassLoader());
+    context.setClassLoader(isolatedClassLoader);
     if (Boolean.parseBoolean(System.getProperty("appengine.allowRemoteShutdown"))) {
       context.addServlet(new ServletHolder(new ServerShutdownServlet()), "/_ah/admin/quit");
     }
 
     return appRoot;
+  }
+
+  private ApiProxy.Environment enterScope(HttpServletRequest request)
+  {
+    ApiProxy.Environment oldEnv = ApiProxy.getCurrentEnvironment();
+
+    // We should have a request that use its associated environment, if there is no request
+    // we cannot select a local environment as picking the wrong one could result in
+    // waiting on the LocalEnvironment API call semaphore forever.
+    LocalEnvironment env = request == null ? null
+                    : (LocalEnvironment) request.getAttribute(LocalEnvironment.class.getName());
+    if (env != null) {
+      ApiProxy.setEnvironmentForCurrentThread(env);
+      DevAppServerModulesFilter.injectBackendServiceCurrentApiInfo(
+              backendName, backendInstance, portMappingProvider.getPortMapping());
+    }
+
+    return oldEnv;
+  }
+
+  private void exitScope(ApiProxy.Environment environment)
+  {
+    ApiProxy.setEnvironmentForCurrentThread(environment);
   }
 
   /** Check if the application contains a JSP file. */
@@ -318,6 +345,10 @@ public class JettyContainerService extends AbstractContainerService {
     Thread currentThread = Thread.currentThread();
     ClassLoader previousCcl = currentThread.getContextClassLoader();
 
+    HttpConfiguration configuration = new HttpConfiguration();
+    configuration.setSendDateHeader(false);
+    configuration.setSendServerVersion(false);
+    configuration.setSendXPoweredBy(false);
     server = new Server();
     try {
       NetworkTrafficServerConnector connector =
@@ -328,7 +359,7 @@ public class JettyContainerService extends AbstractContainerService {
               null,
               0,
               Runtime.getRuntime().availableProcessors(),
-              new HttpConnectionFactory());
+              new HttpConnectionFactory(configuration));
       connector.addBean(new CompletionListener());
       connector.setHost(address);
       connector.setPort(port);
@@ -360,11 +391,8 @@ public class JettyContainerService extends AbstractContainerService {
     try {
       // Wrap context in a handler that manages the ApiProxy ThreadLocal.
       ApiProxyHandler apiHandler = new ApiProxyHandler(appEngineWebXml);
-      apiHandler.setHandler(context);
-
-      ContextHandler contextHandler = new ContextHandler("/");
-      contextHandler.setHandler(apiHandler);
-      server.setHandler(contextHandler);
+      context.insertHandler(apiHandler);
+      server.setHandler(context);
       SessionManagerHandler.create(
           SessionManagerHandler.Config.builder()
               .setEnableSession(isSessionsEnabled())
@@ -527,11 +555,8 @@ public class JettyContainerService extends AbstractContainerService {
 
       // reset the handler
       ApiProxyHandler apiHandler = new ApiProxyHandler(appEngineWebXml);
-      apiHandler.setHandler(context);
-
-      ContextHandler contextHandler = new ContextHandler();
-      contextHandler.setHandler(apiHandler);
-      server.setHandler(contextHandler);
+      context.insertHandler(apiHandler);
+      server.setHandler(context);
       SessionManagerHandler.create(
           SessionManagerHandler.Config.builder()
               .setEnableSession(isSessionsEnabled())
@@ -608,7 +633,15 @@ public class JettyContainerService extends AbstractContainerService {
         environments.add(env);
       }
 
-      super.handle(target, baseRequest, request, response);
+      // We need this here because the ContextScopeListener is invoked before
+      // this and so the Environment has not yet been created.
+      ApiProxy.Environment oldEnv = enterScope(request);
+      try {
+        super.handle(target, baseRequest, request, response);
+      }
+      finally {
+        exitScope(oldEnv);
+      }
     }
   }
 
