@@ -20,11 +20,15 @@ import static com.google.common.base.MoreObjects.firstNonNull;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 /**
  * GAE SDK files and resources provider.
@@ -39,23 +43,244 @@ public abstract class AppengineSdk {
    */
   public static final String DEFAULT_SERVER = "appengine.google.com";
 
-  /**
-   * If {@code true}, the testing jar will be added to the shared libs.  This
-   * is intended for use by frameworks that want to run tests inside the
-   * isolated classloader.
-   *
-   * @param val Whether or the testing jar should be included on the shared
-   * path.
-   */
-  public abstract void includeTestingJarOnSharedPath(boolean val);
-
   private static AppengineSdk currentSdk;
+  public static final String SDK_ROOT_PROPERTY = "appengine.sdk.root";
+
+  static File sdkRoot = null;
+  private static List<File> userLibFiles = null;
+  private static List<URL> userLibs = null;
+  static boolean isDevAppServerTest;
+
+  private static final FileFilter NO_HIDDEN_FILES =
+      new FileFilter() {
+        @Override
+        public boolean accept(File file) {
+          return !file.isHidden();
+        }
+      };
+
+  public AppengineSdk() {
+    if (sdkRoot == null) {
+      sdkRoot = findSdkRoot();
+    }
+    if (new File(sdkRoot, "lib" + File.separator + "user").isDirectory()) {
+      userLibFiles = Collections.unmodifiableList(getLibsRecursive(sdkRoot, "user"));
+    } else {
+      userLibFiles = Collections.emptyList();
+    }
+    userLibs = Collections.unmodifiableList(toURLs(userLibFiles));
+  }
+
+  List<File> getLibs(File sdkRoot, String libSubDir) {
+    return getLibs(sdkRoot, libSubDir, false);
+  }
+
+  List<File> getLibsRecursive(File sdkRoot, String libSubDir) {
+    return getLibs(sdkRoot, libSubDir, true);
+  }
+
+  private List<File> getLibs(File sdkRoot, String libSubDir, boolean recursive) {
+    File subDir = new File(sdkRoot, "lib" + File.separator + libSubDir);
+
+    if (!subDir.exists()) {
+      throw new IllegalArgumentException("Unable to find " + subDir.getAbsolutePath());
+    }
+
+    List<File> libs = new ArrayList<>();
+    getLibs(subDir, libs, recursive);
+    return libs;
+  }
+
+  private void getLibs(File dir, List<File> list, boolean recursive) {
+    for (File f : listFiles(dir)) {
+      if (f.isDirectory() && recursive) {
+        getLibs(f, list, recursive);
+      } else {
+        if (f.getName().endsWith(".jar")) {
+          list.add(f);
+        }
+      }
+    }
+  }
+
+  private static File findSdkRoot() {
+    String explicitRootString = System.getProperty(SDK_ROOT_PROPERTY);
+    if (explicitRootString != null) {
+      return new File(explicitRootString);
+    }
+
+    URL codeLocation = AppengineSdk.class.getProtectionDomain().getCodeSource().getLocation();
+    String msg =
+        "Unable to discover the Google App Engine SDK root. This code should be loaded "
+            + "from the SDK directory, but was instead loaded from "
+            + codeLocation
+            + ".  Specify "
+            + "-Dappengine.sdk.root to override the SDK location.";
+    File libDir;
+    try {
+      libDir = new File(codeLocation.toURI());
+    } catch (URISyntaxException e) {
+      libDir = new File(codeLocation.getFile());
+    }
+    while (!libDir.getName().equals("lib")) {
+      libDir = libDir.getParentFile();
+      if (libDir == null) {
+        ///  throw new RuntimeException(msg);
+      }
+    }
+    return libDir.getParentFile();
+  }
 
   /**
-   * Returns an SDK implementation to use for access jar files and resources.
+   * Returns the full paths of all shared libraries for the SDK. Users should compile against these
+   * libraries, but <b>not</b> bundle them with their web application. These libraries are already
+   * included as part of the App Engine runtime.
    */
+  public abstract List<URL> getSharedLibs();
+
+  /**
+   * @deprecated Use {@link #getOptionalUserLibs()} instead.
+   */
+  @Deprecated
+  public List<URL> getUserLibs() {
+    return userLibs;
+  }
+
+  /**
+   * @deprecated Use {@link #getOptionalUserLibs()} instead.
+   */
+  @Deprecated
+  public List<File> getUserLibFiles() {
+    return userLibFiles;
+  }
+
+  /** Returns the path to the root of the SDK. */
+  public static File getSdkRoot() {
+    return sdkRoot;
+  }
+
+  /**
+   * Explicitly specifies the path to the root of the SDK. This takes precedence over the {@code
+   * appengine.sdk.root} system property, but must be called before any other methods in this class.
+   *
+   * @throws IllegalStateException If any other methods have already been called.
+   */
+  public synchronized void setSdkRoot(File root) {
+    if (!sdkRoot.equals(root)) {
+      throw new IllegalStateException("Cannot set SDK root after initialization has occurred.");
+    }
+    sdkRoot = root;
+  }
+
+  /**
+   * If {@code true}, the testing jar will be added to the shared libs. This is intended for use by
+   * frameworks that want to run tests inside the isolated classloader.
+   *
+   * @param val Whether or the testing jar should be included on the shared path.
+   */
+  public static void includeTestingJarOnSharedPath(boolean val) {
+    // This isn't pretty, but unless we want to move away from accessing all the
+    // SDK info via static methods (which would break out tools customers),
+    // this is the simplest way to adjust the jars that are considered shared
+    // when we're running the dev appserver as part of a test.
+    isDevAppServerTest = val;
+  }
+
+  /**
+   * Optional user libs reside under <sdk_root>/lib/opt/user. Each top-level directory under this
+   * path identifies an optional user library, and each sub-directory for a specific library
+   * represents a version of that library. So for example we could have:
+   * lib/opt/user/mylib1/v1/mylib.jar lib/opt/user/mylib1/v2/mylib.jar
+   * lib/opt/user/mylib2/v1/mylib.jar lib/opt/user/mylib2/v2/mylib.jar
+   *
+   * @return A {@link SortedMap} from the name of the library to an {@link OptionalLib} that
+   *     describes the library. The map is sorted by library name.
+   */
+  private SortedMap<String, OptionalLib> determineOptionalUserLibs() {
+    return determineOptionalLibs(new File(sdkRoot, "lib/opt/user"));
+  }
+
+  /**
+   * Optional tools libs reside under <sdk_root>/lib/opt/tools. Each top-level directory under this
+   * path identifies an optional tools library, and each sub-directory for a specific library
+   * represents a version of that library. So for example we could have:
+   * lib/opt/tools/mylib1/v1/mylib.jar lib/opt/tools/mylib1/v2/mylib.jar
+   * lib/opt/tools/mylib2/v1/mylib.jar lib/opt/tools/mylib2/v2/mylib.jar
+   *
+   * @return A {@link SortedMap} from the name of the library to an {@link OptionalLib} that
+   *     describes the library. The map is sorted by library name.
+   */
+  private SortedMap<String, OptionalLib> determineOptionalToolsLibs() {
+    return determineOptionalLibs(new File(sdkRoot, "lib/opt/tools"));
+  }
+
+  private SortedMap<String, OptionalLib> determineOptionalLibs(File root) {
+    SortedMap<String, OptionalLib> map = new TreeMap<String, OptionalLib>();
+    for (File libDir : listFiles(root)) {
+      SortedMap<String, List<File>> filesByVersion = new TreeMap<String, List<File>>();
+      for (File version : listFiles(libDir)) {
+        List<File> filesForVersion = new ArrayList<File>();
+        getLibs(version, filesForVersion, true);
+        filesByVersion.put(version.getName(), filesForVersion);
+      }
+      // TODO: Read a description out of a README file.
+      String description = "";
+      OptionalLib userLib = new OptionalLib(libDir.getName(), description, filesByVersion);
+      map.put(userLib.getName(), userLib);
+    }
+    return map;
+  }
+
+  /** Returns the File containing the SDK logging properties. */
+  public static File getLoggingProperties() {
+    return new File(
+        getSdkRoot()
+            + File.separator
+            + "config"
+            + File.separator
+            + "sdk"
+            + File.separator
+            + "logging.properties");
+  }
+
+  public File getToolsApiJarFile() {
+    return new File(getSdkRoot() + "/lib/appengine-tools-api.jar");
+  }
+
+  /** Returns the URL to the tools API jar. */
+  public static URL getToolsApiJar() {
+    File f =
+        new File(
+            getSdkRoot() + File.separator + "lib" + File.separator + "appengine-tools-api.jar");
+    return toURL(f);
+  }
+
+  /**
+   * A version of {@link File#listFiles()} that never returns {@code null}. Historically this has
+   * been an issue, since listFiles() can return null if the parent directory does not exist or is
+   * not readable.
+   *
+   * @param dir The directory whose files we want to list.
+   * @return The contents of the provided directory.
+   */
+  File[] listFiles(File dir) {
+    // Some customers check the sdk into subversion, which puts hidden
+    // directories into each sdk directory. We don't want these directories in
+    // our list.
+    File[] files = dir.listFiles(NO_HIDDEN_FILES);
+    if (files == null) {
+      return new File[0];
+    }
+    return files;
+  }
+
+  /** Returns an SDK implementation to use for access jar files and resources. */
   public static AppengineSdk getSdk() {
-    return currentSdk = firstNonNull(currentSdk, new ClassicSdk());
+    if (Boolean.getBoolean("appengine.use.jetty12")) {
+      return currentSdk = firstNonNull(currentSdk, new Jetty12Sdk());
+    } else {
+      return currentSdk = firstNonNull(currentSdk, new ClassicSdk());
+    }
   }
 
   /**
@@ -68,68 +293,26 @@ public abstract class AppengineSdk {
   }
 
   /**
-   * Returns the jar file that contains the appcfg command and its dependencies.
-   */
-  public abstract File getToolsApiJarFile();
-
-  /**
-   * Returns the jar file that contains the dev server agent.
-   */
-  public abstract File getAgentJarFile();
-
-  /**
-   * Returns the list of URLs of all shared libraries for the SDK. Users
-   * should compile against these libraries, but <b>not</b> bundle them
-   * with their web application. These libraries are already included
-   * as part of the App Engine runtime.
-   */
-  public abstract List<URL> getSharedLibs();
-
-  /**
    * Returns the list of URLs of the Datanucleus jar libraries for the SDK.
    *
    * @param version Datanucleus version. Maybe be v1 or v2 but not all implementations need to
    *     support v1 and it is old and not available in Maven central.
    */
-  public abstract List<URL> getDatanucleusLibs(String version);
-
-  /**
-   * Returns the list of URLs of all JSP jar libraries that do not need any
-   * special privileges in the SDK.
-   */
-  public List<URL> getUserJspLibs() {
-    return Collections.unmodifiableList(toURLs(getUserJspLibFiles()));
+  
+  public List<URL> getDatanucleusLibs(String version) {
+    validateDatanucleusVersions(version);
+    return  determineOptionalToolsLibs().get("datanucleus").getURLsForVersion(version);
   }
 
+
   /**
-   * Returns the list of URLs of all implementation jar libraries for the SDK.
+   * Returns the list of URLs of all JSP jar libraries that do not need any special privileges in
+   * the SDK.
    */
+  public abstract List<URL> getUserJspLibs();
+
+  /** Returns the list of URLs of all implementation jar libraries for the SDK. */
   public abstract List<URL> getImplLibs();
-
-  /**
-   * Returns the list of all JSP library jar files that do not need any
-   * special privileges in the SDK.
-   */
-  public abstract List<File> getUserJspLibFiles();
-
-  /**
-   * Returns the list of all JSP library jar files that need to be treated as shared libraries
-   * in the SDK.
-   */
-  public abstract List<File> getSharedJspLibFiles();
-
-  /**
-   * Returns the list of all shared library jar files for the SDK.
-   */
-  public abstract List<File> getSharedLibFiles();
-
-  /**
-   * Returns the list of all user library jar files for the SDK.
-   */
-  public abstract List<File> getUserLibFiles();
-
-  /** Returns the list of web api jar URLs for the SDK. */
-  public abstract List<URL> getWebApiToolsLibs();
 
   /** Returns the classpath of the quickstart process. */
   public abstract String getQuickStartClasspath();
@@ -142,17 +325,11 @@ public abstract class AppengineSdk {
    */
   public abstract File getResourcesDirectory();
 
-  /**
-   * Returns the SDK version (for example, 1.9.38).
-   */
-  public Version getLocalVersion() {
-    return new LocalVersionFactory(getUserLibFiles()).getVersion();
-  }
+  /** Returns the path in a jar file of the jetty server webdefault.xml file. */
+  public abstract String getWebDefaultLocation();
 
-  /**
-   * Returns the File containing the SDK logging properties.
-   */
-  public abstract File getLoggingProperties();
+  /** Returns the JSP compiler class name. */
+  public abstract String getJSPCompilerClassName();
 
   /**
    * Returns the default admin server to talk to for deployments.
@@ -171,7 +348,7 @@ public abstract class AppengineSdk {
     }
   }
 
-  List<URL> toURLs(List<File> files) {
+  static List<URL> toURLs(List<File> files) {
     List<URL> urls = new ArrayList<>(files.size());
     for (File file : files) {
       urls.add(toURL(file));
@@ -179,11 +356,17 @@ public abstract class AppengineSdk {
     return urls;
   }
 
-  private URL toURL(File file) {
+  private static URL toURL(File file) {
     try {
       return file.toURI().toURL();
     } catch (MalformedURLException e) {
       throw new RuntimeException("Unable get a URL from " + file, e);
     }
   }
+
+  public abstract Iterable<File> getUserJspLibFiles();
+
+  public abstract Iterable<File> getSharedJspLibFiles();
+
+  public abstract Iterable<File> getSharedLibFiles();
 }

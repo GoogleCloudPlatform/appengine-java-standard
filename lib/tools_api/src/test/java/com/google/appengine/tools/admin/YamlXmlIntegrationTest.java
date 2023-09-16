@@ -18,7 +18,6 @@ package com.google.appengine.tools.admin;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import com.google.appengine.tools.info.Version;
 import com.google.apphosting.utils.config.AppEngineWebXml;
 import com.google.apphosting.utils.config.AppEngineWebXml.ApiConfig;
 import com.google.apphosting.utils.config.AppYaml;
@@ -41,7 +40,6 @@ import junit.framework.TestCase;
  * <p>As of this writing we are primarily concerned with the translation of the security-related
  * elements, "secure:" and "login:".
  *
- * @author rudominer@google.com (Mitch Rudominer)
  */
 public class YamlXmlIntegrationTest extends TestCase {
 
@@ -210,14 +208,7 @@ public class YamlXmlIntegrationTest extends TestCase {
 
   private AppYamlTranslator createTranslator(WebXml webXml) {
     return new AppYamlTranslator(
-        appEngineWebXml,
-        webXml,
-        backendsXml,
-        "1.0",
-        staticFiles,
-        apiConfig,
-        "java7",
-        Version.UNKNOWN);
+        appEngineWebXml, webXml, backendsXml, "1.0", staticFiles, apiConfig, "java7");
   }
 
   private WebXml getWebXml(AppYaml yaml) {

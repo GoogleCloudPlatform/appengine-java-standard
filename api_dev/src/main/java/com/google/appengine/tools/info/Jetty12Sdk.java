@@ -26,30 +26,30 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Implementation of the SDK abstraction by the existing GAE SDK distribution, which is composed
- * of multiple jar directories for both local execution and deployment of applications.
+ * Implementation of the SDK abstraction by the existing GAE SDK distribution, which is composed of
+ * multiple jar directories for both local execution and deployment of applications.
  */
-class ClassicSdk extends AppengineSdk {
+class Jetty12Sdk extends AppengineSdk {
 
-  // Relative path from SDK Root for the Jetty 9.4 Home lib directory.
-  static final String JETTY9_HOME_LIB_PATH = "jetty94/jetty-home/lib";
-  // Web-default.xml files for Jetty9 based devappserver1.
-  private static final String WEB_DEFAULT_LOCATION_DEVAPPSERVERJETTY9 =
-      "com/google/appengine/tools/development/jetty9/webdefault.xml";
+  // Relative path from SDK Root for the Jetty 12 Home lib directory.
+  static final String JETTY12_HOME_LIB_PATH = "jetty12/jetty-home/lib";
 
-  @Override
-  public String getWebDefaultLocation() {
-    return WEB_DEFAULT_LOCATION_DEVAPPSERVERJETTY9;
-  }
+  private static final String WEB_DEFAULT_LOCATION_DEVAPPSERVERJETTY12 =
+      "com/google/appengine/tools/development/jetty9/webdefault.xml"; // TODO?
 
   @Override
   public List<File> getUserJspLibFiles() {
-    return Collections.unmodifiableList(getJetty9JspJars());
+    return Collections.unmodifiableList(getJetty12JspJars());
+  }
+
+  @Override
+  public String getWebDefaultLocation() {
+    return WEB_DEFAULT_LOCATION_DEVAPPSERVERJETTY12;
   }
 
   @Override
   public List<File> getSharedJspLibFiles() {
-    return Collections.unmodifiableList(getJetty9JspJars());
+    return Collections.unmodifiableList(getJetty12JspJars());
   }
 
   @Override
@@ -57,15 +57,17 @@ class ClassicSdk extends AppengineSdk {
     return Collections.unmodifiableList(toURLs(getImplLibFiles()));
   }
 
-
   @Override
   public String getQuickStartClasspath() {
     List<String> list = new ArrayList<>();
-    File quickstart = new File(getSdkRoot(), "lib/tools/quickstart/quickstartgenerator.jar");
-    File jettyDir = new File(getSdkRoot(), JETTY9_HOME_LIB_PATH);
+    File quickstart =
+        new File(getSdkRoot(), "lib/tools/quickstart/quickstartgenerator-jetty12.jar");
+    File jettyDir = new File(getSdkRoot(), JETTY12_HOME_LIB_PATH);
     for (File f : jettyDir.listFiles()) {
       if (!f.isDirectory()
-          && !(f.getName().startsWith("cdi-") || f.getName().startsWith("jetty-cdi-"))) {
+          && !(f.getName().contains("cdi-")
+              || f.getName().contains("ee9")
+              || f.getName().contains("ee10"))) {
         list.add(f.getAbsolutePath());
       }
     }
@@ -74,19 +76,23 @@ class ClassicSdk extends AppengineSdk {
 
     // Note: Do not put the Apache JSP files in the classpath. If needed, they should be part of
     // the application itself under WEB-INF/lib.
-    for (String subdir : new String[] {"annotations", "jaspi"}) {
+    for (String subdir : new String[] {"ee8-annotations"}) { // TODO: "ee8-jaspi" for Jetty12
       for (File f : new File(jettyDir, subdir).listFiles()) {
         list.add(f.getAbsolutePath());
       }
     }
     list.add(quickstart.getAbsolutePath());
+    // Add Jars for logging.
+    for (File f : new File(jettyDir, "logging").listFiles()) {
+      list.add(f.getAbsolutePath());
+    }
 
     return Joiner.on(System.getProperty("path.separator")).join(list);
   }
 
   @Override
   public String getWebDefaultXml() {
-        return getSdkRoot() + "/docs/webdefault.xml";
+    return getSdkRoot() + "/docs/jetty12/webdefault.xml";
   }
 
   @Override
@@ -95,12 +101,14 @@ class ClassicSdk extends AppengineSdk {
   }
 
   private List<File> getImplLibFiles() {
-    List<File> lf = getJetty9Jars("");
-    lf.addAll(getJetty9JspJars());
+    List<File> lf = getJetty12Jars("");
+    lf.addAll(getJetty12JspJars());
     // We also want the devserver to be able to handle annotated servlet, via ASM:
-    lf.addAll(getJetty9Jars("annotations"));
+    lf.addAll(getJetty12Jars("logging"));
+    lf.addAll(getJetty12Jars("ee8-annotations"));
     lf.addAll(getLibs(sdkRoot, "impl"));
-   return Collections.unmodifiableList(lf);
+    lf.addAll(getLibs(sdkRoot, "impl/jetty12"));
+    return Collections.unmodifiableList(lf);
   }
 
   /**
@@ -111,8 +119,8 @@ class ClassicSdk extends AppengineSdk {
     return Collections.unmodifiableList(toURLs(getSharedJspLibFiles()));
   }
 
-  private List<File> getJetty9Jars(String subDir) {
-    File path = new File(sdkRoot, JETTY9_HOME_LIB_PATH + File.separator + subDir);
+  private List<File> getJetty12Jars(String subDir) {
+    File path = new File(sdkRoot, JETTY12_HOME_LIB_PATH + File.separator + subDir);
 
     if (!path.exists()) {
       throw new IllegalArgumentException("Unable to find " + path.getAbsolutePath());
@@ -122,7 +130,9 @@ class ClassicSdk extends AppengineSdk {
       if (f.getName().endsWith(".jar")) {
         // All but CDI jar. All the tests are still passing without CDI that should not be exposed
         // in our runtime (private Jetty dependency we do not want to expose to the customer).
-        if (!(f.getName().startsWith("jetty-cdi") || f.getName().startsWith("cdi"))) {
+        if (!(f.getName().contains("-cdi-")
+            || f.getName().contains("ee9")
+            || f.getName().contains("ee10"))) {
           jars.add(f);
         }
       }
@@ -130,19 +140,20 @@ class ClassicSdk extends AppengineSdk {
     return jars;
   }
 
-  List<File> getJetty9JspJars() {
-    List<File> lf = getJetty9Jars("apache-jsp");
-    lf.addAll(getJetty9Jars("apache-jstl"));
+  List<File> getJetty12JspJars() {
+    List<File> lf = getJetty12Jars("ee8-apache-jsp");
+    lf.addAll(getJetty12Jars("ee8-glassfish-jstl"));
     return lf;
   }
 
-  List<File> getJetty9SharedLibFiles() {
+  List<File> getJetty12SharedLibFiles() {
     List<File> sharedLibs;
     sharedLibs = new ArrayList<>();
+    // TODO (ludo), this contains compiled JSPs from Jetty9:
     sharedLibs.add(new File(sdkRoot, "lib/shared/appengine-local-runtime-shared.jar"));
-    File jettyHomeLib = new File(sdkRoot, JETTY9_HOME_LIB_PATH);
+    File jettyHomeLib = new File(sdkRoot, JETTY12_HOME_LIB_PATH);
 
-    sharedLibs.add(new File(jettyHomeLib, "servlet-api-3.1.jar"));
+    sharedLibs.add(new File(jettyHomeLib, "jetty-servlet-api-4.0.6.jar"));
     File schemas = new File(jettyHomeLib, "servlet-schemas-3.1.jar");
     if (schemas.exists()) {
       sharedLibs.add(schemas);
@@ -163,15 +174,10 @@ class ClassicSdk extends AppengineSdk {
     }
     File[] files = jettyHomeLib.listFiles(new JettyVersionFilter());
     sharedLibs.addAll(Arrays.asList(files));
-    sharedLibs.addAll(getJetty9JspJars());
+    sharedLibs.addAll(getJetty12JspJars());
     return sharedLibs;
   }
 
-  /**
-   * Returns the full paths of all shared libraries for the SDK. Users should compile against these
-   * libraries, but <b>not</b> bundle them with their web application. These libraries are already
-   * included as part of the App Engine runtime.
-   */
   @Override
   public List<URL> getSharedLibs() {
     return Collections.unmodifiableList(toURLs(getSharedLibFiles()));
@@ -179,13 +185,13 @@ class ClassicSdk extends AppengineSdk {
 
   @Override
   public List<URL> getUserJspLibs() {
-    return Collections.unmodifiableList(toURLs(getJetty9JspJars()));
+    return Collections.unmodifiableList(toURLs(getJetty12JspJars()));
   }
 
   /** Returns the paths of all shared libraries for the SDK. */
   @Override
   public List<File> getSharedLibFiles() {
-    List<File> sharedLibs = getJetty9SharedLibFiles();
+    List<File> sharedLibs = getJetty12SharedLibFiles();
 
     if (isDevAppServerTest) {
       // If we're running the dev appserver as part of a test, add the testing
@@ -202,6 +208,6 @@ class ClassicSdk extends AppengineSdk {
 
   @Override
   public String getJSPCompilerClassName() {
-    return "com.google.appengine.tools.development.jetty9.LocalJspC";
+    return "com.google.appengine.tools.development.jetty.LocalJspC";
   }
 }

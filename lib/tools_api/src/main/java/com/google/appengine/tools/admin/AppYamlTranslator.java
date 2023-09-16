@@ -19,7 +19,6 @@ package com.google.appengine.tools.admin;
 import com.esotericsoftware.yamlbeans.YamlConfig;
 import com.esotericsoftware.yamlbeans.YamlException;
 import com.esotericsoftware.yamlbeans.YamlWriter;
-import com.google.appengine.tools.info.Version;
 import com.google.apphosting.utils.config.AppEngineConfigException;
 import com.google.apphosting.utils.config.AppEngineWebXml;
 import com.google.apphosting.utils.config.AppEngineWebXml.AdminConsolePage;
@@ -96,8 +95,7 @@ public class AppYamlTranslator {
       String apiVersion,
       Set<String> staticFiles,
       ApiConfig apiConfig,
-      String runtime,
-      Version sdkVersion) {
+      String runtime) {
     this.appEngineWebXml = appEngineWebXml;
     this.webXml = webXml;
     this.backendsXml = backendsXml;

@@ -16,7 +16,7 @@
 
 package com.google.appengine.tools.enhancer;
 
-import com.google.appengine.tools.info.SdkImplInfo;
+import com.google.appengine.tools.info.AppengineSdk;
 import com.google.appengine.tools.util.Logging;
 import com.google.common.annotations.VisibleForTesting;
 import java.io.File;
@@ -113,7 +113,7 @@ public class Enhance {
   @SuppressWarnings("URLEqualsHashCode")
   static Set<URL> getEnhanceTargets(PrintWriter writer) {
     Set<URL> urls = new LinkedHashSet<>();
-    URL toolsJar = SdkImplInfo.getToolsApiJar();
+    URL toolsJar = AppengineSdk.getSdk().getToolsApiJar();
     String paths = System.getProperty("java.class.path");
     for (String path : paths.split(File.pathSeparator)) {
       try {

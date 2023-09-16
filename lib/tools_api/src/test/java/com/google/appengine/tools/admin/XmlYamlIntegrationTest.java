@@ -18,7 +18,6 @@ package com.google.appengine.tools.admin;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import com.google.appengine.tools.info.Version;
 import com.google.apphosting.utils.config.AppEngineWebXml;
 import com.google.apphosting.utils.config.AppEngineWebXml.ApiConfig;
 import com.google.apphosting.utils.config.AppEngineWebXmlReader;
@@ -45,7 +44,6 @@ import junit.framework.TestCase;
  * <p>In this test we specify XML text to read and expected Yaml text to write and test that we
  * generate the expected Yaml text.
  *
- * @author rudominer@google.com (Mitch Rudominer)
  */
 public class XmlYamlIntegrationTest extends TestCase {
 
@@ -318,14 +316,7 @@ public class XmlYamlIntegrationTest extends TestCase {
     BackendsXml backendsXml = new BackendsXml();
     AppYamlTranslator translator =
         new AppYamlTranslator(
-            aeWebXml,
-            webXml,
-            backendsXml,
-            "1.7.3",
-            staticFiles,
-            apiConfig,
-            "java8",
-            Version.UNKNOWN);
+            aeWebXml, webXml, backendsXml, "1.7.3", staticFiles, apiConfig, "java8");
     assertEquals(buildYaml(expectedExtraYaml, useYamlSuffix), translator.getYaml());
   }
 

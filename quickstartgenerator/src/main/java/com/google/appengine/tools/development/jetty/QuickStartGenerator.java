@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.appengine.tools.development.jetty9;
+package com.google.appengine.tools.development.jetty;
 
 import java.io.File;
 import java.lang.reflect.Method;

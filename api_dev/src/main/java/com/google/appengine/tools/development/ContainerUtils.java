@@ -16,14 +16,15 @@
 
 package com.google.appengine.tools.development;
 
-import com.google.appengine.tools.info.AppengineSdk;
-
-/**
- * helper to load a {@link ContainerService} instance
- */
+/** helper to load a {@link ContainerService} instance */
 public class ContainerUtils {
+  private static final String JETTY9SERVICE =
+      "com.google.appengine.tools.development.jetty9.JettyContainerService";
+  private static final String JETTY12SERVICE =
+      "com.google.appengine.tools.development.jetty.JettyContainerService";
+
   /**
-   * Load a {@link ContainerService} instance based on the implementation: Jetty9 only for now.
+   * Load a {@link ContainerService} instance based on the implementation: Jetty9 or Jetty12.
    *
    * @return the deployed {@link ContainerService} instance.
    * @throws IllegalArgumentException if the container cannot be loaded.
@@ -31,26 +32,34 @@ public class ContainerUtils {
   public static ContainerService loadContainer() {
     ContainerService result;
 
-    // Try to load jetty 9.
+    // Try to load the correct Jetty service.
 
-    String jettyService = "com.google.appengine.tools.development.jetty9.JettyContainerService";
-
-    try {
-      result =
-          (ContainerService)
-              Class.forName(jettyService, true, DevAppServerImpl.class.getClassLoader())
-                  .newInstance();
-    } catch (ReflectiveOperationException e) {
-      throw new IllegalArgumentException("Cannot load any servlet container.", e);
+    if (Boolean.getBoolean("appengine.use.jetty12")) {
+      try {
+        result =
+            (ContainerService)
+                Class.forName(JETTY12SERVICE, true, DevAppServerImpl.class.getClassLoader())
+                    .newInstance();
+      } catch (ReflectiveOperationException e) {
+        throw new IllegalArgumentException("Cannot load any servlet container.", e);
+      }
+      return result;
+    } else {
+      try {
+        result =
+            (ContainerService)
+                Class.forName(JETTY9SERVICE, true, DevAppServerImpl.class.getClassLoader())
+                    .newInstance();
+      } catch (ReflectiveOperationException e) {
+        throw new IllegalArgumentException("Cannot load any servlet container.", e);
+      }
+      return result;
     }
-    return result;
   }
 
-  /**
-   * @return the server info string with the dev-appserver version
-   */
+  /** Returns the server info string with the dev-appserver version. */
   public static String getServerInfo() {
-    return "Google App Engine Development/" + AppengineSdk.getSdk().getLocalVersion().getRelease();
+    return "Google App Engine Development/dev";
   }
 
   // There are no instances of this class.

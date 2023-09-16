@@ -17,10 +17,7 @@
 package com.google.appengine.tools.admin;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
-import com.google.appengine.tools.info.Version;
 import com.google.apphosting.utils.config.AppEngineConfigException;
 import com.google.apphosting.utils.config.AppEngineWebXml;
 import com.google.apphosting.utils.config.AppEngineWebXml.AdminConsolePage;
@@ -2931,16 +2928,7 @@ public class AppYamlTranslatorTest extends TestCase {
   }
 
   private AppYamlTranslator createTranslator(String apiVersion, String runtime) {
-    Version mockVersion = mock(Version.class);
-    when(mockVersion.getRelease()).thenReturn("1.2.3");
     return new AppYamlTranslator(
-        appEngineWebXml,
-        webXml,
-        backendsXml,
-        apiVersion,
-        staticFiles,
-        apiConfig,
-        runtime,
-        mockVersion);
+        appEngineWebXml, webXml, backendsXml, apiVersion, staticFiles, apiConfig, runtime);
   }
 }

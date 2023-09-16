@@ -18,8 +18,6 @@ package com.google.appengine.tools.development;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import com.google.appengine.tools.info.AppengineSdk;
-import com.google.appengine.tools.info.UpdateCheck;
 import com.google.appengine.tools.util.Action;
 import com.google.appengine.tools.util.Option;
 import com.google.appengine.tools.util.Parser;
@@ -60,11 +58,8 @@ public class DevAppServerMain extends SharedMain {
 
   private final Action startAction = new StartAction();
 
-  private String versionCheckServer = AppengineSdk.getSdk().getDefaultServer();
-
   private String address = DevAppServer.DEFAULT_HTTP_ADDRESS;
   private int port = DevAppServer.DEFAULT_HTTP_PORT;
-  private boolean disableUpdateCheck;
   private String generatedDirectory = null;
   private String defaultGcsBucketName = null;
   private String applicationId = null;
@@ -81,19 +76,6 @@ public class DevAppServerMain extends SharedMain {
     options.addAll(getSharedOptions());
     options.addAll(
         Arrays.asList(
-            new Option("s", "server", false) {
-              @Override
-              public void apply() {
-                versionCheckServer = getValue();
-              }
-
-              @Override
-              public List<String> getHelpLines() {
-                return ImmutableList.of(
-                    " --server=SERVER            The server to use to determine the latest",
-                    "  -s SERVER                   SDK version.");
-              }
-            },
             new Option("a", "address", false) {
               @Override
               public void apply() {
@@ -123,7 +105,7 @@ public class DevAppServerMain extends SharedMain {
             new Option(null, "disable_update_check", true) {
               @Override
               public void apply() {
-                disableUpdateCheck = true;
+                // no op
               }
 
               @Override
@@ -374,11 +356,6 @@ public class DevAppServerMain extends SharedMain {
         validateWarPath(appDir);
         configureRuntime(appDir);
 
-        UpdateCheck updateCheck = new UpdateCheck(versionCheckServer, appDir, true);
-        if (updateCheck.allowedToCheckForUpdates() && !disableUpdateCheck) {
-          updateCheck.maybePrintNagScreen(System.err);
-        }
-        updateCheck.checkJavaVersion(System.err);
         DevAppServer server =
             new DevAppServerFactory()
                 .createDevAppServer(

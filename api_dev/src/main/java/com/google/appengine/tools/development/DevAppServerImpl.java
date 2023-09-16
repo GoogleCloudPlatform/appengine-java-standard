@@ -130,7 +130,7 @@ class DevAppServerImpl implements DevAppServer {
   public DevAppServerImpl(File appDir, File externalResourceDir, File webXmlLocation,
       File appEngineWebXmlLocation, String address, int port, boolean useCustomStreamHandler,
       Map<String, Object> requestedContainerConfigProperties, String applicationId) {
-    String serverInfo = ContainerUtils.getServerInfo();
+    //   String serverInfo = ContainerUtils.getServerInfo();
     if (useCustomStreamHandler) {
       StreamHandlerFactory.install();
     }
@@ -144,8 +144,7 @@ class DevAppServerImpl implements DevAppServer {
     try {
       if (EarHelper.isEar(appDir.getAbsolutePath())) {
         tempManager =
-            ApplicationConfigurationManager.newEarConfigurationManager(
-                appDir, AppengineSdk.getSdk().getLocalVersion().getRelease(), schemaFile);
+            ApplicationConfigurationManager.newEarConfigurationManager(appDir, "dev", schemaFile);
        String contextRootWarning =
             "Ignoring application.xml context-root element, for details see "
              + "https://developers.google.com/appengine/docs/java/modules/#config";
@@ -153,11 +152,7 @@ class DevAppServerImpl implements DevAppServer {
       } else {
         tempManager =
             ApplicationConfigurationManager.newWarConfigurationManager(
-                appDir,
-                appEngineWebXmlLocation,
-                webXmlLocation,
-                externalResourceDir,
-                AppengineSdk.getSdk().getLocalVersion().getRelease());
+                appDir, appEngineWebXmlLocation, webXmlLocation, externalResourceDir, "dev");
       }
     } catch (AppEngineConfigException configurationException) {
       modules = null;
@@ -167,8 +162,9 @@ class DevAppServerImpl implements DevAppServer {
       return;
     }
     this.applicationConfigurationManager = tempManager;
-    this.modules = Modules.createModules(applicationConfigurationManager, serverInfo,
-        externalResourceDir, address, this);
+    this.modules =
+        Modules.createModules(
+            applicationConfigurationManager, "dev", externalResourceDir, address, this);
     DelegatingModulesFilterHelper modulesFilterHelper =
         new DelegatingModulesFilterHelper(backendContainer, modules);
     this.containerConfigProperties =

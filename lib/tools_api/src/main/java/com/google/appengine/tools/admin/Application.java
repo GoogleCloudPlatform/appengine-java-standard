@@ -20,7 +20,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.appengine.tools.admin.RepoInfo.SourceContext;
 import com.google.appengine.tools.info.AppengineSdk;
-import com.google.appengine.tools.info.Version;
 import com.google.appengine.tools.util.ApiVersionFinder;
 import com.google.appengine.tools.util.FileIterator;
 import com.google.appengine.tools.util.JarSplitter;
@@ -180,15 +179,6 @@ public class Application implements GenericApplication {
       sdkDocsDir = AppengineSdk.getSdk().getResourcesDirectory();
     }
     return sdkDocsDir;
-  }
-
-  private static Version sdkVersion;
-
-  public static synchronized Version getSdkVersion() {
-    if (null == sdkVersion) {
-      sdkVersion = AppengineSdk.getSdk().getLocalVersion();
-    }
-    return sdkVersion;
   }
 
   private static final String STAGEDIR_PREFIX = "appcfg";
@@ -1065,7 +1055,7 @@ public class Application implements GenericApplication {
   }
 
   private void fallThroughToRuntimeOnContextInitializers() {
-    // If ServletContextIntializers are used, we need to fall through to
+    // If ServletContextInitializers are used, we need to fall through to
     // the runtime for handling of most of the url patterns.
     // See b/38029573.
     String value = webXml.getContextParams().get("org.eclipse.jetty.containerInitializers");
@@ -1205,7 +1195,7 @@ public class Application implements GenericApplication {
 
   @VisibleForTesting
   String getJSPCClassName() {
-    return "com.google.appengine.tools.development.jetty9.LocalJspC";
+    return AppengineSdk.getSdk().getJSPCompilerClassName();
   }
 
   private void compileJsps(File stage, ApplicationProcessingOptions opts, String runtime)
@@ -1458,7 +1448,7 @@ public class Application implements GenericApplication {
    *
    * @param dir the directory under which to scan
    * @param regex the pattern to look for
-   * @returns Returns {@code true} on the first instance of such a file, {@code false} otherwise.
+   * @return Returns {@code true} on the first instance of such a file, {@code false} otherwise.
    */
   private static boolean matchingFileExists(File dir, Pattern regex) {
     for (File file : dir.listFiles()) {
@@ -1695,14 +1685,7 @@ public class Application implements GenericApplication {
 
     AppYamlTranslator translator =
         new AppYamlTranslator(
-            aeWebXml,
-            getWebXml(),
-            getBackendsXml(),
-            getApiVersion(),
-            staticFiles,
-            null,
-            runtime,
-            getSdkVersion());
+            aeWebXml, getWebXml(), getBackendsXml(), getApiVersion(), staticFiles, null, runtime);
     String yaml = translator.getYaml();
     logger.fine("Generated app.yaml file:\n" + yaml);
     return yaml;
@@ -1764,7 +1747,7 @@ public class Application implements GenericApplication {
       javaCmd,
       "-cp",
       quickstartClassPath,
-      "com.google.appengine.tools.development.jetty9.QuickStartGenerator",
+      "com.google.appengine.tools.development.jetty.QuickStartGenerator",
       stageDir.getAbsolutePath(),
       webDefaultXml.getAbsolutePath()
     };
