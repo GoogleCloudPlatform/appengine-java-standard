@@ -276,9 +276,11 @@
                         <configuration>
                             <target>
                                 <chmod dir="${assembly-directory}/bin" perm="755" includes="**/*.sh" />
+                            </target>
+                            <tasks>
                                 <delete file="${assembly-directory}/jetty94/jetty-home/lib/apache-jsp/org.eclipse.jetty.apache-jsp-${jetty.version}.jar"/>
                                 <delete dir="${assembly-directory}/jetty94/jetty-home/demo-base"/>
-                            </target>
+                            </tasks>
                         </configuration>
                     </execution>
                 </executions>
