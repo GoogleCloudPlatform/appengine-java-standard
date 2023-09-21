@@ -17,10 +17,6 @@
 package com.google.appengine.tools.admin;
 
 
-import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Maps;
-import com.google.common.io.Files;
-import com.google.common.io.MoreFiles;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -28,13 +24,17 @@ import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
 
+import com.google.appengine.tools.info.AppengineSdk;
 import com.google.apphosting.utils.config.AppEngineConfigException;
 import com.google.apphosting.utils.config.AppEngineWebXml;
 import com.google.apphosting.utils.config.CronXml;
 import com.google.apphosting.utils.config.GenerationDirectory;
 import com.google.apphosting.utils.config.RetryParametersXml;
 import com.google.apphosting.utils.config.StagingOptions;
-
+import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Maps;
+import com.google.common.io.Files;
+import com.google.common.io.MoreFiles;
 import java.io.BufferedWriter;
 import java.io.DataInputStream;
 import java.io.File;
@@ -130,9 +130,12 @@ public class ApplicationTest {
   private static final String SDK_ROOT =getSDKRoot();
 
   private static final String SERVLET3_STANDARD_APP_ROOT =getWarPath("bundle_standard");
-  private static final String SERVLET3_STANDARD_APP_NO_JSP_ROOT =getWarPath("bundle_standard_with_no_jsp");
-  private static final String SERVLET3_STANDARD_WEBLISTENER_MEMCACHE =getWarPath("bundle_standard_with_weblistener_memcache");
-  private static final String SERVLET3_STANDARD_APP_WITH_CONTAINER_INIT =getWarPath("bundle_standard_with_container_initializer");
+  private static final String SERVLET3_STANDARD_APP_NO_JSP_ROOT =
+      getWarPath("bundle_standard_with_no_jsp");
+  private static final String SERVLET3_STANDARD_WEBLISTENER_MEMCACHE =
+      getWarPath("bundle_standard_with_weblistener_memcache");
+  private static final String SERVLET3_STANDARD_APP_WITH_CONTAINER_INIT =
+      getWarPath("bundle_standard_with_container_initializer");
   private static final String SERVLET3_APP_ID = "servlet3-demo";
 
   private static final String STAGE_TEST_APP = getWarPath("stage-sampleapp");
@@ -155,7 +158,15 @@ public class ApplicationTest {
   private static String getWarPath(String directoryName) {
           File currentDirectory = new File("").getAbsoluteFile();
 
-    String appRoot = new File(currentDirectory, "../testlocalapps/"+directoryName+"/target/"+directoryName+"-0.0.1-SNAPSHOT").getAbsolutePath();
+    String appRoot =
+        new File(
+                currentDirectory,
+                "../testlocalapps/"
+                    + directoryName
+                    + "/target/"
+                    + directoryName
+                    + "-0.0.1-SNAPSHOT")
+            .getAbsolutePath();
                                 System.out.println(appRoot);
 
 //    assertThat(appRoot.isDirectory()).isTrue();
@@ -167,7 +178,9 @@ return appRoot;
           File currentDirectory = new File("").getAbsoluteFile();
     String sdkRoot= null;
       try {
-          sdkRoot = new File(currentDirectory, "../../sdk_assembly/target/appengine-java-sdk").getCanonicalPath();
+      sdkRoot =
+          new File(currentDirectory, "../../sdk_assembly/target/appengine-java-sdk")
+              .getCanonicalPath();
       } catch (IOException ex) {
           Logger.getLogger(ApplicationTest.class.getName()).log(Level.SEVERE, null, ex);
       }
@@ -503,6 +516,14 @@ return sdkRoot;
     assertThat(new File(stage, "WEB-INF/lib").isDirectory()).isTrue();
     File appYaml = new File(stage, "WEB-INF/appengine-generated/app.yaml");
     assertThat(Files.asCharSource(appYaml, UTF_8).read()).contains("api_version: 'user_defined'");
+    int count = 0;
+    for (File file : AppengineSdk.getSdk().getUserJspLibFiles()) {
+      if (file.getName().contains("apache-jsp")) {
+         count++;
+      }
+    }
+    // Cannot have both the -nolog.jar and the regular jar.
+    assertThat(count).isEqualTo(2); // org.eclipse and org.mortbay
   }
 
   //TODO(ludo) @Test
@@ -1360,12 +1381,12 @@ return sdkRoot;
 
     // See if one of the Jetty9 or Jetty12  JSP jars is being added:
     assertThat(
-              new File(stageDir, "WEB-INF/lib/org.apache.taglibs.taglibs-standard-impl-1.2.5.jar")
-                      .exists()
-              // TODO need to extend for Jarkata APIs!
-              || new File(stageDir, "WEB-INF/lib/org.glassfish.web.javax.servlet.jsp.jstl-1.2.5.jar")
-                      .exists())
-            
+            new File(stageDir, "WEB-INF/lib/org.apache.taglibs.taglibs-standard-impl-1.2.5.jar")
+                    .exists()
+                // TODO need to extend for Jarkata APIs!
+                || new File(
+                        stageDir, "WEB-INF/lib/org.glassfish.web.javax.servlet.jsp.jstl-1.2.5.jar")
+                    .exists())
         .isTrue();
   }
 
