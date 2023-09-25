@@ -50,3 +50,4 @@ runtime/test/WEB-INF/
 # AppEngine Generated Files
 /applications/proberapp/${appengine.runtime.location}/
 /appengine_testing_tests/WEB-INF/appengine-generated/
+/.mvn/wrapper/maven-wrapper.jar

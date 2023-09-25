@@ -23,9 +23,11 @@
       <!-- outputFileMapping produces for example "runtime-impl.jar" -->
       <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
      <includes>
-        <include>com.google.appengine:runtime-impl</include>
+        <include>com.google.appengine:runtime-impl-jetty9</include>
+        <include>com.google.appengine:runtime-impl-jetty12</include>
         <include>com.google.appengine:runtime-main</include>
-        <include>com.google.appengine:runtime-shared</include>
+        <include>com.google.appengine:runtime-shared-jetty9</include>
+        <include>com.google.appengine:runtime-shared-jetty12</include>
       </includes>
     </dependencySet>
   </dependencySets>

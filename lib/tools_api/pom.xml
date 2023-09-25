@@ -36,6 +36,12 @@
       <optional>true</optional>
     </dependency>
     <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <optional>true</optional>
+      <version>2.0.7</version>
+    </dependency>
+    <dependency>
       <groupId>com.google.appengine</groupId>
       <artifactId>appengine-apis-dev</artifactId>
       <optional>true</optional>
@@ -286,8 +292,10 @@
                   <include>org.apache.ant:ant</include>
                   <include>org.apache.httpcomponents:httpclient</include>
                   <include>org.apache.httpcomponents:httpcore:*</include>
+                  <!-- Jetty here for mimetype only, can be either 9 or 12.-->
                   <include>org.eclipse.jetty:jetty-http</include>
                   <include>org.eclipse.jetty:jetty-util</include>
+                  <include>org.slf4j:slf4j-api</include>
                 </includes>
               </artifactSet>
             </configuration>

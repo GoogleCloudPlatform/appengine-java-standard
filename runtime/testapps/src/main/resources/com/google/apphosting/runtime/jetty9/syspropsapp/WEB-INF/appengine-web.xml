@@ -22,6 +22,8 @@
   <runtime>java8</runtime>
   <system-properties>
     <property name="sysprops.test.foo" value="bar" />
+    <!-- for Jetty12, values are different in 9 or 12>
     <property name="javax.xml.parsers.DocumentBuilderFactory" value="foobar" />
+    <property name="javax.xml.parsers.DocumentBuilderFactoryTest" value="foobar" /-->
   </system-properties>
 </appengine-web-app>

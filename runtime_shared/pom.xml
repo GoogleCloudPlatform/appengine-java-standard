@@ -32,17 +32,6 @@
         <dependency>
             <groupId>com.google.appengine</groupId>
             <artifactId>sessiondata</artifactId>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>javax.servlet-api</artifactId>
-             <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>javax.servlet.jsp.jstl</groupId>
-            <artifactId>javax.servlet.jsp.jstl-api</artifactId>
-            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.checkerframework</groupId>
@@ -50,91 +39,8 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>org.eclipse.jetty.toolchain</groupId>
-            <artifactId>jetty-schemas</artifactId>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>org.mortbay.jasper</groupId>
-            <artifactId>apache-jsp</artifactId>
-            <optional>true</optional>
-       </dependency>
-        <dependency>
-            <groupId>org.mortbay.jasper</groupId>
-            <artifactId>apache-el</artifactId>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
           <groupId>com.google.errorprone</groupId>
           <artifactId>error_prone_annotations</artifactId>
-           <optional>true</optional>
        </dependency>
   </dependencies>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-shade-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>shade</goal>
-                        </goals>
-                        <configuration>
-                            <createSourcesJar>true</createSourcesJar>
-                            <artifactSet>
-                                <excludes>
-                                    <exclude>org.eclipse.jdt:ecj</exclude>
-                                 </excludes>
-                                <includes>
-                                    <include>org.eclipse.jetty.toolchain:jetty-schemas</include>
-                                    <include>org.mortbay.jasper:apache-jsp</include>
-                                    <include>org.mortbay.jasper:apache-el</include>
-                                    <include>com.google.appengine:sessiondata</include>
-                                    <include>javax.servlet:javax.servlet-api</include>
-                                    <include>javax.servlet.jsp.jstl:javax.servlet.jsp.jstl-api</include>
-                                </includes>
-                            </artifactSet>
-                            <filters>
-                                <filter>
-                                    <artifact>org.mortbay.jasper:apache-el</artifact>
-                                    <includes>
-                                        <include>javax/el/**</include>
-                                    </includes>
-                                    <excludes>
-                                        <exclude>org/**</exclude>
-                                    </excludes>
-                                </filter>
-                                <filter>
-                                    <artifact>org.mortbay.jasper:apache-jsp</artifact>
-                                    <includes>
-                                        <include>javax/servlet/jsp/**</include>
-                                    </includes>
-                                    <excludes>
-                                        <exclude>org/**</exclude>
-                                    </excludes>
-                                </filter>
-                                <filter>
-                                    <artifact>*:*</artifact>
-                                    <excludes>
-                                        <exclude>META-INF/services/**</exclude>
-                                        <exclude>META-INF/maven/**</exclude>
-                                        <exclude>META-INF/web-fragment.xml</exclude>
-                                        <exclude>META-INF/*.DSA</exclude>
-                                        <exclude>META-INF/*.RSA</exclude>
-                                        <exclude>META-INF/MANIFEST.MF</exclude>
-                                        <exclude>LICENSE</exclude>
-                                        <exclude>META-INF/LICENSE.txt</exclude>
-                                    </excludes>
-                                </filter>
-                            </filters>
-                        </configuration>
-                    </execution>
-                </executions>
-
-            </plugin>
-        </plugins>
-    </build>
 </project>

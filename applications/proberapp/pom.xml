@@ -199,12 +199,20 @@
                         <configuration>
                               <fileSets>
                                 <fileSet>
-                                    <sourceFile>../../runtime/deployment/target/runtime-deployment-${project.version}/runtime-impl.jar</sourceFile>
-                                    <destinationFile>${appengine.runtime.location}/runtime-impl.jar</destinationFile>
+                                    <sourceFile>../../runtime/deployment/target/runtime-deployment-${project.version}/runtime-impl-jetty9.jar</sourceFile>
+                                    <destinationFile>${appengine.runtime.location}/runtime-impl-jetty9.jar</destinationFile>
                                 </fileSet>
                                 <fileSet>
-                                    <sourceFile>../../runtime/deployment/target/runtime-deployment-${project.version}/runtime-shared.jar</sourceFile>
-                                    <destinationFile>${appengine.runtime.location}/runtime-shared.jar</destinationFile>
+                                    <sourceFile>../../runtime/deployment/target/runtime-deployment-${project.version}/runtime-shared-jetty9.jar</sourceFile>
+                                    <destinationFile>${appengine.runtime.location}/runtime-shared-jetty9.jar</destinationFile>
+                                </fileSet>
+                                <fileSet>
+                                    <sourceFile>../../runtime/deployment/target/runtime-deployment-${project.version}/runtime-impl-jetty12.jar</sourceFile>
+                                    <destinationFile>${appengine.runtime.location}/runtime-impl-jetty12.jar</destinationFile>
+                                </fileSet>
+                                <fileSet>
+                                    <sourceFile>../../runtime/deployment/target/runtime-deployment-${project.version}/runtime-shared-jetty12.jar</sourceFile>
+                                    <destinationFile>${appengine.runtime.location}/runtime-shared-jetty12.jar</destinationFile>
                                 </fileSet>
                                 <fileSet>
                                     <sourceFile>../../runtime/deployment/target/runtime-deployment-${project.version}/runtime-main.jar</sourceFile>

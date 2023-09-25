@@ -21,6 +21,11 @@ shopt -s globstar
 src_dir="${KOKORO_ARTIFACTS_DIR}/git/appengine-java-standard"
 cd $src_dir
 
+sudo apt-get update
+sudo apt-get install -y openjdk-17-jdk
+sudo update-java-alternatives --set java-1.17.0-openjdk-amd64
+export JAVA_HOME="$(update-java-alternatives -l | grep "1.17" | head -n 1 | tr -s " " | cut -d " " -f 3)"
+
 # Make sure `JAVA_HOME` is set.
 echo "JAVA_HOME = $JAVA_HOME"
 ./mvnw -v
@@ -45,10 +50,14 @@ cp appengine_testing/target/appengine-testing*.jar ${TMP_STAGING_LOCATION}/appen
 cp remoteapi/target/appengine-remote-api*.jar ${TMP_STAGING_LOCATION}/appengine-remote-api.jar
 cp appengine_jsr107/target/appengine-jsr107*.jar ${TMP_STAGING_LOCATION}/appengine-jsr107.jar
 cp runtime_shared/target/runtime-shared*.jar ${TMP_STAGING_LOCATION}/runtime-shared.jar
+cp runtime_shared_jetty9/target/runtime-shared*.jar ${TMP_STAGING_LOCATION}/runtime-shared-jetty9.jar
+cp runtime_shared_jetty12/target/runtime-shared*.jar ${TMP_STAGING_LOCATION}/runtime-shared-jetty12.jar
 cp lib/tools_api/target/appengine-tools-sdk*.jar ${TMP_STAGING_LOCATION}/appengine-tools-api.jar
 cp lib/xml_validator/target/libxmlvalidator*.jar ${TMP_STAGING_LOCATION}/libxmlvalidator.jar
-cp runtime/impl/target/runtime-impl*.jar ${TMP_STAGING_LOCATION}/runtime-impl.jar
-cp runtime/local/target/appengine-local-runtime*.jar ${TMP_STAGING_LOCATION}/appengine-local-runtime.jar
+cp runtime/runtime_impl_jetty9/target/runtime-impl*.jar ${TMP_STAGING_LOCATION}/runtime-impl-jetty9.jar
+cp runtime/runtime_impl_jetty12/target/runtime-impl*.jar ${TMP_STAGING_LOCATION}/runtime-impl-jetty12.jar
+cp runtime/local_jetty9/target/appengine-local-runtime*.jar ${TMP_STAGING_LOCATION}/appengine-local-runtime-jetty9.jar
+cp runtime/local_jetty12/target/appengine-local-runtime*.jar ${TMP_STAGING_LOCATION}/appengine-local-runtime-jetty12.jar
 cp runtime/main/target/runtime-main*.jar ${TMP_STAGING_LOCATION}/runtime-main.jar
 cp local_runtime_shared/target/appengine-local-runtime-shared*.jar ${TMP_STAGING_LOCATION}/appengine-local-runtime-shared.jar
 cp quickstartgenerator/target/quickstartgenerator*.jar ${TMP_STAGING_LOCATION}/quickstartgenerator.jar

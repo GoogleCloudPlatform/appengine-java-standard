@@ -34,7 +34,6 @@ import com.google.apphosting.utils.config.StagingOptions;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
 import com.google.common.io.Files;
-import com.google.common.io.MoreFiles;
 import java.io.BufferedWriter;
 import java.io.DataInputStream;
 import java.io.File;
@@ -51,6 +50,7 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.EnumSet;
 import java.util.Enumeration;
 import java.util.List;
@@ -70,7 +70,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import org.junit.runners.Parameterized;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -81,7 +81,7 @@ import org.xml.sax.SAXException;
  *
  * @author fabbott@google.com (Freeland Abbott)
  */
-@RunWith(JUnit4.class)
+@RunWith(Parameterized.class)
 public class ApplicationTest {
   private static final String SDK_ROOT_PROPERTY = "appengine.sdk.root";
 
@@ -155,6 +155,18 @@ public class ApplicationTest {
           + "<application>sampleapp</application><version>1</version><static-files/>"
           + "<threadsafe>true</threadsafe><vm>true</vm><resource-files/></appengine-web-app>";
 
+  @Parameterized.Parameters
+  public static Collection jetty12() {
+    return Arrays.asList(new Object[][] {{true}, {false}});
+  }
+
+  public ApplicationTest(Boolean useJetty12) {
+    System.setProperty("appengine.use.jetty12", useJetty12.toString());
+    System.setProperty("appengine.sdk.root", "../../sdk_assembly/target/appengine-java-standard");
+    AppengineSdk.resetSdk();
+
+  }
+
   private static String getWarPath(String directoryName) {
           File currentDirectory = new File("").getAbsoluteFile();
 
@@ -167,7 +179,6 @@ public class ApplicationTest {
                     + directoryName
                     + "-0.0.1-SNAPSHOT")
             .getAbsolutePath();
-                                System.out.println(appRoot);
 
 //    assertThat(appRoot.isDirectory()).isTrue();
 return appRoot;
@@ -218,7 +229,7 @@ return sdkRoot;
       } finally {
         jar.close();
       }
-    } catch (Exception e) {
+    } catch (IOException e) {
       throw new AssertionError("Cannot read jar file: " + jarFile.getAbsolutePath(), e);
     }
     fail("Jar does not contain entry: " + entryName);
@@ -576,7 +587,7 @@ return sdkRoot;
     try {
       doTestAppEngineApiJarIncluded(tmpDir, "impl", "lib/impl/appengine-api.jar");
     } finally {
-      MoreFiles.deleteRecursively(tmpDir.toPath());
+      deleteRecursively(tmpDir.toPath());
     }
   }
 
@@ -1181,15 +1192,15 @@ return sdkRoot;
 
     // all entries should exist for entry 0
     RetryParametersXml retryParameters = entries.get(0).getRetryParameters();
-    assertThat(retryParameters.getRetryLimit().intValue()).isEqualTo(3);
-    assertThat(retryParameters.getAgeLimitSec().intValue()).isEqualTo(60 * 60 * 24 * 2);
+    assertThat(retryParameters.getRetryLimit()).isEqualTo(3);
+    assertThat(retryParameters.getAgeLimitSec()).isEqualTo(60 * 60 * 24 * 2);
     assertThat(retryParameters.getMinBackoffSec()).isEqualTo(2.4);
     assertThat(retryParameters.getMaxBackoffSec()).isEqualTo(10.5);
-    assertThat(retryParameters.getMaxDoublings().intValue()).isEqualTo(4);
+    assertThat(retryParameters.getMaxDoublings()).isEqualTo(4);
 
     // only retry limit should be set for entry 1
     retryParameters = entries.get(1).getRetryParameters();
-    assertThat(retryParameters.getRetryLimit().intValue()).isEqualTo(2);
+    assertThat(retryParameters.getRetryLimit()).isEqualTo(2);
     assertThat(retryParameters.getAgeLimitSec()).isNull();
     assertThat(retryParameters.getMinBackoffSec()).isNull();
     assertThat(retryParameters.getMaxBackoffSec()).isNull();
@@ -1531,7 +1542,15 @@ return sdkRoot;
     //  </context-param>
 
     NodeList nodeList = quickstartDoc.getElementsByTagName("context-param");
-    assertThat(nodeList.getLength()).isEqualTo(3);
+
+    // TODO: review. This expectation used to be 3, this is because the Jetty
+    //  QuickStartGeneratorConfiguration.generateQuickStartWebXml will now
+    //  add an empty set if it doesn't have any SCIs instead of not setting the context param.
+    if (Boolean.getBoolean("appengine.use.jetty12")) {
+      assertThat(nodeList.getLength()).isEqualTo(4);
+    } else {
+      assertThat(nodeList.getLength()).isEqualTo(3);      
+    }
     for (int i = 0; i < nodeList.getLength(); i++) {
       Node contextParam = nodeList.item(i).getFirstChild();
       int nbParamValue = 0;
@@ -1661,10 +1680,18 @@ return sdkRoot;
 
     testApp.createStagingDirectory(opts, temporaryFolder.newFolder());
     assertThat(testApp.getWebXml().getFallThroughToRuntime()).isFalse();
-    String expectedJasperInitializer =
-        "\"ContainerInitializer"
-            + "{org.eclipse.jetty.apache.jsp.JettyJasperInitializer"
-            + ",interested=[],applicable=[],annotated=[]}\"";
+    String expectedJasperInitializer;
+    if (Boolean.getBoolean("appengine.use.jetty12")) {
+        expectedJasperInitializer
+                = "\"ContainerInitializer"
+                + "{org.eclipse.jetty.ee8.apache.jsp.JettyJasperInitializer"
+                + ",interested=[],applicable=[],annotated=[]}\"";
+    } else {
+        expectedJasperInitializer
+                = "\"ContainerInitializer"
+                + "{org.eclipse.jetty.apache.jsp.JettyJasperInitializer"
+                + ",interested=[],applicable=[],annotated=[]}\"";
+    }
     Map<String, String> trimmedContextParams =
         Maps.transformValues(testApp.getWebXml().getContextParams(), String::trim);
     assertThat(trimmedContextParams)

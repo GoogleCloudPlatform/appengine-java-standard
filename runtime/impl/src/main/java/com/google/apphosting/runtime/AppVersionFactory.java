@@ -44,6 +44,7 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
@@ -158,6 +159,9 @@ public class AppVersionFactory {
         };
     AppEngineWebXml appEngineWebXml = reader.readAppEngineWebXml();
     logger.atFine().log("Loaded appengine-web.xml: %s", appEngineWebXml);
+    if (Objects.equals(appEngineWebXml.getRuntime(), "java21")) {
+      System.setProperty("appengine.use.jetty12", "true");
+  }
     return appEngineWebXml;
   }
 
@@ -414,7 +418,7 @@ public class AppVersionFactory {
     // not bundled the api jar.
     // Newer apps are now using "user_defined" and they bundle the api jar, so no need to add it.
     // App not using the api jar would have "none" or empty.
-    // Read ../runtime/jetty94/AppInfoFactory.java to see where it is setup.
+    // Read ../runtime/jetty9/AppInfoFactory.java to see where it is setup.
     String apiVersion = appInfo.getApiVersion();
     if (!apiVersion.isEmpty()
         && !Ascii.equalsIgnoreCase(apiVersion, "none")

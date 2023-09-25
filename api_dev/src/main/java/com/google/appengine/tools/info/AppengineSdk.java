@@ -60,26 +60,18 @@ public abstract class AppengineSdk {
       };
 
   public AppengineSdk() {
-    if (sdkRoot == null) {
-      sdkRoot = findSdkRoot();
-    }
-    if (new File(sdkRoot, "lib" + File.separator + "user").isDirectory()) {
-      userLibFiles = Collections.unmodifiableList(getLibsRecursive(sdkRoot, "user"));
-    } else {
-      userLibFiles = Collections.emptyList();
-    }
-    userLibs = Collections.unmodifiableList(toURLs(userLibFiles));
+      AppengineSdk.resetSdk();
   }
 
   List<File> getLibs(File sdkRoot, String libSubDir) {
     return getLibs(sdkRoot, libSubDir, false);
   }
 
-  List<File> getLibsRecursive(File sdkRoot, String libSubDir) {
+  static List<File> getLibsRecursive(File sdkRoot, String libSubDir) {
     return getLibs(sdkRoot, libSubDir, true);
   }
 
-  private List<File> getLibs(File sdkRoot, String libSubDir, boolean recursive) {
+  private static List<File> getLibs(File sdkRoot, String libSubDir, boolean recursive) {
     File subDir = new File(sdkRoot, "lib" + File.separator + libSubDir);
 
     if (!subDir.exists()) {
@@ -91,7 +83,7 @@ public abstract class AppengineSdk {
     return libs;
   }
 
-  private void getLibs(File dir, List<File> list, boolean recursive) {
+  private static void getLibs(File dir, List<File> list, boolean recursive) {
     for (File f : listFiles(dir)) {
       if (f.isDirectory() && recursive) {
         getLibs(f, list, recursive);
@@ -157,6 +149,18 @@ public abstract class AppengineSdk {
   /** Returns the path to the root of the SDK. */
   public static File getSdkRoot() {
     return sdkRoot;
+  }
+  /** Reset current SDK to null, to trigger re init */
+  public static void resetSdk() {
+     currentSdk = null;
+      sdkRoot = findSdkRoot();
+    
+    if (new File(sdkRoot, "lib" + File.separator + "user").isDirectory()) {
+      userLibFiles = Collections.unmodifiableList(getLibsRecursive(sdkRoot, "user"));
+    } else {
+      userLibFiles = Collections.emptyList();
+    }
+    userLibs = Collections.unmodifiableList(toURLs(userLibFiles));
   }
 
   /**
@@ -263,7 +267,7 @@ public abstract class AppengineSdk {
    * @param dir The directory whose files we want to list.
    * @return The contents of the provided directory.
    */
-  File[] listFiles(File dir) {
+  static File[] listFiles(File dir) {
     // Some customers check the sdk into subversion, which puts hidden
     // directories into each sdk directory. We don't want these directories in
     // our list.

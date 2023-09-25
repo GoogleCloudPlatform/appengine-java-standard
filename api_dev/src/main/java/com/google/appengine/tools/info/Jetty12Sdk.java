@@ -35,7 +35,7 @@ class Jetty12Sdk extends AppengineSdk {
   static final String JETTY12_HOME_LIB_PATH = "jetty12/jetty-home/lib";
 
   private static final String WEB_DEFAULT_LOCATION_DEVAPPSERVERJETTY12 =
-      "com/google/appengine/tools/development/jetty9/webdefault.xml"; // TODO?
+      "com/google/appengine/tools/development/jetty/webdefault.xml"; 
 
   @Override
   public List<File> getUserJspLibFiles() {

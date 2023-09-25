@@ -47,6 +47,12 @@ import com.google.appengine.repackaged.com.google.protobuf.ByteString;
 import com.google.appengine.repackaged.com.google.protobuf.ExtensionRegistry;
 import com.google.appengine.repackaged.com.google.protobuf.InvalidProtocolBufferException;
 import com.google.appengine.repackaged.com.google.protobuf.UninitializedMessageException;
+/*
+import com.google.appengine.repackaged.com.google.appengine.repackaged.com.google.protobuf.ByteString;
+import com.google.appengine.repackaged.com.google.appengine.repackaged.com.google.protobuf.ExtensionRegistry;
+import com.google.appengine.repackaged.com.google.appengine.repackaged.com.google.protobuf.InvalidProtocolBufferException;
+import com.google.appengine.repackaged.com.google.appengine.repackaged.com.google.protobuf.UninitializedMessageException;
+*/
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import java.io.BufferedReader;
@@ -242,6 +248,7 @@ public abstract class JavaRuntimeViaHttpBase {
               .add(
                   JAVA_HOME.value() + "/bin/java",
                   "-Dcom.google.apphosting.runtime.jetty94.LEGACY_MODE=" + useJetty94LegacyMode(),
+                  "-Dappengine.use.jetty12="+ useJetty12(),
                   "-Duse.mavenjars=" + useMavenJars(),
                   "-cp",
                   useMavenJars()
@@ -379,6 +386,11 @@ public abstract class JavaRuntimeViaHttpBase {
     return Boolean.getBoolean("com.google.apphosting.runtime.jetty94.LEGACY_MODE");
   }
 
+  
+  static boolean useJetty12() {
+    return Boolean.getBoolean("appengine.use.jetty12");
+  }
+  
   static class OutputPump implements Runnable {
     private final BufferedReader stream;
     private final String echoPrefix;

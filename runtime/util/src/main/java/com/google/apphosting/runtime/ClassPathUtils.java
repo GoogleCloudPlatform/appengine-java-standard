@@ -74,7 +74,7 @@ public class ClassPathUtils {
       logger.log(Level.INFO, "AppEngine profiler enabled.");
     }
     List<String> runtimeClasspathEntries =
-        Arrays.asList("jars/runtime-impl.jar", profilerJar);
+        Arrays.asList("jars/runtime-impl-jetty9.jar", profilerJar);
 
     String runtimeClasspath =
         runtimeClasspathEntries.stream()
@@ -95,7 +95,7 @@ public class ClassPathUtils {
     // that when deploying with api_version: 1.0 in generated app.yaml
     // we need to add our own legacy jar.
     frozenApiJarFile = new File(new File(root, runtimeBase), "/appengine-api.jar");
-    System.setProperty(RUNTIME_SHARED_PROPERTY, runtimeBase + "/jars/runtime-shared.jar");
+    System.setProperty(RUNTIME_SHARED_PROPERTY, runtimeBase + "/jars/runtime-shared-jetty9.jar");
     System.setProperty(API_PROPERTY, "1.0=" + runtimeBase + "/jars/appengine-api-1.0-sdk.jar");
     System.setProperty(
         APPENGINE_API_LEGACY_PROPERTY, runtimeBase + "/jars/appengine-api-legacy.jar");
@@ -105,16 +105,20 @@ public class ClassPathUtils {
   }
 
   private void initForJava11OrAbove(String runtimeBase) {
-    // No native launcher means gen2 java11 or java17, not java8.
+    // No native launcher means gen2 java11 or java17 or java21, not java8.
     /*
         New content is very simple now (from maven jars):
         ls blaze-bin/java/com/google/apphosting/runtime_java11/deployment_java11
-        appengine-api-1.0-sdk.jar
-        runtime-impl.jar
+        runtime-impl-jetty9.jar
+        runtime-impl-jetty12.jar
         runtime-main.jar
-        runtime-shared.jar
+        runtime-shared.jar (for Jetty9)
+        runtime-shared-jetty12.jar
     */
-    List<String> runtimeClasspathEntries = Arrays.asList("runtime-impl.jar");
+      List<String> runtimeClasspathEntries
+              = Boolean.getBoolean("appengine.use.jetty12")
+              ? Arrays.asList("runtime-impl-jetty12.jar")
+              : Arrays.asList("runtime-impl-jetty9.jar");
 
     String runtimeClasspath =
         runtimeClasspathEntries.stream()
@@ -132,7 +136,12 @@ public class ClassPathUtils {
     System.setProperty(RUNTIME_IMPL_PROPERTY, runtimeClasspath);
     logger.log(Level.INFO, "Using runtime classpath: " + runtimeClasspath);
 
-    System.setProperty(RUNTIME_SHARED_PROPERTY, runtimeBase + "/runtime-shared.jar");
+    if (Boolean.getBoolean("appengine.use.jetty12")) {
+        System.setProperty(RUNTIME_SHARED_PROPERTY, runtimeBase + "/runtime-shared-jetty12.jar");
+    } else {
+        System.setProperty(RUNTIME_SHARED_PROPERTY, runtimeBase + "/runtime-shared-jetty9.jar");
+    };
+
     frozenApiJarFile = new File(runtimeBase, "/appengine-api-1.0-sdk.jar");
   }
 

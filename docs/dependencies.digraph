@@ -21,7 +21,8 @@ appengine_resources [fillcolor=yellow label="appengine-resources"]
 appengine_utils [fillcolor=yellow label="appengine-utils"]
 protos [fillcolor=yellow label="protos"]
 sessiondata [fillcolor=yellow label="sessiondata"]
-runtime_shared [fillcolor=orange label="runtime-shared *"]
+runtime_shared_jetty9 [fillcolor=orange label="runtime-shared-jetty *"]
+runtime_shared_jetty12 [fillcolor=orange label="runtime-shared-jetty *"]
 appengine_apis [fillcolor=yellow label="appengine-apis"]
 appengine_apis_dev [fillcolor=yellow label="appengine-apis-dev"]
 shared_sdk [fillcolor=yellow label="shared-sdk"]
@@ -32,14 +33,24 @@ appengine_local_runtime_shared [fillcolor=orange label="appengine-local-runtime-
 appengine_remoteapi [fillcolor=orange label="appengine-remoteapi"]
 appengine_tools_sdk [fillcolor=orange label="appengine-tools-sdk"]
 runtime_main [fillcolor=orange label="runtime-main * "]
-runtime_impl [fillcolor=orange label="runtime-impl *"]
+runtime_impl_jetty9 [fillcolor=orange label="runtime-impl-jetty9 *"]
+runtime_impl_jetty12 [fillcolor=orange label="runtime-impl-jetty12 *"]
 runtime_util [fillcolor=yellow label="runtime-util"]
 appengine_api_1_0_sdk [fillcolor=orange label="appengine-api-1_0-sdk"]
 appengine_api_stubs [fillcolor=orange label="appengine-api-stubs"]
 runtime_util -> {}
+runtime_impl -> {}
+runtime_shared -> {}
+jetty9 ->{}
+jetty12 ->{}
+quickstartgenerator ->{}
+quickstartgenerator_jetty12 ->{}
+appengine_local_runtime_jetty9 ->{}
+appengine_local_runtime_jetty12 ->{}
 }
 
-runtime_shared -> sessiondata
+runtime_shared -> {runtime_shared,jetty9}
+runtime_shared_jetty12 -> {runtime_shared,jetty12}
 appengine_apis -> {protos, runtime_shared}
 appengine_apis_dev -> {appengine_apis,protos,appengine_utils, shared_sdk, appengine_resources}
 appengine_api_1_0_sdk -> {appengine_apis}
@@ -52,6 +63,11 @@ appengine_remoteapi -> {appengine_apis}
 appengine_tools_sdk -> {appengine_apis_dev, appengine_remoteapi,appengine_utils}
 runtime_main -> {runtime_util }
 runtime_impl -> {appengine_utils,protos,appengine_api_1_0_sdk, runtime_util}
+runtime_impl_jetty9 -> {runtime_impl,appengine_utils,protos,appengine_api_1_0_sdk, runtime_util,jetty9}
+runtime_impl_jetty12 -> {runtime_impl,appengine_utils,protos,appengine_api_1_0_sdk, runtime_util,jetty12}
 appengine_local_runtime -> {appengine_remoteapi,appengine_apis_dev,runtime_shared,appengine_tools_sdk,shared_sdk,appengine_utils}
+appengine_local_runtime_jetty9 -> {appengine_local_runtime,jetty9}
+appengine_local_runtime_jetty12 -> {appengine_local_runtime,jetty12}
 runtime_util -> {}
 }
+

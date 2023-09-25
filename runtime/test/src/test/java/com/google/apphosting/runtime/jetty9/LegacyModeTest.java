@@ -27,19 +27,31 @@ import java.net.Inet4Address;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.Collection;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import org.junit.runners.Parameterized;
 
-@RunWith(JUnit4.class)
+@RunWith(Parameterized.class)
 public class LegacyModeTest extends JavaRuntimeViaHttpBase {
   private static RuntimeContext<DummyApiServer> runtime;
 
   private static final boolean LEGACY =
       Boolean.getBoolean("com.google.apphosting.runtime.jetty94.LEGACY_MODE");
-
+  @Parameterized.Parameters
+  public static Collection jetty12() {
+   return Arrays.asList(new Object[][] { 
+      { true }, { false }});
+  }
+  
+  public LegacyModeTest(Boolean useJetty12) {
+    if (!Boolean.getBoolean("test.running.internally")) {
+      System.setProperty("appengine.use.jetty12", useJetty12.toString());
+    }
+  }  
   @BeforeClass
   public static void beforeClass() throws IOException, InterruptedException {
     Path appPath = temporaryFolder.newFolder("app").toPath();
@@ -102,6 +114,7 @@ public class LegacyModeTest extends JavaRuntimeViaHttpBase {
     assertThat(response).contains("01234567");
   }
 
+  
   @Test
   public void testProxiedMicrosoftEncoding() throws Exception {
     String response =

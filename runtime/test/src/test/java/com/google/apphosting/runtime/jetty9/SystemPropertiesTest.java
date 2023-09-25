@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+
 package com.google.apphosting.runtime.jetty9;
 
 import static com.google.common.collect.ImmutableSortedMap.toImmutableSortedMap;
@@ -26,17 +27,33 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.Collection;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import org.junit.runners.Parameterized;
 
-@RunWith(JUnit4.class)
+@RunWith(Parameterized.class)
+
 public class SystemPropertiesTest extends JavaRuntimeViaHttpBase {
   @Rule public TemporaryFolder temp = new TemporaryFolder();
 
+    @Parameterized.Parameters
+  public static Collection jetty12() {
+   return Arrays.asList(new Object[][] { 
+      { true }, { false }});
+  }
+  
+   public SystemPropertiesTest(Boolean useJetty12) {
+    if (!Boolean.getBoolean("test.running.internally")) {
+      System.setProperty("appengine.use.jetty12", useJetty12.toString());
+    }
+  }
+   
+   
   @Before
   public void copyAppToTemp() throws IOException {
     copyAppToDir("syspropsapp", temp.getRoot().toPath());
@@ -71,7 +88,8 @@ public class SystemPropertiesTest extends JavaRuntimeViaHttpBase {
           "com.google.appengine.runtime.version", "Google App Engine/" + expectedRelease,
           // Set from appengine-web.xml.
           "sysprops.test.foo", "bar",
-          "javax.xml.parsers.DocumentBuilderFactory", "foobar",
+          // 94 is "javax.xml.parsers.DocumentBuilderFactory", "foobar",
+          // 12 is "javax.xml.parsers.DocumentBuilderFactoryTest", "foobar",
           // Should be set by default.
           "user.dir", appRoot.toString(),
           // Also check that SystemProperty.environment.value() returns the right thing.

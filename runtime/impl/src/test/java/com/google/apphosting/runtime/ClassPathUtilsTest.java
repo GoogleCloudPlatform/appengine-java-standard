@@ -51,11 +51,17 @@ public final class ClassPathUtilsTest {
     // we do not call createJava8Environment() so expect java11+
     ClassPathUtils cpu = new ClassPathUtils();
     assertThat(cpu.getConnectorJUrls()).hasLength(0);
-    assertThat(System.getProperty("classpath.runtime-impl"))
-        .isEqualTo(runtimeLocation + "/runtime-impl.jar");
-
-    assertThat(System.getProperty("classpath.runtime-shared"))
-        .isEqualTo(runtimeLocation + "/runtime-shared.jar");
+    if (Boolean.getBoolean("appengine.use.jetty12")) {
+        assertThat(System.getProperty("classpath.runtime-impl"))
+                .isEqualTo(runtimeLocation + "/runtime-impl-jetty12.jar");
+        assertThat(System.getProperty("classpath.runtime-shared"))
+                .isEqualTo(runtimeLocation + "/runtime-shared-jetty12.jar");
+    } else {
+        assertThat(System.getProperty("classpath.runtime-impl"))
+                .isEqualTo(runtimeLocation + "/runtime-impl-jetty9.jar");
+        assertThat(System.getProperty("classpath.runtime-shared"))
+                .isEqualTo(runtimeLocation + "/runtime-shared-jetty9.jar");
+    }
     assertThat(System.getProperty("classpath.connector-j")).isNull();
 
     assertThat(cpu.getFrozenApiJar().getAbsolutePath())
@@ -71,10 +77,10 @@ public final class ClassPathUtilsTest {
     assertThat(System.getProperty("classpath.runtime-impl"))
         .isEqualTo(
             runtimeLocation
-                + "/jars/runtime-impl.jar");
+                + "/jars/runtime-impl-jetty9.jar");
 
     assertThat(System.getProperty("classpath.runtime-shared"))
-        .isEqualTo(runtimeLocation + "/jars/runtime-shared.jar");
+        .isEqualTo(runtimeLocation + "/jars/runtime-shared-jetty9.jar");
     assertThat(System.getProperty("classpath.connector-j"))
         .isEqualTo(runtimeLocation + "/jdbc-mysql-connector.jar");
 

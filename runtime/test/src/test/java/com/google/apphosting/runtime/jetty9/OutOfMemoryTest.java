@@ -22,19 +22,31 @@ import static org.junit.Assert.fail;
 
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collection;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import org.junit.runners.Parameterized;
 
 /**
  * Tests that {@code -XX:ExitOnOutOfMemoryError} gets through to the runtime and has the intended
  * effect.
  */
-@RunWith(JUnit4.class)
+@RunWith(Parameterized.class)
 public class OutOfMemoryTest extends JavaRuntimeViaHttpBase {
+  @Parameterized.Parameters
+  public static Collection jetty12() {
+   return Arrays.asList(new Object[][] { 
+      { true }, { false }});
+  }
+      
+  public OutOfMemoryTest(boolean useJetty12) {
+     System.setProperty("appengine.use.jetty12",  "" + useJetty12);
+  }
+      
   @Rule public TemporaryFolder temp = new TemporaryFolder();
 
   @Before

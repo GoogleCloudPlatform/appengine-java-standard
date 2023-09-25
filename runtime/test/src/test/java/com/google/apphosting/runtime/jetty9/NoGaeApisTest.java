@@ -19,16 +19,26 @@ import static com.google.common.truth.Truth.assertThat;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collection;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import org.junit.runners.Parameterized;
 
-@RunWith(JUnit4.class)
+@RunWith(Parameterized.class)
 public final class NoGaeApisTest extends JavaRuntimeViaHttpBase {
 
   private static File appRoot;
-
+  @Parameterized.Parameters
+  public static Collection jetty12() {
+   return Arrays.asList(new Object[][] { 
+      { true }, { false }});
+  }
+  
+  public NoGaeApisTest(Boolean useJetty12) {
+     System.setProperty("appengine.use.jetty12",  useJetty12.toString());
+  }
   @BeforeClass
   public static void beforeClass() throws IOException, InterruptedException {
     File currentDirectory = new File("").getAbsoluteFile();

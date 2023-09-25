@@ -37,7 +37,7 @@ import com.google.apphosting.runtime.AppVersion;
 import com.google.apphosting.runtime.ApplicationEnvironment;
 import com.google.apphosting.runtime.SessionsConfig;
 import com.google.apphosting.runtime.http.FakeHttpApiHost;
-import com.google.apphosting.runtime.jetty94.AppInfoFactory;
+import com.google.apphosting.runtime.jetty9.AppInfoFactory;
 import com.google.apphosting.testing.PortPicker;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;

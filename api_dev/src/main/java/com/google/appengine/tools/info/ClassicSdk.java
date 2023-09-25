@@ -100,6 +100,7 @@ class ClassicSdk extends AppengineSdk {
     // We also want the devserver to be able to handle annotated servlet, via ASM:
     lf.addAll(getJetty9Jars("annotations"));
     lf.addAll(getLibs(sdkRoot, "impl"));
+    lf.addAll(getLibs(sdkRoot, "impl/jetty9"));
    return Collections.unmodifiableList(lf);
   }
 

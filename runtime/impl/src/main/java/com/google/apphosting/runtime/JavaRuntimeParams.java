@@ -441,14 +441,20 @@ final class JavaRuntimeParams {
   }
 
   private void initServletEngineClass() {
-    String servletEngine = "com.google.apphosting.runtime.jetty94.JettyServletEngineAdapter";
+      String servletEngine;
+
+      if (Boolean.getBoolean("appengine.use.jetty12")) {
+          servletEngine = "com.google.apphosting.runtime.jetty.JettyServletEngineAdapter";
+      } else {
+          servletEngine = "com.google.apphosting.runtime.jetty9.JettyServletEngineAdapter";
+      }
     try {
       servletEngineClass = Class.forName(servletEngine).asSubclass(ServletEngineAdapter.class);
     } catch (ClassNotFoundException nfe) {
       throw new ParameterException(
-          "No class name with the given name " + servletEngine + " could be found");
+          "No class name with the given name " + servletEngine + " could be found", nfe);
     } catch (ClassCastException cce) {
-      throw new ParameterException("Not a subtype of " + ServletEngineAdapter.class.getName());
+      throw new ParameterException("Not a subtype of " + ServletEngineAdapter.class.getName(), cce);
     }
   }
 
