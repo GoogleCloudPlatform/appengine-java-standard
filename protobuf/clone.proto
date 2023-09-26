@@ -22,7 +22,6 @@ syntax = "proto2";
 package java.apphosting;
 
 import "common.proto";
-import "source_context.proto";
 
 option cc_enable_arenas = true;
 option java_package = "com.google.apphosting.base.protos";
