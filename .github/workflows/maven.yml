@@ -21,9 +21,9 @@ on:
   pull_request:
     branches:
       - main
-  push:
-    branches-ignore:
-      - 'dependabot/**'
+
+permissions:
+  contents: read
 
 jobs:
   build:
