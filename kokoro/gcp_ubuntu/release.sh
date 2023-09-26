@@ -98,6 +98,11 @@ git checkout -b $RELEASE_NUMBER
 git config user.email gae-java-bot@google.com
 git config user.name gae-java-bot
 
+sudo apt-get update
+sudo apt-get install -y openjdk-17-jdk
+sudo update-java-alternatives --set java-1.17.0-openjdk-amd64
+export JAVA_HOME="$(update-java-alternatives -l | grep "1.17" | head -n 1 | tr -s " " | cut -d " " -f 3)"
+
 # Make sure `JAVA_HOME` is set.
 echo "JAVA_HOME = $JAVA_HOME"
 

@@ -48,10 +48,14 @@ setup_docuploader
 export NAME=appengine-java11-bundled-services
 export VERSION=11
 
-# Use Java 11 for javadoc plugin usage.
-sudo update-java-alternatives --set java-1.11.0-openjdk-amd64
-export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
+sudo apt-get update
+sudo apt-get install -y openjdk-17-jdk
+sudo update-java-alternatives --set java-1.17.0-openjdk-amd64
+export JAVA_HOME="$(update-java-alternatives -l | grep "1.17" | head -n 1 | tr -s " " | cut -d " " -f 3)"
+
+# Make sure `JAVA_HOME` is set.
 echo "JAVA_HOME = $JAVA_HOME"
+
  # Setting up maven wrapper for the project. https://maven.apache.org/wrapper/
  mvn wrapper:wrapper
 # Do a build of all dependent modules first.
