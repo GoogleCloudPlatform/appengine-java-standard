@@ -32,7 +32,6 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         java: [21]
-        jdk: [temurin]
       fail-fast: false
 
     runs-on: ${{ matrix.os }}
