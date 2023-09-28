@@ -70,7 +70,7 @@
             </goals>
             <configuration>
               <jspc>
-                <package>org.apache.jsp.ah.jetty9</package>
+                <package>org.apache.jsp.ah.jetty</package>
               </jspc>
               <webAppSourceDirectory>${basedir}/src/main/resources/com/google/apphosting/utils/servlet/ah</webAppSourceDirectory>
               <mergeFragment>false</mergeFragment>
