@@ -234,6 +234,7 @@ public abstract class SharedMain {
       System.setProperty("appengine.use.jetty12", "true");
       AppengineSdk.resetSdk();
     }
+    sharedInit();
   }
 
   protected String getRuntime() {

@@ -227,7 +227,6 @@ public class DevAppServerMain extends SharedMain {
   }
 
   public static void main(String[] args) throws Exception {
-    SharedMain.sharedInit();
     new DevAppServerMain().run(args);
   }
 
