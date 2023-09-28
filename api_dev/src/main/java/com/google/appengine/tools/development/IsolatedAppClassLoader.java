@@ -46,9 +46,12 @@ public class IsolatedAppClassLoader extends URLClassLoader {
 
   private static final Logger logger = Logger.getLogger(IsolatedAppClassLoader.class.getName());
 
-  // Web-default.xml files for Jetty9 based devappserver1.
+  // Web-default.xml files for Jetty9 based devappserver.
   private static final String WEB_DEFAULT_LOCATION_DEVAPPSERVER1 =
       "com/google/appengine/tools/development/jetty9/webdefault.xml";
+  // Web-default.xml files for Jetty12 based devappserver.
+  private static final String WEB_DEFAULT_LOCATION_DEVAPPSERVER2 =
+      "com/google/appengine/tools/development/jetty/webdefault.xml";
 
   // This task queue related servlet should be loaded by the application classloader when the
   // api jar is used by the application, and default to the runtime classloader when the application
@@ -74,14 +77,16 @@ public class IsolatedAppClassLoader extends URLClassLoader {
     checkWorkingDirectory(appRoot, externalResourceDir);
     this.devAppServerClassLoader = devAppServerClassLoader;
     this.sharedCodeLibs = new HashSet<>(AppengineSdk.getSdk().getSharedLibs());
+    String webDefault = WEB_DEFAULT_LOCATION_DEVAPPSERVER1;
+    if (Boolean.getBoolean("appengine.use.jetty12")) {
+      webDefault = WEB_DEFAULT_LOCATION_DEVAPPSERVER2;
+    }
     this.classesToBeLoadedByTheRuntimeClassLoader =
         new ImmutableSet.Builder<String>()
             .add(SESSION_DATA_CLASS)
             .addAll(
                 getServletAndFilterClasses(
-                    IsolatedAppClassLoader.class
-                        .getClassLoader()
-                        .getResourceAsStream(WEB_DEFAULT_LOCATION_DEVAPPSERVER1)))
+                    IsolatedAppClassLoader.class.getClassLoader().getResourceAsStream(webDefault)))
             .build();
   }
 

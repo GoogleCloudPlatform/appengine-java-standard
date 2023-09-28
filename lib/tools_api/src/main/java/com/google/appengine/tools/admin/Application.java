@@ -259,6 +259,10 @@ public class Application implements GenericApplication {
           aewebReader.getFilename(), new File(getSdkDocsDir(), "appengine-web.xsd"));
     }
     appEngineWebXml = aewebReader.readAppEngineWebXml();
+    if ("java21".equals(appEngineWebXml.getRuntime())) {
+      System.setProperty("appengine.use.jetty12", "true");
+      AppengineSdk.resetSdk();
+    }
     appEngineWebXml.setSourcePrefix(explodedPath);
 
     if (appId != null) {

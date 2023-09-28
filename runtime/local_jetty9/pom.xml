@@ -45,10 +45,6 @@
     </dependency>
     <dependency>
       <groupId>com.google.appengine</groupId>
-      <artifactId>runtime-shared</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.google.appengine</groupId>
       <artifactId>sessiondata</artifactId>
     </dependency>
     <!-- the auto-value dependency is included to activate generation of the AutoValue classes -->
@@ -204,7 +200,7 @@
                   </excludes>
                 </filter>
                 <filter>
-                  <artifact>com.google.appengine:shared-sdk:*</artifact>
+                  <artifact>com.google.appengine:shared-sdk-jetty9:*</artifact>
                   <includes>
                     <include>com/google/apphosting/runtime/**</include>
                     <include>com/google/appengine/tools/development/**</include>
@@ -251,7 +247,7 @@
                   <include>com.google.appengine:appengine-tools-sdk</include>
                   <include>com.google.appengine:appengine-utils</include>
                   <include>com.google.appengine:sessiondata</include>
-                  <include>com.google.appengine:shared-sdk</include>
+                  <include>com.google.appengine:shared-sdk-jetty9</include>
                   <include>com.google.flogger:google-extensions</include>
                   <include>com.google.flogger:flogger-system-backend</include>
                   <include>com.google.flogger:flogger</include>

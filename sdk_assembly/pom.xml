@@ -172,12 +172,20 @@
                         </goals>
                         <configuration>
                             <artifactItems>
-                                <artifactItem>
+                                 <artifactItem>
                                     <groupId>com.google.appengine</groupId>
-                                    <artifactId>appengine-local-runtime-shared</artifactId>
+                                    <artifactId>appengine-local-runtime-shared-jetty9</artifactId>
                                     <version>${project.version}</version>
                                     <overWrite>true</overWrite>
-                                    <outputDirectory>${assembly-directory}/lib/shared</outputDirectory>
+                                    <outputDirectory>${assembly-directory}/lib/shared/jetty9</outputDirectory>
+                                    <destFileName>appengine-local-runtime-shared.jar</destFileName>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>com.google.appengine</groupId>
+                                    <artifactId>appengine-local-runtime-shared-jetty12</artifactId>
+                                    <version>${project.version}</version>
+                                    <overWrite>true</overWrite>
+                                    <outputDirectory>${assembly-directory}/lib/shared/jetty12</outputDirectory>
                                     <destFileName>appengine-local-runtime-shared.jar</destFileName>
                                 </artifactItem>
                                 <artifactItem>
@@ -386,8 +394,13 @@
         </dependency>
         <dependency>
             <groupId>com.google.appengine</groupId>
-            <artifactId>appengine-local-runtime-shared</artifactId>
+            <artifactId>appengine-local-runtime-shared-jetty9</artifactId>
         </dependency>
+         <dependency>
+            <groupId>com.google.appengine</groupId>
+            <artifactId>appengine-local-runtime-shared-jetty12</artifactId>
+            <version>${project.version}</version>
+       </dependency>
         <dependency>
             <groupId>com.google.appengine</groupId>
             <artifactId>appengine-testing</artifactId>

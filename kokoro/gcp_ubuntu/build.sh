@@ -59,7 +59,8 @@ cp runtime/runtime_impl_jetty12/target/runtime-impl*.jar ${TMP_STAGING_LOCATION}
 cp runtime/local_jetty9/target/appengine-local-runtime*.jar ${TMP_STAGING_LOCATION}/appengine-local-runtime-jetty9.jar
 cp runtime/local_jetty12/target/appengine-local-runtime*.jar ${TMP_STAGING_LOCATION}/appengine-local-runtime-jetty12.jar
 cp runtime/main/target/runtime-main*.jar ${TMP_STAGING_LOCATION}/runtime-main.jar
-cp local_runtime_shared/target/appengine-local-runtime-shared*.jar ${TMP_STAGING_LOCATION}/appengine-local-runtime-shared.jar
+cp local_runtime_shared_jetty9/target/appengine-local-runtime-shared*.jar ${TMP_STAGING_LOCATION}/appengine-local-runtime-shared-jetty9.jar
+cp local_runtime_shared_jetty12/target/appengine-local-runtime-shared*.jar ${TMP_STAGING_LOCATION}/appengine-local-runtime-shared-jetty12.jar
 cp quickstartgenerator/target/quickstartgenerator*.jar ${TMP_STAGING_LOCATION}/quickstartgenerator.jar
 
 cp -rf sdk_assembly/target/appengine-java-sdk ${TMP_STAGING_LOCATION}/

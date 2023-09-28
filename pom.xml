@@ -36,7 +36,8 @@
     <module>api_legacy</module>
     <module>appengine_jsr107</module>
     <module>appengine-api-stubs</module>
-    <module>local_runtime_shared</module>
+    <module>local_runtime_shared_jetty9</module>
+    <module>local_runtime_shared_jetty12</module>
     <module>lib</module>
     <module>appengine_testing</module>
     <module>remoteapi</module>
@@ -337,7 +338,7 @@
       </dependency>
       <dependency>
         <groupId>com.google.appengine</groupId>
-        <artifactId>appengine-local-runtime-shared</artifactId>
+        <artifactId>appengine-local-runtime-shared-jetty9</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>

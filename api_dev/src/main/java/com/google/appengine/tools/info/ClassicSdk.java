@@ -140,7 +140,7 @@ class ClassicSdk extends AppengineSdk {
   List<File> getJetty9SharedLibFiles() {
     List<File> sharedLibs;
     sharedLibs = new ArrayList<>();
-    sharedLibs.add(new File(sdkRoot, "lib/shared/appengine-local-runtime-shared.jar"));
+    sharedLibs.add(new File(sdkRoot, "lib/shared/jetty9/appengine-local-runtime-shared.jar"));
     File jettyHomeLib = new File(sdkRoot, JETTY9_HOME_LIB_PATH);
 
     sharedLibs.add(new File(jettyHomeLib, "servlet-api-3.1.jar"));

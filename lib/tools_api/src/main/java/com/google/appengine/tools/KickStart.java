@@ -99,6 +99,7 @@ public class KickStart {
   private static final String SDK_ROOT_ERROR_MESSAGE = SDK_ROOT_FLAG + "=<path> expected";
 
   private Process serverProcess = null;
+  private static String gaeRuntime = null;
 
   static class AppEnvironment {
     static final AppEnvironment DEFAULT = new AppEnvironment("default", null);
@@ -254,7 +255,6 @@ public class KickStart {
     command.addAll(absoluteAppServerArgs);
     // Setup environment variables.
     String gaeEnv = "localdev";
-    String gaeRuntime = "java8";
     builder.environment().put("GAE_ENV", gaeEnv);
     builder.environment().put("GAE_RUNTIME", gaeRuntime);
     builder.environment().put("GAE_SERVICE", appEnvironment.serviceName);
@@ -330,7 +330,12 @@ public class KickStart {
     File config = new File(appDir, "WEB-INF/appengine-web.xml");
     if (config.exists()) {
       try {
-        configs.add(new AppEngineWebXmlReader(appDir).readAppEngineWebXml());
+        AppEngineWebXml xml = new AppEngineWebXmlReader(appDir).readAppEngineWebXml();
+        gaeRuntime = xml.getRuntime();
+        if (gaeRuntime == null) {
+          gaeRuntime = "java8";
+        }
+        configs.add(xml);
       } catch (AppEngineConfigException e) {
         System.err.println("Error reading module: " + config.getAbsolutePath());
         return AppEnvironment.DEFAULT;

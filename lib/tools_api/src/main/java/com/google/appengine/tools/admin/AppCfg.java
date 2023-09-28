@@ -65,7 +65,6 @@ public class AppCfg {
   private StagingOptions defaultStagingOptions = null;
   private StagingOptions.Builder stagingFlagsBuilder = null;
 
-  private boolean disablePrompt = false;
   private File logFile = null;
   private String overrideAppId;
   private String overrideModule;
@@ -74,7 +73,6 @@ public class AppCfg {
   private boolean useAsyncQuickstart = false;
   private String runtime;
   private boolean allowAnyRuntime = false;
-  private boolean disableUpdateCheck = false;
   private boolean failOnPrecompilationError = false;
   private boolean enableQuickstart = false;
 

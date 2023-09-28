@@ -124,6 +124,10 @@
             <configuration>
               <createSourcesJar>true</createSourcesJar>
               <relocations>
+                 <relocation>
+                  <pattern>org.eclipse</pattern>
+                  <shadedPattern>com.google.appengine.repackaged.org.eclispe</shadedPattern>
+                </relocation>
                 <relocation>
                   <pattern>com.google.common</pattern>
                   <shadedPattern>com.google.appengine.repackaged.com.google.common</shadedPattern>

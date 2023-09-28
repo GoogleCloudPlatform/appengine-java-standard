@@ -16,6 +16,7 @@
 
 package com.google.appengine.tools.development;
 
+import com.google.appengine.tools.info.AppengineSdk;
 import com.google.appengine.tools.util.Logging;
 import com.google.appengine.tools.util.Option;
 import com.google.apphosting.utils.config.AppEngineWebXml;
@@ -30,6 +31,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.TimeZone;
 
@@ -141,18 +143,15 @@ public abstract class SharedMain {
   }
 
   /**
-   * We attempt to record user.timezone before the JVM alters its value.
-   * This can happen just by asking for
-   * {@link java.util.TimeZone#getDefault()}.
+   * We attempt to record user.timezone before the JVM alters its value. This can happen just by
+   * asking for {@link java.util.TimeZone#getDefault()}.
    *
-   * We need this information later, so that we can know if the user
-   * actually requested an override of the timezone. We can still be wrong
-   * about this, for example, if someone directly or indirectly calls
-   * {@code TimeZone.getDefault} before the main method to this class.
-   * This doesn't happen in the App Engine tools themselves, but might
-   * theoretically happen in some third-party tool that wraps the App Engine
-   * tools. In that case, they can set {@code appengine.user.timezone}
-   * to override what we're inferring for user.timezone.
+   * <p>We need this information later, so that we can know if the user actually requested an
+   * override of the timezone. We can still be wrong about this, for example, if someone directly or
+   * indirectly calls {@code TimeZone.getDefault} before the main method to this class. This doesn't
+   * happen in the App Engine tools themselves, but might theoretically happen in some third-party
+   * tool that wraps the App Engine tools. In that case, they can set {@code
+   * appengine.user.timezone} to override what we're inferring for user.timezone.
    */
   private static void recordTimeZone() {
     originalTimeZone = System.getProperty("user.timezone");
@@ -222,23 +221,18 @@ public abstract class SharedMain {
     if (runtime != null) {
       return;
     }
-    File webXmlFile = new File(appDirectory, "WEB-INF/web.xml");
-    // No Web.xml means Java8 and Jetty9:
-    if (!webXmlFile.exists()) {
-      // TODO(b/115567472) revisit when we have Java 11 Beta. Maybe at that time, we will
-      // force a correct runtime ID in appengine-web.xml so the default would not be needed.
-      // runtime = "java8";
-      runtime = "java8";
-    } else {
-      AppEngineWebXml appEngineWebXml =
-          new AppEngineWebXmlReader(appDirectory.getAbsolutePath()).readAppEngineWebXml();
-      runtime = appEngineWebXml.getRuntime();
-      if (runtime == null) {
-        runtime = "java8"; // Default.
-      }
+    AppEngineWebXml appEngineWebXml =
+        new AppEngineWebXmlReader(appDirectory.getAbsolutePath()).readAppEngineWebXml();
+    runtime = appEngineWebXml.getRuntime();
+    if (runtime == null) {
+      runtime = "java8"; // Default.
     }
     if (runtime.equals("java7")) {
       throw new IllegalArgumentException("the Java7 runtime is not supported anymore.");
+    }
+    if (Objects.equals(runtime, "java21")) {
+      System.setProperty("appengine.use.jetty12", "true");
+      AppengineSdk.resetSdk();
     }
   }
 
@@ -247,14 +241,11 @@ public abstract class SharedMain {
   }
 
   /**
-   * Parse the properties list. Each string in the last may take the form:
-   *   name=value
-   *   name          shorthand for name=true
-   *   noname        shorthand for name=false
-   *   name=         required syntax to specify an empty value
+   * Parse the properties list. Each string in the last may take the form: name=value name shorthand
+   * for name=true noname shorthand for name=false name= required syntax to specify an empty value
    *
    * @param properties A list of unparsed properties (may be null).
-   * @returns A map from property names to values.
+   * @return A map from property names to values.
    */
   @VisibleForTesting
   static Map<String, String> parsePropertiesList(List<String> properties) {

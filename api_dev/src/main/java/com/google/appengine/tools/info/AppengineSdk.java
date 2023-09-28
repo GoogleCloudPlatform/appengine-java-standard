@@ -16,7 +16,6 @@
 
 package com.google.appengine.tools.info;
 
-import static com.google.common.base.MoreObjects.firstNonNull;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.File;
@@ -47,8 +46,7 @@ public abstract class AppengineSdk {
   public static final String SDK_ROOT_PROPERTY = "appengine.sdk.root";
 
   static File sdkRoot = null;
-  private static List<File> userLibFiles = null;
-  private static List<URL> userLibs = null;
+
   static boolean isDevAppServerTest;
 
   private static final FileFilter NO_HIDDEN_FILES =
@@ -59,8 +57,8 @@ public abstract class AppengineSdk {
         }
       };
 
-  public AppengineSdk() {
-      AppengineSdk.resetSdk();
+  AppengineSdk() {
+    sdkRoot = findSdkRoot();
   }
 
   List<File> getLibs(File sdkRoot, String libSubDir) {
@@ -135,7 +133,7 @@ public abstract class AppengineSdk {
    */
   @Deprecated
   public List<URL> getUserLibs() {
-    return userLibs;
+    return Collections.unmodifiableList(toURLs(getUserLibFiles()));
   }
 
   /**
@@ -143,6 +141,12 @@ public abstract class AppengineSdk {
    */
   @Deprecated
   public List<File> getUserLibFiles() {
+    List<File> userLibFiles;
+    if (new File(sdkRoot, "lib" + File.separator + "user").isDirectory()) {
+      userLibFiles = Collections.unmodifiableList(getLibsRecursive(sdkRoot, "user"));
+    } else {
+      userLibFiles = Collections.emptyList();
+    }
     return userLibFiles;
   }
 
@@ -153,14 +157,6 @@ public abstract class AppengineSdk {
   /** Reset current SDK to null, to trigger re init */
   public static void resetSdk() {
      currentSdk = null;
-      sdkRoot = findSdkRoot();
-    
-    if (new File(sdkRoot, "lib" + File.separator + "user").isDirectory()) {
-      userLibFiles = Collections.unmodifiableList(getLibsRecursive(sdkRoot, "user"));
-    } else {
-      userLibFiles = Collections.emptyList();
-    }
-    userLibs = Collections.unmodifiableList(toURLs(userLibFiles));
   }
 
   /**
@@ -174,6 +170,7 @@ public abstract class AppengineSdk {
       throw new IllegalStateException("Cannot set SDK root after initialization has occurred.");
     }
     sdkRoot = root;
+    currentSdk = null;
   }
 
   /**
@@ -236,7 +233,7 @@ public abstract class AppengineSdk {
   }
 
   /** Returns the File containing the SDK logging properties. */
-  public static File getLoggingProperties() {
+  public File getLoggingProperties() {
     return new File(
         getSdkRoot()
             + File.separator
@@ -252,7 +249,7 @@ public abstract class AppengineSdk {
   }
 
   /** Returns the URL to the tools API jar. */
-  public static URL getToolsApiJar() {
+  public URL getToolsApiJar() {
     File f =
         new File(
             getSdkRoot() + File.separator + "lib" + File.separator + "appengine-tools-api.jar");
@@ -280,12 +277,15 @@ public abstract class AppengineSdk {
 
   /** Returns an SDK implementation to use for access jar files and resources. */
   public static AppengineSdk getSdk() {
-    if (Boolean.getBoolean("appengine.use.jetty12")) {
-      return currentSdk = firstNonNull(currentSdk, new Jetty12Sdk());
-    } else {
-      return currentSdk = firstNonNull(currentSdk, new ClassicSdk());
+    if (currentSdk != null) {
+      return currentSdk;
     }
-  }
+    if (Boolean.getBoolean("appengine.use.jetty12")) {
+      return currentSdk = new Jetty12Sdk();
+    } else {
+      return currentSdk = new ClassicSdk();
+    }
+    }
 
   /**
    * Modifies the SDK implementation (Classic or Maven-based). This method is invoked via reflection

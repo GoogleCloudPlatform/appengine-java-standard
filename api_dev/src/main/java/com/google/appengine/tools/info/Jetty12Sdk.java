@@ -36,7 +36,7 @@ class Jetty12Sdk extends AppengineSdk {
 
   private static final String WEB_DEFAULT_LOCATION_DEVAPPSERVERJETTY12 =
       "com/google/appengine/tools/development/jetty/webdefault.xml"; 
-
+  
   @Override
   public List<File> getUserJspLibFiles() {
     return Collections.unmodifiableList(getJetty12JspJars());
@@ -149,8 +149,7 @@ class Jetty12Sdk extends AppengineSdk {
   List<File> getJetty12SharedLibFiles() {
     List<File> sharedLibs;
     sharedLibs = new ArrayList<>();
-    // TODO (ludo), this contains compiled JSPs from Jetty9:
-    sharedLibs.add(new File(sdkRoot, "lib/shared/appengine-local-runtime-shared.jar"));
+    sharedLibs.add(new File(sdkRoot, "lib/shared/jetty12/appengine-local-runtime-shared.jar"));
     File jettyHomeLib = new File(sdkRoot, JETTY12_HOME_LIB_PATH);
 
     sharedLibs.add(new File(jettyHomeLib, "jetty-servlet-api-4.0.6.jar"));
