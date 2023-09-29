@@ -69,5 +69,6 @@
       <module>bundle_standard_with_container_initializer</module>
       <module>bundle_standard_with_no_jsp</module>
       <module>bundle_standard_with_weblistener_memcache</module>
+      <module>allinone</module>
   </modules>
 </project>
