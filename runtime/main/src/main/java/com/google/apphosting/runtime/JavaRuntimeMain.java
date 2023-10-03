@@ -21,6 +21,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Method;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -76,7 +77,7 @@ public class JavaRuntimeMain {
 
       // Process user defined properties as soon as possible, in the simple main Classpath.
       processOptionalProperties(args);
-      if ("java21".equals(System.getProperty("GAE_RUNTIME"))) {
+      if (Objects.equals(System.getenv("GAE_RUNTIME"), "java21")) {
         System.setProperty(USE_JETTY12, "true");
       }
       String appsRoot = getApplicationRoot(args);
