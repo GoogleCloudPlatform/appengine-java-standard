@@ -305,13 +305,26 @@ public abstract class AbstractBackendServers implements BackendContainer,
    * specified instance request dispatcher so the request is handled in the
    * right server context.
    */
-  void forwardToServer(String requestedServer, int instance, HttpServletRequest hrequest,
+  public void forwardToServer(String requestedServer, int instance, HttpServletRequest hrequest,
       HttpServletResponse hresponse) throws IOException, ServletException {
     ServerWrapper server = getServerWrapper(requestedServer, instance);
     logger.finest("forwarding request to server: " + server);
     server.getContainer().forwardToServer(hrequest, hresponse);
   }
 
+    /**
+   * Forward a request to a specific server and instance. This will call the
+   * specified instance request dispatcher so the request is handled in the
+   * right server context.
+   */
+  public void forwardToServerEE10(String requestedServer, int instance,
+          jakarta.servlet.http.HttpServletRequest hrequest,
+      jakarta.servlet.http.HttpServletResponse hresponse)
+          throws IOException, ServletException {
+    ServerWrapper server = getServerWrapper(requestedServer, instance);
+    logger.finest("forwarding request to server: " + server);
+    server.getContainer().forwardToServerEE10(hrequest, hresponse);
+  }
   /**
    * This method guards access to servers to limit the number of concurrent
    * requests. Each request running on a server must acquire a serving permit.

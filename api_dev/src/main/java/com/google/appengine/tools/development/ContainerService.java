@@ -137,4 +137,11 @@ public interface ContainerService {
   void forwardToServer(HttpServletRequest hrequest, HttpServletResponse hresponse)
       throws IOException, ServletException;
 
+  /** Forwards an EE10 HttpRequest request to this container. */
+  default void forwardToServerEE10(
+      jakarta.servlet.http.HttpServletRequest hrequest,
+      jakarta.servlet.http.HttpServletResponse hresponse)
+      throws IOException, ServletException {
+      
+  }
 }

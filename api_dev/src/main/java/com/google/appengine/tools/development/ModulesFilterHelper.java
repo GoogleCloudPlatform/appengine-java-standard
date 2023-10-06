@@ -108,6 +108,15 @@ public interface ModulesFilterHelper {
   void forwardToInstance(String requestedModuleOrBackendName, int instance,
       HttpServletRequest hrequest, HttpServletResponse hresponse)
           throws IOException, ServletException;
+ /**
+   * Forward a request to a specified module or backend instance. Calls the
+   * request dispatcher for the requested instance with the instance
+   * context. The caller must hold a serving permit for the requested
+   * instance before calling this method.
+   */
+  void forwardToInstanceEE10(String requestedModuleOrBackendName, int instance,
+      jakarta.servlet.http.HttpServletRequest hrequest, jakarta.servlet.http.HttpServletResponse hresponse)
+          throws IOException, ServletException;
 
   /**
    * Returns true if the specified module or backend instance is a load balancing

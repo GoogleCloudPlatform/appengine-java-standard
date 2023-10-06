@@ -46,7 +46,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * with App Engine APIs such as the datastore.
  *
  */
-class EnvSettingTaskqueueCallback implements LocalTaskQueueCallback {
+public class EnvSettingTaskqueueCallback implements LocalTaskQueueCallback {
 
   /**
    * The name of a property used in the
@@ -82,7 +82,7 @@ class EnvSettingTaskqueueCallback implements LocalTaskQueueCallback {
    * @param shouldCopyApiProxyEnvironment should we copy the {@code Environment}
    *        to the task threads.
    */
-  static void setProxyProperties(ApiProxyLocal proxy,
+  public static void setProxyProperties(ApiProxyLocal proxy,
       Class<? extends LocalTaskQueueCallback> delegateClass,
       boolean shouldCopyApiProxyEnvironment) {
     proxy.setProperty(DELEGATE_CLASS_PROP, delegateClass.getName());
@@ -95,7 +95,7 @@ class EnvSettingTaskqueueCallback implements LocalTaskQueueCallback {
    *
    * @param latch the latch
    */
-  static void setTaskExecutionLatch(CountDownLatch latch) {
+  public static void setTaskExecutionLatch(CountDownLatch latch) {
     ApiProxy.getCurrentEnvironment().getAttributes().put(TASK_EXECUTION_LATCH_PROP, latch);
   }
 

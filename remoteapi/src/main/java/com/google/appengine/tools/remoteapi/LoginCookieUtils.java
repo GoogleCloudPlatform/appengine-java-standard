@@ -16,13 +16,10 @@
 
 package com.google.appengine.tools.remoteapi;
 
-// <internal24>
+//import com.google.security.annotations.SuppressInsecureCipherModeCheckerNoReview;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 /**
  * {@code LoginCookieUtils} encapsulates the creation, deletion, and parsing of the fake
@@ -39,56 +36,6 @@ final class LoginCookieUtils {
    */
   public static final String COOKIE_NAME = "dev_appserver_login";
 
-  /**
-   * The age of the authentication cookie.  -1 means the cookie should
-   * not be persisted to disk, and will be erased when the browser is
-   * restarted.
-   */
-  private static final int COOKIE_AGE = -1;
-
-  /** Create a fake authentication {@link Cookie} with the specified data. */
-  static Cookie createCookie(String email, boolean isAdmin) {
-    String userId = encodeEmailAsUserId(email);
-
-    Cookie cookie = new Cookie(COOKIE_NAME, email + ":" + isAdmin + ":" + userId);
-    cookie.setPath(COOKIE_PATH);
-    cookie.setMaxAge(COOKIE_AGE);
-    return cookie;
-  }
-
-  /** Remove the fake authentication {@link Cookie}, if present. */
-  static void removeCookie(HttpServletRequest req, HttpServletResponse resp) {
-    Cookie cookie = findCookie(req);
-    if (cookie != null) {
-      // The browser doesn't send the original path, but it's part of
-      // the cookie's identity, so we need to re-set it if we want to
-      // delete the same cookie.
-      cookie.setPath(COOKIE_PATH);
-
-      // This causes the cookie to expire immediately (i.e. to be deleted).
-      cookie.setMaxAge(0);
-
-      // Now we need to send the cookie back to the client so it knows
-      // we deleted it.
-      resp.addCookie(cookie);
-    }
-  }
-
-  /**
-   * Parse the fake authentication {@link Cookie}.
-   *
-   * @return A parsed {@link CookieData}, or {@code null} if the user is not logged in.
-   */
-  static CookieData getCookieData(HttpServletRequest req) {
-    Cookie cookie = findCookie(req);
-    if (cookie == null) {
-      return null;
-    } else {
-      return parseCookie(cookie);
-    }
-  }
-
-  // <internal25>
   static String encodeEmailAsUserId(String email) {
     // This is sort of a weird way of doing this, but it matches
     // Python. See dev_appserver_login.py, method CreateCookieData
@@ -108,58 +55,7 @@ final class LoginCookieUtils {
     }
   }
 
-  /** Parse the specified {@link Cookie} into a {@link CookieData}. */
-  static CookieData parseCookie(Cookie cookie) {
-    String value = cookie.getValue();
-    String[] parts = value.split(":");
-    String userId = null;
-    if (parts.length > 2) {
-      userId = parts[2];
-    }
-    return new CookieData(parts[0], Boolean.parseBoolean(parts[1]), userId);
-  }
-
-  private static Cookie findCookie(HttpServletRequest req) {
-    Cookie[] cookies = req.getCookies();
-    if (cookies != null) {
-      for (Cookie cookie : cookies) {
-        if (cookie.getName().equals(COOKIE_NAME)) {
-          return cookie;
-        }
-      }
-    }
-    return null;
-  }
-
   private LoginCookieUtils() {
     // Utility class -- do not instantiate.
-  }
-
-  /**
-   * {@code CookieData} encapsulates all of the data contained in the
-   * fake authentication cookie.
-   */
-  public static final class CookieData {
-    private final String email;
-    private final boolean isAdmin;
-    private final String userId;
-
-    CookieData(String email, boolean isAdmin, String userId) {
-      this.email = email;
-      this.isAdmin = isAdmin;
-      this.userId = userId;
-    }
-
-    public String getEmail() {
-      return email;
-    }
-
-    public boolean isAdmin() {
-      return isAdmin;
-    }
-
-    public String getUserId() {
-      return userId;
-    }
   }
 }

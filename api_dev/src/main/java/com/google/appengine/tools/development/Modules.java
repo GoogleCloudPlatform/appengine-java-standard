@@ -384,7 +384,16 @@ public class Modules implements ModulesController, ModulesFilterHelper {
     InstanceHolder instanceHolder = module.getInstanceHolder(instance);
     instanceHolder.getContainerService().forwardToServer(hrequest, hresponse);
   }
+  @Override
 
+  public    void forwardToInstanceEE10(String requestedModule, int instance, 
+          jakarta.servlet.http.HttpServletRequest hrequest, 
+          jakarta.servlet.http.HttpServletResponse hresponse)
+   throws IOException, ServletException  {
+    Module module = getModule(requestedModule);
+    InstanceHolder instanceHolder = module.getInstanceHolder(instance);
+    instanceHolder.getContainerService().forwardToServerEE10(hrequest, hresponse);
+    }
   @Override
   public boolean isLoadBalancingInstance(String moduleName, int instance) {
     Module module = getModule(moduleName);
@@ -405,5 +414,5 @@ public class Modules implements ModulesController, ModulesFilterHelper {
     Module module = getModule(moduleName);
     InstanceHolder instanceHolder = module.getInstanceHolder(instance);
     return instanceHolder.getContainerService().getPort();
-  }
+}
 }

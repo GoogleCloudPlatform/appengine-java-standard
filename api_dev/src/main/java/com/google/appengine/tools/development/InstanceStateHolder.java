@@ -47,7 +47,7 @@ public class InstanceStateHolder {
    *
    * STOPPED: Incoming requests get a 500 error response.
    */
-  static enum InstanceState {
+  public static enum InstanceState {
     INITIALIZING, SLEEPING, RUNNING_START_REQUEST, RUNNING, STOPPED, SHUTDOWN;
   }
 
@@ -65,7 +65,7 @@ public class InstanceStateHolder {
    * @param instance The instance number or -1 for load balancing instances and automatic module
    * instances.
    */
-  InstanceStateHolder(String moduleOrBackendName, int instance) {
+  public InstanceStateHolder(String moduleOrBackendName, int instance) {
     this.moduleOrBackendName = moduleOrBackendName;
     this.instance = instance;
   }
@@ -79,7 +79,7 @@ public class InstanceStateHolder {
    * @throws IllegalStateException If the current state is not one of the
    *         acceptable previous states
    */
-  void testAndSet(InstanceState newState,
+  public void testAndSet(InstanceState newState,
       InstanceState... acceptablePreviousStates) throws IllegalStateException {
     InstanceState invalidState =
         testAndSetIf(newState, acceptablePreviousStates);
@@ -122,7 +122,7 @@ public class InstanceStateHolder {
   /**
    * Returns true if current state is one of the provided acceptable states.
    */
-  synchronized boolean test(InstanceState... acceptableStates) {
+  public synchronized boolean test(InstanceState... acceptableStates) {
     for (InstanceState acceptable : acceptableStates) {
       if (currentState == acceptable) {
         return true;
@@ -148,7 +148,7 @@ public class InstanceStateHolder {
    *
    * @return true if the instance can accept incoming requests, false otherwise.
    */
-  synchronized boolean acceptsConnections() {
+  public synchronized boolean acceptsConnections() {
     return (currentState == InstanceState.RUNNING
         || currentState == InstanceState.RUNNING_START_REQUEST
         || currentState == InstanceState.SLEEPING);
@@ -157,7 +157,7 @@ public class InstanceStateHolder {
   /**
    * Returns the display name for the current state.
    */
-  synchronized String getDisplayName() {
+  public synchronized String getDisplayName() {
     return currentState.name().toLowerCase();
   }
 

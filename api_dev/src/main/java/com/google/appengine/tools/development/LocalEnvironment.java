@@ -197,7 +197,7 @@ abstract public class LocalEnvironment implements ApiProxy.Environment {
   /**
    * Sets the instance for the provided attributes.
    */
-  static void setInstance(Map<String, Object> attributes, int instance) {
+  public static void setInstance(Map<String, Object> attributes, int instance) {
     // First we remove the old value if there is one.
     attributes.remove(INSTANCE_ID_ENV_ATTRIBUTE);
     // Next we set the new value if needed.
@@ -210,7 +210,7 @@ abstract public class LocalEnvironment implements ApiProxy.Environment {
    * Sets the {@link #PORT_ID_ENV_ATTRIBUTE} value to the provided port value or
    * clears it if port is null.
    */
-  static void setPort(Map<String, Object> attributes, Integer port) {
+  public static void setPort(Map<String, Object> attributes, Integer port) {
     if (port == null) {
       attributes.remove(PORT_ID_ENV_ATTRIBUTE);
     } else {

@@ -112,6 +112,15 @@ public class DelegatingModulesFilterHelper implements ModulesFilterHelper {
   }
 
   @Override
+  public void forwardToInstanceEE10(String moduleOrBackendName, int instance, jakarta.servlet.http.HttpServletRequest request, jakarta.servlet.http.HttpServletResponse response) throws IOException, ServletException {
+       if (isBackend(moduleOrBackendName)) {
+        backendServers.forwardToServerEE10(moduleOrBackendName, instance, request, response);
+     } else {
+       modules.forwardToInstanceEE10(moduleOrBackendName, instance, request, response);
+     }
+    }
+     
+  @Override
   public boolean isLoadBalancingInstance(String moduleOrBackendName, int instance) {
     if (isBackend(moduleOrBackendName)) {
       return false;

@@ -21,13 +21,13 @@ package com.google.appengine.api.blobstore.dev;
  * the state associated with an in-progress upload.
  *
  */
-class BlobUploadSession {
+public class BlobUploadSession {
   private final String successPath;
   private Long maxUploadSizeBytesPerBlob;
   private Long maxUploadSizeBytes;
   private String googleStorageBucket;
 
-  BlobUploadSession(String successPath) {
+  public BlobUploadSession(String successPath) {
     this.successPath = successPath;
   }
 

@@ -325,7 +325,7 @@ public final class LocalImagesService extends AbstractLocalRpcService {
    *     {@code inputFormats} in LocalImagesService.init().
    * @throws ApiProxy.ApplicationException If the image cannot be opened
    */
-  String getMimeType(ImageData imageData) {
+  public String getMimeType(ImageData imageData) {
     try {
       boolean swallowDueToThrow = true;
       ImageInputStream in = ImageIO.createImageInputStream(extractImageData(imageData));
@@ -392,7 +392,7 @@ public final class LocalImagesService extends AbstractLocalRpcService {
    * @return a {@link BufferedImage} of the image.
    * @throws ApiProxy.ApplicationException If the image cannot be opened.
    */
-  BufferedImage openImage(ImageData imageData, Status status) {
+  public BufferedImage openImage(ImageData imageData, Status status) {
     InputStream in = null;
     try {
       try {
@@ -436,7 +436,7 @@ public final class LocalImagesService extends AbstractLocalRpcService {
    * @return A byte array representing an image.
    * @throws ApiProxy.ApplicationException If the image cannot be encoded.
    */
-  byte[] saveImage(BufferedImage image, MIME_TYPE mimeType, Status status) {
+  public byte[] saveImage(BufferedImage image, MIME_TYPE mimeType, Status status) {
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     try {
       if (mimeType == MIME_TYPE.JPEG) {
@@ -594,7 +594,7 @@ public final class LocalImagesService extends AbstractLocalRpcService {
    * @param status RPC status
    * @return processed image
    */
-  BufferedImage processTransform(BufferedImage image, Transform transform, Status status) {
+  public BufferedImage processTransform(BufferedImage image, Transform transform, Status status) {
     AffineTransform affine = null;
     BufferedImage constraintImage = null;
     if (transform.hasWidth() || transform.hasHeight()) {

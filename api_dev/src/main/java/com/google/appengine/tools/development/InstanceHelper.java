@@ -76,7 +76,7 @@ public class InstanceHelper {
    *
    * @param runOnSuccess {@link Runnable#run} invoked when the startup request succeeds.
    */
-  void sendStartRequest(final Runnable runOnSuccess) {
+  public void sendStartRequest(final Runnable runOnSuccess) {
     if (LOGGER.isLoggable(Level.FINER)) {
       LOGGER.log(Level.FINER, "Entering send start request for serverOrBackendName="
           + serverOrBackendName + " instance=" + instance,
@@ -261,7 +261,7 @@ public class InstanceHelper {
    *
    * @throws Exception
    */
-  void shutdown() throws Exception {
+  public void shutdown() throws Exception {
     synchronized (instanceStateHolder) {
       // TODO: This calls user code, can we do this outside the synchronized block.
       if (instanceStateHolder.test(InstanceState.RUNNING, InstanceState.RUNNING_START_REQUEST)) {

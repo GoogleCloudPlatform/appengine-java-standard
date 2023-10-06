@@ -54,7 +54,7 @@ import java.util.logging.Logger;
  * only argument.
  *
  */
-class DevAppServerImpl implements DevAppServer {
+public class DevAppServerImpl implements DevAppServer {
   // Keep this in sync with
   // com.google.apphosting.tests.usercode.testservlets.LoadOnStartupServlet
   //     .MODULES_FILTER_HELPER_PROPERTY.

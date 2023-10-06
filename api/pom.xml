@@ -145,6 +145,11 @@
       <artifactId>guava-testlib</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>jakarta.servlet</groupId>
+      <artifactId>jakarta.servlet-api</artifactId>
+      <version>6.0.0</version>
+    </dependency>
   </dependencies>
   <build>
     <plugins>

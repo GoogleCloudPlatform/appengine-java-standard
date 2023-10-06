@@ -54,7 +54,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * and for unit testing services.
  *
  */
-class ApiProxyLocalImpl implements ApiProxyLocal, DevServices {
+public class ApiProxyLocalImpl implements ApiProxyLocal, DevServices {
   /**
    * The maximum size of any given API request.
    */
@@ -63,7 +63,7 @@ class ApiProxyLocalImpl implements ApiProxyLocal, DevServices {
   private static final String API_DEADLINE_KEY =
       "com.google.apphosting.api.ApiProxy.api_deadline_key";
 
-  static final String IS_OFFLINE_REQUEST_KEY = "com.google.appengine.request.offline";
+  static public final String IS_OFFLINE_REQUEST_KEY = "com.google.appengine.request.offline";
 
   /**
    * Implementation of the {@link LocalServiceContext} interface
