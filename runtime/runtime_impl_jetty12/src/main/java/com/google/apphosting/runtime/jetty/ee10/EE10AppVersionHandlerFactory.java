@@ -20,6 +20,7 @@ import com.google.apphosting.base.AppVersionKey;
 import com.google.apphosting.runtime.AppVersion;
 import com.google.apphosting.runtime.JettyConstants;
 import com.google.apphosting.runtime.SessionsConfig;
+import com.google.apphosting.runtime.jetty.AppVersionHandlerFactory;
 import com.google.apphosting.runtime.jetty.SessionManagerHandler;
 import com.google.common.flogger.GoogleLogger;
 import com.google.common.html.HtmlEscapers;
@@ -33,12 +34,13 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.jsp.JspFactory;
 import org.eclipse.jetty.ee10.annotations.AnnotationConfiguration;
-import org.eclipse.jetty.ee10.nested.Dispatcher;
+// TODO
+import org.eclipse.jetty.ee8.nested.Dispatcher;
 import org.eclipse.jetty.ee10.quickstart.QuickStartConfiguration;
 import org.eclipse.jetty.ee10.servlet.ErrorPageErrorHandler;
 import org.eclipse.jetty.ee10.webapp.FragmentConfiguration;
 import org.eclipse.jetty.ee10.webapp.MetaInfConfiguration;
-import org.eclipse.jetty.ee10.webapp.WebAppContext;
+import org.eclipse.jetty.ee8.webapp.WebAppContext;
 import org.eclipse.jetty.ee10.webapp.WebInfConfiguration;
 import org.eclipse.jetty.ee10.webapp.WebXmlConfiguration;
 import org.eclipse.jetty.server.Server;
@@ -46,7 +48,7 @@ import org.eclipse.jetty.server.Server;
 /**
  * {@code AppVersionHandlerFactory} implements a {@code Handler} for a given {@code AppVersionKey}.
  */
-public class EE8AppVersionHandlerFactory implements com.google.apphosting.runtime.jetty.AppVersionHandlerFactory {
+public class EE10AppVersionHandlerFactory implements AppVersionHandlerFactory {
   private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
   private static final String TOMCAT_SIMPLE_INSTANCE_MANAGER =
       "org.apache.tomcat.SimpleInstanceManager";
@@ -78,13 +80,13 @@ public class EE8AppVersionHandlerFactory implements com.google.apphosting.runtim
   private final WebAppContextFactory contextFactory;
   private final boolean useJettyErrorPageHandler;
 
-  public EE8AppVersionHandlerFactory(
+  public EE10AppVersionHandlerFactory(
           Server server,
           String serverInfo) {
     this(server, serverInfo, new AppEngineWebAppContextFactory(), false);
   }
 
-  public EE8AppVersionHandlerFactory(
+  public EE10AppVersionHandlerFactory(
           Server server,
           String serverInfo,
           WebAppContextFactory contextFactory,
@@ -236,7 +238,7 @@ public class EE8AppVersionHandlerFactory implements com.google.apphosting.runtim
   private static class NullErrorHandler extends ErrorPageErrorHandler {
 
     @Override
-    public void handle(String target, org.eclipse.jetty.ee10.nested.Request baseRequest, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
+    public void handle(String target, org.eclipse.jetty.ee8.nested.Request baseRequest, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
       logger.atFine().log("Custom Jetty ErrorHandler received an error notification.");
       mayHandleByErrorPage(request, response);
       // We don't want Jetty to do anything further.

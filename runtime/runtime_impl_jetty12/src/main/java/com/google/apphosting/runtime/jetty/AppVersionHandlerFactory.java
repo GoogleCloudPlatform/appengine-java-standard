@@ -17,14 +17,19 @@ package com.google.apphosting.runtime.jetty;
 
 import com.google.apphosting.runtime.AppVersion;
 import com.google.apphosting.runtime.jetty.ee8.EE8AppVersionHandlerFactory;
+import com.google.apphosting.runtime.jetty.ee10.EE10AppVersionHandlerFactory;
 import javax.servlet.ServletException;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
 
 public interface AppVersionHandlerFactory {
   static AppVersionHandlerFactory newInstance(Server server, String serverInfo) {
-    return new EE8AppVersionHandlerFactory(server, serverInfo);
-  }
+    if (Boolean.getBoolean("appengine.use.EE10)")) {
+        return new EE8AppVersionHandlerFactory(server, serverInfo);
+    } else {
+        return new EE10AppVersionHandlerFactory(server, serverInfo);
+    }
+}
 
   Handler createHandler(AppVersion appVersion) throws ServletException;
 }

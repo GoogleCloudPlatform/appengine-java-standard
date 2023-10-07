@@ -20,6 +20,7 @@ import com.google.apphosting.base.AppVersionKey;
 import com.google.apphosting.runtime.AppVersion;
 import com.google.apphosting.runtime.JettyConstants;
 import com.google.apphosting.runtime.SessionsConfig;
+import com.google.apphosting.runtime.jetty.AppVersionHandlerFactory;
 import com.google.apphosting.runtime.jetty.SessionManagerHandler;
 import com.google.common.flogger.GoogleLogger;
 import com.google.common.html.HtmlEscapers;
@@ -46,7 +47,7 @@ import org.eclipse.jetty.server.Server;
 /**
  * {@code AppVersionHandlerFactory} implements a {@code Handler} for a given {@code AppVersionKey}.
  */
-public class EE8AppVersionHandlerFactory implements com.google.apphosting.runtime.jetty.AppVersionHandlerFactory {
+public class EE8AppVersionHandlerFactory implements AppVersionHandlerFactory {
   private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
   private static final String TOMCAT_SIMPLE_INSTANCE_MANAGER =
       "org.apache.tomcat.SimpleInstanceManager";
