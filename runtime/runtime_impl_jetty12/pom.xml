@@ -140,6 +140,24 @@
             <optional>true</optional>
         </dependency>
         <dependency>
+            <groupId>org.eclipse.jetty.ee10</groupId>
+            <artifactId>jetty-ee10-quickstart</artifactId>
+            <version>${jetty12.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>javax.transaction</groupId>
+                    <artifactId>javax.transaction-api</artifactId>
+                </exclusion>
+            </exclusions>
+          <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty.ee10</groupId>
+            <artifactId>jetty-ee10-servlets</artifactId>
+            <version>${jetty12.version}</version>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
             <groupId>jakarta.servlet</groupId>
             <artifactId>jakarta.servlet-api</artifactId>
             <version>6.0.0</version>
@@ -522,7 +540,14 @@
                                     <include>org.eclipse.jetty.ee8:jetty-ee8-servlets</include>
                                     <include>org.eclipse.jetty.ee8:jetty-ee8-webapp</include>
                                     <include>org.eclipse.jetty.ee8:jetty-ee8-nested</include>
-                                    <include>org.eclipse.jetty:jetty-ee</include>
+                                    <include>org.eclipse.jetty.ee10:jetty-ee10-annotations</include>
+                                    <include>org.eclipse.jetty.ee10:jetty-ee10-jndi</include>
+                                    <include>org.eclipse.jetty.ee10:jetty-ee10-plus</include>
+                                    <include>org.eclipse.jetty.ee10:jetty-ee10-quickstart</include>
+                                    <!--include>org.eclipse.jetty.ee10:jetty-ee10-security</include-->
+                                    <include>org.eclipse.jetty.ee10:jetty-ee10-servlet</include>
+                                    <include>org.eclipse.jetty.ee10:jetty-ee10-servlets</include>
+                                    <include>org.eclipse.jetty.ee10:jetty-ee10-webapp</include>
                                     <include>org.eclipse.jetty:jetty-client</include>
                                     <include>org.eclipse.jetty:jetty-continuation</include>
                                     <include>org.eclipse.jetty:jetty-http</include>
@@ -542,9 +567,9 @@
                                     <include>org.ow2.asm:asm</include>
                                     <include>org.ow2.asm:asm-tree</include>
                                 </includes>
-                                <excludes>
+                                <!--excludes>
                                     <exclude>jakarta.servlet:jakarta.servlet-api</exclude>
-                                </excludes>
+                                </excludes-->
                             </artifactSet>
                         </configuration>
                     </execution>
