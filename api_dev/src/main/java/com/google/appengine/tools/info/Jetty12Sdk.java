@@ -66,8 +66,7 @@ class Jetty12Sdk extends AppengineSdk {
     for (File f : jettyDir.listFiles()) {
       if (!f.isDirectory()
           && !(f.getName().contains("cdi-")
-              || f.getName().contains("ee9")
-              || f.getName().contains("ee10"))) {
+              || f.getName().contains("ee9"))) {
         list.add(f.getAbsolutePath());
       }
     }
@@ -76,10 +75,23 @@ class Jetty12Sdk extends AppengineSdk {
 
     // Note: Do not put the Apache JSP files in the classpath. If needed, they should be part of
     // the application itself under WEB-INF/lib.
-    for (String subdir : new String[] {"ee8-annotations"}) { // TODO: "ee8-jaspi" for Jetty12
-      for (File f : new File(jettyDir, subdir).listFiles()) {
-        list.add(f.getAbsolutePath());
-      }
+    if (Boolean.getBoolean("appengine.use.EE10")) {
+          for (String subdir : new String[]{"ee10-annotations"}) {
+              for (File f : new File(jettyDir, subdir).listFiles()) {
+                  list.add(f.getAbsolutePath());
+              }
+          }
+          for (String subdir : new String[]{"ee10-jaspi"}) {
+              for (File f : new File(jettyDir, subdir).listFiles()) {
+                  list.add(f.getAbsolutePath());
+              }
+          }
+      } else {
+          for (String subdir : new String[]{"ee8-annotations"}) { // TODO: "ee8-jaspi" for Jetty12
+              for (File f : new File(jettyDir, subdir).listFiles()) {
+                  list.add(f.getAbsolutePath());
+              }
+          }     
     }
     list.add(quickstart.getAbsolutePath());
     // Add Jars for logging.
@@ -105,7 +117,11 @@ class Jetty12Sdk extends AppengineSdk {
     lf.addAll(getJetty12JspJars());
     // We also want the devserver to be able to handle annotated servlet, via ASM:
     lf.addAll(getJetty12Jars("logging"));
-    lf.addAll(getJetty12Jars("ee8-annotations"));
+      if (Boolean.getBoolean("appengine.use.EE10")) {
+          lf.addAll(getJetty12Jars("ee10-annotations"));
+      } else {
+          lf.addAll(getJetty12Jars("ee8-annotations"));
+      }
     lf.addAll(getLibs(sdkRoot, "impl"));
     lf.addAll(getLibs(sdkRoot, "impl/jetty12"));
     return Collections.unmodifiableList(lf);
@@ -141,10 +157,16 @@ class Jetty12Sdk extends AppengineSdk {
   }
 
   List<File> getJetty12JspJars() {
-    List<File> lf = getJetty12Jars("ee8-apache-jsp");
-    lf.addAll(getJetty12Jars("ee8-glassfish-jstl"));
-    return lf;
-  }
+      
+      if (Boolean.getBoolean("appengine.use.EE10")) {
+          List<File> lf = getJetty12Jars("ee10-apache-jsp");
+          lf.addAll(getJetty12Jars("ee10-glassfish-jstl"));
+          return lf;
+      }
+      List<File> lf = getJetty12Jars("ee8-apache-jsp");
+      lf.addAll(getJetty12Jars("ee8-glassfish-jstl"));
+      return lf;
+}
 
   List<File> getJetty12SharedLibFiles() {
     List<File> sharedLibs;
