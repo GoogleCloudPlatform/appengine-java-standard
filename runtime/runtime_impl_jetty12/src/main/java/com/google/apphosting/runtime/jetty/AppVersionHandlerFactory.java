@@ -25,9 +25,9 @@ import org.eclipse.jetty.server.Server;
 public interface AppVersionHandlerFactory {
   static AppVersionHandlerFactory newInstance(Server server, String serverInfo) {
     if (Boolean.getBoolean("appengine.use.EE10)")) {
-        return new EE8AppVersionHandlerFactory(server, serverInfo);
-    } else {
         return new EE10AppVersionHandlerFactory(server, serverInfo);
+    } else {
+        return new EE8AppVersionHandlerFactory(server, serverInfo);
     }
 }
 
