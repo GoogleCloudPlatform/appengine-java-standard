@@ -16,12 +16,10 @@
 
 package com.google.appengine.tools.development;
 
+import com.google.appengine.tools.info.AppengineSdk;
+
 /** helper to load a {@link ContainerService} instance */
 public class ContainerUtils {
-  private static final String JETTY9SERVICE =
-      "com.google.appengine.tools.development.jetty9.JettyContainerService";
-  private static final String JETTY12SERVICE =
-      "com.google.appengine.tools.development.jetty.JettyContainerService";
 
   /**
    * Load a {@link ContainerService} instance based on the implementation: Jetty9 or Jetty12.
@@ -33,28 +31,16 @@ public class ContainerUtils {
     ContainerService result;
 
     // Try to load the correct Jetty service.
-
-    if (Boolean.getBoolean("appengine.use.jetty12")) {
       try {
         result =
             (ContainerService)
-                Class.forName(JETTY12SERVICE, true, DevAppServerImpl.class.getClassLoader())
+                Class.forName(AppengineSdk.getSdk().getJettyContainerService(),
+                        true, DevAppServerImpl.class.getClassLoader())
                     .newInstance();
       } catch (ReflectiveOperationException e) {
         throw new IllegalArgumentException("Cannot load any servlet container.", e);
       }
       return result;
-    } else {
-      try {
-        result =
-            (ContainerService)
-                Class.forName(JETTY9SERVICE, true, DevAppServerImpl.class.getClassLoader())
-                    .newInstance();
-      } catch (ReflectiveOperationException e) {
-        throw new IllegalArgumentException("Cannot load any servlet container.", e);
-      }
-      return result;
-    }
   }
 
   /** Returns the server info string with the dev-appserver version. */

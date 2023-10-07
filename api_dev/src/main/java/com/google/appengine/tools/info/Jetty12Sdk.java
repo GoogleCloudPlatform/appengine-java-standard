@@ -36,6 +36,9 @@ class Jetty12Sdk extends AppengineSdk {
 
   private static final String WEB_DEFAULT_LOCATION_DEVAPPSERVERJETTY12 =
       "com/google/appengine/tools/development/jetty/webdefault.xml"; 
+
+  private static final String WEB_DEFAULT_LOCATION_DEVAPPSERVERJETTY12EE10 =
+      "com/google/appengine/tools/development/jetty/ee10/webdefault.xml"; 
   
   @Override
   public List<File> getUserJspLibFiles() {
@@ -44,9 +47,33 @@ class Jetty12Sdk extends AppengineSdk {
 
   @Override
   public String getWebDefaultLocation() {
-    return WEB_DEFAULT_LOCATION_DEVAPPSERVERJETTY12;
+    if (Boolean.getBoolean("appengine.use.EE10")) {
+    return WEB_DEFAULT_LOCATION_DEVAPPSERVERJETTY12EE10;
+    }
+    else {
+     return WEB_DEFAULT_LOCATION_DEVAPPSERVERJETTY12;  
+    }
+  }
+ 
+  @Override
+  public String getJettyContainerService() {
+    if (Boolean.getBoolean("appengine.use.EE10")) {
+    return "com.google.appengine.tools.development.jetty.ee10.JettyContainerService";
+    }
+    else {
+     return "com.google.appengine.tools.development.jetty.JettyContainerService";  
+    }
   }
 
+  @Override
+  public String getWebDefaultXml() {
+    if (Boolean.getBoolean("appengine.use.EE10")) {
+    return getSdkRoot() + "/docs/jetty12/webdefault.xml";
+    } else {
+     return getSdkRoot() + "/docs/jetty12EE10/webdefault.xml";  
+    }
+  }
+  
   @Override
   public List<File> getSharedJspLibFiles() {
     return Collections.unmodifiableList(getJetty12JspJars());
@@ -100,11 +127,6 @@ class Jetty12Sdk extends AppengineSdk {
     }
 
     return Joiner.on(System.getProperty("path.separator")).join(list);
-  }
-
-  @Override
-  public String getWebDefaultXml() {
-    return getSdkRoot() + "/docs/jetty12/webdefault.xml";
   }
 
   @Override
