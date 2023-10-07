@@ -63,6 +63,7 @@ public class JavaRuntimeMain {
       "gae.allow_non_resident_session_access";
 
   private static final String USE_JETTY12 = "appengine.use.jetty12";
+  private static final String USE_EE10 = "appengine.use.EE10";
 
   public static void main(String[] args) {
     new JavaRuntimeMain().load(args);
@@ -155,12 +156,17 @@ public class JavaRuntimeMain {
         new String[] {
           USE_MAVEN_JARS,
           USE_JETTY12,
+          USE_EE10,
           DISABLE_API_CALL_LOGGING_IN_APIPROXY,
           ALLOW_NON_RESIDENT_SESSION_ACCESS,
           USE_ANNOTATION_SCANNING
         }) {
       if ("true".equalsIgnoreCase(optionalProperties.getProperty(flag))) {
         System.setProperty(flag, "true");
+      }
+      // Force Jetty12 for EE10
+      if (Boolean.getBoolean(USE_EE10)) {
+          System.setProperty(USE_JETTY12, "true");
       }
     }
   }
