@@ -161,6 +161,21 @@
                                     </fileMappers>
                                     <outputDirectory>${assembly-directory}/docs/jetty12</outputDirectory>
                                 </artifactItem>
+                                <artifactItem>
+                                    <groupId>com.google.appengine</groupId>
+                                    <artifactId>runtime-impl-jetty12</artifactId>
+                                     <type>jar</type>
+                                     <excludes>META-INF/**
+                                     </excludes>
+                                     <includes>com/google/apphosting/runtime/jetty/ee10/webdefault.xml</includes>
+                                    <fileMappers>
+                                        <org.codehaus.plexus.components.io.filemappers.RegExpFileMapper>
+                                            <pattern>^\Qcom/google/apphosting/runtime/jetty/ee10/\E</pattern>
+                                            <replacement>./</replacement>
+                                        </org.codehaus.plexus.components.io.filemappers.RegExpFileMapper>
+                                    </fileMappers>
+                                    <outputDirectory>${assembly-directory}/docs/jetty12EE10</outputDirectory>
+                                </artifactItem>
                             </artifactItems>
                         </configuration>
                     </execution>
