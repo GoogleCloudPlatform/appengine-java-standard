@@ -263,6 +263,10 @@ public class Application implements GenericApplication {
       System.setProperty("appengine.use.jetty12", "true");
       AppengineSdk.resetSdk();
     }
+    if ("true".equals(appEngineWebXml.getSystemProperties().get("appengine.use.EE10"))) {
+      System.setProperty("appengine.use.EE10", "true");
+      AppengineSdk.resetSdk();       
+    }
     appEngineWebXml.setSourcePrefix(explodedPath);
 
     if (appId != null) {
