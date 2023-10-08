@@ -165,6 +165,7 @@ public class DevAppServerImpl implements DevAppServer {
     this.modules =
         Modules.createModules(
             applicationConfigurationManager, "dev", externalResourceDir, address, this);
+    
     DelegatingModulesFilterHelper modulesFilterHelper =
         new DelegatingModulesFilterHelper(backendContainer, modules);
     this.containerConfigProperties =

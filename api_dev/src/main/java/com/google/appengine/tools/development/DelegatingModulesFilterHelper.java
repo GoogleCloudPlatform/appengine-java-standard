@@ -17,9 +17,7 @@
 package com.google.appengine.tools.development;
 
 import java.io.IOException;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+
 
 /**
  * A {@link ModulesFilterHelper} for delegating requests to either
@@ -27,10 +25,10 @@ import javax.servlet.http.HttpServletResponse;
  */
 public class DelegatingModulesFilterHelper implements ModulesFilterHelper {
 
-  private final AbstractBackendServers backendServers;
-  private final Modules modules;
+  protected final BackendServers backendServers;
+  protected final Modules modules;
 
-  public DelegatingModulesFilterHelper(AbstractBackendServers backendServers, Modules modules) {
+  public DelegatingModulesFilterHelper(BackendServers backendServers, Modules modules) {
     this.backendServers = backendServers;
     this.modules = modules;
   }
@@ -99,26 +97,6 @@ public class DelegatingModulesFilterHelper implements ModulesFilterHelper {
       return modules.checkInstanceStopped(moduleOrBackendName, instance);
     }
   }
-
-  @Override
-  public void forwardToInstance(String moduleOrBackendName, int instance,
-      HttpServletRequest hrequest, HttpServletResponse response)
-      throws IOException, ServletException {
-      if (isBackend(moduleOrBackendName)) {
-        backendServers.forwardToServer(moduleOrBackendName, instance, hrequest, response);
-     } else {
-       modules.forwardToInstance(moduleOrBackendName, instance, hrequest, response);
-     }
-  }
-
-  @Override
-  public void forwardToInstanceEE10(String moduleOrBackendName, int instance, jakarta.servlet.http.HttpServletRequest request, jakarta.servlet.http.HttpServletResponse response) throws IOException, ServletException {
-       if (isBackend(moduleOrBackendName)) {
-        backendServers.forwardToServerEE10(moduleOrBackendName, instance, request, response);
-     } else {
-       modules.forwardToInstanceEE10(moduleOrBackendName, instance, request, response);
-     }
-    }
      
   @Override
   public boolean isLoadBalancingInstance(String moduleOrBackendName, int instance) {
@@ -129,7 +107,7 @@ public class DelegatingModulesFilterHelper implements ModulesFilterHelper {
     }
   }
 
-  private boolean isBackend(String moduleOrBackendName) {
+  protected boolean isBackend(String moduleOrBackendName) {
     return backendServers.checkServerExists(moduleOrBackendName);
   }
 

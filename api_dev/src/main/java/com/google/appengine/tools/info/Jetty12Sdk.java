@@ -65,6 +65,26 @@ class Jetty12Sdk extends AppengineSdk {
     }
   }
 
+   @Override
+   public String getBackendServersClassName() {
+     if (Boolean.getBoolean("appengine.use.EE10")) {
+    return "com.google.appengine.tools.development.ee10.BackendServersEE10";
+    }
+    else {
+     return "com.google.appengine.tools.development.BackendServersEE8";  
+    }
+   }
+
+   @Override
+   public String getModulesClassName() {
+     if (Boolean.getBoolean("appengine.use.EE10")) {
+    return "com.google.appengine.tools.development.ee10.ModulesEE10";
+    }
+    else {
+     return "com.google.appengine.tools.development.ModulesEE8";  
+    }
+   }
+   
   @Override
   public String getWebDefaultXml() {
     if (Boolean.getBoolean("appengine.use.EE10")) {

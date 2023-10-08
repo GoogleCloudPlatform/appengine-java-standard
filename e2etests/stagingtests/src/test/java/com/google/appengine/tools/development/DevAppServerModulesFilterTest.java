@@ -100,6 +100,7 @@ public class DevAppServerModulesFilterTest extends TestCase {
     when(helper.checkModuleStopped(MODULE1)).thenReturn(false);
     when(helper.getAndReserveFreeInstance(MODULE1)).thenReturn(2);
     filter.doFilter(request, response, alwaysOkFilterChain);
+    //
     verify(helper).forwardToInstance(MODULE1, 2, request, response);
     assertThat(response.getStatus()).isEqualTo(HttpServletResponse.SC_OK);
   }

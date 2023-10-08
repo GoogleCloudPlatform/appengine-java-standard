@@ -17,16 +17,11 @@
 package com.google.appengine.tools.development;
 
 import com.google.appengine.api.backends.BackendService;
-import com.google.appengine.api.backends.dev.LocalServerController;
-import com.google.appengine.api.modules.ModulesException;
 import com.google.appengine.api.modules.ModulesService;
 import com.google.appengine.api.modules.ModulesServiceFactory;
 import com.google.apphosting.api.ApiProxy;
 import com.google.common.annotations.VisibleForTesting;
 import java.io.IOException;
-import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -77,14 +72,7 @@ import javax.servlet.http.HttpServletResponse;
  *
  *
  */
-public class DevAppServerModulesFilter implements Filter {
-
-  static final String BACKEND_REDIRECT_ATTRIBUTE = "com.google.appengine.backend.BackendName";
-  static final String BACKEND_INSTANCE_REDIRECT_ATTRIBUTE =
-      "com.google.appengine.backend.BackendInstance";
-  @VisibleForTesting
-  static final String MODULE_INSTANCE_REDIRECT_ATTRIBUTE =
-      "com.google.appengine.module.ModuleInstance";
+public class DevAppServerModulesFilter extends DevAppServerModulesCommon implements Filter {
 
   // In prod instances return 500 (Internal Server Error) when busy
   static final int INSTANCE_BUSY_ERROR_CODE = HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
@@ -94,15 +82,9 @@ public class DevAppServerModulesFilter implements Filter {
 
   static final int MODULE_MISSING_ERROR_CODE = HttpServletResponse.SC_BAD_GATEWAY;
 
-  private final AbstractBackendServers backendServersManager;
-  private final ModulesService modulesService;
-
-  private final Logger logger = Logger.getLogger(DevAppServerModulesFilter.class.getName());
-
   @VisibleForTesting
-  DevAppServerModulesFilter(AbstractBackendServers backendServers, ModulesService modulesService) {
-    this.backendServersManager = backendServers;
-    this.modulesService = modulesService;
+  DevAppServerModulesFilter(BackendServers backendServers, ModulesService modulesService) {
+    super(backendServers, modulesService);
   }
 
   public DevAppServerModulesFilter() {
@@ -188,46 +170,7 @@ public class DevAppServerModulesFilter implements Filter {
       }
     }
   }
-
-  private boolean isLoadBalancingRequest() {
-    ModulesFilterHelper modulesFilterHelper = getModulesFilterHelper();
-    String module = modulesService.getCurrentModule();
-    int instance = getCurrentModuleInstance();
-    return modulesFilterHelper.isLoadBalancingInstance(module, instance);
-  }
-
-  private boolean expectsGeneratedStartRequests(String backendName,
-      int requestPort) {
-    String moduleOrBackendName = backendName;
-    if (moduleOrBackendName == null) {
-      moduleOrBackendName = modulesService.getCurrentModule();
-    }
-
-    int instance = backendName == null ? getCurrentModuleInstance() :
-      backendServersManager.getServerInstanceFromPort(requestPort);
-    ModulesFilterHelper modulesFilterHelper = getModulesFilterHelper();
-    return modulesFilterHelper.expectsGeneratedStartRequests(moduleOrBackendName, instance);
-  }
-
-  /**
-   * Returns the instance id for the module instance handling the current request or -1
-   * if a back end server or load balancing server is handling the request.
-   */
-  private int getCurrentModuleInstance() {
-    String instance = "-1";
-    try {
-      instance = modulesService.getCurrentInstanceId();
-    } catch (ModulesException me) {
-      logger.log(Level.FINEST, "Ignoring Exception getting module instance and continuing", me);
-    }
-    return Integer.parseInt(instance);
-  }
-
-  private ModulesFilterHelper getModulesFilterHelper() {
-    Map<String, Object> attributes = ApiProxy.getCurrentEnvironment().getAttributes();
-    return (ModulesFilterHelper) attributes.get(DevAppServerImpl.MODULES_FILTER_HELPER_PROPERTY);
-  }
-
+  
   private boolean tryToAcquireServingPermit(
       String moduleOrBackendName, int instance, HttpServletResponse hresponse) throws IOException {
     ModulesFilterHelper modulesFilterHelper = getModulesFilterHelper();
@@ -287,7 +230,7 @@ public class DevAppServerModulesFilter implements Filter {
       moduleOrBackendName = modulesService.getCurrentModule();
       isLoadBalancingModuleInstance = true;
     }
-    ModulesFilterHelper modulesFilterHelper = getModulesFilterHelper();
+    ModulesFilterHelperEE8 modulesFilterHelper = (ModulesFilterHelperEE8)getModulesFilterHelper();
     int instance = getInstanceIdFromRequest(hrequest);
     logger.finest(String.format("redirect request to module: %d.%s", instance,
         moduleOrBackendName));
@@ -334,6 +277,7 @@ public class DevAppServerModulesFilter implements Filter {
         hrequest.setAttribute(BACKEND_INSTANCE_REDIRECT_ATTRIBUTE, Integer.valueOf(instance));
       }
       // forward the request
+      //
       modulesFilterHelper.forwardToInstance(moduleOrBackendName, instance, hrequest, hresponse);
     } finally {
       // return the serving reservation
@@ -447,51 +391,6 @@ public class DevAppServerModulesFilter implements Filter {
   }
 
   /**
-   * Inject information about the current backend server setup so it is available
-   * to the BackendService API. This information is stored in the threadLocalAttributes
-   * in the current environment.
-   *
-   * @param backendName The server that is handling the request
-   * @param instance The server instance that is handling the request
-   */
-  private void injectApiInfo(String backendName, int instance) {
-    Map<String, String> portMapping = backendServersManager.getPortMapping();
-    if (portMapping == null) {
-      throw new IllegalStateException("backendServersManager.getPortMapping() is null");
-    }
-    injectBackendServiceCurrentApiInfo(backendName, instance, portMapping);
-
-    Map<String, Object> threadLocalAttributes = ApiProxy.getCurrentEnvironment().getAttributes();
-
-    // We inject backendServersManager which is not injected by
-    // injectBackendServiceCurrentApiInfo as it is not needed by BackendsService
-    // but is needed by the admin console for handling HTTP requests.
-    if (!portMapping.isEmpty()) {
-      threadLocalAttributes.put(
-          LocalServerController.BACKEND_CONTROLLER_ATTRIBUTE_KEY, backendServersManager);
-    }
-
-    threadLocalAttributes.put(
-        ModulesController.MODULES_CONTROLLER_ATTRIBUTE_KEY,
-        Modules.getInstance());
-  }
-
-  /**
-   * Sets up {@link ApiProxy} attributes needed {@link BackendService}.
-   */
-  public static void injectBackendServiceCurrentApiInfo(
-      String backendName, int backendInstance, Map<String, String> portMapping) {
-    Map<String, Object> threadLocalAttributes = ApiProxy.getCurrentEnvironment().getAttributes();
-    if (backendInstance != -1) {
-      threadLocalAttributes.put(BackendService.INSTANCE_ID_ENV_ATTRIBUTE, backendInstance + "");
-    }
-    if (backendName != null) {
-      threadLocalAttributes.put(BackendService.BACKEND_ID_ENV_ATTRIBUTE, backendName);
-    }
-    threadLocalAttributes.put(BackendService.DEVAPPSERVER_PORTMAPPING_KEY, portMapping);
-  }
-
-  /**
    * Checks the request headers and request parameters for the specified key
    */
   @VisibleForTesting
@@ -522,11 +421,5 @@ public class DevAppServerModulesFilter implements Filter {
     } catch (NumberFormatException e) {
       return -1;
     }
-  }
-
-  @VisibleForTesting
-  static enum RequestType {
-    DIRECT_MODULE_REQUEST, REDIRECT_REQUESTED, DIRECT_BACKEND_REQUEST, REDIRECTED_BACKEND_REQUEST,
-    REDIRECTED_MODULE_REQUEST, STARTUP_REQUEST;
   }
 }

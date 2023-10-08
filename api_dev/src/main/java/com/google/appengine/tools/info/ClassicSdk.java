@@ -93,6 +93,16 @@ class ClassicSdk extends AppengineSdk {
   public String getJettyContainerService() {
       return "com.google.appengine.tools.development.jetty9.JettyContainerService";
   }
+  
+   @Override
+   public String getBackendServersClassName() {
+     return "com.google.appengine.tools.development.jetty9.BackendServers";
+   }
+
+   @Override
+   public String getModulesClassName() {
+     return "com.google.appengine.tools.development.jetty9.ContainerServiceEE8";
+   }
  
   @Override
   public File getResourcesDirectory() {

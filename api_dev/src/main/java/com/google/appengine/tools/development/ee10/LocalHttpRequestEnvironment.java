@@ -21,6 +21,7 @@ import com.google.appengine.api.users.dev.ee10.LoginCookieUtils;
 import com.google.appengine.tools.development.ApiProxyLocalImpl;
 import com.google.appengine.tools.development.DevAppServerImpl;
 import com.google.appengine.tools.development.LocalEnvironment;
+import com.google.appengine.tools.development.ModulesFilterHelper;
 import jakarta.servlet.http.HttpServletRequest;
 
 /**

@@ -455,7 +455,7 @@ public abstract class AbstractContainerService implements ContainerService {
     environment.getAttributes().put(DEFAULT_VERSION_HOSTNAME, "localhost:"
         + defaultModuleMainPort);
     ApiProxy.setEnvironmentForCurrentThread(environment);
-    DevAppServerModulesFilter.injectBackendServiceCurrentApiInfo(backendName, backendInstance,
+    DevAppServerModulesCommon.injectBackendServiceCurrentApiInfo(backendName, backendInstance,
         portMapping);
   }
 
