@@ -101,7 +101,7 @@ class ClassicSdk extends AppengineSdk {
 
    @Override
    public String getModulesClassName() {
-     return "com.google.appengine.tools.development.jetty9.ContainerServiceEE8";
+     return "com.google.appengine.tools.development.ModulesEE8";
    }
  
   @Override

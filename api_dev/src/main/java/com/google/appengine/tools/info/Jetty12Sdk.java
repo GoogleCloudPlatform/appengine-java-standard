@@ -81,7 +81,7 @@ class Jetty12Sdk extends AppengineSdk {
     return "com.google.appengine.tools.development.ee10.ModulesEE10";
     }
     else {
-     return "com.google.appengine.tools.development.ModulesEE8";  
+     return "com.google.appengine.tools.development.ModulesEE8";
     }
    }
    
