@@ -48,6 +48,7 @@
     <module>utils</module>
     <module>quickstartgenerator</module>
     <module>quickstartgenerator_jetty12</module>
+    <module>quickstartgenerator_jetty12_ee10</module>
     <module>jetty12_assembly</module>
     <module>sdk_assembly</module>
     <module>applications</module>

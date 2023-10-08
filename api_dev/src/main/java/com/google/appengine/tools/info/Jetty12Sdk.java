@@ -107,8 +107,9 @@ class Jetty12Sdk extends AppengineSdk {
   @Override
   public String getQuickStartClasspath() {
     List<String> list = new ArrayList<>();
-    File quickstart =
-        new File(getSdkRoot(), "lib/tools/quickstart/quickstartgenerator-jetty12.jar");
+      File quickstart = Boolean.getBoolean("appengine.use.EE10")
+              ? new File(getSdkRoot(), "lib/tools/quickstart/quickstartgenerator-jetty12.jar")
+              : new File(getSdkRoot(), "lib/tools/quickstart/quickstartgenerator-jetty12-ee10.jar");
     File jettyDir = new File(getSdkRoot(), JETTY12_HOME_LIB_PATH);
     for (File f : jettyDir.listFiles()) {
       if (!f.isDirectory()
