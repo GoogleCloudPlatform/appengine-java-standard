@@ -1012,14 +1012,14 @@ public class Application implements GenericApplication {
       statusUpdate("Warning: See https://cloud.google.com/appengine/docs/flexible/java/upgrading");
     }
 
-    boolean isServlet31 = "3.1".equals(servletVersion);
+    boolean isServlet31OrAbove = !"2.5".equals(servletVersion);
     // Do not create quickstart for Java7 standardapps, even is Servlet 3.1 schema is used.
     // This behaviour is compatible with what was there before supporting Java8, we just now print
     // a warning.
-    if (!isJava8OrAbove() && !vm && isServlet31) {
-      statusUpdate("Warning: you are using the Java7 runtime with a Servlet 3.1 web.xml file.");
-      statusUpdate("The Servlet 3.1 annotations will be ignored and not processed.");
-    } else if (opts.isQuickstart() || isServlet31) {
+    if (!isJava8OrAbove() && !vm && isServlet31OrAbove) {
+      statusUpdate("Warning: you are using the Java7 runtime with a Servlet 3.1 or above web.xml file.");
+      statusUpdate("The Servlet annotations will be ignored and not processed.");
+    } else if (opts.isQuickstart() || isServlet31OrAbove) {
       // Cover Flex compat (deprecated but still there in Java7 or Java8 flavor) and Java8 standard:
       try {
         createQuickstartWebXml(opts);
@@ -1743,7 +1743,7 @@ public class Application implements GenericApplication {
       // GAE Standard with servlet 3.1 (and Java8 or Java11).
       if (!isJava8OrAbove()) {
         throw new AppEngineConfigException(
-            "Servlet 3.1 annotations processing is only supported with Java8 runtime."
+            "Servlet annotations processing is only supported with Java8 or higher runtime."
                 + " Please downgrade the servlet version to 2.5 in the web.xml file.");
       }
     }
