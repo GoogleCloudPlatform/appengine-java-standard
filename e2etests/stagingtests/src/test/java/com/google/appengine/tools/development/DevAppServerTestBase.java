@@ -56,7 +56,7 @@ public abstract class DevAppServerTestBase {
     File appRoot =
         new File(
             currentDirectory,
-            "../testlocalapps/" + directoryName + "/target/" + directoryName + "-0.0.1-SNAPSHOT");
+            "../testlocalapps/" + directoryName + "/target/" + directoryName + "-2.0.21-SNAPSHOT");
     return appRoot;
   }
 

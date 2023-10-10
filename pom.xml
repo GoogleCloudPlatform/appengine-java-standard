@@ -888,19 +888,25 @@
             <fileTemplate>${project.basedir}/licenses/resources/third-party-file-template.ftl</fileTemplate>
           </configuration>
         </plugin>
-        <plugin>
-            <groupId>org.cyclonedx</groupId>
-            <artifactId>cyclonedx-maven-plugin</artifactId>
-            <version>2.7.9</version>
-            <executions>
-                <execution>
-                    <phase>package</phase>
-                    <goals>
-                        <goal>makeAggregateBom</goal>
-                    </goals>
-                </execution>
-            </executions>
-        </plugin>
+    <plugin>
+        <groupId>org.spdx</groupId>
+        <artifactId>spdx-maven-plugin</artifactId>
+        <!-- please check for updates on https://search.maven.org/search?q=a:spdx-maven-plugin -->
+        <version>0.7.0</version>
+        <executions>
+            <execution>
+                <id>build-spdx</id>
+                <goals>
+                    <goal>createSPDX</goal>
+                </goals>
+            </execution>
+        </executions>
+        <configuration>
+          <excludedFilePatterns>
+            <excludedFilePattern>*.spdx</excludedFilePattern>
+          </excludedFilePatterns>
+        </configuration>
+    </plugin>
       </plugins>
     </pluginManagement>
   </build>
