@@ -32,7 +32,7 @@ public final class FailureFilterTest extends JavaRuntimeViaHttpBase {
   @BeforeClass
   public static void beforeClass() throws IOException, InterruptedException {
     File currentDirectory = new File("").getAbsoluteFile();
-    appRoot = new File(currentDirectory, "../failinitfilterwebapp/target/failinitfilterwebapp-1.0");
+    appRoot = new File(currentDirectory, "../failinitfilterwebapp/target/failinitfilterwebapp-2.0.21-SNAPSHOT");
     assertThat(appRoot.isDirectory()).isTrue();
   }
 
