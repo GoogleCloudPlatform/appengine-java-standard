@@ -21,7 +21,11 @@
 
     <groupId>com.google.appengine.demos</groupId>
     <artifactId>springboot</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <parent>
+      <groupId>com.google.appengine</groupId>
+      <artifactId>applications</artifactId>
+      <version>2.0.21-SNAPSHOT</version>
+    </parent>
     <packaging>war</packaging>
 
     <name>AppEngine :: springboot</name>
@@ -31,7 +35,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.deploy.skip>true</maven.deploy.skip>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <spring.boot.version>2.7.2</spring.boot.version>
+        <spring.boot.version>2.7.15</spring.boot.version>
         <maven.compiler.target>1.8</maven.compiler.target>
         <maven.compiler.source>1.8</maven.compiler.source>
     </properties>
@@ -40,7 +44,6 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
-            <version>${spring.boot.version}</version>
             <!-- Exclude Tomcat so that it doesn't conflict w/ Jetty server -->
             <exclusions>
                 <exclusion>
@@ -54,7 +57,6 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>jul-to-slf4j</artifactId>
-            <version>1.7.30</version>
             <scope>provided</scope>
         </dependency>
 
@@ -62,20 +64,17 @@
         <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>javax.servlet-api</artifactId>
-            <version>3.1.0</version>
             <scope>provided</scope>
         </dependency>
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
-            <version>${spring.boot.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>4.13.2</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -103,7 +102,7 @@
             <plugin>
                 <groupId>com.google.cloud.tools</groupId>
                 <artifactId>appengine-maven-plugin</artifactId>
-                <version>2.4.3</version>
+                <version>2.4.4</version>
                 <configuration>
                     <!-- can be set w/ -DprojectId=myProjectId on command line -->
                     <projectId>ludo-in-in</projectId>
@@ -114,7 +113,7 @@
             </plugin>
             <plugin>
                 <artifactId>maven-war-plugin</artifactId>
-                <version>3.3.1</version>
+                <version>3.4.0</version>
                 <configuration>
                     <failOnMissingWebXml>false</failOnMissingWebXml>
                 </configuration>
