@@ -31,5 +31,6 @@
   <modules>
     <module>testlocalapps</module>
     <module>stagingtests</module>
+    <module>devappservertests</module>
   </modules>
 </project>

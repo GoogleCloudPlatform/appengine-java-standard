@@ -81,6 +81,11 @@
       <artifactId>commons-codec</artifactId>
       <optional>true</optional>
     </dependency>
+    <dependency>
+      <groupId>com.google.appengine</groupId>
+      <artifactId>shared-sdk</artifactId>
+    </dependency>
+
     <!-- test dependencies -->
     <dependency>
       <groupId>com.google.truth</groupId>
@@ -281,6 +286,7 @@
                   <include>com.contrastsecurity:yamlbeans</include>
                   <include>com.google.appengine:appengine-apis</include>
                   <include>com.google.appengine:appengine-apis-dev</include>
+                  <include>com.google.appengine:shared-sdk</include>
                   <include>com.google.appengine:protos</include>
                   <include>com.google.appengine:proto1:*</include>
                   <include>com.google.appengine:appengine-utils</include>
