@@ -19,7 +19,7 @@ set -e
 shopt -s globstar
 
 setup_docuploader() {
- curl -fsSL --retry 10 -o /tmp/jar1.jar https://github.com/googleapis/java-docfx-doclet/releases/download/1.8.0/docfx-doclet-1.8.0-jar-with-dependencies.jar
+ curl -fsSL --retry 10 -o /tmp/jar1.jar https://github.com/googleapis/java-docfx-doclet/releases/download/1.9.0/docfx-doclet-1.9.0-jar-with-dependencies.jar
  # Update Python 3 and Maven
  sudo apt-get update
  sudo apt-get install -y python3 python3-pip maven

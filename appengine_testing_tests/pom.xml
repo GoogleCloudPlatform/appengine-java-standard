@@ -73,7 +73,7 @@
         <profile>
             <id>surefire-newerjava</id>
             <activation>
-                <jdk>[11,20)</jdk>
+                <jdk>[11,)</jdk>
             </activation>
             <build>
                 <plugins>
@@ -85,7 +85,10 @@
                                 -Duser.timezone=CST
                                 --add-opens java.base/java.lang=ALL-UNNAMED
                             </argLine>
-                        </configuration>
+                          <systemPropertyVariables>
+                            <net.bytebuddy.experimental>true</net.bytebuddy.experimental>
+                        </systemPropertyVariables>
+                    </configuration>
                     </plugin>
                 </plugins>
             </build>

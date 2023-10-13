@@ -30,7 +30,7 @@ export JAVA_HOME="$(update-java-alternatives -l | grep "1.17" | head -n 1 | tr -
 echo "JAVA_HOME = $JAVA_HOME"
 ./mvnw -v
 
-./mvnw -e clean install
+./mvnw -e clean install  spdx:createSPDX
 
 # The artifacts under `${KOKORO_ARTIFACTS_DIR}/maven-artifacts` will be uploaded as a zip file named maven_jars.binary
 TMP_STAGING_LOCATION=${KOKORO_ARTIFACTS_DIR}/tmp
@@ -68,6 +68,10 @@ cp -rf sdk_assembly/target/appengine-java-sdk ${TMP_STAGING_LOCATION}/
 chmod a+x ${TMP_STAGING_LOCATION}/appengine-java-sdk/bin/*
 # LINT.ThenChange(//depot/google3/third_party/java_src/appengine_standard/check_build.sh)
 cp sdk_assembly/target/google_appengine_java_delta*.zip ${TMP_STAGING_LOCATION}/google_appengine_java_delta_from_maven.zip
+
+# Add SBOM files:
+cp target/site/com.google.appengine_parent-*.json ${TMP_STAGING_LOCATION}/com.google.appengine_parent.spdx.json
+
 cd ${TMP_STAGING_LOCATION}
 zip -r ${PUBLISHED_LOCATION}/maven_jars.binary .
 # cleanup staging area

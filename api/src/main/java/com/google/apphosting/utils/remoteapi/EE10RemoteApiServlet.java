@@ -36,6 +36,7 @@ import com.google.apphosting.datastore.DatastoreV3Pb.QueryResult;
 import com.google.apphosting.utils.remoteapi.RemoteApiPb.ApplicationError;
 import com.google.apphosting.utils.remoteapi.RemoteApiPb.Request;
 import com.google.apphosting.utils.remoteapi.RemoteApiPb.Response;
+import com.google.apphosting.utils.remoteapi.RemoteApiPb.TransactionQueryResult;
 import com.google.apphosting.utils.remoteapi.RemoteApiPb.TransactionRequest;
 import com.google.apphosting.utils.remoteapi.RemoteApiPb.TransactionRequest.Precondition;
 import com.google.io.protocol.ProtocolMessage;
@@ -267,7 +268,7 @@ public class EE10RemoteApiServlet extends HttpServlet {
   }
 
   private byte[] executeTxQuery(Request request) {
-    RemoteApiPb.TransactionQueryResult result = new RemoteApiPb.TransactionQueryResult();
+    TransactionQueryResult result = new TransactionQueryResult();
 
     Query query = new Query();
     parseFromBytes(query, request.getRequestAsBytes());

@@ -60,7 +60,7 @@
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <jetty.version>9.4.52.v20230823</jetty.version>
+    <jetty.version>9.4.53.v20231009</jetty.version>
     <jetty12.version>12.0.2</jetty12.version>
     <distributionManagement.snapshot.url>https://oss.sonatype.org/content/repositories/google-snapshots/</distributionManagement.snapshot.url>
     <distributionManagement.snapshot.id>sonatype-nexus-snapshots</distributionManagement.snapshot.id>
@@ -236,8 +236,9 @@
                           <systemPropertyVariables>
                               <appengine.runtime.dir>../deployment/target/runtime-deployment-${project.version}</appengine.runtime.dir>
                               <com.google.apphosting.runtime.jetty94.LEGACY_MODE>true</com.google.apphosting.runtime.jetty94.LEGACY_MODE>
+                              <net.bytebuddy.experimental>true</net.bytebuddy.experimental>
                           </systemPropertyVariables>
-                          <argLine>
+                        <argLine>
                               --add-opens java.base/java.lang=ALL-UNNAMED
                               --add-opens java.base/java.nio.charset=ALL-UNNAMED
                               --add-opens java.base/java.util.concurrent=ALL-UNNAMED
@@ -657,42 +658,42 @@
       <dependency>
           <groupId>io.netty</groupId>
           <artifactId>netty-buffer</artifactId>
-          <version>4.1.97.Final</version>
+          <version>4.1.100.Final</version>
       </dependency>
       <dependency>
           <groupId>io.netty</groupId>
           <artifactId>netty-codec</artifactId>
-          <version>4.1.97.Final</version>
+          <version>4.1.100.Final</version>
       </dependency>
       <dependency>
           <groupId>io.netty</groupId>
           <artifactId>netty-codec-http</artifactId>
-          <version>4.1.97.Final</version>
+          <version>4.1.100.Final</version>
       </dependency>
       <dependency>
           <groupId>io.netty</groupId>
           <artifactId>netty-codec-http2</artifactId>
-          <version>4.1.97.Final</version>
+          <version>4.1.100.Final</version>
       </dependency>
       <dependency>
           <groupId>io.netty</groupId>
           <artifactId>netty-common</artifactId>
-          <version>4.1.94.Final</version>
+          <version>4.1.100.Final</version>
       </dependency>
       <dependency>
           <groupId>io.netty</groupId>
           <artifactId>netty-handler</artifactId>
-          <version>4.1.97.Final</version>
+          <version>4.1.100.Final</version>
       </dependency>
       <dependency>
           <groupId>io.netty</groupId>
           <artifactId>netty-transport</artifactId>
-          <version>4.1.97.Final</version>
+          <version>4.1.100.Final</version>
       </dependency>
       <dependency>
           <groupId>io.netty</groupId>
           <artifactId>netty-transport-native-unix-common</artifactId>
-          <version>4.1.97.Final</version>
+          <version>4.1.100.Final</version>
       </dependency>
       <dependency>
         <groupId>org.apache.tomcat</groupId>
@@ -888,6 +889,25 @@
             <fileTemplate>${project.basedir}/licenses/resources/third-party-file-template.ftl</fileTemplate>
           </configuration>
         </plugin>
+    <plugin>
+        <groupId>org.spdx</groupId>
+        <artifactId>spdx-maven-plugin</artifactId>
+        <!-- please check for updates on https://search.maven.org/search?q=a:spdx-maven-plugin -->
+        <version>0.7.0</version>
+        <executions>
+            <execution>
+                <id>build-spdx</id>
+                <goals>
+                    <goal>createSPDX</goal>
+                </goals>
+            </execution>
+        </executions>
+        <configuration>
+          <excludedFilePatterns>
+            <excludedFilePattern>*.spdx</excludedFilePattern>
+          </excludedFilePatterns>
+        </configuration>
+    </plugin>
       </plugins>
     </pluginManagement>
   </build>

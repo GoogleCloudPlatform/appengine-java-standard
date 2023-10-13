@@ -106,12 +106,9 @@ export JAVA_HOME="$(update-java-alternatives -l | grep "1.17" | head -n 1 | tr -
 # Make sure `JAVA_HOME` is set.
 echo "JAVA_HOME = $JAVA_HOME"
 
-# Install Maven.
-sudo apt-get -qq update && sudo apt-get -qq install -y maven
-
 # compile all packages
 echo "Calling release:prepare and release:perform."
-mvn release:prepare release:perform -B -q --settings=../settings.xml -DskipTests -Darguments=-DskipTests -Dgpg.homedir=${GNUPGHOME} -Dgpg.passphrase=${GPG_PASSPHRASE}
+./mvnw release:prepare release:perform -B -q --settings=../settings.xml -DskipTests -Darguments=-DskipTests -Dgpg.homedir=${GNUPGHOME} -Dgpg.passphrase=${GPG_PASSPHRASE}
 
 git remote set-url origin https://gae-java-bot:${GAE_JAVA_BOT_GITHUB_TOKEN}@github.com/GoogleCloudPlatform/appengine-java-standard
 echo "Doing git tag and push."

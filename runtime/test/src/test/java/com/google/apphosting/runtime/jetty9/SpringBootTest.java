@@ -39,7 +39,7 @@ public final class SpringBootTest extends JavaRuntimeViaHttpBase {
     File currentDirectory = new File("").getAbsoluteFile();
     Process process =
         new ProcessBuilder(
-                "mvn",
+                "../../mvnw",
                 "install",
                 "appengine:stage",
                 "-f",
