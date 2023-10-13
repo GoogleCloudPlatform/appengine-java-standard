@@ -18,7 +18,7 @@ package com.google.apphosting.runtime.jetty.ee10;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import com.google.apphosting.utils.servlet.MultipartMimeUtils;
+import com.google.apphosting.utils.servlet.ee10.MultipartMimeUtils;
 import com.google.common.collect.Maps;
 import com.google.common.flogger.GoogleLogger;
 import java.io.ByteArrayInputStream;
@@ -34,13 +34,20 @@ import javax.mail.MessagingException;
 import javax.mail.internet.ContentType;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMultipart;
-import jakarta.servlet.DispatcherType;
+
+import jakarta.servlet.Filter;
+import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletRequestWrapper;
 import jakarta.servlet.http.HttpServletResponse;
-import org.eclipse.jetty.ee10.nested.HandlerWrapper;
+import org.eclipse.jetty.ee10.servlet.ServletContextRequest;
+import org.eclipse.jetty.server.Handler;
+import org.eclipse.jetty.server.Request;
+import org.eclipse.jetty.server.Response;
+import org.eclipse.jetty.util.Callback;
 
 /**
  * {@code ParseBlobUploadHandler} is responsible for the parsing multipart/form-data or
@@ -52,7 +59,7 @@ import org.eclipse.jetty.ee10.nested.HandlerWrapper;
  * DevAppServer, the equivalent work is subsumed by {@code UploadBlobServlet}.
  *
  */
-public class ParseBlobUploadHandler extends HandlerWrapper {
+public class ParseBlobUploadFilter implements Filter {
   private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
 
   /**
@@ -77,9 +84,11 @@ public class ParseBlobUploadHandler extends HandlerWrapper {
   static final String CONTENT_LENGTH_HEADER = "Content-Length";
 
   @Override
-  public void handle(String target, org.eclipse.jetty.ee10.nested.Request baseRequest, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
-    if (request.getDispatcherType() == DispatcherType.REQUEST
-        && request.getHeader(UPLOAD_HEADER) != null) {
+  public void doFilter(ServletRequest req, ServletResponse resp, FilterChain chain) throws IOException, ServletException {
+    HttpServletRequest request = (HttpServletRequest)req;
+    HttpServletResponse response = (HttpServletResponse)resp;
+
+    if (request.getHeader(UPLOAD_HEADER) != null) {
       Map<String, List<String>> blobKeys = new HashMap<>();
       Map<String, List<Map<String, String>>> blobInfos = new HashMap<>();
       Map<String, List<String>> otherParams = new HashMap<>();
@@ -97,11 +106,7 @@ public class ParseBlobUploadHandler extends HandlerWrapper {
               String blobKeyString = contentType.getParameter("blob-key");
               List<String> keys = blobKeys.computeIfAbsent(fieldName, k -> new ArrayList<>());
               keys.add(blobKeyString);
-              List<Map<String, String>> infos = blobInfos.get(fieldName);
-              if (infos == null) {
-                infos = new ArrayList<Map<String, String>>();
-                blobInfos.put(fieldName, infos);
-              }
+              List<Map<String, String>> infos = blobInfos.computeIfAbsent(fieldName, k -> new ArrayList<>());
               infos.add(getInfoFromBody(MultipartMimeUtils.getTextContent(part), blobKeyString));
             }
           } else {
@@ -115,9 +120,9 @@ public class ParseBlobUploadHandler extends HandlerWrapper {
         logger.atWarning().withCause(ex).log("Could not parse multipart message:");
       }
 
-      super.handle(target, baseRequest, new ParameterServletWrapper(request, otherParams), response);
+      chain.doFilter(new ParameterServletWrapper(request, otherParams), response);
     } else {
-      super.handle(target, baseRequest, request, response);
+      chain.doFilter(request, response);
     }
   }
 

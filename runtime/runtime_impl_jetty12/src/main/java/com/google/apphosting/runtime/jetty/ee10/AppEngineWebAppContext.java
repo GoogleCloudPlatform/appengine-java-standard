@@ -16,25 +16,24 @@
 
 package com.google.apphosting.runtime.jetty.ee10;
 
-import com.google.apphosting.runtime.jetty.ee10.*;
 import static com.google.common.base.StandardSystemProperty.JAVA_IO_TMPDIR;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.apphosting.api.ApiProxy;
 import com.google.apphosting.api.ApiProxy.LogRecord;
-import com.google.apphosting.runtime.jetty.AppEngineAuthentication;
-import com.google.apphosting.utils.servlet.DeferredTaskServlet;
-import com.google.apphosting.utils.servlet.JdbcMySqlConnectionCleanupFilter;
-import com.google.apphosting.utils.servlet.SessionCleanupServlet;
-import com.google.apphosting.utils.servlet.SnapshotServlet;
-import com.google.apphosting.utils.servlet.WarmupServlet;
+import com.google.apphosting.runtime.jetty.EE10AppEngineAuthentication;
+import com.google.apphosting.utils.servlet.ee10.DeferredTaskServlet;
+import com.google.apphosting.utils.servlet.ee10.JdbcMySqlConnectionCleanupFilter;
+import com.google.apphosting.utils.servlet.ee10.SessionCleanupServlet;
+import com.google.apphosting.utils.servlet.ee10.SnapshotServlet;
+import com.google.apphosting.utils.servlet.ee10.WarmupServlet;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.EventListener;
 import java.util.HashMap;
 import java.util.List;
@@ -43,14 +42,10 @@ import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
-import javax.servlet.Filter;
-import javax.servlet.Servlet;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import org.eclipse.jetty.ee10.nested.ServletConstraint;
-import org.eclipse.jetty.ee10.security.ConstraintMapping;
-import org.eclipse.jetty.ee10.security.ConstraintSecurityHandler;
+
+import jakarta.servlet.DispatcherType;
+import jakarta.servlet.Filter;
+import jakarta.servlet.Servlet;
 import org.eclipse.jetty.ee10.servlet.FilterHolder;
 import org.eclipse.jetty.ee10.servlet.FilterMapping;
 import org.eclipse.jetty.ee10.servlet.Holder;
@@ -58,7 +53,13 @@ import org.eclipse.jetty.ee10.servlet.ListenerHolder;
 import org.eclipse.jetty.ee10.servlet.ServletHandler;
 import org.eclipse.jetty.ee10.servlet.ServletHolder;
 import org.eclipse.jetty.ee10.servlet.ServletMapping;
+import org.eclipse.jetty.ee10.servlet.security.ConstraintMapping;
+import org.eclipse.jetty.ee10.servlet.security.ConstraintSecurityHandler;
 import org.eclipse.jetty.ee10.webapp.WebAppContext;
+import org.eclipse.jetty.security.Constraint;
+import org.eclipse.jetty.server.Request;
+import org.eclipse.jetty.server.Response;
+import org.eclipse.jetty.util.Callback;
 import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.util.resource.ResourceFactory;
 
@@ -161,11 +162,11 @@ public class AppEngineWebAppContext extends WebAppContext {
 
     // Configure the Jetty SecurityHandler to understand our method of
     // authentication (via the UserService).
-    AppEngineAuthentication.configureSecurityHandler((ConstraintSecurityHandler) getSecurityHandler());
+    EE10AppEngineAuthentication.configureSecurityHandler((ConstraintSecurityHandler) getSecurityHandler());
 
     setMaxFormContentSize(MAX_RESPONSE_SIZE);
 
-    insertHandler(new ParseBlobUploadHandler());
+    addFilter(new ParseBlobUploadFilter(), "/*", EnumSet.allOf(DispatcherType.class));
     ignoreContentLength = isAppIdForNonContentLength();
   }
 
@@ -176,20 +177,19 @@ public class AppEngineWebAppContext extends WebAppContext {
   }
 
   @Override
-    public APIContext getServletContext()
-    {
-        /* TODO only does this for logging?
-        // Override the default HttpServletContext implementation.
-        // TODO: maybe not needed when there is no securrity manager.
-        // see
-        // https://github.com/GoogleCloudPlatform/appengine-java-vm-runtime/commit/43c37fd039fb619608cfffdc5461ecddb4d90ebc
-        _scontext = new AppEngineServletContext();
-        */
+  public ServletContextApi newServletContextApi() {
+      /* TODO only does this for logging?
+      // Override the default HttpServletContext implementation.
+      // TODO: maybe not needed when there is no securrity manager.
+      // see
+      // https://github.com/GoogleCloudPlatform/appengine-java-vm-runtime/commit/43c37fd039fb619608cfffdc5461ecddb4d90ebc
+      _scontext = new AppEngineServletContext();
+      */
 
-        return super.getServletContext();
-    }
+    return super.newServletContextApi();
+  }
 
-    private static boolean isAppIdForNonContentLength() {
+  private static boolean isAppIdForNonContentLength() {
     String projectId = System.getenv("GOOGLE_CLOUD_PROJECT");
     if (projectId == null) {
       return false;
@@ -276,9 +276,9 @@ public class AppEngineWebAppContext extends WebAppContext {
     servletHandler.setAllowDuplicateMappings(true);
 
     // Protect deferred task queue with constraint
-    ConstraintSecurityHandler security = getChildHandlerByClass(ConstraintSecurityHandler.class);
+    ConstraintSecurityHandler security = (ConstraintSecurityHandler)getSecurityHandler();
     ConstraintMapping cm = new ConstraintMapping();
-    cm.setConstraint(new ServletConstraint("deferred_queue", "admin"));
+    cm.setConstraint(Constraint.from("deferred_queue", Constraint.Authorization.KNOWN_ROLE, "admin"));
     cm.setPathSpec("/_ah/queue/__deferred__");
     security.addConstraintMapping(cm);
 
@@ -286,25 +286,24 @@ public class AppEngineWebAppContext extends WebAppContext {
     super.startContext();
   }
 
-    @Override
-    public void doHandle(String target, org.eclipse.jetty.ee10.nested.Request baseRequest, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
-
-      ListIterator<RequestListener> iter = requestListeners.listIterator();
-      while (iter.hasNext()) {
-        iter.next().requestReceived(this, baseRequest);
+  @Override
+  public boolean handle(Request request, Response response, Callback callback) throws Exception {
+    ListIterator<RequestListener> iter = requestListeners.listIterator();
+    while (iter.hasNext()) {
+      iter.next().requestReceived(this, request);
+    }
+    try {
+      if (ignoreContentLength) {
+        response = new IgnoreContentLengthResponseWrapper(request, response);
       }
-      try {
-        if (ignoreContentLength) {
-          response = new IgnoreContentLengthResponseWrapper(response);
-        }
 
-        super.doHandle(target, baseRequest, request, response);
-      } finally {
-        // TODO: this finally approach is ok until async request handling is supported
-        while (iter.hasPrevious()) {
-          iter.previous().requestComplete(this, baseRequest);
-        }
+      return super.handle(request, response, callback);
+    } finally {
+      // TODO: this finally approach is ok until async request handling is supported
+      while (iter.hasPrevious()) {
+        iter.previous().requestComplete(this, request);
       }
+    }
   }
 
   @Override
@@ -378,7 +377,7 @@ public class AppEngineWebAppContext extends WebAppContext {
   // inner class to modify its behavior.
 
   /** A context that uses our logs API to log messages. */
-  public class AppEngineServletContext extends WebAppContext.Context {
+  public class AppEngineServletContext extends ServletContextApi {
 
     @Override
     public ClassLoader getClassLoader() {
@@ -414,11 +413,6 @@ public class AppEngineWebAppContext extends WebAppContext {
       LogRecord.Level logLevel = throwable == null ? LogRecord.Level.info : LogRecord.Level.error;
       ApiProxy.log(
           new ApiProxy.LogRecord(logLevel, System.currentTimeMillis() * 1000L, writer.toString()));
-    }
-
-    @Override
-    public void log(Exception exception, String msg) {
-      log(msg, exception);
     }
   }
 

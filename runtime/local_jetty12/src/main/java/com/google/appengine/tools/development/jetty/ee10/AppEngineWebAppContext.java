@@ -18,16 +18,14 @@ package com.google.appengine.tools.development.jetty.ee10;
 
 import com.google.apphosting.api.ApiProxy;
 import com.google.apphosting.api.ApiProxy.LogRecord;
-import com.google.apphosting.runtime.jetty.AppEngineAuthentication;
 import java.io.File;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import org.eclipse.jetty.ee10.nested.Request;
+
+import com.google.apphosting.runtime.jetty.EE10AppEngineAuthentication;
 import org.eclipse.jetty.ee10.servlet.security.ConstraintSecurityHandler;
-import org.eclipse.jetty.ee10.servlet.security.RoleInfo;
-import org.eclipse.jetty.ee10.servlet.security.SecurityHandler;
-import org.eclipse.jetty.ee10.servlet.security.UserDataConstraint;
 import org.eclipse.jetty.ee10.webapp.WebAppContext;
+import org.eclipse.jetty.security.Constraint;
+import org.eclipse.jetty.security.SecurityHandler;
+import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.util.resource.ResourceFactory;
 
@@ -73,17 +71,16 @@ public class AppEngineWebAppContext extends WebAppContext {
 
     // Configure the Jetty SecurityHandler to understand our method of
     // authentication (via the UserService).
-    AppEngineAuthentication.configureSecurityHandler(
-        (ConstraintSecurityHandler) getSecurityHandler());
+    EE10AppEngineAuthentication.configureSecurityHandler((ConstraintSecurityHandler) getSecurityHandler());
 
     setMaxFormContentSize(MAX_RESPONSE_SIZE);
   }
 
   @Override
-  public APIContext getServletContext() {
+  public ServletScopedContext getContext() {
     // TODO: Override the default HttpServletContext implementation (for logging)?.
     AppEngineServletContext appEngineServletContext = new AppEngineServletContext();
-    return super.getServletContext();
+    return super.getContext();
   }
 
   private static File createTempDir() {
@@ -100,8 +97,8 @@ public class AppEngineWebAppContext extends WebAppContext {
   }
 
   @Override
-  protected SecurityHandler newSecurityHandler() {
-    return new AppEngineConstraintSecurityHandler();
+  public Class<? extends SecurityHandler> getDefaultSecurityHandlerClass() {
+    return AppEngineConstraintSecurityHandler.class;
   }
 
   /**
@@ -110,11 +107,12 @@ public class AppEngineWebAppContext extends WebAppContext {
    */
   private static class AppEngineConstraintSecurityHandler extends ConstraintSecurityHandler {
     @Override
-    protected RoleInfo prepareConstraintInfo(String pathInContext, Request request) {
-      RoleInfo ri = super.prepareConstraintInfo(pathInContext, request);
+    protected Constraint getConstraint(String pathInContext, Request request) {
+      Constraint constraint = super.getConstraint(pathInContext, request);
+
       // Remove constraints so that we can emulate HTTPS locally.
-      ri.setUserDataConstraint(UserDataConstraint.None);
-      return ri;
+      constraint = Constraint.from(constraint.getName(), Constraint.Transport.ANY, constraint.getAuthorization(), constraint.getRoles());
+      return constraint;
     }
   }
 
@@ -124,22 +122,20 @@ public class AppEngineWebAppContext extends WebAppContext {
   // inner class to modify its behavior.
 
   /** Context extension that allows logs to be written to the App Engine log APIs. */
-  public class AppEngineServletContext extends Context {
+  public class AppEngineServletContext extends ServletScopedContext {
 
     @Override
     public ClassLoader getClassLoader() {
       return AppEngineWebAppContext.this.getClassLoader();
     }
 
-    @Override
-    public String getServerInfo() {
-      return serverInfo;
-    }
-
+    /*
+    TODO fix logging.
     @Override
     public void log(String message) {
       log(message, null);
     }
+     */
 
     /**
      * {@inheritDoc}
@@ -147,6 +143,7 @@ public class AppEngineWebAppContext extends WebAppContext {
      * @param throwable an exception associated with this log message,
      * or {@code null}.
      */
+    /*
     @Override
     public void log(String message, Throwable throwable) {
       StringWriter writer = new StringWriter();
@@ -167,5 +164,6 @@ public class AppEngineWebAppContext extends WebAppContext {
     public void log(Exception exception, String msg) {
       log(msg, exception);
     }
+     */
   }
 }

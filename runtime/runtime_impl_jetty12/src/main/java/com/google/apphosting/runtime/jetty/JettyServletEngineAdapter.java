@@ -174,7 +174,7 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
 
   @Override
   public void serviceRequest(UPRequest upRequest, MutableUpResponse upResponse)
-      throws ServletException, IOException {
+      throws Exception {
     if (upRequest.getHandler().getType() != AppinfoPb.Handler.HANDLERTYPE.CGI_BIN_VALUE) {
       upResponse.setError(UPResponse.ERROR.UNKNOWN_HANDLER_VALUE);
       upResponse.setErrorMessage("Unsupported handler type: " + upRequest.getHandler().getType());

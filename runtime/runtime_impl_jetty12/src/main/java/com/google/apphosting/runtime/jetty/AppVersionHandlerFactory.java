@@ -31,5 +31,5 @@ public interface AppVersionHandlerFactory {
     }
 }
 
-  Handler createHandler(AppVersion appVersion) throws ServletException;
+  Handler createHandler(AppVersion appVersion) throws Exception;
 }

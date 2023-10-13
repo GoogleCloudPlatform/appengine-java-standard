@@ -19,8 +19,8 @@ package com.google.apphosting.runtime.jetty.ee10;
 import java.io.IOException;
 import java.util.EventListener;
 import jakarta.servlet.ServletException;
-import org.eclipse.jetty.ee10.nested.Request;
 import org.eclipse.jetty.ee10.webapp.WebAppContext;
+import org.eclipse.jetty.server.Request;
 
 /**
  * {@code RequestListener} is called for new request and request completion events. It is abstracted

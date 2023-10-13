@@ -26,13 +26,13 @@ import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.FilterConfig;
 import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletRequestWrapper;
 import jakarta.servlet.http.HttpServletResponse;
-import org.eclipse.jetty.ee10.nested.ContextHandler;
 import org.eclipse.jetty.ee10.servlet.ServletContextHandler;
 import org.eclipse.jetty.util.URIUtil;
 import org.eclipse.jetty.util.resource.Resource;
@@ -55,16 +55,17 @@ public class StaticFileFilter implements Filter {
   private Resource resourceBase;
   private String[] welcomeFiles;
   private String resourceRoot;
-  private ContextHandler.APIContext servletContext;
+  private ServletContext servletContext;
 
   @Override
   public void init(FilterConfig filterConfig) throws ServletException {
-    servletContext = ServletContextHandler.getServletContextHandler(servletContext).getServletContext();
+    ServletContextHandler contextHandler = ServletContextHandler.getServletContextHandler(servletContext);
+    servletContext = contextHandler.getServletContext();
     staticFileUtils = new StaticFileUtils(servletContext);
 
     // AFAICT, there is no real API to retrieve this information, so
     // we access Jetty's internal state.
-    welcomeFiles = servletContext.getContextHandler().getWelcomeFiles();
+    welcomeFiles = contextHandler.getWelcomeFiles();
 
     appEngineWebXml = (AppEngineWebXml) servletContext.getAttribute(
         "com.google.appengine.tools.development.appEngineWebXml");

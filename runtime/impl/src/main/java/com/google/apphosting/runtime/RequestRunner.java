@@ -30,7 +30,6 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeoutException;
-import javax.servlet.ServletException;
 
 /**
  * Runs an inbound request within the context of the given app, whether ordinary inbound HTTP or
@@ -216,7 +215,7 @@ public class RequestRunner implements Runnable {
   }
 
   private void dispatchRequest(RequestManager.RequestToken requestToken)
-      throws InterruptedException, TimeoutException, ServletException, IOException {
+      throws Exception {
     switch (upRequest.getRequestType()) {
       case SHUTDOWN:
         logger.atInfo().log("Shutting down requests");
@@ -260,7 +259,7 @@ public class RequestRunner implements Runnable {
     }
   }
 
-  private void dispatchServletRequest() throws ServletException, IOException {
+  private void dispatchServletRequest() throws Exception {
     upRequestHandler.serviceRequest(upRequest, upResponse);
     if (compressResponse) {
       // try to compress if necessary (http://b/issue?id=3368468)
@@ -279,12 +278,19 @@ public class RequestRunner implements Runnable {
 
   private void handleException(Throwable ex, RequestManager.RequestToken requestToken) {
     // Unwrap ServletExceptions
-    if (ex instanceof ServletException) {
-      ServletException sex = (ServletException) ex;
+    if (ex instanceof javax.servlet.ServletException) {
+      javax.servlet.ServletException sex = (javax.servlet.ServletException) ex;
       if (sex.getRootCause() != null) {
         ex = sex.getRootCause();
       }
     }
+    else if (ex instanceof jakarta.servlet.ServletException) {
+      jakarta.servlet.ServletException sex = (jakarta.servlet.ServletException) ex;
+      if (sex.getRootCause() != null) {
+        ex = sex.getRootCause();
+      }
+    }
+
     String msg = "Uncaught exception from servlet";
     logger.atWarning().withCause(ex).log("%s", msg);
     // Don't use ApiProxy here, because we don't know what state the

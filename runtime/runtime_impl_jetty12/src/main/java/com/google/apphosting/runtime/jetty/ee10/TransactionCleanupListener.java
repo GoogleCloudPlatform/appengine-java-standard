@@ -16,12 +16,16 @@
 
 package com.google.apphosting.runtime.jetty.ee10;
 
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import jakarta.servlet.ServletException;
 import org.eclipse.jetty.ee10.webapp.WebAppContext;
+import org.eclipse.jetty.server.Request;
 
 /**
  * {@code TransactionCleanupListener} looks for datastore transactions that are still active when
@@ -72,10 +76,10 @@ public class TransactionCleanupListener implements RequestListener {
   }
 
   @Override
-  public void requestReceived(WebAppContext context, org.eclipse.jetty.ee10.nested.Request request) {}
+  public void requestReceived(WebAppContext context, Request request) throws IOException, ServletException {}
 
   @Override
-  public void requestComplete(WebAppContext context, org.eclipse.jetty.ee10.nested.Request request) {
+  public void requestComplete(WebAppContext context, Request request) {
     if (transactionGetId == null) {
       // No datastore service found in webapp
       return;

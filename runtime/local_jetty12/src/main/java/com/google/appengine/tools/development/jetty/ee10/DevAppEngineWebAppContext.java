@@ -23,15 +23,19 @@ import com.google.apphosting.api.ApiProxy;
 import com.google.apphosting.utils.io.IoUtil;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.logging.Logger;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.eclipse.jetty.ee10.security.ConstraintMapping;
-import org.eclipse.jetty.ee10.security.ConstraintSecurityHandler;
-import org.eclipse.jetty.ee10.nested.Request;
+import org.eclipse.jetty.ee10.servlet.security.ConstraintMapping;
+import org.eclipse.jetty.ee10.servlet.security.ConstraintSecurityHandler;
+import org.eclipse.jetty.http.HttpField;
+import org.eclipse.jetty.security.Constraint;
+import org.eclipse.jetty.server.Context;
+import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.util.resource.Resource;
 
 /**
@@ -96,15 +100,10 @@ public class DevAppEngineWebAppContext extends AppEngineWebAppContext {
   }
 
   @Override
-  public void doScope(
-      String target,
-      Request baseRequest,
-      HttpServletRequest httpServletRequest,
-      HttpServletResponse httpServletResponse)
-      throws IOException, ServletException {
-
-    if (hasSkipAdminCheck(baseRequest)) {
-      baseRequest.setAttribute(SKIP_ADMIN_CHECK_ATTR, Boolean.TRUE);
+  protected ClassLoader enterScope(Request contextRequest)
+  {
+    if (hasSkipAdminCheck(contextRequest)) {
+      contextRequest.setAttribute(SKIP_ADMIN_CHECK_ATTR, Boolean.TRUE);
     }
 
     disableTransportGuarantee();
@@ -114,11 +113,14 @@ public class DevAppEngineWebAppContext extends AppEngineWebAppContext {
     // Find something better.
     // See DevAppServerFactory.CustomSecurityManager.
     System.setProperty("devappserver-thread-" + Thread.currentThread().getName(), "true");
-    try {
-      super.doScope(target, baseRequest, httpServletRequest, httpServletResponse);
-    } finally {
-      System.clearProperty("devappserver-thread-" + Thread.currentThread().getName());
-    }
+    return super.enterScope(contextRequest);
+  }
+
+  @Override
+  protected void exitScope(Request request, Context lastContext, ClassLoader lastLoader)
+  {
+    super.exitScope(request, lastContext, lastLoader);
+    System.clearProperty("devappserver-thread-" + Thread.currentThread().getName());
   }
 
   /**
@@ -127,12 +129,10 @@ public class DevAppEngineWebAppContext extends AppEngineWebAppContext {
    * and circumventing dev appserver security, but the dev appserver was not
    * designed to be secure.
    */
-  private boolean hasSkipAdminCheck(HttpServletRequest request) {
-    // wow, old school java
-    for (Enumeration<?> headerNames = request.getHeaderNames(); headerNames.hasMoreElements(); ) {
-      String name = (String) headerNames.nextElement();
+  private boolean hasSkipAdminCheck(Request request) {
+    for (HttpField field : request.getHeaders()) {
       // We don't care about the header value, its presence is sufficient.
-      if (name.equalsIgnoreCase(X_GOOGLE_DEV_APPSERVER_SKIPADMINCHECK)) {
+      if (field.getName().equalsIgnoreCase(X_GOOGLE_DEV_APPSERVER_SKIPADMINCHECK)) {
         return true;
       }
     }
@@ -176,21 +176,25 @@ public class DevAppEngineWebAppContext extends AppEngineWebAppContext {
    */
   private void disableTransportGuarantee() {
     synchronized (transportGuaranteeLock) {
-      if (!transportGuaranteesDisabled && getSecurityHandler() != null) {
-        List<ConstraintMapping> mappings =
-            ((ConstraintSecurityHandler) getSecurityHandler()).getConstraintMappings();
-        if (mappings != null) {
-          for (ConstraintMapping mapping : mappings) {
-            if (mapping.getConstraint().getDataConstraint() > 0) {
-              logger.info(
-                  "Ignoring <transport-guarantee> for "
-                      + mapping.getPathSpec()
-                      + " as the SDK does not support HTTPS.  It will still be used"
-                      + " when you upload your application.");
-              mapping.getConstraint().setDataConstraint(0);
-            }
+      ConstraintSecurityHandler securityHandler = (ConstraintSecurityHandler) getSecurityHandler();
+      if (!transportGuaranteesDisabled && securityHandler != null) {
+        List<ConstraintMapping> mappings = new ArrayList<>();
+        for (ConstraintMapping mapping : securityHandler.getConstraintMappings()) {
+          Constraint constraint = mapping.getConstraint();
+          if (constraint.getTransport() == Constraint.Transport.SECURE) {
+            logger.info(
+                    "Ignoring <transport-guarantee> for "
+                            + mapping.getPathSpec()
+                            + " as the SDK does not support HTTPS.  It will still be used"
+                            + " when you upload your application.");
           }
+
+          mapping.setConstraint(Constraint.from(constraint.getName(), Constraint.Transport.ANY, constraint.getAuthorization(), constraint.getRoles()));
+          mappings.add(mapping);
         }
+
+        // TODO: do we need to call this with a new list or is modifying the ConstraintMapping enough?
+        securityHandler.setConstraintMappings(mappings);
       }
       transportGuaranteesDisabled = true;
     }

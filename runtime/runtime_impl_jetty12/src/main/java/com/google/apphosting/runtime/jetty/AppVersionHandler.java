@@ -70,7 +70,7 @@ public class AppVersionHandler extends HotSwapHandler {
   /**
    * Returns the {@code Handler} that will handle requests for the specified application version.
    */
-  public synchronized boolean ensureHandler(AppVersionKey appVersionKey) throws ServletException {
+  public synchronized boolean ensureHandler(AppVersionKey appVersionKey) throws Exception {
     if (!Objects.equals(appVersionKey, appVersion.getKey()))
       return false;
 

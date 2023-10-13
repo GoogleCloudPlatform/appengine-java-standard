@@ -28,11 +28,11 @@ import com.google.appengine.tools.development.DevAppServer;
 import com.google.appengine.tools.development.DevAppServerModulesFilter;
 import com.google.appengine.tools.development.IsolatedAppClassLoader;
 import com.google.appengine.tools.development.LocalEnvironment;
-import com.google.appengine.tools.development.LocalHttpRequestEnvironment;
+import com.google.appengine.tools.development.ee10.LocalHttpRequestEnvironment;
 import com.google.appengine.tools.development.ee10.ContainerServiceEE10;
 import com.google.appengine.tools.info.AppengineSdk;
 import com.google.apphosting.api.ApiProxy;
-import com.google.apphosting.runtime.jetty.SessionManagerHandler;
+import com.google.apphosting.runtime.jetty.EE10SessionManagerHandler;
 import com.google.apphosting.utils.config.AppEngineConfigException;
 import com.google.apphosting.utils.config.AppEngineWebXml;
 import com.google.apphosting.utils.config.WebModule;
@@ -55,25 +55,28 @@ import java.util.concurrent.Semaphore;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
-import jakarta.servlet.DispatcherType;
 import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.eclipse.jetty.ee10.nested.ContextHandler;
-import org.eclipse.jetty.ee10.nested.HandlerWrapper;
-import org.eclipse.jetty.ee10.nested.HttpChannel;
-import org.eclipse.jetty.ee10.nested.Request;
+import org.eclipse.jetty.ee10.servlet.ServletApiRequest;
+import org.eclipse.jetty.ee10.servlet.ServletContextRequest;
 import org.eclipse.jetty.ee10.servlet.ServletHolder;
 import org.eclipse.jetty.ee10.webapp.Configuration;
 import org.eclipse.jetty.ee10.webapp.JettyWebXmlConfiguration;
 import org.eclipse.jetty.ee10.webapp.WebAppContext;
+import org.eclipse.jetty.server.Context;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.NetworkTrafficServerConnector;
+import org.eclipse.jetty.server.Request;
+import org.eclipse.jetty.server.Response;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.handler.ContextHandler;
+import org.eclipse.jetty.util.Callback;
+import org.eclipse.jetty.util.Fields;
 import org.eclipse.jetty.util.Scanner;
 import org.eclipse.jetty.util.component.LifeCycle;
 import org.eclipse.jetty.util.resource.Resource;
@@ -181,16 +184,17 @@ public class JettyContainerService extends AbstractContainerService implements C
             appDir, externalResourceDir, devAppServerVersion, apiProxyDelegate, devAppServer);
 
     context.addEventListener(new ContextHandler.ContextScopeListener() {
-          @Override
-          public void enterScope(ContextHandler.APIContext context, Request request, Object reason) {
-            JettyContainerService.this.enterScope(request);
-          }
+      @Override
+      public void enterScope(Context context, Request request) {
+        JettyContainerService.this.enterScope(request);
+      }
 
-          @Override
-          public void exitScope(ContextHandler.APIContext context, Request request) {
-            JettyContainerService.this.exitScope(null);
-          }
-        });
+      @Override
+      public void exitScope(Context context, Request request) {
+        JettyContainerService.this.exitScope(null);
+      }
+    });
+
     this.appContext = new JettyAppContext();
 
     // Set the location of deployment descriptor.  This value might be null,
@@ -280,7 +284,7 @@ public class JettyContainerService extends AbstractContainerService implements C
     return appRoot;
   }
 
-  private ApiProxy.Environment enterScope(HttpServletRequest request)
+  private ApiProxy.Environment enterScope(Request request)
   {
     ApiProxy.Environment oldEnv = ApiProxy.getCurrentEnvironment();
 
@@ -354,7 +358,6 @@ public class JettyContainerService extends AbstractContainerService implements C
               0,
               Runtime.getRuntime().availableProcessors(),
               new HttpConnectionFactory(configuration));
-      connector.addBean(new CompletionListener());
       connector.setHost(address);
       connector.setPort(port);
       // Linux keeps the port blocked after shutdown if we don't disable this.
@@ -387,8 +390,8 @@ public class JettyContainerService extends AbstractContainerService implements C
       ApiProxyHandler apiHandler = new ApiProxyHandler(appEngineWebXml);
       context.insertHandler(apiHandler);
       server.setHandler(context);
-      SessionManagerHandler unused = SessionManagerHandler.create(
-          SessionManagerHandler.Config.builder()
+      EE10SessionManagerHandler unused = EE10SessionManagerHandler.create(
+              EE10SessionManagerHandler.Config.builder()
               .setEnableSession(isSessionsEnabled())
               .setServletContextHandler(context)
               .build());
@@ -551,8 +554,8 @@ public class JettyContainerService extends AbstractContainerService implements C
       ApiProxyHandler apiHandler = new ApiProxyHandler(appEngineWebXml);
       context.insertHandler(apiHandler);
       server.setHandler(context);
-      SessionManagerHandler unused = SessionManagerHandler.create(
-          SessionManagerHandler.Config.builder()
+      EE10SessionManagerHandler unused = EE10SessionManagerHandler.create(
+              EE10SessionManagerHandler.Config.builder()
               .setEnableSession(isSessionsEnabled())
               .setServletContextHandler(context)
               .build());
@@ -597,7 +600,7 @@ public class JettyContainerService extends AbstractContainerService implements C
    * com.google.apphosting.api.ApiProxy.Environment} which is stored as a request Attribute and then
    * set/cleared on a ThreadLocal by the ContextScopeListener {@link ThreadLocal}.
    */
-  private class ApiProxyHandler extends HandlerWrapper {
+  private class ApiProxyHandler extends Handler.Wrapper {
     @SuppressWarnings("hiding") // Hides AbstractContainerService.appEngineWebXml
     private final AppEngineWebXml appEngineWebXml;
 
@@ -606,32 +609,32 @@ public class JettyContainerService extends AbstractContainerService implements C
     }
 
     @Override
-    public void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
-      if (baseRequest.getDispatcherType() == DispatcherType.REQUEST) {
-        Semaphore semaphore = new Semaphore(MAX_SIMULTANEOUS_API_CALLS);
+    public boolean handle(Request request, Response response, Callback callback) throws Exception {
+      Semaphore semaphore = new Semaphore(MAX_SIMULTANEOUS_API_CALLS);
 
-        LocalEnvironment env =
-            new LocalHttpRequestEnvironment(
-                appEngineWebXml.getAppId(),
-                WebModule.getModuleName(appEngineWebXml),
-                appEngineWebXml.getMajorVersionId(),
-                instance,
-                getPort(),
-                request,
-                SOFT_DEADLINE_DELAY_MS,
-                modulesFilterHelper);
-        env.getAttributes().put(LocalEnvironment.API_CALL_SEMAPHORE, semaphore);
-        env.getAttributes().put(DEFAULT_VERSION_HOSTNAME, "localhost:" + devAppServer.getPort());
+      ServletContextRequest contextRequest = Request.as(request, ServletContextRequest.class);
+      LocalEnvironment env =
+          new LocalHttpRequestEnvironment(
+              appEngineWebXml.getAppId(),
+              WebModule.getModuleName(appEngineWebXml),
+              appEngineWebXml.getMajorVersionId(),
+              instance,
+              getPort(),
+              contextRequest.getServletApiRequest(),
+              SOFT_DEADLINE_DELAY_MS,
+              modulesFilterHelper);
+      env.getAttributes().put(LocalEnvironment.API_CALL_SEMAPHORE, semaphore);
+      env.getAttributes().put(DEFAULT_VERSION_HOSTNAME, "localhost:" + devAppServer.getPort());
 
-        request.setAttribute(LocalEnvironment.class.getName(), env);
-        environments.add(env);
-      }
+      request.setAttribute(LocalEnvironment.class.getName(), env);
+      environments.add(env);
 
       // We need this here because the ContextScopeListener is invoked before
       // this and so the Environment has not yet been created.
       ApiProxy.Environment oldEnv = enterScope(request);
       try {
-        super.handle(target, baseRequest, request, response);
+        callback = Callback.from(callback, () -> onComplete(contextRequest));
+        return super.handle(request, response, callback);
       }
       finally {
         exitScope(oldEnv);
@@ -639,17 +642,16 @@ public class JettyContainerService extends AbstractContainerService implements C
     }
   }
 
-  private class CompletionListener implements HttpChannel.Listener {
-    @Override
-    public void onComplete(Request request) {
+    private void onComplete(ServletContextRequest request) {
       try {
         // a special hook with direct access to the container instance
         // we invoke this only after the normal request processing,
         // in order to generate a valid response
-        if (request.getRequestURI().startsWith(AH_URL_RELOAD)) {
+        if (request.getHttpURI().getPath().startsWith(AH_URL_RELOAD)) {
           try {
             reloadWebApp();
-            log.info("Reloaded the webapp context: " + request.getParameter("info"));
+            Fields parameters = Request.getParameters(request);
+            log.info("Reloaded the webapp context: " + parameters.get("info"));
           } catch (Exception ex) {
             log.log(Level.WARNING, "Failed to reload the current webapp context.", ex);
           }
@@ -689,23 +691,24 @@ public class JettyContainerService extends AbstractContainerService implements C
               LocalLogService logService =
                   (LocalLogService) apiProxyLocal.getService(LocalLogService.PACKAGE);
 
+              ServletApiRequest httpServletRequest = request.getServletApiRequest();
               @SuppressWarnings("NowMillis")
               long nowMillis = System.currentTimeMillis();
               logService.addRequestInfo(
                   appId,
                   versionId,
                   requestId,
-                  request.getRemoteAddr(),
-                  request.getRemoteUser(),
-                  request.getTimeStamp() * 1000,
+                  httpServletRequest.getRemoteAddr(),
+                  httpServletRequest.getRemoteUser(),
+                  Request.getTimeStamp(request) * 1000,
                   nowMillis * 1000,
                   request.getMethod(),
-                  request.getRequestURI(),
-                  request.getProtocol(),
-                  request.getHeader("User-Agent"),
+                  httpServletRequest.getRequestURI(),
+                  httpServletRequest.getProtocol(),
+                  httpServletRequest.getHeader("User-Agent"),
                   true,
-                  request.getResponse().getStatus(),
-                  request.getHeader("Referrer"));
+                  request.getHttpServletResponse().getStatus(),
+                  request.getHeaders().get("Referrer"));
               logService.clearResponseSize();
             }
           } finally {
@@ -714,5 +717,4 @@ public class JettyContainerService extends AbstractContainerService implements C
         }
       }
     }
-  }
 }

@@ -29,9 +29,11 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.eclipse.jetty.ee10.nested.ContextHandler;
+import org.eclipse.jetty.ee10.servlet.ServletContextHandler;
 import org.eclipse.jetty.ee10.servlet.ServletHandler;
 import org.eclipse.jetty.http.pathmap.MappedResource;
+import org.eclipse.jetty.http.pathmap.MatchedResource;
+import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.util.StringUtil;
 import org.eclipse.jetty.util.URIUtil;
 import org.eclipse.jetty.util.resource.Resource;
@@ -57,7 +59,7 @@ public class ResourceFileServlet extends HttpServlet {
   private Resource resourceBase;
   private String[] welcomeFiles;
   private FileSender fSender;
-  ContextHandler chandler;
+  ServletContextHandler chandler;
   ServletContext context;
 
   /**
@@ -69,7 +71,7 @@ public class ResourceFileServlet extends HttpServlet {
     context = getServletContext();
     AppVersion appVersion =
         (AppVersion) context.getAttribute(JettyConstants.APP_VERSION_CONTEXT_ATTR);
-    chandler = ContextHandler.getContextHandler(context);
+    chandler = ServletContextHandler.getServletContextHandler(context);
 
     AppYaml appYaml =
         (AppYaml) chandler.getServer().getAttribute(JettyConstants.APP_YAML_ATTRIBUTE_TARGET);
@@ -252,15 +254,15 @@ public class ResourceFileServlet extends HttpServlet {
 
     AppVersion appVersion =
         (AppVersion) getServletContext().getAttribute(JettyConstants.APP_VERSION_CONTEXT_ATTR);
-    ServletHandler handler = chandler.getChildHandlerByClass(ServletHandler.class);
+    ServletHandler handler = chandler.getServletHandler();
 
-    MappedResource<ServletHandler.MappedServlet> defaultEntry = handler.getHolderEntry("/");
+    MatchedResource<ServletHandler.MappedServlet> defaultEntry = handler.getMatchedServlet("/");
 
     for (String welcomeName : welcomeFiles) {
       String welcomePath = path + welcomeName;
       String relativePath = welcomePath.substring(1);
 
-      if (!Objects.equals(handler.getHolderEntry(welcomePath), defaultEntry)) {
+      if (!Objects.equals(handler.getMatchedServlet(welcomePath), defaultEntry)) {
         // It's a path mapped to a servlet.  Forward to it.
         RequestDispatcher dispatcher = request.getRequestDispatcher(path + welcomeName);
         return serveWelcomeFileAsForward(dispatcher, included, request, response);

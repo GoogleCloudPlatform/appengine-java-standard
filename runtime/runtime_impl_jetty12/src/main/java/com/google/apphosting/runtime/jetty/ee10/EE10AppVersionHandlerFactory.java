@@ -21,29 +21,36 @@ import com.google.apphosting.runtime.AppVersion;
 import com.google.apphosting.runtime.JettyConstants;
 import com.google.apphosting.runtime.SessionsConfig;
 import com.google.apphosting.runtime.jetty.AppVersionHandlerFactory;
-import com.google.apphosting.runtime.jetty.SessionManagerHandler;
+import com.google.apphosting.runtime.jetty.EE10SessionManagerHandler;
 import com.google.common.flogger.GoogleLogger;
 import com.google.common.html.HtmlEscapers;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
-import javax.servlet.RequestDispatcher;
-import javax.servlet.ServletException;
-import javax.servlet.UnavailableException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.UnavailableException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import javax.servlet.jsp.JspFactory;
 import org.eclipse.jetty.ee10.annotations.AnnotationConfiguration;
-// TODO
-import org.eclipse.jetty.ee8.nested.Dispatcher;
+import org.eclipse.jetty.ee10.servlet.Dispatcher;
+import org.eclipse.jetty.ee10.servlet.ErrorHandler;
 import org.eclipse.jetty.ee10.quickstart.QuickStartConfiguration;
 import org.eclipse.jetty.ee10.servlet.ErrorPageErrorHandler;
+import org.eclipse.jetty.ee10.servlet.ServletContextRequest;
 import org.eclipse.jetty.ee10.webapp.FragmentConfiguration;
 import org.eclipse.jetty.ee10.webapp.MetaInfConfiguration;
 import org.eclipse.jetty.ee8.webapp.WebAppContext;
 import org.eclipse.jetty.ee10.webapp.WebInfConfiguration;
 import org.eclipse.jetty.ee10.webapp.WebXmlConfiguration;
+import org.eclipse.jetty.http.HttpHeader;
+import org.eclipse.jetty.io.Content;
+import org.eclipse.jetty.server.Request;
+import org.eclipse.jetty.server.Response;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.util.Callback;
 
 /**
  * {@code AppVersionHandlerFactory} implements a {@code Handler} for a given {@code AppVersionKey}.
@@ -77,23 +84,20 @@ public class EE10AppVersionHandlerFactory implements AppVersionHandlerFactory {
 
   private final Server server;
   private final String serverInfo;
-  private final WebAppContextFactory contextFactory;
   private final boolean useJettyErrorPageHandler;
 
   public EE10AppVersionHandlerFactory(
           Server server,
           String serverInfo) {
-    this(server, serverInfo, new AppEngineWebAppContextFactory(), false);
+    this(server, serverInfo, false);
   }
 
   public EE10AppVersionHandlerFactory(
           Server server,
           String serverInfo,
-          WebAppContextFactory contextFactory,
           boolean useJettyErrorPageHandler) {
     this.server = server;
     this.serverInfo = serverInfo;
-    this.contextFactory = contextFactory;
     this.useJettyErrorPageHandler = useJettyErrorPageHandler;
   }
 
@@ -119,14 +123,13 @@ public class EE10AppVersionHandlerFactory implements AppVersionHandlerFactory {
     try {
       File contextRoot = appVersion.getRootDirectory();
 
-      final AppEngineWebAppContext context = contextFactory.createContext(appVersion, serverInfo);
-      context.getCoreContextHandler().setServer(server);
+      final AppEngineWebAppContext context = new AppEngineWebAppContext(appVersion.getRootDirectory(), serverInfo);
       context.setServer(server);
       context.setDefaultsDescriptor(WEB_DEFAULTS_XML);
       ClassLoader classLoader = appVersion.getClassLoader();
       context.setClassLoader(classLoader);
       if (useJettyErrorPageHandler) {
-        context.getErrorHandler().setShowStacks(false);
+        ((ErrorHandler)context.getErrorHandler()).setShowStacks(false);
       } else {
         context.setErrorHandler(new NullErrorHandler());
       }
@@ -166,7 +169,7 @@ public class EE10AppVersionHandlerFactory implements AppVersionHandlerFactory {
       // TODO: review which configurations are added by default.
 
       // prevent jetty from trying to delete the temp dir
-      context.setPersistTempDirectory(true);
+      context.setTempDirectoryPersistent(true);
       // ensure jetty does not unpack, probably not necessary because the unpacking
       // is done by AppEngineWebAppContext
       context.setExtractWAR(false);
@@ -193,7 +196,7 @@ public class EE10AppVersionHandlerFactory implements AppVersionHandlerFactory {
       }
 
       SessionsConfig sessionsConfig = appVersion.getSessionsConfig();
-      SessionManagerHandler.Config.Builder builder = SessionManagerHandler.Config.builder();
+      EE10SessionManagerHandler.Config.Builder builder = EE10SessionManagerHandler.Config.builder();
       if (sessionsConfig.getAsyncPersistenceQueueName() != null) {
         builder.setAsyncPersistenceQueueName(sessionsConfig.getAsyncPersistenceQueueName());
       }
@@ -202,7 +205,7 @@ public class EE10AppVersionHandlerFactory implements AppVersionHandlerFactory {
           .setAsyncPersistence(sessionsConfig.isAsyncPersistence())
           .setServletContextHandler(context);
 
-      SessionManagerHandler.create(builder.build());
+      EE10SessionManagerHandler.create(builder.build());
       // Pass the AppVersion on to any of our servlets (e.g. ResourceFileServlet).
       context.setAttribute(JettyConstants.APP_VERSION_CONTEXT_ATTR, appVersion);
 
@@ -220,7 +223,7 @@ public class EE10AppVersionHandlerFactory implements AppVersionHandlerFactory {
         }
       }
 
-      return context.get();
+      return context;
     } catch (ServletException ex) {
       logger.atWarning().withCause(ex).log("Exception adding %s", appVersionKey);
       throw ex;
@@ -238,11 +241,11 @@ public class EE10AppVersionHandlerFactory implements AppVersionHandlerFactory {
   private static class NullErrorHandler extends ErrorPageErrorHandler {
 
     @Override
-    public void handle(String target, org.eclipse.jetty.ee8.nested.Request baseRequest, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
+    public boolean handle(Request request, Response response, Callback callback) throws Exception {
       logger.atFine().log("Custom Jetty ErrorHandler received an error notification.");
-      mayHandleByErrorPage(request, response);
+      mayHandleByErrorPage(request, response, callback);
       // We don't want Jetty to do anything further.
-      baseRequest.setHandled(true);
+      return true;
     }
 
     /**
@@ -255,15 +258,20 @@ public class EE10AppVersionHandlerFactory implements AppVersionHandlerFactory {
      * set a special {@code ERROR_PAGE_HANDLED} attribute that disables our default behavior of
      * returning the exception to the appserver for rendering.
      */
-    private void mayHandleByErrorPage(HttpServletRequest request, HttpServletResponse response)
+    private void mayHandleByErrorPage(Request request, Response response, Callback callback)
         throws IOException {
+
+      ServletContextRequest contextRequest = Request.as(request, ServletContextRequest.class);
+      HttpServletRequest httpServletRequest = contextRequest.getServletApiRequest();
+      HttpServletResponse httpServletResponse = contextRequest.getHttpServletResponse();
+
       // Extract some error handling info from Jetty's proprietary attributes.
-      Throwable error = (Throwable)request.getAttribute(RequestDispatcher.ERROR_EXCEPTION);
-      Integer code = (Integer) request.getAttribute(RequestDispatcher.ERROR_STATUS_CODE);
-      String message = (String) request.getAttribute(RequestDispatcher.ERROR_MESSAGE);
+      Throwable error = (Throwable)contextRequest.getAttribute(RequestDispatcher.ERROR_EXCEPTION);
+      Integer code = (Integer) contextRequest.getAttribute(RequestDispatcher.ERROR_STATUS_CODE);
+      String message = (String) contextRequest.getAttribute(RequestDispatcher.ERROR_MESSAGE);
 
       // Now try to find an error handler...
-      String errorPage = getErrorPage(request);
+      String errorPage = getErrorPage(httpServletRequest);
 
       // If we found an error handler, dispatch to it.
       if (errorPage != null) {
@@ -271,10 +279,11 @@ public class EE10AppVersionHandlerFactory implements AppVersionHandlerFactory {
         String oldErrorPage = (String) request.getAttribute(WebAppContext.ERROR_PAGE);
         if (oldErrorPage == null || !oldErrorPage.equals(errorPage)) {
           request.setAttribute(WebAppContext.ERROR_PAGE, errorPage);
-          Dispatcher dispatcher = (Dispatcher) _servletContext.getRequestDispatcher(errorPage);
+          ServletContext servletContext = httpServletRequest.getServletContext();
+          Dispatcher dispatcher = (Dispatcher) servletContext.getRequestDispatcher(errorPage);
           try {
             if (dispatcher != null) {
-              dispatcher.error(request, response);
+              dispatcher.error(httpServletRequest, httpServletResponse);
               // Set this special attribute iff the dispatch actually works!
               // We use this attribute to decide if we want to keep the response content
               // or let the Runtime generate the default error page
@@ -295,18 +304,26 @@ public class EE10AppVersionHandlerFactory implements AppVersionHandlerFactory {
       // for error conditions that it or the AppServer detect.
       if (code != null && message != null) {
         // This template is based on the default XFE error response.
-        response.setContentType("text/html; charset=UTF-8");
+        response.getHeaders().put(HttpHeader.CONTENT_TYPE, "text/html; charset=UTF-8");
 
         String messageEscaped = HtmlEscapers.htmlEscaper().escape(message);
 
-        PrintWriter writer = response.getWriter();
-        writer.println("<html><head>");
-        writer.println("<meta http-equiv=\"content-type\" content=\"text/html;charset=utf-8\">");
-        writer.println("<title>" + code + " " + messageEscaped + "</title>");
-        writer.println("</head>");
-        writer.println("<body text=#000000 bgcolor=#ffffff>");
-        writer.println("<h1>Error: " + messageEscaped + "</h1>");
-        writer.println("</body></html>");
+        try (PrintWriter writer = new PrintWriter(Content.Sink.asOutputStream(response))) {
+          writer.println("<html><head>");
+          writer.println("<meta http-equiv=\"content-type\" content=\"text/html;charset=utf-8\">");
+          writer.println("<title>" + code + " " + messageEscaped + "</title>");
+          writer.println("</head>");
+          writer.println("<body text=#000000 bgcolor=#ffffff>");
+          writer.println("<h1>Error: " + messageEscaped + "</h1>");
+          writer.println("</body></html>");
+          writer.close();
+          callback.succeeded();
+        }
+        catch (Throwable t)
+        {
+          callback.failed(t);
+        }
+
         return;
       }
 

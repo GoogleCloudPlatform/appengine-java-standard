@@ -29,7 +29,8 @@ import org.apache.tomcat.InstanceManager;
  * {@code FixupJspServlet} adds some logic to work around bugs in the Jasper {@link JspServlet}.
  *
  */
-public class FixupJspServlet extends JspServlet {
+public class FixupJspServlet { // TODO: this requires the   apache-jsp-10.0.7.jar but we only have the javax one...
+                                // extends JspServlet {
 
   /**
    * The request attribute that contains the name of the JSP file, when the
@@ -45,7 +46,7 @@ public class FixupJspServlet extends JspServlet {
           + "http://java.sun.com/xml/ns/javaee/web-app_3_1.xsd\">"
           + "</web-app>";
 
-  @Override
+  //@Override
   public void init(ServletConfig config) throws ServletException {
     config
         .getServletContext()
@@ -53,15 +54,15 @@ public class FixupJspServlet extends JspServlet {
     config
         .getServletContext()
         .setAttribute("org.apache.tomcat.util.scan.MergedWebXml", WEB31XML);
-    super.init(config);
+    //super.init(config);
   }
 
-  @Override
-  public void service(HttpServletRequest request, HttpServletResponse response)
-      throws ServletException, IOException {
-    fixupJspFileAttribute(request);
-    super.service(request, response);
-  }
+//  @Override
+//  public void service(HttpServletRequest request, HttpServletResponse response)
+//      throws ServletException, IOException {
+//    fixupJspFileAttribute(request);
+//    super.service(request, response);
+//  }
 
   private static class InstanceManagerImpl implements InstanceManager {
     @Override

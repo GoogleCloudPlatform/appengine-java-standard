@@ -14,9 +14,8 @@
  * limitations under the License.
  */
 
-package com.google.apphosting.runtime.jetty.ee10;
+package com.google.apphosting.runtime.jetty;
 
-import com.google.apphosting.runtime.jetty.*;
 import static com.google.common.io.BaseEncoding.base64Url;
 
 import com.google.auto.value.AutoValue;
@@ -24,8 +23,8 @@ import com.google.common.annotations.VisibleForTesting;
 import java.security.SecureRandom;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
-import org.eclipse.jetty.ee10.nested.SessionHandler;
 import org.eclipse.jetty.ee10.servlet.ServletContextHandler;
+import org.eclipse.jetty.ee10.servlet.SessionHandler;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.session.CachingSessionDataStore;
 import org.eclipse.jetty.session.DefaultSessionIdManager;
@@ -42,12 +41,12 @@ import org.eclipse.jetty.session.SessionManager;
  */
 // Needs to be public as it will be used by the GAE runtime as well as the GAE local SDK.
 // More info at go/appengine-jetty94-sessionmanagement.
-public class SessionManagerHandler {
+public class EE10SessionManagerHandler {
   private final AppEngineSessionIdManager idManager;
   private final NullSessionCache cache;
   private final MemcacheSessionDataMap memcacheMap;
 
-  private SessionManagerHandler(
+  private EE10SessionManagerHandler(
       AppEngineSessionIdManager idManager,
       NullSessionCache cache,
       MemcacheSessionDataMap memcacheMap) {
@@ -57,7 +56,7 @@ public class SessionManagerHandler {
   }
 
   /** Setup a new App Engine session manager based on the given configuration. */
-  public static SessionManagerHandler create(Config config) {
+  public static EE10SessionManagerHandler create(Config config) {
     ServletContextHandler context = config.servletContextHandler();
     Server server = context.getServer();
     AppEngineSessionIdManager idManager = new AppEngineSessionIdManager(server);
@@ -80,7 +79,7 @@ public class SessionManagerHandler {
           new CachingSessionDataStore(memcacheMap, dataStore.getSessionDataStoreImpl());
       cache.setSessionDataStore(cachingDataStore);
       context.getSessionHandler().setSessionCache(cache);
-      return new SessionManagerHandler(idManager, cache, memcacheMap);
+      return new EE10SessionManagerHandler(idManager, cache, memcacheMap);
 
     } else {
       // No need to configure an AppEngineSessionIdManager, nor a MemcacheSessionDataMap.
@@ -89,7 +88,7 @@ public class SessionManagerHandler {
       SessionDataStore nullStore = new AppEngineNullSessionDataStore();
       cache.setSessionDataStore(nullStore);
       context.getSessionHandler().setSessionCache(cache);
-      return new SessionManagerHandler(/* idManager= */ null, cache, /* memcacheMap= */ null);
+      return new EE10SessionManagerHandler(/* idManager= */ null, cache, /* memcacheMap= */ null);
     }
   }
 
@@ -131,7 +130,7 @@ public class SessionManagerHandler {
 
     /** Returns an {@code Config.Builder}. */
     public static Builder builder() {
-      return new AutoValue_SessionManagerHandler_Config.Builder()
+      return new AutoValue_EE10SessionManagerHandler_Config.Builder()
           .setEnableSession(false)
           .setAsyncPersistence(false);
     }
@@ -162,7 +161,7 @@ public class SessionManagerHandler {
      * @param handler the SessionHandler to which this cache belongs
      */
     AppEngineNullSessionCache(SessionHandler handler) {
-      super(handler.getSessionManager());
+      super(handler);
       // Saves a call to the SessionDataStore.
       setSaveOnCreate(false);
       setRemoveUnloadableSessions(false);
@@ -263,7 +262,7 @@ public class SessionManagerHandler {
      * @param handler the SessionHandler to which this cache pertains
      */
     AppEngineSessionCache(SessionHandler handler) {
-      super(handler.getSessionManager());
+      super(handler);
       setSaveOnCreate(true);
     }
 

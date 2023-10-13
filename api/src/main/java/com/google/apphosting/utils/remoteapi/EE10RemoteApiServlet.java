@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.apphosting.utils.remoteapi.ee10;
+package com.google.apphosting.utils.remoteapi;
 
 import static com.google.apphosting.datastore.DatastoreV3Pb.Error.ErrorCode.BAD_REQUEST;
 import static com.google.apphosting.datastore.DatastoreV3Pb.Error.ErrorCode.CONCURRENT_TRANSACTION;
@@ -61,8 +61,8 @@ import jakarta.servlet.http.HttpServletResponse;
  * Remote API servlet handler.
  *
  */
-public class RemoteApiServlet extends HttpServlet {
-  private static final Logger log = Logger.getLogger(RemoteApiServlet.class.getName());
+public class EE10RemoteApiServlet extends HttpServlet {
+  private static final Logger log = Logger.getLogger(EE10RemoteApiServlet.class.getName());
 
   private static final String[] OAUTH_SCOPES = new String[] {
       "https://www.googleapis.com/auth/appengine.apis",
@@ -74,12 +74,12 @@ public class RemoteApiServlet extends HttpServlet {
   private HashSet<String> allowedApps = null;
   private final OAuthService oauthService;
 
-  public RemoteApiServlet() {
+  public EE10RemoteApiServlet() {
     this(OAuthServiceFactory.getOAuthService());
   }
 
   // @VisibleForTesting
-  RemoteApiServlet(OAuthService oauthService) {
+  EE10RemoteApiServlet(OAuthService oauthService) {
     this.oauthService = oauthService;
   }
 

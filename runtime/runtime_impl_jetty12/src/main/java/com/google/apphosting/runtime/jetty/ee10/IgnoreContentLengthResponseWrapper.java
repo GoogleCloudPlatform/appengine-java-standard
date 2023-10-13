@@ -16,51 +16,33 @@
 
 package com.google.apphosting.runtime.jetty.ee10;
 
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpServletResponseWrapper;
+import org.eclipse.jetty.http.HttpField;
+import org.eclipse.jetty.http.HttpFields;
 import org.eclipse.jetty.http.HttpHeader;
+import org.eclipse.jetty.server.Request;
+import org.eclipse.jetty.server.Response;
 
-public class IgnoreContentLengthResponseWrapper extends HttpServletResponseWrapper {
+public class IgnoreContentLengthResponseWrapper extends Response.Wrapper {
 
-  public IgnoreContentLengthResponseWrapper(HttpServletResponse response) {
-    super(response);
+  private final HttpFields.Mutable.Wrapper httpFields;
+
+  public IgnoreContentLengthResponseWrapper(Request request, Response response) {
+    super(request, response);
+
+    httpFields = new HttpFields.Mutable.Wrapper(response.getHeaders())
+    {
+      @Override
+      public HttpField onAddField(HttpField field) {
+        if (!HttpHeader.CONTENT_LENGTH.is(field.getName())) {
+          return super.onAddField(field);
+        }
+        return null;
+      }
+    };
   }
 
   @Override
-  public void setHeader(String name, String value) {
-    if (!HttpHeader.CONTENT_LENGTH.is(name)) {
-      super.setHeader(name, value);
-    }
-  }
-
-  @Override
-  public void addHeader(String name, String value) {
-    if (!HttpHeader.CONTENT_LENGTH.is(name)) {
-      super.addHeader(name, value);
-    }
-  }
-
-  @Override
-  public void setIntHeader(String name, int value) {
-    if (!HttpHeader.CONTENT_LENGTH.is(name)) {
-      super.setIntHeader(name, value);
-    }
-  }
-
-  @Override
-  public void addIntHeader(String name, int value) {
-    if (!HttpHeader.CONTENT_LENGTH.is(name)) {
-      super.addIntHeader(name, value);
-    }
-  }
-
-  @Override
-  public void setContentLength(int len) {
-    // Do nothing.
-  }
-
-  @Override
-  public void setContentLengthLong(long len) {
-    // Do nothing.
+  public HttpFields.Mutable getHeaders() {
+    return httpFields;
   }
 }

@@ -24,18 +24,18 @@ import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-import org.eclipse.jetty.ee8.servlet.ServletHandler.MappedServlet;
+import org.eclipse.jetty.ee10.servlet.ServletContextHandler;
+import org.eclipse.jetty.ee10.servlet.ServletHandler;
 import org.eclipse.jetty.http.pathmap.MappedResource;
-import org.eclipse.jetty.ee8.nested.ContextHandler;
-import org.eclipse.jetty.ee8.servlet.ServletHandler;
+import org.eclipse.jetty.http.pathmap.MatchedResource;
 import org.eclipse.jetty.util.URIUtil;
 import org.eclipse.jetty.util.resource.Resource;
-import org.eclipse.jetty.ee8.webapp.WebAppContext;
 import org.eclipse.jetty.util.resource.ResourceFactory;
 
 /**
@@ -48,7 +48,7 @@ import org.eclipse.jetty.util.resource.ResourceFactory;
  * API's, use of {@code ByteArrayBuffer} instead of Strings, etc.).
  *
  * <p>A few remaining Jetty-centric details remain, such as use of the
- * {@link ContextHandler.APIContext} class, and Jetty-specific request
+ * {@link ServletContextHandler} class, and Jetty-specific request
  * attributes, but these are specific cases where there is no
  * servlet-engine-neutral API available.  This class also uses Jetty's
  * {@link Resource} class as a convenience, but could be converted to
@@ -70,14 +70,15 @@ public class LocalResourceFileServlet extends HttpServlet {
    */
   @Override
   public void init() throws ServletException {
-    ContextHandler.APIContext context = (ContextHandler.APIContext) getServletContext();
-    staticFileUtils = new StaticFileUtils(context);
+    ServletContext servletContext = getServletContext();
+    staticFileUtils = new StaticFileUtils(servletContext);
 
     // AFAICT, there is no real API to retrieve this information, so
     // we access Jetty's internal state.
-    welcomeFiles = context.getContextHandler().getWelcomeFiles();
+    ServletContextHandler contextHandler = ServletContextHandler.getServletContextHandler(servletContext);
+    welcomeFiles = contextHandler.getWelcomeFiles();
 
-    AppEngineWebXml appEngineWebXml = (AppEngineWebXml) getServletContext().getAttribute(
+    AppEngineWebXml appEngineWebXml = (AppEngineWebXml) servletContext.getAttribute(
         "com.google.appengine.tools.development.appEngineWebXml");
 
     resourceRoot = appEngineWebXml.getPublicRoot();
@@ -90,7 +91,7 @@ public class LocalResourceFileServlet extends HttpServlet {
         base = "/" + resourceRoot;
       }
       // In Jetty 9 "//public" is not seen as "/public" .
-      resourceBase = ResourceFactory.root().newResource(context.getResource(base));
+      resourceBase = ResourceFactory.root().newResource(servletContext.getResource(base));
     } catch (MalformedURLException ex) {
       logger.log(Level.WARNING, "Could not initialize:", ex);
       throw new ServletException(ex);
@@ -232,7 +233,7 @@ public class LocalResourceFileServlet extends HttpServlet {
    * exists within the directory referenced by the path.  If the
    * resource is not a directory, or no matching file is found, then
    * <code>null</code> is returned.  The list of welcome files is read
-   * from the {@link ContextHandler} for this servlet, or
+   * from the {@link ServletContextHandler} for this servlet, or
    * <code>"index.jsp" , "index.html"</code> if that is
    * <code>null</code>.
    *
@@ -259,17 +260,18 @@ public class LocalResourceFileServlet extends HttpServlet {
     AppEngineWebXml appEngineWebXml = (AppEngineWebXml) getServletContext().getAttribute(
         "com.google.appengine.tools.development.appEngineWebXml");
 
-    ContextHandler.APIContext context = (ContextHandler.APIContext) getServletContext();
-    ServletHandler handler = ((WebAppContext) context.getContextHandler()).getServletHandler();
-    MappedResource<MappedServlet> defaultEntry = handler.getHolderEntry("/");
-    MappedResource<MappedServlet> jspEntry = handler.getHolderEntry("/foo.jsp");
+    ServletContext context = getServletContext();
+    ServletContextHandler contextHandler = ServletContextHandler.getServletContextHandler(context);
+    ServletHandler handler = contextHandler.getServletHandler();
+    MatchedResource<ServletHandler.MappedServlet> defaultEntry = handler.getMatchedServlet("/");
+    MatchedResource<ServletHandler.MappedServlet> jspEntry = handler.getMatchedServlet("/foo.jsp");
 
     // Search for dynamic welcome files.
     for (String welcomeName : welcomeFiles) {
       String welcomePath = path + welcomeName;
       String relativePath = welcomePath.substring(1);
 
-      MappedResource<MappedServlet> entry = handler.getHolderEntry(welcomePath);
+      MatchedResource<ServletHandler.MappedServlet> entry = handler.getMatchedServlet(welcomePath);
       if (!Objects.equals(entry, defaultEntry) && !Objects.equals(entry, jspEntry)) {
         // It's a path mapped to a servlet.  Forward to it.
         RequestDispatcher dispatcher = request.getRequestDispatcher(path + welcomeName);

@@ -26,10 +26,10 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.eclipse.jetty.ee10.nested.ContextHandler;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.io.WriterOutputStream;
@@ -44,9 +44,9 @@ import org.eclipse.jetty.util.resource.Resource;
 public class StaticFileUtils {
   private static final String DEFAULT_CACHE_CONTROL_VALUE = "public, max-age=600";
 
-  private final ContextHandler.APIContext servletContext;
+  private final ServletContext servletContext;
 
-  public StaticFileUtils(ContextHandler.APIContext servletContext) {
+  public StaticFileUtils(ServletContext servletContext) {
     this.servletContext = servletContext;
   }
 

@@ -29,18 +29,19 @@ import org.eclipse.jetty.ee10.webapp.WebAppContext;
  */
 public class AppEngineAnnotationConfiguration extends AnnotationConfiguration {
   @Override
-  public List<ServletContainerInitializer> getNonExcludedInitializers(WebAppContext context)
-      throws Exception {
-    ArrayList<ServletContainerInitializer> nonExcludedInitializers =
-        new ArrayList<>(super.getNonExcludedInitializers(context));
-    for (ServletContainerInitializer sci : nonExcludedInitializers) {
+  protected List<ServletContainerInitializer> getNonExcludedInitializers(State state) {
+
+    List<ServletContainerInitializer> initializers = super.getNonExcludedInitializers(state);
+    for (ServletContainerInitializer sci : initializers) {
       if (sci instanceof JettyJasperInitializer) {
         // Jasper is already there, no need to add it.
-        return nonExcludedInitializers;
+        return initializers;
       }
     }
-    nonExcludedInitializers.add(new JettyJasperInitializer());
 
-    return nonExcludedInitializers;
+    initializers = new ArrayList<>(initializers);
+    // TODO: we need the Jakarta JSP classes.
+    // initializers.add(new JettyJasperInitializer());
+    return initializers;
   }
 }

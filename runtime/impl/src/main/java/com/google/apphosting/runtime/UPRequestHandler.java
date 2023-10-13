@@ -31,6 +31,5 @@ public interface UPRequestHandler {
    *
    * @throws IOException If any error related to the request buffer was detected.
    */
-  void serviceRequest(UPRequest upRequest, MutableUpResponse upResponse)
-      throws ServletException, IOException;
+  void serviceRequest(UPRequest upRequest, MutableUpResponse upResponse) throws Exception;
 }

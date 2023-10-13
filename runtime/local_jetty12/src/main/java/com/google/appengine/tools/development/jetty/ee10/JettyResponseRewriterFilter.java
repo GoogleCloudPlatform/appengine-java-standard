@@ -16,7 +16,7 @@
 
 package com.google.appengine.tools.development.jetty.ee10;
 
-import com.google.appengine.tools.development.ResponseRewriterFilter;
+import com.google.appengine.tools.development.ee10.ResponseRewriterFilter;
 import com.google.common.base.Preconditions;
 import java.io.OutputStream;
 import jakarta.servlet.ServletOutputStream;

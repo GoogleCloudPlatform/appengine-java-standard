@@ -23,7 +23,7 @@ import static org.mockito.Mockito.when;
 import com.google.appengine.api.backends.BackendService;
 import com.google.appengine.api.modules.ModulesService;
 import com.google.appengine.api.testing.MockEnvironment;
-import com.google.appengine.tools.development.DevAppServerModulesFilter.RequestType;
+import com.google.appengine.tools.development.DevAppServerModulesCommon.RequestType;
 import com.google.appengine.tools.development.testing.FakeHttpServletRequest;
 import com.google.appengine.tools.development.testing.FakeHttpServletResponse;
 import com.google.apphosting.api.ApiProxy;
@@ -43,7 +43,7 @@ import org.mockito.MockitoAnnotations;
 public class DevAppServerModulesFilterTest extends TestCase {
   private static final String MODULE1 = "module1";
 
-  @Mock ModulesFilterHelper helper;
+  @Mock ModulesFilterHelperEE8 helper;
   @Mock BackendServers backends;
   @Mock ModulesService modulesService;
 

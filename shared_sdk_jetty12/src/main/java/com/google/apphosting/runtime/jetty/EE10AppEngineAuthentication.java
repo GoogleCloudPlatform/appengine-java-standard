@@ -14,9 +14,8 @@
  * limitations under the License.
  */
 
-package com.google.apphosting.runtime.jetty.ee10;
+package com.google.apphosting.runtime.jetty;
 
-import com.google.apphosting.runtime.jetty.*;
 import com.google.appengine.api.users.User;
 import com.google.appengine.api.users.UserService;
 import com.google.appengine.api.users.UserServiceFactory;
@@ -27,27 +26,27 @@ import java.security.Principal;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.function.Function;
-import javax.security.auth.Subject;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
-import org.eclipse.jetty.ee10.nested.Authentication;
-import org.eclipse.jetty.ee10.security.Authenticator;
-import org.eclipse.jetty.ee10.security.ConstraintSecurityHandler;
-import org.eclipse.jetty.ee10.security.SecurityHandler;
-import org.eclipse.jetty.ee10.security.ServerAuthException;
-import org.eclipse.jetty.ee10.security.UserAuthentication;
-import org.eclipse.jetty.ee10.security.authentication.DeferredAuthentication;
-import org.eclipse.jetty.ee10.security.authentication.LoginAuthenticator;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.eclipse.jetty.ee10.servlet.ServletContextRequest;
+import org.eclipse.jetty.ee10.servlet.security.ConstraintSecurityHandler;
+import org.eclipse.jetty.security.AuthenticationState;
+import org.eclipse.jetty.security.Authenticator;
+import org.eclipse.jetty.security.Constraint;
 import org.eclipse.jetty.security.DefaultIdentityService;
 import org.eclipse.jetty.security.IdentityService;
 import org.eclipse.jetty.security.LoginService;
+import org.eclipse.jetty.security.ServerAuthException;
 import org.eclipse.jetty.security.UserIdentity;
+import org.eclipse.jetty.security.authentication.LoginAuthenticator;
 import org.eclipse.jetty.server.Request;
+import org.eclipse.jetty.server.Response;
 import org.eclipse.jetty.server.Session;
+import org.eclipse.jetty.util.Callback;
 import org.eclipse.jetty.util.URIUtil;
+
+import javax.security.auth.Subject;
 
 /**
  * {@code AppEngineAuthentication} is a utility class that can configure a Jetty {@link
@@ -57,7 +56,7 @@ import org.eclipse.jetty.util.URIUtil;
  * users to a login URL using the {@link UserService}, and a custom {@link UserIdentity} that is
  * aware of the custom roles provided by the App Engine.
  */
-public class AppEngineAuthentication {
+public class EE10AppEngineAuthentication {
   private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
 
   /**
@@ -117,8 +116,13 @@ public class AppEngineAuthentication {
     }
 
     @Override
-    public String getAuthMethod() {
+    public String getAuthenticationType() {
       return AUTH_METHOD;
+    }
+
+    @Override
+    public Constraint.Authorization getConstraintAuthentication(String pathInContext, Constraint.Authorization existing, Function<Boolean, Session> getSession) {
+      return super.getConstraintAuthentication(pathInContext, existing, getSession);
     }
 
     /**
@@ -142,14 +146,13 @@ public class AppEngineAuthentication {
      * @throws ServerAuthException
      */
     @Override
-    public Authentication validateRequest(
-        ServletRequest servletRequest, ServletResponse servletResponse, boolean mandatory)
-        throws ServerAuthException {
-      HttpServletRequest request = (HttpServletRequest) servletRequest;
-      HttpServletResponse response = (HttpServletResponse) servletResponse;
-      if (!mandatory) {
-        return new DeferredAuthentication(this);
-      }
+    public AuthenticationState validateRequest(Request req, Response res, Callback cb) throws ServerAuthException {
+
+      ServletContextRequest contextRequest = Request.as(req, ServletContextRequest.class);
+
+      HttpServletRequest request = contextRequest.getServletApiRequest();
+      HttpServletResponse response = contextRequest.getHttpServletResponse();
+
       // Trusted inbound ip, auth headers can be trusted.
 
       // Use the canonical path within the context for authentication and authorization
@@ -163,17 +166,17 @@ public class AppEngineAuthentication {
       // that we can log out properly.  Specifically, watch out for
       // the case where the user logs in, but as a role that isn't
       // allowed to see /*.  They should still be able to log out.
-      if (isLoginOrErrorPage(uri) && !DeferredAuthentication.isDeferred(response)) {
+      if (isLoginOrErrorPage(uri) && !AuthenticationState.Deferred.isDeferred(res)) {
         logger.atFine().log(
             "Got %s, returning DeferredAuthentication to imply authentication is in progress.",
             uri);
-        return new DeferredAuthentication(this);
+        return null;
       }
 
       if (request.getAttribute(SKIP_ADMIN_CHECK_ATTR) != null) {
         logger.atFine().log("Returning DeferredAuthentication because of SkipAdminCheck.");
         // Warning: returning DeferredAuthentication here will bypass security restrictions!
-        return new DeferredAuthentication(this);
+        return null;
       }
 
       if (response == null) {
@@ -188,12 +191,12 @@ public class AppEngineAuthentication {
           UserIdentity user = _loginService.login(null, null, null, null);
           logger.atFine().log("authenticate() returning new principal for %s", user);
           if (user != null) {
-            return new UserAuthentication(getAuthMethod(), user);
+            return new UserAuthenticationSent(getAuthenticationType(), user);
           }
         }
 
-        if (DeferredAuthentication.isDeferred(response)) {
-          return Authentication.UNAUTHENTICATED;
+        if (AuthenticationState.Deferred.isDeferred(res)) {
+          return null;
         }
 
         try {
@@ -202,37 +205,16 @@ public class AppEngineAuthentication {
           String url = userService.createLoginURL(getFullURL(request));
           response.sendRedirect(url);
           // Tell Jetty that we've already committed a response here.
-          return Authentication.SEND_CONTINUE;
+          return AuthenticationState.CHALLENGE;
         } catch (ApiProxy.ApiProxyException ex) {
           // If we couldn't get a login URL for some reason, return a 403 instead.
           logger.atSevere().withCause(ex).log("Could not get login URL:");
           response.sendError(HttpServletResponse.SC_FORBIDDEN);
-          return Authentication.SEND_FAILURE;
+          return AuthenticationState.SEND_FAILURE;
         }
       } catch (IOException ex) {
         throw new ServerAuthException(ex);
       }
-    }
-
-    /*
-     * We are not using sessions for authentication.
-     */
-    @Override
-    protected HttpSession renewSession(HttpServletRequest request, HttpServletResponse response) {
-      logger.atWarning().log("renewSession throwing an UnsupportedOperationException");
-      throw new UnsupportedOperationException();
-    }
-
-    /*
-     * This seems to only be used by JaspiAuthenticator, all other Authenticators return true.
-     */
-    @Override
-    public boolean secureResponse(
-        ServletRequest servletRequest,
-        ServletResponse servletResponse,
-        boolean isAuthMandatory,
-        Authentication.User user) {
-      return true;
     }
   }
 

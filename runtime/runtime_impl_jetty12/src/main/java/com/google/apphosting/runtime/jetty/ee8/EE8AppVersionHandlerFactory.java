@@ -76,23 +76,20 @@ public class EE8AppVersionHandlerFactory implements AppVersionHandlerFactory {
 
   private final Server server;
   private final String serverInfo;
-  private final WebAppContextFactory contextFactory;
   private final boolean useJettyErrorPageHandler;
 
   public EE8AppVersionHandlerFactory(
           Server server,
           String serverInfo) {
-    this(server, serverInfo, new AppEngineWebAppContextFactory(), false);
+    this(server, serverInfo, false);
   }
 
   public EE8AppVersionHandlerFactory(
           Server server,
           String serverInfo,
-          WebAppContextFactory contextFactory,
           boolean useJettyErrorPageHandler) {
     this.server = server;
     this.serverInfo = serverInfo;
-    this.contextFactory = contextFactory;
     this.useJettyErrorPageHandler = useJettyErrorPageHandler;
   }
 
@@ -118,7 +115,7 @@ public class EE8AppVersionHandlerFactory implements AppVersionHandlerFactory {
     try {
       File contextRoot = appVersion.getRootDirectory();
 
-      final AppEngineWebAppContext context = contextFactory.createContext(appVersion, serverInfo);
+      final AppEngineWebAppContext context = new AppEngineWebAppContext(appVersion.getRootDirectory(), serverInfo);
       context.getCoreContextHandler().setServer(server);
       context.setServer(server);
       context.setDefaultsDescriptor(WEB_DEFAULTS_XML);
