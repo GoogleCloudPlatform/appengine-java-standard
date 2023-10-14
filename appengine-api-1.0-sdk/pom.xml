@@ -337,7 +337,14 @@
                     <include>com/google/apphosting/utils/servlet/SnapshotServlet*</include>
                     <include>com/google/apphosting/utils/servlet/TransactionCleanupFilter*</include>
                     <include>com/google/apphosting/utils/servlet/WarmupServlet*</include>
-                    <include>com/google/storage/onestore/PropertyType*</include>
+                    <include>com/google/apphosting/utils/servlet/ee10/DeferredTaskServlet*</include>
+                    <include>com/google/apphosting/utils/servlet/ee10/JdbcMySqlConnectionCleanupFilter*</include>
+                    <include>com/google/apphosting/utils/servlet/ee10/MultipartMimeUtils*</include>
+                    <include>com/google/apphosting/utils/servlet/ee10/ParseBlobUploadFilter*</include>
+                    <include>com/google/apphosting/utils/servlet/ee10/SessionCleanupServlet*</include>
+                    <include>com/google/apphosting/utils/servlet/ee10/SnapshotServlet*</include>
+                    <include>com/google/apphosting/utils/servlet/ee10/TransactionCleanupFilter*</include>
+                    <include>com/google/apphosting/utils/servlet/ee10/WarmupServlet*</include>                    <include>com/google/storage/onestore/PropertyType*</include>
                     <include>javax/cache/LICENSE</include>
                     <include>javax/mail/LICENSE</include>
                     <include>org/apache/geronimo/mail/LICENSE</include>

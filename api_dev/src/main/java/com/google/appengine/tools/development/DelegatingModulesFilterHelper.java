@@ -16,9 +16,6 @@
 
 package com.google.appengine.tools.development;
 
-import java.io.IOException;
-
-
 /**
  * A {@link ModulesFilterHelper} for delegating requests to either
  * {@link BackendServers} for backends or {@link Modules} for module instances.

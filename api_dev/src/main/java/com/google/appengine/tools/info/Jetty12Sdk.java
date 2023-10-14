@@ -158,13 +158,17 @@ class Jetty12Sdk extends AppengineSdk {
   private List<File> getImplLibFiles() {
     List<File> lf = getJetty12Jars("");
     lf.addAll(getJetty12JspJars());
-    // We also want the devserver to be able to handle annotated servlet, via ASM:
     lf.addAll(getJetty12Jars("logging"));
-      if (Boolean.getBoolean("appengine.use.EE10")) {
-          lf.addAll(getJetty12Jars("ee10-annotations"));
-      } else {
-          lf.addAll(getJetty12Jars("ee8-annotations"));
-      }
+    // We also want the devserver to be able to handle annotated servlet, via ASM:
+    if (Boolean.getBoolean("appengine.use.EE10")) {
+        lf.addAll(getJetty12Jars("ee10-annotations"));
+        lf = getJetty12Jars("ee10-apache-jsp");
+        lf.addAll(getJetty12Jars("ee10-glassfish-jstl"));
+    } else {
+        lf.addAll(getJetty12Jars("ee8-annotations"));
+        lf = getJetty12Jars("ee8-apache-jsp");
+        lf.addAll(getJetty12Jars("ee8-glassfish-jstl"));
+    }
     lf.addAll(getLibs(sdkRoot, "impl"));
     lf.addAll(getLibs(sdkRoot, "impl/jetty12"));
     return Collections.unmodifiableList(lf);
@@ -190,8 +194,10 @@ class Jetty12Sdk extends AppengineSdk {
         // All but CDI jar. All the tests are still passing without CDI that should not be exposed
         // in our runtime (private Jetty dependency we do not want to expose to the customer).
         if (!(f.getName().contains("-cdi-")
-            || f.getName().contains("ee9")
-            || f.getName().contains("ee10"))) {
+            || f.getName().contains("jetty-servlet-api-") // no javax. if needed should be in shared
+            || f.getName().contains("ee9") // we want ee10 only. jakarta apis should be in shared
+            || f.getName().contains("jetty-jakarta-servlet-api") // old
+            )) {
           jars.add(f);
         }
       }
@@ -205,7 +211,7 @@ class Jetty12Sdk extends AppengineSdk {
           List<File> lf = getJetty12Jars("ee10-apache-jsp");
           lf.addAll(getJetty12Jars("ee10-glassfish-jstl"));
           return lf;
-      }
+      } 
       List<File> lf = getJetty12Jars("ee8-apache-jsp");
       lf.addAll(getJetty12Jars("ee8-glassfish-jstl"));
       return lf;
@@ -217,12 +223,13 @@ class Jetty12Sdk extends AppengineSdk {
     sharedLibs.add(new File(sdkRoot, "lib/shared/jetty12/appengine-local-runtime-shared.jar"));
     File jettyHomeLib = new File(sdkRoot, JETTY12_HOME_LIB_PATH);
 
-    sharedLibs.add(new File(jettyHomeLib, "jetty-servlet-api-4.0.6.jar"));
-    File schemas = new File(jettyHomeLib, "servlet-schemas-3.1.jar");
+    sharedLibs.add(new File(jettyHomeLib, "jetty-servlet-api-4.0.6.jar")); //this is javax.servlet
+    sharedLibs.add(new File(jettyHomeLib, "jakarta.servlet-api-6.0.0.jar")); // need more jars?
+    File schemas = new File(jettyHomeLib, "servlet-schemas-3.1.jar"); //nope
     if (schemas.exists()) {
       sharedLibs.add(schemas);
     } else {
-      schemas = new File(jettyHomeLib, "jetty-schemas-3.1.jar");
+      schemas = new File(jettyHomeLib, "jetty-schemas-3.1.jar"); //nope!!
       if (schemas.exists()) {
         sharedLibs.add(schemas);
       }

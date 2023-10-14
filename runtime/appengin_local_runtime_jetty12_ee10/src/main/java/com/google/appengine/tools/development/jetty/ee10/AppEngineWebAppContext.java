@@ -105,7 +105,7 @@ public class AppEngineWebAppContext extends WebAppContext {
    * Override to make sure all RoleInfos do not have security constraints to avoid a Jetty failure
    * when not running with https.
    */
-  private static class AppEngineConstraintSecurityHandler extends ConstraintSecurityHandler {
+  public static class AppEngineConstraintSecurityHandler extends ConstraintSecurityHandler {
     @Override
     protected Constraint getConstraint(String pathInContext, Request request) {
       Constraint constraint = super.getConstraint(pathInContext, request);

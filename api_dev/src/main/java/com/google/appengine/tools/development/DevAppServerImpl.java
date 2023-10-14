@@ -18,6 +18,7 @@ package com.google.appengine.tools.development;
 
 import com.google.appengine.api.modules.dev.LocalModulesService;
 import com.google.appengine.tools.development.EnvironmentVariableChecker.MismatchReportingPolicy;
+import com.google.appengine.tools.development.ee10.DelegatingModulesFilterHelperEE10;
 import com.google.appengine.tools.info.AppengineSdk;
 import com.google.apphosting.api.ApiProxy;
 import com.google.apphosting.api.ApiProxy.Environment;
@@ -150,7 +151,7 @@ public class DevAppServerImpl implements DevAppServer {
              + "https://developers.google.com/appengine/docs/java/modules/#config";
         logger.info(contextRootWarning);
       } else {
-        tempManager =
+          tempManager =
             ApplicationConfigurationManager.newWarConfigurationManager(
                 appDir, appEngineWebXmlLocation, webXmlLocation, externalResourceDir, "dev");
       }
@@ -166,8 +167,11 @@ public class DevAppServerImpl implements DevAppServer {
         Modules.createModules(
             applicationConfigurationManager, "dev", externalResourceDir, address, this);
     
-    DelegatingModulesFilterHelper modulesFilterHelper =
-        new DelegatingModulesFilterHelper(backendContainer, modules);
+    DelegatingModulesFilterHelper modulesFilterHelper
+              = Boolean.getBoolean("appengine.use.EE10")
+              ? new DelegatingModulesFilterHelperEE10(backendContainer, modules)
+              : new DelegatingModulesFilterHelperEE8(backendContainer, modules);
+
     this.containerConfigProperties =
         ImmutableMap.<String, Object>builder()
             .putAll(requestedContainerConfigProperties)

@@ -16,6 +16,9 @@
 
 package com.google.appengine.tools.development;
 
+import com.google.appengine.tools.info.AppengineSdk;
+import com.google.apphosting.utils.config.WebXml;
+import com.google.apphosting.utils.config.WebXmlReader;
 import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -340,14 +343,24 @@ public class DevAppServerFactory {
       boolean useCustomStreamHandler,
       Map<String, Object> containerConfigProperties,
       String applicationId) {
-
     if (webXmlLocation == null) {
       webXmlLocation = new File(appDir, "WEB-INF/web.xml");
     }
     if (appEngineWebXmlLocation == null) {
       appEngineWebXmlLocation = new File(appDir, "WEB-INF/appengine-web.xml");
     }
+    if (webXmlLocation.exists()) {
+        WebXmlReader webXmlReader = new WebXmlReader(appDir.getAbsolutePath());
 
+        WebXml webXml = webXmlReader.readWebXml();
+        webXml.validate();
+        String servletVersion = webXmlReader.getServletVersion();
+        if (Double.parseDouble(servletVersion) >= 4.0) {
+            // Jakarta Servlet start at version 4.0, we force EE 10 for it.
+            System.setProperty("appengine.use.EE10", "true");
+            AppengineSdk.resetSdk();
+        }
+    }
     DevAppServerClassLoader loader = DevAppServerClassLoader.newClassLoader(
         DevAppServerFactory.class.getClassLoader());
     DevAppServer devAppServer;

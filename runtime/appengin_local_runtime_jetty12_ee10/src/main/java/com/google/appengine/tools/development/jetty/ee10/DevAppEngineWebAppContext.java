@@ -16,20 +16,14 @@
 
 package com.google.appengine.tools.development.jetty.ee10;
 
-import com.google.appengine.tools.development.jetty.*;
 import com.google.appengine.tools.development.DevAppServer;
 import com.google.appengine.tools.info.AppengineSdk;
 import com.google.apphosting.api.ApiProxy;
 import com.google.apphosting.utils.io.IoUtil;
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.List;
 import java.util.logging.Logger;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import org.eclipse.jetty.ee10.servlet.security.ConstraintMapping;
 import org.eclipse.jetty.ee10.servlet.security.ConstraintSecurityHandler;
 import org.eclipse.jetty.http.HttpField;
@@ -102,7 +96,7 @@ public class DevAppEngineWebAppContext extends AppEngineWebAppContext {
   @Override
   protected ClassLoader enterScope(Request contextRequest)
   {
-    if (hasSkipAdminCheck(contextRequest)) {
+    if ((contextRequest!=null) &&(hasSkipAdminCheck(contextRequest))) {
       contextRequest.setAttribute(SKIP_ADMIN_CHECK_ATTR, Boolean.TRUE);
     }
 
@@ -112,6 +106,8 @@ public class DevAppEngineWebAppContext extends AppEngineWebAppContext {
     // SecurityManager determine if a DevAppServer request thread is executing.
     // Find something better.
     // See DevAppServerFactory.CustomSecurityManager.
+    
+    //ludo remove entirely
     System.setProperty("devappserver-thread-" + Thread.currentThread().getName(), "true");
     return super.enterScope(contextRequest);
   }

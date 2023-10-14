@@ -266,7 +266,7 @@ public class Application implements GenericApplication {
     if ("true".equals(appEngineWebXml.getSystemProperties().get("appengine.use.EE10"))) {
       System.setProperty("appengine.use.EE10", "true");
       AppengineSdk.resetSdk();       
-    }
+    }    
     appEngineWebXml.setSourcePrefix(explodedPath);
 
     if (appId != null) {
@@ -298,7 +298,12 @@ public class Application implements GenericApplication {
     // TODO: validateXml(webXml.getFilename(), new File(SDKDOCS, "servlet.xsd"));
     webXml.validate();
     servletVersion = webXmlReader.getServletVersion();
-
+    if (Double.parseDouble(servletVersion)>=4.0) { 
+        // Jakarta Servlet start at version 4.0, we force EE 10 for it.
+      System.setProperty("appengine.use.EE10", "true");
+      AppengineSdk.resetSdk();        
+    }
+    
     validateFilterClasses();
     validateRuntime();
 

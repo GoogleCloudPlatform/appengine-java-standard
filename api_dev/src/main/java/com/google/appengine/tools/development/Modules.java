@@ -83,7 +83,7 @@ public class Modules implements ModulesController, ModulesFilterHelper {
           List<Module> lm = builder.build();
           instance.set(
                   (Modules) Class.forName(AppengineSdk.getSdk().getModulesClassName())
-                          .getDeclaredConstructor(lm.getClass())
+                          .getDeclaredConstructor(List.class)
                           .newInstance(lm)
           );
           return instance.get();
@@ -137,7 +137,7 @@ public class Modules implements ModulesController, ModulesFilterHelper {
     return modules.get(0);
   }
 
-  protected Modules(List<Module> modules) {
+  public Modules(List<Module> modules) {
     if (modules.size() < 1) {
       throw new IllegalArgumentException("modules must not be empty.");
     }

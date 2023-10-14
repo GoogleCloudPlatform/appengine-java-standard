@@ -29,7 +29,7 @@ import javax.servlet.http.HttpServletResponse;
  */
 public class ModulesEE8 extends Modules {
 
-  protected ModulesEE8(List<Module> modules) {
+  public ModulesEE8(List<Module> modules) {
       super(modules);
   }
 

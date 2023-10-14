@@ -38,11 +38,10 @@
 <!-- by the jetty.xml file.                                                -->
 <!--                                                                       -->
 <!-- ===================================================================== -->
-<web-app xmlns="https://jakarta.ee/xml/ns/jakartaee"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee
-         web-app_6_0.xsd"
-         version="6.0">
+<web-app xmlns="http://java.sun.com/xml/ns/javaee"
+   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_1.xsd"
+   version="3.1">
 
   <description>
     Default web.xml file.
@@ -55,7 +54,7 @@
   <filter>
     <filter-name>_ah_DevAppServerRequestLogFilter</filter-name>
     <filter-class>
-      com.google.appengine.tools.development.ee10.DevAppServerRequestLogFilter
+      com.google.appengine.tools.development.DevAppServerRequestLogFilter
     </filter-class>
   </filter>
 
@@ -64,14 +63,14 @@
   <filter>
     <filter-name>_ah_DevAppServerModulesFilter</filter-name>
     <filter-class>
-      com.google.appengine.tools.development.ee10.DevAppServerModulesFilter
+      com.google.appengine.tools.development.DevAppServerModulesFilter
     </filter-class>
   </filter>
 
   <filter>
     <filter-name>_ah_StaticFileFilter</filter-name>
     <filter-class>
-      com.google.appengine.tools.development.jetty.ee10.StaticFileFilter
+      com.google.appengine.tools.development.jetty.StaticFileFilter
     </filter-class>
   </filter>
 
@@ -83,7 +82,7 @@
   <filter>
     <filter-name>_ah_AbandonedTransactionDetector</filter-name>
     <filter-class>
-      com.google.apphosting.utils.servlet.ee10.TransactionCleanupFilter
+      com.google.apphosting.utils.servlet.TransactionCleanupFilter
     </filter-class>
   </filter>
 
@@ -92,21 +91,21 @@
   <filter>
     <filter-name>_ah_ServeBlobFilter</filter-name>
     <filter-class>
-      com.google.appengine.api.blobstore.dev.ee10.ServeBlobFilter
+      com.google.appengine.api.blobstore.dev.ServeBlobFilter
     </filter-class>
   </filter>
 
   <filter>
     <filter-name>_ah_HeaderVerificationFilter</filter-name>
     <filter-class>
-      com.google.appengine.tools.development.ee10.HeaderVerificationFilter
+      com.google.appengine.tools.development.HeaderVerificationFilter
     </filter-class>
   </filter>
 
   <filter>
     <filter-name>_ah_ResponseRewriterFilter</filter-name>
     <filter-class>
-      com.google.appengine.tools.development.jetty.ee10.JettyResponseRewriterFilter
+      com.google.appengine.tools.development.jetty.JettyResponseRewriterFilter
     </filter-class>
   </filter>
 
@@ -167,17 +166,17 @@
 
   <servlet>
     <servlet-name>_ah_default</servlet-name>
-    <servlet-class>com.google.appengine.tools.development.jetty.ee10.LocalResourceFileServlet</servlet-class>
+    <servlet-class>com.google.appengine.tools.development.jetty.LocalResourceFileServlet</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_blobUpload</servlet-name>
-    <servlet-class>com.google.appengine.api.blobstore.dev.ee10.UploadBlobServlet</servlet-class>
+    <servlet-class>com.google.appengine.api.blobstore.dev.UploadBlobServlet</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_blobImage</servlet-name>
-    <servlet-class>com.google.appengine.api.images.dev.ee10.LocalBlobImageServlet</servlet-class>
+    <servlet-class>com.google.appengine.api.images.dev.LocalBlobImageServlet</servlet-class>
   </servlet>
 
   <!-- ==================================================================== -->
@@ -267,7 +266,7 @@
   <!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  -->
   <servlet id="jsp">
     <servlet-name>jsp</servlet-name>
-    <servlet-class>com.google.appengine.tools.development.jetty.ee10.FixupJspServlet</servlet-class>
+    <servlet-class>com.google.appengine.tools.development.jetty.FixupJspServlet</servlet-class>
     <init-param>
         <param-name>logVerbosityLevel</param-name>
         <param-value>DEBUG</param-value>
@@ -294,225 +293,225 @@
   <!-- Register the helper servlets for our stub authentication support. -->
   <servlet>
     <servlet-name>_ah_login</servlet-name>
-    <servlet-class>com.google.appengine.api.users.dev.ee10.LocalLoginServlet</servlet-class>
+    <servlet-class>com.google.appengine.api.users.dev.LocalLoginServlet</servlet-class>
   </servlet>
   <servlet>
     <servlet-name>_ah_logout</servlet-name>
-    <servlet-class>com.google.appengine.api.users.dev.ee10.LocalLogoutServlet</servlet-class>
+    <servlet-class>com.google.appengine.api.users.dev.LocalLogoutServlet</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_oauthGetRequestToken</servlet-name>
-    <servlet-class>com.google.appengine.api.users.dev.ee10.LocalOAuthRequestTokenServlet</servlet-class>
+    <servlet-class>com.google.appengine.api.users.dev.LocalOAuthRequestTokenServlet</servlet-class>
   </servlet>
   <servlet>
     <servlet-name>_ah_oauthAuthorizeToken</servlet-name>
-    <servlet-class>com.google.appengine.api.users.dev.ee10.LocalOAuthAuthorizeTokenServlet</servlet-class>
+    <servlet-class>com.google.appengine.api.users.dev.LocalOAuthAuthorizeTokenServlet</servlet-class>
   </servlet>
   <servlet>
     <servlet-name>_ah_oauthGetAccessToken</servlet-name>
-    <servlet-class>com.google.appengine.api.users.dev.ee10.LocalOAuthAccessTokenServlet</servlet-class>
+    <servlet-class>com.google.appengine.api.users.dev.LocalOAuthAccessTokenServlet</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_queue_deferred</servlet-name>
-    <servlet-class>com.google.apphosting.utils.servlet.ee10.DeferredTaskServlet</servlet-class>
+    <servlet-class>com.google.apphosting.utils.servlet.DeferredTaskServlet</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_sessioncleanup</servlet-name>
-    <servlet-class>com.google.apphosting.utils.servlet.ee10.SessionCleanupServlet</servlet-class>
+    <servlet-class>com.google.apphosting.utils.servlet.SessionCleanupServlet</servlet-class>
   </servlet>
 
   <!-- Admin console servlets -->
   <servlet>
     <servlet-name>_ah_capabilitiesViewer</servlet-name>
-    <servlet-class>com.google.apphosting.utils.servlet.ee10.CapabilitiesStatusServlet</servlet-class>
+    <servlet-class>com.google.apphosting.utils.servlet.CapabilitiesStatusServlet</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_datastoreViewer</servlet-name>
-    <servlet-class>com.google.apphosting.utils.servlet.ee10.DatastoreViewerServlet</servlet-class>
+    <servlet-class>com.google.apphosting.utils.servlet.DatastoreViewerServlet</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_modules</servlet-name>
-    <servlet-class>com.google.apphosting.utils.servlet.ee10.ModulesServlet</servlet-class>
+    <servlet-class>com.google.apphosting.utils.servlet.ModulesServlet</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_taskqueueViewer</servlet-name>
-    <servlet-class>com.google.apphosting.utils.servlet.ee10.TaskQueueViewerServlet</servlet-class>
+    <servlet-class>com.google.apphosting.utils.servlet.TaskQueueViewerServlet</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_inboundMail</servlet-name>
-    <servlet-class>com.google.apphosting.utils.servlet.ee10.InboundMailServlet</servlet-class>
+    <servlet-class>com.google.apphosting.utils.servlet.InboundMailServlet</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_search</servlet-name>
-    <servlet-class>com.google.apphosting.utils.servlet.ee10.SearchServlet</servlet-class>
+    <servlet-class>com.google.apphosting.utils.servlet.SearchServlet</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_resources</servlet-name>
-    <servlet-class>com.google.apphosting.utils.servlet.ee10.AdminConsoleResourceServlet</servlet-class>
+    <servlet-class>com.google.apphosting.utils.servlet.AdminConsoleResourceServlet</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_adminConsole</servlet-name>
-    <servlet-class>org.apache.jsp.ah.jetty.ee10.adminConsole_jsp</servlet-class>
+    <servlet-class>org.apache.jsp.ah.jetty.adminConsole_jsp</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_datastoreViewerHead</servlet-name>
-    <servlet-class>org.apache.jsp.ah.jetty.ee10.datastoreViewerHead_jsp</servlet-class>
+    <servlet-class>org.apache.jsp.ah.jetty.datastoreViewerHead_jsp</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_datastoreViewerBody</servlet-name>
-    <servlet-class>org.apache.jsp.ah.jetty.ee10.datastoreViewerBody_jsp</servlet-class>
+    <servlet-class>org.apache.jsp.ah.jetty.datastoreViewerBody_jsp</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_datastoreViewerFinal</servlet-name>
-    <servlet-class>org.apache.jsp.ah.jetty.ee10.datastoreViewerFinal_jsp</servlet-class>
+    <servlet-class>org.apache.jsp.ah.jetty.datastoreViewerFinal_jsp</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_searchIndexesListHead</servlet-name>
-    <servlet-class>org.apache.jsp.ah.jetty.ee10.searchIndexesListHead_jsp</servlet-class>
+    <servlet-class>org.apache.jsp.ah.jetty.searchIndexesListHead_jsp</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_searchIndexesListBody</servlet-name>
-    <servlet-class>org.apache.jsp.ah.jetty.ee10.searchIndexesListBody_jsp</servlet-class>
+    <servlet-class>org.apache.jsp.ah.jetty.searchIndexesListBody_jsp</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_searchIndexesListFinal</servlet-name>
-    <servlet-class>org.apache.jsp.ah.jetty.ee10.searchIndexesListFinal_jsp</servlet-class>
+    <servlet-class>org.apache.jsp.ah.jetty.searchIndexesListFinal_jsp</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_searchIndexHead</servlet-name>
-    <servlet-class>org.apache.jsp.ah.jetty.ee10.searchIndexHead_jsp</servlet-class>
+    <servlet-class>org.apache.jsp.ah.jetty.searchIndexHead_jsp</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_searchIndexBody</servlet-name>
-    <servlet-class>org.apache.jsp.ah.jetty.ee10.searchIndexBody_jsp</servlet-class>
+    <servlet-class>org.apache.jsp.ah.jetty.searchIndexBody_jsp</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_searchIndexFinal</servlet-name>
-    <servlet-class>org.apache.jsp.ah.jetty.ee10.searchIndexFinal_jsp</servlet-class>
+    <servlet-class>org.apache.jsp.ah.jetty.searchIndexFinal_jsp</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_searchDocumentHead</servlet-name>
-    <servlet-class>org.apache.jsp.ah.jetty.ee10.searchDocumentHead_jsp</servlet-class>
+    <servlet-class>org.apache.jsp.ah.jetty.searchDocumentHead_jsp</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_searchDocumentBody</servlet-name>
-    <servlet-class>org.apache.jsp.ah.jetty.ee10.searchDocumentBody_jsp</servlet-class>
+    <servlet-class>org.apache.jsp.ah.jetty.searchDocumentBody_jsp</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_searchDocumentFinal</servlet-name>
-    <servlet-class>org.apache.jsp.ah.jetty.ee10.searchDocumentFinal_jsp</servlet-class>
+    <servlet-class>org.apache.jsp.ah.jetty.searchDocumentFinal_jsp</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_capabilitiesStatusHead</servlet-name>
-    <servlet-class>org.apache.jsp.ah.jetty.ee10.capabilitiesStatusHead_jsp</servlet-class>
+    <servlet-class>org.apache.jsp.ah.jetty.capabilitiesStatusHead_jsp</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_capabilitiesStatusBody</servlet-name>
-    <servlet-class>org.apache.jsp.ah.jetty.ee10.capabilitiesStatusBody_jsp</servlet-class>
+    <servlet-class>org.apache.jsp.ah.jetty.capabilitiesStatusBody_jsp</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_capabilitiesStatusFinal</servlet-name>
-    <servlet-class>org.apache.jsp.ah.jetty.ee10.capabilitiesStatusFinal_jsp</servlet-class>
+    <servlet-class>org.apache.jsp.ah.jetty.capabilitiesStatusFinal_jsp</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_entityDetailsHead</servlet-name>
-    <servlet-class>org.apache.jsp.ah.jetty.ee10.entityDetailsHead_jsp</servlet-class>
+    <servlet-class>org.apache.jsp.ah.jetty.entityDetailsHead_jsp</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_entityDetailsBody</servlet-name>
-    <servlet-class>org.apache.jsp.ah.jetty.ee10.entityDetailsBody_jsp</servlet-class>
+    <servlet-class>org.apache.jsp.ah.jetty.entityDetailsBody_jsp</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_entityDetailsFinal</servlet-name>
-    <servlet-class>org.apache.jsp.ah.jetty.ee10.entityDetailsFinal_jsp</servlet-class>
+    <servlet-class>org.apache.jsp.ah.jetty.entityDetailsFinal_jsp</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_indexDetailsHead</servlet-name>
-    <servlet-class>org.apache.jsp.ah.jetty.ee10.indexDetailsHead_jsp</servlet-class>
+    <servlet-class>org.apache.jsp.ah.jetty.indexDetailsHead_jsp</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_indexDetailsBody</servlet-name>
-    <servlet-class>org.apache.jsp.ah.jetty.ee10.indexDetailsBody_jsp</servlet-class>
+    <servlet-class>org.apache.jsp.ah.jetty.indexDetailsBody_jsp</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_indexDetailsFinal</servlet-name>
-    <servlet-class>org.apache.jsp.ah.jetty.ee10.indexDetailsFinal_jsp</servlet-class>
+    <servlet-class>org.apache.jsp.ah.jetty.indexDetailsFinal_jsp</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_modulesHead</servlet-name>
-    <servlet-class>org.apache.jsp.ah.jetty.ee10.modulesHead_jsp</servlet-class>
+    <servlet-class>org.apache.jsp.ah.jetty.modulesHead_jsp</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_modulesBody</servlet-name>
-    <servlet-class>org.apache.jsp.ah.jetty.ee10.modulesBody_jsp</servlet-class>
+    <servlet-class>org.apache.jsp.ah.jetty.modulesBody_jsp</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_modulesFinal</servlet-name>
-    <servlet-class>org.apache.jsp.ah.jetty.ee10.modulesFinal_jsp</servlet-class>
+    <servlet-class>org.apache.jsp.ah.jetty.modulesFinal_jsp</servlet-class>
   </servlet>
      
   <servlet>
     <servlet-name>_ah_taskqueueViewerHead</servlet-name>
-    <servlet-class>org.apache.jsp.ah.jetty.ee10.taskqueueViewerHead_jsp</servlet-class>
+    <servlet-class>org.apache.jsp.ah.jetty.taskqueueViewerHead_jsp</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_taskqueueViewerBody</servlet-name>
-    <servlet-class>org.apache.jsp.ah.jetty.ee10.taskqueueViewerBody_jsp</servlet-class>
+    <servlet-class>org.apache.jsp.ah.jetty.taskqueueViewerBody_jsp</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_taskqueueViewerFinal</servlet-name>
-    <servlet-class>org.apache.jsp.ah.jetty.ee10.taskqueueViewerFinal_jsp</servlet-class>
+    <servlet-class>org.apache.jsp.ah.jetty.taskqueueViewerFinal_jsp</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_inboundMailHead</servlet-name>
-    <servlet-class>org.apache.jsp.ah.jetty.ee10.inboundMailHead_jsp</servlet-class>
+    <servlet-class>org.apache.jsp.ah.jetty.inboundMailHead_jsp</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_inboundMailBody</servlet-name>
-    <servlet-class>org.apache.jsp.ah.jetty.ee10.inboundMailBody_jsp</servlet-class>
+    <servlet-class>org.apache.jsp.ah.jetty.inboundMailBody_jsp</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_inboundMailFinal</servlet-name>
-    <servlet-class>org.apache.jsp.ah.jetty.ee10.inboundMailFinal_jsp</servlet-class>
+    <servlet-class>org.apache.jsp.ah.jetty.inboundMailFinal_jsp</servlet-class>
   </servlet>
 
   <!-- Servlet mappings -->

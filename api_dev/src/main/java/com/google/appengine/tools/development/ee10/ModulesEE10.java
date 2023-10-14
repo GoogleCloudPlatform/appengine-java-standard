@@ -32,7 +32,7 @@ import jakarta.servlet.http.HttpServletResponse;
  */
 public class ModulesEE10 extends Modules {
 
-  protected ModulesEE10(List<Module> modules) {
+  public ModulesEE10(List<Module> modules) {
       super(modules);
   }
 

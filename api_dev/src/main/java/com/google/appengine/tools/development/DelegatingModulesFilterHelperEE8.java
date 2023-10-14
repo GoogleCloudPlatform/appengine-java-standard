@@ -24,11 +24,13 @@ import javax.servlet.http.HttpServletResponse;
 /**
  *
  */
-public class DelegatingModulesFilterHelperEE8 extends DelegatingModulesFilterHelper {
+public class DelegatingModulesFilterHelperEE8 extends DelegatingModulesFilterHelper  implements ModulesFilterHelperEE8 {
     
   public DelegatingModulesFilterHelperEE8(BackendServers backendServers, Modules modules) {
     super(backendServers, modules);
   }
+  
+  @Override
   public void forwardToInstance(String moduleOrBackendName, int instance,
       HttpServletRequest hrequest, HttpServletResponse response)
       throws IOException, ServletException {

@@ -22,39 +22,38 @@ import jakarta.servlet.ServletConfig;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.apache.jasper.servlet.JspServlet;
+import org.eclipse.jetty.ee10.jsp.JettyJspServlet;
 import org.apache.tomcat.InstanceManager;
 
 /**
  * {@code FixupJspServlet} adds some logic to work around bugs in the Jasper {@link JspServlet}.
  *
  */
-public class FixupJspServlet { // TODO: this requires the   apache-jsp-10.0.7.jar but we only have the javax one...
-                                // extends JspServlet {
+public class FixupJspServlet  extends JettyJspServlet {
 
   /**
    * The request attribute that contains the name of the JSP file, when the
    * request path doesn't refer directly to the JSP file (for example,
    * it's instead a servlet mapping).
    */
-  private static final String JASPER_JSP_FILE = "org.apache.catalina.jsp_file";
-  private static final String WEB31XML =
-      "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
-          + "<web-app version=\"3.1\" xmlns=\"http://java.sun.com/xml/ns/javaee\""
-          + " xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" "
-          + "xsi:schemaLocation=\"http://java.sun.com/xml/ns/javaee "
-          + "http://java.sun.com/xml/ns/javaee/web-app_3_1.xsd\">"
-          + "</web-app>";
+//  private static final String JASPER_JSP_FILE = "org.apache.catalina.jsp_file";
+//  private static final String WEB31XML =
+//      "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+//          + "<web-app version=\"3.1\" xmlns=\"http://java.sun.com/xml/ns/javaee\""
+//          + " xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" "
+//          + "xsi:schemaLocation=\"http://java.sun.com/xml/ns/javaee "
+//          + "http://java.sun.com/xml/ns/javaee/web-app_3_1.xsd\">"
+//          + "</web-app>";
 
-  //@Override
+  @Override
   public void init(ServletConfig config) throws ServletException {
     config
         .getServletContext()
         .setAttribute(InstanceManager.class.getName(), new InstanceManagerImpl());
-    config
-        .getServletContext()
-        .setAttribute("org.apache.tomcat.util.scan.MergedWebXml", WEB31XML);
-    //super.init(config);
+//    config
+//        .getServletContext()
+//        .setAttribute("org.apache.tomcat.util.scan.MergedWebXml", WEB31XML);
+    super.init(config);
   }
 
 //  @Override
@@ -117,16 +116,16 @@ public class FixupJspServlet { // TODO: this requires the   apache-jsp-10.0.7.ja
   //
   // If we enforce a leading slash, Jetty and Jasper seem to co-operate
   // correctly.
-  private void fixupJspFileAttribute(HttpServletRequest request) {
-    String jspFile = (String) request.getAttribute(JASPER_JSP_FILE);
-
-    if (jspFile != null) {
-      if (jspFile.length() == 0) {
-        jspFile = "/";
-      } else if (jspFile.charAt(0) != '/') {
-        jspFile = "/" + jspFile;
-      }
-      request.setAttribute(JASPER_JSP_FILE, jspFile);
-    }
-  }
+//  private void fixupJspFileAttribute(HttpServletRequest request) {
+//    String jspFile = (String) request.getAttribute(JASPER_JSP_FILE);
+//
+//    if (jspFile != null) {
+//      if (jspFile.length() == 0) {
+//        jspFile = "/";
+//      } else if (jspFile.charAt(0) != '/') {
+//        jspFile = "/" + jspFile;
+//      }
+//      request.setAttribute(JASPER_JSP_FILE, jspFile);
+//    }
+//  }
 }

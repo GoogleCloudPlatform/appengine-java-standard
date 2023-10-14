@@ -21,7 +21,6 @@ import java.util.List;
 import jakarta.servlet.ServletContainerInitializer;
 import org.eclipse.jetty.ee10.annotations.AnnotationConfiguration;
 import org.eclipse.jetty.ee10.apache.jsp.JettyJasperInitializer;
-import org.eclipse.jetty.ee10.webapp.WebAppContext;
 
 /**
  * Customization of AnnotationConfiguration which correctly configures the JSP Jasper initializer.
@@ -40,8 +39,7 @@ public class AppEngineAnnotationConfiguration extends AnnotationConfiguration {
     }
 
     initializers = new ArrayList<>(initializers);
-    // TODO: we need the Jakarta JSP classes.
-    // initializers.add(new JettyJasperInitializer());
+    initializers.add(new JettyJasperInitializer());
     return initializers;
   }
 }

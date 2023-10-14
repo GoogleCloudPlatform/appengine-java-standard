@@ -269,12 +269,16 @@
     <servlet-name>jsp</servlet-name>
     <servlet-class>com.google.appengine.tools.development.jetty.ee10.FixupJspServlet</servlet-class>
     <init-param>
-        <param-name>logVerbosityLevel</param-name>
-        <param-value>DEBUG</param-value>
+      <param-name>xpoweredBy</param-name>
+      <param-value>false</param-value>
     </init-param>
     <init-param>
-        <param-name>xpoweredBy</param-name>
-        <param-value>false</param-value>
+      <param-name>compilerTargetVM</param-name>
+      <param-value>1.8</param-value>
+    </init-param>
+    <init-param>
+      <param-name>compilerSourceVM</param-name>
+      <param-value>1.8</param-value>
     </init-param>
     <load-on-startup>0</load-on-startup>
   </servlet>
