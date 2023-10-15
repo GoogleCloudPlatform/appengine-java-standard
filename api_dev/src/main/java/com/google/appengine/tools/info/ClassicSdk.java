@@ -96,7 +96,7 @@ class ClassicSdk extends AppengineSdk {
   
    @Override
    public String getBackendServersClassName() {
-     return "com.google.appengine.tools.development.jetty9.BackendServers";
+     return "com.google.appengine.tools.development.BackendServersEE8";
    }
 
    @Override

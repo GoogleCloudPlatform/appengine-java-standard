@@ -162,11 +162,11 @@ class Jetty12Sdk extends AppengineSdk {
     // We also want the devserver to be able to handle annotated servlet, via ASM:
     if (Boolean.getBoolean("appengine.use.EE10")) {
         lf.addAll(getJetty12Jars("ee10-annotations"));
-        lf = getJetty12Jars("ee10-apache-jsp");
+        lf.addAll(getJetty12Jars("ee10-apache-jsp"));
         lf.addAll(getJetty12Jars("ee10-glassfish-jstl"));
     } else {
         lf.addAll(getJetty12Jars("ee8-annotations"));
-        lf = getJetty12Jars("ee8-apache-jsp");
+        lf.addAll(getJetty12Jars("ee8-apache-jsp"));
         lf.addAll(getJetty12Jars("ee8-glassfish-jstl"));
     }
     lf.addAll(getLibs(sdkRoot, "impl"));
