@@ -298,6 +298,7 @@
                   <include>com.google.appengine:appengine-tools-sdk</include>
                   <include>com.google.appengine:appengine-utils</include>
                   <include>com.google.appengine:sessiondata</include>
+                  <include>com.google.appengine:shared-sdk</include>
                   <include>com.google.appengine:shared-sdk-jetty12</include>
                   <include>com.google.flogger:google-extensions</include>
                   <include>com.google.flogger:flogger-system-backend</include>
