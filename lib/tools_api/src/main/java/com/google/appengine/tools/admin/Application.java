@@ -299,11 +299,15 @@ public class Application implements GenericApplication {
     webXml.validate();
     servletVersion = webXmlReader.getServletVersion();
     if (Double.parseDouble(servletVersion)>=4.0) { 
-        // Jakarta Servlet start at version 4.0, we force EE 10 for it.
-      System.setProperty("appengine.use.EE10", "true");
-      AppengineSdk.resetSdk();        
+      // javax Servlet start is still at version 4.0, we force Jetty12 EE8 for it.
+      System.setProperty("appengine.use.jetty12", "true");
     }
-    
+    if (Double.parseDouble(servletVersion)>=6.0) { 
+      // Jakarta Servlet start at version 6.0, we force  Jetty12 EE 10 for it.
+      System.setProperty("appengine.use.EE10", "true");
+    }
+    AppengineSdk.resetSdk(); // To make sure the correct Jetty version is used.       
+ 
     validateFilterClasses();
     validateRuntime();
 
@@ -1038,7 +1042,7 @@ public class Application implements GenericApplication {
       } catch (SAXException | ParserConfigurationException | TransformerException e) {
         throw new IOException(e);
       }
-      if (!webXml.getContextParams().isEmpty()) {
+      if (!webXml.getContextParams().isEmpty()) {          
         fallThroughToRuntimeOnContextInitializers();
       }
     }
@@ -1082,8 +1086,8 @@ public class Application implements GenericApplication {
     while (matcher.find()) {
       String containerInitializer = matcher.group(1);
       if ("org.eclipse.jetty.apache.jsp.JettyJasperInitializer".equals(containerInitializer)
-          || ("org.eclipse.jetty.ee8.apache.jsp.JettyJasperInitializer"
-              .equals(containerInitializer))) {
+          || "org.eclipse.jetty.ee8.apache.jsp.JettyJasperInitializer".equals(containerInitializer)
+          || "org.eclipse.jetty.ee10.apache.jsp.JettyJasperInitializer".equals(containerInitializer)) {
         foundJasperInitializer = true;
       }
       initializers.add(containerInitializer);

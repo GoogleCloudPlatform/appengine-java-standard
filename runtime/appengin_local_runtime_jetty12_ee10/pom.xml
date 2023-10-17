@@ -78,17 +78,37 @@
       <artifactId>proto1</artifactId>
     </dependency>
     <dependency>
+      <groupId>org.eclipse.jetty.ee10</groupId>
+      <artifactId>jetty-ee10-webapp</artifactId>
+       <version>${jetty12.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty.ee10</groupId>
+      <artifactId>jetty-ee10-servlet</artifactId>
+       <version>${jetty12.version}</version>
+    </dependency>
+    <dependency>
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-util</artifactId>
       <version>${jetty12.version}</version>
     </dependency>
     <dependency>
+      <groupId>org.eclipse.jetty.ee10</groupId>
+      <artifactId>jetty-ee10-annotations</artifactId>
+       <version>${jetty12.version}</version>
+    </dependency>
+    <dependency>
       <groupId>org.mortbay.jasper</groupId>
       <artifactId>apache-jsp</artifactId>
-      <version>10.1.7</version> <!--jarkata version! -->
+      <version>10.1.7</version> <!--jarkata Jetty 12 EE10 version! -->
 
     </dependency>
-   <dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty.ee10</groupId>
+      <artifactId>jetty-ee10-apache-jsp</artifactId>
+       <version>${jetty12.version}</version>
+    </dependency>
+    <dependency>
       <groupId>com.google.appengine</groupId>
       <artifactId>appengine-api-1.0-sdk</artifactId>
     </dependency>
@@ -142,26 +162,6 @@
           <artifactId>jetty-ee8-servlet</artifactId>
         </exclusion>
       </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.eclipse.jetty.ee10</groupId>
-      <artifactId>jetty-ee10-servlet</artifactId>
-       <version>${jetty12.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.eclipse.jetty.ee10</groupId>
-      <artifactId>jetty-ee10-webapp</artifactId>
-       <version>${jetty12.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.eclipse.jetty.ee10</groupId>
-      <artifactId>jetty-ee10-annotations</artifactId>
-       <version>${jetty12.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.eclipse.jetty.ee10</groupId>
-      <artifactId>jetty-ee10-apache-jsp</artifactId>
-       <version>${jetty12.version}</version>
     </dependency>
   </dependencies>
 </project>

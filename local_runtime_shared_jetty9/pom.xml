@@ -38,6 +38,10 @@
           <groupId>com.google.appengine</groupId>
           <artifactId>geronimo-javamail_1.4_spec</artifactId>
         </exclusion>
+        <exclusion>
+          <groupId>jakarta.servlet</groupId>
+          <artifactId>jakarta.servlet-api</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
     <dependency>

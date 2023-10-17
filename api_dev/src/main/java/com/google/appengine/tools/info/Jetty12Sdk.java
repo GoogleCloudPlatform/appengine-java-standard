@@ -88,9 +88,9 @@ class Jetty12Sdk extends AppengineSdk {
   @Override
   public String getWebDefaultXml() {
     if (Boolean.getBoolean("appengine.use.EE10")) {
-    return getSdkRoot() + "/docs/jetty12/webdefault.xml";
+    return getSdkRoot() + "/docs/jetty12EE10/webdefault.xml";
     } else {
-     return getSdkRoot() + "/docs/jetty12EE10/webdefault.xml";  
+     return getSdkRoot() + "/docs/jetty12/webdefault.xml";  
     }
   }
   
@@ -107,14 +107,21 @@ class Jetty12Sdk extends AppengineSdk {
   @Override
   public String getQuickStartClasspath() {
     List<String> list = new ArrayList<>();
-      File quickstart = Boolean.getBoolean("appengine.use.EE10")
-              ? new File(getSdkRoot(), "lib/tools/quickstart/quickstartgenerator-jetty12.jar")
-              : new File(getSdkRoot(), "lib/tools/quickstart/quickstartgenerator-jetty12-ee10.jar");
+    File quickstart = Boolean.getBoolean("appengine.use.EE10")
+         ? new File(getSdkRoot(), "lib/tools/quickstart/quickstartgenerator-jetty12-ee10.jar")
+         : new File(getSdkRoot(), "lib/tools/quickstart/quickstartgenerator-jetty12.jar");
+     String avoidJars = Boolean.getBoolean("appengine.use.EE10")
+         ? "ee8"
+         : "ee10";
+ 
+    
     File jettyDir = new File(getSdkRoot(), JETTY12_HOME_LIB_PATH);
     for (File f : jettyDir.listFiles()) {
       if (!f.isDirectory()
           && !(f.getName().contains("cdi-")
-              || f.getName().contains("ee9"))) {
+              || f.getName().contains("ee9")
+              || f.getName().contains(avoidJars))
+              ) {
         list.add(f.getAbsolutePath());
       }
     }
@@ -278,7 +285,11 @@ class Jetty12Sdk extends AppengineSdk {
   }
 
   @Override
-  public String getJSPCompilerClassName() {
-    return "com.google.appengine.tools.development.jetty.LocalJspC";
-  }
+    public String getJSPCompilerClassName() {
+    if (Boolean.getBoolean("appengine.use.EE10")) {
+        return "com.google.appengine.tools.development.jetty.ee10.LocalJspC";
+    } else {
+        return "com.google.appengine.tools.development.jetty.LocalJspC";
+    }
+    }
 }
