@@ -59,7 +59,7 @@ public class DevAppServerMainTest extends DevAppServerTestBase {
     PortPicker portPicker = PortPicker.create();
     int jettyPort = portPicker.pickUnusedPort();
     File appDir = Boolean.getBoolean("appengine.use.EE10")
-            ? createApp("allinone-jakarta")
+            ? createApp("allinone_jakarta")
             : createApp("allinone");
 
     ArrayList<String> runtimeArgs = new ArrayList<>();

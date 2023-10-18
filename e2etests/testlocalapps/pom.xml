@@ -70,7 +70,7 @@
       <module>bundle_standard_with_no_jsp</module>
       <module>bundle_standard_with_weblistener_memcache</module>
       <module>allinone</module>
-      <module>allinone_jarkata</module>
+      <module>allinone_jakarta</module>
   </modules>
   <build>
       <plugins>

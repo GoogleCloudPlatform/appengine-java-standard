@@ -20,7 +20,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.google.appengine.demos</groupId>
-    <artifactId>allinone-jakarta</artifactId>
+    <artifactId>allinone_jakarta</artifactId>
     <parent>
       <groupId>com.google.appengine</groupId>
       <artifactId>testlocalapps</artifactId>
