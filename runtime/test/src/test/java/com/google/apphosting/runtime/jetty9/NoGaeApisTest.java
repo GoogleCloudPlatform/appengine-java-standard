@@ -42,7 +42,8 @@ public final class NoGaeApisTest extends JavaRuntimeViaHttpBase {
   @BeforeClass
   public static void beforeClass() throws IOException, InterruptedException {
     File currentDirectory = new File("").getAbsoluteFile();
-    appRoot = new File(currentDirectory, "../nogaeapiswebapp/target/nogaeapiswebapp-2.0.21-SNAPSHOT");
+    appRoot =
+        new File(currentDirectory, "../nogaeapiswebapp/target/nogaeapiswebapp-2.0.22-SNAPSHOT");
     assertThat(appRoot.isDirectory()).isTrue();
   }
 
