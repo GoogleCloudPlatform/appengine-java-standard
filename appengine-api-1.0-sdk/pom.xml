@@ -328,6 +328,7 @@
                     <include>com/google/apphosting/api/search/DocumentPb*</include>
                     <include>com/google/appengine/tools/compilation/*</include>
                     <include>com/google/apphosting/utils/remoteapi/RemoteApiServlet*</include>
+                    <include>com/google/apphosting/utils/remoteapi/EE10RemoteApiServlet*</include>
                     <include>com/google/apphosting/utils/security/urlfetch/*</include>
                     <include>com/google/apphosting/utils/servlet/DeferredTaskServlet*</include>
                     <include>com/google/apphosting/utils/servlet/JdbcMySqlConnectionCleanupFilter*</include>

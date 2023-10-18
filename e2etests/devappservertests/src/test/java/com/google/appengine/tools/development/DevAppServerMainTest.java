@@ -58,7 +58,9 @@ public class DevAppServerMainTest extends DevAppServerTestBase {
   public void setUpClass() throws IOException, InterruptedException {
     PortPicker portPicker = PortPicker.create();
     int jettyPort = portPicker.pickUnusedPort();
-    File appDir = createApp("allinone");
+    File appDir = Boolean.getBoolean("appengine.use.EE10")
+            ? createApp("allinone-jakarta")
+            : createApp("allinone");
 
     ArrayList<String> runtimeArgs = new ArrayList<>();
     runtimeArgs.add(JAVA_HOME.value() + "/bin/java");
@@ -77,7 +79,7 @@ public class DevAppServerMainTest extends DevAppServerTestBase {
         System.setProperty("appengine.use.EE10", "false");
     }
     runtimeArgs.add("-Dappengine.use.jetty12=" + System.getProperty("appengine.use.jetty12"));
-    //TODO(ludo) Need to adapt servlets runtimeArgs.add("-Dappengine.use.EE10=" + System.getProperty("appengine.use.EE10"));
+    runtimeArgs.add("-Dappengine.use.EE10=" + System.getProperty("appengine.use.EE10"));
     runtimeArgs.add("-cp");
     runtimeArgs.add(TOOLS_JAR);
     runtimeArgs.add("com.google.appengine.tools.development.DevAppServerMain");
