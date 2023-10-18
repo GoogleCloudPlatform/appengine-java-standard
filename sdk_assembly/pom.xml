@@ -273,16 +273,6 @@
                                 </artifactItem>
                                 <artifactItem>
                                     <groupId>com.google.appengine</groupId>
-                                    <artifactId>quickstartgenerator-jetty12-ee10</artifactId>
-                                    <version>${project.version}</version>
-                                    <type>jar</type>
-                                    <overWrite>true</overWrite>
-                                    <includes>**</includes>
-                                    <outputDirectory>${assembly-directory}/lib/tools/quickstart</outputDirectory>
-                                    <destFileName>quickstartgenerator-jetty12-ee10.jar</destFileName>
-                                </artifactItem>
-                                <artifactItem>
-                                    <groupId>com.google.appengine</groupId>
                                     <artifactId>appengine-testing</artifactId>
                                     <version>${project.version}</version>
                                     <type>jar</type>
@@ -437,11 +427,6 @@
         <dependency>
             <groupId>com.google.appengine</groupId>
             <artifactId>quickstartgenerator-jetty12</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.google.appengine</groupId>
-            <artifactId>quickstartgenerator-jetty12-ee10</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
