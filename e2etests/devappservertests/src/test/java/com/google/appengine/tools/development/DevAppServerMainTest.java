@@ -77,7 +77,7 @@ public class DevAppServerMainTest extends DevAppServerTestBase {
         System.setProperty("appengine.use.EE10", "false");
     }
     runtimeArgs.add("-Dappengine.use.jetty12=" + System.getProperty("appengine.use.jetty12"));
-    runtimeArgs.add("-Dappengine.use.EE10=" + System.getProperty("appengine.use.EE10"));
+    //TODO(ludo) Need to adapt servlets runtimeArgs.add("-Dappengine.use.EE10=" + System.getProperty("appengine.use.EE10"));
     runtimeArgs.add("-cp");
     runtimeArgs.add(TOOLS_JAR);
     runtimeArgs.add("com.google.appengine.tools.development.DevAppServerMain");
