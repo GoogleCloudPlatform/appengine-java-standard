@@ -15,26 +15,15 @@
  */
 package com.google.appengine.tools.development;
 
-import static com.google.common.base.StandardSystemProperty.JAVA_HOME;
-import static com.google.common.base.StandardSystemProperty.JAVA_SPECIFICATION_VERSION;
-
-import com.google.apphosting.testing.PortPicker;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import java.io.File;
-import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import org.junit.Before;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 @RunWith(Parameterized.class)
 public class DevAppServerMainTest extends DevAppServerTestBase {
-  private static final String TOOLS_JAR =
-      getSdkRoot().getAbsolutePath() + "/lib/appengine-tools-api.jar";
 
   @Parameterized.Parameters
   public static Collection EEVersion() {
@@ -42,54 +31,60 @@ public class DevAppServerMainTest extends DevAppServerTestBase {
   }
 
   public DevAppServerMainTest(String EEVersion) {
-    if (EEVersion.equals("EE6")) {
-        System.setProperty("appengine.use.jetty12", "false");
-        System.setProperty("appengine.use.EE10", "false");
-    } else if (EEVersion.equals("EE8")) {
-        System.setProperty("appengine.use.jetty12", "true");
-        System.setProperty("appengine.use.EE10", "false");
-    }  else if (EEVersion.equals("EE10")) {
-        System.setProperty("appengine.use.jetty12", "true");
-        System.setProperty("appengine.use.EE10", "true");
-    }
+    super(EEVersion);
   }
 
-  @Before
-  public void setUpClass() throws IOException, InterruptedException {
-    PortPicker portPicker = PortPicker.create();
-    int jettyPort = portPicker.pickUnusedPort();
-    File appDir = Boolean.getBoolean("appengine.use.EE10")
+  @Override
+  public File getAppDir() {
+    return Boolean.getBoolean("appengine.use.EE10")
             ? createApp("allinone_jakarta")
             : createApp("allinone");
+  }
+    
+  @Test
+  public void useMemcache() throws Exception {
+    // App Engine Memcache access.
+    executeHttpGet(
+        "/?memcache_loops=10&memcache_size=10",
+        "Running memcache for 10 loops with value size 10\n"
+            + "Cache hits: 10\n"
+            + "Cache misses: 0\n",
+        RESPONSE_200);
 
-    ArrayList<String> runtimeArgs = new ArrayList<>();
-    runtimeArgs.add(JAVA_HOME.value() + "/bin/java");
-    runtimeArgs.add("-Dappengine.sdk.root=" + getSdkRoot());
-    if (!JAVA_SPECIFICATION_VERSION.value().equals("1.8")) {
-      // Java11 or later need more flags:
-      runtimeArgs.add("--add-opens");
-      runtimeArgs.add("java.base/java.net=ALL-UNNAMED");
-      runtimeArgs.add("--add-opens");
-      runtimeArgs.add("java.base/sun.net.www.protocol.http=ALL-UNNAMED");
-      runtimeArgs.add("--add-opens");
-      runtimeArgs.add("java.base/sun.net.www.protocol.https=ALL-UNNAMED");
-    } else {
-        // Jetty12 does not support java8.
-        System.setProperty("appengine.use.jetty12", "false");
-        System.setProperty("appengine.use.EE10", "false");
-    }
-    runtimeArgs.add("-Dappengine.use.jetty12=" + System.getProperty("appengine.use.jetty12"));
-    runtimeArgs.add("-Dappengine.use.EE10=" + System.getProperty("appengine.use.EE10"));
-    runtimeArgs.add("-cp");
-    runtimeArgs.add(TOOLS_JAR);
-    runtimeArgs.add("com.google.appengine.tools.development.DevAppServerMain");
-    runtimeArgs.add("--address=" + new InetSocketAddress(jettyPort).getHostString());
-    runtimeArgs.add("--port=" + jettyPort);
-    runtimeArgs.add("--allow_remote_shutdown"); // Keep as used in Maven plugin
-    runtimeArgs.add("--disable_update_check"); // Keep, as used in Maven plugin
-    runtimeArgs.add("--no_java_agent"); // Keep, as used in Maven plugin
+    executeHttpGet(
+        "/?memcache_loops=10&memcache_size=10",
+        "Running memcache for 10 loops with value size 10\n"
+            + "Cache hits: 20\n"
+            + "Cache misses: 0\n",
+        RESPONSE_200);
 
-    runtimeArgs.add(appDir.toString());
-    createRuntime(ImmutableList.copyOf(runtimeArgs), ImmutableMap.of(), jettyPort);
+    executeHttpGet(
+        "/?memcache_loops=5&memcache_size=10",
+        "Running memcache for 5 loops with value size 10\n"
+            + "Cache hits: 25\n"
+            + "Cache misses: 0\n",
+        RESPONSE_200);
+  }
+
+  @Test
+  public void useUserApi() throws Exception {
+    // App Engine User API access.
+    executeHttpGet("/?user", "Sign in with /_ah/login?continue=%2F\n", RESPONSE_200);
+  }
+
+  @Test
+  public void useDatastoreAndTaskQueue() throws Exception {
+    // First, populate Datastore entities
+    executeHttpGet("/?datastore_entities=3", "Added 3 entities\n", RESPONSE_200);
+
+    // App Engine Taskqueue usage, queuing the addition of 7 entities.
+    executeHttpGet(
+        "/?add_tasks=1&task_url=/?datastore_entities=7",
+        "Adding 1 tasks for URL /?datastore_entities=7\n",
+        RESPONSE_200);
+
+    // After a while, we should have 10 or more entities.
+    executeHttpGetWithRetriesContains(
+        "/?datastore_count", "Found ", RESPONSE_200, NUMBER_OF_RETRIES);
   }
 }
