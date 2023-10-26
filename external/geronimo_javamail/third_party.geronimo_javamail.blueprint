@@ -1,0 +1,19 @@
+include "devtools/blueprint/bluze/public/bluze.ncl";
+include bytes "third_party/apphosting/java/geronimo_javamail/bluze.textproto" as textproto;
+
+// See go/bluze/guide before editing. To check the generated final blueprint run
+// rncl third_party/apphosting/java/geronimo_javamail/third_party.geronimo_javamail.blueprint printproto blueprint_file
+
+blueprint_file = ::bluze::BlueprintFile(
+  textproto,
+
+  project_name = "third_party.geronimo_javamail",
+  teams_product_id = 8953574006,
+  tech_lead = ["ludo"],
+  dev_mailing_list = "prometheus-core@google.com",
+  mdb_groups = ["third-party-tap-forge"],
+  buganizer_component_ids = [103696],
+  metadata_path = "//depot/google3/third_party/apphosting/java/geronimo_javamail/METADATA",
+
+// Customize your blueprint here: go/blueprint/howto-write.
+);

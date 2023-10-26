@@ -1,0 +1,53 @@
+# Format: google3/devtools/metadata/metadata.proto (go/google3metadata)
+
+name: "geronimo_javamail"
+description:
+  "This package contains a snapshot of geronimo-javamail_1.4_spec module of "
+  "the following SVN repository taken at revision 753292: "
+  " "
+  "http://svn.apache.org/repos/asf/geronimo/specs/trunk/ "
+  " "
+  "It contains a re-implementation of javamail (javax.mail) that is released "
+  "under the Apache 2.0 license as part of the Apache Geronimo product. "
+  "Google App Engine for Java intends to make custom modifications to this "
+  "code (to eliminate AWT dependencies) and to redistribute the modified jar "
+  "along with the Google App Engine SDK."
+
+third_party {
+  discouraged {
+    reason: "Use //third_party/java/sun_mail:sun_mail_api instead"
+    alternatives: "//third_party/java/sun_mail:sun_mail_api"
+  }
+  version: "Revision 753292"
+  last_upgrade_date: {
+    year: 2009
+    month: 3
+    day: 16
+  }
+  identifier {
+    type: "Archive"
+    value: "http://svn.apache.org/repos/asf/geronimo/specs/trunk/"
+    version: "Revision 753292"
+  }
+  identifier {
+    type: "Git"
+    value: "https://github.com/apache/geronimo-javamail"
+    version: "Revision 753292"
+  }
+}
+
+exported {
+  copybara {
+    config_path: "//depot/google3/third_party/java_src/appengine_standard/copy.bara.sky"
+  }
+  owning_team_email: "serverless-runtimes-java-ext@google.com"
+  path_expression: "//depot/google3/third_party/apphosting/java/geronimo_javamail/..."
+  request_url: "http://b/189970809"
+  reason: OPEN_SOURCE
+  description: "Sync GAE Java runtime from Piper to external GitHub repo - Automatically translated from http://depot/google3/devtools/copybara/policy/piper.origin.allowlist.textproto;l=6663;rcl=466385013"
+}
+presubmit: {
+  check_tests: {
+    project: "third_party.geronimo_javamail"
+  }
+}

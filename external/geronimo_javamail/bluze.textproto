@@ -1,0 +1,19 @@
+# proto-file: devtools/blueprint/blueprint_file.proto
+# proto-message: BlueprintFile
+# DO NOT EDIT! Regenerate the contents by running go/bluze after changing any BUILD file or the Blueprint.
+# Override the default values in third_party.geronimo_javamail.blueprint instead.
+
+buildable_unit: {
+  name: "third_party.geronimo_javamail"
+  build_pattern: "//third_party/apphosting/java/geronimo_javamail/..."
+  test_pattern: "//third_party/apphosting/java/geronimo_javamail/..."
+  test_tag_filter: "-nofastbuild"
+  build_tag_filter: "-nofastbuild"
+  enable_coverage: true
+  enable_presubmit: true
+  enable_continuous_build: true
+  continuous_build_email: {
+    build_cop_email_id: "prometheus-core+buildgardener@google.com"
+  }
+  enable_release: false
+}
