@@ -71,8 +71,6 @@
       <module>bundle_standard_with_weblistener_memcache</module>
       <module>allinone</module>
       <module>allinone_jakarta</module>
-      <module>guestbook</module>
-      <module>guestbook_jakarta</module>
   </modules>
   <build>
       <plugins>

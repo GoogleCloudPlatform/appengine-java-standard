@@ -23,10 +23,6 @@ import com.google.apphosting.api.ApiProxy;
 import com.google.apphosting.utils.config.AppEngineWebXml;
 import com.google.apphosting.utils.config.AppEngineWebXmlReader;
 import com.google.apphosting.utils.config.WebModule;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.logging.Logger;
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.FilterConfig;
@@ -35,6 +31,10 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.logging.Logger;
 
 /**
  * This filter is not currently used.  It was originally written for

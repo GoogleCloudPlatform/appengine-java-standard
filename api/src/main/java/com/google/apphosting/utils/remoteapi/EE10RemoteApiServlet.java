@@ -40,10 +40,13 @@ import com.google.apphosting.utils.remoteapi.RemoteApiPb.TransactionQueryResult;
 import com.google.apphosting.utils.remoteapi.RemoteApiPb.TransactionRequest;
 import com.google.apphosting.utils.remoteapi.RemoteApiPb.TransactionRequest.Precondition;
 import com.google.io.protocol.ProtocolMessage;
-// <internal24>
+
 import com.google.storage.onestore.v3.OnestoreEntity;
 import com.google.storage.onestore.v3.OnestoreEntity.EntityProto;
 import com.google.storage.onestore.v3.OnestoreEntity.Path.Element;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.ObjectOutput;
@@ -54,14 +57,8 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.logging.Logger;
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 
-/**
- * Remote API servlet handler.
- *
- */
+/** Remote API servlet handler. */
 public class EE10RemoteApiServlet extends HttpServlet {
   private static final Logger log = Logger.getLogger(EE10RemoteApiServlet.class.getName());
 
@@ -474,7 +471,7 @@ public class EE10RemoteApiServlet extends HttpServlet {
     return computeSha1(entityBytes, entityBytes.length - 1);
   }
 
-  // <internal25>
+  
   private static byte[] computeSha1(byte[] bytes, int length) {
     MessageDigest md;
     try {

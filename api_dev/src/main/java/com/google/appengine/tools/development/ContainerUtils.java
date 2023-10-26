@@ -32,11 +32,13 @@ public class ContainerUtils {
 
     // Try to load the correct Jetty service.
       try {
-        result =
-            (ContainerService)
-                Class.forName(AppengineSdk.getSdk().getJettyContainerService(),
-                        true, DevAppServerImpl.class.getClassLoader())
-                    .newInstance();
+      result =
+          (ContainerService)
+              Class.forName(
+                      AppengineSdk.getSdk().getJettyContainerService(),
+                      true,
+                      DevAppServerImpl.class.getClassLoader())
+                  .getDeclaredConstructor().newInstance();
       } catch (ReflectiveOperationException e) {
         throw new IllegalArgumentException("Cannot load any servlet container.", e);
       }

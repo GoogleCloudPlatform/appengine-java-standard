@@ -22,10 +22,10 @@ package com.google.appengine.tools.development;
  */
 public class DelegatingModulesFilterHelper implements ModulesFilterHelper {
 
-  protected final BackendServers backendServers;
+  protected final BackendServersBase backendServers;
   protected final Modules modules;
 
-  public DelegatingModulesFilterHelper(BackendServers backendServers, Modules modules) {
+  public DelegatingModulesFilterHelper(BackendServersBase backendServers, Modules modules) {
     this.backendServers = backendServers;
     this.modules = modules;
   }

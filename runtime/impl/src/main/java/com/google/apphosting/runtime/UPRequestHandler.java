@@ -18,7 +18,6 @@ package com.google.apphosting.runtime;
 
 import com.google.apphosting.base.protos.RuntimePb.UPRequest;
 import java.io.IOException;
-import javax.servlet.ServletException;
 
 /** Defines an interface for handling the Prometheus Untrusted Process API. */
 public interface UPRequestHandler {

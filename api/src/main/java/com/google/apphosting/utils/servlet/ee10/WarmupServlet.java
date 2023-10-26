@@ -16,11 +16,11 @@
 
 package com.google.apphosting.utils.servlet.ee10;
 
-import java.io.IOException;
-import java.util.logging.Logger;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.logging.Logger;
 
 /**
  * {@code WarmupServlet} does very little.  It primarily serves as a

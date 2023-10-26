@@ -29,16 +29,16 @@ public class IgnoreContentLengthResponseWrapper extends Response.Wrapper {
   public IgnoreContentLengthResponseWrapper(Request request, Response response) {
     super(request, response);
 
-    httpFields = new HttpFields.Mutable.Wrapper(response.getHeaders())
-    {
-      @Override
-      public HttpField onAddField(HttpField field) {
-        if (!HttpHeader.CONTENT_LENGTH.is(field.getName())) {
-          return super.onAddField(field);
-        }
-        return null;
-      }
-    };
+    httpFields =
+        new HttpFields.Mutable.Wrapper(response.getHeaders()) {
+          @Override
+          public HttpField onAddField(HttpField field) {
+            if (!HttpHeader.CONTENT_LENGTH.is(field.getName())) {
+              return super.onAddField(field);
+            }
+            return null;
+          }
+        };
   }
 
   @Override

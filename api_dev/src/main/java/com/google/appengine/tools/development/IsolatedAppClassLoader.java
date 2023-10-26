@@ -151,14 +151,14 @@ public class IsolatedAppClassLoader extends URLClassLoader {
   protected synchronized Class<?> loadClass(String name, boolean resolve)
       throws ClassNotFoundException {
 
-
-  // This task queue related servlet should be loaded by the application classloader when the
-  // api jar is used by the application, and default to the runtime classloader when the application
-  // does not have the API jar in the classpath so that the Jetty container can boot, even if the
-  // servlet is not used by the application.
-  // This change is required now with the new Jetty 9.4 classloader which is more strict.
-  //    "com.google.apphosting.utils.servlet.DeferredTaskServlet" or EE10 related.
-  if (name.contains("DeferredTaskServlet")) {
+    // This task queue related servlet should be loaded by the application classloader when the
+    // api jar is used by the application, and default to the runtime classloader when the
+    // application
+    // does not have the API jar in the classpath so that the Jetty container can boot, even if the
+    // servlet is not used by the application.
+    // This change is required now with the new Jetty 9.4 classloader which is more strict.
+    //    "com.google.apphosting.utils.servlet.DeferredTaskServlet" or EE10 related.
+    if (name.contains("DeferredTaskServlet")) {
       try {
         return super.loadClass(name, resolve);
       } catch (ClassNotFoundException ignore) {

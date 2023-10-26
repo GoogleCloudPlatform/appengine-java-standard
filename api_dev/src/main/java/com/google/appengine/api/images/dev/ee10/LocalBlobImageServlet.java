@@ -26,6 +26,10 @@ import com.google.appengine.tools.development.LocalRpcService.Status;
 import com.google.apphosting.api.ApiProxy;
 import com.google.common.collect.ImmutableSet;
 import com.google.protobuf.ByteString;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -34,10 +38,6 @@ import java.security.PrivilegedAction;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 
 /**
  * Stubs out dynamic image server.

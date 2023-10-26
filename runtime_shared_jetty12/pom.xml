@@ -39,43 +39,24 @@
             <artifactId>runtime-shared</artifactId>
             <optional>true</optional>
         </dependency>
-        <dependency>
+        <dependency> <!-- for EE10 -->
             <groupId>jakarta.servlet</groupId>
             <artifactId>jakarta.servlet-api</artifactId>
-            <version>4.0.4</version>
+            <version>6.0.0</version>
             <optional>true</optional>
         </dependency>
-        <dependency>
-            <groupId>javax.servlet.jsp.jstl</groupId>
-            <artifactId>javax.servlet.jsp.jstl-api</artifactId>
+        <dependency>  <!-- for EE8 -->
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
+            <version>4.0.1</version>
             <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>org.checkerframework</groupId>
-            <artifactId>checker-qual</artifactId>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.eclipse.jetty.toolchain</groupId>
             <artifactId>jetty-schemas</artifactId>
-            <version>4.0.3</version>
+            <version>5.2</version>
             <optional>true</optional>
         </dependency>
-        <dependency>
-            <groupId>org.mortbay.jasper</groupId>
-            <artifactId>apache-jsp</artifactId>
-            <optional>true</optional>
-       </dependency>
-        <dependency>
-            <groupId>org.mortbay.jasper</groupId>
-            <artifactId>apache-el</artifactId>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-          <groupId>com.google.errorprone</groupId>
-          <artifactId>error_prone_annotations</artifactId>
-           <optional>true</optional>
-       </dependency>
   </dependencies>
 
     <build>
@@ -97,33 +78,13 @@
                                  </excludes>
                                 <includes>
                                     <include>org.eclipse.jetty.toolchain:jetty-schemas</include>
-                                    <include>org.mortbay.jasper:apache-jsp</include>
-                                    <include>org.mortbay.jasper:apache-el</include>
                                     <include>com.google.appengine:sessiondata</include>
                                     <include>jakarta.servlet:jakarta.servlet-api</include>
-                                    <include>javax.servlet.jsp.jstl:javax.servlet.jsp.jstl-api</include>
+                                    <include>javax.servlet:javax.servlet-api</include>
                                     <include>com.google.appengine:runtime-shared</include>
                                 </includes>
                             </artifactSet>
                             <filters>
-                                <filter>
-                                    <artifact>org.mortbay.jasper:apache-el</artifact>
-                                    <includes>
-                                        <include>javax/el/**</include>
-                                    </includes>
-                                    <excludes>
-                                        <exclude>org/**</exclude>
-                                    </excludes>
-                                </filter>
-                                <filter>
-                                    <artifact>org.mortbay.jasper:apache-jsp</artifact>
-                                    <includes>
-                                        <include>javax/servlet/jsp/**</include>
-                                    </includes>
-                                    <excludes>
-                                        <exclude>org/**</exclude>
-                                    </excludes>
-                                </filter>
                                 <filter>
                                     <artifact>*:*</artifact>
                                     <excludes>

@@ -206,9 +206,9 @@ public class HttpCompression {
     return canCompressFor(!compressForGfe, userAgent, acceptEncoding, contentType);
   }
 
-  // below is from <internal17>
+  // below is from https://cs.corp.google.com/#google3/net/httpconnection/httpserverconnection.cc
   // and a mix of java
-  // <internal18>
+  // https://cs.corp.google.com/#google3/java/com/google/gse/HttpResponseImpl.java
 
   /**
    * Returns whether we can compress for the client based on the user-agent and the content-type.

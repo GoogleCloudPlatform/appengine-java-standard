@@ -58,45 +58,47 @@ public class Modules implements ModulesController, ModulesFilterHelper {
   public static Modules createModules(
       ApplicationConfigurationManager applicationConfigurationManager,
       String serverInfo, File externalResourceDir, String address, DevAppServer devAppServer) {
-          ImmutableList.Builder<Module> builder = ImmutableList.builder();
-          for (ApplicationConfigurationManager.ModuleConfigurationHandle moduleConfigurationHandle :
-                  applicationConfigurationManager.getModuleConfigurationHandles()) {
-              AppEngineWebXml appEngineWebXml =
-                      moduleConfigurationHandle.getModule().getAppEngineWebXml();
-              Module module = null;
-              if (!appEngineWebXml.getBasicScaling().isEmpty()) {
-                  module = new BasicModule(moduleConfigurationHandle, serverInfo, address, devAppServer,
-                          appEngineWebXml);
-              } else if (!appEngineWebXml.getManualScaling().isEmpty()) {
-                  module = new ManualModule(moduleConfigurationHandle, serverInfo, address, devAppServer,
-                          appEngineWebXml);
-              } else {
-                  module = new AutomaticModule(moduleConfigurationHandle, serverInfo, externalResourceDir,
-                          address, devAppServer);
-              }
-              builder.add(module);
-              
-              // Clear values that apply to the primary container only
-              externalResourceDir = null;
-          }
-      try {
-          List<Module> lm = builder.build();
-          instance.set(
-                  (Modules) Class.forName(AppengineSdk.getSdk().getModulesClassName())
-                          .getDeclaredConstructor(List.class)
-                          .newInstance(lm)
-          );
-          return instance.get();
-      } catch (ClassNotFoundException
-              | IllegalAccessException
-              | IllegalArgumentException
-              | InstantiationException
-              | NoSuchMethodException
-              | SecurityException
-              | InvocationTargetException ex) {
-          Logger.getLogger(Modules.class.getName()).log(Level.SEVERE, null, ex);
+    ImmutableList.Builder<Module> builder = ImmutableList.builder();
+    for (ApplicationConfigurationManager.ModuleConfigurationHandle moduleConfigurationHandle :
+        applicationConfigurationManager.getModuleConfigurationHandles()) {
+      AppEngineWebXml appEngineWebXml = moduleConfigurationHandle.getModule().getAppEngineWebXml();
+      Module module = null;
+      if (!appEngineWebXml.getBasicScaling().isEmpty()) {
+        module =
+            new BasicModule(
+                moduleConfigurationHandle, serverInfo, address, devAppServer, appEngineWebXml);
+      } else if (!appEngineWebXml.getManualScaling().isEmpty()) {
+        module =
+            new ManualModule(
+                moduleConfigurationHandle, serverInfo, address, devAppServer, appEngineWebXml);
+      } else {
+        module =
+            new AutomaticModule(
+                moduleConfigurationHandle, serverInfo, externalResourceDir, address, devAppServer);
       }
-      return null;
+      builder.add(module);
+
+      // Clear values that apply to the primary container only
+      externalResourceDir = null;
+    }
+    try {
+      ImmutableList<Module> lm = builder.build();
+      instance.set(
+          Class.forName(AppengineSdk.getSdk().getModulesClassName())
+              .asSubclass(Modules.class)
+              .getDeclaredConstructor(List.class)
+              .newInstance(lm));
+      return instance.get();
+    } catch (ClassNotFoundException
+        | IllegalAccessException
+        | IllegalArgumentException
+        | InstantiationException
+        | NoSuchMethodException
+        | SecurityException
+        | InvocationTargetException ex) {
+      Logger.getLogger(Modules.class.getName()).log(Level.SEVERE, null, ex);
+      }
+    return null;
   }
 
   public static Modules getInstance() {
@@ -411,5 +413,5 @@ public class Modules implements ModulesController, ModulesFilterHelper {
     Module module = getModule(moduleName);
     InstanceHolder instanceHolder = module.getInstanceHolder(instance);
     return instanceHolder.getContainerService().getPort();
-}
+  }
 }

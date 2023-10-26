@@ -21,17 +21,16 @@ import com.google.apphosting.runtime.JettyConstants;
 import com.google.apphosting.utils.config.AppYaml;
 import com.google.common.base.Ascii;
 import com.google.common.flogger.GoogleLogger;
-import java.io.IOException;
-import java.util.Objects;
 import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.Objects;
 import org.eclipse.jetty.ee10.servlet.ServletContextHandler;
 import org.eclipse.jetty.ee10.servlet.ServletHandler;
-import org.eclipse.jetty.http.pathmap.MappedResource;
 import org.eclipse.jetty.http.pathmap.MatchedResource;
 import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.util.StringUtil;
@@ -82,7 +81,8 @@ public class ResourceFileServlet extends HttpServlet {
 
     try {
       // TODO: review use of root factory.
-      resourceBase = ResourceFactory.root().newResource(context.getResource("/" + appVersion.getPublicRoot()));
+      resourceBase =
+          ResourceFactory.root().newResource(context.getResource("/" + appVersion.getPublicRoot()));
     } catch (Exception ex) {
       throw new ServletException(ex);
     }

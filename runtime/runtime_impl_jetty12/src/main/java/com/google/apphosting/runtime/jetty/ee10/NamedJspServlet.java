@@ -16,11 +16,11 @@
 
 package com.google.apphosting.runtime.jetty.ee10;
 
-import java.io.IOException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
 
 /**
  * Generate 500 error for any request mapped directly to "jsp" servlet.

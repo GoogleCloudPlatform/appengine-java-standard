@@ -17,11 +17,11 @@
 package com.google.appengine.api.users.dev.ee10;
 
 import com.google.common.html.HtmlEscapers;
-import java.io.IOException;
-import java.io.PrintWriter;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.PrintWriter;
 
 /**
  * {@code LocalOAuthAuthorizeTokenServlet} is the servlet responsible for

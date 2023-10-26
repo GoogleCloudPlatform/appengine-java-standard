@@ -26,7 +26,7 @@ import com.google.apphosting.utils.servlet.MultipartMimeUtils;
 import com.google.common.base.Ascii;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Closeables;
-// <internal24>
+
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -171,7 +171,7 @@ public final class UploadBlobServlet extends HttpServlet {
     return info;
   }
 
-  // <internal25>
+  
   @SuppressWarnings("InputStreamSlowMultibyteRead")
   private void handleUpload(final HttpServletRequest req, HttpServletResponse resp)
       throws ServletException, IOException {

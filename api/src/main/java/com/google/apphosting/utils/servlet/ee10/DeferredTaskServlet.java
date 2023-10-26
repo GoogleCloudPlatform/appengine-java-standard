@@ -19,6 +19,11 @@ package com.google.apphosting.utils.servlet.ee10;
 import com.google.appengine.api.taskqueue.DeferredTask;
 import com.google.appengine.api.taskqueue.DeferredTaskContext;
 import com.google.apphosting.api.ApiProxy;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletInputStream;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectStreamClass;
@@ -26,11 +31,6 @@ import java.lang.reflect.Modifier;
 import java.lang.reflect.Proxy;
 import java.net.HttpURLConnection;
 import java.util.Map;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.ServletInputStream;
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 
 /**
  * Implementation of {@link HttpServlet} to dispatch tasks with a {@link DeferredTask} payload; see
@@ -123,7 +123,8 @@ public class DeferredTaskServlet extends HttpServlet {
         throw new ServletException(e);
       } else if (doNotRetry) {
         resp.setStatus(HttpURLConnection.HTTP_NOT_AUTHORITATIVE); // Alternate success code.
-        log(DeferredTaskServlet.class.getName()
+        log(
+            DeferredTaskServlet.class.getName()
                 + " - Deferred task failed but doNotRetry specified. Exception: "
                 + e);
       }

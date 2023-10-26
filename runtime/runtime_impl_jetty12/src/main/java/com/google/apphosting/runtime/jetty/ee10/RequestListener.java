@@ -16,9 +16,9 @@
 
 package com.google.apphosting.runtime.jetty.ee10;
 
+import jakarta.servlet.ServletException;
 import java.io.IOException;
 import java.util.EventListener;
-import jakarta.servlet.ServletException;
 import org.eclipse.jetty.ee10.webapp.WebAppContext;
 import org.eclipse.jetty.server.Request;
 

@@ -17,9 +17,9 @@
 package com.google.apphosting.utils.servlet.ee10;
 
 import com.google.apphosting.utils.http.HttpResponse;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
-import jakarta.servlet.http.HttpServletResponse;
 
 /**
  * Simple adapter for a Serlvet Http Response.

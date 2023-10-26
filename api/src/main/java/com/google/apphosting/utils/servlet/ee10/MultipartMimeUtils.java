@@ -17,6 +17,7 @@
 package com.google.apphosting.utils.servlet.ee10;
 
 import com.google.common.io.ByteStreams;
+import jakarta.servlet.http.HttpServletRequest;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -29,7 +30,6 @@ import javax.mail.MessagingException;
 import javax.mail.internet.ContentDisposition;
 import javax.mail.internet.ContentType;
 import javax.mail.internet.MimeMultipart;
-import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * {@code MultipartMimeUtils} is a collection of static utility clases

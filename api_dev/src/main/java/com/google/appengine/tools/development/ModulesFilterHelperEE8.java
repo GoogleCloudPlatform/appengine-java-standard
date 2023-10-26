@@ -21,17 +21,17 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-/**
- *
- */
+/** */
 public interface ModulesFilterHelperEE8 extends ModulesFilterHelper {
-   /**
-   * Forward a request to a specified module or backend instance. Calls the
-   * request dispatcher for the requested instance with the instance
-   * context. The caller must hold a serving permit for the requested
-   * instance before calling this method.
+  /**
+   * Forward a request to a specified module or backend instance. Calls the request dispatcher for
+   * the requested instance with the instance context. The caller must hold a serving permit for the
+   * requested instance before calling this method.
    */
-  void forwardToInstance(String requestedModuleOrBackendName, int instance,
-      HttpServletRequest hrequest, HttpServletResponse hresponse)
-          throws IOException, ServletException;  
+  void forwardToInstance(
+      String requestedModuleOrBackendName,
+      int instance,
+      HttpServletRequest hrequest,
+      HttpServletResponse hresponse)
+      throws IOException, ServletException;
 }

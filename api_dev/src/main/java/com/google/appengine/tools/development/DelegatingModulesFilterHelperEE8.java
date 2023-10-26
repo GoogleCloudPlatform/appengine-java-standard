@@ -1,4 +1,3 @@
-
 /*
  * Copyright 2021 Google LLC
  *
@@ -21,23 +20,27 @@ import java.io.IOException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-/**
- *
- */
-public class DelegatingModulesFilterHelperEE8 extends DelegatingModulesFilterHelper  implements ModulesFilterHelperEE8 {
-    
-  public DelegatingModulesFilterHelperEE8(BackendServers backendServers, Modules modules) {
+
+/** */
+public class DelegatingModulesFilterHelperEE8 extends DelegatingModulesFilterHelper
+    implements ModulesFilterHelperEE8 {
+
+  public DelegatingModulesFilterHelperEE8(BackendServersBase backendServers, Modules modules) {
     super(backendServers, modules);
   }
-  
+
   @Override
-  public void forwardToInstance(String moduleOrBackendName, int instance,
-      HttpServletRequest hrequest, HttpServletResponse response)
+  public void forwardToInstance(
+      String moduleOrBackendName,
+      int instance,
+      HttpServletRequest hrequest,
+      HttpServletResponse response)
       throws IOException, ServletException {
-      if (isBackend(moduleOrBackendName)) {
-        ((BackendServersEE8)backendServers).forwardToServer(moduleOrBackendName, instance, hrequest, response);
-     } else {
-       ((ModulesEE8)modules).forwardToInstance(moduleOrBackendName, instance, hrequest, response);
-     }
-  }    
+    if (isBackend(moduleOrBackendName)) {
+      ((BackendServersEE8) backendServers)
+          .forwardToServer(moduleOrBackendName, instance, hrequest, response);
+    } else {
+      ((ModulesEE8) modules).forwardToInstance(moduleOrBackendName, instance, hrequest, response);
+    }
+  }
 }

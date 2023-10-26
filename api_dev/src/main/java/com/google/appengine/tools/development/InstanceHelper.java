@@ -71,8 +71,7 @@ public class InstanceHelper {
   /**
    * Triggers an HTTP GET to /_ah/start in a background thread
    *
-   * This method will keep on trying until it receives a non-error response
-   * code from the server.
+   * <p>This method will keep on trying until it receives a non-error response code from the server.
    *
    * @param runOnSuccess {@link Runnable#run} invoked when the startup request succeeds.
    */
@@ -256,8 +255,8 @@ public class InstanceHelper {
   /**
    * Shut down the server.
    *
-   * Will trigger any shutdown hooks installed by the
-   * {@link com.google.appengine.api.LifecycleManager}
+   * <p>Will trigger any shutdown hooks installed by the {@link
+   * com.google.appengine.api.LifecycleManager}
    *
    * @throws Exception
    */

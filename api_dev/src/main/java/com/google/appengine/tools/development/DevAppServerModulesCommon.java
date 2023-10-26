@@ -30,66 +30,65 @@ import java.util.logging.Logger;
 /**
  * This filter intercepts all request sent to all module instances.
  *
- *  There are 6 different request types that this filter will see:
+ * <p>There are 6 different request types that this filter will see:
  *
- *  * DIRECT_BACKEND_REQUEST: a client request sent to a serving (non load balancing)
- *    backend instance.
+ * <p>* DIRECT_BACKEND_REQUEST: a client request sent to a serving (non load balancing) backend
+ * instance.
  *
- *  * REDIRECT_REQUESTED: a request requesting a redirect in one of three ways
- *     1) The request contains a BackendService.REQUEST_HEADER_BACKEND_REDIRECT
- *        header or parameter
- *     2) The request is sent to a load balancing module instance.
- *     3) The request is sent to a load balancing backend instance.
+ * <p>* REDIRECT_REQUESTED: a request requesting a redirect in one of three ways 1) The request
+ * contains a BackendService.REQUEST_HEADER_BACKEND_REDIRECT header or parameter 2) The request is
+ * sent to a load balancing module instance. 3) The request is sent to a load balancing backend
+ * instance.
  *
- *    If the request specifies an instance with the BackendService.REQUEST_HEADER_INSTANCE_REDIRECT
- *    request header or parameter the filter verifies that the instance is available,
- *    obtains a serving permit and forwards the requests. If the instance is not available
- *    the filter responds with a 500 error.
+ * <p>If the request specifies an instance with the BackendService.REQUEST_HEADER_INSTANCE_REDIRECT
+ * request header or parameter the filter verifies that the instance is available, obtains a serving
+ * permit and forwards the requests. If the instance is not available the filter responds with a 500
+ * error.
  *
- *    If the request does not specify an instance the filter picks one,
- *    obtains a serving permit, and and forwards the request. If no instance is
- *    available this filter responds with a 500 error.
+ * <p>If the request does not specify an instance the filter picks one, obtains a serving permit,
+ * and forwards the request. If no instance is available this filter responds with a 500 error.
  *
- *  * DIRECT_MODULE_REQUEST: a request sent directly to the listening port of a
- *    specific serving module instance. The filter verifies that the instance is
- *    available, obtains a serving permit and sends the request to the handler.
- *    If no instance is available this filter responds with a 500 error.
+ * <p>* DIRECT_MODULE_REQUEST: a request sent directly to the listening port of a specific serving
+ * module instance. The filter verifies that the instance is available, obtains a serving permit and
+ * sends the request to the handler. If no instance is available this filter responds with a 500
+ * error.
  *
- *  * REDIRECTED_BACKEND_REQUEST: a request redirected to a backend instance.
- *    The filter sends the request to the handler. The serving permit has
- *    already been obtained by this filter when performing the redirect.
+ * <p>* REDIRECTED_BACKEND_REQUEST: a request redirected to a backend instance. The filter sends the
+ * request to the handler. The serving permit has already been obtained by this filter when
+ * performing the redirect.
  *
- *  * REDIRECTED_MODULE_REQUEST: a request redirected to a specific module instance.
- *    The filter sends the request to the handler. The serving permit has
- *    already been obtained when by filter performing the redirect.
+ * <p>* REDIRECTED_MODULE_REQUEST: a request redirected to a specific module instance. The filter
+ * sends the request to the handler. The serving permit has already been obtained when by filter
+ * performing the redirect.
  *
- * * STARTUP_REQUEST: Internally generated startup request. The filter
- *   passes the request to the handler without obtaining a serving permit.
- *
- *
+ * <p>* STARTUP_REQUEST: Internally generated startup request. The filter passes the request to the
+ * handler without obtaining a serving permit.
  */
 public class DevAppServerModulesCommon {
 
-  protected static final String BACKEND_REDIRECT_ATTRIBUTE = "com.google.appengine.backend.BackendName";
+  protected static final String BACKEND_REDIRECT_ATTRIBUTE =
+      "com.google.appengine.backend.BackendName";
   protected static final String BACKEND_INSTANCE_REDIRECT_ATTRIBUTE =
       "com.google.appengine.backend.BackendInstance";
+
   @VisibleForTesting
   protected static final String MODULE_INSTANCE_REDIRECT_ATTRIBUTE =
       "com.google.appengine.module.ModuleInstance";
 
-  protected final BackendServers backendServersManager;
+  protected final BackendServersBase backendServersManager;
   protected final ModulesService modulesService;
 
   protected final Logger logger = Logger.getLogger(DevAppServerModulesFilter.class.getName());
 
   @VisibleForTesting
-  protected DevAppServerModulesCommon(BackendServers backendServers, ModulesService modulesService) {
+  protected DevAppServerModulesCommon(
+      BackendServersBase backendServers, ModulesService modulesService) {
     this.backendServersManager = backendServers;
     this.modulesService = modulesService;
   }
 
   public DevAppServerModulesCommon() {
-    this(BackendServers.getInstance(), ModulesServiceFactory.getModulesService());
+    this(BackendServersBase.getInstance(), ModulesServiceFactory.getModulesService());
   }
 
   protected boolean isLoadBalancingRequest() {
@@ -99,22 +98,23 @@ public class DevAppServerModulesCommon {
     return modulesFilterHelper.isLoadBalancingInstance(module, instance);
   }
 
-  protected boolean expectsGeneratedStartRequests(String backendName,
-      int requestPort) {
+  protected boolean expectsGeneratedStartRequests(String backendName, int requestPort) {
     String moduleOrBackendName = backendName;
     if (moduleOrBackendName == null) {
       moduleOrBackendName = modulesService.getCurrentModule();
     }
 
-    int instance = backendName == null ? getCurrentModuleInstance() :
-      backendServersManager.getServerInstanceFromPort(requestPort);
+    int instance =
+        backendName == null
+            ? getCurrentModuleInstance()
+            : backendServersManager.getServerInstanceFromPort(requestPort);
     ModulesFilterHelper modulesFilterHelper = getModulesFilterHelper();
     return modulesFilterHelper.expectsGeneratedStartRequests(moduleOrBackendName, instance);
   }
 
   /**
-   * Returns the instance id for the module instance handling the current request or -1
-   * if a back end server or load balancing server is handling the request.
+   * Returns the instance id for the module instance handling the current request or -1 if a back
+   * end server or load balancing server is handling the request.
    */
   protected int getCurrentModuleInstance() {
     String instance = "-1";
@@ -132,9 +132,9 @@ public class DevAppServerModulesCommon {
   }
 
   /**
-   * Inject information about the current backend server setup so it is available
-   * to the BackendService API. This information is stored in the threadLocalAttributes
-   * in the current environment.
+   * Inject information about the current backend server setup so it is available to the
+   * BackendService API. This information is stored in the threadLocalAttributes in the current
+   * environment.
    *
    * @param backendName The server that is handling the request
    * @param instance The server instance that is handling the request
@@ -157,13 +157,10 @@ public class DevAppServerModulesCommon {
     }
 
     threadLocalAttributes.put(
-        ModulesController.MODULES_CONTROLLER_ATTRIBUTE_KEY,
-        Modules.getInstance());
+        ModulesController.MODULES_CONTROLLER_ATTRIBUTE_KEY, Modules.getInstance());
   }
 
-  /**
-   * Sets up {@link ApiProxy} attributes needed {@link BackendService}.
-   */
+  /** Sets up {@link ApiProxy} attributes needed {@link BackendService}. */
   public static void injectBackendServiceCurrentApiInfo(
       String backendName, int backendInstance, Map<String, String> portMapping) {
     Map<String, Object> threadLocalAttributes = ApiProxy.getCurrentEnvironment().getAttributes();
@@ -178,7 +175,11 @@ public class DevAppServerModulesCommon {
 
   @VisibleForTesting
   public static enum RequestType {
-    DIRECT_MODULE_REQUEST, REDIRECT_REQUESTED, DIRECT_BACKEND_REQUEST, REDIRECTED_BACKEND_REQUEST,
-    REDIRECTED_MODULE_REQUEST, STARTUP_REQUEST;
+    DIRECT_MODULE_REQUEST,
+    REDIRECT_REQUESTED,
+    DIRECT_BACKEND_REQUEST,
+    REDIRECTED_BACKEND_REQUEST,
+    REDIRECTED_MODULE_REQUEST,
+    STARTUP_REQUEST;
   }
 }

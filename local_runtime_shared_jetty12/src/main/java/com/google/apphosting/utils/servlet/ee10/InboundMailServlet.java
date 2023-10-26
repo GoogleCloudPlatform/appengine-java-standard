@@ -17,11 +17,11 @@
 package com.google.apphosting.utils.servlet.ee10;
 
 import com.google.apphosting.api.ApiProxy;
-import java.io.IOException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
 
 /**
  * Handler for the InboundMail local console.

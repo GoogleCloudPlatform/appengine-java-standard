@@ -22,12 +22,12 @@ import com.google.appengine.api.datastore.Entity;
 import com.google.appengine.api.datastore.FetchOptions;
 import com.google.appengine.api.datastore.Key;
 import com.google.appengine.api.datastore.Query;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.ArrayList;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.ArrayList;
 
 /**
  * This servlet is run to cleanup expired sessions.  Since our

@@ -32,7 +32,7 @@ public final class NamespaceResources {
   // existing records.
   //
   // *IMPORTANT* - Keep this in sync with C++ client and Python (and newer runtimes).
-  // (<internal8>)
+  // (//apphosting/datastore/appid_namespace.h)
   public static final char NAMESPACE_SEPARATOR = '!';
 
   private NamespaceResources() {

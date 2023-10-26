@@ -24,27 +24,27 @@ import com.google.apphosting.runtime.jetty.AppVersionHandlerFactory;
 import com.google.apphosting.runtime.jetty.EE10SessionManagerHandler;
 import com.google.common.flogger.GoogleLogger;
 import com.google.common.html.HtmlEscapers;
-import java.io.File;
-import java.io.IOException;
-import java.io.PrintWriter;
 import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.UnavailableException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintWriter;
 import javax.servlet.jsp.JspFactory;
 import org.eclipse.jetty.ee10.annotations.AnnotationConfiguration;
+import org.eclipse.jetty.ee10.quickstart.QuickStartConfiguration;
 import org.eclipse.jetty.ee10.servlet.Dispatcher;
 import org.eclipse.jetty.ee10.servlet.ErrorHandler;
-import org.eclipse.jetty.ee10.quickstart.QuickStartConfiguration;
 import org.eclipse.jetty.ee10.servlet.ErrorPageErrorHandler;
 import org.eclipse.jetty.ee10.servlet.ServletContextRequest;
 import org.eclipse.jetty.ee10.webapp.FragmentConfiguration;
 import org.eclipse.jetty.ee10.webapp.MetaInfConfiguration;
-import org.eclipse.jetty.ee8.webapp.WebAppContext;
 import org.eclipse.jetty.ee10.webapp.WebInfConfiguration;
 import org.eclipse.jetty.ee10.webapp.WebXmlConfiguration;
+import org.eclipse.jetty.ee8.webapp.WebAppContext;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.io.Content;
 import org.eclipse.jetty.server.Request;
@@ -86,16 +86,12 @@ public class EE10AppVersionHandlerFactory implements AppVersionHandlerFactory {
   private final String serverInfo;
   private final boolean useJettyErrorPageHandler;
 
-  public EE10AppVersionHandlerFactory(
-          Server server,
-          String serverInfo) {
+  public EE10AppVersionHandlerFactory(Server server, String serverInfo) {
     this(server, serverInfo, false);
   }
 
   public EE10AppVersionHandlerFactory(
-          Server server,
-          String serverInfo,
-          boolean useJettyErrorPageHandler) {
+      Server server, String serverInfo, boolean useJettyErrorPageHandler) {
     this.server = server;
     this.serverInfo = serverInfo;
     this.useJettyErrorPageHandler = useJettyErrorPageHandler;
@@ -123,26 +119,31 @@ public class EE10AppVersionHandlerFactory implements AppVersionHandlerFactory {
     try {
       File contextRoot = appVersion.getRootDirectory();
 
-      final AppEngineWebAppContext context = new AppEngineWebAppContext(appVersion.getRootDirectory(), serverInfo);
+      final AppEngineWebAppContext context =
+          new AppEngineWebAppContext(appVersion.getRootDirectory(), serverInfo);
       context.setServer(server);
       context.setDefaultsDescriptor(WEB_DEFAULTS_XML);
       ClassLoader classLoader = appVersion.getClassLoader();
       context.setClassLoader(classLoader);
       if (useJettyErrorPageHandler) {
-        ((ErrorHandler)context.getErrorHandler()).setShowStacks(false);
+        ((ErrorHandler) context.getErrorHandler()).setShowStacks(false);
       } else {
         context.setErrorHandler(new NullErrorHandler());
       }
 
-      // TODO: because of the shading we do not have a correct org.eclipse.jetty.ee10.webapp.Configuration file from
-      //  the runtime-impl jar. It failed to merge content from various modules and only contains quickstart.
-      //  Because of this the default configurations are not able to be found by WebAppContext with ServiceLoader.
-      context.setConfigurationClasses(new String[]{
-              WebInfConfiguration.class.getCanonicalName(),
-              WebXmlConfiguration.class.getCanonicalName(),
-              MetaInfConfiguration.class.getCanonicalName(),
-              FragmentConfiguration.class.getCanonicalName()
-      });
+      // TODO: because of the shading we do not have a correct
+      // org.eclipse.jetty.ee10.webapp.Configuration file from
+      //  the runtime-impl jar. It failed to merge content from various modules and only contains
+      // quickstart.
+      //  Because of this the default configurations are not able to be found by WebAppContext with
+      // ServiceLoader.
+      context.setConfigurationClasses(
+          new String[] {
+            WebInfConfiguration.class.getCanonicalName(),
+            WebXmlConfiguration.class.getCanonicalName(),
+            MetaInfConfiguration.class.getCanonicalName(),
+            FragmentConfiguration.class.getCanonicalName()
+          });
 
       /*
        * Remove JettyWebXmlConfiguration which allows users to use jetty-web.xml files.
@@ -266,7 +267,7 @@ public class EE10AppVersionHandlerFactory implements AppVersionHandlerFactory {
       HttpServletResponse httpServletResponse = contextRequest.getHttpServletResponse();
 
       // Extract some error handling info from Jetty's proprietary attributes.
-      Throwable error = (Throwable)contextRequest.getAttribute(RequestDispatcher.ERROR_EXCEPTION);
+      Throwable error = (Throwable) contextRequest.getAttribute(RequestDispatcher.ERROR_EXCEPTION);
       Integer code = (Integer) contextRequest.getAttribute(RequestDispatcher.ERROR_STATUS_CODE);
       String message = (String) contextRequest.getAttribute(RequestDispatcher.ERROR_MESSAGE);
 
@@ -318,9 +319,7 @@ public class EE10AppVersionHandlerFactory implements AppVersionHandlerFactory {
           writer.println("</body></html>");
           writer.close();
           callback.succeeded();
-        }
-        catch (Throwable t)
-        {
+        } catch (Throwable t) {
           callback.failed(t);
         }
 

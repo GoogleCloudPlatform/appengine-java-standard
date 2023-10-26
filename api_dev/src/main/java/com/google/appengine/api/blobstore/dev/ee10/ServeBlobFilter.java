@@ -26,10 +26,6 @@ import com.google.appengine.api.blobstore.dev.BlobStorageFactory;
 import com.google.appengine.api.blobstore.dev.LocalBlobstoreService;
 import com.google.appengine.tools.development.ApiProxyLocal;
 import com.google.common.io.Closeables;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.logging.Logger;
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.FilterConfig;
@@ -39,6 +35,10 @@ import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpServletResponseWrapper;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.logging.Logger;
 
 /**
  * {@code ServeBlobFilter} implements the ability to serve a blob in

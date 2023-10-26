@@ -320,9 +320,8 @@ public final class LocalImagesService extends AbstractLocalRpcService {
    * Obtains the mime type of the image data.
    *
    * @param imageData a reference to the image
-   *
-   * @return a string representing the mime type. Valid return values include
-   *     {@code inputFormats} in LocalImagesService.init().
+   * @return a string representing the mime type. Valid return values include {@code inputFormats}
+   *     in LocalImagesService.init().
    * @throws ApiProxy.ApplicationException If the image cannot be opened
    */
   public String getMimeType(ImageData imageData) {
@@ -550,7 +549,7 @@ public final class LocalImagesService extends AbstractLocalRpcService {
 
   @Override
   public Integer getMaxApiRequestSize() {
-    // Keep this in sync with MAX_REQUEST_SIZE in <internal5>.
+    // Keep this in sync with MAX_REQUEST_SIZE in //apphosting/api/images/images_stub.py.
     return 32 << 20;  // 32 MB
   }
 

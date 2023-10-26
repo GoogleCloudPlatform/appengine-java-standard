@@ -21,7 +21,6 @@ import com.google.apphosting.runtime.AppVersion;
 import com.google.apphosting.runtime.SessionStore;
 import com.google.apphosting.runtime.SessionStoreFactory;
 import java.util.Objects;
-import javax.servlet.ServletException;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.handler.HotSwapHandler;
 import org.eclipse.jetty.session.SessionManager;
@@ -53,7 +52,8 @@ public class AppVersionHandler extends HotSwapHandler {
 
   public void removeAppVersion(AppVersionKey appVersionKey) {
     if (!Objects.equals(appVersionKey, appVersion.getKey()))
-      throw new IllegalArgumentException("AppVersionKey does not match AppVersion " + appVersion.getKey());
+      throw new IllegalArgumentException(
+          "AppVersionKey does not match AppVersion " + appVersion.getKey());
     this.appVersion = null;
   }
 

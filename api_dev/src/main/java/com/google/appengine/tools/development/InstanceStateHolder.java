@@ -63,7 +63,7 @@ public class InstanceStateHolder {
    * @param moduleOrBackendName For module instances the module name and for backend instances the
    *     backend name.
    * @param instance The instance number or -1 for load balancing instances and automatic module
-   * instances.
+   *     instances.
    */
   public InstanceStateHolder(String moduleOrBackendName, int instance) {
     this.moduleOrBackendName = moduleOrBackendName;
@@ -71,16 +71,14 @@ public class InstanceStateHolder {
   }
 
   /**
-   * Updates the current instance state and verifies that the previous state is
-   * what is expected.
+   * Updates the current instance state and verifies that the previous state is what is expected.
    *
    * @param newState The new state to change to
    * @param acceptablePreviousStates Acceptable previous states
-   * @throws IllegalStateException If the current state is not one of the
-   *         acceptable previous states
+   * @throws IllegalStateException If the current state is not one of the acceptable previous states
    */
-  public void testAndSet(InstanceState newState,
-      InstanceState... acceptablePreviousStates) throws IllegalStateException {
+  public void testAndSet(InstanceState newState, InstanceState... acceptablePreviousStates)
+      throws IllegalStateException {
     InstanceState invalidState =
         testAndSetIf(newState, acceptablePreviousStates);
     if (invalidState != null) {
@@ -119,9 +117,7 @@ public class InstanceStateHolder {
     return result;
   }
 
-  /**
-   * Returns true if current state is one of the provided acceptable states.
-   */
+  /** Returns true if current state is one of the provided acceptable states. */
   public synchronized boolean test(InstanceState... acceptableStates) {
     for (InstanceState acceptable : acceptableStates) {
       if (currentState == acceptable) {
@@ -154,9 +150,7 @@ public class InstanceStateHolder {
         || currentState == InstanceState.SLEEPING);
   }
 
-  /**
-   * Returns the display name for the current state.
-   */
+  /** Returns the display name for the current state. */
   public synchronized String getDisplayName() {
     return currentState.name().toLowerCase();
   }

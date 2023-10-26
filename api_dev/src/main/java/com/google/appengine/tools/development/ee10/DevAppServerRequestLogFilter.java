@@ -16,13 +16,13 @@
 
 package com.google.appengine.tools.development.ee10;
 
-import java.io.IOException;
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.FilterConfig;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
+import java.io.IOException;
 
 /**
  * This filter configures request logging on the Python API server.

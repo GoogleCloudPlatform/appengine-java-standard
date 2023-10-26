@@ -17,9 +17,8 @@
 package com.google.appengine.api.blobstore.dev;
 
 /**
- * {@code BlobUploadSession} is a simple data container that stores
- * the state associated with an in-progress upload.
- *
+ * {@code BlobUploadSession} is a simple data container that stores the state associated with an
+ * in-progress upload.
  */
 public class BlobUploadSession {
   private final String successPath;

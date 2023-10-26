@@ -23,14 +23,14 @@ import com.google.appengine.tools.development.ApiProxyLocal;
 import com.google.appengine.tools.development.LocalCapabilitiesEnvironment;
 import com.google.apphosting.api.ApiProxy;
 import com.google.common.collect.ImmutableMap;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Handler for the Capabilities status change on local console.

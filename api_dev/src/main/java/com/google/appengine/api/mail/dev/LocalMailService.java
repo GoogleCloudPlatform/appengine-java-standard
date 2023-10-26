@@ -298,7 +298,7 @@ public final class LocalMailService extends AbstractLocalRpcService {
 
   @Override
   public Integer getMaxApiRequestSize() {
-    // Keep this in sync with MAX_REQUEST_SIZE in <internal6>.
+    // Keep this in sync with MAX_REQUEST_SIZE in //apphosting/api/mail/mail_stub.py.
     return 32 << 20;  // 32 MB
   }
 }

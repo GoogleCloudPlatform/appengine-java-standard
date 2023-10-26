@@ -40,7 +40,7 @@ import com.google.apphosting.utils.remoteapi.RemoteApiPb.TransactionQueryResult;
 import com.google.apphosting.utils.remoteapi.RemoteApiPb.TransactionRequest;
 import com.google.apphosting.utils.remoteapi.RemoteApiPb.TransactionRequest.Precondition;
 import com.google.io.protocol.ProtocolMessage;
-// <internal24>
+
 import com.google.storage.onestore.v3.OnestoreEntity;
 import com.google.storage.onestore.v3.OnestoreEntity.EntityProto;
 import com.google.storage.onestore.v3.OnestoreEntity.Path.Element;
@@ -474,7 +474,7 @@ public class RemoteApiServlet extends HttpServlet {
     return computeSha1(entityBytes, entityBytes.length - 1);
   }
 
-  // <internal25>
+  
   private static byte[] computeSha1(byte[] bytes, int length) {
     MessageDigest md;
     try {

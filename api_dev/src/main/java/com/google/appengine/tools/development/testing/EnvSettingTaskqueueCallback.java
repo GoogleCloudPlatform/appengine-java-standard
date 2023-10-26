@@ -25,26 +25,21 @@ import java.util.concurrent.CountDownLatch;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
- * An implementation of {@code LocalTaskQueueCallback} that wraps a delegate and
- * invokes {@link
- * ApiProxy#setEnvironmentForCurrentThread(com.google.apphosting.api.ApiProxy.Environment)}
- * prior to invoking the delegate.
- * <p>
- * There are two types of threads that may interact with this class. Class 1
- * consists of threads used to initialize data relevent to this class. These are
- * the main thread of a unit test, which will invoke
- * {@link #setProxyProperties(ApiProxyLocal, Class, boolean)} and the threads
- * started by {@code ApiProxyLocalImpl.makeAsyncCall()} which will invoke
- * {@link #initialize(Map)}.
- * <p>
- * Class 2 consists of automatic task hanlding threads which will invoke {@link
- * #execute(com.google.appengine.api.urlfetch.URLFetchServicePb.URLFetchRequest)}.
- * <p>
- * The goal of this class is to be able to get data about an
- * {@link ApiProxy.Environment} from class 1 threads to class 2 threads. We want
- * the class 2 threads to have an {@code Environment} so that they can interact
- * with App Engine APIs such as the datastore.
+ * An implementation of {@code LocalTaskQueueCallback} that wraps a delegate and invokes {@link
+ * ApiProxy#setEnvironmentForCurrentThread(com.google.apphosting.api.ApiProxy.Environment)} prior to
+ * invoking the delegate.
  *
+ * <p>There are two types of threads that may interact with this class. Class 1 consists of threads
+ * used to initialize data relevant to this class. These are the main thread of a unit test, which
+ * will invoke {@link #setProxyProperties(ApiProxyLocal, Class, boolean)} and the threads started by
+ * {@code ApiProxyLocalImpl.makeAsyncCall()} which will invoke {@link #initialize(Map)}.
+ *
+ * <p>Class 2 consists of automatic task hanlding threads which will invoke {@link
+ * #execute(com.google.appengine.api.urlfetch.URLFetchServicePb.URLFetchRequest)}.
+ *
+ * <p>The goal of this class is to be able to get data about an {@link ApiProxy.Environment} from
+ * class 1 threads to class 2 threads. We want the class 2 threads to have an {@code Environment} so
+ * that they can interact with App Engine APIs such as the datastore.
  */
 public class EnvSettingTaskqueueCallback implements LocalTaskQueueCallback {
 
@@ -73,16 +68,16 @@ public class EnvSettingTaskqueueCallback implements LocalTaskQueueCallback {
       EnvSettingTaskqueueCallback.class.getName() + ".taskExecutionLatch";
 
   /**
-   * A helper method invoked from {@link LocalTaskQueueTestConfig} which sets
-   * the above two properties.
+   * A helper method invoked from {@link LocalTaskQueueTestConfig} which sets the above two
+   * properties.
    *
-   * @param proxy The instance of {@code ApiProxyLocal} in which the properties
-   *        should be set.
+   * @param proxy The instance of {@code ApiProxyLocal} in which the properties should be set.
    * @param delegateClass the name of the delegate class.
-   * @param shouldCopyApiProxyEnvironment should we copy the {@code Environment}
-   *        to the task threads.
+   * @param shouldCopyApiProxyEnvironment should we copy the {@code Environment} to the task
+   *     threads.
    */
-  public static void setProxyProperties(ApiProxyLocal proxy,
+  public static void setProxyProperties(
+      ApiProxyLocal proxy,
       Class<? extends LocalTaskQueueCallback> delegateClass,
       boolean shouldCopyApiProxyEnvironment) {
     proxy.setProperty(DELEGATE_CLASS_PROP, delegateClass.getName());
@@ -90,8 +85,8 @@ public class EnvSettingTaskqueueCallback implements LocalTaskQueueCallback {
   }
 
   /**
-   * A helper method invoked from {@link LocalTaskQueueTestConfig} which sets
-   * the provided latch on the current environment.
+   * A helper method invoked from {@link LocalTaskQueueTestConfig} which sets the provided latch on
+   * the current environment.
    *
    * @param latch the latch
    */

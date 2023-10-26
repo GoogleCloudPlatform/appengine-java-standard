@@ -16,14 +16,13 @@
 
 package com.google.apphosting.runtime.jetty.ee10;
 
+import jakarta.servlet.ServletException;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import jakarta.servlet.ServletException;
 import org.eclipse.jetty.ee10.webapp.WebAppContext;
 import org.eclipse.jetty.server.Request;
 
@@ -76,7 +75,8 @@ public class TransactionCleanupListener implements RequestListener {
   }
 
   @Override
-  public void requestReceived(WebAppContext context, Request request) throws IOException, ServletException {}
+  public void requestReceived(WebAppContext context, Request request)
+      throws IOException, ServletException {}
 
   @Override
   public void requestComplete(WebAppContext context, Request request) {

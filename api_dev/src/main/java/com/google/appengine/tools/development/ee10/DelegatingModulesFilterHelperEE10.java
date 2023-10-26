@@ -16,7 +16,7 @@
 
 package com.google.appengine.tools.development.ee10;
 
-import com.google.appengine.tools.development.BackendServers;
+import com.google.appengine.tools.development.BackendServersBase;
 import com.google.appengine.tools.development.DelegatingModulesFilterHelper;
 import com.google.appengine.tools.development.Modules;
 import jakarta.servlet.ServletException;
@@ -24,23 +24,26 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-/**
- *
- */
-public class DelegatingModulesFilterHelperEE10  extends DelegatingModulesFilterHelper implements ModulesFilterHelperEE10 {
-    
-  public DelegatingModulesFilterHelperEE10(BackendServers backendServers, Modules modules) {
+/** */
+public class DelegatingModulesFilterHelperEE10 extends DelegatingModulesFilterHelper
+    implements ModulesFilterHelperEE10 {
+
+  public DelegatingModulesFilterHelperEE10(BackendServersBase backendServers, Modules modules) {
     super(backendServers, modules);
   }
-  
+
   @Override
-  public void forwardToInstance(String moduleOrBackendName, int instance,
-      HttpServletRequest hrequest, HttpServletResponse response)
+  public void forwardToInstance(
+      String moduleOrBackendName,
+      int instance,
+      HttpServletRequest hrequest,
+      HttpServletResponse response)
       throws IOException, ServletException {
-      if (isBackend(moduleOrBackendName)) {
-        ((BackendServersEE10)backendServers).forwardToServer(moduleOrBackendName, instance, hrequest, response);
-     } else {
-       ((ModulesEE10)modules).forwardToInstance(moduleOrBackendName, instance, hrequest, response);
-     }
-  }   
+    if (isBackend(moduleOrBackendName)) {
+      ((BackendServersEE10) backendServers)
+          .forwardToServer(moduleOrBackendName, instance, hrequest, response);
+    } else {
+      ((ModulesEE10) modules).forwardToInstance(moduleOrBackendName, instance, hrequest, response);
+    }
+  }
 }

@@ -166,7 +166,7 @@ public class JavaRuntimeMain {
       }
       // Force Jetty12 for EE10
       if (Boolean.getBoolean(USE_EE10)) {
-          System.setProperty(USE_JETTY12, "true");
+        System.setProperty(USE_JETTY12, "true");
       }
     }
   }

@@ -21,14 +21,15 @@ import com.google.appengine.api.users.UserService;
 import com.google.appengine.api.users.UserServiceFactory;
 import com.google.apphosting.api.ApiProxy;
 import com.google.common.flogger.GoogleLogger;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.security.Principal;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.function.Function;
-import jakarta.servlet.ServletRequest;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import javax.security.auth.Subject;
 import org.eclipse.jetty.ee10.servlet.ServletContextRequest;
 import org.eclipse.jetty.ee10.servlet.security.ConstraintSecurityHandler;
 import org.eclipse.jetty.security.AuthenticationState;
@@ -45,8 +46,6 @@ import org.eclipse.jetty.server.Response;
 import org.eclipse.jetty.server.Session;
 import org.eclipse.jetty.util.Callback;
 import org.eclipse.jetty.util.URIUtil;
-
-import javax.security.auth.Subject;
 
 /**
  * {@code AppEngineAuthentication} is a utility class that can configure a Jetty {@link
@@ -121,7 +120,10 @@ public class EE10AppEngineAuthentication {
     }
 
     @Override
-    public Constraint.Authorization getConstraintAuthentication(String pathInContext, Constraint.Authorization existing, Function<Boolean, Session> getSession) {
+    public Constraint.Authorization getConstraintAuthentication(
+        String pathInContext,
+        Constraint.Authorization existing,
+        Function<Boolean, Session> getSession) {
       return super.getConstraintAuthentication(pathInContext, existing, getSession);
     }
 
@@ -146,7 +148,8 @@ public class EE10AppEngineAuthentication {
      * @throws ServerAuthException
      */
     @Override
-    public AuthenticationState validateRequest(Request req, Response res, Callback cb) throws ServerAuthException {
+    public AuthenticationState validateRequest(Request req, Response res, Callback cb)
+        throws ServerAuthException {
 
       ServletContextRequest contextRequest = Request.as(req, ServletContextRequest.class);
 

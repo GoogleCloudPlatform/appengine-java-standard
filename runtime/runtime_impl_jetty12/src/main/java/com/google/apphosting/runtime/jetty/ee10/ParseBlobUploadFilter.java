@@ -21,6 +21,14 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import com.google.apphosting.utils.servlet.ee10.MultipartMimeUtils;
 import com.google.common.collect.Maps;
 import com.google.common.flogger.GoogleLogger;
+import jakarta.servlet.Filter;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequestWrapper;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -35,20 +43,6 @@ import javax.mail.internet.ContentType;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMultipart;
 
-import jakarta.servlet.Filter;
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.ServletRequest;
-import jakarta.servlet.ServletResponse;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletRequestWrapper;
-import jakarta.servlet.http.HttpServletResponse;
-import org.eclipse.jetty.ee10.servlet.ServletContextRequest;
-import org.eclipse.jetty.server.Handler;
-import org.eclipse.jetty.server.Request;
-import org.eclipse.jetty.server.Response;
-import org.eclipse.jetty.util.Callback;
-
 /**
  * {@code ParseBlobUploadHandler} is responsible for the parsing multipart/form-data or
  * multipart/mixed requests used to make Blob upload callbacks, and storing a set of string-encoded
@@ -57,7 +51,6 @@ import org.eclipse.jetty.util.Callback;
  *
  * <p>This listener automatically runs on all dynamic requests in the production environment. In the
  * DevAppServer, the equivalent work is subsumed by {@code UploadBlobServlet}.
- *
  */
 public class ParseBlobUploadFilter implements Filter {
   private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
@@ -84,9 +77,10 @@ public class ParseBlobUploadFilter implements Filter {
   static final String CONTENT_LENGTH_HEADER = "Content-Length";
 
   @Override
-  public void doFilter(ServletRequest req, ServletResponse resp, FilterChain chain) throws IOException, ServletException {
-    HttpServletRequest request = (HttpServletRequest)req;
-    HttpServletResponse response = (HttpServletResponse)resp;
+  public void doFilter(ServletRequest req, ServletResponse resp, FilterChain chain)
+      throws IOException, ServletException {
+    HttpServletRequest request = (HttpServletRequest) req;
+    HttpServletResponse response = (HttpServletResponse) resp;
 
     if (request.getHeader(UPLOAD_HEADER) != null) {
       Map<String, List<String>> blobKeys = new HashMap<>();
@@ -106,7 +100,8 @@ public class ParseBlobUploadFilter implements Filter {
               String blobKeyString = contentType.getParameter("blob-key");
               List<String> keys = blobKeys.computeIfAbsent(fieldName, k -> new ArrayList<>());
               keys.add(blobKeyString);
-              List<Map<String, String>> infos = blobInfos.computeIfAbsent(fieldName, k -> new ArrayList<>());
+              List<Map<String, String>> infos =
+                  blobInfos.computeIfAbsent(fieldName, k -> new ArrayList<>());
               infos.add(getInfoFromBody(MultipartMimeUtils.getTextContent(part), blobKeyString));
             }
           } else {

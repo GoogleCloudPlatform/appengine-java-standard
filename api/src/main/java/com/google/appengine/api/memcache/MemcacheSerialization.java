@@ -48,7 +48,7 @@ public class MemcacheSerialization {
    */
   public enum Flag {
     // For a MemcacheViewer to make sense, we need to have commonality between
-    // these constants and those in <internal7>
+    // these constants and those in //apphosting/api/memcche/__init__.py
     BYTES,   // python TYPE_STR
     UTF8,    // python TYPE_UNICODE
     OBJECT,  // python TYPE_PICKLED (but our serialization is different!)

@@ -39,7 +39,7 @@ import com.google.auto.service.AutoService;
 import com.google.common.base.CharMatcher;
 import com.google.common.io.BaseEncoding;
 import com.google.protobuf.ByteString;
-// <internal24>
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.GeneralSecurityException;
@@ -126,7 +126,7 @@ public class LocalAppIdentityService extends AbstractLocalRpcService {
   public void stop() {
   }
 
-  // <internal25>
+  
   public SignForAppResponse signForApp(Status status, SignForAppRequest request) throws Exception {
     SignForAppResponse.Builder responseBuilder = SignForAppResponse.newBuilder();
     Signature signature = Signature.getInstance("SHA256withRSA");

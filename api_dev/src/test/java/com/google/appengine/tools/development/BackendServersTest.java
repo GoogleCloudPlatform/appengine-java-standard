@@ -16,15 +16,11 @@
 
 package com.google.appengine.tools.development;
 
-import com.google.appengine.tools.development.BackendServers.ServerInstanceEntry;
+import com.google.appengine.tools.development.BackendServersBase.ServerInstanceEntry;
 import java.util.HashSet;
 import junit.framework.TestCase;
 
-/**
- * Test @code {@link BackendServers}
- * 
- * 
- */
+/** Test @code {@link BackendServersBase} */
 public class BackendServersTest extends TestCase {
 
   public void testServerInstanceEntryHashCode() throws Exception{

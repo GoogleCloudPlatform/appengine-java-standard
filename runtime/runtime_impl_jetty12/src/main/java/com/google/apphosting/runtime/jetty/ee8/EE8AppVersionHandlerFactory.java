@@ -115,7 +115,8 @@ public class EE8AppVersionHandlerFactory implements AppVersionHandlerFactory {
     try {
       File contextRoot = appVersion.getRootDirectory();
 
-      final AppEngineWebAppContext context = new AppEngineWebAppContext(appVersion.getRootDirectory(), serverInfo);
+      final AppEngineWebAppContext context =
+          new AppEngineWebAppContext(appVersion.getRootDirectory(), serverInfo);
       context.getCoreContextHandler().setServer(server);
       context.setServer(server);
       context.setDefaultsDescriptor(WEB_DEFAULTS_XML);

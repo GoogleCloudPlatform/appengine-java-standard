@@ -280,8 +280,8 @@
                                     <includes>**</includes>
                                     <outputDirectory>${assembly-directory}/lib/tools/quickstart</outputDirectory>
                                     <destFileName>quickstartgenerator-jetty12-ee10.jar</destFileName>
-                                </artifactItem>
-                                <artifactItem>
+                                 </artifactItem>
+                                 <artifactItem>
                                     <groupId>com.google.appengine</groupId>
                                     <artifactId>appengine-testing</artifactId>
                                     <version>${project.version}</version>

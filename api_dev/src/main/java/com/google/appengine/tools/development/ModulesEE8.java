@@ -18,26 +18,27 @@ package com.google.appengine.tools.development;
 
 import java.io.IOException;
 import java.util.List;
-
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-/**
- * Manager for {@link DevAppServer} servers.
- *
- */
+/** Manager for {@link DevAppServer} servers. */
 public class ModulesEE8 extends Modules {
 
   public ModulesEE8(List<Module> modules) {
-      super(modules);
+    super(modules);
   }
 
-  public void forwardToInstance(String requestedModule, int instance, HttpServletRequest hrequest,
-      HttpServletResponse hresponse) throws IOException, ServletException {
+  public void forwardToInstance(
+      String requestedModule,
+      int instance,
+      HttpServletRequest hrequest,
+      HttpServletResponse hresponse)
+      throws IOException, ServletException {
     Module module = getModule(requestedModule);
     InstanceHolder instanceHolder = module.getInstanceHolder(instance);
-    ((ContainerServiceEE8)instanceHolder.getContainerService()).forwardToServer(hrequest, hresponse);
+    ((ContainerServiceEE8) instanceHolder.getContainerService())
+        .forwardToServer(hrequest, hresponse);
   }
 
 }

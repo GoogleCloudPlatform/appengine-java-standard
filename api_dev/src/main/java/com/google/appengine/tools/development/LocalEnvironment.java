@@ -21,7 +21,7 @@ import static java.nio.charset.StandardCharsets.US_ASCII;
 import com.google.appengine.api.NamespaceManager;
 import com.google.apphosting.api.ApiProxy;
 import com.google.apphosting.utils.config.WebModule;
-// <internal24>
+
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.security.MessageDigest;
@@ -54,7 +54,7 @@ abstract public class LocalEnvironment implements ApiProxy.Environment {
       NamespaceManager.class.getName() + ".appsNamespace";
 
   // Default port for tests that do not specify a port.
-  public static final Integer TESTING_DEFAULT_PORT = new Integer(8080);
+  public static final Integer TESTING_DEFAULT_PORT = Integer.valueOf(8080);
 
   // Environment attribute key where the instance id is stored. Keep in sync
   // with ModulesServiceImpl.INSTANCE_ID_ENV_ATTRIBUTE.
@@ -194,9 +194,7 @@ abstract public class LocalEnvironment implements ApiProxy.Environment {
         moduleName, majorVersionId));
   }
 
-  /**
-   * Sets the instance for the provided attributes.
-   */
+  /** Sets the instance for the provided attributes. */
   public static void setInstance(Map<String, Object> attributes, int instance) {
     // First we remove the old value if there is one.
     attributes.remove(INSTANCE_ID_ENV_ATTRIBUTE);
@@ -207,8 +205,8 @@ abstract public class LocalEnvironment implements ApiProxy.Environment {
   }
 
   /**
-   * Sets the {@link #PORT_ID_ENV_ATTRIBUTE} value to the provided port value or
-   * clears it if port is null.
+   * Sets the {@link #PORT_ID_ENV_ATTRIBUTE} value to the provided port value or clears it if port
+   * is null.
    */
   public static void setPort(Map<String, Object> attributes, Integer port) {
     if (port == null) {
@@ -248,7 +246,7 @@ abstract public class LocalEnvironment implements ApiProxy.Environment {
    * in big-endian byte order. To ensure uniqueness, a hash of the incrementing counter is appended.
    * Hexadecimal encoding is used instead of base64 in order to preserve comparison order.
    */
-  // <internal25>
+  
   private String generateRequestId() {
     try {
       ByteBuffer buf = ByteBuffer.allocate(12);

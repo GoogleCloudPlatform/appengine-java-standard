@@ -28,6 +28,9 @@ import com.google.apphosting.utils.servlet.ee10.SessionCleanupServlet;
 import com.google.apphosting.utils.servlet.ee10.SnapshotServlet;
 import com.google.apphosting.utils.servlet.ee10.WarmupServlet;
 import com.google.common.collect.ImmutableSet;
+import jakarta.servlet.DispatcherType;
+import jakarta.servlet.Filter;
+import jakarta.servlet.Servlet;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
@@ -42,10 +45,6 @@ import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
-
-import jakarta.servlet.DispatcherType;
-import jakarta.servlet.Filter;
-import jakarta.servlet.Servlet;
 import org.eclipse.jetty.ee10.servlet.FilterHolder;
 import org.eclipse.jetty.ee10.servlet.FilterMapping;
 import org.eclipse.jetty.ee10.servlet.Holder;
@@ -106,7 +105,8 @@ public class AppEngineWebAppContext extends WebAppContext {
               "com.google.apphosting.utils.servlet.ParseBlobUploadFilter"),
           new HolderMatcher(
               "_ah_default", "com.google.apphosting.runtime.jetty.ResourceFileServlet"),
-          new HolderMatcher("default", "com.google.apphosting.runtime.jetty.ee10.NamedDefaultServlet"),
+          new HolderMatcher(
+              "default", "com.google.apphosting.runtime.jetty.ee10.NamedDefaultServlet"),
           new HolderMatcher("jsp", "com.google.apphosting.runtime.jetty.NoJspSerlvet"),
 
           // remove application filters and servlets that are known to only be applicable to
@@ -162,7 +162,8 @@ public class AppEngineWebAppContext extends WebAppContext {
 
     // Configure the Jetty SecurityHandler to understand our method of
     // authentication (via the UserService).
-    EE10AppEngineAuthentication.configureSecurityHandler((ConstraintSecurityHandler) getSecurityHandler());
+    EE10AppEngineAuthentication.configureSecurityHandler(
+        (ConstraintSecurityHandler) getSecurityHandler());
 
     setMaxFormContentSize(MAX_RESPONSE_SIZE);
 
@@ -178,13 +179,13 @@ public class AppEngineWebAppContext extends WebAppContext {
 
   @Override
   public ServletContextApi newServletContextApi() {
-      /* TODO only does this for logging?
-      // Override the default HttpServletContext implementation.
-      // TODO: maybe not needed when there is no securrity manager.
-      // see
-      // https://github.com/GoogleCloudPlatform/appengine-java-vm-runtime/commit/43c37fd039fb619608cfffdc5461ecddb4d90ebc
-      _scontext = new AppEngineServletContext();
-      */
+    /* TODO only does this for logging?
+    // Override the default HttpServletContext implementation.
+    // TODO: maybe not needed when there is no securrity manager.
+    // see
+    // https://github.com/GoogleCloudPlatform/appengine-java-vm-runtime/commit/43c37fd039fb619608cfffdc5461ecddb4d90ebc
+    _scontext = new AppEngineServletContext();
+    */
 
     return super.newServletContextApi();
   }
@@ -276,9 +277,10 @@ public class AppEngineWebAppContext extends WebAppContext {
     servletHandler.setAllowDuplicateMappings(true);
 
     // Protect deferred task queue with constraint
-    ConstraintSecurityHandler security = (ConstraintSecurityHandler)getSecurityHandler();
+    ConstraintSecurityHandler security = (ConstraintSecurityHandler) getSecurityHandler();
     ConstraintMapping cm = new ConstraintMapping();
-    cm.setConstraint(Constraint.from("deferred_queue", Constraint.Authorization.KNOWN_ROLE, "admin"));
+    cm.setConstraint(
+        Constraint.from("deferred_queue", Constraint.Authorization.KNOWN_ROLE, "admin"));
     cm.setPathSpec("/_ah/queue/__deferred__");
     security.addConstraintMapping(cm);
 

@@ -32,7 +32,14 @@ import com.google.apphosting.utils.servlet.ee10.MultipartMimeUtils;
 import com.google.common.base.Ascii;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Closeables;
-// <internal24>
+
+import jakarta.servlet.ReadListener;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletInputStream;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequestWrapper;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -63,13 +70,6 @@ import javax.mail.MessagingException;
 import javax.mail.internet.ContentType;
 import javax.mail.internet.MimeMultipart;
 import javax.mail.internet.ParseException;
-import jakarta.servlet.ReadListener;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.ServletInputStream;
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletRequestWrapper;
-import jakarta.servlet.http.HttpServletResponse;
 
 /**
  * {@code UploadBlobServlet} handles blob uploads in the development
@@ -177,7 +177,7 @@ public final class UploadBlobServlet extends HttpServlet {
     return info;
   }
 
-  // <internal25>
+  
   @SuppressWarnings("InputStreamSlowMultibyteRead")
   private void handleUpload(final HttpServletRequest req, HttpServletResponse resp)
       throws ServletException, IOException {

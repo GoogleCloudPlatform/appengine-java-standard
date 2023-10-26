@@ -30,6 +30,8 @@ import com.google.appengine.tools.development.testing.LocalServiceTestConfig;
 import com.google.appengine.tools.development.testing.LocalServiceTestHelper;
 import com.google.common.collect.Maps;
 import com.google.protobuf.ByteString;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.ByteArrayInputStream;
 import java.io.ObjectInputStream;
 import java.io.UnsupportedEncodingException;
@@ -41,8 +43,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletResponse;
 
 /**
  * Config for accessing the local task queue in tests. Default behavior is to

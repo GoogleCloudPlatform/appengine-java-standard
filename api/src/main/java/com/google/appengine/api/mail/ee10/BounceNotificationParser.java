@@ -18,6 +18,7 @@ package com.google.appengine.api.mail.ee10;
 
 import com.google.appengine.api.mail.BounceNotification;
 import com.google.appengine.api.utils.ee10.HttpRequestParser;
+import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.Properties;
 import javax.mail.BodyPart;
@@ -25,7 +26,6 @@ import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
-import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * The {@code BounceNotificationParser} parses an incoming HTTP request into

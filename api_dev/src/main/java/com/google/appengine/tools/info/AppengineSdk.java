@@ -326,13 +326,16 @@ public abstract class AppengineSdk {
 
   /** Returns the devappserver BackendServers FQN class for the corresponding Jetty version. */
   public abstract String getBackendServersClassName();
-  
+
   /** Returns the devappserver Modules FQN class for the corresponding Jetty version. */
   public abstract String getModulesClassName();
 
   /** Returns the JettyContainerService FQN class for the corresponding Jetty version. */
   public abstract String getJettyContainerService();
-  
+
+  /** Returns the DelegatingModulesFilterHelper FQN class for the corresponding Jetty version. */
+  public abstract String getDelegatingModulesFilterHelperClassName();
+
   /**
    * Returns the path to SDK resource files like xml or schemas files.
    */

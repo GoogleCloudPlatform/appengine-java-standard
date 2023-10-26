@@ -368,7 +368,7 @@ FIFTH     : ( '5th' );
 
 /* Special rule to avoid nondeterminism.  FOURTH_OR_FIFTH is never actually
  * returned but delegates to FOURTH or FIFTH.  For more info see:
- * <internal21>
+ * http://big.corp.google.com/~dizer/blogger/2007/03/antlr-and-lexical-nondeterminism.html
  */
 FOURTH_OR_FIFTH
           : ( ('fourth' { $type = FOURTH; })

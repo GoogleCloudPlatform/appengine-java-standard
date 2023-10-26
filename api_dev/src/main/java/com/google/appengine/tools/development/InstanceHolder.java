@@ -16,9 +16,7 @@
 
 package com.google.appengine.tools.development;
 
-/**
- * Holder for per module instance state.
- */
+/** Holder for per module instance state. */
 public interface InstanceHolder {
 
   /**

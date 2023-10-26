@@ -16,11 +16,11 @@
 
 package com.google.apphosting.utils.servlet.ee10;
 
-import java.io.IOException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
 
 /**
  * Servlet invoked for {@code /_ah/snapshot} requests. Users can override this by providing their

@@ -145,7 +145,7 @@ message AppInfo {
   // within the runtime_id:container runtime.
   //
   // Important: This field should be populated only on consultation with
-  // the appengine<internal> team.
+  // the appengine-appserving@google.com team.
   optional string runtime_specialization = 78;
 
   // Enable App Engine APIs on Second Generation go/gen2-wormhole-phase-1

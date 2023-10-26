@@ -50,11 +50,11 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 // InternalRemoteApiInstaller according to the very long comment in that class.
 public class RemoteApiInstaller {
   // Matches entries in a YAML map of app properties returned by the server.
-  // Currently, apps running on Google<internal> return quoted values, and their IDs are more complex.
+  // Currently, apps running on Googleplex return quoted values, and their IDs are more complex.
   //
-  // Appspot Examples:         Google<internal> Examples:
+  // Appspot Examples:         Googleplex Examples:
   // ~~~~~~~~~~~~~~~~~~~~      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  // app_id: appengineapp      app_id: 's~google.com:google<internal>_app_id'
+  // app_id: appengineapp      app_id: 's~google.com:googleplex_app_id'
   // rtok: 0                   rtok: '0'
   private static final Pattern PAIR_REGEXP =
       Pattern.compile("([a-z0-9_-]+): +(['\\\"]?)([:~.a-z0-9_-]+)\\2");

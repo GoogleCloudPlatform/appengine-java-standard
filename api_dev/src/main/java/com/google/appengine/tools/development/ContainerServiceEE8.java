@@ -17,26 +17,20 @@
 package com.google.appengine.tools.development;
 
 import java.io.IOException;
-
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 /**
- * Provides the backing servlet container support for the {@link DevAppServer},
- * as discovered via {@link ServiceProvider}.
- * <p>
- * More specifically, this interface encapsulates the interactions between the
- * {@link DevAppServer} and the underlying servlet container, which by default
- * uses Jetty.
+ * Provides the backing servlet container support for the {@link DevAppServer}, as discovered via
+ * {@link ServiceProvider}.
  *
+ * <p>More specifically, this interface encapsulates the interactions between the {@link
+ * DevAppServer} and the underlying servlet container, which by default uses Jetty.
  */
 public interface ContainerServiceEE8 extends ContainerService {
 
-  /**
-   * Forwards an HttpRequest request to this container.
-   */
+  /** Forwards an HttpRequest request to this container. */
   void forwardToServer(HttpServletRequest hrequest, HttpServletResponse hresponse)
       throws IOException, ServletException;
-
 }

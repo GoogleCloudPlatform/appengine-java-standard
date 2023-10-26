@@ -16,7 +16,7 @@
 
 package com.google.apphosting.runtime;
 
-// <internal22>
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -47,7 +47,7 @@ public final class SessionManagerUtil {
     }
   }
 
-  // <internal23>
+  
   public static Object deserialize(byte[] bytes) {
     // N.B.: There is most likely user code on the stack
     // here, but because the value we're returning is not related to

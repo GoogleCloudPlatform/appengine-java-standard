@@ -217,7 +217,7 @@ public class FakeHttpServletResponse implements HttpServletResponse {
     headers.put(HttpHeaders.CONTENT_TYPE, type);
     String encoding = getCharSet(type);
     // Mimic the real HttpResponse which only resets the character encoding
-    // when it's explcitily set in the content type
+    // when it's explicitly set in the content type
     if (encoding != null) {
       setCharacterEncoding(encoding);
     }

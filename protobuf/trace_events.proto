@@ -21,7 +21,7 @@
 // this file in favor of that interface.
 //
 // see:
-// <internal16>
+// https://cs.corp.google.com/piper///depot/google3/google/devtools/cloudtrace/v1/trace_event.proto
 //
 // We may discover that the use of protocol buffers to represent events is too
 // heavyweight for the throughput we require. In that case, all of these

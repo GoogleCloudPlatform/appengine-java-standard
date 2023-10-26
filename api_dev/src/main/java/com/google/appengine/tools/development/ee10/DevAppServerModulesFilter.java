@@ -19,13 +19,12 @@ package com.google.appengine.tools.development.ee10;
 import com.google.appengine.api.backends.BackendService;
 import com.google.appengine.api.modules.ModulesService;
 import com.google.appengine.api.modules.ModulesServiceFactory;
-import com.google.appengine.tools.development.BackendServers;
+import com.google.appengine.tools.development.BackendServersBase;
 import com.google.appengine.tools.development.DevAppServerModulesCommon;
 import com.google.appengine.tools.development.LocalEnvironment;
 import com.google.appengine.tools.development.ModulesFilterHelper;
 import com.google.apphosting.api.ApiProxy;
 import com.google.common.annotations.VisibleForTesting;
-import java.io.IOException;
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.FilterConfig;
@@ -34,47 +33,44 @@ import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
 
 /**
  * This filter intercepts all request sent to all module instances.
  *
- *  There are 6 different request types that this filter will see:
+ * <p>There are 6 different request types that this filter will see:
  *
- *  * DIRECT_BACKEND_REQUEST: a client request sent to a serving (non load balancing)
- *    backend instance.
+ * <p>* DIRECT_BACKEND_REQUEST: a client request sent to a serving (non load balancing) backend
+ * instance.
  *
- *  * REDIRECT_REQUESTED: a request requesting a redirect in one of three ways
- *     1) The request contains a BackendService.REQUEST_HEADER_BACKEND_REDIRECT
- *        header or parameter
- *     2) The request is sent to a load balancing module instance.
- *     3) The request is sent to a load balancing backend instance.
+ * <p>* REDIRECT_REQUESTED: a request requesting a redirect in one of three ways 1) The request
+ * contains a BackendService.REQUEST_HEADER_BACKEND_REDIRECT header or parameter 2) The request is
+ * sent to a load balancing module instance. 3) The request is sent to a load balancing backend
+ * instance.
  *
- *    If the request specifies an instance with the BackendService.REQUEST_HEADER_INSTANCE_REDIRECT
- *    request header or parameter the filter verifies that the instance is available,
- *    obtains a serving permit and forwards the requests. If the instance is not available
- *    the filter responds with a 500 error.
+ * <p>If the request specifies an instance with the BackendService.REQUEST_HEADER_INSTANCE_REDIRECT
+ * request header or parameter the filter verifies that the instance is available, obtains a serving
+ * permit and forwards the requests. If the instance is not available the filter responds with a 500
+ * error.
  *
- *    If the request does not specify an instance the filter picks one,
- *    obtains a serving permit, and and forwards the request. If no instance is
- *    available this filter responds with a 500 error.
+ * <p>If the request does not specify an instance the filter picks one, obtains a serving permit,
+ * and forwards the request. If no instance is available this filter responds with a 500 error.
  *
- *  * DIRECT_MODULE_REQUEST: a request sent directly to the listening port of a
- *    specific serving module instance. The filter verifies that the instance is
- *    available, obtains a serving permit and sends the request to the handler.
- *    If no instance is available this filter responds with a 500 error.
+ * <p>* DIRECT_MODULE_REQUEST: a request sent directly to the listening port of a specific serving
+ * module instance. The filter verifies that the instance is available, obtains a serving permit and
+ * sends the request to the handler. If no instance is available this filter responds with a 500
+ * error.
  *
- *  * REDIRECTED_BACKEND_REQUEST: a request redirected to a backend instance.
- *    The filter sends the request to the handler. The serving permit has
- *    already been obtained by this filter when performing the redirect.
+ * <p>* REDIRECTED_BACKEND_REQUEST: a request redirected to a backend instance. The filter sends the
+ * request to the handler. The serving permit has already been obtained by this filter when
+ * performing the redirect.
  *
- *  * REDIRECTED_MODULE_REQUEST: a request redirected to a specific module instance.
- *    The filter sends the request to the handler. The serving permit has
- *    already been obtained when by filter performing the redirect.
+ * <p>* REDIRECTED_MODULE_REQUEST: a request redirected to a specific module instance. The filter
+ * sends the request to the handler. The serving permit has already been obtained when by filter
+ * performing the redirect.
  *
- * * STARTUP_REQUEST: Internally generated startup request. The filter
- *   passes the request to the handler without obtaining a serving permit.
- *
- *
+ * <p>* STARTUP_REQUEST: Internally generated startup request. The filter passes the request to the
+ * handler without obtaining a serving permit.
  */
 public class DevAppServerModulesFilter extends DevAppServerModulesCommon implements Filter {
 
@@ -87,12 +83,12 @@ public class DevAppServerModulesFilter extends DevAppServerModulesCommon impleme
   static final int MODULE_MISSING_ERROR_CODE = HttpServletResponse.SC_BAD_GATEWAY;
 
   @VisibleForTesting
-  DevAppServerModulesFilter(BackendServers backendServers, ModulesService modulesService) {
+  DevAppServerModulesFilter(BackendServersBase backendServers, ModulesService modulesService) {
     super(backendServers, modulesService);
   }
 
   public DevAppServerModulesFilter() {
-    this(BackendServers.getInstance(), ModulesServiceFactory.getModulesService());
+    this(BackendServersBase.getInstance(), ModulesServiceFactory.getModulesService());
   }
 
   @Override
@@ -177,7 +173,8 @@ public class DevAppServerModulesFilter extends DevAppServerModulesCommon impleme
   
   private boolean tryToAcquireServingPermit(
       String moduleOrBackendName, int instance, HttpServletResponse hresponse) throws IOException {
-    ModulesFilterHelperEE10 modulesFilterHelper = (ModulesFilterHelperEE10) getModulesFilterHelper();
+    ModulesFilterHelperEE10 modulesFilterHelper =
+        (ModulesFilterHelperEE10) getModulesFilterHelper();
     // Instance specified, check if exists.
     if (!modulesFilterHelper.checkInstanceExists(moduleOrBackendName, instance)) {
       String msg =
@@ -234,7 +231,8 @@ public class DevAppServerModulesFilter extends DevAppServerModulesCommon impleme
       moduleOrBackendName = modulesService.getCurrentModule();
       isLoadBalancingModuleInstance = true;
     }
-    ModulesFilterHelperEE10 modulesFilterHelper = (ModulesFilterHelperEE10)getModulesFilterHelper();
+    ModulesFilterHelperEE10 modulesFilterHelper =
+        (ModulesFilterHelperEE10) getModulesFilterHelper();
     int instance = getInstanceIdFromRequest(hrequest);
     logger.finest(String.format("redirect request to module: %d.%s", instance,
         moduleOrBackendName));

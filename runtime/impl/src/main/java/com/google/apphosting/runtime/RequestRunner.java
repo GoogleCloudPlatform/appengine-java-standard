@@ -214,8 +214,7 @@ public class RequestRunner implements Runnable {
     }
   }
 
-  private void dispatchRequest(RequestManager.RequestToken requestToken)
-      throws Exception {
+  private void dispatchRequest(RequestManager.RequestToken requestToken) throws Exception {
     switch (upRequest.getRequestType()) {
       case SHUTDOWN:
         logger.atInfo().log("Shutting down requests");
@@ -277,20 +276,15 @@ public class RequestRunner implements Runnable {
   }
 
   private void handleException(Throwable ex, RequestManager.RequestToken requestToken) {
-    // Unwrap ServletExceptions
-    if (ex instanceof javax.servlet.ServletException) {
-      javax.servlet.ServletException sex = (javax.servlet.ServletException) ex;
-      if (sex.getRootCause() != null) {
-        ex = sex.getRootCause();
+    // Unwrap ServletException, either from javax or from jakarta exception:
+    try {
+      java.lang.reflect.Method getRootCause = ex.getClass().getMethod("getRootCause");
+      Object rootCause = getRootCause.invoke(ex);
+      if (rootCause != null) {
+        ex = (Throwable) rootCause;
       }
+    } catch (Throwable ignore) {
     }
-    else if (ex instanceof jakarta.servlet.ServletException) {
-      jakarta.servlet.ServletException sex = (jakarta.servlet.ServletException) ex;
-      if (sex.getRootCause() != null) {
-        ex = sex.getRootCause();
-      }
-    }
-
     String msg = "Uncaught exception from servlet";
     logger.atWarning().withCause(ex).log("%s", msg);
     // Don't use ApiProxy here, because we don't know what state the

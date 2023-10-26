@@ -84,7 +84,7 @@ public class UPRequestTranslator {
   private static final String IS_TRUSTED = "1";
 
   // The impersonated IP address of warmup requests (and also background)
-  //     (<internal20>)
+  //     (https://g3doc.corp.google.com/apphosting/g3doc/howto/headers.md?cl=head)
   private static final String WARMUP_IP = "0.1.0.3";
 
   private static final ImmutableSet<String> PRIVATE_APPENGINE_HEADERS =

@@ -19,29 +19,29 @@ package com.google.appengine.tools.development.ee10;
 import com.google.appengine.tools.development.InstanceHolder;
 import com.google.appengine.tools.development.Module;
 import com.google.appengine.tools.development.Modules;
-import java.io.IOException;
-import java.util.List;
-
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.List;
 
-/**
- * Manager for {@link DevAppServer} servers.
- *
- */
+/** Manager for {@link DevAppServer} servers. */
 public class ModulesEE10 extends Modules {
 
   public ModulesEE10(List<Module> modules) {
-      super(modules);
+    super(modules);
   }
 
-  public void forwardToInstance(String requestedModule, int instance, HttpServletRequest hrequest,
-      HttpServletResponse hresponse) throws IOException, ServletException {
+  public void forwardToInstance(
+      String requestedModule,
+      int instance,
+      HttpServletRequest hrequest,
+      HttpServletResponse hresponse)
+      throws IOException, ServletException {
     Module module = getModule(requestedModule);
     InstanceHolder instanceHolder = module.getInstanceHolder(instance);
-    ((ContainerServiceEE10)instanceHolder.getContainerService()).forwardToServer(hrequest, hresponse);
-
+    ((ContainerServiceEE10) instanceHolder.getContainerService())
+        .forwardToServer(hrequest, hresponse);
   }
 
 }

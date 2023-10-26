@@ -20,21 +20,26 @@ import java.io.IOException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
 /**
- *
+ * Controls backend servers configured in appengine-web.xml. Each server is
+ * started on a separate port. All servers run the same code as the main app.
+ * This one is serving javax.servlet based applications.
  */
-public class BackendServersEE8 extends BackendServers {
+public class BackendServersEE8 extends BackendServersBase {
 
   /**
-   * Forward a request to a specific server and instance. This will call the
-   * specified instance request dispatcher so the request is handled in the
-   * right server context.
+   * Forward a request to a specific server and instance. This will call the specified instance
+   * request dispatcher so the request is handled in the right server context.
    */
-  public void forwardToServer(String requestedServer, int instance, HttpServletRequest hrequest,
-      HttpServletResponse hresponse) throws IOException, ServletException {
+  public void forwardToServer(
+      String requestedServer,
+      int instance,
+      HttpServletRequest hrequest,
+      HttpServletResponse hresponse)
+      throws IOException, ServletException {
     ServerWrapper server = getServerWrapper(requestedServer, instance);
     logger.finest("forwarding request to server: " + server);
-    ((ContainerServiceEE8)server.getContainer()).forwardToServer(hrequest, hresponse);
-  }    
-
+    ((ContainerServiceEE8) server.getContainer()).forwardToServer(hrequest, hresponse);
+  }
 }

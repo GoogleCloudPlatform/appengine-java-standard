@@ -40,7 +40,7 @@ public class LocalCapabilitiesEnvironment {
    */
   public static final String KEY_PREFIX = "capability.status.";
 
-  // see <internal13>
+  // see https://cs.corp.google.com/#google3/apphosting/appserver/register_methods.cc
   // &q=register_methods.cc&l=62
   public static final ImmutableSet<String> DATASTORE_WRITE_RPCS = new ImmutableSet.Builder<String>()
       .add("Delete")

@@ -78,7 +78,7 @@ public class AppYamlTranslator {
     EXPIRATION_PROPERTY,
   };
 
-  // This should be kept in sync with MAX_URL_MAPS in <internal1>.
+  // This should be kept in sync with MAX_URL_MAPS in //apphosting/api/appinfo.py.
   private static final int MAX_HANDLERS = 100;
 
   private final AppEngineWebXml appEngineWebXml;

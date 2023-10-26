@@ -72,10 +72,7 @@ import org.eclipse.jetty.util.Scanner;
 import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.webapp.WebAppContext;
 
-/**
- * Implements a Jetty backed {@link ContainerService}.
- *
- */
+/** Implements a Jetty backed {@link ContainerService}. */
 public class JettyContainerService extends AbstractContainerService implements ContainerServiceEE8 {
 
   private static final Logger log = Logger.getLogger(JettyContainerService.class.getName());

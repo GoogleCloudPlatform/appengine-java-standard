@@ -49,6 +49,13 @@ import com.google.common.math.BigIntegerMath;
 import com.google.errorprone.annotations.FormatMethod;
 import com.sun.management.HotSpotDiagnosticMXBean;
 import com.sun.management.VMOption;
+import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.ServletConfig;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
@@ -103,25 +110,16 @@ import java.util.logging.Logger;
 import java.util.stream.Stream;
 import javax.imageio.ImageIO;
 import javax.management.MBeanServer;
-import jakarta.servlet.RequestDispatcher;
-import jakarta.servlet.ServletConfig;
-import jakarta.servlet.ServletContext;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import javax.swing.JEditorPane;
 
 /**
- * Servlet capable of performing a variety of actions based on the value of
- * the query parameters.
+ * Servlet capable of performing a variety of actions based on the value of the query parameters.
  *
- * <p>Originally this code was compatible with {@code <internal4>},
- * but it has evolved enough since then that compatibility should not be expected.
+ * <p>Originally this code was compatible with {@code //apphosting/tools/loadtest/allinone}, but it
+ * has evolved enough since then that compatibility should not be expected.
  *
- * <p>This servlet also accepts POST requests and returns a plain text response containing
- * the number of bytes read.
- *
+ * <p>This servlet also accepts POST requests and returns a plain text response containing the
+ * number of bytes read.
  */
 public class MainServlet extends HttpServlet {
   private static final Logger logger = Logger.getLogger(MainServlet.class.getName());
@@ -133,8 +131,8 @@ public class MainServlet extends HttpServlet {
   private static final String CAR_KIND = "Car";
   private static final String COLOR_PROPERTY = "color";
   private static final String BRAND_PROPERTY = "brand";
-  private static final String[] COLORS = new String[] { "green", "red", "blue" };
-  private static final String[] BRANDS = new String[] { "toyota", "honda", "nissan" };
+  private static final String[] COLORS = new String[] {"green", "red", "blue"};
+  private static final String[] BRANDS = new String[] {"toyota", "honda", "nissan"};
   // "Log" datastore entity.
   private static final String LOG_KIND = "Log";
   private static final String URL_PROPERTY = "url";
@@ -209,8 +207,8 @@ public class MainServlet extends HttpServlet {
   }
 
   @Override
-  protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException,
-      IOException {
+  protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+      throws ServletException, IOException {
     validateParameters(req);
     // In silent mode, regular response output is suppressed and a single "OK"
     // string is printed if all actions ran successfully.
@@ -326,7 +324,7 @@ public class MainServlet extends HttpServlet {
     }
     String dispatcherName = req.getParameter("get_named_dispatcher");
     if (dispatcherName != null) {
-       emitf(w, "%s", context.getNamedDispatcher(dispatcherName));
+      emitf(w, "%s", context.getNamedDispatcher(dispatcherName));
     }
     if (req.getParameter("fetch_project_id_from_metadata") != null) {
       performFetchProjectIdFromMetadata(w);
@@ -358,9 +356,14 @@ public class MainServlet extends HttpServlet {
       Integer columns = getIntParameter("sql_columns", req);
       Integer len = getIntParameter("sql_len", req);
       boolean replace = req.getParameter("sql_replace") != null;
-      performCloudSqlAccess(dbParam, (rows != null ? rows : 10),
-          (columns != null ? columns : 1), (len != null ? len : 10),
-          (timeout != null ? timeout : 0), replace, w);
+      performCloudSqlAccess(
+          dbParam,
+          (rows != null ? rows : 10),
+          (columns != null ? columns : 1),
+          (len != null ? len : 10),
+          (timeout != null ? timeout : 0),
+          replace,
+          w);
     }
     /*
     // The spanner functionality is commented out because it results
@@ -413,8 +416,8 @@ public class MainServlet extends HttpServlet {
   }
 
   @Override
-  protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException,
-      IOException {
+  protected void doPost(HttpServletRequest req, HttpServletResponse resp)
+      throws ServletException, IOException {
     resp.setContentType("text/plain");
     PrintWriter w = resp.getWriter();
     CountingInputStream payload = new CountingInputStream(req.getInputStream());
@@ -431,12 +434,14 @@ public class MainServlet extends HttpServlet {
    */
   private void performMathMs(int ms, PrintWriter w) {
     emitf(w, "Burning cpu for %d ms", ms);
-    runRepeatedly(ms, new Runnable() {
-      @Override
-      public void run() {
-        performMath(random.nextBoolean());
-      }
-    });
+    runRepeatedly(
+        ms,
+        new Runnable() {
+          @Override
+          public void run() {
+            performMath(random.nextBoolean());
+          }
+        });
     logger.info("Cpu burned");
   }
 
@@ -449,7 +454,7 @@ public class MainServlet extends HttpServlet {
   private void performMathLoops(int count, PrintWriter w) {
     emitf(w, "Burning cpu for %d loops", count);
     for (int i = 0; i < count; ++i) {
-        performMath(random.nextBoolean());
+      performMath(random.nextBoolean());
     }
     logger.info("Cpu burned");
   }
@@ -465,8 +470,10 @@ public class MainServlet extends HttpServlet {
   private static void performMath(boolean addOne) {
     int x = 0;
     for (int i = 0; i < 200; ++i) {
-      x += BigIntegerMath.log2(BigIntegerMath.factorial(i)
-          .add(addOne ? BigInteger.ONE : BigInteger.ZERO), RoundingMode.DOWN);
+      x +=
+          BigIntegerMath.log2(
+              BigIntegerMath.factorial(i).add(addOne ? BigInteger.ONE : BigInteger.ZERO),
+              RoundingMode.DOWN);
     }
     if (x != 109766 && !addOne) {
       throw new AssertionError("incorrect result");
@@ -503,7 +510,8 @@ public class MainServlet extends HttpServlet {
     emitf(w, "Logging %d entries", count);
     logger.info("Starting logging");
     for (int i = 0; i < count; ++i) {
-      logger.log(LOG_LEVELS[random.nextInt(LOG_LEVELS.length)],
+      logger.log(
+          LOG_LEVELS[random.nextInt(LOG_LEVELS.length)],
           "An informative log message with some interesting words.");
     }
     logger.info("Done logging");
@@ -558,16 +566,18 @@ public class MainServlet extends HttpServlet {
       Query query = new Query(CAR_KIND);
       Filter filter = null;
       if (random.nextBoolean()) {
-        filter = new Query.FilterPredicate(COLOR_PROPERTY, Query.FilterOperator.EQUAL,
-            COLORS[random.nextInt(COLORS.length)]);
+        filter =
+            new Query.FilterPredicate(
+                COLOR_PROPERTY, Query.FilterOperator.EQUAL, COLORS[random.nextInt(COLORS.length)]);
 
       } else {
-        filter = new Query.FilterPredicate(BRAND_PROPERTY, Query.FilterOperator.EQUAL,
-            BRANDS[random.nextInt(BRANDS.length)]);
+        filter =
+            new Query.FilterPredicate(
+                BRAND_PROPERTY, Query.FilterOperator.EQUAL, BRANDS[random.nextInt(BRANDS.length)]);
       }
       query.setFilter(filter);
-      List<Entity> results = datastoreService.prepare(query)
-          .asList(FetchOptions.Builder.withLimit(20));
+      List<Entity> results =
+          datastoreService.prepare(query).asList(FetchOptions.Builder.withLimit(20));
       emitf(w, "Retrieved %d entities", results.size());
     }
   }
@@ -619,8 +629,7 @@ public class MainServlet extends HttpServlet {
   private static void performUserLogin(PrintWriter w, String url, Principal principal) {
     UserService userService = UserServiceFactory.getUserService();
     if (principal != null) {
-      emitf(w, "Hello %s. Sign out with %s", principal.getName(),
-          userService.createLogoutURL(url));
+      emitf(w, "Hello %s. Sign out with %s", principal.getName(), userService.createLogoutURL(url));
     } else {
       emitf(w, "Sign in with %s", userService.createLoginURL(url));
     }
@@ -747,8 +756,8 @@ public class MainServlet extends HttpServlet {
    * @param w response writer
    */
   private static void performListAttributes(PrintWriter w) {
-    SortedMap<String, Object> attributes = new TreeMap<>(
-        ApiProxy.getCurrentEnvironment().getAttributes());
+    SortedMap<String, Object> attributes =
+        new TreeMap<>(ApiProxy.getCurrentEnvironment().getAttributes());
     for (Map.Entry<String, Object> entry : attributes.entrySet()) {
       emitf(w, "%s = %s", entry.getKey(), entry.getValue());
     }
@@ -757,13 +766,14 @@ public class MainServlet extends HttpServlet {
   /**
    * Sets some servlet attributes, then lists all servlet attributes. {@code servletAttributeString}
    * looks like {@code foo=bar:baz=buh} and is interpreted to mean that the attribute {@code foo}
-   * should be set to {@code bar}, etc. The reply lists each attribute on its own line, with
-   * a format like {@code foo = bar}.
+   * should be set to {@code bar}, etc. The reply lists each attribute on its own line, with a
+   * format like {@code foo = bar}.
    */
   private static void performSetServletAttributes(
       HttpServletRequest req, String servletAttributeString, PrintWriter w) {
     Splitter eq = Splitter.on('=');
-    Splitter.on(':').splitToStream(servletAttributeString)
+    Splitter.on(':')
+        .splitToStream(servletAttributeString)
         .map(eq::splitToList)
         .forEach(list -> req.setAttribute(list.get(0), list.get(1)));
     @SuppressWarnings("unchecked")
@@ -781,16 +791,20 @@ public class MainServlet extends HttpServlet {
 
   private static void performFetchServiceAccountTokenFromMetadata(PrintWriter w)
       throws IOException {
-    URL url = new URL("http://metadata.google.internal/computeMetadata/v1/instance"
-        + "/service-accounts/default/token");
+    URL url =
+        new URL(
+            "http://metadata.google.internal/computeMetadata/v1/instance"
+                + "/service-accounts/default/token");
     String token = fetchMetadata(url);
     emitf(w, "Token: %s", token);
   }
 
   private static void performFetchServiceAccountScopesFromMetadata(PrintWriter w)
       throws IOException {
-    URL url = new URL("http://metadata.google.internal/computeMetadata/v1/instance"
-        + "/service-accounts/default/scopes");
+    URL url =
+        new URL(
+            "http://metadata.google.internal/computeMetadata/v1/instance"
+                + "/service-accounts/default/scopes");
     String scopes = fetchMetadata(url);
     emitf(w, "Scopes: %s", scopes);
   }
@@ -823,9 +837,7 @@ public class MainServlet extends HttpServlet {
   private static void performAddTasks(int count, String url, PrintWriter w) {
     emitf(w, "Adding %d tasks for URL %s", count, url);
     for (int i = 0; i < count; ++i) {
-      TaskOptions taskoptions = TaskOptions.Builder
-          .withMethod(TaskOptions.Method.GET)
-          .url(url);
+      TaskOptions taskoptions = TaskOptions.Builder.withMethod(TaskOptions.Method.GET).url(url);
       QueueFactory.getDefaultQueue().add(taskoptions);
     }
     logger.info("Done adding tasks");
@@ -910,8 +922,9 @@ public class MainServlet extends HttpServlet {
         conn.setAutoCommit(false);
         try {
           conn.setTransactionIsolation(Connection.TRANSACTION_READ_UNCOMMITTED);
-          PreparedStatement s = conn.prepareStatement(replace ? replaceInto(tableName, columns)
-              : insertInto(tableName, columns));
+          PreparedStatement s =
+              conn.prepareStatement(
+                  replace ? replaceInto(tableName, columns) : insertInto(tableName, columns));
           s.setQueryTimeout(timeout);
           for (int i = 0; i < rows; ++i) {
             for (int j = 1; j <= columns; ++j) {
@@ -1031,8 +1044,9 @@ public class MainServlet extends HttpServlet {
    */
   private static void performJmxListVmOptions(PrintWriter w) throws IOException {
     MBeanServer server = ManagementFactory.getPlatformMBeanServer();
-    HotSpotDiagnosticMXBean bean = ManagementFactory.newPlatformMXBeanProxy(server,
-        "com.sun.management:type=HotSpotDiagnostic", HotSpotDiagnosticMXBean.class);
+    HotSpotDiagnosticMXBean bean =
+        ManagementFactory.newPlatformMXBeanProxy(
+            server, "com.sun.management:type=HotSpotDiagnostic", HotSpotDiagnosticMXBean.class);
     for (VMOption option : bean.getDiagnosticOptions()) {
       emitf(w, "%s = %s", option.getName(), option.getValue());
     }
@@ -1048,7 +1062,7 @@ public class MainServlet extends HttpServlet {
     for (ThreadInfo i : threading.dumpAllThreads(false, false)) {
       emitf(w, "%s", i.toString());
     }
- }
+  }
 
   private static String drop(String tableName) {
     return String.format("DROP TABLE IF EXISTS %s", tableName);
@@ -1072,13 +1086,13 @@ public class MainServlet extends HttpServlet {
   }
 
   private static String insertInto(String tableName, int columns) {
-    return String.format("INSERT INTO %s VALUES (?" + Strings.repeat(",?", columns - 1) + ")",
-        tableName);
+    return String.format(
+        "INSERT INTO %s VALUES (?" + Strings.repeat(",?", columns - 1) + ")", tableName);
   }
 
   private static String replaceInto(String tableName, int columns) {
-    return String.format("REPLACE INTO %s VALUES (?" + Strings.repeat(",?", columns - 1) + ")",
-        tableName);
+    return String.format(
+        "REPLACE INTO %s VALUES (?" + Strings.repeat(",?", columns - 1) + ")", tableName);
   }
 
   /**
@@ -1170,8 +1184,8 @@ public class MainServlet extends HttpServlet {
     Set<String> params = Sets.newTreeSet(parameterNames);
     Set<String> invalidParams = Sets.difference(params, VALID_PARAMETERS);
     if (!invalidParams.isEmpty()) {
-      throw new ServletException("unrecognized query parameters: "
-          + Joiner.on(",").join(invalidParams));
+      throw new ServletException(
+          "unrecognized query parameters: " + Joiner.on(",").join(invalidParams));
     }
   }
 

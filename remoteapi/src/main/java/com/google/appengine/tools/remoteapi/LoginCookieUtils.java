@@ -16,7 +16,7 @@
 
 package com.google.appengine.tools.remoteapi;
 
-//import com.google.security.annotations.SuppressInsecureCipherModeCheckerNoReview;
+
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -36,6 +36,7 @@ final class LoginCookieUtils {
    */
   public static final String COOKIE_NAME = "dev_appserver_login";
 
+  
   static String encodeEmailAsUserId(String email) {
     // This is sort of a weird way of doing this, but it matches
     // Python. See dev_appserver_login.py, method CreateCookieData

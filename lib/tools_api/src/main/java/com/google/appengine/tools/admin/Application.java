@@ -265,8 +265,8 @@ public class Application implements GenericApplication {
     }
     if ("true".equals(appEngineWebXml.getSystemProperties().get("appengine.use.EE10"))) {
       System.setProperty("appengine.use.EE10", "true");
-      AppengineSdk.resetSdk();       
-    }    
+      AppengineSdk.resetSdk();
+    }
     appEngineWebXml.setSourcePrefix(explodedPath);
 
     if (appId != null) {
@@ -298,16 +298,16 @@ public class Application implements GenericApplication {
     // TODO: validateXml(webXml.getFilename(), new File(SDKDOCS, "servlet.xsd"));
     webXml.validate();
     servletVersion = webXmlReader.getServletVersion();
-    if (Double.parseDouble(servletVersion)>=4.0) { 
+    if (Double.parseDouble(servletVersion) >= 4.0) {
       // javax Servlet start is still at version 4.0, we force Jetty12 EE8 for it.
       System.setProperty("appengine.use.jetty12", "true");
     }
-    if (Double.parseDouble(servletVersion)>=6.0) { 
+    if (Double.parseDouble(servletVersion) >= 6.0) {
       // Jakarta Servlet start at version 6.0, we force  Jetty12 EE 10 for it.
       System.setProperty("appengine.use.EE10", "true");
     }
-    AppengineSdk.resetSdk(); // To make sure the correct Jetty version is used.       
- 
+    AppengineSdk.resetSdk(); // To make sure the correct Jetty version is used.
+
     validateFilterClasses();
     validateRuntime();
 
@@ -1030,7 +1030,8 @@ public class Application implements GenericApplication {
     // This behaviour is compatible with what was there before supporting Java8, we just now print
     // a warning.
     if (!isJava8OrAbove() && !vm && isServlet31OrAbove) {
-      statusUpdate("Warning: you are using the Java7 runtime with a Servlet 3.1 or above web.xml file.");
+      statusUpdate(
+          "Warning: you are using the Java7 runtime with a Servlet 3.1 or above web.xml file.");
       statusUpdate("The Servlet annotations will be ignored and not processed.");
     } else if (opts.isQuickstart() || isServlet31OrAbove) {
       // Cover Flex compat (deprecated but still there in Java7 or Java8 flavor) and Java8 standard:
@@ -1042,7 +1043,7 @@ public class Application implements GenericApplication {
       } catch (SAXException | ParserConfigurationException | TransformerException e) {
         throw new IOException(e);
       }
-      if (!webXml.getContextParams().isEmpty()) {          
+      if (!webXml.getContextParams().isEmpty()) {
         fallThroughToRuntimeOnContextInitializers();
       }
     }
@@ -1087,7 +1088,8 @@ public class Application implements GenericApplication {
       String containerInitializer = matcher.group(1);
       if ("org.eclipse.jetty.apache.jsp.JettyJasperInitializer".equals(containerInitializer)
           || "org.eclipse.jetty.ee8.apache.jsp.JettyJasperInitializer".equals(containerInitializer)
-          || "org.eclipse.jetty.ee10.apache.jsp.JettyJasperInitializer".equals(containerInitializer)) {
+          || "org.eclipse.jetty.ee10.apache.jsp.JettyJasperInitializer"
+              .equals(containerInitializer)) {
         foundJasperInitializer = true;
       }
       initializers.add(containerInitializer);

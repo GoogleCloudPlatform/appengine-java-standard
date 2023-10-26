@@ -18,13 +18,13 @@ package com.google.appengine.tools.development;
 
 import com.google.appengine.api.modules.dev.LocalModulesService;
 import com.google.appengine.tools.development.EnvironmentVariableChecker.MismatchReportingPolicy;
-import com.google.appengine.tools.development.ee10.DelegatingModulesFilterHelperEE10;
 import com.google.appengine.tools.info.AppengineSdk;
 import com.google.apphosting.api.ApiProxy;
 import com.google.apphosting.api.ApiProxy.Environment;
 import com.google.apphosting.utils.config.AppEngineConfigException;
 import com.google.apphosting.utils.config.EarHelper;
 import com.google.common.base.Joiner;
+import com.google.common.base.VerifyException;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
@@ -49,11 +49,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * {@code DevAppServer} launches a local Jetty server (by default) with a single
- * hosted web application.  It can be invoked from the command-line by
- * providing the path to the directory in which the application resides as the
- * only argument.
- *
+ * {@code DevAppServer} launches a local Jetty server (by default) with a single hosted web
+ * application. It can be invoked from the command-line by providing the path to the directory in
+ * which the application resides as the only argument.
  */
 public class DevAppServerImpl implements DevAppServer {
   // Keep this in sync with
@@ -78,12 +76,11 @@ public class DevAppServerImpl implements DevAppServer {
   private ServerState serverState = ServerState.INITIALIZING;
 
   /**
-   * Contains the backend servers configured as part of the "Servers" feature.
-   * Each backend server is started on a separate port and keep their own
-   * internal state. Memcache, datastore, and other API services are shared by
-   * all servers, including the "main" server.
+   * Contains the backend servers configured as part of the "Servers" feature. Each backend server
+   * is started on a separate port and keep their own internal state. Memcache, datastore, and other
+   * API services are shared by all servers, including the "main" server.
    */
-  private final BackendServers backendContainer;
+  private final BackendServersBase backendContainer;
 
   /**
    * The api proxy we created when we started the web containers. Not initialized until after
@@ -135,8 +132,8 @@ public class DevAppServerImpl implements DevAppServer {
     if (useCustomStreamHandler) {
       StreamHandlerFactory.install();
     }
-    
-    backendContainer = BackendServers.getInstance();
+
+    backendContainer = BackendServersBase.getInstance();
     requestedPort = port;
     customApplicationId = applicationId;
     ApplicationConfigurationManager tempManager = null;
@@ -151,7 +148,7 @@ public class DevAppServerImpl implements DevAppServer {
              + "https://developers.google.com/appengine/docs/java/modules/#config";
         logger.info(contextRootWarning);
       } else {
-          tempManager =
+        tempManager =
             ApplicationConfigurationManager.newWarConfigurationManager(
                 appDir, appEngineWebXmlLocation, webXmlLocation, externalResourceDir, "dev");
       }
@@ -166,12 +163,17 @@ public class DevAppServerImpl implements DevAppServer {
     this.modules =
         Modules.createModules(
             applicationConfigurationManager, "dev", externalResourceDir, address, this);
-    
-    DelegatingModulesFilterHelper modulesFilterHelper
-              = Boolean.getBoolean("appengine.use.EE10")
-              ? new DelegatingModulesFilterHelperEE10(backendContainer, modules)
-              : new DelegatingModulesFilterHelperEE8(backendContainer, modules);
 
+    DelegatingModulesFilterHelper modulesFilterHelper;
+    try {
+      modulesFilterHelper =
+          Class.forName(AppengineSdk.getSdk().getDelegatingModulesFilterHelperClassName())
+              .asSubclass(DelegatingModulesFilterHelper.class)
+              .getDeclaredConstructor(BackendServersBase.class, Modules.class)
+              .newInstance(backendContainer, modules);
+    } catch (Exception ex) {
+      throw new VerifyException("Cannot find a DelegatingModulesFilterHelper class", ex);
+    }
     this.containerConfigProperties =
         ImmutableMap.<String, Object>builder()
             .putAll(requestedContainerConfigProperties)

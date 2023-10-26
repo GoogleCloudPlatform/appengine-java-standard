@@ -44,7 +44,7 @@ public class DevAppServerModulesFilterTest extends TestCase {
   private static final String MODULE1 = "module1";
 
   @Mock ModulesFilterHelperEE8 helper;
-  @Mock BackendServers backends;
+  @Mock BackendServersBase backends;
   @Mock ModulesService modulesService;
 
   private DevAppServerModulesFilter filter;

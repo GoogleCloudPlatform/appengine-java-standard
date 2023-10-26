@@ -18,17 +18,17 @@ package com.google.apphosting.utils.servlet.ee10;
 
 import com.google.apphosting.api.ApiProxy;
 import com.google.apphosting.api.ApiProxy.Environment;
-import java.io.IOException;
-import java.lang.reflect.Method;
-import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.FilterConfig;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
+import java.io.IOException;
+import java.lang.reflect.Method;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Filter to cleanup any SQL connections that were opened but not closed during the
@@ -122,7 +122,7 @@ public class JdbcMySqlConnectionCleanupFilter implements Filter {
    */
   static class AppEngineApiWrapper {
     /**
-     * Utility method that fetches back the attributes map for the the HTTP-request being processed.
+     * Utility method that fetches back the attributes map for the HTTP-request being processed.
      *
      * @return The environment attribute map for the current HTTP request,
      *          or null if unable to fetch the map

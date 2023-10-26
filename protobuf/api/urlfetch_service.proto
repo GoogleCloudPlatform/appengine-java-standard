@@ -21,7 +21,7 @@
 // internal URLs using HTTPOverRpc.
 // See:
 //   https://cloud.google.com/appengine/docs/python/urlfetch/
-//   <internal15>
+//   https://gaeplaybook.corp.google.com/troubleshooting_guides/URLFetch
 
 syntax = "proto2";
 

@@ -35,11 +35,11 @@ class Jetty12Sdk extends AppengineSdk {
   static final String JETTY12_HOME_LIB_PATH = "jetty12/jetty-home/lib";
 
   private static final String WEB_DEFAULT_LOCATION_DEVAPPSERVERJETTY12 =
-      "com/google/appengine/tools/development/jetty/webdefault.xml"; 
+      "com/google/appengine/tools/development/jetty/webdefault.xml";
 
   private static final String WEB_DEFAULT_LOCATION_DEVAPPSERVERJETTY12EE10 =
-      "com/google/appengine/tools/development/jetty/ee10/webdefault.xml"; 
-  
+      "com/google/appengine/tools/development/jetty/ee10/webdefault.xml";
+
   @Override
   public List<File> getUserJspLibFiles() {
     return Collections.unmodifiableList(getJetty12JspJars());
@@ -48,52 +48,57 @@ class Jetty12Sdk extends AppengineSdk {
   @Override
   public String getWebDefaultLocation() {
     if (Boolean.getBoolean("appengine.use.EE10")) {
-    return WEB_DEFAULT_LOCATION_DEVAPPSERVERJETTY12EE10;
-    }
-    else {
-     return WEB_DEFAULT_LOCATION_DEVAPPSERVERJETTY12;  
+      return WEB_DEFAULT_LOCATION_DEVAPPSERVERJETTY12EE10;
+    } else {
+      return WEB_DEFAULT_LOCATION_DEVAPPSERVERJETTY12;
     }
   }
- 
+
   @Override
   public String getJettyContainerService() {
     if (Boolean.getBoolean("appengine.use.EE10")) {
-    return "com.google.appengine.tools.development.jetty.ee10.JettyContainerService";
-    }
-    else {
-     return "com.google.appengine.tools.development.jetty.JettyContainerService";  
+      return "com.google.appengine.tools.development.jetty.ee10.JettyContainerService";
+    } else {
+      return "com.google.appengine.tools.development.jetty.JettyContainerService";
     }
   }
 
-   @Override
-   public String getBackendServersClassName() {
-     if (Boolean.getBoolean("appengine.use.EE10")) {
-    return "com.google.appengine.tools.development.ee10.BackendServersEE10";
+  @Override
+  public String getBackendServersClassName() {
+    if (Boolean.getBoolean("appengine.use.EE10")) {
+      return "com.google.appengine.tools.development.ee10.BackendServersEE10";
+    } else {
+      return "com.google.appengine.tools.development.BackendServersEE8";
     }
-    else {
-     return "com.google.appengine.tools.development.BackendServersEE8";  
-    }
-   }
+  }
 
-   @Override
-   public String getModulesClassName() {
-     if (Boolean.getBoolean("appengine.use.EE10")) {
-    return "com.google.appengine.tools.development.ee10.ModulesEE10";
+  @Override
+  public String getModulesClassName() {
+    if (Boolean.getBoolean("appengine.use.EE10")) {
+      return "com.google.appengine.tools.development.ee10.ModulesEE10";
+    } else {
+      return "com.google.appengine.tools.development.ModulesEE8";
     }
-    else {
-     return "com.google.appengine.tools.development.ModulesEE8";
+  }
+
+  @Override
+  public String getDelegatingModulesFilterHelperClassName() {
+    if (Boolean.getBoolean("appengine.use.EE10")) {
+      return "com.google.appengine.tools.development.ee10.DelegatingModulesFilterHelperEE10";
+    } else {
+      return "com.google.appengine.tools.development.DelegatingModulesFilterHelperEE8";
     }
-   }
-   
+  }
+
   @Override
   public String getWebDefaultXml() {
     if (Boolean.getBoolean("appengine.use.EE10")) {
-    return getSdkRoot() + "/docs/jetty12EE10/webdefault.xml";
+      return getSdkRoot() + "/docs/jetty12EE10/webdefault.xml";
     } else {
-     return getSdkRoot() + "/docs/jetty12/webdefault.xml";  
+      return getSdkRoot() + "/docs/jetty12/webdefault.xml";
     }
   }
-  
+
   @Override
   public List<File> getSharedJspLibFiles() {
     return Collections.unmodifiableList(getJetty12JspJars());
@@ -107,21 +112,18 @@ class Jetty12Sdk extends AppengineSdk {
   @Override
   public String getQuickStartClasspath() {
     List<String> list = new ArrayList<>();
-    File quickstart = Boolean.getBoolean("appengine.use.EE10")
-         ? new File(getSdkRoot(), "lib/tools/quickstart/quickstartgenerator-jetty12-ee10.jar")
-         : new File(getSdkRoot(), "lib/tools/quickstart/quickstartgenerator-jetty12.jar");
-     String avoidJars = Boolean.getBoolean("appengine.use.EE10")
-         ? "ee8"
-         : "ee10";
- 
-    
+    File quickstart =
+        Boolean.getBoolean("appengine.use.EE10")
+            ? new File(getSdkRoot(), "lib/tools/quickstart/quickstartgenerator-jetty12-ee10.jar")
+            : new File(getSdkRoot(), "lib/tools/quickstart/quickstartgenerator-jetty12.jar");
+    String avoidJars = Boolean.getBoolean("appengine.use.EE10") ? "ee8" : "ee10";
+
     File jettyDir = new File(getSdkRoot(), JETTY12_HOME_LIB_PATH);
     for (File f : jettyDir.listFiles()) {
       if (!f.isDirectory()
           && !(f.getName().contains("cdi-")
               || f.getName().contains("ee9")
-              || f.getName().contains(avoidJars))
-              ) {
+              || f.getName().contains(avoidJars))) {
         list.add(f.getAbsolutePath());
       }
     }
@@ -131,22 +133,22 @@ class Jetty12Sdk extends AppengineSdk {
     // Note: Do not put the Apache JSP files in the classpath. If needed, they should be part of
     // the application itself under WEB-INF/lib.
     if (Boolean.getBoolean("appengine.use.EE10")) {
-          for (String subdir : new String[]{"ee10-annotations"}) {
-              for (File f : new File(jettyDir, subdir).listFiles()) {
-                  list.add(f.getAbsolutePath());
-              }
-          }
-          for (String subdir : new String[]{"ee10-jaspi"}) {
-              for (File f : new File(jettyDir, subdir).listFiles()) {
-                  list.add(f.getAbsolutePath());
-              }
-          }
-      } else {
-          for (String subdir : new String[]{"ee8-annotations"}) { // TODO: "ee8-jaspi" for Jetty12
-              for (File f : new File(jettyDir, subdir).listFiles()) {
-                  list.add(f.getAbsolutePath());
-              }
-          }     
+      for (String subdir : new String[] {"ee10-annotations"}) {
+        for (File f : new File(jettyDir, subdir).listFiles()) {
+          list.add(f.getAbsolutePath());
+        }
+      }
+      for (String subdir : new String[] {"ee10-jaspi"}) {
+        for (File f : new File(jettyDir, subdir).listFiles()) {
+          list.add(f.getAbsolutePath());
+        }
+      }
+    } else {
+      for (String subdir : new String[] {"ee8-annotations"}) { // TODO: "ee8-jaspi" for Jetty12
+        for (File f : new File(jettyDir, subdir).listFiles()) {
+          list.add(f.getAbsolutePath());
+        }
+      }
     }
     list.add(quickstart.getAbsolutePath());
     // Add Jars for logging.
@@ -168,13 +170,13 @@ class Jetty12Sdk extends AppengineSdk {
     lf.addAll(getJetty12Jars("logging"));
     // We also want the devserver to be able to handle annotated servlet, via ASM:
     if (Boolean.getBoolean("appengine.use.EE10")) {
-        lf.addAll(getJetty12Jars("ee10-annotations"));
-        lf.addAll(getJetty12Jars("ee10-apache-jsp"));
-        lf.addAll(getJetty12Jars("ee10-glassfish-jstl"));
+      lf.addAll(getJetty12Jars("ee10-annotations"));
+      lf.addAll(getJetty12Jars("ee10-apache-jsp"));
+      lf.addAll(getJetty12Jars("ee10-glassfish-jstl"));
     } else {
-        lf.addAll(getJetty12Jars("ee8-annotations"));
-        lf.addAll(getJetty12Jars("ee8-apache-jsp"));
-        lf.addAll(getJetty12Jars("ee8-glassfish-jstl"));
+      lf.addAll(getJetty12Jars("ee8-annotations"));
+      lf.addAll(getJetty12Jars("ee8-apache-jsp"));
+      lf.addAll(getJetty12Jars("ee8-glassfish-jstl"));
     }
     lf.addAll(getLibs(sdkRoot, "impl"));
     lf.addAll(getLibs(sdkRoot, "impl/jetty12"));
@@ -204,7 +206,7 @@ class Jetty12Sdk extends AppengineSdk {
             || f.getName().contains("jetty-servlet-api-") // no javax. if needed should be in shared
             || f.getName().contains("ee9") // we want ee10 only. jakarta apis should be in shared
             || f.getName().contains("jetty-jakarta-servlet-api") // old
-            )) {
+        )) {
           jars.add(f);
         }
       }
@@ -213,16 +215,16 @@ class Jetty12Sdk extends AppengineSdk {
   }
 
   List<File> getJetty12JspJars() {
-      
-      if (Boolean.getBoolean("appengine.use.EE10")) {
-          List<File> lf = getJetty12Jars("ee10-apache-jsp");
-          lf.addAll(getJetty12Jars("ee10-glassfish-jstl"));
-          return lf;
-      } 
-      List<File> lf = getJetty12Jars("ee8-apache-jsp");
-      lf.addAll(getJetty12Jars("ee8-glassfish-jstl"));
+
+    if (Boolean.getBoolean("appengine.use.EE10")) {
+      List<File> lf = getJetty12Jars("ee10-apache-jsp");
+      lf.addAll(getJetty12Jars("ee10-glassfish-jstl"));
       return lf;
-}
+    }
+    List<File> lf = getJetty12Jars("ee8-apache-jsp");
+    lf.addAll(getJetty12Jars("ee8-glassfish-jstl"));
+    return lf;
+  }
 
   List<File> getJetty12SharedLibFiles() {
     List<File> sharedLibs;
@@ -230,18 +232,9 @@ class Jetty12Sdk extends AppengineSdk {
     sharedLibs.add(new File(sdkRoot, "lib/shared/jetty12/appengine-local-runtime-shared.jar"));
     File jettyHomeLib = new File(sdkRoot, JETTY12_HOME_LIB_PATH);
 
-    sharedLibs.add(new File(jettyHomeLib, "jetty-servlet-api-4.0.6.jar")); //this is javax.servlet
-    sharedLibs.add(new File(jettyHomeLib, "jakarta.servlet-api-6.0.0.jar")); // need more jars?
-    File schemas = new File(jettyHomeLib, "servlet-schemas-3.1.jar"); //nope
-    if (schemas.exists()) {
-      sharedLibs.add(schemas);
-    } else {
-      schemas = new File(jettyHomeLib, "jetty-schemas-3.1.jar"); //nope!!
-      if (schemas.exists()) {
-        sharedLibs.add(schemas);
-      }
-    }
-
+    sharedLibs.add(new File(jettyHomeLib, "jetty-servlet-api-4.0.6.jar")); // this is javax.servlet
+    sharedLibs.add(new File(jettyHomeLib, "jakarta.servlet-api-6.0.0.jar")); // contains schemas.
+ 
     // We want to match this file: "jetty-util-9.3.8.v20160314.jar"
     // but without hardcoding the Jetty version which is changing from time to time.
     class JettyVersionFilter implements FileFilter {
@@ -285,11 +278,11 @@ class Jetty12Sdk extends AppengineSdk {
   }
 
   @Override
-    public String getJSPCompilerClassName() {
+  public String getJSPCompilerClassName() {
     if (Boolean.getBoolean("appengine.use.EE10")) {
-        return "com.google.appengine.tools.development.jetty.ee10.LocalJspC";
+      return "com.google.appengine.tools.development.jetty.ee10.LocalJspC";
     } else {
-        return "com.google.appengine.tools.development.jetty.LocalJspC";
+      return "com.google.appengine.tools.development.jetty.LocalJspC";
     }
-    }
+  }
 }

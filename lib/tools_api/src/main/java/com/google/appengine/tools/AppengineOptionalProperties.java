@@ -24,12 +24,12 @@ import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- */
+/** */
 public class AppengineOptionalProperties {
-  private static final Logger logger = Logger.getLogger(AppengineOptionalProperties.class.getName());
+  private static final Logger logger =
+      Logger.getLogger(AppengineOptionalProperties.class.getName());
   private static final String PROPERTIES_LOCATION = "WEB-INF/appengine_optional.properties";
+
   /**
    * This property will be used in ClassPathUtils processing to determine the correct classpath.
    * Property must now be true for the Java8 runtime, and is ignored for Java11/17/21 runtimes which
@@ -56,7 +56,8 @@ public class AppengineOptionalProperties {
 
   /**
    * Handles an undocumented property file that could be use by select customers to change flags.
-     * @param applicationPath  Root directory of the Web Application (exploded war directory)
+   *
+   * @param applicationPath Root directory of the Web Application (exploded war directory)
    */
   public void processOptionalProperties(String applicationPath) {
     File optionalPropFile = new File(applicationPath, PROPERTIES_LOCATION);
@@ -86,8 +87,8 @@ public class AppengineOptionalProperties {
       }
       // Force Jetty12 for EE10
       if (Boolean.getBoolean(USE_EE10)) {
-          System.setProperty(USE_JETTY12, "true");
+        System.setProperty(USE_JETTY12, "true");
       }
     }
-  }   
+  }
 }

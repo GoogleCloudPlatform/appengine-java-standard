@@ -16,6 +16,8 @@
 
 package com.google.appengine.api.utils.ee10;
 
+import jakarta.servlet.ServletInputStream;
+import jakarta.servlet.http.HttpServletRequest;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -28,8 +30,6 @@ import javax.mail.MessagingException;
 import javax.mail.internet.ContentDisposition;
 import javax.mail.internet.ContentType;
 import javax.mail.internet.MimeMultipart;
-import jakarta.servlet.ServletInputStream;
-import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * {@code HttpRequestParser} encapsulates helper methods used to parse incoming {@code

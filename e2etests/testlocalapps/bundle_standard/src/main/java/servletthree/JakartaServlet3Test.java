@@ -18,18 +18,17 @@ package servletthree;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
 import jakarta.servlet.annotation.WebInitParam;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 
-/**
- */
+/** */
 @WebServlet(
     name = "servlet3test",
     urlPatterns = {"/test/*"},

@@ -16,12 +16,12 @@
 
 package com.google.apphosting.runtime.jetty.ee10;
 
-import java.io.IOException;
 import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
 
 /** Servlet to handled named dispatches to "default" */
 public class NamedDefaultServlet extends HttpServlet {
