@@ -39,7 +39,7 @@
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
       <optional>true</optional>
-      <version>2.0.7</version>
+      <version>${slf4j.version}</version>
     </dependency>
     <dependency>
       <groupId>com.google.appengine</groupId>
