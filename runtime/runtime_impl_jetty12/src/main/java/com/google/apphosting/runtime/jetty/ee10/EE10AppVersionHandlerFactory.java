@@ -42,7 +42,6 @@ import org.eclipse.jetty.ee10.servlet.ErrorPageErrorHandler;
 import org.eclipse.jetty.ee10.servlet.ServletContextRequest;
 import org.eclipse.jetty.ee10.webapp.FragmentConfiguration;
 import org.eclipse.jetty.ee10.webapp.MetaInfConfiguration;
-import org.eclipse.jetty.ee8.webapp.WebAppContext;
 import org.eclipse.jetty.ee10.webapp.WebInfConfiguration;
 import org.eclipse.jetty.ee10.webapp.WebXmlConfiguration;
 import org.eclipse.jetty.http.HttpHeader;
@@ -80,7 +79,7 @@ public class EE10AppVersionHandlerFactory implements AppVersionHandlerFactory {
    * A "private" request attribute to indicate if the dispatch to a most recent error page has run
    * to completion. Note an error page itself may generate errors.
    */
-  static final String ERROR_PAGE_HANDLED = WebAppContext.ERROR_PAGE + ".handled";
+  static final String ERROR_PAGE_HANDLED = ErrorHandler.ERROR_PAGE + ".handled";
 
   private final Server server;
   private final String serverInfo;
@@ -276,9 +275,9 @@ public class EE10AppVersionHandlerFactory implements AppVersionHandlerFactory {
       // If we found an error handler, dispatch to it.
       if (errorPage != null) {
         // Check for reentry into the same error page.
-        String oldErrorPage = (String) request.getAttribute(WebAppContext.ERROR_PAGE);
+        String oldErrorPage = (String) request.getAttribute(ErrorHandler.ERROR_PAGE);
         if (oldErrorPage == null || !oldErrorPage.equals(errorPage)) {
-          request.setAttribute(WebAppContext.ERROR_PAGE, errorPage);
+          request.setAttribute(ErrorHandler.ERROR_PAGE, errorPage);
           ServletContext servletContext = httpServletRequest.getServletContext();
           Dispatcher dispatcher = (Dispatcher) servletContext.getRequestDispatcher(errorPage);
           try {
