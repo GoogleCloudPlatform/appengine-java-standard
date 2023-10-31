@@ -355,16 +355,18 @@ public class DevAppServerFactory {
       WebXml webXml = webXmlReader.readWebXml();
       webXml.validate();
       String servletVersion = webXmlReader.getServletVersion();
-
-      if (Double.parseDouble(servletVersion) >= 4.0) {
-        // Jetty12 starts at version 4.0, EE8.
-        System.setProperty("appengine.use.jetty12", "true");
-        AppengineSdk.resetSdk();
-      }
-      if (Double.parseDouble(servletVersion) >= 6.0) {
-        // Jakarta Servlet start at version 6.0, we force EE 10 for it.
-        System.setProperty("appengine.use.EE10", "true");
-        AppengineSdk.resetSdk();
+      if (servletVersion != null) {
+        if (Double.parseDouble(servletVersion) >= 4.0) {
+          // Jetty12 starts at version 4.0, EE8.
+          System.setProperty("appengine.use.EE8", "true");
+          AppengineSdk.resetSdk();
+        }
+        if (Double.parseDouble(servletVersion) >= 6.0) {
+          // Jakarta Servlet start at version 6.0, we force EE 10 for it.
+          System.setProperty("appengine.use.EE10", "true");
+          System.setProperty("appengine.use.EE8", "false");
+          AppengineSdk.resetSdk();
+        }
       }
     }
     DevAppServerClassLoader loader = DevAppServerClassLoader.newClassLoader(

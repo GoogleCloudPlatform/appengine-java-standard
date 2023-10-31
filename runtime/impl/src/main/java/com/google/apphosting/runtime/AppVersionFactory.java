@@ -160,7 +160,7 @@ public class AppVersionFactory {
     AppEngineWebXml appEngineWebXml = reader.readAppEngineWebXml();
     logger.atFine().log("Loaded appengine-web.xml: %s", appEngineWebXml);
     if (Objects.equals(appEngineWebXml.getRuntime(), "java21")) {
-      System.setProperty("appengine.use.jetty12", "true");
+      System.setProperty("appengine.use.EE8", "true");
   }
     return appEngineWebXml;
   }

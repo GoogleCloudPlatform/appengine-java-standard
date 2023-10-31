@@ -20,7 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Collection;
+import java.util.List;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
@@ -36,13 +36,30 @@ public final class JspTest extends JavaRuntimeViaHttpBase {
   @Rule public TemporaryFolder temp = new TemporaryFolder();
 
   @Parameterized.Parameters
-  public static Collection jetty12() {
-    return Arrays.asList(new Object[][] {{true}, {false}});
+  public static List<Object[]> version() {
+    return Arrays.asList(new Object[][] {{"EE6"}, {"EE8"}, {"EE10"}});
   }
 
-  public JspTest(Boolean useJetty12) {
-    if (!Boolean.getBoolean("test.running.internally")) {
-      System.setProperty("appengine.use.jetty12", useJetty12.toString());
+  public JspTest(String version) {
+    switch (version) {
+      case "EE6":
+        System.setProperty("appengine.use.EE8", "false");
+        System.setProperty("appengine.use.EE10", "false");
+        break;
+      case "EE8":
+        System.setProperty("appengine.use.EE8", "true");
+        System.setProperty("appengine.use.EE10", "false");
+        break;
+      case "EE10":
+        //TODO  System.setProperty("appengine.use.EE8", "false");
+        //TODO  System.setProperty("appengine.use.EE10", "true");
+        break;
+      default:
+        // fall through
+    }
+    if (Boolean.getBoolean("test.running.internally")) { // Internal can only do EE6
+      System.setProperty("appengine.use.EE8", "false");
+      System.setProperty("appengine.use.EE10", "false");
     }
   }
 

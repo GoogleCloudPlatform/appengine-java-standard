@@ -260,12 +260,13 @@ public class Application implements GenericApplication {
     }
     appEngineWebXml = aewebReader.readAppEngineWebXml();
     if ("java21".equals(appEngineWebXml.getRuntime())) {
-      System.setProperty("appengine.use.jetty12", "true");
+      System.setProperty("appengine.use.EE8", "true");
       AppengineSdk.resetSdk();
     }
     if ("true".equals(appEngineWebXml.getSystemProperties().get("appengine.use.EE10"))) {
       System.setProperty("appengine.use.EE10", "true");
-      AppengineSdk.resetSdk();
+       System.setProperty("appengine.use.EE8", "false");
+     AppengineSdk.resetSdk();
     }
     appEngineWebXml.setSourcePrefix(explodedPath);
 
@@ -300,7 +301,7 @@ public class Application implements GenericApplication {
     servletVersion = webXmlReader.getServletVersion();
     if (Double.parseDouble(servletVersion) >= 4.0) {
       // javax Servlet start is still at version 4.0, we force Jetty12 EE8 for it.
-      System.setProperty("appengine.use.jetty12", "true");
+      System.setProperty("appengine.use.EE8", "true");
     }
     if (Double.parseDouble(servletVersion) >= 6.0) {
       // Jakarta Servlet start at version 6.0, we force  Jetty12 EE 10 for it.

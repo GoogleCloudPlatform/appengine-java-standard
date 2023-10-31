@@ -231,7 +231,7 @@ public abstract class SharedMain {
       throw new IllegalArgumentException("the Java7 runtime is not supported anymore.");
     }
     if (Objects.equals(runtime, "java21")) {
-      System.setProperty("appengine.use.jetty12", "true");
+      System.setProperty("appengine.use.EE8", "true");
       AppengineSdk.resetSdk();
     }
     sharedInit();

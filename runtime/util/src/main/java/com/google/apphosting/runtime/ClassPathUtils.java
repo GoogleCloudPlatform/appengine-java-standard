@@ -109,14 +109,15 @@ public class ClassPathUtils {
     /*
         New content is very simple now (from maven jars):
         ls blaze-bin/java/com/google/apphosting/runtime_java11/deployment_java11
-        runtime-impl-jetty9.jar
-        runtime-impl-jetty12.jar
-        runtime-main.jar
+        runtime-impl-jetty9.jar for Jetty9
+        runtime-impl-jetty12.jar for EE8 and EE10
+        runtime-main.jar shared bootstrap main
         runtime-shared.jar (for Jetty9)
-        runtime-shared-jetty12.jar
+        runtime-shared-jetty12.jar for EE8
+        runtime-shared-jetty12-ee10.jar for EE10
     */
       List<String> runtimeClasspathEntries
-              = Boolean.getBoolean("appengine.use.jetty12")
+              = Boolean.getBoolean("appengine.use.EE8") || Boolean.getBoolean("appengine.use.EE10")
               ? Arrays.asList("runtime-impl-jetty12.jar")
               : Arrays.asList("runtime-impl-jetty9.jar");
 
@@ -136,16 +137,15 @@ public class ClassPathUtils {
     System.setProperty(RUNTIME_IMPL_PROPERTY, runtimeClasspath);
     logger.log(Level.INFO, "Using runtime classpath: " + runtimeClasspath);
 
-    if (Boolean.getBoolean("appengine.use.jetty12")) {
-      if (Boolean.getBoolean("appengine.use.EE10")) {
-        System.setProperty(
-            RUNTIME_SHARED_PROPERTY, runtimeBase + "/runtime-shared-jetty12-ee10.jar");
-      } else {
-        System.setProperty(RUNTIME_SHARED_PROPERTY, runtimeBase + "/runtime-shared-jetty12.jar");
-      }
+    if (Boolean.getBoolean("appengine.use.EE10")) {
+      logger.log(Level.INFO, "AppEngine is using EE10 profile.");
+      System.setProperty(RUNTIME_SHARED_PROPERTY, runtimeBase + "/runtime-shared-jetty12-ee10.jar");
+    } else if (Boolean.getBoolean("appengine.use.EE8")) {
+      logger.log(Level.INFO, "AppEngine is using EE8 profile.");
+      System.setProperty(RUNTIME_SHARED_PROPERTY, runtimeBase + "/runtime-shared-jetty12.jar");
     } else {
-        System.setProperty(RUNTIME_SHARED_PROPERTY, runtimeBase + "/runtime-shared-jetty9.jar");
-    };
+      System.setProperty(RUNTIME_SHARED_PROPERTY, runtimeBase + "/runtime-shared-jetty9.jar");
+    }
 
     frozenApiJarFile = new File(runtimeBase, "/appengine-api-1.0-sdk.jar");
   }

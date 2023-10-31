@@ -26,7 +26,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
+import java.util.List;
 import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -37,20 +37,26 @@ public class DevAppServerMainTest extends DevAppServerTestBase {
       getSdkRoot().getAbsolutePath() + "/lib/appengine-tools-api.jar";
 
   @Parameterized.Parameters
-  public static Collection EEVersion() {
+  public static List<Object[]> version() {
     return Arrays.asList(new Object[][] {{"EE6"}, {"EE8"}, {"EE10"}});
   }
 
-  public DevAppServerMainTest(String EEVersion) {
-    if (EEVersion.equals("EE6")) {
-      System.setProperty("appengine.use.jetty12", "false");
-      System.setProperty("appengine.use.EE10", "false");
-    } else if (EEVersion.equals("EE8")) {
-      System.setProperty("appengine.use.jetty12", "true");
-      System.setProperty("appengine.use.EE10", "false");
-    } else if (EEVersion.equals("EE10")) {
-      System.setProperty("appengine.use.jetty12", "true");
-      System.setProperty("appengine.use.EE10", "true");
+  public DevAppServerMainTest(String version) {
+    switch (version) {
+      case "EE6":
+        System.setProperty("appengine.use.EE8", "false");
+        System.setProperty("appengine.use.EE10", "false");
+        break;
+      case "EE8":
+        System.setProperty("appengine.use.EE8", "true");
+        System.setProperty("appengine.use.EE10", "false");
+        break;
+      case "EE10":
+        System.setProperty("appengine.use.EE8", "false");
+        System.setProperty("appengine.use.EE10", "true");
+        break;
+      default:
+        // fall through
     }
   }
 
@@ -76,10 +82,10 @@ public class DevAppServerMainTest extends DevAppServerTestBase {
       runtimeArgs.add("java.base/sun.net.www.protocol.https=ALL-UNNAMED");
     } else {
       // Jetty12 does not support java8.
-      System.setProperty("appengine.use.jetty12", "false");
+      System.setProperty("appengine.use.EE8", "false");
       System.setProperty("appengine.use.EE10", "false");
     }
-    runtimeArgs.add("-Dappengine.use.jetty12=" + System.getProperty("appengine.use.jetty12"));
+    runtimeArgs.add("-Dappengine.use.EE8=" + System.getProperty("appengine.use.EE8"));
     runtimeArgs.add("-Dappengine.use.EE10=" + System.getProperty("appengine.use.EE10"));
     runtimeArgs.add("-cp");
     runtimeArgs.add(TOOLS_JAR);

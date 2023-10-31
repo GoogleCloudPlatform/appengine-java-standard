@@ -248,7 +248,8 @@ public abstract class JavaRuntimeViaHttpBase {
               .add(
                   JAVA_HOME.value() + "/bin/java",
                   "-Dcom.google.apphosting.runtime.jetty94.LEGACY_MODE=" + useJetty94LegacyMode(),
-                  "-Dappengine.use.jetty12="+ useJetty12(),
+                  "-Dappengine.use.EE8=" + Boolean.getBoolean("appengine.use.EE8"),
+                  "-Dappengine.use.EE10=" + Boolean.getBoolean("appengine.use.EE10"),
                   "-Duse.mavenjars=" + useMavenJars(),
                   "-cp",
                   useMavenJars()
@@ -386,11 +387,6 @@ public abstract class JavaRuntimeViaHttpBase {
     return Boolean.getBoolean("com.google.apphosting.runtime.jetty94.LEGACY_MODE");
   }
 
-  
-  static boolean useJetty12() {
-    return Boolean.getBoolean("appengine.use.jetty12");
-  }
-  
   static class OutputPump implements Runnable {
     private final BufferedReader stream;
     private final String echoPrefix;

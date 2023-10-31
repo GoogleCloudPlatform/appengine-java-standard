@@ -62,7 +62,7 @@ public class JavaRuntimeMain {
   private static final String ALLOW_NON_RESIDENT_SESSION_ACCESS =
       "gae.allow_non_resident_session_access";
 
-  private static final String USE_JETTY12 = "appengine.use.jetty12";
+  private static final String USE_EE8 = "appengine.use.EE8";
   private static final String USE_EE10 = "appengine.use.EE10";
 
   public static void main(String[] args) {
@@ -79,7 +79,7 @@ public class JavaRuntimeMain {
       // Process user defined properties as soon as possible, in the simple main Classpath.
       processOptionalProperties(args);
       if (Objects.equals(System.getenv("GAE_RUNTIME"), "java21")) {
-        System.setProperty(USE_JETTY12, "true");
+        System.setProperty(USE_EE8, "true");
       }
       String appsRoot = getApplicationRoot(args);
       NullSandboxPlugin plugin = new NullSandboxPlugin();
@@ -155,7 +155,7 @@ public class JavaRuntimeMain {
     for (String flag :
         new String[] {
           USE_MAVEN_JARS,
-          USE_JETTY12,
+          USE_EE8,
           USE_EE10,
           DISABLE_API_CALL_LOGGING_IN_APIPROXY,
           ALLOW_NON_RESIDENT_SESSION_ACCESS,
@@ -166,7 +166,7 @@ public class JavaRuntimeMain {
       }
       // Force Jetty12 for EE10
       if (Boolean.getBoolean(USE_EE10)) {
-        System.setProperty(USE_JETTY12, "true");
+        System.setProperty(USE_EE8, "true");
       }
     }
   }

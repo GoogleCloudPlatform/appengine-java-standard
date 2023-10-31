@@ -20,7 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Collection;
+import java.util.List;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -32,12 +32,27 @@ public final class AnnotationScanningTest extends JavaRuntimeViaHttpBase {
   private static File appRoot;
 
   @Parameterized.Parameters
-  public static Collection jetty12() {
-    return Arrays.asList(new Object[][] {{true}, {false}});
+  public static List<Object[]> version() {
+    return Arrays.asList(new Object[][] {{"EE6"}, {"EE8"}, {"EE10"}});
   }
 
-  public AnnotationScanningTest(Boolean useJetty12) {
-    System.setProperty("appengine.use.jetty12", useJetty12.toString());
+  public AnnotationScanningTest(String version) {
+    switch (version) {
+      case "EE6":
+        System.setProperty("appengine.use.EE8", "false");
+        System.setProperty("appengine.use.EE10", "false");
+        break;
+      case "EE8":
+        System.setProperty("appengine.use.EE8", "true");
+        System.setProperty("appengine.use.EE10", "false");
+        break;
+      case "EE10":
+        //TODO System.setProperty("appengine.use.EE8", "false");
+        //TODO  System.setProperty("appengine.use.EE10", "true");
+        break;
+      default:
+        // fall through
+    }
   }
 
   @BeforeClass

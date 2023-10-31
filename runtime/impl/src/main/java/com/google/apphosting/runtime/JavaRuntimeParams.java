@@ -443,7 +443,7 @@ final class JavaRuntimeParams {
   private void initServletEngineClass() {
       String servletEngine;
 
-      if (Boolean.getBoolean("appengine.use.jetty12")) {
+      if (Boolean.getBoolean("appengine.use.EE8")||Boolean.getBoolean("appengine.use.EE10")) {
           servletEngine = "com.google.apphosting.runtime.jetty.JettyServletEngineAdapter";
       } else {
           servletEngine = "com.google.apphosting.runtime.jetty9.JettyServletEngineAdapter";

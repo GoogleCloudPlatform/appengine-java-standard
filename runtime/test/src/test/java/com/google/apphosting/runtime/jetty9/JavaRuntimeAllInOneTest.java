@@ -40,17 +40,34 @@ public final class JavaRuntimeAllInOneTest extends JavaRuntimeViaHttpBase {
   private static final int NUMBER_OF_RETRIES = 5;
 
   private RuntimeContext<?> runtime;
-    @Parameterized.Parameters
-  public static Collection jetty12() {
-   return Arrays.asList(new Object[][] { 
-      { true }, { false }});
+  @Parameterized.Parameters
+  public static Collection<Object[]> version() {
+    return Arrays.asList(new Object[][] {{"EE6"}, {"EE8"}, {"EE10"}});
   }
-  public JavaRuntimeAllInOneTest(Boolean useJetty12) {
-    if (!Boolean.getBoolean("test.running.internally")) {
-      System.setProperty("appengine.use.jetty12", useJetty12.toString());
+
+  public JavaRuntimeAllInOneTest(String version) {
+    switch (version) {
+      case "EE6":
+        System.setProperty("appengine.use.EE8", "false");
+        System.setProperty("appengine.use.EE10", "false");
+        break;
+      case "EE8":
+        System.setProperty("appengine.use.EE8", "true");
+        System.setProperty("appengine.use.EE10", "false");
+        break;
+      case "EE10":
+        //TODO System.setProperty("appengine.use.EE8", "false");
+        //TODO System.setProperty("appengine.use.EE10", "true");
+        break;
+      default:
+        // fall through
+    }
+    if (Boolean.getBoolean("test.running.internally")) { // Internal can only do EE6
+      System.setProperty("appengine.use.EE8", "false");
+      System.setProperty("appengine.use.EE10", "false");
     }
   }
-   
+
   @Before
   public void startRuntime() throws Exception {
     copyAppToDir("com/google/apphosting/loadtesting/allinone", temp.getRoot().toPath());

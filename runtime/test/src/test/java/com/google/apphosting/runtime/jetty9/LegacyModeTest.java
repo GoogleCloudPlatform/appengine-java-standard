@@ -28,7 +28,7 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.nio.file.Path;
 import java.util.Arrays;
-import java.util.Collection;
+import java.util.List;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -41,17 +41,35 @@ public class LegacyModeTest extends JavaRuntimeViaHttpBase {
 
   private static final boolean LEGACY =
       Boolean.getBoolean("com.google.apphosting.runtime.jetty94.LEGACY_MODE");
+
   @Parameterized.Parameters
-  public static Collection jetty12() {
-   return Arrays.asList(new Object[][] { 
-      { true }, { false }});
+  public static List<Object[]> version() {
+    return Arrays.asList(new Object[][] {{"EE6"}, {"EE8"}, {"EE10"}});
   }
-  
-  public LegacyModeTest(Boolean useJetty12) {
-    if (!Boolean.getBoolean("test.running.internally")) {
-      System.setProperty("appengine.use.jetty12", useJetty12.toString());
+
+  public LegacyModeTest(String version) {
+    switch (version) {
+      case "EE6":
+        System.setProperty("appengine.use.EE8", "false");
+        System.setProperty("appengine.use.EE10", "false");
+        break;
+      case "EE8":
+        System.setProperty("appengine.use.EE8", "true");
+        System.setProperty("appengine.use.EE10", "false");
+        break;
+      case "EE10":
+        //TODO System.setProperty("appengine.use.EE8", "false");
+        //TODO System.setProperty("appengine.use.EE10", "true");
+        break;
+      default:
+        // fall through
     }
-  }  
+    if (Boolean.getBoolean("test.running.internally")) { // Internal can only do EE6
+      System.setProperty("appengine.use.EE8", "false");
+      System.setProperty("appengine.use.EE10", "false");
+    }
+  }
+
   @BeforeClass
   public static void beforeClass() throws IOException, InterruptedException {
     Path appPath = temporaryFolder.newFolder("app").toPath();

@@ -280,7 +280,7 @@ public abstract class AppengineSdk {
     if (currentSdk != null) {
       return currentSdk;
     }
-    if (Boolean.getBoolean("appengine.use.jetty12")) {
+    if (Boolean.getBoolean("appengine.use.EE8")|| Boolean.getBoolean("appengine.use.EE10")) {
       return currentSdk = new Jetty12Sdk();
     } else {
       return currentSdk = new ClassicSdk();

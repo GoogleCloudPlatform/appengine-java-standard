@@ -50,7 +50,6 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.EnumSet;
 import java.util.Enumeration;
 import java.util.List;
@@ -156,15 +155,29 @@ public class ApplicationTest {
           + "<threadsafe>true</threadsafe><vm>true</vm><resource-files/></appengine-web-app>";
 
   @Parameterized.Parameters
-  public static Collection jetty12() {
-    return Arrays.asList(new Object[][] {{true}, {false}});
+  public static List<Object[]> version() {
+    return Arrays.asList(new Object[][] {{"EE6"}, {"EE8"}, {"EE10"}});
   }
 
-  public ApplicationTest(Boolean useJetty12) {
-    System.setProperty("appengine.use.jetty12", useJetty12.toString());
+  public ApplicationTest(String version) {
+    switch (version) {
+      case "EE6":
+        System.setProperty("appengine.use.EE8", "false");
+        System.setProperty("appengine.use.EE10", "false");
+        break;
+      case "EE8":
+        System.setProperty("appengine.use.EE8", "true");
+        System.setProperty("appengine.use.EE10", "false");
+        break;
+      case "EE10":
+        System.setProperty("appengine.use.EE8", "false");
+        System.setProperty("appengine.use.EE10", "true");
+        break;
+      default:
+        // fall through
+    }
     System.setProperty("appengine.sdk.root", "../../sdk_assembly/target/appengine-java-standard");
-    AppengineSdk.resetSdk();
-
+    AppengineSdk.resetSdk();    
   }
 
   private static String getWarPath(String directoryName) {
@@ -1394,7 +1407,10 @@ return sdkRoot;
     assertThat(
             new File(stageDir, "WEB-INF/lib/org.apache.taglibs.taglibs-standard-impl-1.2.5.jar")
                     .exists()
-                // TODO need to extend for Jarkata APIs!
+                || new File(
+                        stageDir,
+                        "WEB-INF/lib/org.glassfish.web.jakarta.servlet.jsp.jstl-3.0.1.jar")
+                    .exists()
                 || new File(
                         stageDir, "WEB-INF/lib/org.glassfish.web.javax.servlet.jsp.jstl-1.2.5.jar")
                     .exists())
@@ -1546,7 +1562,7 @@ return sdkRoot;
     // TODO: review. This expectation used to be 3, this is because the Jetty
     //  QuickStartGeneratorConfiguration.generateQuickStartWebXml will now
     //  add an empty set if it doesn't have any SCIs instead of not setting the context param.
-    if (Boolean.getBoolean("appengine.use.jetty12")) {
+    if (Boolean.getBoolean("appengine.use.EE8")||Boolean.getBoolean("appengine.use.EE10")) {
       assertThat(nodeList.getLength()).isEqualTo(4);
     } else {
       assertThat(nodeList.getLength()).isEqualTo(3);      
@@ -1681,10 +1697,15 @@ return sdkRoot;
     testApp.createStagingDirectory(opts, temporaryFolder.newFolder());
     assertThat(testApp.getWebXml().getFallThroughToRuntime()).isFalse();
     String expectedJasperInitializer;
-    if (Boolean.getBoolean("appengine.use.jetty12")) {
+    if (Boolean.getBoolean("appengine.use.EE8")) {
         expectedJasperInitializer
                 = "\"ContainerInitializer"
                 + "{org.eclipse.jetty.ee8.apache.jsp.JettyJasperInitializer"
+                + ",interested=[],applicable=[],annotated=[]}\"";
+    } else if (Boolean.getBoolean("appengine.use.EE10")) {
+        expectedJasperInitializer
+                = "\"ContainerInitializer"
+                + "{org.eclipse.jetty.ee10.apache.jsp.JettyJasperInitializer"
                 + ",interested=[],applicable=[],annotated=[]}\"";
     } else {
         expectedJasperInitializer
