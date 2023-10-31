@@ -30,7 +30,6 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeoutException;
-import javax.servlet.ServletException;
 
 /**
  * Runs an inbound request within the context of the given app, whether ordinary inbound HTTP or
@@ -215,8 +214,7 @@ public class RequestRunner implements Runnable {
     }
   }
 
-  private void dispatchRequest(RequestManager.RequestToken requestToken)
-      throws InterruptedException, TimeoutException, ServletException, IOException {
+  private void dispatchRequest(RequestManager.RequestToken requestToken) throws Exception {
     switch (upRequest.getRequestType()) {
       case SHUTDOWN:
         logger.atInfo().log("Shutting down requests");
@@ -260,7 +258,7 @@ public class RequestRunner implements Runnable {
     }
   }
 
-  private void dispatchServletRequest() throws ServletException, IOException {
+  private void dispatchServletRequest() throws Exception {
     upRequestHandler.serviceRequest(upRequest, upResponse);
     if (compressResponse) {
       // try to compress if necessary (http://b/issue?id=3368468)
@@ -278,12 +276,14 @@ public class RequestRunner implements Runnable {
   }
 
   private void handleException(Throwable ex, RequestManager.RequestToken requestToken) {
-    // Unwrap ServletExceptions
-    if (ex instanceof ServletException) {
-      ServletException sex = (ServletException) ex;
-      if (sex.getRootCause() != null) {
-        ex = sex.getRootCause();
+    // Unwrap ServletException, either from javax or from jakarta exception:
+    try {
+      java.lang.reflect.Method getRootCause = ex.getClass().getMethod("getRootCause");
+      Object rootCause = getRootCause.invoke(ex);
+      if (rootCause != null) {
+        ex = (Throwable) rootCause;
       }
+    } catch (Throwable ignore) {
     }
     String msg = "Uncaught exception from servlet";
     logger.atWarning().withCause(ex).log("%s", msg);

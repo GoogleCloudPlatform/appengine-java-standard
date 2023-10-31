@@ -16,6 +16,9 @@
 
 package com.google.appengine.tools.development;
 
+import com.google.appengine.tools.info.AppengineSdk;
+import com.google.apphosting.utils.config.WebXml;
+import com.google.apphosting.utils.config.WebXmlReader;
 import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -57,7 +60,7 @@ public class DevAppServerFactory {
    *
    * @param appDir The top-level directory of the web application to be run
    * @param externalResourceDir If not {@code null}, a resource directory external to the appDir.
-   *     This paramater is now ignored.
+   *     This parameter is now ignored.
    * @param address Address to bind to
    * @param port Port to bind to
    * @return a {@code DevAppServer}
@@ -82,7 +85,7 @@ public class DevAppServerFactory {
    *
    * @param appDir The top-level directory of the web application to be run
    * @param externalResourceDir If not {@code null}, a resource directory external to the appDir.
-   *     This paramater is now ignored.
+   *     This parameter is now ignored.
    * @param address Address to bind to
    * @param port Port to bind to
    * @param noJavaAgent whether to disable detection of the Java agent or not
@@ -340,14 +343,30 @@ public class DevAppServerFactory {
       boolean useCustomStreamHandler,
       Map<String, Object> containerConfigProperties,
       String applicationId) {
-
     if (webXmlLocation == null) {
       webXmlLocation = new File(appDir, "WEB-INF/web.xml");
     }
     if (appEngineWebXmlLocation == null) {
       appEngineWebXmlLocation = new File(appDir, "WEB-INF/appengine-web.xml");
     }
+    if (webXmlLocation.exists()) {
+      WebXmlReader webXmlReader = new WebXmlReader(appDir.getAbsolutePath());
 
+      WebXml webXml = webXmlReader.readWebXml();
+      webXml.validate();
+      String servletVersion = webXmlReader.getServletVersion();
+
+      if (Double.parseDouble(servletVersion) >= 4.0) {
+        // Jetty12 starts at version 4.0, EE8.
+        System.setProperty("appengine.use.jetty12", "true");
+        AppengineSdk.resetSdk();
+      }
+      if (Double.parseDouble(servletVersion) >= 6.0) {
+        // Jakarta Servlet start at version 6.0, we force EE 10 for it.
+        System.setProperty("appengine.use.EE10", "true");
+        AppengineSdk.resetSdk();
+      }
+    }
     DevAppServerClassLoader loader = DevAppServerClassLoader.newClassLoader(
         DevAppServerFactory.class.getClassLoader());
     DevAppServer devAppServer;

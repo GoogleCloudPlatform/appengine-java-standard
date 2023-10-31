@@ -53,12 +53,42 @@
       <artifactId>apache-jsp</artifactId>
     </dependency>
     <dependency>
+       <groupId>org.eclipse.jetty.ee10</groupId>
+       <artifactId>jetty-ee10-apache-jsp</artifactId>
+       <version>${jetty12.version}</version>
+    </dependency>    
+    <dependency>
       <groupId>javax.servlet</groupId>
       <artifactId>javax.servlet-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>jakarta.servlet</groupId>
+      <artifactId>jakarta.servlet-api</artifactId>
+      <version>6.0.0</version>
     </dependency>
   </dependencies>
   <build>
     <plugins>
+      <plugin>
+        <groupId>org.eclipse.jetty.ee10</groupId>
+        <artifactId>jetty-ee10-jspc-maven-plugin</artifactId>
+       <version>${jetty12.version}</version>
+        <executions>
+          <execution>
+            <id>jspc</id>
+            <goals>
+              <goal>jspc</goal>
+            </goals>
+            <configuration>
+              <jspc>
+                <package>org.apache.jsp.ah.jetty.ee10</package>
+              </jspc>
+              <webAppSourceDirectory>${basedir}/src/main/resources/com/google/apphosting/utils/servlet/ah</webAppSourceDirectory>
+              <mergeFragment>false</mergeFragment>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
       <plugin>
         <groupId>org.eclipse.jetty</groupId>
         <artifactId>jetty-jspc-maven-plugin</artifactId>

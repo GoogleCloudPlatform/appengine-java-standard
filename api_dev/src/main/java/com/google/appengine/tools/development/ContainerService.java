@@ -20,11 +20,7 @@ import com.google.appengine.tools.development.ApplicationConfigurationManager.Mo
 import com.google.apphosting.api.ApiProxy;
 import com.google.apphosting.utils.config.AppEngineWebXml;
 import java.io.File;
-import java.io.IOException;
 import java.util.Map;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 /**
  * Provides the backing servlet container support for the {@link DevAppServer},
@@ -130,11 +126,5 @@ public interface ContainerService {
    * @return the map of properties to be passed to each service.
    */
   Map<String, String> getServiceProperties();
-
-  /**
-   * Forwards an HttpRequest request to this container.
-   */
-  void forwardToServer(HttpServletRequest hrequest, HttpServletResponse hresponse)
-      throws IOException, ServletException;
 
 }

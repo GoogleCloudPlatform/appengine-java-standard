@@ -23,7 +23,7 @@ import static org.mockito.Mockito.when;
 import com.google.appengine.api.backends.BackendService;
 import com.google.appengine.api.modules.ModulesService;
 import com.google.appengine.api.testing.MockEnvironment;
-import com.google.appengine.tools.development.DevAppServerModulesFilter.RequestType;
+import com.google.appengine.tools.development.DevAppServerModulesCommon.RequestType;
 import com.google.appengine.tools.development.testing.FakeHttpServletRequest;
 import com.google.appengine.tools.development.testing.FakeHttpServletResponse;
 import com.google.apphosting.api.ApiProxy;
@@ -43,8 +43,8 @@ import org.mockito.MockitoAnnotations;
 public class DevAppServerModulesFilterTest extends TestCase {
   private static final String MODULE1 = "module1";
 
-  @Mock ModulesFilterHelper helper;
-  @Mock BackendServers backends;
+  @Mock ModulesFilterHelperEE8 helper;
+  @Mock BackendServersBase backends;
   @Mock ModulesService modulesService;
 
   private DevAppServerModulesFilter filter;
@@ -100,6 +100,7 @@ public class DevAppServerModulesFilterTest extends TestCase {
     when(helper.checkModuleStopped(MODULE1)).thenReturn(false);
     when(helper.getAndReserveFreeInstance(MODULE1)).thenReturn(2);
     filter.doFilter(request, response, alwaysOkFilterChain);
+    //
     verify(helper).forwardToInstance(MODULE1, 2, request, response);
     assertThat(response.getStatus()).isEqualTo(HttpServletResponse.SC_OK);
   }

@@ -17,6 +17,7 @@
 package com.google.appengine.tools.development;
 
 import com.google.appengine.api.modules.ModulesServicePb.ModulesServiceError;
+import com.google.appengine.tools.info.AppengineSdk;
 import com.google.apphosting.api.ApiProxy;
 import com.google.apphosting.api.ApiProxy.ApplicationException;
 import com.google.apphosting.utils.config.AppEngineWebXml;
@@ -24,7 +25,7 @@ import com.google.apphosting.utils.config.AppEngineWebXml.ManualScaling;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.File;
-import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -33,9 +34,6 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 /**
  * Manager for {@link DevAppServer} servers.
@@ -62,27 +60,45 @@ public class Modules implements ModulesController, ModulesFilterHelper {
       String serverInfo, File externalResourceDir, String address, DevAppServer devAppServer) {
     ImmutableList.Builder<Module> builder = ImmutableList.builder();
     for (ApplicationConfigurationManager.ModuleConfigurationHandle moduleConfigurationHandle :
-      applicationConfigurationManager.getModuleConfigurationHandles()) {
-      AppEngineWebXml appEngineWebXml =
-          moduleConfigurationHandle.getModule().getAppEngineWebXml();
+        applicationConfigurationManager.getModuleConfigurationHandles()) {
+      AppEngineWebXml appEngineWebXml = moduleConfigurationHandle.getModule().getAppEngineWebXml();
       Module module = null;
       if (!appEngineWebXml.getBasicScaling().isEmpty()) {
-        module = new BasicModule(moduleConfigurationHandle, serverInfo, address, devAppServer,
-            appEngineWebXml);
+        module =
+            new BasicModule(
+                moduleConfigurationHandle, serverInfo, address, devAppServer, appEngineWebXml);
       } else if (!appEngineWebXml.getManualScaling().isEmpty()) {
-        module = new ManualModule(moduleConfigurationHandle, serverInfo, address, devAppServer,
-            appEngineWebXml);
+        module =
+            new ManualModule(
+                moduleConfigurationHandle, serverInfo, address, devAppServer, appEngineWebXml);
       } else {
-        module = new AutomaticModule(moduleConfigurationHandle, serverInfo, externalResourceDir,
-            address, devAppServer);
+        module =
+            new AutomaticModule(
+                moduleConfigurationHandle, serverInfo, externalResourceDir, address, devAppServer);
       }
       builder.add(module);
 
       // Clear values that apply to the primary container only
       externalResourceDir = null;
     }
-    instance.set(new Modules(builder.build()));
-    return instance.get();
+    try {
+      ImmutableList<Module> lm = builder.build();
+      instance.set(
+          Class.forName(AppengineSdk.getSdk().getModulesClassName())
+              .asSubclass(Modules.class)
+              .getDeclaredConstructor(List.class)
+              .newInstance(lm));
+      return instance.get();
+    } catch (ClassNotFoundException
+        | IllegalAccessException
+        | IllegalArgumentException
+        | InstantiationException
+        | NoSuchMethodException
+        | SecurityException
+        | InvocationTargetException ex) {
+      Logger.getLogger(Modules.class.getName()).log(Level.SEVERE, null, ex);
+    }
+    return null;
   }
 
   public static Modules getInstance() {
@@ -123,7 +139,7 @@ public class Modules implements ModulesController, ModulesFilterHelper {
     return modules.get(0);
   }
 
-  private Modules(List<Module> modules) {
+  public Modules(List<Module> modules) {
     if (modules.size() < 1) {
       throw new IllegalArgumentException("modules must not be empty.");
     }
@@ -375,14 +391,6 @@ public class Modules implements ModulesController, ModulesFilterHelper {
     Module module = getModule(moduleName);
     InstanceHolder instanceHolder = module.getInstanceHolder(instance);
     return instanceHolder.isStopped();
-  }
-
-  @Override
-  public void forwardToInstance(String requestedModule, int instance, HttpServletRequest hrequest,
-      HttpServletResponse hresponse) throws IOException, ServletException {
-    Module module = getModule(requestedModule);
-    InstanceHolder instanceHolder = module.getInstanceHolder(instance);
-    instanceHolder.getContainerService().forwardToServer(hrequest, hresponse);
   }
 
   @Override

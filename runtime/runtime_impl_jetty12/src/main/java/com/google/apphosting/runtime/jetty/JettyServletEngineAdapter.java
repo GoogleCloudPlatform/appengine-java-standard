@@ -35,11 +35,9 @@ import com.google.common.flogger.GoogleLogger;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
-import javax.servlet.ServletException;
 import org.eclipse.jetty.http.CookieCompliance;
 import org.eclipse.jetty.http.UriCompliance;
 import org.eclipse.jetty.server.HttpConfiguration;
@@ -58,10 +56,11 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
   private static final long MAX_RESPONSE_SIZE = 32 * 1024 * 1024;
 
   /**
-   * If Legacy Mode is tunred on, then Jetty is configured to be more forgiving of bad requests
-   * and to act more in the style of Jetty-9.3
+   * If Legacy Mode is tunred on, then Jetty is configured to be more forgiving of bad requests and
+   * to act more in the style of Jetty-9.3
    */
-  public static final boolean LEGACY_MODE = Boolean.getBoolean("com.google.apphosting.runtime.jetty94.LEGACY_MODE");
+  public static final boolean LEGACY_MODE =
+      Boolean.getBoolean("com.google.apphosting.runtime.jetty94.LEGACY_MODE");
 
   private AppVersionKey lastAppVersionKey;
 
@@ -173,8 +172,7 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
   }
 
   @Override
-  public void serviceRequest(UPRequest upRequest, MutableUpResponse upResponse)
-      throws ServletException, IOException {
+  public void serviceRequest(UPRequest upRequest, MutableUpResponse upResponse) throws Exception {
     if (upRequest.getHandler().getType() != AppinfoPb.Handler.HANDLERTYPE.CGI_BIN_VALUE) {
       upResponse.setError(UPResponse.ERROR.UNKNOWN_HANDLER_VALUE);
       upResponse.setErrorMessage("Unsupported handler type: " + upRequest.getHandler().getType());

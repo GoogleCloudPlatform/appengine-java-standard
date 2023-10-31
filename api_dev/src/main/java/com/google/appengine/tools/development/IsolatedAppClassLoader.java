@@ -46,21 +46,6 @@ public class IsolatedAppClassLoader extends URLClassLoader {
 
   private static final Logger logger = Logger.getLogger(IsolatedAppClassLoader.class.getName());
 
-  // Web-default.xml files for Jetty9 based devappserver.
-  private static final String WEB_DEFAULT_LOCATION_DEVAPPSERVER1 =
-      "com/google/appengine/tools/development/jetty9/webdefault.xml";
-  // Web-default.xml files for Jetty12 based devappserver.
-  private static final String WEB_DEFAULT_LOCATION_DEVAPPSERVER2 =
-      "com/google/appengine/tools/development/jetty/webdefault.xml";
-
-  // This task queue related servlet should be loaded by the application classloader when the
-  // api jar is used by the application, and default to the runtime classloader when the application
-  // does not have the API jar in the classpath so that the Jetty container can boot, even if the
-  // servlet is not used by the application.
-  // This change is required now with the new Jetty 9.4 classloader which is more strict.
-  private static final String DEFERRED_TASK_SERVLET =
-      "com.google.apphosting.utils.servlet.DeferredTaskServlet";
-
   // Session Data class must be loaded by the runtime classloader, as it is only used by the runtime
   // servlet session management. For Jetty9.4, the newer session management has a cleaner
   // classloading implementation.
@@ -77,10 +62,7 @@ public class IsolatedAppClassLoader extends URLClassLoader {
     checkWorkingDirectory(appRoot, externalResourceDir);
     this.devAppServerClassLoader = devAppServerClassLoader;
     this.sharedCodeLibs = new HashSet<>(AppengineSdk.getSdk().getSharedLibs());
-    String webDefault = WEB_DEFAULT_LOCATION_DEVAPPSERVER1;
-    if (Boolean.getBoolean("appengine.use.jetty12")) {
-      webDefault = WEB_DEFAULT_LOCATION_DEVAPPSERVER2;
-    }
+    String webDefault = AppengineSdk.getSdk().getWebDefaultLocation();
     this.classesToBeLoadedByTheRuntimeClassLoader =
         new ImmutableSet.Builder<String>()
             .add(SESSION_DATA_CLASS)
@@ -169,7 +151,14 @@ public class IsolatedAppClassLoader extends URLClassLoader {
   protected synchronized Class<?> loadClass(String name, boolean resolve)
       throws ClassNotFoundException {
 
-    if (name.equals(DEFERRED_TASK_SERVLET)) {
+    // This task queue related servlet should be loaded by the application classloader when the
+    // api jar is used by the application, and default to the runtime classloader when the
+    // application
+    // does not have the API jar in the classpath so that the Jetty container can boot, even if the
+    // servlet is not used by the application.
+    // This change is required now with the new Jetty 9.4 classloader which is more strict.
+    //    "com.google.apphosting.utils.servlet.DeferredTaskServlet" or EE10 related.
+    if (name.contains("DeferredTaskServlet")) {
       try {
         return super.loadClass(name, resolve);
       } catch (ClassNotFoundException ignore) {

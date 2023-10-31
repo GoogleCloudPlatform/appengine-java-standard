@@ -54,7 +54,7 @@ abstract public class LocalEnvironment implements ApiProxy.Environment {
       NamespaceManager.class.getName() + ".appsNamespace";
 
   // Default port for tests that do not specify a port.
-  public static final Integer TESTING_DEFAULT_PORT = new Integer(8080);
+  public static final Integer TESTING_DEFAULT_PORT = Integer.valueOf(8080);
 
   // Environment attribute key where the instance id is stored. Keep in sync
   // with ModulesServiceImpl.INSTANCE_ID_ENV_ATTRIBUTE.
@@ -194,10 +194,8 @@ abstract public class LocalEnvironment implements ApiProxy.Environment {
         moduleName, majorVersionId));
   }
 
-  /**
-   * Sets the instance for the provided attributes.
-   */
-  static void setInstance(Map<String, Object> attributes, int instance) {
+  /** Sets the instance for the provided attributes. */
+  public static void setInstance(Map<String, Object> attributes, int instance) {
     // First we remove the old value if there is one.
     attributes.remove(INSTANCE_ID_ENV_ATTRIBUTE);
     // Next we set the new value if needed.
@@ -207,10 +205,10 @@ abstract public class LocalEnvironment implements ApiProxy.Environment {
   }
 
   /**
-   * Sets the {@link #PORT_ID_ENV_ATTRIBUTE} value to the provided port value or
-   * clears it if port is null.
+   * Sets the {@link #PORT_ID_ENV_ATTRIBUTE} value to the provided port value or clears it if port
+   * is null.
    */
-  static void setPort(Map<String, Object> attributes, Integer port) {
+  public static void setPort(Map<String, Object> attributes, Integer port) {
     if (port == null) {
       attributes.remove(PORT_ID_ENV_ATTRIBUTE);
     } else {

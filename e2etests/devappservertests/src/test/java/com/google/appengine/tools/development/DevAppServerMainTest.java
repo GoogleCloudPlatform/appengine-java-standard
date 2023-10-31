@@ -35,22 +35,33 @@ import org.junit.runners.Parameterized;
 public class DevAppServerMainTest extends DevAppServerTestBase {
   private static final String TOOLS_JAR =
       getSdkRoot().getAbsolutePath() + "/lib/appengine-tools-api.jar";
-  boolean useJetty12;
 
   @Parameterized.Parameters
-  public static Collection jetty12() {
-    return Arrays.asList(new Object[][] {{true}, {false}});
+  public static Collection EEVersion() {
+    return Arrays.asList(new Object[][] {{"EE6"}, {"EE8"}, {"EE10"}});
   }
 
-  public DevAppServerMainTest(boolean jetty12) {
-    useJetty12 = jetty12;
+  public DevAppServerMainTest(String EEVersion) {
+    if (EEVersion.equals("EE6")) {
+      System.setProperty("appengine.use.jetty12", "false");
+      System.setProperty("appengine.use.EE10", "false");
+    } else if (EEVersion.equals("EE8")) {
+      System.setProperty("appengine.use.jetty12", "true");
+      System.setProperty("appengine.use.EE10", "false");
+    } else if (EEVersion.equals("EE10")) {
+      System.setProperty("appengine.use.jetty12", "true");
+      System.setProperty("appengine.use.EE10", "true");
+    }
   }
 
   @Before
   public void setUpClass() throws IOException, InterruptedException {
     PortPicker portPicker = PortPicker.create();
     int jettyPort = portPicker.pickUnusedPort();
-    File appDir = createApp("allinone");
+    File appDir =
+        Boolean.getBoolean("appengine.use.EE10")
+            ? createApp("allinone_jakarta")
+            : createApp("allinone");
 
     ArrayList<String> runtimeArgs = new ArrayList<>();
     runtimeArgs.add(JAVA_HOME.value() + "/bin/java");
@@ -64,9 +75,12 @@ public class DevAppServerMainTest extends DevAppServerTestBase {
       runtimeArgs.add("--add-opens");
       runtimeArgs.add("java.base/sun.net.www.protocol.https=ALL-UNNAMED");
     } else {
-      useJetty12 = false; // Jetty12 does not support java8.
+      // Jetty12 does not support java8.
+      System.setProperty("appengine.use.jetty12", "false");
+      System.setProperty("appengine.use.EE10", "false");
     }
-    runtimeArgs.add("-Dappengine.use.jetty12=" + useJetty12);
+    runtimeArgs.add("-Dappengine.use.jetty12=" + System.getProperty("appengine.use.jetty12"));
+    runtimeArgs.add("-Dappengine.use.EE10=" + System.getProperty("appengine.use.EE10"));
     runtimeArgs.add("-cp");
     runtimeArgs.add(TOOLS_JAR);
     runtimeArgs.add("com.google.appengine.tools.development.DevAppServerMain");

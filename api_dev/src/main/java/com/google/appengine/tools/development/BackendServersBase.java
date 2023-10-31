@@ -21,12 +21,13 @@ import com.google.appengine.api.backends.dev.LocalServerController;
 import com.google.appengine.tools.development.AbstractContainerService.PortMappingProvider;
 import com.google.appengine.tools.development.ApplicationConfigurationManager.ModuleConfigurationHandle;
 import com.google.appengine.tools.development.InstanceStateHolder.InstanceState;
+import com.google.appengine.tools.info.AppengineSdk;
 import com.google.apphosting.api.ApiProxy;
 import com.google.apphosting.utils.config.BackendsXml;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import java.io.File;
-import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,19 +35,15 @@ import java.util.Map.Entry;
 import java.util.TreeMap;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 /**
- * Controls backend servers configured in appengine-web.xml. Each server is
- * started on a separate port. All servers run the same code as the main app.
- *
- *
+ * Controls backend servers configured in appengine-web.xml. Each server is started on a separate
+ * port. All servers run the same code as the main app.
  */
-public abstract class AbstractBackendServers implements BackendContainer,
-    LocalServerController, PortMappingProvider {
+public class BackendServersBase
+    implements BackendContainer, LocalServerController, PortMappingProvider {
   public static final String SYSTEM_PROPERTY_STATIC_PORT_NUM_PREFIX =
       "com.google.appengine.devappserver.";
 
@@ -67,18 +64,45 @@ public abstract class AbstractBackendServers implements BackendContainer,
   private ModuleConfigurationHandle moduleConfigurationHandle;
   private File externalResourceDir;
   private Map<String, Object> containerConfigProperties;
-  private Map<AbstractBackendServers.ServerInstanceEntry, ServerWrapper> backendServers =
+  private ImmutableMap<BackendServersBase.ServerInstanceEntry, ServerWrapper> backendServers =
       ImmutableMap.copyOf(new HashMap<ServerInstanceEntry, ServerWrapper>());
   private Map<String, String> portMapping =
       ImmutableMap.copyOf(new HashMap<String, String>());
   // Should not be used until startup() is called.
-  protected Logger logger = Logger.getLogger(AbstractBackendServers.class.getName());
+  protected Logger logger = Logger.getLogger(BackendServersBase.class.getName());
 
   private Map<String, String> serviceProperties = new HashMap<String, String>();
 
   // A reference to the devAppServer that initiated this BackendServers instance.
   private DevAppServer devAppServer;
   private ApiProxyLocal apiProxyLocal;
+  // Singleton so BackendServers can to be accessed from the
+  // {@ link DevAppServerModulesFilter} configured in the webdefaults.xml file.
+  // The filter is configured in the xml file to ensure that it runs after the
+  // StaticFileFilter but before any other filters.
+  private static BackendServersBase instance;
+
+  public static BackendServersBase getInstance() {
+    if (instance == null) {
+      try {
+        instance =
+            Class.forName(AppengineSdk.getSdk().getBackendServersClassName())
+                .asSubclass(BackendServersBase.class)
+                .getDeclaredConstructor()
+                .newInstance();
+
+      } catch (ClassNotFoundException
+          | IllegalAccessException
+          | IllegalArgumentException
+          | InstantiationException
+          | NoSuchMethodException
+          | SecurityException
+          | InvocationTargetException ex) {
+        Logger.getLogger(BackendServersBase.class.getName()).log(Level.SEVERE, null, ex);
+      }
+    }
+    return instance;
+  }
 
   @Override
   public void init(String address, ModuleConfigurationHandle moduleConfigurationHandle,
@@ -216,7 +240,7 @@ public abstract class AbstractBackendServers implements BackendContainer,
     }
     logger.finer("Found " + servers.size() + " configured backends.");
 
-    Map<AbstractBackendServers.ServerInstanceEntry, ServerWrapper> serverMap = Maps.newHashMap();
+    Map<BackendServersBase.ServerInstanceEntry, ServerWrapper> serverMap = Maps.newHashMap();
     for (BackendsXml.Entry entry : servers) {
       entry = resolveDefaults(entry);
 
@@ -298,18 +322,6 @@ public abstract class AbstractBackendServers implements BackendContainer,
                                                    entry.getMaxConcurrentRequests(),
         entry.getOptions(),
         entry.getState() == null ? BackendsXml.State.STOP : entry.getState());
-  }
-
-  /**
-   * Forward a request to a specific server and instance. This will call the
-   * specified instance request dispatcher so the request is handled in the
-   * right server context.
-   */
-  void forwardToServer(String requestedServer, int instance, HttpServletRequest hrequest,
-      HttpServletResponse hresponse) throws IOException, ServletException {
-    ServerWrapper server = getServerWrapper(requestedServer, instance);
-    logger.finest("forwarding request to server: " + server);
-    server.getContainer().forwardToServer(hrequest, hresponse);
   }
 
   /**
@@ -436,7 +448,7 @@ public abstract class AbstractBackendServers implements BackendContainer,
         }
       }
     } catch (InterruptedException e) {
-      logger.finer("interupted while queued at server " + instanceWithShortestQueue);
+      logger.finer("interrupted while queued at server " + instanceWithShortestQueue);
     }
     return -1;
   }
@@ -775,7 +787,7 @@ public abstract class AbstractBackendServers implements BackendContainer,
      */
     boolean acquireServingPermit(int maxWaitTimeInMs) throws InterruptedException {
       logger.finest(
-          this + ": accuiring serving permit, available: " + servingQueue.availablePermits());
+          this + ": acquiring serving permit, available: " + servingQueue.availablePermits());
       return servingQueue.tryAcquire(maxWaitTimeInMs, TimeUnit.MILLISECONDS);
     }
 

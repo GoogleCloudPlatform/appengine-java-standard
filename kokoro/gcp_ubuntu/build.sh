@@ -52,6 +52,7 @@ cp appengine_jsr107/target/appengine-jsr107*.jar ${TMP_STAGING_LOCATION}/appengi
 cp runtime_shared/target/runtime-shared*.jar ${TMP_STAGING_LOCATION}/runtime-shared.jar
 cp runtime_shared_jetty9/target/runtime-shared*.jar ${TMP_STAGING_LOCATION}/runtime-shared-jetty9.jar
 cp runtime_shared_jetty12/target/runtime-shared*.jar ${TMP_STAGING_LOCATION}/runtime-shared-jetty12.jar
+cp runtime_shared_jetty12_ee10/target/runtime-shared*.jar ${TMP_STAGING_LOCATION}/runtime-shared-jetty12-ee10.jar
 cp lib/tools_api/target/appengine-tools-sdk*.jar ${TMP_STAGING_LOCATION}/appengine-tools-api.jar
 cp lib/xml_validator/target/libxmlvalidator*.jar ${TMP_STAGING_LOCATION}/libxmlvalidator.jar
 cp runtime/runtime_impl_jetty9/target/runtime-impl*.jar ${TMP_STAGING_LOCATION}/runtime-impl-jetty9.jar

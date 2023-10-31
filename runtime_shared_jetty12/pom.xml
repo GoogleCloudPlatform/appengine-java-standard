@@ -58,18 +58,20 @@
         <dependency>
             <groupId>org.eclipse.jetty.toolchain</groupId>
             <artifactId>jetty-schemas</artifactId>
-            <version>4.0.3</version>
+            <version>5.2</version>
             <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.mortbay.jasper</groupId>
             <artifactId>apache-jsp</artifactId>
+            <version>9.0.52</version>
             <optional>true</optional>
        </dependency>
         <dependency>
             <groupId>org.mortbay.jasper</groupId>
             <artifactId>apache-el</artifactId>
-            <optional>true</optional>
+            <version>9.0.52</version>
+          <optional>true</optional>
         </dependency>
         <dependency>
           <groupId>com.google.errorprone</groupId>

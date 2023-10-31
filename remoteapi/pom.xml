@@ -50,11 +50,6 @@
       <artifactId>guava</artifactId>
       <optional>true</optional>
     </dependency>
-    <dependency>
-      <groupId>javax.servlet</groupId>
-      <artifactId>javax.servlet-api</artifactId>
-      <optional>true</optional>
-    </dependency>
      <dependency>
       <groupId>com.google.appengine</groupId>
       <artifactId>appengine-api-1.0-sdk</artifactId>

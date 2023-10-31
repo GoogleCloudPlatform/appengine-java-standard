@@ -16,10 +16,8 @@
 
 package com.google.appengine.tools.development;
 
-/**
- * Holder for per module instance state.
- */
-interface InstanceHolder {
+/** Holder for per module instance state. */
+public interface InstanceHolder {
 
   /**
    * Returns the {@link ContainerService} for this instance.

@@ -137,7 +137,12 @@ public class ClassPathUtils {
     logger.log(Level.INFO, "Using runtime classpath: " + runtimeClasspath);
 
     if (Boolean.getBoolean("appengine.use.jetty12")) {
+      if (Boolean.getBoolean("appengine.use.EE10")) {
+        System.setProperty(
+            RUNTIME_SHARED_PROPERTY, runtimeBase + "/runtime-shared-jetty12-ee10.jar");
+      } else {
         System.setProperty(RUNTIME_SHARED_PROPERTY, runtimeBase + "/runtime-shared-jetty12.jar");
+      }
     } else {
         System.setProperty(RUNTIME_SHARED_PROPERTY, runtimeBase + "/runtime-shared-jetty9.jar");
     };

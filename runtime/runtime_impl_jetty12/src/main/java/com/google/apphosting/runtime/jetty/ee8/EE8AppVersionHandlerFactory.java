@@ -20,6 +20,7 @@ import com.google.apphosting.base.AppVersionKey;
 import com.google.apphosting.runtime.AppVersion;
 import com.google.apphosting.runtime.JettyConstants;
 import com.google.apphosting.runtime.SessionsConfig;
+import com.google.apphosting.runtime.jetty.AppVersionHandlerFactory;
 import com.google.apphosting.runtime.jetty.SessionManagerHandler;
 import com.google.common.flogger.GoogleLogger;
 import com.google.common.html.HtmlEscapers;
@@ -46,7 +47,7 @@ import org.eclipse.jetty.server.Server;
 /**
  * {@code AppVersionHandlerFactory} implements a {@code Handler} for a given {@code AppVersionKey}.
  */
-public class EE8AppVersionHandlerFactory implements com.google.apphosting.runtime.jetty.AppVersionHandlerFactory {
+public class EE8AppVersionHandlerFactory implements AppVersionHandlerFactory {
   private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
   private static final String TOMCAT_SIMPLE_INSTANCE_MANAGER =
       "org.apache.tomcat.SimpleInstanceManager";
@@ -75,23 +76,20 @@ public class EE8AppVersionHandlerFactory implements com.google.apphosting.runtim
 
   private final Server server;
   private final String serverInfo;
-  private final WebAppContextFactory contextFactory;
   private final boolean useJettyErrorPageHandler;
 
   public EE8AppVersionHandlerFactory(
           Server server,
           String serverInfo) {
-    this(server, serverInfo, new AppEngineWebAppContextFactory(), false);
+    this(server, serverInfo, false);
   }
 
   public EE8AppVersionHandlerFactory(
           Server server,
           String serverInfo,
-          WebAppContextFactory contextFactory,
           boolean useJettyErrorPageHandler) {
     this.server = server;
     this.serverInfo = serverInfo;
-    this.contextFactory = contextFactory;
     this.useJettyErrorPageHandler = useJettyErrorPageHandler;
   }
 
@@ -117,7 +115,8 @@ public class EE8AppVersionHandlerFactory implements com.google.apphosting.runtim
     try {
       File contextRoot = appVersion.getRootDirectory();
 
-      final AppEngineWebAppContext context = contextFactory.createContext(appVersion, serverInfo);
+      final AppEngineWebAppContext context =
+          new AppEngineWebAppContext(appVersion.getRootDirectory(), serverInfo);
       context.getCoreContextHandler().setServer(server);
       context.setServer(server);
       context.setDefaultsDescriptor(WEB_DEFAULTS_XML);

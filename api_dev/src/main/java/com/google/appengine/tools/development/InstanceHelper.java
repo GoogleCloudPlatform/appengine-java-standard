@@ -71,12 +71,11 @@ public class InstanceHelper {
   /**
    * Triggers an HTTP GET to /_ah/start in a background thread
    *
-   * This method will keep on trying until it receives a non-error response
-   * code from the server.
+   * <p>This method will keep on trying until it receives a non-error response code from the server.
    *
    * @param runOnSuccess {@link Runnable#run} invoked when the startup request succeeds.
    */
-  void sendStartRequest(final Runnable runOnSuccess) {
+  public void sendStartRequest(final Runnable runOnSuccess) {
     if (LOGGER.isLoggable(Level.FINER)) {
       LOGGER.log(Level.FINER, "Entering send start request for serverOrBackendName="
           + serverOrBackendName + " instance=" + instance,
@@ -256,12 +255,12 @@ public class InstanceHelper {
   /**
    * Shut down the server.
    *
-   * Will trigger any shutdown hooks installed by the
-   * {@link com.google.appengine.api.LifecycleManager}
+   * <p>Will trigger any shutdown hooks installed by the {@link
+   * com.google.appengine.api.LifecycleManager}
    *
    * @throws Exception
    */
-  void shutdown() throws Exception {
+  public void shutdown() throws Exception {
     synchronized (instanceStateHolder) {
       // TODO: This calls user code, can we do this outside the synchronized block.
       if (instanceStateHolder.test(InstanceState.RUNNING, InstanceState.RUNNING_START_REQUEST)) {

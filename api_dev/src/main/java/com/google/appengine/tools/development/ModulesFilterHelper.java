@@ -16,11 +16,6 @@
 
 package com.google.appengine.tools.development;
 
-import java.io.IOException;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 /**
  * Support interface for {@link DevAppServerModulesFilter}.
  */
@@ -98,16 +93,6 @@ public interface ModulesFilterHelper {
    * @return true if the module instance is stopped and false otherwise.
    */
   boolean checkInstanceStopped(String moduleOrBackendName, int instance);
-
-  /**
-   * Forward a request to a specified module or backend instance. Calls the
-   * request dispatcher for the requested instance with the instance
-   * context. The caller must hold a serving permit for the requested
-   * instance before calling this method.
-   */
-  void forwardToInstance(String requestedModuleOrBackendName, int instance,
-      HttpServletRequest hrequest, HttpServletResponse hresponse)
-          throws IOException, ServletException;
 
   /**
    * Returns true if the specified module or backend instance is a load balancing

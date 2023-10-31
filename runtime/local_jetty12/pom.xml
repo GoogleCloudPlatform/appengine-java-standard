@@ -90,7 +90,7 @@
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-util</artifactId>
-      <version>${jetty12.version}</version>
+       <version>${jetty12.version}</version>
     </dependency>
     <dependency>
       <groupId>org.eclipse.jetty.ee8</groupId>
@@ -100,7 +100,7 @@
     <dependency>
       <groupId>org.mortbay.jasper</groupId>
       <artifactId>apache-jsp</artifactId>
-      <version>9.0.52</version> <!-- -->
+      <version>9.0.52</version> <!-- Jetty12 EE8 only.-->
 
     </dependency>
     <dependency>
@@ -147,27 +147,40 @@
       <artifactId>jetty-xml</artifactId>
        <version>${jetty12.version}</version>
     </dependency>
-    
-    <!-- test dependencies -->
-    <dependency>
-      <groupId>com.google.truth</groupId>
-      <artifactId>truth</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.mockito</groupId>
-      <artifactId>mockito-core</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>com.google.appengine</groupId>
-      <artifactId>appengine-api-1.0-sdk</artifactId>
-    </dependency>
     <dependency>
       <groupId>com.google.appengine</groupId>
       <artifactId>shared-sdk-jetty12</artifactId>
       <version>${project.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.eclipse.jetty.ee10</groupId>
+          <artifactId>jetty-ee10-servlet</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
+     <dependency>
+      <groupId>com.google.appengine</groupId>
+      <artifactId>appengine-local-runtime-jetty12-ee10</artifactId>
+      <version>${project.version}</version>
+       <exclusions>
+         <exclusion>
+           <groupId>org.eclipse.jetty.ee10</groupId>
+           <artifactId>jetty-ee10-annotations</artifactId>
+         </exclusion>
+         <exclusion>
+           <groupId>org.eclipse.jetty.ee10</groupId>
+           <artifactId>jetty-ee10-apache-jsp</artifactId>
+         </exclusion>
+         <exclusion>
+           <groupId>org.eclipse.jetty.ee10</groupId>
+           <artifactId>jetty-ee10-webapp</artifactId>
+         </exclusion>
+         <exclusion>
+           <groupId>org.eclipse.jetty.ee10</groupId>
+           <artifactId>jetty-ee10-servlet</artifactId>
+         </exclusion>
+       </exclusions>
+     </dependency>
   </dependencies>
 
   <build>
@@ -300,6 +313,7 @@
                   <include>com.google.appengine:sessiondata</include>
                   <include>com.google.appengine:shared-sdk</include>
                   <include>com.google.appengine:shared-sdk-jetty12</include>
+                  <include>com.google.appengine:appengine-local-runtime-jetty12-ee10</include>
                   <include>com.google.flogger:google-extensions</include>
                   <include>com.google.flogger:flogger-system-backend</include>
                   <include>com.google.flogger:flogger</include>

@@ -140,6 +140,24 @@
             <optional>true</optional>
         </dependency>
         <dependency>
+            <groupId>org.eclipse.jetty.ee10</groupId>
+            <artifactId>jetty-ee10-quickstart</artifactId>
+            <version>${jetty12.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>javax.transaction</groupId>
+                    <artifactId>javax.transaction-api</artifactId>
+                </exclusion>
+            </exclusions>
+          <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty.ee10</groupId>
+            <artifactId>jetty-ee10-servlets</artifactId>
+            <version>${jetty12.version}</version>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
             <groupId>jakarta.servlet</groupId>
             <artifactId>jakarta.servlet-api</artifactId>
             <version>6.0.0</version>
@@ -262,6 +280,11 @@
             <artifactId>netty-transport-native-unix-common</artifactId>
             <optional>true</optional>
         </dependency>
+        <dependency>
+           <groupId>jakarta.annotation</groupId>
+           <artifactId>jakarta.annotation-api</artifactId>
+           <version>2.1.1</version>
+        </dependency>
       <!-- Test dependencies. -->
 
 
@@ -342,6 +365,16 @@
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-jndi</artifactId>
+            <version>${jetty12.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty.ee10</groupId>
+            <artifactId>jetty-ee10-annotations</artifactId>
+            <version>${jetty12.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty.ee10</groupId>
+            <artifactId>jetty-ee10-quickstart</artifactId>
             <version>${jetty12.version}</version>
         </dependency>
     </dependencies>
@@ -498,6 +531,7 @@
                                     <include>io.netty:netty-transport</include>
                                     <include>io.perfmark:perfmark-api</include>
                                     <include>javax.annotation:javax.annotation-api</include>
+                                    <include>jakarta.annotation:jakarta.annotation-api</include>
                                     <include>joda-time:joda-time</include>
                                     <include>org.checkerframework:checker-compat-qual</include>
                                     <include>org.codehaus.mojo:animal-sniffer-annotations</include>
@@ -510,7 +544,14 @@
                                     <include>org.eclipse.jetty.ee8:jetty-ee8-servlets</include>
                                     <include>org.eclipse.jetty.ee8:jetty-ee8-webapp</include>
                                     <include>org.eclipse.jetty.ee8:jetty-ee8-nested</include>
-                                    <include>org.eclipse.jetty:jetty-ee</include>
+                                    <include>org.eclipse.jetty.ee10:jetty-ee10-annotations</include>
+                                    <include>org.eclipse.jetty.ee10:jetty-ee10-jndi</include>
+                                    <include>org.eclipse.jetty.ee10:jetty-ee10-plus</include>
+                                    <include>org.eclipse.jetty.ee10:jetty-ee10-quickstart</include>
+                                    <!--include>org.eclipse.jetty.ee10:jetty-ee10-security</include-->
+                                    <include>org.eclipse.jetty.ee10:jetty-ee10-servlet</include>
+                                    <include>org.eclipse.jetty.ee10:jetty-ee10-servlets</include>
+                                    <include>org.eclipse.jetty.ee10:jetty-ee10-webapp</include>
                                     <include>org.eclipse.jetty:jetty-client</include>
                                     <include>org.eclipse.jetty:jetty-continuation</include>
                                     <include>org.eclipse.jetty:jetty-http</include>
@@ -530,9 +571,9 @@
                                     <include>org.ow2.asm:asm</include>
                                     <include>org.ow2.asm:asm-tree</include>
                                 </includes>
-                                <excludes>
+                                <!--excludes>
                                     <exclude>jakarta.servlet:jakarta.servlet-api</exclude>
-                                </excludes>
+                                </excludes-->
                             </artifactSet>
                         </configuration>
                     </execution>

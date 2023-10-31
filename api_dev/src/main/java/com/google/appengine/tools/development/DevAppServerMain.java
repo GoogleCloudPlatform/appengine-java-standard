@@ -354,7 +354,7 @@ public class DevAppServerMain extends SharedMain {
 
         validateWarPath(appDir);
         configureRuntime(appDir);
-
+        
         DevAppServer server =
             new DevAppServerFactory()
                 .createDevAppServer(

@@ -14,11 +14,18 @@
  * limitations under the License.
  */
 
-package com.google.apphosting.runtime.jetty.ee8;
+package allinone;
 
-import com.google.apphosting.runtime.AppVersion;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
 
-/** A base interface for factories that create {@link AppEngineWebAppContext}. */
-public interface WebAppContextFactory {
-  AppEngineWebAppContext createContext(AppVersion appVersion, String serverInfo);
+/** Handler for a warmup request. */
+public class Warmup extends HttpServlet {
+
+  @Override
+  public void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+    resp.getWriter().println("OK");
+  }
 }

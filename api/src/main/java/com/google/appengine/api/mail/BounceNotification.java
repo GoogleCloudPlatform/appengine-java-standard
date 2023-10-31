@@ -97,7 +97,7 @@ public final class BounceNotification {
     }
   }
 
-  static class DetailsBuilder {
+  public static class DetailsBuilder {
     private @Nullable String from;
     private @Nullable String to;
     private @Nullable String cc;
@@ -140,7 +140,7 @@ public final class BounceNotification {
     }
   }
 
-  static class BounceNotificationBuilder {
+  public static class BounceNotificationBuilder {
     public BounceNotification build() {
       return new BounceNotification(rawMessage, original, notification);
     }
