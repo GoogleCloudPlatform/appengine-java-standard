@@ -126,13 +126,6 @@ public class JettyContainerService extends AbstractContainerService implements C
   private static final String APPENGINE_WEB_XML_ATTR =
       "com.google.appengine.tools.development.appEngineWebXml";
 
-  static {
-    // Tell Jetty to use our custom logging class (that forwards to
-    // java.util.logging) instead of writing to System.err.
-    System.setProperty(
-        "org.eclipse.jetty.util.log.class", " com.google.appengine.development.jetty.JettyLogger");
-  }
-
   private static final int SCAN_INTERVAL_SECONDS = 5;
 
   /** Jetty webapp context. */
