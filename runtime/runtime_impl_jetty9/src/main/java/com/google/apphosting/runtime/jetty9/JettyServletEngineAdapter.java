@@ -25,7 +25,6 @@ import com.google.apphosting.base.protos.RuntimePb.UPResponse;
 import com.google.apphosting.runtime.AppVersion;
 import com.google.apphosting.runtime.MutableUpResponse;
 import com.google.apphosting.runtime.ServletEngineAdapter;
-import com.google.apphosting.runtime.jetty9.JettyLogger;
 import com.google.apphosting.utils.config.AppEngineConfigException;
 import com.google.apphosting.utils.config.AppYaml;
 import com.google.common.flogger.GoogleLogger;
