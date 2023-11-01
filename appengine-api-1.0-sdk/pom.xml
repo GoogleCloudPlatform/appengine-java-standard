@@ -290,11 +290,13 @@
                     <include>com/google/appengine/api/*</include>
                     <include>com/google/appengine/api/backends/*</include>
                     <include>com/google/appengine/api/blobstore/*</include>
+                    <include>com/google/appengine/api/blobstore/ee10/*</include>
                     <include>com/google/appengine/api/capabilities/*</include>
                     <include>com/google/appengine/api/images/*</include>
                     <include>com/google/appengine/api/internal/*</include>
                     <include>com/google/appengine/api/log/*</include>
                     <include>com/google/appengine/api/mail/*</include>
+                    <include>com/google/appengine/api/mail/ee10/*</include>
                     <include>com/google/appengine/api/mail/stdimpl/*</include>
                     <include>com/google/appengine/api/memcache/*</include>
                     <include>com/google/appengine/api/memcache/stdimpl/*</include>
@@ -307,9 +309,11 @@
                     <include>com/google/appengine/api/search/proto/SearchServicePb*</include>
                     <include>com/google/appengine/api/search/query/*</include>
                     <include>com/google/appengine/api/taskqueue/*</include>
+                    <include>com/google/appengine/api/taskqueue/ee10/*</include>
                     <include>com/google/appengine/api/urlfetch/*</include>
                     <include>com/google/appengine/api/users/*</include>
                     <include>com/google/appengine/api/utils/*</include>
+                    <include>com/google/appengine/api/utils/ee10/*</include>
                     <include>com/google/appengine/api/datastore/*</include>
                     <include>com/google/appengine/api/appidentity/*</include>
                     <include>com/google/appengine/spi/*</include>

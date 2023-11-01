@@ -51,11 +51,15 @@ public final class UploadOptions {
     return this;
   }
 
-  boolean hasMaxUploadSizeBytesPerBlob() {
+  /** Determines if the maximum upload size per blob is set. */
+  public boolean hasMaxUploadSizeBytesPerBlob() {
     return maxUploadSizeBytesPerBlob != null;
   }
 
-  long getMaxUploadSizeBytesPerBlob() {
+  /**
+   * @returns the maximum upload size per blob.
+   */
+  public long getMaxUploadSizeBytesPerBlob() {
     if (maxUploadSizeBytesPerBlob == null) {
       throw new IllegalStateException("maxUploadSizeBytesPerBlob has not been set.");
     }
@@ -76,11 +80,15 @@ public final class UploadOptions {
     return this;
   }
 
-  boolean hasMaxUploadSizeBytes() {
+  /** Determines if the maximum size is set. */
+  public boolean hasMaxUploadSizeBytes() {
     return maxUploadSizeBytes != null;
   }
 
-  long getMaxUploadSizeBytes() {
+  /**
+   * @returns the maximum upload size.
+   */
+  public long getMaxUploadSizeBytes() {
     if (maxUploadSizeBytes == null) {
       throw new IllegalStateException("maxUploadSizeBytes has not been set.");
     }
@@ -92,11 +100,15 @@ public final class UploadOptions {
     return this;
   }
 
-  boolean hasGoogleStorageBucketName() {
+  /** Determines if the storage bucket is set. */
+  public boolean hasGoogleStorageBucketName() {
     return this.gsBucketName != null;
   }
 
-  String getGoogleStorageBucketName() {
+  /**
+   * @returns the storage bucket name.
+   */
+  public String getGoogleStorageBucketName() {
     if (gsBucketName == null) {
       throw new IllegalStateException("gsBucketName has not been set.");
     }
