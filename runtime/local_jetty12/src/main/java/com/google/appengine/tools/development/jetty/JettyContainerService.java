@@ -443,7 +443,7 @@ public class JettyContainerService extends AbstractContainerService implements C
           }
         });
     scanner.addListener(new ScannerListener());
-    scanner.doStart();
+    scanner.start();
   }
 
   @Override

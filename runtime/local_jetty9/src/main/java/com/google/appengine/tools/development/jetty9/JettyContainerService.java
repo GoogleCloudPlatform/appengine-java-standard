@@ -69,6 +69,7 @@ import org.eclipse.jetty.server.handler.HandlerWrapper;
 import org.eclipse.jetty.server.nio.NetworkTrafficSelectChannelConnector;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.Scanner;
+import org.eclipse.jetty.util.component.LifeCycle;
 import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.webapp.WebAppContext;
 
@@ -420,7 +421,7 @@ public class JettyContainerService extends AbstractContainerService implements C
           }
         });
     scanner.addListener(new ScannerListener());
-    scanner.doStart();
+    scanner.start();
   }
 
   @Override
@@ -463,7 +464,7 @@ public class JettyContainerService extends AbstractContainerService implements C
     }
   }
 
-  private void fullWebAppScanner(int interval) throws IOException {
+  private void fullWebAppScanner(int interval) throws Exception {
     String webInf = context.getWebInf().getFile().getPath();
     List<File> scanList = new ArrayList<>();
     Collections.addAll(
@@ -488,7 +489,7 @@ public class JettyContainerService extends AbstractContainerService implements C
           }
         });
 
-    scanner.doStart();
+    scanner.start();
   }
 
   /**
