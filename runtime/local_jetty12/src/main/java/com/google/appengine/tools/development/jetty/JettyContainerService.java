@@ -446,7 +446,7 @@ public class JettyContainerService extends AbstractContainerService  implements 
           }
         });
     scanner.addListener(new ScannerListener());
-    scanner.doStart();
+    scanner.start();
   }
 
   @Override
