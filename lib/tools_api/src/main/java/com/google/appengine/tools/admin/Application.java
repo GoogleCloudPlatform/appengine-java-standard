@@ -299,16 +299,17 @@ public class Application implements GenericApplication {
     // TODO: validateXml(webXml.getFilename(), new File(SDKDOCS, "servlet.xsd"));
     webXml.validate();
     servletVersion = webXmlReader.getServletVersion();
-    if (Double.parseDouble(servletVersion) >= 4.0) {
-      // javax Servlet start is still at version 4.0, we force Jetty12 EE8 for it.
-      System.setProperty("appengine.use.EE8", "true");
+    if (servletVersion != null) {
+      if (Double.parseDouble(servletVersion) >= 4.0) {
+        // javax Servlet start is still at version 4.0, we force Jetty12 EE8 for it.
+        System.setProperty("appengine.use.EE8", "true");
+      }
+      if (Double.parseDouble(servletVersion) >= 6.0) {
+        // Jakarta Servlet start at version 6.0, we force  Jetty12 EE 10 for it.
+        System.setProperty("appengine.use.EE10", "true");
+      }
+      AppengineSdk.resetSdk(); // To make sure the correct Jetty version is used.
     }
-    if (Double.parseDouble(servletVersion) >= 6.0) {
-      // Jakarta Servlet start at version 6.0, we force  Jetty12 EE 10 for it.
-      System.setProperty("appengine.use.EE10", "true");
-    }
-    AppengineSdk.resetSdk(); // To make sure the correct Jetty version is used.
-
     validateFilterClasses();
     validateRuntime();
 
