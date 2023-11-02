@@ -119,7 +119,8 @@ public class EE10AppVersionHandlerFactory implements AppVersionHandlerFactory {
       File contextRoot = appVersion.getRootDirectory();
 
       final AppEngineWebAppContext context =
-          new AppEngineWebAppContext(appVersion.getRootDirectory(), serverInfo);
+          new AppEngineWebAppContext(
+              appVersion.getRootDirectory(), serverInfo, /* extractWar=*/ false);
       context.setServer(server);
       context.setDefaultsDescriptor(WEB_DEFAULTS_XML);
       ClassLoader classLoader = appVersion.getClassLoader();
