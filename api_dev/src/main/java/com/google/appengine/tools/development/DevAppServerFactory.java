@@ -350,7 +350,7 @@ public class DevAppServerFactory {
       appEngineWebXmlLocation = new File(appDir, "WEB-INF/appengine-web.xml");
     }
     if (webXmlLocation.exists()) {
-      WebXmlReader webXmlReader = new WebXmlReader(appDir.getAbsolutePath());
+      WebXmlReader webXmlReader = new WebXmlReader(webXmlLocation.getAbsolutePath(), "");
 
       WebXml webXml = webXmlReader.readWebXml();
       webXml.validate();
