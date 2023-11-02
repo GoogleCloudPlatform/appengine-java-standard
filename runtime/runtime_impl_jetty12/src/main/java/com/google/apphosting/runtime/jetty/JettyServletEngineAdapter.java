@@ -65,11 +65,6 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
   private AppVersionKey lastAppVersionKey;
 
   static {
-    // Tell Jetty to use our custom logging class (that forwards to
-    // java.util.logging) instead of writing to System.err
-    // Documentation: http://www.eclipse.org/jetty/documentation/current/configuring-logging.html
-    // TODO: re-enable logging.
-    // System.setProperty("org.eclipse.jetty.util.log.class", JettyLogger.class.getName());
     // Remove internal URLs.
     System.setProperty("java.vendor.url", "");
     System.setProperty("java.vendor.url.bug", "");

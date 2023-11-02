@@ -571,7 +571,7 @@
                                     <include>org.eclipse.jetty:jetty-server</include>
                                     <include>org.eclipse.jetty:jetty-session</include>
                                     <include>org.eclipse.jetty:jetty-security</include>
-                                    <include>org.eclipse.jetty:jetty-slf4j-impl</include>
+                                    <include>org.slf4j:slf4j-jdk14</include>
                                     <include>org.slf4j:slf4j-api</include>
                                     <include>org.eclipse.jetty:jetty-util-ajax</include>
                                     <include>org.eclipse.jetty:jetty-util</include>
