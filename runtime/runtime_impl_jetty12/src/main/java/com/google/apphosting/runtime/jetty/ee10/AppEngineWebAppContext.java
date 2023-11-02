@@ -280,7 +280,7 @@ public class AppEngineWebAppContext extends WebAppContext {
     ConstraintSecurityHandler security = (ConstraintSecurityHandler) getSecurityHandler();
     ConstraintMapping cm = new ConstraintMapping();
     cm.setConstraint(
-        Constraint.from("deferred_queue", Constraint.Authorization.KNOWN_ROLE, "admin"));
+        Constraint.from("deferred_queue", Constraint.Authorization.SPECIFIC_ROLE, "admin"));
     cm.setPathSpec("/_ah/queue/__deferred__");
     security.addConstraintMapping(cm);
 

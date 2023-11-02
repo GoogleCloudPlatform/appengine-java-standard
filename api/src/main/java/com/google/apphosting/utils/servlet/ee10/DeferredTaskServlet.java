@@ -17,7 +17,7 @@
 package com.google.apphosting.utils.servlet.ee10;
 
 import com.google.appengine.api.taskqueue.DeferredTask;
-import com.google.appengine.api.taskqueue.DeferredTaskContext;
+import com.google.appengine.api.taskqueue.ee10.DeferredTaskContext;
 import com.google.apphosting.api.ApiProxy;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletInputStream;

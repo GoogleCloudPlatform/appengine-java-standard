@@ -70,7 +70,11 @@ public final class JavaRuntimeAllInOneTest extends JavaRuntimeViaHttpBase {
 
   @Before
   public void startRuntime() throws Exception {
-    copyAppToDir("com/google/apphosting/loadtesting/allinone", temp.getRoot().toPath());
+    if (Boolean.getBoolean("appengine.use.EE10")) {
+      copyAppToDir("com/google/apphosting/loadtesting/allinone/ee10", temp.getRoot().toPath());
+    } else {
+      copyAppToDir("com/google/apphosting/loadtesting/allinone", temp.getRoot().toPath());
+    }
     ApiServerFactory<HttpApiServer> apiServerFactory =
         (apiPort, runtimePort) -> {
           HttpApiServer httpApiServer = new HttpApiServer(apiPort, "localhost", runtimePort);
@@ -172,14 +176,30 @@ public final class JavaRuntimeAllInOneTest extends JavaRuntimeViaHttpBase {
     // into hassles with Servlet API 2.5 vs 3.1.)
     // The "forwarded" attribute is set by our servlet and the APP_VERSION_KEY_REQUEST_ATTR one is
     // set by our infrastructure.
-    assertThat(attributes).containsAtLeast(
-            "foo", "bar",
-            "baz", "buh",
-            "forwarded", "true",
-            "javax.servlet.forward.query_string", "forward=set_servlet_attributes=foo=bar:baz=buh",
-            "javax.servlet.forward.request_uri", "/",
-            "javax.servlet.forward.servlet_path", "/",
-            "javax.servlet.forward.context_path", "",
-            "com.google.apphosting.runtime.jetty.APP_VERSION_REQUEST_ATTR", "s~testapp/allinone");
+    if (Boolean.getBoolean("appengine.use.EE10")) {
+      assertThat(attributes)
+          .containsAtLeast(
+              "foo", "bar",
+              "baz", "buh",
+              "forwarded", "true",
+              "jakarta.servlet.forward.query_string",
+                  "forward=set_servlet_attributes=foo=bar:baz=buh",
+              "jakarta.servlet.forward.request_uri", "/",
+              "jakarta.servlet.forward.servlet_path", "/",
+              "jakarta.servlet.forward.context_path", "",
+              "com.google.apphosting.runtime.jetty.APP_VERSION_REQUEST_ATTR", "s~testapp/allinone");
+    } else {
+      assertThat(attributes)
+          .containsAtLeast(
+              "foo", "bar",
+              "baz", "buh",
+              "forwarded", "true",
+              "javax.servlet.forward.query_string",
+                  "forward=set_servlet_attributes=foo=bar:baz=buh",
+              "javax.servlet.forward.request_uri", "/",
+              "javax.servlet.forward.servlet_path", "/",
+              "javax.servlet.forward.context_path", "",
+              "com.google.apphosting.runtime.jetty.APP_VERSION_REQUEST_ATTR", "s~testapp/allinone");
+    }
   }
 }
