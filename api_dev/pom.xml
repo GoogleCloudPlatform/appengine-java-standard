@@ -44,6 +44,10 @@
       <artifactId>appengine-apis</artifactId>
     </dependency>
     <dependency>
+        <groupId>com.google.appengine</groupId>
+        <artifactId>appengine-init</artifactId>
+     </dependency>
+     <dependency>
       <groupId>com.google.appengine</groupId>
       <artifactId>mediautil</artifactId>
     </dependency>

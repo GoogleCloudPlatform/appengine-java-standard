@@ -44,7 +44,6 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
@@ -159,9 +158,6 @@ public class AppVersionFactory {
         };
     AppEngineWebXml appEngineWebXml = reader.readAppEngineWebXml();
     logger.atFine().log("Loaded appengine-web.xml: %s", appEngineWebXml);
-    if (Objects.equals(appEngineWebXml.getRuntime(), "java21")) {
-      System.setProperty("appengine.use.EE8", "true");
-  }
     return appEngineWebXml;
   }
 

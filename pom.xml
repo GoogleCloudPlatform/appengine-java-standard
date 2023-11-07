@@ -27,6 +27,7 @@
     <module>protobuf</module>
     <module>api</module>
     <module>sessiondata</module>
+    <module>appengine_init</module>
     <module>shared_sdk</module>
     <module>shared_sdk_jetty9</module>
     <module>shared_sdk_jetty12</module>
@@ -259,7 +260,12 @@
 
   <dependencyManagement>
     <dependencies>
-      <dependency>
+        <dependency>
+          <groupId>com.google.appengine</groupId>
+          <artifactId>appengine-init</artifactId>
+          <version>${project.version}</version>
+        </dependency>
+        <dependency>
         <groupId>com.google.appengine</groupId>
         <artifactId>appengine-apis</artifactId>
         <version>${project.version}</version>

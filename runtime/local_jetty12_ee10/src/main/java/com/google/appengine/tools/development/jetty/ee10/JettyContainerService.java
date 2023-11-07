@@ -687,23 +687,28 @@ public class JettyContainerService extends AbstractContainerService
             ServletApiRequest httpServletRequest = request.getServletApiRequest();
               @SuppressWarnings("NowMillis")
               long nowMillis = System.currentTimeMillis();
-            logService.addRequestInfo(
-                appId,
-                versionId,
-                requestId,
-                httpServletRequest.getRemoteAddr(),
-                httpServletRequest.getRemoteUser(),
-                Request.getTimeStamp(request) * 1000,
-                nowMillis * 1000,
-                request.getMethod(),
-                httpServletRequest.getRequestURI(),
-                httpServletRequest.getProtocol(),
-                httpServletRequest.getHeader("User-Agent"),
-                true,
-                request.getHttpServletResponse().getStatus(),
-                request.getHeaders().get("Referrer"));
+            try {
+              logService.addRequestInfo(
+                  appId,
+                  versionId,
+                  requestId,
+                  httpServletRequest.getRemoteAddr(),
+                  httpServletRequest.getRemoteUser(),
+                  Request.getTimeStamp(request) * 1000,
+                  nowMillis * 1000,
+                  request.getMethod(),
+                  httpServletRequest.getRequestURI(),
+                  httpServletRequest.getProtocol(),
+                  httpServletRequest.getHeader("User-Agent"),
+                  true,
+                  request.getHttpServletResponse().getStatus(),
+                  request.getHeaders().get("Referrer"));
               logService.clearResponseSize();
+            } catch (NullPointerException ignored) {
+              // TODO remove when
+              // https://github.com/GoogleCloudPlatform/appengine-java-standard/issues/70 is fixed
             }
+          }
           } finally {
             ApiProxy.clearEnvironmentForCurrentThread();
           }

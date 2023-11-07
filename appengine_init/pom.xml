@@ -19,25 +19,18 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>com.google.appengine</groupId>
-  <artifactId>runtime-main</artifactId>
+  <artifactId>appengine-init</artifactId>
   <parent>
     <groupId>com.google.appengine</groupId>
-    <artifactId>runtime-parent</artifactId>
+    <artifactId>parent</artifactId>
     <version>2.0.22-SNAPSHOT</version>
   </parent>
 
   <packaging>jar</packaging>
-  <name>AppEngine :: runtime-main</name>
+  <name>AppEngine :: appengine-init</name>
 
   <dependencies>
-    <dependency>
-      <groupId>com.google.appengine</groupId>
-      <artifactId>runtime-util</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.google.appengine</groupId>
-      <artifactId>appengine-init</artifactId>
-    </dependency>
+ 
     <!-- Test dependencies. -->
     <dependency>
       <groupId>com.google.truth</groupId>
@@ -50,23 +43,5 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-shade-plugin</artifactId>
-        <executions>
-          <execution>
-            <phase>package</phase>
-            <goals>
-              <goal>shade</goal>
-            </goals>
-            <configuration>
-              <createSourcesJar>true</createSourcesJar>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-    </plugins>
-  </build>
+
 </project>

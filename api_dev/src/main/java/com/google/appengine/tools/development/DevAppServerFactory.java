@@ -16,6 +16,7 @@
 
 package com.google.appengine.tools.development;
 
+import com.google.appengine.init.AppEngineWebXmlInitialParse;
 import com.google.appengine.tools.info.AppengineSdk;
 import com.google.apphosting.utils.config.WebXml;
 import com.google.apphosting.utils.config.WebXmlReader;
@@ -75,7 +76,7 @@ public class DevAppServerFactory {
         address,
         port,
         true,
-        /* installSecurityManager*/ false,
+        /* installSecurityManager= */ false,
         new HashMap<String, Object>(),
         false);
   }
@@ -349,25 +350,16 @@ public class DevAppServerFactory {
     if (appEngineWebXmlLocation == null) {
       appEngineWebXmlLocation = new File(appDir, "WEB-INF/appengine-web.xml");
     }
+    new AppEngineWebXmlInitialParse(appEngineWebXmlLocation.getAbsolutePath())
+        .handleRuntimeProperties();
+    if (Boolean.getBoolean("appengine.use.EE8") || Boolean.getBoolean("appengine.use.EE10")) {
+      AppengineSdk.resetSdk();
+    }
     if (webXmlLocation.exists()) {
       WebXmlReader webXmlReader = new WebXmlReader(webXmlLocation.getAbsolutePath(), "");
 
       WebXml webXml = webXmlReader.readWebXml();
       webXml.validate();
-      String servletVersion = webXmlReader.getServletVersion();
-      if (servletVersion != null) {
-        if (Double.parseDouble(servletVersion) >= 4.0) {
-          // Jetty12 starts at version 4.0, EE8.
-          System.setProperty("appengine.use.EE8", "true");
-          AppengineSdk.resetSdk();
-        }
-        if (Double.parseDouble(servletVersion) >= 6.0) {
-          // Jakarta Servlet start at version 6.0, we force EE 10 for it.
-          System.setProperty("appengine.use.EE10", "true");
-          System.setProperty("appengine.use.EE8", "false");
-          AppengineSdk.resetSdk();
-        }
-      }
     }
     DevAppServerClassLoader loader = DevAppServerClassLoader.newClassLoader(
         DevAppServerFactory.class.getClassLoader());

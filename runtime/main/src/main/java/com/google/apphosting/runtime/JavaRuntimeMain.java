@@ -16,12 +16,12 @@
 
 package com.google.apphosting.runtime;
 
+import com.google.appengine.init.AppEngineWebXmlInitialParse;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Method;
-import java.util.Objects;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -62,9 +62,6 @@ public class JavaRuntimeMain {
   private static final String ALLOW_NON_RESIDENT_SESSION_ACCESS =
       "gae.allow_non_resident_session_access";
 
-  private static final String USE_EE8 = "appengine.use.EE8";
-  private static final String USE_EE10 = "appengine.use.EE10";
-
   public static void main(String[] args) {
     new JavaRuntimeMain().load(args);
   }
@@ -78,9 +75,7 @@ public class JavaRuntimeMain {
 
       // Process user defined properties as soon as possible, in the simple main Classpath.
       processOptionalProperties(args);
-      if (Objects.equals(System.getenv("GAE_RUNTIME"), "java21")) {
-        System.setProperty(USE_EE8, "true");
-      }
+
       String appsRoot = getApplicationRoot(args);
       NullSandboxPlugin plugin = new NullSandboxPlugin();
       ClassPathUtils classPathUtils = new ClassPathUtils();
@@ -139,6 +134,11 @@ public class JavaRuntimeMain {
    * Handles an undocumented property file that could be use by select customers to change flags.
    */
   void processOptionalProperties(String[] args) {
+    File appengineWeb = new File(getApplicationPath(args), "WEB-INF/appengine-web.xml");
+    if (appengineWeb.exists()) {
+      new AppEngineWebXmlInitialParse(appengineWeb.getAbsolutePath())
+          .handleRuntimeProperties();
+    }
     File optionalPropFile = new File(getApplicationPath(args), PROPERTIES_LOCATION);
     if (!optionalPropFile.exists()) {
       // nothing to process.
@@ -155,18 +155,12 @@ public class JavaRuntimeMain {
     for (String flag :
         new String[] {
           USE_MAVEN_JARS,
-          USE_EE8,
-          USE_EE10,
           DISABLE_API_CALL_LOGGING_IN_APIPROXY,
           ALLOW_NON_RESIDENT_SESSION_ACCESS,
           USE_ANNOTATION_SCANNING
         }) {
       if ("true".equalsIgnoreCase(optionalProperties.getProperty(flag))) {
         System.setProperty(flag, "true");
-      }
-      // Force Jetty12 for EE10
-      if (Boolean.getBoolean(USE_EE10)) {
-        System.setProperty(USE_EE8, "false");
       }
     }
   }

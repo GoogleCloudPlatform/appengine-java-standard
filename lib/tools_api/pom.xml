@@ -55,6 +55,11 @@
       <artifactId>appengine-utils</artifactId>
       <optional>true</optional>
     </dependency>
+    <dependency>
+        <groupId>com.google.appengine</groupId>
+        <artifactId>appengine-init</artifactId>
+        <optional>true</optional>
+    </dependency>
     <!-- the auto-value dependency is included to activate generation of the AutoValue classes -->
     <dependency>
       <groupId>com.google.auto.value</groupId>
@@ -284,6 +289,7 @@
               <artifactSet>
                 <includes>
                   <include>com.contrastsecurity:yamlbeans</include>
+                  <include>com.google.appengine:appengine-init</include>
                   <include>com.google.appengine:appengine-apis</include>
                   <include>com.google.appengine:appengine-apis-dev</include>
                   <include>com.google.appengine:shared-sdk</include>
