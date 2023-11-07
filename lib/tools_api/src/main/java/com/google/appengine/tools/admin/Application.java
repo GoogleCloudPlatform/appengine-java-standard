@@ -289,6 +289,7 @@ public class Application implements GenericApplication {
     webXml = webXmlReader.readWebXml();
     // TODO: validateXml(webXml.getFilename(), new File(SDKDOCS, "servlet.xsd"));
     webXml.validate();
+    servletVersion = webXmlReader.getServletVersion();
 
     validateFilterClasses();
     validateRuntime();
