@@ -21,9 +21,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.google.apphosting.base.protos.ClonePb.PerformanceData;
-import com.google.apphosting.base.protos.GitSourceContext;
 import com.google.apphosting.base.protos.ModelClonePb.PerformanceDataRequest;
-import com.google.apphosting.base.protos.SourceContext;
 import com.google.apphosting.runtime.test.MockAnyRpcServerContext;
 import com.google.common.io.ByteStreams;
 import java.io.InputStream;
@@ -54,14 +52,10 @@ public class CloneControllerImplTest {
 
   private final JavaRuntime javaRuntime = mock(JavaRuntime.class);
   private final AppVersion appVersion = mock(AppVersion.class);
-  private final SourceContext sourceContext = SourceContext.newBuilder()
-      .setGit(GitSourceContext.newBuilder().setUrl("http://foo/bar"))
-      .build();
 
   @Before
   public void setUp() {
     when(javaRuntime.findAppVersion("app1", "1.1")).thenReturn(appVersion);
-    when(appVersion.getSourceContext()).thenReturn(sourceContext);
   }
 
   @Test

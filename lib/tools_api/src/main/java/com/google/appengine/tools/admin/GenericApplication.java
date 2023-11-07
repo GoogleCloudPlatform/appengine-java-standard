@@ -157,15 +157,6 @@ public interface GenericApplication {
   File createStagingDirectory(ApplicationProcessingOptions opts, File stagingDir)
       throws IOException;
 
-  /**
-   * Generates source context file in the staging directory.
-   * 
-   * <p>Does nothing if the source directory is not in a Git repo or if the source context file 
-   * already exists. If the operation fails, this function logs and continues. The deployment
-   * is never blocked if we can't generate the source context file.
-   */
-  void exportRepoInfoFile();
-
   /** deletes the staging directory, if one was created. */
   void cleanStagingDirectory();
 

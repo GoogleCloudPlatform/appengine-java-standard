@@ -22,7 +22,6 @@ import com.google.apphosting.base.protos.ClonePb.PerformanceData;
 import com.google.apphosting.base.protos.EmptyMessage;
 import com.google.apphosting.base.protos.ModelClonePb.DeadlineInfo;
 import com.google.apphosting.base.protos.ModelClonePb.PerformanceDataRequest;
-import com.google.apphosting.base.protos.SourceContext;
 import com.google.apphosting.runtime.anyrpc.AnyRpcServerContext;
 import com.google.apphosting.runtime.anyrpc.CloneControllerServerInterface;
 import com.google.common.flogger.GoogleLogger;
@@ -133,12 +132,6 @@ public class CloneControllerImpl implements CloneControllerServerInterface {
       data.addEntries(entry);
     }
     rpc.finishWithResponse(data.build());
-  }
-
-  SourceContext getSourceContext(String appId, String versionId) {
-    AppVersion appVersion = callback.getAppVersion(appId, versionId);
-
-    return (appVersion == null) ? null : appVersion.getSourceContext();
   }
 
   /**

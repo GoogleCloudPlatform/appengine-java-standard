@@ -41,7 +41,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
@@ -379,8 +378,7 @@ return sdkRoot;
     testApp.createStagingDirectory(opts);
     testStagedFiles(testApp);
     File stage = testApp.getStagingDir();
-    // Does not work when you are on github automation 
-    // assertThat(new File(stage, "WEB-INF/classes/source-context.json").canRead()).isFalse();
+
     File appYaml = new File(stage, "WEB-INF/appengine-generated/app.yaml");
     assertFileContains(appYaml, "application: 'sampleapp'");
     assertFileContains(appYaml, "\nversion: '1'");
@@ -409,8 +407,6 @@ return sdkRoot;
     testApp.createStagingDirectory(opts);
     testStagedFiles(testApp);
     File stage = testApp.getStagingDir();
-    // Does not work when you are on github automation 
-    // assertThat(new File(stage, "WEB-INF/classes/source-context.json").canRead()).isFalse();
     File appYaml = new File(stage, "WEB-INF/appengine-generated/app.yaml");
     assertFileContains(appYaml, "application: 'sampleapp'");
     assertFileContains(appYaml, "\nversion: '1'");
@@ -458,36 +454,6 @@ return sdkRoot;
     File stage = testApp.getStagingDir();
     File appYaml = new File(stage, "WEB-INF/appengine-generated/app.yaml");
     assertFileContains(appYaml, "application: 'sampleapp'");
-  }
-
-  @Test
-  public void testStagingWithSourceContext() throws Exception {
-    RepoInfo.SourceContext testSourceContext =
-        RepoInfo.SourceContext.createFromUrl(
-            "https://source.developers.google.com/p/testing/r/default", "dummyrevision");
-    String testSourceContextJson =
-        "{\"cloudRepo\": {\"repoId\": {\"projectRepoId\":"
-            + " {\"projectId\": \"testing\", \"repoName\": \"default\"}},"
-            + " \"revisionId\": \"dummyrevision\"}}";
-    Application testApp = Application.readApplication(TEST_FILES, testSourceContext);
-    testApp.setDetailsWriter(
-        new PrintWriter(new BufferedWriter(new OutputStreamWriter(System.out, UTF_8))));
-
-    assertThat(testApp.getAppId()).isEqualTo(APPID);
-
-    ApplicationProcessingOptions opts = new ApplicationProcessingOptions();
-    opts.setStagingOptions(StagingOptions.builder().setSplitJarFiles(Optional.of(true)).build());
-
-    testApp.createStagingDirectory(opts);
-    testStagedFiles(testApp);
-    File stage = testApp.getStagingDir();
-    File jsonFile = new File(stage, "WEB-INF/classes/source-context.json");
-    assertThat(jsonFile.isFile()).isTrue();
-    String contents = Files.asCharSource(jsonFile, StandardCharsets.UTF_8).read();
-    assertThat(testSourceContextJson).isEqualTo(contents);
-    File appYaml = new File(stage, "WEB-INF/appengine-generated/app.yaml");
-    assertFileContains(appYaml, "application: 'sampleapp'");
-    assertFileContains(appYaml, "\nversion: '1'");
   }
 
   @Test

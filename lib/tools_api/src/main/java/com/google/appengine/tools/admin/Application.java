@@ -18,7 +18,6 @@ package com.google.appengine.tools.admin;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import com.google.appengine.tools.admin.RepoInfo.SourceContext;
 import com.google.appengine.tools.info.AppengineSdk;
 import com.google.appengine.tools.util.ApiVersionFinder;
 import com.google.appengine.tools.util.FileIterator;
@@ -194,7 +193,6 @@ public class Application implements GenericApplication {
   private final IndexesXml indexesXml;
   private final BackendsXml backendsXml;
   private final File baseDir;
-  private final SourceContext sourceContext;
 
   private AppEngineWebXml appEngineWebXml;
   private WebXml webXml;
@@ -224,15 +222,9 @@ public class Application implements GenericApplication {
     this.queueXml = null;
 
     this.baseDir = null;
-    this.sourceContext = null;
   }
 
-  private Application(
-      String explodedPath,
-      String appId,
-      String module,
-      String appVersion,
-      RepoInfo.SourceContext sourceContext) {
+  private Application(String explodedPath, String appId, String module, String appVersion) {
     this.baseDir = new File(explodedPath);
     // Normalize the exploded path.
     explodedPath = buildNormalizedPath(baseDir);
@@ -270,21 +262,6 @@ public class Application implements GenericApplication {
     if (module != null) {
       appEngineWebXml.setModule(module);
     }
-
-    // Auto-detect and propagate source context to the server.
-    if (sourceContext == null) {
-      sourceContext = new RepoInfo(baseDir).getSourceContext();
-      if (sourceContext != null) {
-        String sourceRef = sourceContext.getRevisionId();
-        if (sourceContext.getRepositoryUrl() != null
-            && HAS_PROTOCOL_RE.matcher(sourceContext.getRepositoryUrl()).find()) {
-          sourceRef = sourceContext.getRepositoryUrl() + "#" + sourceRef;
-        }
-        // The option is available since 1.9.23.
-        appEngineWebXml.addBetaSetting(BETA_SOURCE_REFERENCE_KEY, sourceRef);
-      }
-    }
-    this.sourceContext = sourceContext;
 
     webXml = webXmlReader.readWebXml();
     // TODO: validateXml(webXml.getFilename(), new File(SDKDOCS, "servlet.xsd"));
@@ -393,24 +370,7 @@ public class Application implements GenericApplication {
    */
   public static Application readApplication(String path) throws IOException {
     // TODO If path is a WAR file, explode to temporary directory first.
-    return readApplication(path, null);
-  }
-
-  /**
-   * Reads the App Engine application from {@code path}. The path may either be a WAR file or the
-   * root of an exploded WAR directory.
-   *
-   * @param path a not {@code null} path.
-   * @param sourceContext an explicit RepoInfo.SourceContext. If {@code null}, the source context
-   *     will be inferred from the current directory.
-   * @throws IOException if an error occurs while trying to read the {@code Application}.
-   * @throws com.google.apphosting.utils.config.AppEngineConfigException if the {@code
-   *     Application's} appengine-web.xml file is malformed.
-   */
-  public static Application readApplication(String path, SourceContext sourceContext)
-      throws IOException {
-    // TODO If path is a WAR file, explode to temporary directory first.
-    return new Application(path, null, null, null, sourceContext);
+    return new Application(path, null, null, null);
   }
 
   /**
@@ -536,7 +496,7 @@ public class Application implements GenericApplication {
   public static Application readApplication(
       String path, String appId, String module, String appVersion) throws IOException {
     // TODO If path is a WAR file, explode to temporary directory first.
-    return new Application(path, appId, module, appVersion, null);
+    return new Application(path, appId, module, appVersion);
   }
 
   /**
@@ -1050,8 +1010,6 @@ public class Application implements GenericApplication {
       }
     }
 
-    exportRepoInfoFile();
-
     return stageDir;
   }
 
@@ -1088,30 +1046,6 @@ public class Application implements GenericApplication {
     // There are initializers other than jasper's, so we must fall through to runtime
     // to handle /*.
     webXml.setFallThroughToRuntime(true);
-  }
-
-  @Override
-  public void exportRepoInfoFile() {
-    File target = new File(stageDir, "WEB-INF/classes/source-context.json");
-    if (target.exists()) {
-      return; // The source context file already exists, nothing to do.
-    }
-
-    if (sourceContext == null || sourceContext.getJson() == null) {
-      return; // Not a valid git repo
-    }
-
-    try {
-      // The directory will almost always exist. The mkdirs() addresses a rare corner case (which is
-      // hit in tests).
-      target.getParentFile().mkdirs();
-      Files.asCharSink(target, UTF_8).write(sourceContext.getJson());
-    } catch (IOException ex) {
-      logger.log(Level.FINE, "Failed to write git repository information file.", ex);
-      return; // Failed to generate the source context file.
-    }
-
-    statusUpdate("Generated git repository information file.");
   }
 
   /** Write yaml file to generation subdirectory within stage directory. */
