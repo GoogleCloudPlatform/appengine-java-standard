@@ -109,8 +109,7 @@ public class ApiProxyLocalImpl implements ApiProxyLocal, DevServices {
 
   private static final Logger logger = Logger.getLogger(ApiProxyLocalImpl.class.getName());
 
-  private final Map<String, LocalRpcService> serviceCache =
-      new ConcurrentHashMap<String, LocalRpcService>();
+  private final Map<String, LocalRpcService> serviceCache = new ConcurrentHashMap<>();
 
   private final Map<String, Method> methodCache = new ConcurrentHashMap<String, Method>();
   final Map<Method, LatencySimulator> latencySimulatorCache =
@@ -204,12 +203,10 @@ public class ApiProxyLocalImpl implements ApiProxyLocal, DevServices {
     Semaphore semaphore = (Semaphore) environment.getAttributes().get(
         LocalEnvironment.API_CALL_SEMAPHORE);
     if (semaphore != null) {
-      try {
-        semaphore.acquire();
-      } catch (InterruptedException ex) {
-        // We never do this, so just propagate it as a RuntimeException for now.
-        throw new RuntimeException("Interrupted while waiting on semaphore:", ex);
-      }
+     // TODO: investigate why the acquire() locks when Sessions are configured in appengine-web.xml
+     // Maybe the semaphore has been released just before the app engine session manager starts
+     // saving the data in datastore.
+      semaphore.tryAcquire();
     }
     AsyncApiCall asyncApiCall =
         new AsyncApiCall(environment, packageName, methodName, requestBytes, semaphore);
