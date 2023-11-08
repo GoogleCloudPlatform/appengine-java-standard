@@ -42,6 +42,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -76,8 +77,8 @@ public class AppEngineWebAppContext extends WebAppContext {
   // constant.  If it's much larger than this we may need to
   // restructure the code a bit.
   private static final int MAX_RESPONSE_SIZE = 32 * 1024 * 1024;
-  private static final String ASYNC_ENABLE_PPROPERTY = "enable_async_PROPERTY"; // TODO
-  private static final boolean APP_IS_ASYNC = Boolean.getBoolean(ASYNC_ENABLE_PPROPERTY);
+  private static final String ASYNC_ENABLE_PROPERTY = "enable_async_PROPERTY"; // TODO
+  private static final boolean APP_IS_ASYNC = Boolean.getBoolean(ASYNC_ENABLE_PROPERTY);
 
   private static final String JETTY_PACKAGE = "org.eclipse.jetty.";
 
@@ -86,7 +87,6 @@ public class AppEngineWebAppContext extends WebAppContext {
       "/base/java8_runtime/appengine.ignore-content-length";
 
   private final String serverInfo;
-  private final boolean extractWar;
   private final List<RequestListener> requestListeners = new CopyOnWriteArrayList<>();
   private final boolean ignoreContentLength;
 
@@ -127,27 +127,25 @@ public class AppEngineWebAppContext extends WebAppContext {
     // We set the contextPath to / for all applications.
     super(appDir.getPath(), "/");
 
-    this.extractWar = extractWar;
-
     // If the application fails to start, we throw so the JVM can exit.
     setThrowUnavailableOnStartupException(true);
 
     if (extractWar) {
-      Resource webApp = null;
+      Resource webApp;
       try {
-        webApp = ResourceFactory.root().newResource(appDir.getAbsolutePath());
+        ResourceFactory resourceFactory = ResourceFactory.of(this);
+        webApp = resourceFactory.newResource(appDir.getAbsolutePath());
 
         if (appDir.isDirectory()) {
           setWar(appDir.getPath());
           setBaseResource(webApp);
         } else {
           // Real war file, not exploded , so we explode it in tmp area.
-          File extractedWebAppDir = createTempDir();
-          extractedWebAppDir.mkdir();
-          extractedWebAppDir.deleteOnExit();
-          Resource jarWebWpp = ResourceFactory.root().newJarFileResource(webApp.getURI());
+          createTempDirectory();
+          File extractedWebAppDir = getTempDirectory();
+          Resource jarWebWpp = resourceFactory.newJarFileResource(webApp.getURI());
           jarWebWpp.copyTo(extractedWebAppDir.toPath());
-          setBaseResource(ResourceFactory.root().newResource(extractedWebAppDir.getAbsolutePath()));
+          setBaseResource(resourceFactory.newResource(extractedWebAppDir.getAbsolutePath()));
           setWar(extractedWebAppDir.getPath());
         }
       } catch (Exception e) {
@@ -332,45 +330,30 @@ public class AppEngineWebAppContext extends WebAppContext {
     }
   }
 
-  private static File createTempDir() {
-    File baseDir = new File(JAVA_IO_TMPDIR.value());
+  @Override
+  protected void createTempDirectory() {
+    File tempDir = getTempDirectory();
+    if (tempDir != null) {
+      // Someone has already set the temp directory.
+      super.createTempDirectory();
+      return;
+    }
+
+    File baseDir = new File(Objects.requireNonNull(JAVA_IO_TMPDIR.value()));
     String baseName = System.currentTimeMillis() + "-";
 
     for (int counter = 0; counter < 10; counter++) {
-      File tempDir = new File(baseDir, baseName + counter);
+      tempDir = new File(baseDir, baseName + counter);
       if (tempDir.mkdir()) {
-        return tempDir;
+        if (!isTempDirectoryPersistent()) {
+          tempDir.deleteOnExit();
+        }
+
+        setTempDirectory(tempDir);
+        return;
       }
     }
     throw new IllegalStateException("Failed to create directory ");
-  }
-
-  /**
-   * Jetty needs a temp directory that already exists, so we point it to the directory of the war.
-   * Since we don't allow Jetty to do any actual writes, this isn't a problem. It'd be nice to just
-   * use setTempDirectory, but Jetty tests to see if it's writable.
-   */
-  @Override
-  public File getTempDirectory() {
-    if (extractWar) {
-      return new File(getWar());
-    }
-
-    return super.getTempDirectory();
-  }
-
-  /**
-   * Set temporary directory for context. The javax.servlet.context.tempdir attribute is also set.
-   *
-   * @param dir Writable temporary directory.
-   */
-  @Override
-  public void setTempDirectory(File dir) {
-
-    if (dir != null && !dir.exists()) {
-      dir.mkdir();
-    }
-    super.setTempDirectory(dir);
   }
 
   // N.B.: Yuck.  Jetty hardcodes all of this logic into an
