@@ -160,8 +160,7 @@ public class AppEngineWebAppContext extends WebAppContext {
 
     // Configure the Jetty SecurityHandler to understand our method of
     // authentication (via the UserService).
-    EE10AppEngineAuthentication.configureSecurityHandler(
-        (ConstraintSecurityHandler) getSecurityHandler());
+    setSecurityHandler(EE10AppEngineAuthentication.newSecurityHandler());
 
     setMaxFormContentSize(MAX_RESPONSE_SIZE);
 

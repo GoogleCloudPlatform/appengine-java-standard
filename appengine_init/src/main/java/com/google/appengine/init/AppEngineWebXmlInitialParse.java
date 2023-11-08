@@ -18,6 +18,7 @@ package com.google.appengine.init;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.xml.namespace.QName;
@@ -39,6 +40,26 @@ public final class AppEngineWebXmlInitialParse {
   private static final String PROPERTIES = "system-properties";
   private static final String PROPERTY = "property";
   private static final String RUNTIME = "runtime";
+
+  /** git commit number if the build is done via Maven */
+  public static final String GIT_HASH;
+
+  /** a formatted build timestamp with pattern yyyy-MM-dd'T'HH:mm:ssXXX */
+  public static final String BUILD_TIMESTAMP;
+
+  private static final Properties BUILD_PROPERTIES = new Properties();
+
+  static {
+    try (InputStream inputStream =
+        AppEngineWebXmlInitialParse.class.getResourceAsStream(
+            "/com/google/appengine/init/build.properties")) {
+      BUILD_PROPERTIES.load(inputStream);
+    } catch (Exception ignored) {
+    }
+    GIT_HASH = BUILD_PROPERTIES.getProperty("buildNumber", "unknown");
+    System.setProperty("appengine.git.hash", GIT_HASH);
+    BUILD_TIMESTAMP = BUILD_PROPERTIES.getProperty("timestamp", "unknown");
+  }
 
   public void handleRuntimeProperties() {
     try (final InputStream stream = new FileInputStream(file)) {
@@ -104,5 +125,9 @@ public final class AppEngineWebXmlInitialParse {
 
   public AppEngineWebXmlInitialParse(String file) {
     this.file = file;
+    if (!GIT_HASH.equals("unknown")) {
+      logger.log(
+          Level.INFO, "built on {0} from commit {1}", new Object[] {BUILD_TIMESTAMP, GIT_HASH});
+    }
   }
 }
