@@ -28,6 +28,7 @@ import com.google.apphosting.utils.servlet.ee10.SessionCleanupServlet;
 import com.google.apphosting.utils.servlet.ee10.SnapshotServlet;
 import com.google.apphosting.utils.servlet.ee10.WarmupServlet;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.flogger.GoogleLogger;
 import jakarta.servlet.DispatcherType;
 import jakarta.servlet.Filter;
 import jakarta.servlet.Servlet;
@@ -160,8 +161,7 @@ public class AppEngineWebAppContext extends WebAppContext {
 
     // Configure the Jetty SecurityHandler to understand our method of
     // authentication (via the UserService).
-    EE10AppEngineAuthentication.configureSecurityHandler(
-        (ConstraintSecurityHandler) getSecurityHandler());
+    setSecurityHandler(EE10AppEngineAuthentication.newSecurityHandler());
 
     setMaxFormContentSize(MAX_RESPONSE_SIZE);
 

@@ -23,7 +23,7 @@
 
   <servlet>
     <servlet-name>main</servlet-name>
-    <servlet-class>com.google.apphosting.loadtesting.allinoneee10.MainServlet</servlet-class>
+    <servlet-class>com.google.apphosting.loadtesting.allinone.ee10.MainServlet</servlet-class>
   </servlet>
   <servlet>
     <servlet-name>warmup</servlet-name>

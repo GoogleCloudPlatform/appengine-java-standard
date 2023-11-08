@@ -45,7 +45,6 @@ import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Response;
 import org.eclipse.jetty.server.Session;
 import org.eclipse.jetty.util.Callback;
-import org.eclipse.jetty.util.URIUtil;
 
 /**
  * {@code AppEngineAuthentication} is a utility class that can configure a Jetty {@link
@@ -84,7 +83,20 @@ public class EE10AppEngineAuthentication {
    * Inject custom {@link LoginService} and {@link Authenticator} implementations into the specified
    * {@link ConstraintSecurityHandler}.
    */
-  public static void configureSecurityHandler(ConstraintSecurityHandler handler) {
+  public static ConstraintSecurityHandler newSecurityHandler() {
+    ConstraintSecurityHandler handler = new ConstraintSecurityHandler()
+    {
+      @Override
+      protected Constraint getConstraint(String pathInContext, Request request) {
+        if (request.getAttribute(SKIP_ADMIN_CHECK_ATTR) != null) {
+          logger.atFine().log("Returning DeferredAuthentication because of SkipAdminCheck.");
+          // Warning: returning ALLOWED here will bypass security restrictions!
+          return Constraint.ALLOWED;
+        }
+
+        return super.getConstraint(pathInContext, request);
+      }
+    };
 
     LoginService loginService = new AppEngineLoginService();
     LoginAuthenticator authenticator = new AppEngineAuthenticator();
@@ -96,6 +108,7 @@ public class EE10AppEngineAuthentication {
     handler.setAuthenticator(authenticator);
     handler.setIdentityService(identityService);
     authenticator.setConfiguration(handler);
+    return handler;
   }
 
   /**
@@ -105,7 +118,7 @@ public class EE10AppEngineAuthentication {
   private static class AppEngineAuthenticator extends LoginAuthenticator {
 
     /**
-     * Checks if the request could to to the login page.
+     * Checks if the request could go to the login page.
      *
      * @param uri The uri requested.
      * @return True if the uri starts with "/_ah/", false otherwise.
@@ -124,6 +137,18 @@ public class EE10AppEngineAuthentication {
         String pathInContext,
         Constraint.Authorization existing,
         Function<Boolean, Session> getSession) {
+
+      // Check this before checking if there is a user logged in, so
+      // that we can log out properly.  Specifically, watch out for
+      // the case where the user logs in, but as a role that isn't
+      // allowed to see /*.  They should still be able to log out.
+      if (isLoginOrErrorPage(pathInContext)) {
+        logger.atFine().log(
+                "Got %s, returning DeferredAuthentication to imply authentication is in progress.",
+                pathInContext);
+        return Constraint.Authorization.ALLOWED;
+      }
+
       return super.getConstraintAuthentication(pathInContext, existing, getSession);
     }
 
@@ -137,53 +162,25 @@ public class EE10AppEngineAuthentication {
      *
      * <p>From org.eclipse.jetty.server.Authentication:
      *
-     * @param servletRequest The request
-     * @param servletResponse The response
-     * @param mandatory True if authentication is mandatory.
-     * @return An Authentication. If Authentication is successful, this will be a {@link
-     *     Authentication.User}. If a response has been sent by the Authenticator (which can be done
-     *     for both successful and unsuccessful authentications), then the result will implement
-     *     {@link Authentication.ResponseSent}. If Authentication is not mandatory, then a {@link
-     *     Authentication.Deferred} may be returned.
-     * @throws ServerAuthException
+     * @param req The request
+     * @param res The response
+     * @param cb The callback
+     * @throws ServerAuthException if an error occurred
      */
     @Override
     public AuthenticationState validateRequest(Request req, Response res, Callback cb)
         throws ServerAuthException {
 
       ServletContextRequest contextRequest = Request.as(req, ServletContextRequest.class);
-
       HttpServletRequest request = contextRequest.getServletApiRequest();
       HttpServletResponse response = contextRequest.getHttpServletResponse();
 
-      // Trusted inbound ip, auth headers can be trusted.
-
-      // Use the canonical path within the context for authentication and authorization
-      // as this is what is used to generate response content
-      String uri = URIUtil.addPaths(request.getServletPath(), request.getPathInfo());
-
-      if (uri == null) {
-        uri = "/";
-      }
-      // Check this before checking if there is a user logged in, so
-      // that we can log out properly.  Specifically, watch out for
-      // the case where the user logs in, but as a role that isn't
-      // allowed to see /*.  They should still be able to log out.
-      if (isLoginOrErrorPage(uri) && !AuthenticationState.Deferred.isDeferred(res)) {
-        logger.atFine().log(
-            "Got %s, returning DeferredAuthentication to imply authentication is in progress.",
-            uri);
-        return null;
-      }
-
-      if (request.getAttribute(SKIP_ADMIN_CHECK_ATTR) != null) {
-        logger.atFine().log("Returning DeferredAuthentication because of SkipAdminCheck.");
-        // Warning: returning DeferredAuthentication here will bypass security restrictions!
-        return null;
-      }
-
       if (response == null) {
         throw new ServerAuthException("validateRequest called with null response!!!");
+      }
+
+      if (AuthenticationState.Deferred.isDeferred(res)) {
+        return null;
       }
 
       try {
@@ -196,10 +193,6 @@ public class EE10AppEngineAuthentication {
           if (user != null) {
             return new UserAuthenticationSent(getAuthenticationType(), user);
           }
-        }
-
-        if (AuthenticationState.Deferred.isDeferred(res)) {
-          return null;
         }
 
         try {
