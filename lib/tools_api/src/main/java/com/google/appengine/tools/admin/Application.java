@@ -18,6 +18,7 @@ package com.google.appengine.tools.admin;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+import com.google.appengine.init.AppEngineWebXmlInitialParse;
 import com.google.appengine.tools.info.AppengineSdk;
 import com.google.appengine.tools.util.ApiVersionFinder;
 import com.google.appengine.tools.util.FileIterator;
@@ -81,6 +82,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -140,18 +142,12 @@ public class Application implements GenericApplication {
           GOOGLE_RUNTIME_ID,
           GOOGLE_LEGACY_RUNTIME_ID);
 
-  // Beta settings keys
-  private static final String BETA_SOURCE_REFERENCE_KEY = "source_reference";
-
   private static final Pattern JSP_REGEX = Pattern.compile(".*\\.jspx?");
   // Jetty's Container Initializer Pattern is taken from
   // org.eclipse.jetty.plus.annotation.ContainerInitializer (9.3.x branch).
   private static final Pattern CONTAINER_INITIALIZER_PATTERN =
       Pattern.compile(
           "ContainerInitializer\\{(.*),interested=(.*),applicable=(.*),annotated=(.*)\\}");
-
-  // Regex for detecting if a URL starts with a protocol.
-  private static final Pattern HAS_PROTOCOL_RE = Pattern.compile("^\\w+:");
 
   // If we detect many .class files, the SDK will output a log message suggesting that the user
   // package .class files into jars to improve classloading times.
@@ -235,6 +231,10 @@ public class Application implements GenericApplication {
       // code is case-sensitive so we disallow this.
       throw new AppEngineConfigException("WEB-INF directory must be capitalized.");
     }
+    // Should initialize correctly the appengine.use.EE10 or 8 system properties.
+    new AppEngineWebXmlInitialParse(explodedPath + "/WEB-INF/appengine-web.xml")
+        .handleRuntimeProperties();
+    AppengineSdk.resetSdk();
 
     String webinfPath = webinf.getPath();
     AppEngineWebXmlReader aewebReader = new AppEngineWebXmlReader(explodedPath);
@@ -598,7 +598,7 @@ public class Application implements GenericApplication {
         return buffer;
       }
       // special cases, not handled by Jetty version 6 or the other methods
-      String lowerName = fileName.toLowerCase();
+      String lowerName = fileName.toLowerCase(Locale.ROOT);
       if (lowerName.endsWith(".json")) {
         return "application/json";
       } else if (lowerName.endsWith(".wasm")) {
@@ -1231,7 +1231,7 @@ public class Application implements GenericApplication {
 
     ArrayList<File> files = new ArrayList<File>();
     for (File f : new FileIterator(jspClassDir)) {
-      if (f.getPath().toLowerCase().endsWith(".java")) {
+      if (f.getPath().toLowerCase(Locale.ROOT).endsWith(".java")) {
         files.add(f);
       }
     }
@@ -1275,7 +1275,7 @@ public class Application implements GenericApplication {
     }
     if (staging.deleteJsps().get()) {
       for (File f : new FileIterator(webInf.getParentFile())) {
-        if (f.getPath().toLowerCase().endsWith(".jsp")) {
+        if (f.getPath().toLowerCase(Locale.ROOT).endsWith(".jsp")) {
           f.delete();
         }
       }
@@ -1337,7 +1337,7 @@ public class Application implements GenericApplication {
     classpath.append(File.pathSeparatorChar);
 
     for (File f : new FileIterator(new File(classDir.getParentFile(), "lib"))) {
-      String filename = f.getPath().toLowerCase();
+      String filename = f.getPath().toLowerCase(Locale.ROOT);
       if (filename.endsWith(".jar") || filename.endsWith(".zip")) {
         classpath.append(f.getPath());
         classpath.append(File.pathSeparatorChar);
@@ -1360,7 +1360,7 @@ public class Application implements GenericApplication {
       urls.add(genDir.toURI().toURL());
 
       for (File f : new FileIterator(new File(classDir.getParentFile(), "lib"))) {
-        String filename = f.getPath().toLowerCase();
+        String filename = f.getPath().toLowerCase(Locale.ROOT);
         if (filename.endsWith(".jar") || filename.endsWith(".zip")) {
           urls.add(f.toURI().toURL());
         }
@@ -1490,7 +1490,7 @@ public class Application implements GenericApplication {
 
         if (forceResource
             || appEngineWebXml.includesResource(path)
-            || (opts.isCompileJspsSet() && name.toLowerCase().endsWith(".jsp"))) {
+            || (opts.isCompileJspsSet() && name.toLowerCase(Locale.ROOT).endsWith(".jsp"))) {
           copyOrLinkFile(file, new File(resDir, name));
         }
         if (!forceResource && appEngineWebXml.includesStatic(path)) {
@@ -1706,7 +1706,7 @@ public class Application implements GenericApplication {
     File minimizedQuickstartXml = new File(stageDir, "/WEB-INF/min-quickstart-web.xml");
 
     Document quickstartDoc =
-        getFilteredQuickstartDoc(!notGAEStandard, quickstartXml, webDefaultXml);
+        getFilteredQuickstartDoc(quickstartXml, webDefaultXml);
 
     Transformer transformer = TransformerFactory.newInstance().newTransformer();
     transformer.setOutputProperty(OutputKeys.INDENT, "yes");
@@ -1732,7 +1732,7 @@ public class Application implements GenericApplication {
    * @return a filtered quickstart Document object appropriate for translation to app.yaml
    */
   static Document getFilteredQuickstartDoc(
-      boolean isGAEStandard, File quickstartXml, File webDefaultXml)
+      File quickstartXml, File webDefaultXml)
       throws ParserConfigurationException, IOException, SAXException {
 
     DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory.newInstance();
@@ -1741,7 +1741,6 @@ public class Application implements GenericApplication {
     DocumentBuilder quickstartDocBuilder = docBuilderFactory.newDocumentBuilder();
     Document quickstartDoc = quickstartDocBuilder.parse(quickstartXml);
 
-    if (isGAEStandard) {
       // Remove from quickstartDoc all "welcome-file" defined in webDefaultDoc.
       removeNodes(webDefaultDoc, quickstartDoc, "welcome-file", 0);
       // Remove from quickstartDoc all parents of "servlet-name" defined in webDefaultDoc:
@@ -1762,45 +1761,6 @@ public class Application implements GenericApplication {
       removeNodes(webDefaultDoc, quickstartDoc, "web-resource-name", 2);
 
       return quickstartDoc;
-    }
-
-    // For Flex or vm:true, we keep the current processing:
-    final Set<String> tagsToExamine = ImmutableSet.of("filter-mapping", "servlet-mapping");
-    final String urlPatternTag = "url-pattern";
-
-    Set<String> defaultRoots = Sets.newHashSet();
-    List<Node> nodesToRemove = Lists.newArrayList();
-
-    webDefaultDoc.getDocumentElement().normalize();
-    NodeList webDefaultChildren =
-        webDefaultDoc.getDocumentElement().getElementsByTagName(urlPatternTag);
-    for (int i = 0; i < webDefaultChildren.getLength(); i++) {
-      Node child = webDefaultChildren.item(i);
-      if (tagsToExamine.contains(child.getParentNode().getNodeName())) {
-        String url = child.getTextContent().trim();
-        if (url.startsWith("/")) {
-          defaultRoots.add(url);
-        }
-      }
-    }
-
-    quickstartDoc.getDocumentElement().normalize();
-    NodeList quickstartChildren =
-        quickstartDoc.getDocumentElement().getElementsByTagName(urlPatternTag);
-    for (int i = 0; i < quickstartChildren.getLength(); i++) {
-      Node child = quickstartChildren.item(i);
-      if (tagsToExamine.contains(child.getParentNode().getNodeName())) {
-        String url = child.getTextContent().trim();
-        if (defaultRoots.contains(url)) {
-          nodesToRemove.add(child.getParentNode());
-        }
-      }
-    }
-    for (Node node : nodesToRemove) {
-      quickstartDoc.getDocumentElement().removeChild(node);
-    }
-
-    return quickstartDoc;
   }
 
   /**

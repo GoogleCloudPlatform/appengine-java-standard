@@ -65,13 +65,13 @@ public final class AppEngineWebXmlInitialParse {
     if (!settingDoneInAppEngineWebXml && (runtimeId != null)) {
       switch (runtimeId) {
         case "java21": // Force default to EE10.
-          System.setProperty("appengine.use.EE8", "false");
+          System.clearProperty("appengine.use.EE8");
           System.setProperty("appengine.use.EE10", "true");
           break;
         case "java11": // EE8 and EE10 not supported
         case "java8":
-          System.setProperty("appengine.use.EE8", "false");
-          System.setProperty("appengine.use.EE10", "false");
+          System.clearProperty("appengine.use.EE8");
+          System.clearProperty("appengine.use.EE10");
           break;
         default:
           break;
@@ -92,7 +92,7 @@ public final class AppEngineWebXmlInitialParse {
         if (elementName.equals(PROPERTY)) {
           String prop = element.getAttributeByName(new QName("name")).getValue();
           String value = element.getAttributeByName(new QName("value")).getValue();
-          if (prop.startsWith("appengine.use.EE")) {
+          if (prop.equals("appengine.use.EE8") || prop.equals("appengine.use.EE10")) {
             // appengine.use.EE10 or appengine.use.EE8
             settingDoneInAppEngineWebXml = true;
             System.setProperty(prop, value);
