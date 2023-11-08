@@ -77,8 +77,8 @@ public class AppEngineWebAppContext extends WebAppContext {
   // constant.  If it's much larger than this we may need to
   // restructure the code a bit.
   private static final int MAX_RESPONSE_SIZE = 32 * 1024 * 1024;
-  private static final String ASYNC_ENABLE_PPROPERTY = "enable_async_PROPERTY"; // TODO
-  private static final boolean APP_IS_ASYNC = Boolean.getBoolean(ASYNC_ENABLE_PPROPERTY);
+  private static final String ASYNC_ENABLE_PROPERTY = "enable_async_PROPERTY"; // TODO
+  private static final boolean APP_IS_ASYNC = Boolean.getBoolean(ASYNC_ENABLE_PROPERTY);
 
   private static final String JETTY_PACKAGE = "org.eclipse.jetty.";
 
