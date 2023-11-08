@@ -17,6 +17,9 @@
 package com.google.apphosting.runtime.jetty;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.google.appengine.tools.development.resource.ResourceExtractor;
 import com.google.apphosting.runtime.jetty.ee8.AppEngineWebAppContext;
@@ -108,7 +111,10 @@ public final class AppEngineWebAppContextTest {
         .isTrue();
     assertThat(context.getBaseResource().getURI())
         .isEqualTo(expandedAppDir.toAbsolutePath().toUri());
-    assertThat(context.getTempDirectory()).isEqualTo(expandedAppDir.toFile());
+
+    // The base resource is set as the expandedAppDir but not the temp directory.
+    assertThat(context.getBaseResource().getPath().toFile()).isEqualTo(expandedAppDir.toFile());
+    assertThat(context.getTempDirectory()).isNotEqualTo(expandedAppDir.toFile());
   }
 
   /** Given a (zipped) WAR file, AppEngineWebAppContext doesn't extract it when told to not. */
@@ -119,6 +125,12 @@ public final class AppEngineWebAppContextTest {
 
     assertThat(context.getWar()).isEqualTo(zippedAppDir.toString());
     assertThat(context.getBaseResource()).isNull();
-    assertThat(context.getTempDirectory()).isNull();
+    File tempDirectory = context.getTempDirectory();
+    if (tempDirectory != null) {
+      assertTrue(tempDirectory.isDirectory());
+      String[] files = tempDirectory.list();
+      assertNotNull(files);
+      assertEquals(files.length, 0);
+    }
   }
 }
