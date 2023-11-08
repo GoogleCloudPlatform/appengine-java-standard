@@ -167,7 +167,8 @@ public class AppEngineWebAppContext extends WebAppContext {
 
     setMaxFormContentSize(MAX_RESPONSE_SIZE);
 
-    addFilter(new ParseBlobUploadFilter(), "/*", EnumSet.allOf(DispatcherType.class));
+    // TODO: Can we change to a jetty-core handler? what to do on ASYNC?
+    addFilter(new ParseBlobUploadFilter(), "/*", EnumSet.of(DispatcherType.REQUEST));
     ignoreContentLength = isAppIdForNonContentLength();
   }
 
