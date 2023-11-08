@@ -420,7 +420,7 @@ public class JettyContainerService extends AbstractContainerService implements C
           }
         });
     scanner.addListener(new ScannerListener());
-    scanner.doStart();
+    scanner.start();
   }
 
   @Override
@@ -463,7 +463,7 @@ public class JettyContainerService extends AbstractContainerService implements C
     }
   }
 
-  private void fullWebAppScanner(int interval) throws IOException {
+  private void fullWebAppScanner(int interval) throws Exception {
     String webInf = context.getWebInf().getFile().getPath();
     List<File> scanList = new ArrayList<>();
     Collections.addAll(
@@ -488,7 +488,7 @@ public class JettyContainerService extends AbstractContainerService implements C
           }
         });
 
-    scanner.doStart();
+    scanner.start();
   }
 
   /**

@@ -28,7 +28,6 @@ import com.google.apphosting.utils.servlet.ee10.SessionCleanupServlet;
 import com.google.apphosting.utils.servlet.ee10.SnapshotServlet;
 import com.google.apphosting.utils.servlet.ee10.WarmupServlet;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.flogger.GoogleLogger;
 import jakarta.servlet.DispatcherType;
 import jakarta.servlet.Filter;
 import jakarta.servlet.Servlet;
@@ -161,11 +160,13 @@ public class AppEngineWebAppContext extends WebAppContext {
 
     // Configure the Jetty SecurityHandler to understand our method of
     // authentication (via the UserService).
-    setSecurityHandler(EE10AppEngineAuthentication.newSecurityHandler());
+    EE10AppEngineAuthentication.configureSecurityHandler(
+        (ConstraintSecurityHandler) getSecurityHandler());
 
     setMaxFormContentSize(MAX_RESPONSE_SIZE);
 
-    addFilter(new ParseBlobUploadFilter(), "/*", EnumSet.allOf(DispatcherType.class));
+    // TODO: Can we change to a jetty-core handler? what to do on ASYNC?
+    addFilter(new ParseBlobUploadFilter(), "/*", EnumSet.of(DispatcherType.REQUEST));
     ignoreContentLength = isAppIdForNonContentLength();
   }
 
