@@ -57,6 +57,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
@@ -70,6 +71,7 @@ import org.eclipse.jetty.server.Context;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.HttpConnectionFactory;
+import org.eclipse.jetty.server.HttpStream;
 import org.eclipse.jetty.server.NetworkTrafficServerConnector;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Response;
@@ -626,7 +628,20 @@ public class JettyContainerService extends AbstractContainerService
       // this and so the Environment has not yet been created.
       ApiProxy.Environment oldEnv = enterScope(request);
       try {
-        callback = Callback.from(callback, () -> onComplete(contextRequest));
+        request.addHttpStreamWrapper(s -> new HttpStream.Wrapper(s)
+        {
+          @Override
+          public void succeeded() {
+            onComplete(contextRequest);
+            super.succeeded();
+          }
+
+          @Override
+          public void failed(Throwable x) {
+            onComplete(contextRequest);
+            super.failed(x);
+          }
+        });
         return super.handle(request, response, callback);
       }
       finally {
