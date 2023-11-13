@@ -56,8 +56,6 @@ export JAVA_HOME="$(update-java-alternatives -l | grep "1.17" | head -n 1 | tr -
 # Make sure `JAVA_HOME` is set.
 echo "JAVA_HOME = $JAVA_HOME"
 
- # Setting up maven wrapper for the project. https://maven.apache.org/wrapper/
- mvn wrapper:wrapper
 # Do a build of all dependent modules first.
 ./mvnw install -B  -DskipTests=true
 
