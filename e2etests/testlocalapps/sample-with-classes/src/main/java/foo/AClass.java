@@ -16,10 +16,10 @@
 package foo;
 
 /**
- *
+ * Simple public class so that javadoc plugin can work.
  */
-final class AClass {
+public final class AClass {
 
-  private AClass() {
+  public AClass() {
   }
 }
