@@ -61,7 +61,7 @@ public final class AnnotationScanningTest extends JavaRuntimeViaHttpBase {
     appRoot =
         new File(
             currentDirectory,
-            "../annotationscanningwebapp/target/annotationscanningwebapp-2.0.22-SNAPSHOT");
+            "../annotationscanningwebapp/target/annotationscanningwebapp-2.0.23-SNAPSHOT");
     assertThat(appRoot.isDirectory()).isTrue();
   }
 

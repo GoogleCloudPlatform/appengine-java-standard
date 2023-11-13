@@ -59,11 +59,11 @@ echo "JAVA_HOME = $JAVA_HOME"
  # Setting up maven wrapper for the project. https://maven.apache.org/wrapper/
  mvn wrapper:wrapper
 # Do a build of all dependent modules first.
-./mvnw install -B -q -DskipTests=true
+./mvnw install -B  -DskipTests=true
 
 # Then do a build in api/ for cloud RAD generation.
 cd api
-../mvnw javadoc:aggregate -B -q -P docFX -DdocletPath=/tmp/jar1.jar
+../mvnw javadoc:aggregate -B  -P docFX -DdocletPath=/tmp/jar1.jar
 
 # include CHANGELOG
 #cp CHANGELOG.md target/docfx-yml/history.md

@@ -189,7 +189,7 @@ public class ApplicationTest {
                     + directoryName
                     + "/target/"
                     + directoryName
-                    + "-2.0.22-SNAPSHOT")
+                    + "-2.0.23-SNAPSHOT")
             .getAbsolutePath();
 
 //    assertThat(appRoot.isDirectory()).isTrue();
