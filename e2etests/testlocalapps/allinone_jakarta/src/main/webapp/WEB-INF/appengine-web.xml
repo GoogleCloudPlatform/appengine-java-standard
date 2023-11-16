@@ -34,4 +34,9 @@
 
   <!-- files in the war, other than WEB-INF, which are java resources: none -->
   <resource-files/>
+  <app-engine-apis>true</app-engine-apis>
+  <system-properties>
+    <property name="java.util.logging.config.file" value="WEB-INF/logging.properties"/>
+    <property name="appengine.use.virtualthreads" value="true"/>
+  </system-properties>
 </appengine-web-app>

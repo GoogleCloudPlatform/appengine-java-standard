@@ -80,8 +80,10 @@ import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.util.Callback;
 import org.eclipse.jetty.util.Fields;
 import org.eclipse.jetty.util.Scanner;
+import org.eclipse.jetty.util.VirtualThreads;
 import org.eclipse.jetty.util.component.LifeCycle;
 import org.eclipse.jetty.util.resource.Resource;
+import org.eclipse.jetty.util.thread.QueuedThreadPool;
 
 /** Implements a Jetty backed {@link ContainerService}. */
 public class JettyContainerService extends AbstractContainerService
@@ -340,7 +342,14 @@ public class JettyContainerService extends AbstractContainerService
     configuration.setSendDateHeader(false);
     configuration.setSendServerVersion(false);
     configuration.setSendXPoweredBy(false);
-    server = new Server();
+    // Try to enable virtual threads if requested on java21:
+    if (Boolean.getBoolean("appengine.use.virtualthreads")) {
+      QueuedThreadPool threadPool = new QueuedThreadPool();
+      threadPool.setVirtualThreadsExecutor(VirtualThreads.getDefaultVirtualThreadsExecutor());
+      server = new Server(threadPool);
+    } else {
+      server = new Server();
+    }
     try {
       NetworkTrafficServerConnector connector =
           new NetworkTrafficServerConnector(

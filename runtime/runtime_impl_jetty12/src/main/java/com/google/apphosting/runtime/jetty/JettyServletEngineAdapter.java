@@ -42,6 +42,7 @@ import org.eclipse.jetty.http.CookieCompliance;
 import org.eclipse.jetty.http.UriCompliance;
 import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.util.VirtualThreads;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
 
 /**
@@ -93,13 +94,21 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
 
   @Override
   public void start(String serverInfo, ServletEngineAdapter.Config runtimeOptions) {
-    server = new Server(new QueuedThreadPool(MAX_THREAD_POOL_THREADS, MIN_THREAD_POOL_THREADS))
-    {
-      @Override
-      public InvocationType getInvocationType() {
-        return InvocationType.BLOCKING;
-      }
-    };
+    QueuedThreadPool threadPool =
+        new QueuedThreadPool(MAX_THREAD_POOL_THREADS, MIN_THREAD_POOL_THREADS);
+    // Try to enable virtual threads if requested and on java21:
+    if (Boolean.getBoolean("appengine.use.virtualthreads")
+        && "java21".equals(System.getenv("GAE_RUNTIME"))) {
+      threadPool.setVirtualThreadsExecutor(VirtualThreads.getDefaultVirtualThreadsExecutor());
+      logger.atInfo().log("Configuring Appengine web server virtual threads.");
+    }
+    server =
+        new Server(threadPool) {
+          @Override
+          public InvocationType getInvocationType() {
+            return InvocationType.BLOCKING;
+          }
+        };
 
     rpcConnector = new DelegateConnector(server, "RPC") {
       @Override
