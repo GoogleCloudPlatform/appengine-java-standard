@@ -968,7 +968,7 @@ public class Application implements GenericApplication {
       statusUpdate("Warning: See https://cloud.google.com/appengine/docs/flexible/java/upgrading");
     }
 
-    boolean isServlet31OrAbove = !"2.5".equals(servletVersion);
+    boolean isServlet31OrAbove = servletVersion != null && !"2.5".equals(servletVersion);
     // Do not create quickstart for Java7 standardapps, even is Servlet 3.1 schema is used.
     // This behaviour is compatible with what was there before supporting Java8, we just now print
     // a warning.
