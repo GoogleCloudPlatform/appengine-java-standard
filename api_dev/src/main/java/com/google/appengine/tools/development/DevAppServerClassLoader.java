@@ -60,16 +60,31 @@ class DevAppServerClassLoader extends URLClassLoader {
    * classes will be loaded (e.g. DevAppServer).
    */
   public static DevAppServerClassLoader newClassLoader(ClassLoader delegate) {
+    List<URL> sharedLibs = AppengineSdk.getSdk().getSharedLibs();
+    List<URL> implLibs = AppengineSdk.getSdk().getImplLibs();
+    List<URL> userJspLibs = AppengineSdk.getSdk().getUserJspLibs();
+
     // NB Doing shared, then impl, in order, allows us to prefer
-    // returning shared classes when asked by other classloaders. This makes
-    // it so that we don't have to have the impl and shared classes
-    // be a strictly disjoint set.
-    List<URL> libs = new ArrayList<>(AppengineSdk.getSdk().getSharedLibs());
-    libs.addAll(AppengineSdk.getSdk().getImplLibs());
-    // Needed by admin console servlets, which are loaded by this
-    // ClassLoader
-    libs.addAll(AppengineSdk.getSdk().getUserJspLibs());
-    return new DevAppServerClassLoader(libs.toArray(new URL[libs.size()]), delegate);
+    // returning shared classes when asked by other classloaders.
+    // This makes it so that we don't have to have the impl and
+    // shared classes be a strictly disjoint set.
+    List<URL> libs = new ArrayList<>(sharedLibs);
+    addLibs(libs, implLibs);
+
+    // Needed by admin console servlets, which are loaded by this ClassLoader.
+    addLibs(libs, userJspLibs);
+
+    return new DevAppServerClassLoader(libs.toArray(new URL[0]), delegate);
+  }
+
+  private static void addLibs(List<URL> libs, List<URL> toAdd)
+  {
+    for (URL url : toAdd)
+    {
+      if (libs.contains(url))
+        continue;
+      libs.add(url);
+    }
   }
 
   // NB

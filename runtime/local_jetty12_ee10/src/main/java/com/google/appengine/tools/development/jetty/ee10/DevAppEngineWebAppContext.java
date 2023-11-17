@@ -64,6 +64,7 @@ public class DevAppEngineWebAppContext extends AppEngineWebAppContext {
 
     // Set up the classpath required to compile JSPs. This is specific to Jasper.
     setAttribute(JASPER_SERVLET_CLASSPATH, buildClasspath());
+    setAttribute("org.eclipse.jetty.server.webapp.ContainerIncludeJarPattern", ".*/jakarta.servlet-api-[^/]*\\.jar$|.*jakarta.servlet.jsp.jstl-.*\\.jar$");
 
     // Make ApiProxyLocal available via the servlet context.  This allows
     // servlets that are part of the dev appserver (like those that render the
@@ -95,12 +96,16 @@ public class DevAppEngineWebAppContext extends AppEngineWebAppContext {
   }
 
   @Override
+  protected void doStart() throws Exception {
+    super.doStart();
+    disableTransportGuarantee();
+  }
+
+  @Override
   protected ClassLoader enterScope(Request contextRequest) {
     if ((contextRequest != null) && (hasSkipAdminCheck(contextRequest))) {
       contextRequest.setAttribute(SKIP_ADMIN_CHECK_ATTR, Boolean.TRUE);
     }
-
-    disableTransportGuarantee();
 
     // TODO An extremely heinous way of helping the DevAppServer's
     // SecurityManager determine if a DevAppServer request thread is executing.
