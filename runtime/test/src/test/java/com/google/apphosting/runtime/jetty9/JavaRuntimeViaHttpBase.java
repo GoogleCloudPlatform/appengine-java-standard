@@ -29,6 +29,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.awaitility.Awaitility.await;
 
 import com.google.apphosting.base.protos.api.RemoteApiPb;
 import com.google.apphosting.testing.PortPicker;
@@ -63,6 +64,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -243,10 +245,12 @@ public abstract class JavaRuntimeViaHttpBase {
           .isTrue();
       InetSocketAddress apiSocketAddress = new InetSocketAddress(apiPort);
 
-      ImmutableList<String> runtimeArgs =
-          ImmutableList.<String>builder()
-              .add(
-                  JAVA_HOME.value() + "/bin/java",
+      ImmutableList.Builder<String> builder = ImmutableList.<String>builder();
+          builder.add(JAVA_HOME.value() + "/bin/java");
+          if (Boolean.getBoolean("debug.forked.process")) {
+            builder.add("-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:8000");
+          }
+          builder.add(
                   "-Dcom.google.apphosting.runtime.jetty94.LEGACY_MODE=" + useJetty94LegacyMode(),
                   "-Dappengine.use.EE8=" + Boolean.getBoolean("appengine.use.EE8"),
                   "-Dappengine.use.EE10=" + Boolean.getBoolean("appengine.use.EE10"),
@@ -254,8 +258,8 @@ public abstract class JavaRuntimeViaHttpBase {
                   "-cp",
                   useMavenJars()
                       ? new File(runtimeDir, "jars/runtime-main.jar").getAbsolutePath()
-                      : new File(runtimeDir, "runtime-main.jar").getAbsolutePath())
-              .addAll(optionalFlags())
+                      : new File(runtimeDir, "runtime-main.jar").getAbsolutePath());
+            builder.addAll(optionalFlags())
               .addAll(jvmFlagsFromEnvironment(config.environmentEntries()))
               .add(
                   "com.google.apphosting.runtime.JavaRuntimeMainWithDefaults",
@@ -264,18 +268,15 @@ public abstract class JavaRuntimeViaHttpBase {
                   "--trusted_host="
                       + HostAndPort.fromParts(apiSocketAddress.getHostString(), apiPort),
                   runtimeDir.getAbsolutePath())
-              .addAll(config.launcherFlags())
-              .build();
+              .addAll(config.launcherFlags());
+      ImmutableList<String> runtimeArgs = builder.build();
 
       Process runtimeProcess = launchRuntime(runtimeArgs, config.environmentEntries());
       OutputPump outPump = new OutputPump(runtimeProcess.getInputStream(), "[stdout] ");
       OutputPump errPump = new OutputPump(runtimeProcess.getErrorStream(), "[stderr] ");
       new Thread(outPump).start();
       new Thread(errPump).start();
-      // TODO(b/192665275):
-      // For some reason, a Maven build does not emit anymore this log, need to investigate.
-      // For now, just wait a bit so the server is started in tests.
-      Thread.sleep(SERVER_START_TIMEOUT_SECONDS * 100);
+      await().atMost(30, SECONDS).until(() -> isPortAvailable("localhost", jettyPort));
 
       int timeoutMillis = 30_000;
       RequestConfig requestConfig =
@@ -290,6 +291,16 @@ public abstract class JavaRuntimeViaHttpBase {
 
       return new RuntimeContext<>(
           runtimeProcess, httpApiServer, httpClient, jettyPort, outPump, errPump);
+    }
+
+    public static boolean isPortAvailable(String host, int port) {
+        try {
+          Socket socket = new Socket(host, port);
+          socket.close();
+          return true;
+        } catch (Exception e) {
+          return false;
+        }
     }
 
     private static List<String> jvmFlagsFromEnvironment(ImmutableMap<String, String> env) {
