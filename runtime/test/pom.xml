@@ -30,7 +30,6 @@
 
   <properties>
     <maven.deploy.skip>true</maven.deploy.skip>
-    <debug.forked.process>false</debug.forked.process>
   </properties>
   <dependencies>
     <dependency>
@@ -125,7 +124,7 @@
           <artifactId>maven-surefire-plugin</artifactId>
           <configuration>
             <systemPropertyVariables>
-              <debug.forked.process>${debug.forked.process}</debug.forked.process>
+              <appengine.debug.port>${appengine.debug.port}</appengine.debug.port>
             </systemPropertyVariables>
           </configuration>
         </plugin>

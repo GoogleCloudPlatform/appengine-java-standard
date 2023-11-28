@@ -247,8 +247,9 @@ public abstract class JavaRuntimeViaHttpBase {
 
       ImmutableList.Builder<String> builder = ImmutableList.<String>builder();
           builder.add(JAVA_HOME.value() + "/bin/java");
-          if (Boolean.getBoolean("debug.forked.process")) {
-            builder.add("-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:8000");
+          Integer debugPort = Integer.getInteger("appengine.debug.port");
+          if (debugPort != null) {
+            builder.add("-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:" + debugPort);
           }
           builder.add(
                   "-Dcom.google.apphosting.runtime.jetty94.LEGACY_MODE=" + useJetty94LegacyMode(),
