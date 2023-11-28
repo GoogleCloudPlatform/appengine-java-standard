@@ -62,7 +62,7 @@ public final class SpringBootTest extends JavaRuntimeViaHttpBase {
 
   private static List<String> readOutput(InputStream inputStream) throws IOException {
     try (BufferedReader output = new BufferedReader(new InputStreamReader(inputStream))) {
-      return output.lines().collect(Collectors.toList());
+      return output.lines().map(l -> l + "\n").collect(Collectors.toList());
     }
   }
 

@@ -73,8 +73,6 @@ import org.eclipse.jetty.util.Callback;
  */
 public class JettyHttpProxy {
   private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
-  private static final String JETTY_LOG_CLASS = "org.eclipse.jetty.util.log.class";
-  private static final String JETTY_STDERRLOG = "org.eclipse.jetty.util.log.StdErrLog";
   private static final long MAX_REQUEST_SIZE = 32 * 1024 * 1024;
 
   /**
@@ -83,8 +81,6 @@ public class JettyHttpProxy {
    */
   public static void startServer(ServletEngineAdapter.Config runtimeOptions) {
     try {
-      System.setProperty(JETTY_LOG_CLASS, JETTY_STDERRLOG);
-
       ForwardingHandler handler = new ForwardingHandler(runtimeOptions, System.getenv());
       handler.init();
       Server server = newServer(runtimeOptions, handler);
