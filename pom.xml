@@ -63,7 +63,7 @@
     <maven.compiler.target>1.8</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <jetty.version>9.4.53.v20231009</jetty.version>
-    <jetty12.version>12.0.3</jetty12.version>
+    <jetty12.version>12.0.4</jetty12.version>
     <slf4j.version>2.0.9</slf4j.version>
     <distributionManagement.snapshot.url>https://oss.sonatype.org/content/repositories/google-snapshots/</distributionManagement.snapshot.url>
     <distributionManagement.snapshot.id>sonatype-nexus-snapshots</distributionManagement.snapshot.id>
@@ -126,7 +126,19 @@
           <url>${distributionManagement.snapshot.url}</url>
       </snapshotRepository>
   </distributionManagement>
-  <profiles>
+  <repositories>
+      <repository>
+      <id>jetty-staging</id>
+      <url>https://oss.sonatype.org/content/repositories/jetty-1844/</url>
+    </repository>
+  </repositories>
+  <pluginRepositories>
+      <pluginRepository>
+      <id>jetty-staging</id>
+      <url>https://oss.sonatype.org/content/repositories/jetty-1844/</url>
+    </pluginRepository>
+  </pluginRepositories> 
+ <profiles>
       <profile>
           <id>jdk9+</id>
           <activation>
