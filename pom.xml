@@ -126,18 +126,6 @@
           <url>${distributionManagement.snapshot.url}</url>
       </snapshotRepository>
   </distributionManagement>
-  <repositories>
-      <repository>
-      <id>jetty-staging</id>
-      <url>https://oss.sonatype.org/content/repositories/jetty-1844/</url>
-    </repository>
-  </repositories>
-  <pluginRepositories>
-      <pluginRepository>
-      <id>jetty-staging</id>
-      <url>https://oss.sonatype.org/content/repositories/jetty-1844/</url>
-    </pluginRepository>
-  </pluginRepositories> 
   <profiles>
       <profile>
           <id>jdk9+</id>
