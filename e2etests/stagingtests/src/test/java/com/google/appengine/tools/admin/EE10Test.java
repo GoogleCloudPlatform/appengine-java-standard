@@ -56,7 +56,7 @@ public class EE10Test extends TestCase {
                     + directoryName
                     + "/target/"
                     + directoryName
-                    + "-2.0.23-SNAPSHOT")
+                    + "-2.0.24-SNAPSHOT")
             .getAbsolutePath();
 
     return appRoot;

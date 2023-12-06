@@ -35,7 +35,7 @@ public final class FailureFilterTest extends JavaRuntimeViaHttpBase {
     appRoot =
         new File(
             currentDirectory,
-            "../failinitfilterwebapp/target/failinitfilterwebapp-2.0.23-SNAPSHOT");
+            "../failinitfilterwebapp/target/failinitfilterwebapp-2.0.24-SNAPSHOT");
     assertThat(appRoot.isDirectory()).isTrue();
   }
 
