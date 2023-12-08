@@ -13,11 +13,11 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 -->
-[![Java8/11/17](https://github.com/GoogleCloudPlatform/appengine-java-standard/actions/workflows/maven.yml/badge.svg)](https://github.com/GoogleCloudPlatform/appengine-java-standard/actions/workflows/maven.yml)
+[![Java8/11/17/21](https://github.com/GoogleCloudPlatform/appengine-java-standard/actions/workflows/maven.yml/badge.svg)](https://github.com/GoogleCloudPlatform/appengine-java-standard/actions/workflows/maven.yml)
 [![Maven][maven-version-image]][maven-version-link]
 [![Code of conduct](https://img.shields.io/badge/%E2%9D%A4-code%20of%20conduct-blue.svg)](https://github.com/GoogleCloudPlatform/appengine-java-standard/blob/main/CODE_OF_CONDUCT.md)
 
-# Google App Engine Standard Environment Source Code for Java 8, Java 11 and Java 17.
+# Google App Engine Standard Environment Source Code for Java 8, Java 11, Java 17, Java 21.
 
 
 This repository contains the Java Source Code for [Google App Engine
@@ -64,7 +64,7 @@ Source code for all public APIs for com.google.appengine.api.* packages.
 
     ```
     <packaging>war</packaging><!-- Servlet 3.1 WAR packaging-->
- ...
+    ...
     <dependencies>
         <dependency>
             <groupId>com.google.appengine</groupId>
@@ -77,16 +77,14 @@ Source code for all public APIs for com.google.appengine.api.* packages.
           <version>3.1</version>
           <scope>provided</scope>
     </dependency>
-        ...
+    ...
     ```
-*  Maven Java 21 with Jarkata EE 10 support pom.xml
 
-- [Public Java 21 Documentation](https://cloud.google.com/appengine/docs/standard/java-gen2/runtime)
-- [How to upgrade to Java21](https://cloud.google.com/appengine/docs/standard/java-gen2/upgrade-java-runtime)
+*  Maven Java 21 with Jarkata EE 10 support pom.xml
 
     ```
     <packaging>war</packaging><!-- Servlet 6.0 WAR packaging-->
- ...
+    ...
     <dependencies>
         <dependency>
             <groupId>com.google.appengine</groupId>
@@ -99,7 +97,7 @@ Source code for all public APIs for com.google.appengine.api.* packages.
           <version>6.0.0</version>
           <scope>provided</scope>
     </dependency>
-        ...
+    ...
     ```
 
 *  Java 21  with Jakarta or javax appengine-web.xml
@@ -107,10 +105,10 @@ Source code for all public APIs for com.google.appengine.api.* packages.
     ```
     <?xml version="1.0" encoding="utf-8"?>
     <appengine-web-app xmlns="http://appengine.google.com/ns/1.0">
-      <runtime>java11</runtime>
+      <runtime>java21</runtime>
       <app-engine-apis>true</app-engine-apis>
 
-      <!-- add 
+      <!-- Add optionally:
       <system-properties>
         <property name="appegine.use.EE8" value="true"/>
     </system-properties>
@@ -119,6 +117,9 @@ Source code for all public APIs for com.google.appengine.api.* packages.
     </appengine-web-app>
     ```
 
+
+- [Public Java 21 Documentation](https://cloud.google.com/appengine/docs/standard/java-gen2/runtime)
+- [How to upgrade to Java21](https://cloud.google.com/appengine/docs/standard/java-gen2/upgrade-java-runtime)
 
 *  Java 17 appengine-web.xml
 
@@ -181,7 +182,7 @@ Source code for remote APIs for App Engine.
    </servlet-mapping>
 ```
 
-*  Maven javax and jakarta pom.xml
+*  Maven javax and jakarta API pom.xml
 
 ```
     <dependency>
