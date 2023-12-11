@@ -110,7 +110,7 @@ Source code for all public APIs for com.google.appengine.api.* packages.
 
       <!-- Add optionally:
       <system-properties>
-        <property name="appegine.use.EE8" value="true"/>
+        <property name="appengine.use.EE8" value="true"/>
     </system-properties>
     If you want to keep javax.servlet APIs and not jarkata.servlet by default
     -->
