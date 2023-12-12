@@ -22,13 +22,13 @@ import org.eclipse.jetty.http.HttpException;
 import org.eclipse.jetty.http.HttpField;
 import org.eclipse.jetty.http.HttpFields;
 import org.eclipse.jetty.http.HttpHeader;
+import org.eclipse.jetty.http.HttpStatus;
 import org.eclipse.jetty.http.MetaData;
 import org.eclipse.jetty.io.Content;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.HttpStream;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Response;
-import org.eclipse.jetty.util.BufferUtil;
 import org.eclipse.jetty.util.Callback;
 
 /**
@@ -46,8 +46,6 @@ public class CoreSizeLimitHandler extends Handler.Wrapper
 {
   private final long _requestLimit;
   private final long _responseLimit;
-  private long _read = 0;
-  private long _written = 0;
 
   /**
    * @param requestLimit The request body size limit in bytes or -1 for no limit
@@ -66,10 +64,10 @@ public class CoreSizeLimitHandler extends Handler.Wrapper
     if (contentLengthField != null)
     {
       long contentLength = contentLengthField.getLongValue();
-      if (_requestLimit > 0 && contentLength > _requestLimit) {
-        response.setStatus(413);
+      if (_requestLimit >= 0 && contentLength > _requestLimit)
+      {
         String s = "Request body is too large: " + contentLength + ">" + _requestLimit;
-        response.write(true, BufferUtil.toBuffer(s), callback);
+        Response.writeError(request, response, callback, HttpStatus.PAYLOAD_TOO_LARGE_413, s);
         return true;
       }
     }
@@ -79,11 +77,11 @@ public class CoreSizeLimitHandler extends Handler.Wrapper
       @Override
       public HttpField onAddField(HttpField field)
       {
-        if ((field.getHeader()!=null) && (field.getHeader().is(HttpHeader.CONTENT_LENGTH.asString())))
+        if (field.getHeader().is(HttpHeader.CONTENT_LENGTH.asString()))
         {
           long contentLength = field.getLongValue();
-          if (_responseLimit > 0 && contentLength > _responseLimit)
-            throw new HttpException.RuntimeException(500, "Response body is too large: " + contentLength + ">" + _responseLimit);
+          if (_responseLimit >= 0 && contentLength > _responseLimit)
+            throw new HttpException.RuntimeException(HttpStatus.INTERNAL_SERVER_ERROR_500, "Response body is too large: " + contentLength + ">" + _responseLimit);
         }
         return super.onAddField(field);
       }
@@ -100,6 +98,9 @@ public class CoreSizeLimitHandler extends Handler.Wrapper
 
     request.addHttpStreamWrapper(httpStream -> new HttpStream.Wrapper(httpStream)
     {
+      private long _read = 0;
+      private long _written = 0;
+
       @Override
       public Content.Chunk read()
       {
@@ -116,8 +117,7 @@ public class CoreSizeLimitHandler extends Handler.Wrapper
           _read += content.remaining();
           if (_requestLimit >= 0 && _read > _requestLimit)
           {
-            System.err.println("we actually read too much content in coreSizeLimitHandler for request size limit");
-            BadMessageException e = new BadMessageException(413, "Request body is too large: " + _read + ">" + _requestLimit);
+            BadMessageException e = new BadMessageException(HttpStatus.PAYLOAD_TOO_LARGE_413, "Request body is too large: " + _read + ">" + _requestLimit);
             request.fail(e);
             return null;
           }
@@ -134,7 +134,7 @@ public class CoreSizeLimitHandler extends Handler.Wrapper
         {
           if (_responseLimit >= 0 && (_written + content.remaining())  > _responseLimit)
           {
-            callback.failed(new HttpException.RuntimeException(500, "Response body is too large: " +
+            callback.failed(new HttpException.RuntimeException(HttpStatus.INTERNAL_SERVER_ERROR_500, "Response body is too large: " +
                     _written + content.remaining() + ">" + _responseLimit));
             return;
           }
