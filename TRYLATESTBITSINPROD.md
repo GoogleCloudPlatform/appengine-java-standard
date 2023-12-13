@@ -29,11 +29,14 @@ pom.xml file.
 First, you need to decide which App Engine Java runtime jars version you want to use. There are 3 runtime jars that
 are bundled as a Maven assembly under `<artifactId>runtime-deployment</artifactId>`:
 
-  * runtime-impl.jar
-  * runtime-shared.jar
+  * runtime-impl-jetty9.jar
+  * runtime-impl-jetty12.jar
+  * runtime-shared-jetty9.jar
+  * runtime-shared-jetty12.jar
+  * runtime-shared-jetty12-ee10.jar
   * runtime-main.jar
 
-Let's say you want the latest from head in this github repository. You could built the 3 jars, add them at the
+Let's say you want the latest from head in this github repository. You could built the 6 jars, add them at the
 top of your web application and change the entrypoint to boot with these jars instead of the one maintained in production.
 
 
@@ -78,12 +81,24 @@ deployed web application.
             <configuration>
                 <fileSets>
                     <fileSet>
-                        <sourceFile>${appengine.runtime.location}/WEB-INF/lib/runtime-impl-${appengine.runtime.version}.jar</sourceFile>
-                        <destinationFile>${appengine.runtime.location}/runtime-impl.jar</destinationFile>
+                        <sourceFile>${appengine.runtime.location}/WEB-INF/lib/runtime-impl-jetty9-${appengine.runtime.version}.jar</sourceFile>
+                        <destinationFile>${appengine.runtime.location}/runtime-impl-jetty9.jar</destinationFile>
                     </fileSet>
                     <fileSet>
-                        <sourceFile>${appengine.runtime.location}/WEB-INF/lib/runtime-shared-${appengine.runtime.version}.jar</sourceFile>
-                        <destinationFile>${appengine.runtime.location}/runtime-shared.jar</destinationFile>
+                        <sourceFile>${appengine.runtime.location}/WEB-INF/lib/runtime-shared-jetty9-${appengine.runtime.version}.jar</sourceFile>
+                        <destinationFile>${appengine.runtime.location}/runtime-shared-jetty9.jar</destinationFile>
+                    </fileSet>
+                    <fileSet>
+                        <sourceFile>${appengine.runtime.location}/WEB-INF/lib/runtime-impl-jetty12-${appengine.runtime.version}.jar</sourceFile>
+                        <destinationFile>${appengine.runtime.location}/runtime-impl-jetty12.jar</destinationFile>
+                    </fileSet>
+                    <fileSet>
+                        <sourceFile>${appengine.runtime.location}/WEB-INF/lib/runtime-shared-jetty12-${appengine.runtime.version}.jar</sourceFile>
+                        <destinationFile>${appengine.runtime.location}/runtime-shared-jetty12.jar</destinationFile>
+                    </fileSet>
+                     <fileSet>
+                        <sourceFile>${appengine.runtime.location}/WEB-INF/lib/runtime-shared-jetty12-ee10-${appengine.runtime.version}.jar</sourceFile>
+                        <destinationFile>${appengine.runtime.location}/runtime-shared-jetty12-ee10.jar</destinationFile>
                     </fileSet>
                     <fileSet>
                         <sourceFile>${appengine.runtime.location}/WEB-INF/lib/runtime-main-${appengine.runtime.version}.jar</sourceFile>
