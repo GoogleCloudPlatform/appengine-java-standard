@@ -18,16 +18,14 @@ package com.google.apphosting.runtime.jetty.delegate.impl;
 
 import java.nio.ByteBuffer;
 import java.util.Objects;
+
 import org.eclipse.jetty.io.Content;
+import org.eclipse.jetty.io.Retainable;
 import org.eclipse.jetty.util.BufferUtil;
 
-public class ContentChunk implements Content.Chunk {
+public class ContentChunk extends Retainable.ReferenceCounter implements Content.Chunk {
   private final ByteBuffer byteBuffer;
   private final boolean last;
-
-  public ContentChunk(ByteBuffer byteBuffer) {
-    this(byteBuffer, true);
-  }
 
   public ContentChunk(byte[] bytes) {
     this(BufferUtil.toBuffer(bytes), true);
@@ -46,16 +44,6 @@ public class ContentChunk implements Content.Chunk {
   @Override
   public boolean isLast() {
     return last;
-  }
-
-  @Override
-  public void retain() {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public boolean release() {
-    return true;
   }
 
   @Override
