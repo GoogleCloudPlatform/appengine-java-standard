@@ -347,6 +347,11 @@
             <artifactId>jetty-http</artifactId>
             <version>${jetty12.version}</version>
         </dependency>
+         <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-plus</artifactId>
+            <version>${jetty12.version}</version>
+        </dependency>
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-xml</artifactId>
@@ -568,6 +573,7 @@
                                     <include>org.eclipse.jetty:jetty-http</include>
                                     <include>org.eclipse.jetty:jetty-io</include>
                                     <include>org.eclipse.jetty:jetty-jmx</include>
+                                    <include>org.eclipse.jetty:jetty-plus</include>
                                     <include>org.eclipse.jetty:jetty-server</include>
                                     <include>org.eclipse.jetty:jetty-session</include>
                                     <include>org.eclipse.jetty:jetty-security</include>

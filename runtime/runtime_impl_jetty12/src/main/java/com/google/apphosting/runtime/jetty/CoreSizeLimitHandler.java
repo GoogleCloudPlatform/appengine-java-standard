@@ -119,20 +119,20 @@ public class CoreSizeLimitHandler extends Handler.Wrapper
     public SizeLimitResponseWrapper(Request request, Response wrapped) {
       super(request, wrapped);
 
-      _httpFields = new HttpFields.Mutable.Wrapper(wrapped.getHeaders())
-      {
-        @Override
-        public HttpField onAddField(HttpField field)
-        {
-          if (field.getHeader().is(HttpHeader.CONTENT_LENGTH.asString()))
-          {
-            long contentLength = field.getLongValue();
-            if (_responseLimit >= 0 && contentLength > _responseLimit)
-              throw new HttpException.RuntimeException(HttpStatus.INTERNAL_SERVER_ERROR_500, "Response body is too large: " + contentLength + ">" + _responseLimit);
-          }
-          return super.onAddField(field);
-        }
-      };
+      _httpFields =
+          new HttpFields.Mutable.Wrapper(wrapped.getHeaders()) {
+            @Override
+            public HttpField onAddField(HttpField field) {
+              if (HttpHeader.CONTENT_LENGTH.is(field.getName())) {
+                long contentLength = field.getLongValue();
+                if (_responseLimit >= 0 && contentLength > _responseLimit)
+                  throw new HttpException.RuntimeException(
+                      HttpStatus.INTERNAL_SERVER_ERROR_500,
+                      "Response body is too large: " + contentLength + ">" + _responseLimit);
+              }
+              return super.onAddField(field);
+            }
+          };
     }
 
     @Override
