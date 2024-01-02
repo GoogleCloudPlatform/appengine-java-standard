@@ -124,7 +124,7 @@ public class CoreSizeLimitHandler extends Handler.Wrapper
         @Override
         public HttpField onAddField(HttpField field)
         {
-          if (field.getHeader().is(HttpHeader.CONTENT_LENGTH.asString()))
+          if (HttpHeader.CONTENT_LENGTH.is(field.getName()))
           {
             long contentLength = field.getLongValue();
             if (_responseLimit >= 0 && contentLength > _responseLimit)
