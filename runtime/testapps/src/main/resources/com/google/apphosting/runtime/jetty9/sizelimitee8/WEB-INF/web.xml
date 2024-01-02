@@ -20,7 +20,7 @@
     xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_1.xsd">
   <servlet>
     <servlet-name>CookieTestServlet</servlet-name>
-    <servlet-class>com.google.apphosting.runtime.jetty9.sizelimithandlerapp.SizedResponseServletEE10</servlet-class>
+    <servlet-class>com.google.apphosting.runtime.jetty9.sizelimithandlerapp.SizedResponseServletEE8</servlet-class>
   </servlet>
   <servlet-mapping>
     <servlet-name>CookieTestServlet</servlet-name>

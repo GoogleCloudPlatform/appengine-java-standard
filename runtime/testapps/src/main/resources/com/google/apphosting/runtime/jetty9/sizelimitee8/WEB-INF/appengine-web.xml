@@ -15,15 +15,12 @@
  limitations under the License.
 -->
 
-<web-app xmlns="http://java.sun.com/xml/ns/javaee"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="3.1"
-    xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_1.xsd">
-  <servlet>
-    <servlet-name>CookieTestServlet</servlet-name>
-    <servlet-class>com.google.apphosting.runtime.jetty9.sizelimithandlerapp.SizedResponseServletEE10</servlet-class>
-  </servlet>
-  <servlet-mapping>
-    <servlet-name>CookieTestServlet</servlet-name>
-    <url-pattern>/*</url-pattern>
-  </servlet-mapping>
-</web-app>
+<appengine-web-app xmlns="http://appengine.google.com/ns/1.0">
+  <runtime>java21</runtime>
+  <application>sizelimithandler</application>
+  <version>1</version>
+  <threadsafe>true</threadsafe>
+  <system-properties>
+    <property name="appengine.use.EE8" value="true"/>
+  </system-properties>
+</appengine-web-app>

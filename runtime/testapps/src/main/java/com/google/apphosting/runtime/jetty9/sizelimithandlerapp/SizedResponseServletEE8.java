@@ -14,21 +14,19 @@
  * limitations under the License.
  */
 
-package com.google.apphosting.runtime.jetty9.sizelimitee10;
+package com.google.apphosting.runtime.jetty9.sizelimithandlerapp;
 
-import jakarta.servlet.ServletInputStream;
-import jakarta.servlet.ServletOutputStream;
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import javax.servlet.ServletInputStream;
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import java.io.IOException;
 
-public class SizedResponseServlet extends HttpServlet {
+public class SizedResponseServletEE8 extends HttpServlet {
     @Override
     protected void service(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-
-        System.err.println("received request: " + req);
-
         String getRuntime = req.getParameter("getRequestClass");
         if (getRuntime != null)
         {
