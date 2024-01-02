@@ -29,7 +29,6 @@ import org.eclipse.jetty.http.HttpStatus;
 import org.eclipse.jetty.util.BufferUtil;
 import org.eclipse.jetty.util.Utf8StringBuilder;
 import org.junit.After;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -41,6 +40,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
@@ -263,12 +263,8 @@ public class SizeLimitHandlerTest extends JavaRuntimeViaHttpBase {
 
   @Test
   public void testRequestContentLengthHeader() throws Exception {
-
-    // TODO: We need to wait for IdleTimeout before server receives the request.
-    Assume.assumeTrue(!"jetty94".equals(environment));
-
     CompletableFuture<Result> completionListener = new CompletableFuture<>();
-    DeferredContentProvider provider = new DeferredContentProvider();
+    DeferredContentProvider provider = new DeferredContentProvider(ByteBuffer.allocate(1));
     int contentLength = MAX_SIZE + 1;
     String url = runtime.jettyUrl("/");
     Utf8StringBuilder received = new Utf8StringBuilder();
@@ -294,13 +290,6 @@ public class SizeLimitHandlerTest extends JavaRuntimeViaHttpBase {
     RuntimeContext.Config<?> config =
         RuntimeContext.Config.builder().setApplicationPath(temp.getRoot().toString()).build();
     return RuntimeContext.create(config);
-  }
-
-  private void assertRequestClassContains(RuntimeContext<?> runtime, String match) throws Exception
-  {
-    String runtimeUrl = runtime.jettyUrl("/?getRequestClass=true");
-    ContentResponse response = httpClient.GET(runtimeUrl);
-    assertThat(response.getContentAsString(), containsString(match));
   }
 
   private void assertEnvironment() throws Exception
