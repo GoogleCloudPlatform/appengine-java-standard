@@ -54,7 +54,7 @@ public abstract class ApiExhaustiveUsageTestCase {
 
   /** The path to the sdk api jar. */
   private static final String API_JAR_PATH =
-      "/tmp/check_build/appengine-api-1.0-sdk/target/appengine-api-1.0-sdk-2.0.24-SNAPSHOT.jar";
+      "/tmp/check_build/appengine-api-1.0-sdk/target/appengine-api-1.0-sdk-2.0.25-SNAPSHOT.jar";
 
     private boolean isExhaustiveUsageClass(String clsName) {
         return clsName.startsWith("com.google.appengine.apicompat.usage");
