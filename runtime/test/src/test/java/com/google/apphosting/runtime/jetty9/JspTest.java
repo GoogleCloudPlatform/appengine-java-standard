@@ -51,8 +51,8 @@ public final class JspTest extends JavaRuntimeViaHttpBase {
         System.setProperty("appengine.use.EE10", "false");
         break;
       case "EE10":
-        //TODO  System.setProperty("appengine.use.EE8", "false");
-        //TODO  System.setProperty("appengine.use.EE10", "true");
+        System.setProperty("appengine.use.EE8", "false");
+        System.setProperty("appengine.use.EE10", "true");
         break;
       default:
         // fall through

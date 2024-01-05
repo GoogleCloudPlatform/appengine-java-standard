@@ -189,7 +189,8 @@ public class ApplicationTest {
                     + directoryName
                     + "/target/"
                     + directoryName
-                    + "-2.0.25-SNAPSHOT")
+                    + "-"
+                    + System.getProperty("appengine.projectversion"))
             .getAbsolutePath();
 
 //    assertThat(appRoot.isDirectory()).isTrue();

@@ -47,8 +47,8 @@ public final class AnnotationScanningTest extends JavaRuntimeViaHttpBase {
         System.setProperty("appengine.use.EE10", "false");
         break;
       case "EE10":
-        //TODO System.setProperty("appengine.use.EE8", "false");
-        //TODO  System.setProperty("appengine.use.EE10", "true");
+        System.setProperty("appengine.use.EE8", "false");
+        System.setProperty("appengine.use.EE10", "true");
         break;
       default:
         // fall through
@@ -61,7 +61,8 @@ public final class AnnotationScanningTest extends JavaRuntimeViaHttpBase {
     appRoot =
         new File(
             currentDirectory,
-            "../annotationscanningwebapp/target/annotationscanningwebapp-2.0.25-SNAPSHOT");
+            "../annotationscanningwebapp/target/annotationscanningwebapp-"
+                + System.getProperty("appengine.projectversion"));
     assertThat(appRoot.isDirectory()).isTrue();
   }
 

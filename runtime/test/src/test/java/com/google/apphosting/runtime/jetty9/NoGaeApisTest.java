@@ -46,8 +46,8 @@ public final class NoGaeApisTest extends JavaRuntimeViaHttpBase {
         System.setProperty("appengine.use.EE10", "false");
         break;
       case "EE10":
-        //TODO System.setProperty("appengine.use.EE8", "false");
-        //TODO System.setProperty("appengine.use.EE10", "true");
+        System.setProperty("appengine.use.EE8", "false");
+        System.setProperty("appengine.use.EE10", "true");
         break;
       default:
         // fall through
@@ -62,7 +62,8 @@ public final class NoGaeApisTest extends JavaRuntimeViaHttpBase {
   public static void beforeClass() throws IOException, InterruptedException {
     File currentDirectory = new File("").getAbsoluteFile();
     appRoot =
-        new File(currentDirectory, "../nogaeapiswebapp/target/nogaeapiswebapp-2.0.25-SNAPSHOT");
+        new File(currentDirectory, "../nogaeapiswebapp/target/nogaeapiswebapp-"
+                + System.getProperty("appengine.projectversion"));
     assertThat(appRoot.isDirectory()).isTrue();
   }
 

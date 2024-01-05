@@ -125,7 +125,8 @@
           <configuration>
             <systemPropertyVariables>
               <appengine.debug.port>${appengine.debug.port}</appengine.debug.port>
-            </systemPropertyVariables>
+              <appengine.projectversion>${project.version}</appengine.projectversion>
+          </systemPropertyVariables>
           </configuration>
         </plugin>
       </plugins>
