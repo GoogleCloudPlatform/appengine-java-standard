@@ -127,6 +127,7 @@ public class DelegateRpcExchange implements DelegateExchange {
   @Override
   public void succeeded() {
     _response.setHttpResponseResponse(ByteString.copyFrom(accumulator.takeByteBuffer()));
+    _response.setError(RuntimePb.UPResponse.ERROR.OK_VALUE);
     _completion.complete(null);
   }
 
