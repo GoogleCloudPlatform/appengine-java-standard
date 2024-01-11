@@ -58,13 +58,13 @@
         <dependency>
             <groupId>org.mortbay.jasper</groupId>
             <artifactId>apache-jsp</artifactId>
-            <version>10.1.7</version>
+            <version>10.1.16</version>
            <optional>true</optional>
        </dependency>
         <dependency>
             <groupId>org.mortbay.jasper</groupId>
             <artifactId>apache-el</artifactId>
-            <version>10.1.7</version>
+            <version>10.1.16</version>
             <optional>true</optional>
         </dependency>
         <dependency>
@@ -72,6 +72,11 @@
           <artifactId>error_prone_annotations</artifactId>
            <optional>true</optional>
        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-xml</artifactId>
+            <version>${jetty12.version}</version>
+        </dependency>
   </dependencies>
 
     <build>
@@ -93,6 +98,7 @@
                                  </excludes>
                                 <includes>
                                     <include>org.eclipse.jetty.toolchain:jetty-schemas</include>
+                                    <include>org.eclipse.jetty:jetty-xml</include>
                                     <include>org.mortbay.jasper:apache-jsp</include>
                                     <include>org.mortbay.jasper:apache-el</include>
                                     <include>com.google.appengine:sessiondata</include>
@@ -119,6 +125,13 @@
                                     <excludes>
                                         <exclude>org/**</exclude>
                                     </excludes>
+                                </filter>
+                                <filter>
+                                    <artifact>org.eclipse.jetty:jetty-xml</artifact>
+                                    <includes>
+                                        <include>**/*.xsd</include>
+                                        <include>**/*.dtd</include>
+                                    </includes>
                                 </filter>
                                 <filter>
                                     <artifact>*:*</artifact>
