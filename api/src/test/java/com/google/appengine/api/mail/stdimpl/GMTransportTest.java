@@ -831,6 +831,14 @@ public class GMTransportTest {
     runHeadersTest(headers, headers);
   }
 
+  /** Tests that valid headers can be set. */
+  @Test
+  public void testSendWithListUnsubribeHeaders() throws Exception {
+    String[] headers =
+        new String[] {"List-Unsubscribe", "List-Unsubscribe-Post"};
+    runHeadersTest(headers, headers);
+  }
+
   /** Tests that invalid headers are not set. */
   @Test
   public void testSendWithInvalidHeaders() throws Exception {

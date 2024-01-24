@@ -72,6 +72,7 @@ public class GMTransport extends Transport {
     "In-Reply-To",
     "List-Id",
     "List-Unsubscribe",
+    "List-Unsubscribe-Post",
     "On-Behalf-Of",
     "References",
     "Resent-Date",
