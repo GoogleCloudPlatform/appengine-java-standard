@@ -17,7 +17,6 @@
 package com.google.appengine.api.urlfetch.dev;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.common.truth.Truth8.assertThat;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.stream.Collectors.toMap;
 import static org.junit.Assert.assertThrows;
@@ -43,6 +42,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.CharStreams;
+import com.google.common.truth.Truth8;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -679,7 +679,7 @@ public class LocalURLFetchServiceIntegrationTest {
             .filter(h -> Ascii.equalsIgnoreCase(h.getName(), "location"))
             .map(HTTPHeader::getValue)
             .findFirst();
-    assertThat(location).hasValue("/redirectTest2");
+    Truth8.assertThat(location).hasValue("/redirectTest2");
   }
 
   @Test

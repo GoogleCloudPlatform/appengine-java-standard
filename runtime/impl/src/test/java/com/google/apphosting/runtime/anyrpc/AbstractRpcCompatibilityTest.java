@@ -19,7 +19,6 @@ package com.google.apphosting.runtime.anyrpc;
 import static com.google.common.truth.OptionalSubject.optionals;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
-import static com.google.common.truth.Truth8.assertThat;
 import static java.nio.charset.StandardCharsets.US_ASCII;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -47,6 +46,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.flogger.GoogleLogger;
 import com.google.common.reflect.Reflection;
 import com.google.common.testing.TestLogHandler;
+import com.google.common.truth.Truth8;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
 import com.google.protobuf.MessageLite;
@@ -279,7 +279,7 @@ public abstract class AbstractRpcCompatibilityTest {
     void assertFailureOrNoResult() {
       Optional<T> result = resultQueue.poll();
       if (result != null) {
-        assertThat(result).isEmpty();
+        Truth8.assertThat(result).isEmpty();
       }
     }
 
@@ -429,7 +429,7 @@ public abstract class AbstractRpcCompatibilityTest {
     AppInfo request = makeAppInfo();
     evaluationRuntimeClient.addAppVersion(clientContext, request, callback);
     Optional<EmptyMessage> result = callback.result();
-    assertThat(result).isEmpty();
+    Truth8.assertThat(result).isEmpty();
     StatusProto status = clientContext.getStatus();
     assertThat(status.getSpace()).isEqualTo("RPC");
     assertThat(status.getCode()).isEqualTo(RPC_DEADLINE_EXCEEDED);
@@ -502,7 +502,7 @@ public abstract class AbstractRpcCompatibilityTest {
     clockHandler.advanceClock();
     clientContext.startCancel();
     Optional<EmptyMessage> result = callback.result();
-    assertThat(result).isEmpty();
+    Truth8.assertThat(result).isEmpty();
     StatusProto status = clientContext.getStatus();
     assertThat(status.getSpace()).isEqualTo("RPC");
     assertThat(status.getCode()).isEqualTo(RPC_CANCELLED);

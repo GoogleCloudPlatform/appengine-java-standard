@@ -18,7 +18,6 @@ package com.google.apphosting.runtime;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
-import static com.google.common.truth.Truth8.assertThat;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -62,6 +61,7 @@ import com.google.apphosting.runtime.timer.CpuRatioTimer;
 import com.google.apphosting.runtime.timer.Timer;
 import com.google.apphosting.utils.runtime.ApiProxyUtils;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.truth.Truth8;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.ExtensionRegistry;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -264,7 +264,7 @@ public class ApiProxyImplTest {
         StatusProto.newBuilder().setCode(Code.CANCELLED_VALUE).setSpace("generic").build();
     Optional<ApiProxyException> optionalException =
         ApiProxyUtils.statusException(proto, "packageName", "methodName", null);
-    assertThat(optionalException).isPresent();
+    Truth8.assertThat(optionalException).isPresent();
     Exception exception = optionalException.get();
     assertThat(exception).isInstanceOf(ApiProxy.CancelledException.class);
     assertThat(exception)
@@ -282,7 +282,7 @@ public class ApiProxyImplTest {
             .build();
     Optional<ApiProxyException> optionalException =
         ApiProxyUtils.statusException(proto, "packageName", "methodName", null);
-    assertThat(optionalException).isPresent();
+    Truth8.assertThat(optionalException).isPresent();
     Exception exception = optionalException.get();
     assertThat(exception).isInstanceOf(ApiProxy.ApiDeadlineExceededException.class);
     assertThat(exception).hasMessageThat().containsMatch("packageName.*methodName");
@@ -299,7 +299,7 @@ public class ApiProxyImplTest {
             .build();
     Optional<ApiProxyException> optionalException =
         ApiProxyUtils.statusException(proto, "packageName", "methodName", cause);
-    assertThat(optionalException).isPresent();
+    Truth8.assertThat(optionalException).isPresent();
     Exception exception = optionalException.get();
     assertThat(exception).isInstanceOf(ApiProxy.UnknownException.class);
     assertThat(exception).hasMessageThat().containsMatch("packageName.*methodName");
@@ -334,7 +334,7 @@ public class ApiProxyImplTest {
         StatusProto.newBuilder().setCode(Code.UNKNOWN_VALUE).setSpace("generic").build();
     Optional<ApiProxyException> optionalException =
         ApiProxyUtils.statusException(proto, "packageName", "methodName", null);
-    assertThat(optionalException).isEmpty();
+    Truth8.assertThat(optionalException).isEmpty();
   }
 
   @Test
@@ -365,7 +365,7 @@ public class ApiProxyImplTest {
     assertThat(
             environment.getAttributes().get(ApiProxyImpl.CLOUD_SQL_JDBC_CONNECTIVITY_ENABLED_KEY))
         .isEqualTo(false);
-    assertThat(environment.getTraceId()).isEmpty();
+    Truth8.assertThat(environment.getTraceId()).isEmpty();
   }
 
   @Test
@@ -634,7 +634,7 @@ public class ApiProxyImplTest {
     upRequest = upRequest.toBuilder().setTraceContext(context).buildPartial();
     environment = createEnvironment();
 
-    assertThat(environment.getTraceId()).hasValue("01020304050607080910111213141516");
+    Truth8.assertThat(environment.getTraceId()).hasValue("01020304050607080910111213141516");
   }
 
   @Test
