@@ -339,7 +339,7 @@ public final class UPRequestTranslatorTest {
         httpResponse, "Expected error during test.", Callback.NOOP);
 
     verify(httpResponse).setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-    verify(httpFields, never()).add((String) any(), any());
+    verify(httpFields, never()).add((String) any(), (String) any());
     verify(httpFields, never()).put((String) any(), (String) any());
     assertThat(out.toString("UTF-8"))
         .isEqualTo(
