@@ -38,6 +38,8 @@ public interface DelegateExchange extends Content.Source, Content.Sink, Callback
 
     InetSocketAddress getLocalAddr();
 
+    boolean isSecure();
+
     // Response Methods
 
     void setStatus(int status);
