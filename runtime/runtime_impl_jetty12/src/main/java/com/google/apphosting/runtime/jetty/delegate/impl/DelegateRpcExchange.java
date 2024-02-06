@@ -93,6 +93,11 @@ public class DelegateRpcExchange implements DelegateExchange {
   }
 
   @Override
+  public boolean isSecure() {
+    return _request.getIsHttps();
+  }
+
+  @Override
   public Content.Chunk read() {
     return _content.getAndUpdate(chunk -> (chunk instanceof ContentChunk) ? EOF : chunk);
   }

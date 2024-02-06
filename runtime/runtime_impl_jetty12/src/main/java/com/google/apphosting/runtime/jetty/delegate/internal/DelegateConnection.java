@@ -24,6 +24,7 @@ import java.util.EventListener;
 import java.util.concurrent.TimeoutException;
 import org.eclipse.jetty.http.HttpFields;
 import org.eclipse.jetty.http.HttpHeader;
+import org.eclipse.jetty.http.HttpScheme;
 import org.eclipse.jetty.http.HttpURI;
 import org.eclipse.jetty.http.HttpVersion;
 import org.eclipse.jetty.http.MetaData;
@@ -116,13 +117,12 @@ public class DelegateConnection implements Connection {
       ConnectionMetaData connectionMetaData =
           new DelegateConnectionMetadata(_endpoint, this, _connector);
       HttpChannelState httpChannel = new HttpChannelState(connectionMetaData);
-
-      // TODO: This needs HttpChannel to implement demand().
       httpChannel.setHttpStream(new DelegateHttpStream(_endpoint, this, httpChannel));
 
       // Generate the Request MetaData.
       String method = delegateExchange.getMethod();
-      HttpURI httpURI = HttpURI.build(delegateExchange.getRequestURI());
+      HttpURI httpURI = HttpURI.build(delegateExchange.getRequestURI())
+              .scheme(delegateExchange.isSecure() ? HttpScheme.HTTPS : HttpScheme.HTTP);
       HttpVersion httpVersion = HttpVersion.fromString(delegateExchange.getProtocol());
       HttpFields httpFields = delegateExchange.getHeaders();
       long contentLength =
