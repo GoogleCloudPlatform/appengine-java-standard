@@ -738,13 +738,13 @@
       <dependency>
         <groupId>com.google.truth</groupId>
         <artifactId>truth</artifactId>
-        <version>1.2.0</version>
+        <version>1.4.0</version>
         <scope>test</scope>
       </dependency>
       <dependency>
         <groupId>com.google.truth.extensions</groupId>
         <artifactId>truth-java8-extension</artifactId>
-        <version>1.2.0</version>
+        <version>1.4.0</version>
         <scope>test</scope>
       </dependency>
 

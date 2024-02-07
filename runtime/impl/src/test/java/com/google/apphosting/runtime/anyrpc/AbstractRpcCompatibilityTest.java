@@ -46,7 +46,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.flogger.GoogleLogger;
 import com.google.common.reflect.Reflection;
 import com.google.common.testing.TestLogHandler;
-import com.google.common.truth.Truth8;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
 import com.google.protobuf.MessageLite;
@@ -279,7 +278,7 @@ public abstract class AbstractRpcCompatibilityTest {
     void assertFailureOrNoResult() {
       Optional<T> result = resultQueue.poll();
       if (result != null) {
-        Truth8.assertThat(result).isEmpty();
+        assertThat(result).isEmpty();
       }
     }
 
@@ -429,7 +428,7 @@ public abstract class AbstractRpcCompatibilityTest {
     AppInfo request = makeAppInfo();
     evaluationRuntimeClient.addAppVersion(clientContext, request, callback);
     Optional<EmptyMessage> result = callback.result();
-    Truth8.assertThat(result).isEmpty();
+    assertThat(result).isEmpty();
     StatusProto status = clientContext.getStatus();
     assertThat(status.getSpace()).isEqualTo("RPC");
     assertThat(status.getCode()).isEqualTo(RPC_DEADLINE_EXCEEDED);
@@ -502,7 +501,7 @@ public abstract class AbstractRpcCompatibilityTest {
     clockHandler.advanceClock();
     clientContext.startCancel();
     Optional<EmptyMessage> result = callback.result();
-    Truth8.assertThat(result).isEmpty();
+    assertThat(result).isEmpty();
     StatusProto status = clientContext.getStatus();
     assertThat(status.getSpace()).isEqualTo("RPC");
     assertThat(status.getCode()).isEqualTo(RPC_CANCELLED);

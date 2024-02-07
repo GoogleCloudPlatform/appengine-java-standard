@@ -42,7 +42,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.CharStreams;
-import com.google.common.truth.Truth8;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -679,7 +678,7 @@ public class LocalURLFetchServiceIntegrationTest {
             .filter(h -> Ascii.equalsIgnoreCase(h.getName(), "location"))
             .map(HTTPHeader::getValue)
             .findFirst();
-    Truth8.assertThat(location).hasValue("/redirectTest2");
+    assertThat(location).hasValue("/redirectTest2");
   }
 
   @Test

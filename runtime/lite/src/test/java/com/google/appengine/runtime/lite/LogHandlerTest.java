@@ -30,7 +30,6 @@ import com.google.common.flogger.LogSite;
 import com.google.common.flogger.backend.LogData;
 import com.google.common.flogger.backend.Metadata;
 import com.google.common.flogger.backend.system.SimpleLogRecord;
-import com.google.common.truth.Truth8;
 import java.io.UnsupportedEncodingException;
 import java.time.Instant;
 import java.util.Map;
@@ -135,7 +134,7 @@ public final class LogHandlerTest {
 
     Optional<SourceLocation> ret = LogHandler.getSrcInfoFromFloggerMetadata(logRecord);
 
-    Truth8.assertThat(ret).isPresent();
+    assertThat(ret).isPresent();
     SourceLocation sourceLocation = ret.get();
     assertThat(sourceLocation.getFile()).isEqualTo("SomeFile.java");
     assertThat(sourceLocation.getFunction()).isEqualTo("some.package.SomeClass.someMethod");
@@ -150,7 +149,7 @@ public final class LogHandlerTest {
 
     Optional<SourceLocation> ret = LogHandler.getSrcInfoFromFloggerMetadata(record);
 
-    Truth8.assertThat(ret).isEmpty();
+    assertThat(ret).isEmpty();
   }
 
   @Test
@@ -161,7 +160,7 @@ public final class LogHandlerTest {
 
     Optional<SourceLocation> ret = LogHandler.getSrcInfoFromStack(record);
 
-    Truth8.assertThat(ret).isPresent();
+    assertThat(ret).isPresent();
     SourceLocation sourceLocation = ret.get();
     assertThat(sourceLocation.getFile()).isEqualTo("LogHandlerTest.java");
     assertThat(sourceLocation.getFunction())
@@ -177,6 +176,6 @@ public final class LogHandlerTest {
 
     Optional<SourceLocation> ret = LogHandler.getSrcInfoFromStack(record);
 
-    Truth8.assertThat(ret).isEmpty();
+    assertThat(ret).isEmpty();
   }
 }
