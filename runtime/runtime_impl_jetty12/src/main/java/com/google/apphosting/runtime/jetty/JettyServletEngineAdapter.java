@@ -139,13 +139,13 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
 
     // This is our new HTTP mode.
     // TODO: we don't want to always use this when useJettyHttpProxy is true, this is for testing.
-    boolean httpConnector = Boolean.getBoolean("appengine.use.HTTP")  || runtimeOptions.useJettyHttpProxy();
+    boolean httpConnector = Boolean.getBoolean("appengine.use.HTTP") || runtimeOptions.useJettyHttpProxy();
     if (httpConnector) {
-      server.insertHandler(new JettyHttpHandler(runtimeOptions));
+      AppVersionKey appVersionKey = init(runtimeOptions);
       JettyHttpProxy.insertHandlers(server);
+      server.insertHandler(new JettyHttpHandler(runtimeOptions, appVersionKey));
       ServerConnector connector = JettyHttpProxy.newConnector(server, runtimeOptions);
       server.addConnector(connector);
-      init(runtimeOptions);
     }
     else if (runtimeOptions.useJettyHttpProxy()) {
         server.setAttribute("com.google.apphosting.runtime.jetty.appYaml",
@@ -163,7 +163,7 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
     }
   }
 
-  private void init(ServletEngineAdapter.Config runtimeOptions)
+  private AppVersionKey init(ServletEngineAdapter.Config runtimeOptions)
   {
     /* The init actions are not done in the constructor as they are not used when testing */
     try {
@@ -181,7 +181,7 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
 
       AppVersionKey appVersionKey = AppVersionKey.fromAppInfo(appinfo);
       appVersionHandler.ensureHandler(appVersionKey);
-
+      return appVersionKey;
     } catch (Exception e) {
       throw new IllegalStateException(e);
     }

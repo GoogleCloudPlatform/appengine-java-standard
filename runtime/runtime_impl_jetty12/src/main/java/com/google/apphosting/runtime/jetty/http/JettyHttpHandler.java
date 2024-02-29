@@ -16,6 +16,8 @@
 
 package com.google.apphosting.runtime.jetty.http;
 
+import com.google.apphosting.base.AppVersionKey;
+import com.google.apphosting.runtime.JettyConstants;
 import com.google.apphosting.runtime.ServletEngineAdapter;
 import com.google.common.base.Ascii;
 import com.google.common.base.Strings;
@@ -40,12 +42,13 @@ public class JettyHttpHandler extends Handler.Wrapper {
           "com.google.apphosting.internal.SkipAdminCheck";
   private static final String IS_TRUSTED = "1";
 
-  private final ServletEngineAdapter.Config _runtimeOptions;
-  private final boolean passThroughPrivateHeaders = false; // TODO
+  private final boolean passThroughPrivateHeaders;
+  private final AppVersionKey appVersionKey;
 
-  public JettyHttpHandler(ServletEngineAdapter.Config runtimeOptions)
+  public JettyHttpHandler(ServletEngineAdapter.Config runtimeOptions, AppVersionKey appVersionKey)
   {
-    _runtimeOptions = runtimeOptions;
+    this.passThroughPrivateHeaders = runtimeOptions.passThroughPrivateHeaders();
+    this.appVersionKey = appVersionKey;
   }
 
   @Override
@@ -86,6 +89,8 @@ public class JettyHttpHandler extends Handler.Wrapper {
       }
     };
 
+    // TODO: set the environment.
+    request.setAttribute(JettyConstants.APP_VERSION_KEY_REQUEST_ATTR, appVersionKey);
     return super.handle(request, response, callback);
   }
 
