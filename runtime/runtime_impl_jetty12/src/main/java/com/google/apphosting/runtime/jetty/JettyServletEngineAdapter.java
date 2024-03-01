@@ -137,21 +137,42 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
       server.setHandler(appVersionHandler);
     }
 
-    // This is our new HTTP mode.
-    // TODO: we don't want to always use this when useJettyHttpProxy is true, this is for testing.
-    boolean httpConnector = Boolean.getBoolean("appengine.use.HTTP") || runtimeOptions.useJettyHttpProxy();
-    if (httpConnector) {
-      AppVersionKey appVersionKey = init(runtimeOptions);
-      JettyHttpProxy.insertHandlers(server);
-      server.insertHandler(new JettyHttpHandler(runtimeOptions, appVersionKey));
-      ServerConnector connector = JettyHttpProxy.newConnector(server, runtimeOptions);
-      server.addConnector(connector);
-    }
-    else if (runtimeOptions.useJettyHttpProxy()) {
+    if (runtimeOptions.useJettyHttpProxy()) {
+
+      AppInfoFactory appInfoFactory;
+      AppVersionKey appVersionKey;
+
+      /* The init actions are not done in the constructor as they are not used when testing */
+      try {
+        String appRoot = runtimeOptions.applicationRoot();
+        String appPath = runtimeOptions.fixedApplicationPath();
+        appInfoFactory = new AppInfoFactory(System.getenv());
+        AppinfoPb.AppInfo appinfo = appInfoFactory.getAppInfoFromFile(appRoot, appPath);
+
+        // TODO Should we also call ApplyCloneSettings()?
+        LocalRpcContext<EmptyMessage> context = new LocalRpcContext<>(EmptyMessage.class);
+        EvaluationRuntimeServerInterface evaluationRuntimeServerInterface = Objects.requireNonNull(
+                runtimeOptions.evaluationRuntimeServerInterface());
+        evaluationRuntimeServerInterface.addAppVersion(context, appinfo);
+        context.getResponse();
+
+        appVersionKey = AppVersionKey.fromAppInfo(appinfo);
+        appVersionHandler.ensureHandler(appVersionKey);
+      } catch (Exception e) {
+        throw new IllegalStateException(e);
+      }
+
+      // TODO: we don't want to always use this when useJettyHttpProxy is true, this is for testing.
+      if (Boolean.getBoolean("appengine.use.HTTP") || true) {
+        JettyHttpProxy.insertHandlers(server);
+        server.insertHandler(new JettyHttpHandler(runtimeOptions, appVersionKey, appInfoFactory));
+        ServerConnector connector = JettyHttpProxy.newConnector(server, runtimeOptions);
+        server.addConnector(connector);
+      } else {
         server.setAttribute("com.google.apphosting.runtime.jetty.appYaml",
                 JettyServletEngineAdapter.getAppYaml(runtimeOptions));
         JettyHttpProxy.startServer(runtimeOptions);
-        init(runtimeOptions);
+      }
     }
 
     try {
@@ -160,30 +181,6 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
       // TODO: Should we have a wrapper exception for this
       // type of thing in ServletEngineAdapter?
       throw new RuntimeException(ex);
-    }
-  }
-
-  private AppVersionKey init(ServletEngineAdapter.Config runtimeOptions)
-  {
-    /* The init actions are not done in the constructor as they are not used when testing */
-    try {
-      String appRoot = runtimeOptions.applicationRoot();
-      String appPath = runtimeOptions.fixedApplicationPath();
-      AppInfoFactory appInfoFactory = new AppInfoFactory(System.getenv());
-      AppinfoPb.AppInfo appinfo = appInfoFactory.getAppInfoFromFile(appRoot, appPath);
-
-      // TODO Should we also call ApplyCloneSettings()?
-      LocalRpcContext<EmptyMessage> context = new LocalRpcContext<>(EmptyMessage.class);
-      EvaluationRuntimeServerInterface evaluationRuntimeServerInterface = Objects.requireNonNull(
-              runtimeOptions.evaluationRuntimeServerInterface());
-      evaluationRuntimeServerInterface.addAppVersion(context, appinfo);
-      context.getResponse();
-
-      AppVersionKey appVersionKey = AppVersionKey.fromAppInfo(appinfo);
-      appVersionHandler.ensureHandler(appVersionKey);
-      return appVersionKey;
-    } catch (Exception e) {
-      throw new IllegalStateException(e);
     }
   }
 

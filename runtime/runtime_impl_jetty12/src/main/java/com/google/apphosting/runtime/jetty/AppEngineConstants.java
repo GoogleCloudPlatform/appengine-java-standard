@@ -18,7 +18,7 @@ package com.google.apphosting.runtime.jetty;
 
 import com.google.common.collect.ImmutableSet;
 
-public final class AppEngineHeaders {
+public final class AppEngineConstants {
   /**
    * The HTTP headers that are handled specially by this proxy are defined in lowercase because HTTP
    * headers are case-insensitive, and we look then up in a set or switch after converting to
@@ -36,13 +36,13 @@ public final class AppEngineHeaders {
   public static final String X_APPENGINE_USER_IS_ADMIN = "x-appengine-user-is-admin";
   public static final String X_APPENGINE_TRUSTED_IP_REQUEST = "x-appengine-trusted-ip-request";
   public static final String X_APPENGINE_LOAS_PEER_USERNAME = "x-appengine-loas-peer-username";
+  public static final String X_APPENGINE_ID_HASH = "x-appengine-request-id-hash";
   public static final String X_APPENGINE_GAIA_ID = "x-appengine-gaia-id";
   public static final String X_APPENGINE_GAIA_AUTHUSER = "x-appengine-gaia-authuser";
   public static final String X_APPENGINE_GAIA_SESSION = "x-appengine-gaia-session";
   public static final String X_APPENGINE_APPSERVER_DATACENTER = "x-appengine-appserver-datacenter";
   public static final String X_APPENGINE_APPSERVER_TASK_BNS = "x-appengine-appserver-task-bns";
-  public static final String X_APPENGINE_DEFAULT_VERSION_HOSTNAME =
-          "x-appengine-default-version-hostname";
+  public static final String X_APPENGINE_DEFAULT_VERSION_HOSTNAME = "x-appengine-default-version-hostname";
   public static final String X_APPENGINE_REQUEST_LOG_ID = "x-appengine-request-log-id";
   public static final String X_APPENGINE_QUEUENAME = "x-appengine-queuename";
   public static final String X_APPENGINE_TIMEOUT_MS = "x-appengine-timeout-ms";
@@ -74,4 +74,15 @@ public final class AppEngineHeaders {
                   X_APPENGINE_REQUEST_LOG_ID,
                   X_APPENGINE_TIMEOUT_MS,
                   X_GOOGLE_INTERNAL_PROFILER);
+
+  public static final String IS_ADMIN_HEADER_VALUE = "1";
+  public static final String IS_TRUSTED = "1";
+  public static final String SKIP_ADMIN_CHECK_ATTR =
+          "com.google.apphosting.internal.SkipAdminCheck";
+
+  // The impersonated IP address of warmup requests (and also background)
+  //     (<internal20>)
+  public static final String WARMUP_IP = "0.1.0.3";
+
+  public static final String DEFAULT_SECRET_KEY = "secretkey";
 }
