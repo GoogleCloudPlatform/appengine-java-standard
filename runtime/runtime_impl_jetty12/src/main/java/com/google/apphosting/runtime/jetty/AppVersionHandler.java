@@ -20,10 +20,11 @@ import com.google.apphosting.base.AppVersionKey;
 import com.google.apphosting.runtime.AppVersion;
 import com.google.apphosting.runtime.SessionStore;
 import com.google.apphosting.runtime.SessionStoreFactory;
-import java.util.Objects;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.handler.HotSwapHandler;
 import org.eclipse.jetty.session.SessionManager;
+
+import java.util.Objects;
 
 /**
  * {@code AppVersionHandlerMap} is a {@code HandlerContainer} that identifies each child {@code
@@ -41,6 +42,10 @@ public class AppVersionHandler extends HotSwapHandler {
 
   public AppVersionHandler(AppVersionHandlerFactory appVersionHandlerFactory) {
     this.appVersionHandlerFactory = appVersionHandlerFactory;
+  }
+
+  public AppVersion getAppVersion() {
+    return appVersion;
   }
 
   public void addAppVersion(AppVersion appVersion) {

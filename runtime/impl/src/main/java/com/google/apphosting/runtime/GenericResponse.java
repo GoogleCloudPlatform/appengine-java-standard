@@ -17,7 +17,11 @@
 package com.google.apphosting.runtime;
 
 import com.google.apphosting.base.protos.AppLogsPb;
+import com.google.apphosting.base.protos.RuntimePb;
+import com.google.apphosting.runtime.anyrpc.AnyRpcServerContext;
+import com.google.protobuf.ByteString;
 
+import java.util.Collection;
 import java.util.List;
 
 public interface GenericResponse {
@@ -26,4 +30,22 @@ public interface GenericResponse {
   int getAppLogCount();
 
   List<AppLogsPb.AppLogLine> getAndClearAppLogList();
+
+  void setSerializedTrace(ByteString byteString);
+
+  void setTerminateClone(boolean terminateClone);
+
+  void setCloneIsInUncleanState(boolean b);
+
+  void setUserMcycles(long l);
+
+  void addAllRuntimeLogLine(Collection<RuntimePb.UPResponse.RuntimeLogLine> logLines);
+
+  void error(int error, String errorMessage);
+
+  void finishWithResponse(AnyRpcServerContext rpc);
+
+  void complete();
+
+  int getError();
 }

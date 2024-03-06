@@ -17,12 +17,29 @@
 package com.google.apphosting.runtime.jetty.http;
 
 import com.google.apphosting.base.protos.AppLogsPb;
+import com.google.apphosting.base.protos.RuntimePb;
 import com.google.apphosting.runtime.GenericResponse;
+import com.google.apphosting.runtime.anyrpc.AnyRpcServerContext;
+import com.google.protobuf.ByteString;
+import org.eclipse.jetty.server.Response;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
 public class GenericJettyResponse implements GenericResponse {
+
+  private final Response response;
+
+  public GenericJettyResponse(Response response) {
+    this.response = response;
+  }
+
+  public Response getWrappedResponse()
+  {
+    return response;
+  }
+
   @Override
   public void addAppLog(AppLogsPb.AppLogLine logLine) {
   }
@@ -35,5 +52,45 @@ public class GenericJettyResponse implements GenericResponse {
   @Override
   public List<AppLogsPb.AppLogLine> getAndClearAppLogList() {
     return Collections.emptyList();
+  }
+
+  @Override
+  public void setSerializedTrace(ByteString byteString) {
+
+  }
+
+  @Override
+  public void setTerminateClone(boolean terminateClone) {
+
+  }
+
+  @Override
+  public void setCloneIsInUncleanState(boolean b) {
+
+  }
+
+  @Override
+  public void setUserMcycles(long l) {
+
+  }
+
+  @Override
+  public void addAllRuntimeLogLine(Collection<RuntimePb.UPResponse.RuntimeLogLine> logLines) {
+
+  }
+
+  @Override
+  public void error(int error, String errorMessage) {
+
+  }
+
+  @Override
+  public void finishWithResponse(AnyRpcServerContext rpc) {
+
+  }
+
+  @Override
+  public void complete() {
+
   }
 }

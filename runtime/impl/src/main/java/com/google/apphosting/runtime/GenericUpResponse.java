@@ -17,7 +17,12 @@
 package com.google.apphosting.runtime;
 
 import com.google.apphosting.base.protos.AppLogsPb;
+import com.google.apphosting.base.protos.RuntimePb;
+import com.google.apphosting.runtime.anyrpc.AnyRpcServerContext;
 import com.google.common.collect.ImmutableList;
+import com.google.protobuf.ByteString;
+
+import java.util.Collection;
 
 public class GenericUpResponse implements GenericResponse {
 
@@ -41,5 +46,49 @@ public class GenericUpResponse implements GenericResponse {
   @Override
   public ImmutableList<AppLogsPb.AppLogLine> getAndClearAppLogList() {
     return response.getAndClearAppLogList();
+  }
+
+  @Override
+  public void setSerializedTrace(ByteString byteString) {
+    response.setSerializedTrace(byteString);
+  }
+
+  @Override
+  public void setTerminateClone(boolean terminateClone) {
+    response.setTerminateClone(terminateClone);
+  }
+
+  @Override
+  public void setCloneIsInUncleanState(boolean b) {
+    response.setCloneIsInUncleanState(b);
+  }
+
+  @Override
+  public void setUserMcycles(long l) {
+    response.setUserMcycles(l);
+  }
+
+  @Override
+  public void addAllRuntimeLogLine(Collection<RuntimePb.UPResponse.RuntimeLogLine> logLines) {
+    response.addAllRuntimeLogLine(logLines);
+  }
+
+  @Override
+  public void error(int error, String errorMessage) {
+    response.clearHttpResponse();
+    response.setError(RuntimePb.UPResponse.ERROR.LOG_FATAL_DEATH_VALUE);
+    if (errorMessage != null)
+      response.setErrorMessage(errorMessage);
+  }
+
+  @Override
+  public void finishWithResponse(AnyRpcServerContext rpc) {
+    rpc.finishWithResponse(response.build());
+  }
+
+  @Override
+  public void complete() {
+    response.setError(RuntimePb.UPResponse.ERROR.OK_VALUE);
+    response.setHttpResponseCodeAndResponse(200, "OK");
   }
 }

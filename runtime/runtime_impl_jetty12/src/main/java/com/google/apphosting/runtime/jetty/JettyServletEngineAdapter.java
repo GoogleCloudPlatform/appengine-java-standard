@@ -164,8 +164,10 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
 
       // TODO: we don't want to always use this when useJettyHttpProxy is true, this is for testing.
       if (Boolean.getBoolean("appengine.use.HTTP") || true) {
+
+        // TODO: how can we construct/obtain a GenericRequestManager and BackgroundRequestCoordinator to give to the JettyHttpHandler
         JettyHttpProxy.insertHandlers(server);
-        server.insertHandler(new JettyHttpHandler(runtimeOptions, appVersionKey, appInfoFactory));
+        server.insertHandler(new JettyHttpHandler(runtimeOptions, appVersionHandler.getAppVersion(), appVersionKey, appInfoFactory));
         ServerConnector connector = JettyHttpProxy.newConnector(server, runtimeOptions);
         server.addConnector(connector);
       } else {

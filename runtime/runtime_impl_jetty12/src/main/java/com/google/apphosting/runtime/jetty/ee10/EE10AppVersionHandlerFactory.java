@@ -16,10 +16,12 @@
 
 package com.google.apphosting.runtime.jetty.ee10;
 
+import com.google.apphosting.api.ApiProxy;
 import com.google.apphosting.base.AppVersionKey;
 import com.google.apphosting.runtime.AppVersion;
 import com.google.apphosting.runtime.JettyConstants;
 import com.google.apphosting.runtime.SessionsConfig;
+import com.google.apphosting.runtime.jetty.AppEngineConstants;
 import com.google.apphosting.runtime.jetty.AppVersionHandlerFactory;
 import com.google.apphosting.runtime.jetty.EE10SessionManagerHandler;
 import com.google.common.flogger.GoogleLogger;
@@ -30,10 +32,6 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.UnavailableException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.io.File;
-import java.io.IOException;
-import java.io.PrintWriter;
-import javax.servlet.jsp.JspFactory;
 import org.eclipse.jetty.ee10.annotations.AnnotationConfiguration;
 import org.eclipse.jetty.ee10.quickstart.QuickStartConfiguration;
 import org.eclipse.jetty.ee10.servlet.Dispatcher;
@@ -46,10 +44,17 @@ import org.eclipse.jetty.ee10.webapp.WebInfConfiguration;
 import org.eclipse.jetty.ee10.webapp.WebXmlConfiguration;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.io.Content;
+import org.eclipse.jetty.server.Context;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Response;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.util.Callback;
+
+import javax.servlet.jsp.JspFactory;
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintWriter;
 
 /**
  * {@code AppVersionHandlerFactory} implements a {@code Handler} for a given {@code AppVersionKey}.
@@ -209,6 +214,26 @@ public class EE10AppVersionHandlerFactory implements AppVersionHandlerFactory {
       EE10SessionManagerHandler.create(builder.build());
       // Pass the AppVersion on to any of our servlets (e.g. ResourceFileServlet).
       context.setAttribute(JettyConstants.APP_VERSION_CONTEXT_ATTR, appVersion);
+
+      context.addEventListener(new ContextHandler.ContextScopeListener() {
+        @Override
+        public void enterScope(Context context, Request request) {
+          if (request != null)
+          {
+            ApiProxy.Environment environment = (ApiProxy.Environment)request.getAttribute(AppEngineConstants.ENVIRONMENT_ATTR);
+            if (environment != null)
+              ApiProxy.setEnvironmentForCurrentThread(environment);
+          }
+        }
+
+        @Override
+        public void exitScope(Context context, Request request) {
+          if (request != null)
+          {
+              ApiProxy.clearEnvironmentForCurrentThread();
+          }
+        }
+      });
 
       context.start();
       // Check to see if servlet filter initialization failed.

@@ -17,6 +17,7 @@
 package com.google.apphosting.runtime;
 
 import com.google.apphosting.base.protos.HttpPb;
+import com.google.apphosting.base.protos.RuntimePb;
 import com.google.apphosting.base.protos.TracePb;
 
 import java.util.stream.Stream;
@@ -77,4 +78,8 @@ public interface GenericRequest {
   boolean hasTraceContext();
 
   TracePb.TraceContextProto getTraceContext();
+
+  String getUrl();
+
+  RuntimePb.UPRequest.RequestType getRequestType();
 }
