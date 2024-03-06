@@ -19,7 +19,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.google.appengine</groupId>
   <artifactId>parent</artifactId>
-  <version>2.0.25-SNAPSHOT</version>
+  <version>2.0.25</version>
   <packaging>pom</packaging>
   <name>AppEngine :: Parent project</name>
   <modules>
@@ -74,7 +74,7 @@
     <connection>scm:git:git://github.com/GoogleCloudPlatform/appengine-java-standard.git</connection>
     <url>https://github.com/GoogleCloudPlatform/appengine-java-standard</url>
     <developerConnection>scm:git:ssh://git@github.com/GoogleCloudPlatform/appengine-java-standard.git</developerConnection>
-    <tag>HEAD</tag>
+    <tag>parent-2.0.25</tag>
   </scm>
   <licenses>
       <license>
