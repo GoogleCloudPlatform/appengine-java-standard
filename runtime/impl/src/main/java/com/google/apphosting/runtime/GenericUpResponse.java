@@ -91,4 +91,9 @@ public class GenericUpResponse implements GenericResponse {
     response.setError(RuntimePb.UPResponse.ERROR.OK_VALUE);
     response.setHttpResponseCodeAndResponse(200, "OK");
   }
+
+  @Override
+  public int getError() {
+    return response.getError();
+  }
 }

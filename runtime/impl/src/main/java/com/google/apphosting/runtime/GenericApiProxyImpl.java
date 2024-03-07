@@ -390,7 +390,7 @@ public class GenericApiProxyImpl implements ApiProxy.Delegate<GenericApiProxyImp
       String methodName,
       byte[] requestBytes,
       Double requestDeadlineInSeconds) {
-    TraceWriter traceWriter = environment.getTraceWriter();
+    GenericTraceWriter traceWriter = environment.getTraceWriter();
     CloudTraceContext currentContext = null;
     if (traceWriter != null) {
       CloudTraceContext parentContext = CloudTrace.getCurrentContext(environment);
@@ -646,7 +646,7 @@ public class GenericApiProxyImpl implements ApiProxy.Delegate<GenericApiProxyImp
     }
 
     private void endApiSpan() {
-      TraceWriter traceWriter = environment.getTraceWriter();
+      GenericTraceWriter traceWriter = environment.getTraceWriter();
       if (traceWriter != null && context != null) {
         traceWriter.endApiSpan(context);
       }
@@ -794,7 +794,7 @@ public class GenericApiProxyImpl implements ApiProxy.Delegate<GenericApiProxyImp
   }
 
   private static final class CloudTraceImpl extends CloudTrace {
-    private final TraceWriter writer;
+    private final GenericTraceWriter writer;
 
     @CanIgnoreReturnValue
     CloudTraceImpl(EnvironmentImpl env) {
@@ -903,7 +903,7 @@ public class GenericApiProxyImpl implements ApiProxy.Delegate<GenericApiProxyImp
     private final String requestId;
     private final List<Future<?>> asyncFutures;
     private final GenericAppLogsWriter appLogsWriter;
-    @Nullable private final TraceWriter traceWriter;
+    @Nullable private final GenericTraceWriter traceWriter;
     @Nullable private final TraceExceptionGenerator traceExceptionGenerator;
     private final Semaphore outstandingApiRpcSemaphore;
     private final ThreadGroup requestThreadGroup;
@@ -1106,7 +1106,7 @@ public class GenericApiProxyImpl implements ApiProxy.Delegate<GenericApiProxyImp
       appLogsWriter.flushAndWait();
     }
 
-    public TraceWriter getTraceWriter() {
+    public GenericTraceWriter getTraceWriter() {
       return traceWriter;
     }
 

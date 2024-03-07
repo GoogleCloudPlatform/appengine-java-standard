@@ -93,4 +93,9 @@ public class GenericJettyResponse implements GenericResponse {
   public void complete() {
 
   }
+
+  @Override
+  public int getError() {
+    return 0;
+  }
 }

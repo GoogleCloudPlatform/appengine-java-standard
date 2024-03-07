@@ -19,11 +19,9 @@ package com.google.apphosting.runtime.jetty.http;
 import com.google.apphosting.api.ApiProxy;
 import com.google.apphosting.base.AppVersionKey;
 import com.google.apphosting.base.protos.EmptyMessage;
-import com.google.apphosting.base.protos.HttpPb;
 import com.google.apphosting.base.protos.RuntimePb;
 import com.google.apphosting.runtime.AppVersion;
 import com.google.apphosting.runtime.BackgroundRequestCoordinator;
-import com.google.apphosting.runtime.GenericRequest;
 import com.google.apphosting.runtime.GenericRequestManager;
 import com.google.apphosting.runtime.GenericResponse;
 import com.google.apphosting.runtime.JettyConstants;
@@ -34,6 +32,7 @@ import com.google.apphosting.runtime.jetty.AppInfoFactory;
 import com.google.common.base.Ascii;
 import com.google.common.flogger.GoogleLogger;
 import com.google.common.util.concurrent.Uninterruptibles;
+import org.eclipse.jetty.http.HttpField;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Response;
@@ -44,9 +43,9 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.time.Duration;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeoutException;
-import java.util.stream.Collectors;
 
 import static com.google.apphosting.runtime.RequestRunner.WAIT_FOR_USER_RUNNABLE_DEADLINE;
 import static com.google.apphosting.runtime.jetty.AppEngineConstants.X_APPENGINE_TIMEOUT_MS;
@@ -88,12 +87,14 @@ public class JettyHttpHandler extends Handler.Wrapper {
 
     // Read time remaining in request from headers and pass value to LocalRpcContext for use in
     // reporting remaining time until deadline for API calls (see b/154745969)
+    // TODO: do this in genericRequest
     Duration timeRemaining = request.getHeaders().stream()
             .filter(h -> X_APPENGINE_TIMEOUT_MS.equals(h.getLowerCaseName()))
             .map(p -> Duration.ofMillis(Long.parseLong(p.getValue())))
             .findFirst()
             .orElse(Duration.ofNanos(Long.MAX_VALUE));
 
+    // TODO: Can we get rid of this? or do we need to implement MessageLite?
     LocalRpcContext<EmptyMessage> context = new LocalRpcContext<>(EmptyMessage.class, timeRemaining);
 
     boolean handled;
@@ -168,7 +169,7 @@ public class JettyHttpHandler extends Handler.Wrapper {
     }
   }
 
-  private void dispatchBackgroundRequest(GenericRequest request, GenericResponse response) throws InterruptedException, TimeoutException {
+  private void dispatchBackgroundRequest(GenericJettyRequest request, GenericJettyResponse response) throws InterruptedException, TimeoutException {
     String requestId = getBackgroundRequestId(request);
     // Wait here for synchronization with the ThreadFactory.
     CountDownLatch latch = ThreadGroupPool.resetCurrentThread();
@@ -268,14 +269,12 @@ public class JettyHttpHandler extends Handler.Wrapper {
     return false;
   }
 
-  private String getBackgroundRequestId(GenericRequest upRequest) {
-    // TODO: Use stream.
-    upRequest.getHeadersList().anyMatch(h -> h.)
-    for (HttpPb.ParsedHttpHeader header : upRequest.getHeadersList().collect(Collectors.toList())) {
-      if (Ascii.equalsIgnoreCase(header.getKey(), "X-AppEngine-BackgroundRequest")) {
-        return header.getValue();
-      }
-    }
+  private String getBackgroundRequestId(GenericJettyRequest upRequest) {
+    Optional<HttpField> match = upRequest.getOriginalRequest().getHeaders().stream()
+            .filter(h -> Ascii.equalsIgnoreCase(h.getName(), "X-AppEngine-BackgroundRequest"))
+            .findFirst();
+    if (match.isPresent())
+      return match.get().getValue();
     throw new IllegalArgumentException("Did not receive a background request identifier.");
   }
 

@@ -162,10 +162,10 @@ public class GenericRequestManager implements RequestThreadManager {
 
     public abstract boolean disableDeadlineTimers();
 
-    public abstract Builder setRuntimeLogSink(Optional<RuntimeLogSink> x);
+    public abstract Builder setRuntimeLogSink(Optional<GenericRuntimeLogSink> x);
 
 
-    public abstract Builder setApiProxyImpl(ApiProxyImpl x);
+    public abstract Builder setApiProxyImpl(GenericApiProxyImpl x);
 
     public abstract Builder setMaxOutstandingApiRpcs(int x);
 
@@ -966,7 +966,7 @@ public class GenericRequestManager implements RequestThreadManager {
      */
     private final Thread requestThread;
 
-    private final GenericResponse upResponse;
+    private final GenericResponse response;
 
     /**
      * A collection of {@code Future} objects that have been scheduled
@@ -1004,7 +1004,7 @@ public class GenericRequestManager implements RequestThreadManager {
 
     RequestToken(
         Thread requestThread,
-        GenericResponse upResponse,
+        GenericResponse response,
         String requestId,
         String securityTicket,
         CpuRatioTimer requestTimer,
@@ -1017,7 +1017,7 @@ public class GenericRequestManager implements RequestThreadManager {
         RequestState state,
         Runnable endAction) {
       this.requestThread = requestThread;
-      this.upResponse = upResponse;
+      this.response = response;
       this.requestId = requestId;
       this.securityTicket = securityTicket;
       this.requestTimer = requestTimer;
@@ -1042,7 +1042,7 @@ public class GenericRequestManager implements RequestThreadManager {
     }
 
     GenericResponse getUpResponse() {
-      return upResponse;
+      return response;
     }
 
     CpuRatioTimer getRequestTimer() {
@@ -1099,7 +1099,7 @@ public class GenericRequestManager implements RequestThreadManager {
     }
 
     public void addAppLogMessage(Level level, String message) {
-      upResponse.addAppLog(AppLogLine.newBuilder()
+      response.addAppLog(AppLogLine.newBuilder()
           .setLevel(level.ordinal())
           .setTimestampUsec(System.currentTimeMillis() * 1000)
           .setMessage(message).build());
@@ -1107,8 +1107,8 @@ public class GenericRequestManager implements RequestThreadManager {
 
     void logAndKillRuntime(String errorMessage) {
       logger.atSevere().log("LOG(FATAL): %s", errorMessage);
-      upResponse.error(UPResponse.ERROR.LOG_FATAL_DEATH_VALUE, errorMessage);
-      upResponse.finishWithResponse(rpc);
+      response.error(UPResponse.ERROR.LOG_FATAL_DEATH_VALUE, errorMessage);
+      response.finishWithResponse(rpc);
     }
 
     void runEndAction() {

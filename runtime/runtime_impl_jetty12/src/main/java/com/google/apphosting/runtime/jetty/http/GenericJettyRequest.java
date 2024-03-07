@@ -69,6 +69,7 @@ public class GenericJettyRequest implements GenericRequest {
   private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
 
   private final HttpFields.Mutable runtimeHeaders = HttpFields.build();
+  private final Request originalRequest;
   private final Request request;
   private final AppInfoFactory appInfoFactory;
   private RuntimePb.UPRequest.RequestType requestType;
@@ -258,6 +259,7 @@ public class GenericJettyRequest implements GenericRequest {
       }
     }
 
+    this.originalRequest = request;
     this.request = new Request.Wrapper(request)
     {
       @Override
@@ -277,6 +279,11 @@ public class GenericJettyRequest implements GenericRequest {
     };
   }
 
+  public Request getOriginalRequest()
+  {
+    return originalRequest;
+  }
+
   public Request getWrappedRequest()
   {
     return request;
@@ -286,6 +293,16 @@ public class GenericJettyRequest implements GenericRequest {
   public Stream<HttpPb.ParsedHttpHeader> getHeadersList() {
     return request.getHeaders().stream()
             .map(f -> HttpPb.ParsedHttpHeader.newBuilder().setKey(f.getName()).setValue(f.getValue()).build());
+  }
+
+  @Override
+  public String getUrl() {
+    return null;
+  }
+
+  @Override
+  public RuntimePb.UPRequest.RequestType getRequestType() {
+    return null;
   }
 
   @Override

@@ -170,4 +170,14 @@ public class GenericUpRequest implements GenericRequest {
   public TracePb.TraceContextProto getTraceContext() {
     return request.getTraceContext();
   }
+
+  @Override
+  public String getUrl() {
+    return request.getRequest().getUrl();
+  }
+
+  @Override
+  public RuntimePb.UPRequest.RequestType getRequestType() {
+    return request.getRequestType();
+  }
 }
