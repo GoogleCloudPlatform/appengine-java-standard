@@ -56,42 +56,34 @@ public class GenericJettyResponse implements GenericResponse {
 
   @Override
   public void setSerializedTrace(ByteString byteString) {
-
   }
 
   @Override
   public void setTerminateClone(boolean terminateClone) {
-
   }
 
   @Override
   public void setCloneIsInUncleanState(boolean b) {
-
   }
 
   @Override
   public void setUserMcycles(long l) {
-
   }
 
   @Override
   public void addAllRuntimeLogLine(Collection<RuntimePb.UPResponse.RuntimeLogLine> logLines) {
-
   }
 
   @Override
   public void error(int error, String errorMessage) {
-
   }
 
   @Override
   public void finishWithResponse(AnyRpcServerContext rpc) {
-
   }
 
   @Override
   public void complete() {
-
   }
 
   @Override

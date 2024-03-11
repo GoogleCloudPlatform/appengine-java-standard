@@ -20,11 +20,12 @@ import com.google.apphosting.api.ApiProxy;
 import com.google.apphosting.base.AppVersionKey;
 import com.google.apphosting.base.protos.EmptyMessage;
 import com.google.apphosting.base.protos.RuntimePb;
+import com.google.apphosting.runtime.ApiProxyImpl;
 import com.google.apphosting.runtime.AppVersion;
 import com.google.apphosting.runtime.BackgroundRequestCoordinator;
-import com.google.apphosting.runtime.GenericRequestManager;
 import com.google.apphosting.runtime.GenericResponse;
 import com.google.apphosting.runtime.JettyConstants;
+import com.google.apphosting.runtime.RequestManager;
 import com.google.apphosting.runtime.ServletEngineAdapter;
 import com.google.apphosting.runtime.ThreadGroupPool;
 import com.google.apphosting.runtime.jetty.AppEngineConstants;
@@ -42,13 +43,11 @@ import org.eclipse.jetty.util.Callback;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.time.Duration;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeoutException;
 
 import static com.google.apphosting.runtime.RequestRunner.WAIT_FOR_USER_RUNNABLE_DEADLINE;
-import static com.google.apphosting.runtime.jetty.AppEngineConstants.X_APPENGINE_TIMEOUT_MS;
 
 public class JettyHttpHandler extends Handler.Wrapper {
   private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
@@ -58,8 +57,8 @@ public class JettyHttpHandler extends Handler.Wrapper {
   private final AppVersionKey appVersionKey;
   private final AppVersion appVersion;
 
-  private final GenericRequestManager requestManager = Objects.requireNonNull(null);
-  private final BackgroundRequestCoordinator coordinator = Objects.requireNonNull(null);
+  private final RequestManager requestManager;
+  private final BackgroundRequestCoordinator coordinator;
 
 
   public JettyHttpHandler(ServletEngineAdapter.Config runtimeOptions, AppVersion appVersion, AppVersionKey appVersionKey, AppInfoFactory appInfoFactory)
@@ -68,15 +67,10 @@ public class JettyHttpHandler extends Handler.Wrapper {
     this.appInfoFactory = appInfoFactory;
     this.appVersionKey = appVersionKey;
     this.appVersion = appVersion;
-  }
 
-  @Override
-  protected void doStart() throws Exception {
-
-    // TODO: Add behaviour from the JavaRuntimeFactory,
-    //  including adding the logging handler
-
-    super.doStart();
+    ApiProxyImpl apiProxyImpl = (ApiProxyImpl)ApiProxy.getDelegate();
+    coordinator = apiProxyImpl.getBackgroundRequestCoordinator();
+    requestManager = (RequestManager)apiProxyImpl.getRequestThreadManager();
   }
 
   @Override
@@ -87,19 +81,14 @@ public class JettyHttpHandler extends Handler.Wrapper {
 
     // Read time remaining in request from headers and pass value to LocalRpcContext for use in
     // reporting remaining time until deadline for API calls (see b/154745969)
-    // TODO: do this in genericRequest
-    Duration timeRemaining = request.getHeaders().stream()
-            .filter(h -> X_APPENGINE_TIMEOUT_MS.equals(h.getLowerCaseName()))
-            .map(p -> Duration.ofMillis(Long.parseLong(p.getValue())))
-            .findFirst()
-            .orElse(Duration.ofNanos(Long.MAX_VALUE));
+    Duration timeRemaining = genericRequest.getTimeRemaining();
 
     // TODO: Can we get rid of this? or do we need to implement MessageLite?
     LocalRpcContext<EmptyMessage> context = new LocalRpcContext<>(EmptyMessage.class, timeRemaining);
 
     boolean handled;
     ThreadGroup currentThreadGroup = Thread.currentThread().getThreadGroup();
-    GenericRequestManager.RequestToken requestToken =
+    RequestManager.RequestToken requestToken =
             requestManager.startRequest(appVersion, context, genericRequest, genericResponse, currentThreadGroup);
 
     // TODO: seems to be an issue with Jetty 12 that sometimes request is not set in ContextScopeListener.
@@ -137,10 +126,9 @@ public class JettyHttpHandler extends Handler.Wrapper {
     return handled;
   }
 
-
-  private boolean dispatchRequest(GenericRequestManager.RequestToken requestToken,
-                               GenericJettyRequest request, GenericJettyResponse response,
-                               Callback callback) throws Throwable {
+  private boolean dispatchRequest(RequestManager.RequestToken requestToken,
+                                  GenericJettyRequest request, GenericJettyResponse response,
+                                  Callback callback) throws Throwable {
     switch (request.getRequestType()) {
       case SHUTDOWN:
         logger.atInfo().log("Shutting down requests");
@@ -202,7 +190,7 @@ public class JettyHttpHandler extends Handler.Wrapper {
      */
   }
 
-  private boolean handleException(Throwable ex, GenericRequestManager.RequestToken requestToken, GenericResponse response) {
+  private boolean handleException(Throwable ex, RequestManager.RequestToken requestToken, GenericResponse response) {
     // Unwrap ServletException, either from javax or from jakarta exception:
     try {
       java.lang.reflect.Method getRootCause = ex.getClass().getMethod("getRootCause");

@@ -30,9 +30,11 @@ import org.eclipse.jetty.http.HttpScheme;
 import org.eclipse.jetty.http.HttpURI;
 import org.eclipse.jetty.server.Request;
 
+import java.time.Duration;
 import java.util.Objects;
 import java.util.stream.Stream;
 
+import static com.google.apphosting.base.protos.RuntimePb.UPRequest.RequestType.OTHER;
 import static com.google.apphosting.runtime.jetty.AppEngineConstants.DEFAULT_SECRET_KEY;
 import static com.google.apphosting.runtime.jetty.AppEngineConstants.IS_ADMIN_HEADER_VALUE;
 import static com.google.apphosting.runtime.jetty.AppEngineConstants.IS_TRUSTED;
@@ -72,9 +74,10 @@ public class GenericJettyRequest implements GenericRequest {
   private final Request originalRequest;
   private final Request request;
   private final AppInfoFactory appInfoFactory;
-  private RuntimePb.UPRequest.RequestType requestType;
-  private String authDomain;
-
+  private final String url;
+  private Duration duration = Duration.ofNanos(Long.MAX_VALUE);
+  private RuntimePb.UPRequest.RequestType requestType = OTHER;
+  private String authDomain = "";
   private boolean isTrusted;
   private boolean isTrustedApp;
   private boolean isAdmin;
@@ -82,9 +85,8 @@ public class GenericJettyRequest implements GenericRequest {
   private boolean isOffline;
   private String userIp;
   private TracePb.TraceContextProto traceContext;
-
   private String obfuscatedGaiaId;
-  private String userOrganization;
+  private String userOrganization = "";
   private String peerUsername;
   private long gaiaId;
   private String authUser;
@@ -94,7 +96,7 @@ public class GenericJettyRequest implements GenericRequest {
   String eventIdHash;
   private String requestLogId;
   private String defaultVersionHostname;
-  private String email;
+  private String email = "";
   private String securityTicket;
 
 
@@ -211,6 +213,7 @@ public class GenericJettyRequest implements GenericRequest {
           break;
 
         case X_APPENGINE_TIMEOUT_MS:
+          duration = Duration.ofMillis(Long.parseLong(value));
           runtimeHeaders.add(X_APPENGINE_TIMEOUT_MS, value);
           break;
 
@@ -233,7 +236,6 @@ public class GenericJettyRequest implements GenericRequest {
         fields.add(fields);
       }
     }
-
 
     HttpURI httpURI;
     boolean isSecure;
@@ -258,6 +260,17 @@ public class GenericJettyRequest implements GenericRequest {
         isHttps = true;
       }
     }
+
+    StringBuilder sb = new StringBuilder(HttpURI.build(httpURI).query(null).asString());
+    String query = httpURI.getQuery();
+    // No need to escape, URL retains any %-escaping it might have, which is what we want.
+    if (query != null) {
+      sb.append('?').append(query);
+    }
+    url = sb.toString();
+
+    if (traceContext == null)
+      traceContext = com.google.apphosting.base.protos.TracePb.TraceContextProto.getDefaultInstance();
 
     this.originalRequest = request;
     this.request = new Request.Wrapper(request)
@@ -297,12 +310,12 @@ public class GenericJettyRequest implements GenericRequest {
 
   @Override
   public String getUrl() {
-    return null;
+    return url;
   }
 
   @Override
   public RuntimePb.UPRequest.RequestType getRequestType() {
-    return null;
+    return requestType;
   }
 
   @Override
@@ -439,5 +452,9 @@ public class GenericJettyRequest implements GenericRequest {
   @Override
   public String getSecurityTicket() {
     return securityTicket;
+  }
+
+  public Duration getTimeRemaining() {
+    return duration;
   }
 }

@@ -24,10 +24,9 @@ import com.google.apphosting.api.ApiProxy.LogRecord;
 import com.google.apphosting.api.ApiStats;
 import com.google.apphosting.api.CloudTrace;
 import com.google.apphosting.api.CloudTraceContext;
-import com.google.apphosting.base.protos.HttpPb.ParsedHttpHeader;
+import com.google.apphosting.base.protos.RuntimePb;
 import com.google.apphosting.base.protos.RuntimePb.APIRequest;
 import com.google.apphosting.base.protos.RuntimePb.APIResponse;
-import com.google.apphosting.base.protos.RuntimePb.UPRequest;
 import com.google.apphosting.base.protos.Status.StatusProto;
 import com.google.apphosting.base.protos.TraceId;
 import com.google.apphosting.runtime.anyrpc.APIHostClientInterface;
@@ -48,6 +47,8 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.ExtensionRegistry;
 import com.google.protobuf.InvalidProtocolBufferException;
+
+import javax.annotation.Nullable;
 import java.security.AccessControlContext;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
@@ -66,7 +67,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
-import javax.annotation.Nullable;
 
 /**
  * ApiProxyImpl is a concrete implementation of the ApiProxy.Delegate
@@ -249,6 +249,16 @@ public class ApiProxyImpl implements ApiProxy.Delegate<ApiProxyImpl.EnvironmentI
   // modularize this.
   public void setRequestManager(RequestThreadManager requestThreadManager) {
     this.requestThreadManager = requestThreadManager;
+  }
+
+  public RequestThreadManager getRequestThreadManager()
+  {
+    return requestThreadManager;
+  }
+
+  public BackgroundRequestCoordinator getBackgroundRequestCoordinator()
+  {
+    return coordinator;
   }
 
   public void disable() {
@@ -744,11 +754,28 @@ public class ApiProxyImpl implements ApiProxy.Delegate<ApiProxyImpl.EnvironmentI
     return requestThreadManager.getRequestThreads(environment.getAppVersion().getKey());
   }
 
+  public EnvironmentImpl createEnvironment(
+          AppVersion appVersion,
+          RuntimePb.UPRequest request,
+          MutableUpResponse response,
+          @Nullable TraceWriter traceWriter,
+          CpuRatioTimer requestTimer,
+          String requestId,
+          List<Future<?>> asyncFutures,
+          Semaphore outstandingApiRpcSemaphore,
+          ThreadGroup requestThreadGroup,
+          RequestState requestState,
+          @Nullable Long millisUntilSoftDeadline) {
+    return createEnvironment(appVersion, new GenericUpRequest(request), new GenericUpResponse(response),
+            traceWriter, requestTimer, requestId, asyncFutures, outstandingApiRpcSemaphore, requestThreadGroup,
+            requestState, millisUntilSoftDeadline);
+  }
+
   /** Creates an {@link Environment} instance that is suitable for use with this class. */
   public EnvironmentImpl createEnvironment(
       AppVersion appVersion,
-      UPRequest upRequest,
-      MutableUpResponse upResponse,
+      GenericRequest request,
+      GenericResponse response,
       @Nullable TraceWriter traceWriter,
       CpuRatioTimer requestTimer,
       String requestId,
@@ -759,8 +786,8 @@ public class ApiProxyImpl implements ApiProxy.Delegate<ApiProxyImpl.EnvironmentI
       @Nullable Long millisUntilSoftDeadline) {
     return new EnvironmentImpl(
         appVersion,
-        upRequest,
-        upResponse,
+        request,
+        response,
         traceWriter,
         requestTimer,
         requestId,
@@ -898,7 +925,7 @@ public class ApiProxyImpl implements ApiProxy.Delegate<ApiProxyImpl.EnvironmentI
         "com.google.appengine.api.ThreadManager.BACKGROUND_THREAD_FACTORY";
 
     private final AppVersion appVersion;
-    private final UPRequest upRequest;
+    private final GenericRequest genericRequest;
     private final CpuRatioTimer requestTimer;
     private final Map<String, Object> attributes;
     private final String requestId;
@@ -915,8 +942,8 @@ public class ApiProxyImpl implements ApiProxy.Delegate<ApiProxyImpl.EnvironmentI
 
     EnvironmentImpl(
         AppVersion appVersion,
-        UPRequest upRequest,
-        MutableUpResponse upResponse,
+        GenericRequest genericRequest,
+        GenericResponse upResponse,
         @Nullable TraceWriter traceWriter,
         CpuRatioTimer requestTimer,
         String requestId,
@@ -932,13 +959,13 @@ public class ApiProxyImpl implements ApiProxy.Delegate<ApiProxyImpl.EnvironmentI
         boolean cloudSqlJdbcConnectivityEnabled,
         @Nullable Long millisUntilSoftDeadline) {
       this.appVersion = appVersion;
-      this.upRequest = upRequest;
+      this.genericRequest = genericRequest;
       this.requestTimer = requestTimer;
       this.requestId = requestId;
       this.asyncFutures = asyncFutures;
       this.attributes =
           createInitialAttributes(
-              upRequest, externalDatacenterName, coordinator, cloudSqlJdbcConnectivityEnabled);
+              genericRequest, externalDatacenterName, coordinator, cloudSqlJdbcConnectivityEnabled);
       this.outstandingApiRpcSemaphore = outstandingApiRpcSemaphore;
       this.requestState = requestState;
       this.millisUntilSoftDeadline = millisUntilSoftDeadline;
@@ -946,13 +973,13 @@ public class ApiProxyImpl implements ApiProxy.Delegate<ApiProxyImpl.EnvironmentI
       this.traceId = this.buildTraceId();
       this.spanId = this.buildSpanId();
 
-      for (ParsedHttpHeader header : upRequest.getRequest().getHeadersList()) {
+      genericRequest.getHeadersList().forEach(header -> {
         if (header.getKey().equals(DEFAULT_NAMESPACE_HEADER)) {
           attributes.put(APPS_NAMESPACE_KEY, header.getValue());
         } else if (header.getKey().equals(CURRENT_NAMESPACE_HEADER)) {
           attributes.put(CURRENT_NAMESPACE_KEY, header.getValue());
         }
-      }
+      });
 
       // Bind an ApiStats class to this environment.
       new ApiStatsImpl(this);
@@ -966,7 +993,7 @@ public class ApiProxyImpl implements ApiProxy.Delegate<ApiProxyImpl.EnvironmentI
               isLongRequest ? maxLogFlushSeconds : 0);
 
       this.traceWriter = traceWriter;
-      if (TraceContextHelper.needsStackTrace(upRequest.getTraceContext())) {
+      if (TraceContextHelper.needsStackTrace(genericRequest.getTraceContext())) {
         this.traceExceptionGenerator = new TraceExceptionGenerator();
       } else {
         this.traceExceptionGenerator = null;
@@ -981,11 +1008,11 @@ public class ApiProxyImpl implements ApiProxy.Delegate<ApiProxyImpl.EnvironmentI
     }
 
     private Optional<String> buildTraceId() {
-      if (this.upRequest.hasTraceContext()) {
+      if (this.genericRequest.hasTraceContext()) {
         try {
           TraceId.TraceIdProto traceIdProto =
               TraceId.TraceIdProto.parseFrom(
-                  this.upRequest.getTraceContext().getTraceId(),
+                  this.genericRequest.getTraceContext().getTraceId(),
                   ExtensionRegistry.getEmptyRegistry());
           String traceIdString =
               String.format("%016x%016x", traceIdProto.getHi(), traceIdProto.getLo());
@@ -1000,10 +1027,10 @@ public class ApiProxyImpl implements ApiProxy.Delegate<ApiProxyImpl.EnvironmentI
     }
 
     private Optional<String> buildSpanId() {
-      if (this.upRequest.hasTraceContext() && this.upRequest.getTraceContext().hasSpanId()) {
+      if (this.genericRequest.hasTraceContext() && this.genericRequest.getTraceContext().hasSpanId()) {
         // Stackdriver expects the spanId to be a 16-character hexadecimal encoding of an 8-byte
         // array, such as "000000000000004a"
-        String spanIdString = String.format("%016x", this.upRequest.getTraceContext().getSpanId());
+        String spanIdString = String.format("%016x", this.genericRequest.getTraceContext().getSpanId());
         return Optional.of(spanIdString);
       }
       return Optional.empty();
@@ -1048,45 +1075,45 @@ public class ApiProxyImpl implements ApiProxy.Delegate<ApiProxyImpl.EnvironmentI
     }
 
     private static Map<String, Object> createInitialAttributes(
-        UPRequest upRequest,
+        GenericRequest request,
         String externalDatacenterName,
         BackgroundRequestCoordinator coordinator,
         boolean cloudSqlJdbcConnectivityEnabled) {
       Map<String, Object> attributes = new HashMap<String, Object>();
-      attributes.put(USER_ID_KEY, upRequest.getObfuscatedGaiaId());
-      attributes.put(USER_ORGANIZATION_KEY, upRequest.getUserOrganization());
+      attributes.put(USER_ID_KEY, request.getObfuscatedGaiaId());
+      attributes.put(USER_ORGANIZATION_KEY, request.getUserOrganization());
       // Federated Login is no longer supported, but these fields were previously set,
       // so they must be maintained.
       attributes.put("com.google.appengine.api.users.UserService.federated_identity", "");
       attributes.put("com.google.appengine.api.users.UserService.federated_authority", "");
       attributes.put("com.google.appengine.api.users.UserService.is_federated_user", false);
-      if (upRequest.getIsTrustedApp()) {
-        attributes.put(LOAS_PEER_USERNAME, upRequest.getPeerUsername());
-        attributes.put(LOAS_SECURITY_LEVEL, upRequest.getSecurityLevel());
-        attributes.put(IS_TRUSTED_IP, upRequest.getRequest().getTrusted());
+      if (request.getIsTrustedApp()) {
+        attributes.put(LOAS_PEER_USERNAME, request.getPeerUsername());
+        attributes.put(LOAS_SECURITY_LEVEL, request.getSecurityLevel());
+        attributes.put(IS_TRUSTED_IP, request.getTrusted());
         // NOTE: Omitted if absent, so that this has the same format as
         // USER_ID_KEY.
-        long gaiaId = upRequest.getGaiaId();
+        long gaiaId = request.getGaiaId();
         attributes.put(GAIA_ID, gaiaId == 0 ? "" : Long.toString(gaiaId));
-        attributes.put(GAIA_AUTHUSER, upRequest.getAuthuser());
-        attributes.put(GAIA_SESSION, upRequest.getGaiaSession());
-        attributes.put(APPSERVER_DATACENTER, upRequest.getAppserverDatacenter());
-        attributes.put(APPSERVER_TASK_BNS, upRequest.getAppserverTaskBns());
+        attributes.put(GAIA_AUTHUSER, request.getAuthuser());
+        attributes.put(GAIA_SESSION, request.getGaiaSession());
+        attributes.put(APPSERVER_DATACENTER, request.getAppserverDatacenter());
+        attributes.put(APPSERVER_TASK_BNS, request.getAppserverTaskBns());
       }
 
       if (externalDatacenterName != null) {
         attributes.put(DATACENTER, externalDatacenterName);
       }
 
-      if (upRequest.hasEventIdHash()) {
-        attributes.put(REQUEST_ID_HASH, upRequest.getEventIdHash());
+      if (request.hasEventIdHash()) {
+        attributes.put(REQUEST_ID_HASH, request.getEventIdHash());
       }
-      if (upRequest.hasRequestLogId()) {
-        attributes.put(REQUEST_LOG_ID, upRequest.getRequestLogId());
+      if (request.hasRequestLogId()) {
+        attributes.put(REQUEST_LOG_ID, request.getRequestLogId());
       }
 
-      if (upRequest.hasDefaultVersionHostname()) {
-        attributes.put(DEFAULT_VERSION_HOSTNAME, upRequest.getDefaultVersionHostname());
+      if (request.hasDefaultVersionHostname()) {
+        attributes.put(DEFAULT_VERSION_HOSTNAME, request.getDefaultVersionHostname());
       }
       attributes.put(REQUEST_THREAD_FACTORY_ATTR, CurrentRequestThreadFactory.SINGLETON);
       attributes.put(BACKGROUND_THREAD_FACTORY_ATTR, new BackgroundThreadFactory(coordinator));
@@ -1113,19 +1140,19 @@ public class ApiProxyImpl implements ApiProxy.Delegate<ApiProxyImpl.EnvironmentI
 
     @Override
     public String getAppId() {
-      return upRequest.getAppId();
+      return genericRequest.getAppId();
     }
 
     @Override
     public String getModuleId() {
-      return upRequest.getModuleId();
+      return genericRequest.getModuleId();
     }
 
     @Override
     public String getVersionId() {
       // We use the module_version_id field because the version_id field has the 'module:version'
       // form.
-      return upRequest.getModuleVersionId();
+      return genericRequest.getModuleVersionId();
     }
 
     /**
@@ -1152,22 +1179,22 @@ public class ApiProxyImpl implements ApiProxy.Delegate<ApiProxyImpl.EnvironmentI
     @Override
     public boolean isLoggedIn() {
       // TODO: It would be nice if UPRequest had a bool for this.
-      return upRequest.getEmail().length() > 0;
+      return !genericRequest.getEmail().isEmpty();
     }
 
     @Override
     public boolean isAdmin() {
-      return upRequest.getIsAdmin();
+      return genericRequest.getIsAdmin();
     }
 
     @Override
     public String getEmail() {
-      return upRequest.getEmail();
+      return genericRequest.getEmail();
     }
 
     @Override
     public String getAuthDomain() {
-      return upRequest.getAuthDomain();
+      return genericRequest.getAuthDomain();
     }
 
     @Override
@@ -1192,11 +1219,11 @@ public class ApiProxyImpl implements ApiProxy.Delegate<ApiProxyImpl.EnvironmentI
      * and there is no reason to expose it to applications.
      */
     String getSecurityTicket() {
-      return upRequest.getSecurityTicket();
+      return genericRequest.getSecurityTicket();
     }
 
     boolean isOfflineRequest() {
-      return upRequest.getRequest().getIsOffline();
+      return genericRequest.getIsOffline();
     }
 
     /**
@@ -1249,14 +1276,14 @@ public class ApiProxyImpl implements ApiProxy.Delegate<ApiProxyImpl.EnvironmentI
   public static class CurrentRequestThread extends Thread {
     private final Runnable userRunnable;
     private final RequestState requestState;
-    private final ApiProxy.Environment environment;
+    private final Environment environment;
 
     CurrentRequestThread(
         ThreadGroup requestThreadGroup,
         Runnable runnable,
         Runnable userRunnable,
         RequestState requestState,
-        ApiProxy.Environment environment) {
+        Environment environment) {
       super(requestThreadGroup, runnable);
       this.userRunnable = userRunnable;
       this.requestState = requestState;

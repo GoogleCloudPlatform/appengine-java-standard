@@ -16,8 +16,6 @@
 
 package com.google.apphosting.runtime;
 
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
-
 import com.google.apphosting.api.CloudTraceContext;
 import com.google.apphosting.base.protos.LabelsProtos.LabelProto;
 import com.google.apphosting.base.protos.LabelsProtos.LabelsProto;
@@ -39,9 +37,12 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.flogger.GoogleLogger;
 import com.google.common.primitives.Ints;
+
+import javax.annotation.Nullable;
 import java.util.Map;
 import java.util.Set;
-import javax.annotation.Nullable;
+
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 /**
  * Stores trace spans for a single request, and flushes them into {@link UPResponse}.
@@ -60,7 +61,7 @@ public class TraceWriter {
   static final int MAX_DICTIONARY_SIZE = 1024;
 
   private final CloudTraceContext context;
-  private final MutableUpResponse upResponse;
+  private final GenericResponse upResponse;
   // Also used to synchronize any mutations to the trace and its spans contained in this builder and
   // in spanEventsMap.
   private final TraceEventsProto.Builder traceEventsBuilder;
@@ -68,11 +69,16 @@ public class TraceWriter {
   private final Set<Long> dictionaryKeys = Sets.newHashSet();
   private final int maxTraceSize;
 
+  @Deprecated
   public TraceWriter(CloudTraceContext context, MutableUpResponse upResponse) {
+    this(context, new GenericUpResponse(upResponse), false);
+  }
+
+  public TraceWriter(CloudTraceContext context, GenericResponse upResponse) {
     this(context, upResponse, false);
   }
 
-  private TraceWriter(CloudTraceContext context, MutableUpResponse upResponse, boolean background) {
+  private TraceWriter(CloudTraceContext context, GenericResponse upResponse, boolean background) {
     this.context = context;
     this.upResponse = upResponse;
     // TODO: Set trace id properly. This can't be done until we define a way to parse
@@ -89,14 +95,20 @@ public class TraceWriter {
 
   @Nullable
   public static TraceWriter getTraceWriterForRequest(
-      UPRequest upRequest, MutableUpResponse upResponse) {
-    if (!TraceContextHelper.needsTrace(upRequest.getTraceContext())) {
+          UPRequest upRequest, MutableUpResponse upResponse) {
+    return getTraceWriterForRequest(new GenericUpRequest(upRequest), new GenericUpResponse(upResponse));
+  }
+
+  @Nullable
+  public static TraceWriter getTraceWriterForRequest(
+      GenericRequest request, GenericResponse response) {
+    if (!TraceContextHelper.needsTrace(request.getTraceContext())) {
       return null;
     }
     CloudTraceContext traceContext =
-        TraceContextHelper.toObject(upRequest.getTraceContext()).createChildContext();
-    boolean background = upRequest.getRequestType().equals(UPRequest.RequestType.BACKGROUND);
-    return new TraceWriter(traceContext, upResponse, background);
+        TraceContextHelper.toObject(request.getTraceContext()).createChildContext();
+    boolean background = request.getRequestType().equals(UPRequest.RequestType.BACKGROUND);
+    return new TraceWriter(traceContext, response, background);
   }
 
   /**

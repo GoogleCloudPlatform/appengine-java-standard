@@ -18,6 +18,7 @@ package com.google.apphosting.runtime;
 
 import com.google.apphosting.base.protos.RuntimePb.UPResponse;
 import com.google.apphosting.base.protos.RuntimePb.UPResponse.RuntimeLogLine;
+
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.text.DateFormat;
@@ -69,7 +70,7 @@ public class RuntimeLogSink {
     pendingLogLines.add(logLine);
   }
 
-  public synchronized void flushLogs(MutableUpResponse response) {
+  public synchronized void flushLogs(GenericResponse response) {
     response.addAllRuntimeLogLine(pendingLogLines);
     pendingLogLines.clear();
     mapExceptionDate.clear();
