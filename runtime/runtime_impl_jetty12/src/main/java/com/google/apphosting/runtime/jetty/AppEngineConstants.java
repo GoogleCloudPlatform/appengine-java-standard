@@ -87,4 +87,6 @@ public final class AppEngineConstants {
   public static final String DEFAULT_SECRET_KEY = "secretkey";
 
   public static final String ENVIRONMENT_ATTR = "appengine.environment";
+  
+  public static final String HTTP_CONNECTOR_MODE = "appengine.use.HttpConnector";
 }

@@ -215,7 +215,7 @@ public class GenericJettyRequest implements GenericRequest {
 
       if (passThroughPrivateHeaders || !PRIVATE_APPENGINE_HEADERS.contains(name)) {
         // Only non AppEngine specific headers are passed to the application.
-        fields.add(fields);
+        fields.add(field);
       }
     }
 

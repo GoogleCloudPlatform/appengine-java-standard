@@ -45,6 +45,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.zip.GZIPOutputStream;
 
@@ -52,6 +53,9 @@ import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.lessThan;
+import static org.hamcrest.Matchers.lessThanOrEqualTo;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 @RunWith(Parameterized.class)
 public class SizeLimitHandlerTest extends JavaRuntimeViaHttpBase {
@@ -59,9 +63,11 @@ public class SizeLimitHandlerTest extends JavaRuntimeViaHttpBase {
   @Parameterized.Parameters
   public static Collection<Object[]> data() {
     return Arrays.asList(new Object[][]{
-            {"jetty94"},
-            {"ee8"},
-            {"ee10"},
+            {"jetty94", false},
+            {"ee8", false},
+            {"ee10", false},
+            {"ee8", true},
+            {"ee10", true},
     });
   }
 
@@ -69,11 +75,14 @@ public class SizeLimitHandlerTest extends JavaRuntimeViaHttpBase {
 
   @Rule public TemporaryFolder temp = new TemporaryFolder();
   private final HttpClient httpClient = new HttpClient();
+  private final boolean httpMode;
   private final String environment;
   private RuntimeContext<?> runtime;
 
-  public SizeLimitHandlerTest(String environment) {
+  public SizeLimitHandlerTest(String environment, boolean httpMode) {
     this.environment = environment;
+    this.httpMode = httpMode;
+    System.setProperty("appengine.use.HttpConnector", Boolean.toString(httpMode));
   }
 
   @Before
@@ -114,12 +123,31 @@ public class SizeLimitHandlerTest extends JavaRuntimeViaHttpBase {
   public void testResponseContentAboveMaxLength() throws Exception {
     long contentLength = MAX_SIZE + 1;
     String url = runtime.jettyUrl("/?size=" + contentLength);
-    ContentResponse response = httpClient.GET(url);
-    assertThat(response.getStatus(), equalTo(HttpStatus.INTERNAL_SERVER_ERROR_500));
+
+    CompletableFuture<Result> completionListener = new CompletableFuture<>();
+    Utf8StringBuilder received = new Utf8StringBuilder();
+    httpClient.newRequest(url)
+            .onResponseContentAsync((r, c, cb) ->
+            {
+              received.append(c);
+              cb.succeeded();
+            })
+            .send(completionListener::complete);
+
+    Result result = completionListener.get(5, TimeUnit.MINUTES);
+
+    if (httpMode) {
+      // In this mode the response will already be committed with a 200 status code then aborted when it exceeds limit.
+      assertNull(result.getRequestFailure());
+      assertNotNull(result.getResponseFailure());
+    } else {
+      assertThat(result.getResponse().getStatus(), equalTo(HttpStatus.INTERNAL_SERVER_ERROR_500));
+    }
+    assertThat(received.length(), lessThanOrEqualTo(MAX_SIZE));
 
     // No content is sent on the Jetty 9.4 runtime.
-    if (!"jetty94".equals(environment))
-      assertThat(response.getContentAsString(), containsString("Response body is too large"));
+    if (!"jetty94".equals(environment) && !httpMode)
+      assertThat(received.toString(), containsString("Response body is too large"));
   }
 
   @Test
@@ -149,15 +177,36 @@ public class SizeLimitHandlerTest extends JavaRuntimeViaHttpBase {
     long contentLength = MAX_SIZE + 1;
     String url = runtime.jettyUrl("/?size=" + contentLength);
     httpClient.getContentDecoderFactories().clear();
-    ContentResponse response = httpClient.newRequest(url)
-            .header(HttpHeader.ACCEPT_ENCODING, "gzip")
-            .send();
 
-    assertThat(response.getStatus(), equalTo(HttpStatus.INTERNAL_SERVER_ERROR_500));
+    CompletableFuture<Result> completionListener = new CompletableFuture<>();
+    Utf8StringBuilder received = new Utf8StringBuilder();
+    AtomicInteger receivedCount = new AtomicInteger();
+    httpClient.newRequest(url)
+            .header(HttpHeader.ACCEPT_ENCODING, "gzip")
+            .onResponseContentAsync((r, c, cb) ->
+            {
+              receivedCount.addAndGet(c.remaining());
+              if (!httpMode) {
+                received.append(c);
+              }
+              cb.succeeded();
+            })
+            .send(completionListener::complete);
+
+    Result result = completionListener.get(5, TimeUnit.SECONDS);
+
+    if (httpMode) {
+      // In this mode the response will already be committed with a 200 status code then aborted when it exceeds limit.
+      assertNull(result.getRequestFailure());
+      assertNotNull(result.getResponseFailure());
+    } else {
+      assertThat(result.getResponse().getStatus(), equalTo(HttpStatus.INTERNAL_SERVER_ERROR_500));
+    }
+    assertThat(received.length(), lessThanOrEqualTo(MAX_SIZE));
 
     // No content is sent on the Jetty 9.4 runtime.
-    if (!"jetty94".equals(environment))
-      assertThat(response.getContentAsString(), containsString("Response body is too large"));
+    if (!"jetty94".equals(environment) && !httpMode)
+      assertThat(received.toString(), containsString("Response body is too large"));
   }
 
   @Test

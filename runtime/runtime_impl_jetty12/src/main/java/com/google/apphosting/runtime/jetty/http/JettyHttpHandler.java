@@ -149,7 +149,8 @@ public class JettyHttpHandler extends Handler.Wrapper {
     Response jettyResponse = response.getWrappedResponse();
     jettyRequest.setAttribute(JettyConstants.APP_VERSION_KEY_REQUEST_ATTR, appVersionKey);
 
-    // TODO: set the environment in context wrapper.
+    // Environment is set in a request attribute which is set/unset for async threads by
+    // a ContextScopeListener created inside the AppVersionHandlerFactory.
     try (Blocker.Callback cb = Blocker.callback()) {
       boolean handle = super.handle(jettyRequest, jettyResponse, cb);
       cb.block();

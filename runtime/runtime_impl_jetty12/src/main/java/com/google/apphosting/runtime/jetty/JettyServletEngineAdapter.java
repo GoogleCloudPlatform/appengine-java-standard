@@ -49,6 +49,7 @@ import java.io.InputStreamReader;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 
+import static com.google.apphosting.runtime.jetty.AppEngineConstants.HTTP_CONNECTOR_MODE;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
@@ -162,9 +163,7 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
         throw new IllegalStateException(e);
       }
 
-      // TODO: we don't want to always use this when useJettyHttpProxy is true, this is for testing.
-      if (Boolean.getBoolean("appengine.use.HTTP") || true) {
-
+      if (Boolean.getBoolean(HTTP_CONNECTOR_MODE)) {
         JettyHttpProxy.insertHandlers(server);
         server.insertHandler(new JettyHttpHandler(runtimeOptions, appVersionHandler.getAppVersion(), appVersionKey, appInfoFactory));
         ServerConnector connector = JettyHttpProxy.newConnector(server, runtimeOptions);
