@@ -23,10 +23,10 @@ somewhere in your App Engine Application and use these jars instead of the one i
 You could either use a custom build of the runtime of pin to a version you like of the runtime,
 without being impacted with a scheduled new runtime push.
 
-Well, it is possible, but changing just a little bit your application configuration and your
+Well, it is possible, by changing just a little bit your application configuration and your
 pom.xml file.
 
-First, you need to decide which App Engine Java runtime jars version you want to use. There are 3 runtime jars that
+First, you need to decide which App Engine Java runtime jars version you want to use. There are 6 runtime jars that
 are bundled as a Maven assembly under `<artifactId>runtime-deployment</artifactId>`:
 
   * runtime-impl-jetty9.jar
