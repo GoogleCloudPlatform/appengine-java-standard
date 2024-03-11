@@ -65,12 +65,10 @@ import static com.google.apphosting.runtime.jetty.AppEngineConstants.X_CLOUD_TRA
 import static com.google.apphosting.runtime.jetty.AppEngineConstants.X_FORWARDED_PROTO;
 import static com.google.apphosting.runtime.jetty.AppEngineConstants.X_GOOGLE_INTERNAL_PROFILER;
 import static com.google.apphosting.runtime.jetty.AppEngineConstants.X_GOOGLE_INTERNAL_SKIPADMINCHECK;
-import static com.google.apphosting.runtime.jetty.AppEngineConstants.X_GOOGLE_INTERNAL_SKIPADMINCHECK_UC;
 
 public class GenericJettyRequest implements GenericRequest {
   private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
 
-  private final HttpFields.Mutable runtimeHeaders = HttpFields.build();
   private final Request originalRequest;
   private final Request request;
   private final AppInfoFactory appInfoFactory;
@@ -83,7 +81,6 @@ public class GenericJettyRequest implements GenericRequest {
   private boolean isAdmin;
   private boolean isHttps;
   private boolean isOffline;
-  private String userIp;
   private TracePb.TraceContextProto traceContext;
   private String obfuscatedGaiaId;
   private String userOrganization = "";
@@ -104,7 +101,7 @@ public class GenericJettyRequest implements GenericRequest {
     this.appInfoFactory = appInfoFactory;
 
     // Can be overridden by X_APPENGINE_USER_IP header.
-    this.userIp = Request.getRemoteAddr(request);
+    String userIp = Request.getRemoteAddr(request);
 
     // Can be overridden by X_APPENGINE_API_TICKET header.
     this.securityTicket = DEFAULT_SECRET_KEY;
@@ -190,31 +187,16 @@ public class GenericJettyRequest implements GenericRequest {
 
         case X_GOOGLE_INTERNAL_SKIPADMINCHECK:
           request.setAttribute(SKIP_ADMIN_CHECK_ATTR, true);
-
-          // may be set by X_APPENGINE_QUEUENAME below
-          if (runtimeHeaders.stream()
-                  .map(HttpField::getLowerCaseName)
-                  .noneMatch(X_GOOGLE_INTERNAL_SKIPADMINCHECK::equals)) {
-
-            runtimeHeaders.add(X_GOOGLE_INTERNAL_SKIPADMINCHECK_UC, "true");
-          }
+          isHttps = true;
           break;
 
         case X_APPENGINE_QUEUENAME:
           request.setAttribute(SKIP_ADMIN_CHECK_ATTR, true);
           isOffline = true;
-          // See b/139183416, allow for cron jobs and task queues to access login: admin urls
-          if (runtimeHeaders.stream()
-                  .map(HttpField::getLowerCaseName)
-                  .noneMatch(X_GOOGLE_INTERNAL_SKIPADMINCHECK::equals)) {
-
-            runtimeHeaders.add(X_GOOGLE_INTERNAL_SKIPADMINCHECK_UC, "true");
-          }
           break;
 
         case X_APPENGINE_TIMEOUT_MS:
           duration = Duration.ofMillis(Long.parseLong(value));
-          runtimeHeaders.add(X_APPENGINE_TIMEOUT_MS, value);
           break;
 
         case X_GOOGLE_INTERNAL_PROFILER:
