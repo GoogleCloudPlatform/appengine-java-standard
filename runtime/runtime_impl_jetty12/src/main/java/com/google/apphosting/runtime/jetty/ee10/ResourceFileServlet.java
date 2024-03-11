@@ -27,16 +27,16 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.util.Objects;
 import org.eclipse.jetty.ee10.servlet.ServletContextHandler;
 import org.eclipse.jetty.ee10.servlet.ServletHandler;
-import org.eclipse.jetty.http.pathmap.MatchedResource;
 import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.util.StringUtil;
 import org.eclipse.jetty.util.URIUtil;
 import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.util.resource.ResourceFactory;
+
+import java.io.IOException;
+import java.util.Objects;
 
 /**
  * {@code ResourceFileServlet} is a copy of {@code org.mortbay.jetty.servlet.DefaultServlet} that
@@ -256,13 +256,13 @@ public class ResourceFileServlet extends HttpServlet {
         (AppVersion) getServletContext().getAttribute(JettyConstants.APP_VERSION_CONTEXT_ATTR);
     ServletHandler handler = chandler.getServletHandler();
 
-    MatchedResource<ServletHandler.MappedServlet> defaultEntry = handler.getMatchedServlet("/");
+    ServletHandler.MappedServlet defaultEntry = handler.getMappedServlet("/");
 
     for (String welcomeName : welcomeFiles) {
       String welcomePath = path + welcomeName;
       String relativePath = welcomePath.substring(1);
 
-      if (!Objects.equals(handler.getMatchedServlet(welcomePath), defaultEntry)) {
+      if (!Objects.equals(handler.getMappedServlet(welcomePath), defaultEntry)) {
         // It's a path mapped to a servlet.  Forward to it.
         RequestDispatcher dispatcher = request.getRequestDispatcher(path + welcomeName);
         return serveWelcomeFileAsForward(dispatcher, included, request, response);
