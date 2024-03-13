@@ -57,9 +57,6 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
     // java.util.logging) instead of writing to System.err
     // Documentation: http://www.eclipse.org/jetty/documentation/current/configuring-logging.html
     System.setProperty("org.eclipse.jetty.util.log.class", JettyLogger.class.getName());
-    // Remove internal URLs.
-    System.setProperty("java.vendor.url", "");
-    System.setProperty("java.vendor.url.bug", "");
   }
 
   private Server server;

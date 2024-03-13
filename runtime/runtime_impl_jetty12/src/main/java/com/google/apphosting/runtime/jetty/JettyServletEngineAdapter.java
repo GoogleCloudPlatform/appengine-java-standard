@@ -71,9 +71,6 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
     // test if this value is null to decide whether it is Java 7 runtime.
     System.setProperty("org.eclipse.jetty.util.log.class", "DEPRECATED");
 
-    // Remove internal URLs.
-    System.setProperty("java.vendor.url", "");
-    System.setProperty("java.vendor.url.bug", "");
   }
 
   private Server server;
