@@ -16,8 +16,6 @@
 
 package com.google.apphosting.runtime.jetty;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-
 import com.google.apphosting.base.AppVersionKey;
 import com.google.apphosting.base.protos.AppinfoPb;
 import com.google.apphosting.base.protos.RuntimePb.UPRequest;
@@ -32,18 +30,21 @@ import com.google.apphosting.runtime.jetty.proxy.JettyHttpProxy;
 import com.google.apphosting.utils.config.AppEngineConfigException;
 import com.google.apphosting.utils.config.AppYaml;
 import com.google.common.flogger.GoogleLogger;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.InputStreamReader;
-import java.util.Objects;
-import java.util.concurrent.ExecutionException;
 import org.eclipse.jetty.http.CookieCompliance;
 import org.eclipse.jetty.http.UriCompliance;
 import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.util.VirtualThreads;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStreamReader;
+import java.util.Objects;
+import java.util.concurrent.ExecutionException;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * This is an implementation of ServletEngineAdapter that uses the third-party Jetty servlet engine.
@@ -66,6 +67,10 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
   private AppVersionKey lastAppVersionKey;
 
   static {
+    // Set legacy system property to dummy value because external libraries (google-auth-library-java)
+    // test if this value is null to decide whether it is Java 7 runtime.
+    System.setProperty("org.eclipse.jetty.util.log.class", "DEPRECATED");
+
     // Remove internal URLs.
     System.setProperty("java.vendor.url", "");
     System.setProperty("java.vendor.url.bug", "");
