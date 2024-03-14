@@ -33,6 +33,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Objects;
 import java.util.Optional;
 import javax.servlet.ServletException;
 import org.eclipse.jetty.server.Connector;
@@ -57,6 +58,11 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
     // java.util.logging) instead of writing to System.err
     // Documentation: http://www.eclipse.org/jetty/documentation/current/configuring-logging.html
     System.setProperty("org.eclipse.jetty.util.log.class", JettyLogger.class.getName());
+    if (Objects.equals(System.getenv("GAE_RUNTIME"), "java8")) {
+      // Remove internal URLs.
+      System.setProperty("java.vendor.url", "");
+      System.setProperty("java.vendor.url.bug", "");
+    }
   }
 
   private Server server;
