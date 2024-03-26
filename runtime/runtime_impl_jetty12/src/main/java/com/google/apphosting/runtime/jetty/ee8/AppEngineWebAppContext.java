@@ -16,9 +16,6 @@
 
 package com.google.apphosting.runtime.jetty.ee8;
 
-import static com.google.common.base.StandardSystemProperty.JAVA_IO_TMPDIR;
-import static java.nio.charset.StandardCharsets.UTF_8;
-
 import com.google.apphosting.api.ApiProxy;
 import com.google.apphosting.api.ApiProxy.LogRecord;
 import com.google.apphosting.runtime.jetty.AppEngineAuthentication;
@@ -28,6 +25,25 @@ import com.google.apphosting.utils.servlet.SessionCleanupServlet;
 import com.google.apphosting.utils.servlet.SnapshotServlet;
 import com.google.apphosting.utils.servlet.WarmupServlet;
 import com.google.common.collect.ImmutableSet;
+import org.eclipse.jetty.ee8.nested.ServletConstraint;
+import org.eclipse.jetty.ee8.security.ConstraintMapping;
+import org.eclipse.jetty.ee8.security.ConstraintSecurityHandler;
+import org.eclipse.jetty.ee8.servlet.FilterHolder;
+import org.eclipse.jetty.ee8.servlet.FilterMapping;
+import org.eclipse.jetty.ee8.servlet.Holder;
+import org.eclipse.jetty.ee8.servlet.ListenerHolder;
+import org.eclipse.jetty.ee8.servlet.ServletHandler;
+import org.eclipse.jetty.ee8.servlet.ServletHolder;
+import org.eclipse.jetty.ee8.servlet.ServletMapping;
+import org.eclipse.jetty.ee8.webapp.WebAppContext;
+import org.eclipse.jetty.util.resource.Resource;
+import org.eclipse.jetty.util.resource.ResourceFactory;
+
+import javax.servlet.Filter;
+import javax.servlet.Servlet;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -43,24 +59,9 @@ import java.util.Objects;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
-import javax.servlet.Filter;
-import javax.servlet.Servlet;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import org.eclipse.jetty.ee8.nested.ServletConstraint;
-import org.eclipse.jetty.ee8.security.ConstraintMapping;
-import org.eclipse.jetty.ee8.security.ConstraintSecurityHandler;
-import org.eclipse.jetty.ee8.servlet.FilterHolder;
-import org.eclipse.jetty.ee8.servlet.FilterMapping;
-import org.eclipse.jetty.ee8.servlet.Holder;
-import org.eclipse.jetty.ee8.servlet.ListenerHolder;
-import org.eclipse.jetty.ee8.servlet.ServletHandler;
-import org.eclipse.jetty.ee8.servlet.ServletHolder;
-import org.eclipse.jetty.ee8.servlet.ServletMapping;
-import org.eclipse.jetty.ee8.webapp.WebAppContext;
-import org.eclipse.jetty.util.resource.Resource;
-import org.eclipse.jetty.util.resource.ResourceFactory;
+
+import static com.google.common.base.StandardSystemProperty.JAVA_IO_TMPDIR;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * {@code AppEngineWebAppContext} is a customization of Jetty's {@link WebAppContext} that is aware
@@ -239,53 +240,61 @@ public class AppEngineWebAppContext extends WebAppContext {
 
     @Override
     protected void startContext() throws Exception {
-    // startWebapp is called after the web.xml metadata has been resolved, so we can
-    // clean configuration here:
-    //  - Removed deprecated filters and servlets
-    //  - Ensure known runtime filters/servlets are instantiated from this classloader
-    //  - Ensure known runtime mappings exist.
     ServletHandler servletHandler = getServletHandler();
-    TrimmedFilters trimmedFilters =
-        new TrimmedFilters(
-            servletHandler.getFilters(),
-            servletHandler.getFilterMappings(),
-            DEPRECATED_SERVLETS_FILTERS);
-    trimmedFilters.ensure(
-        "CloudSqlConnectionCleanupFilter", JdbcMySqlConnectionCleanupFilter.class, "/*");
+      getServletHandler().addListener(new ListenerHolder() {
+        @Override
+        public void doStart() throws Exception {
 
-    TrimmedServlets trimmedServlets =
-        new TrimmedServlets(
-            servletHandler.getServlets(),
-            servletHandler.getServletMappings(),
-            DEPRECATED_SERVLETS_FILTERS);
-    trimmedServlets.ensure("_ah_warmup", WarmupServlet.class, "/_ah/warmup");
-    trimmedServlets.ensure(
-        "_ah_sessioncleanup", SessionCleanupServlet.class, "/_ah/sessioncleanup");
-    trimmedServlets.ensure(
-        "_ah_queue_deferred", DeferredTaskServlet.class, "/_ah/queue/__deferred__");
-    trimmedServlets.ensure("_ah_snapshot", SnapshotServlet.class, "/_ah/snapshot");
-    trimmedServlets.ensure("_ah_default", ResourceFileServlet.class, "/");
-    trimmedServlets.ensure("default", NamedDefaultServlet.class);
-    trimmedServlets.ensure("jsp", NamedJspServlet.class);
+          // This Listener doStart is called after the web.xml metadata has been resolved, so we can
+          // clean configuration here:
+          //  - Removed deprecated filters and servlets
+          //  - Ensure known runtime filters/servlets are instantiated from this classloader
+          //  - Ensure known runtime mappings exist.
+          setListener(new EventListener() {});
 
-    trimmedServlets.instantiateJettyServlets();
-    trimmedFilters.instantiateJettyFilters();
-    instantiateJettyListeners();
+          TrimmedFilters trimmedFilters =
+                  new TrimmedFilters(
+                          servletHandler.getFilters(),
+                          servletHandler.getFilterMappings(),
+                          DEPRECATED_SERVLETS_FILTERS);
+          trimmedFilters.ensure(
+                  "CloudSqlConnectionCleanupFilter", JdbcMySqlConnectionCleanupFilter.class, "/*");
 
-    servletHandler.setFilters(trimmedFilters.getHolders());
-    servletHandler.setFilterMappings(trimmedFilters.getMappings());
-    servletHandler.setServlets(trimmedServlets.getHolders());
-    servletHandler.setServletMappings(trimmedServlets.getMappings());
-    servletHandler.setAllowDuplicateMappings(true);
+          TrimmedServlets trimmedServlets =
+                  new TrimmedServlets(
+                          servletHandler.getServlets(),
+                          servletHandler.getServletMappings(),
+                          DEPRECATED_SERVLETS_FILTERS);
+          trimmedServlets.ensure("_ah_warmup", WarmupServlet.class, "/_ah/warmup");
+          trimmedServlets.ensure(
+                  "_ah_sessioncleanup", SessionCleanupServlet.class, "/_ah/sessioncleanup");
+          trimmedServlets.ensure(
+                  "_ah_queue_deferred", DeferredTaskServlet.class, "/_ah/queue/__deferred__");
+          trimmedServlets.ensure("_ah_snapshot", SnapshotServlet.class, "/_ah/snapshot");
+          trimmedServlets.ensure("_ah_default", ResourceFileServlet.class, "/");
+          trimmedServlets.ensure("default", NamedDefaultServlet.class);
+          trimmedServlets.ensure("jsp", NamedJspServlet.class);
 
-    // Protect deferred task queue with constraint
-    ConstraintSecurityHandler security = getChildHandlerByClass(ConstraintSecurityHandler.class);
-    ConstraintMapping cm = new ConstraintMapping();
-    cm.setConstraint(new ServletConstraint("deferred_queue", "admin"));
-    cm.setPathSpec("/_ah/queue/__deferred__");
-    security.addConstraintMapping(cm);
+          trimmedServlets.instantiateJettyServlets();
+          trimmedFilters.instantiateJettyFilters();
+          instantiateJettyListeners();
 
-    // continue starting the webapp
+          servletHandler.setFilters(trimmedFilters.getHolders());
+          servletHandler.setFilterMappings(trimmedFilters.getMappings());
+          servletHandler.setServlets(trimmedServlets.getHolders());
+          servletHandler.setServletMappings(trimmedServlets.getMappings());
+          servletHandler.setAllowDuplicateMappings(true);
+
+          // Protect deferred task queue with constraint
+          ConstraintSecurityHandler security = getChildHandlerByClass(ConstraintSecurityHandler.class);
+          ConstraintMapping cm = new ConstraintMapping();
+          cm.setConstraint(new ServletConstraint("deferred_queue", "admin"));
+          cm.setPathSpec("/_ah/queue/__deferred__");
+          security.addConstraintMapping(cm);
+        }
+      });
+
+      // continue starting the webapp
     super.startContext();
   }
 

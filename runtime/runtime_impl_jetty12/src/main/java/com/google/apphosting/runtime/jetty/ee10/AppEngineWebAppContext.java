@@ -16,9 +16,6 @@
 
 package com.google.apphosting.runtime.jetty.ee10;
 
-import static com.google.common.base.StandardSystemProperty.JAVA_IO_TMPDIR;
-import static java.nio.charset.StandardCharsets.UTF_8;
-
 import com.google.apphosting.api.ApiProxy;
 import com.google.apphosting.api.ApiProxy.LogRecord;
 import com.google.apphosting.runtime.jetty.EE10AppEngineAuthentication;
@@ -31,21 +28,6 @@ import com.google.common.collect.ImmutableSet;
 import jakarta.servlet.DispatcherType;
 import jakarta.servlet.Filter;
 import jakarta.servlet.Servlet;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.EnumSet;
-import java.util.EventListener;
-import java.util.HashMap;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Scanner;
-import java.util.Set;
-import java.util.concurrent.CopyOnWriteArrayList;
 import org.eclipse.jetty.ee10.servlet.FilterHolder;
 import org.eclipse.jetty.ee10.servlet.FilterMapping;
 import org.eclipse.jetty.ee10.servlet.Holder;
@@ -62,6 +44,25 @@ import org.eclipse.jetty.server.Response;
 import org.eclipse.jetty.util.Callback;
 import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.util.resource.ResourceFactory;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.EventListener;
+import java.util.HashMap;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Scanner;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
+
+import static com.google.common.base.StandardSystemProperty.JAVA_IO_TMPDIR;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * {@code AppEngineWebAppContext} is a customization of Jetty's {@link WebAppContext} that is aware
@@ -235,52 +236,59 @@ public class AppEngineWebAppContext extends WebAppContext {
 
     @Override
     protected void startContext() throws Exception {
-    // startWebapp is called after the web.xml metadata has been resolved, so we can
-    // clean configuration here:
-    //  - Removed deprecated filters and servlets
-    //  - Ensure known runtime filters/servlets are instantiated from this classloader
-    //  - Ensure known runtime mappings exist.
-    ServletHandler servletHandler = getServletHandler();
-    TrimmedFilters trimmedFilters =
-        new TrimmedFilters(
-            servletHandler.getFilters(),
-            servletHandler.getFilterMappings(),
-            DEPRECATED_SERVLETS_FILTERS);
-    trimmedFilters.ensure(
-        "CloudSqlConnectionCleanupFilter", JdbcMySqlConnectionCleanupFilter.class, "/*");
+      ServletHandler servletHandler = getServletHandler();
+      getServletHandler().addListener(new ListenerHolder() {
+        @Override
+        public void doStart() throws Exception {
+          // This Listener doStart is called after the web.xml metadata has been resolved, so we can
+          // clean configuration here:
+          //  - Removed deprecated filters and servlets
+          //  - Ensure known runtime filters/servlets are instantiated from this classloader
+          //  - Ensure known runtime mappings exist.
+          setListener(new EventListener() {});
 
-    TrimmedServlets trimmedServlets =
-        new TrimmedServlets(
-            servletHandler.getServlets(),
-            servletHandler.getServletMappings(),
-            DEPRECATED_SERVLETS_FILTERS);
-    trimmedServlets.ensure("_ah_warmup", WarmupServlet.class, "/_ah/warmup");
-    trimmedServlets.ensure(
-        "_ah_sessioncleanup", SessionCleanupServlet.class, "/_ah/sessioncleanup");
-    trimmedServlets.ensure(
-        "_ah_queue_deferred", DeferredTaskServlet.class, "/_ah/queue/__deferred__");
-    trimmedServlets.ensure("_ah_snapshot", SnapshotServlet.class, "/_ah/snapshot");
-    trimmedServlets.ensure("_ah_default", ResourceFileServlet.class, "/");
-    trimmedServlets.ensure("default", NamedDefaultServlet.class);
-    trimmedServlets.ensure("jsp", NamedJspServlet.class);
+          TrimmedFilters trimmedFilters =
+              new TrimmedFilters(
+                  servletHandler.getFilters(),
+                  servletHandler.getFilterMappings(),
+                  DEPRECATED_SERVLETS_FILTERS);
+          trimmedFilters.ensure(
+              "CloudSqlConnectionCleanupFilter", JdbcMySqlConnectionCleanupFilter.class, "/*");
 
-    trimmedServlets.instantiateJettyServlets();
-    trimmedFilters.instantiateJettyFilters();
-    instantiateJettyListeners();
+          TrimmedServlets trimmedServlets =
+              new TrimmedServlets(
+                  servletHandler.getServlets(),
+                  servletHandler.getServletMappings(),
+                  DEPRECATED_SERVLETS_FILTERS);
+          trimmedServlets.ensure("_ah_warmup", WarmupServlet.class, "/_ah/warmup");
+          trimmedServlets.ensure(
+              "_ah_sessioncleanup", SessionCleanupServlet.class, "/_ah/sessioncleanup");
+          trimmedServlets.ensure(
+              "_ah_queue_deferred", DeferredTaskServlet.class, "/_ah/queue/__deferred__");
+          trimmedServlets.ensure("_ah_snapshot", SnapshotServlet.class, "/_ah/snapshot");
+          trimmedServlets.ensure("_ah_default", ResourceFileServlet.class, "/");
+          trimmedServlets.ensure("default", NamedDefaultServlet.class);
+          trimmedServlets.ensure("jsp", NamedJspServlet.class);
 
-    servletHandler.setFilters(trimmedFilters.getHolders());
-    servletHandler.setFilterMappings(trimmedFilters.getMappings());
-    servletHandler.setServlets(trimmedServlets.getHolders());
-    servletHandler.setServletMappings(trimmedServlets.getMappings());
-    servletHandler.setAllowDuplicateMappings(true);
+          trimmedServlets.instantiateJettyServlets();
+          trimmedFilters.instantiateJettyFilters();
+          instantiateJettyListeners();
 
-    // Protect deferred task queue with constraint
-    ConstraintSecurityHandler security = (ConstraintSecurityHandler) getSecurityHandler();
-    ConstraintMapping cm = new ConstraintMapping();
-    cm.setConstraint(
-        Constraint.from("deferred_queue", Constraint.Authorization.SPECIFIC_ROLE, "admin"));
-    cm.setPathSpec("/_ah/queue/__deferred__");
-    security.addConstraintMapping(cm);
+          servletHandler.setFilters(trimmedFilters.getHolders());
+          servletHandler.setFilterMappings(trimmedFilters.getMappings());
+          servletHandler.setServlets(trimmedServlets.getHolders());
+          servletHandler.setServletMappings(trimmedServlets.getMappings());
+          servletHandler.setAllowDuplicateMappings(true);
+
+          // Protect deferred task queue with constraint
+          ConstraintSecurityHandler security = (ConstraintSecurityHandler) getSecurityHandler();
+          ConstraintMapping cm = new ConstraintMapping();
+          cm.setConstraint(
+              Constraint.from("deferred_queue", Constraint.Authorization.SPECIFIC_ROLE, "admin"));
+          cm.setPathSpec("/_ah/queue/__deferred__");
+          security.addConstraintMapping(cm);
+        }
+      });
 
     // continue starting the webapp
     super.startContext();
