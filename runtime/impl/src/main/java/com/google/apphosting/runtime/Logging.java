@@ -16,8 +16,7 @@
 
 package com.google.apphosting.runtime;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-
+import javax.annotation.Nullable;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
@@ -40,7 +39,8 @@ import java.util.logging.LogManager;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
-import javax.annotation.Nullable;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /** Configures logging for the GAE Java Runtime. */
 public final class Logging {
@@ -167,7 +167,12 @@ public final class Logging {
     try {
       printStream = new PrintStream(logPath.toFile());
     } catch (FileNotFoundException e) {
-      logger.log(Level.WARNING, "Unable to create log handler to " + logPath, e);
+      if (logger.isLoggable(Level.FINE)) {
+        logger.log(Level.WARNING, "Unable to create log handler to " + logPath, e);
+      }
+      else {
+        logger.log(Level.WARNING, "Unable to create log handler to " + logPath);
+      }
       return;
     }
 
