@@ -46,6 +46,7 @@ public final class AppEngineWebXmlInitialParse {
 
   /** a formatted build timestamp with pattern yyyy-MM-dd'T'HH:mm:ssXXX */
   public static final String BUILD_TIMESTAMP;
+  private static final String BUILD_VERSION;
 
   private static final Properties BUILD_PROPERTIES = new Properties();
 
@@ -54,11 +55,13 @@ public final class AppEngineWebXmlInitialParse {
         AppEngineWebXmlInitialParse.class.getResourceAsStream(
             "/com/google/appengine/init/build.properties")) {
       BUILD_PROPERTIES.load(inputStream);
-    } catch (Exception ignored) {
+    } catch (Exception ok) {
+        // File not there; that's fine, just continue.
     }
     GIT_HASH = BUILD_PROPERTIES.getProperty("buildNumber", "unknown");
     System.setProperty("appengine.git.hash", GIT_HASH);
     BUILD_TIMESTAMP = BUILD_PROPERTIES.getProperty("timestamp", "unknown");
+    BUILD_VERSION = BUILD_PROPERTIES.getProperty("version", "unknown");
   }
 
   public void handleRuntimeProperties() {
@@ -127,7 +130,9 @@ public final class AppEngineWebXmlInitialParse {
     this.file = file;
     if (!GIT_HASH.equals("unknown")) {
       logger.log(
-          Level.INFO, "built on {0} from commit {1}", new Object[] {BUILD_TIMESTAMP, GIT_HASH});
+          Level.INFO,
+          "appengine runtime jars built on {0} from commit {1}, version {2}",
+          new Object[] {BUILD_TIMESTAMP, GIT_HASH, BUILD_VERSION});
     }
   }
 }

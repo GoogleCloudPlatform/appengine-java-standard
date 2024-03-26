@@ -73,9 +73,10 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
   private AppVersionKey lastAppVersionKey;
 
   static {
-    // Remove internal URLs.
-    System.setProperty("java.vendor.url", "");
-    System.setProperty("java.vendor.url.bug", "");
+    // Set legacy system property to dummy value because external libraries (google-auth-library-java)
+    // test if this value is null to decide whether it is Java 7 runtime.
+    System.setProperty("org.eclipse.jetty.util.log.class", "DEPRECATED");
+
   }
 
   private Server server;

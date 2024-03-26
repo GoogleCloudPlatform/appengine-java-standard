@@ -168,7 +168,7 @@
                   <plugin>
                       <groupId>org.apache.maven.plugins</groupId>
                       <artifactId>maven-gpg-plugin</artifactId>
-                      <version>3.1.0</version>
+                      <version>3.2.1</version>
                       <configuration>
                          <gpgArguments>
                              <arg>--batch</arg>
@@ -374,12 +374,12 @@
       <dependency>
          <groupId>com.google.api-client</groupId>
          <artifactId>google-api-client-appengine</artifactId>
-         <version>2.2.0</version>
+         <version>2.4.0</version>
       </dependency>
       <dependency>
         <groupId>com.google.api-client</groupId>
         <artifactId>google-api-client</artifactId>
-        <version>2.2.0</version>
+        <version>2.4.0</version>
       </dependency>
       <dependency>
         <groupId>com.google.appengine</groupId>
@@ -405,7 +405,7 @@
       <dependency>
         <groupId>com.google.cloud.datastore</groupId>
         <artifactId>datastore-v1-proto-client</artifactId>
-        <version>2.18.2</version>
+        <version>2.18.2</version> <!--keep>-->
       </dependency>
       <dependency>
         <groupId>com.google.geometry</groupId>
@@ -468,12 +468,12 @@
       <dependency>
         <groupId>com.google.api.grpc</groupId>
         <artifactId>proto-google-cloud-datastore-v1</artifactId>
-        <version>0.108.5</version>
+        <version>0.108.5</version>  <!--keep--> 
       </dependency>
       <dependency>
         <groupId>com.google.api.grpc</groupId>
         <artifactId>proto-google-common-protos</artifactId>
-        <version>2.32.0</version>
+        <version>2.32.0</version> <!--keep-->
       </dependency>
       <dependency>
         <groupId>com.google.code.findbugs</groupId>
@@ -499,17 +499,17 @@
       <dependency>
         <groupId>com.google.guava</groupId>
         <artifactId>guava</artifactId>
-        <version>33.0.0-jre</version>
+        <version>33.1.0-jre</version>
       </dependency>
       <dependency>
         <groupId>com.google.errorprone</groupId>
         <artifactId>error_prone_annotations</artifactId>
-        <version>2.24.1</version>
+        <version>2.26.1</version>
       </dependency>
       <dependency>
         <groupId>com.google.http-client</groupId>
         <artifactId>google-http-client</artifactId>
-        <version>1.43.3</version>
+        <version>1.44.1</version>
       </dependency>
       <dependency>
         <groupId>com.google.http-client</groupId>
@@ -546,6 +546,11 @@
         <groupId>javax.servlet</groupId>
         <artifactId>javax.servlet-api</artifactId>
         <version>3.1.0</version> <!-- keep -->
+      </dependency>
+      <dependency>
+        <groupId>jakarta.servlet</groupId>
+         <artifactId>jakarta.servlet-api</artifactId>
+         <version>6.0.0</version> <!-- keep -->
       </dependency>
       <dependency>
         <groupId>javax.servlet.jsp.jstl</groupId>
@@ -594,7 +599,7 @@
       <dependency>
         <groupId>org.eclipse.jetty.toolchain</groupId>
         <artifactId>jetty-schemas</artifactId>
-        <version>3.1</version>
+        <version>3.1</version> <!--keep-->
       </dependency>
       <dependency>
         <groupId>org.glassfish.web</groupId>
@@ -610,7 +615,7 @@
       <dependency>
         <groupId>org.apache.lucene</groupId>
         <artifactId>lucene-core</artifactId>
-        <version>2.9.4</version>
+        <version>2.9.4</version> <!--keep-->
       </dependency>
       <dependency>
         <groupId>org.jsoup</groupId>
@@ -620,22 +625,22 @@
       <dependency>
         <groupId>org.apache.lucene</groupId>
         <artifactId>lucene-analyzers</artifactId>
-        <version>2.9.4</version>
+        <version>2.9.4</version> <!--keep-->
       </dependency>
       <dependency>
         <groupId>org.mortbay.jasper</groupId>
         <artifactId>apache-jsp</artifactId>
-        <version>8.5.70</version>
+        <version>8.5.70</version> <!--keep-->
       </dependency>
       <dependency>
         <groupId>org.mortbay.jasper</groupId>
         <artifactId>apache-el</artifactId>
-        <version>8.5.70</version>
+        <version>8.5.70</version> <!--keep-->
       </dependency>
       <dependency>
         <groupId>com.google.http-client</groupId>
         <artifactId>google-http-client-appengine</artifactId>
-        <version>1.43.3</version>
+        <version>1.44.1</version>
       </dependency>
       <dependency>
         <groupId>com.google.oauth-client</groupId>
@@ -645,12 +650,12 @@
       <dependency>
         <groupId>io.grpc</groupId>
         <artifactId>grpc-api</artifactId>
-        <version>1.61.0</version>
+        <version>1.62.2</version>
       </dependency>
       <dependency>
         <groupId>io.grpc</groupId>
         <artifactId>grpc-stub</artifactId>
-        <version>1.61.0</version>
+        <version>1.61.0</version> <!--keep-->
       </dependency>
       <dependency>
         <groupId>io.grpc</groupId>
@@ -666,42 +671,42 @@
       <dependency>
           <groupId>io.netty</groupId>
           <artifactId>netty-buffer</artifactId>
-          <version>4.1.106.Final</version>
+          <version>4.1.108.Final</version>
       </dependency>
       <dependency>
           <groupId>io.netty</groupId>
           <artifactId>netty-codec</artifactId>
-          <version>4.1.106.Final</version>
+          <version>4.1.108.Final</version>
       </dependency>
       <dependency>
           <groupId>io.netty</groupId>
           <artifactId>netty-codec-http</artifactId>
-          <version>4.1.106.Final</version>
+          <version>4.1.108.Final</version>
       </dependency>
       <dependency>
           <groupId>io.netty</groupId>
           <artifactId>netty-codec-http2</artifactId>
-          <version>4.1.106.Final</version>
+          <version>4.1.108.Final</version>
       </dependency>
       <dependency>
           <groupId>io.netty</groupId>
           <artifactId>netty-common</artifactId>
-          <version>4.1.106.Final</version>
+          <version>4.1.108.Final</version>
       </dependency>
       <dependency>
           <groupId>io.netty</groupId>
           <artifactId>netty-handler</artifactId>
-          <version>4.1.106.Final</version>
+          <version>4.1.108.Final</version>
       </dependency>
       <dependency>
           <groupId>io.netty</groupId>
           <artifactId>netty-transport</artifactId>
-          <version>4.1.106.Final</version>
+          <version>4.1.108.Final</version>
       </dependency>
       <dependency>
           <groupId>io.netty</groupId>
           <artifactId>netty-transport-native-unix-common</artifactId>
-          <version>4.1.106.Final</version>
+          <version>4.1.108.Final</version>
       </dependency>
       <dependency>
         <groupId>org.apache.tomcat</groupId>
@@ -711,40 +716,40 @@
       <dependency>
         <groupId>com.fasterxml.jackson.core</groupId>
         <artifactId>jackson-core</artifactId>
-        <version>2.16.1</version>
+        <version>2.17.0</version>
       </dependency>
       <dependency>
         <groupId>joda-time</groupId>
         <artifactId>joda-time</artifactId>
-        <version>2.12.6</version>
+        <version>2.12.7</version>
       </dependency>
       <dependency>
         <groupId>org.json</groupId>
         <artifactId>json</artifactId>
-        <version>20231013</version>
+        <version>20240303</version>
       </dependency>
       <dependency>
         <groupId>commons-codec</groupId>
         <artifactId>commons-codec</artifactId>
-        <version>1.16.0</version>
+        <version>1.16.1</version>
       </dependency>
        <!-- test dependencies -->
       <dependency>
         <groupId>com.google.guava</groupId>
         <artifactId>guava-testlib</artifactId>
-        <version>33.0.0-jre</version>
+        <version>33.1.0-jre</version>
         <scope>test</scope>
       </dependency>
       <dependency>
         <groupId>com.google.truth</groupId>
         <artifactId>truth</artifactId>
-        <version>1.4.0</version>
+        <version>1.4.2</version>
         <scope>test</scope>
       </dependency>
       <dependency>
         <groupId>com.google.truth.extensions</groupId>
         <artifactId>truth-java8-extension</artifactId>
-        <version>1.4.0</version>
+        <version>1.4.2</version>
         <scope>test</scope>
       </dependency>
 
@@ -757,26 +762,33 @@
        <dependency>
         <groupId>org.mockito</groupId>
         <artifactId>mockito-bom</artifactId>
-        <version>4.11.0</version>
+        <version>5.11.0</version>
         <scope>import</scope>
         <type>pom</type>
       </dependency>
       <dependency>
           <groupId>org.mockito</groupId>
           <artifactId>mockito-inline</artifactId>
-          <version>4.11.0</version>
+          <version>5.2.0</version>
          <scope>test</scope>
      </dependency>
       <dependency>
         <groupId>com.google.cloud</groupId>
         <artifactId>google-cloud-logging</artifactId>
-        <version>3.15.15</version>
+        <version>3.16.2</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
   <build>
     <plugins>
         <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>versions-maven-plugin</artifactId>
+          <configuration>
+            <rulesUri>file:///${session.executionRootDirectory}/maven-version-rules.xml</rulesUri>
+          </configuration>
+       </plugin>
+       <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-enforcer-plugin</artifactId>
             <version>3.4.1</version>
@@ -807,7 +819,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-compiler-plugin</artifactId>
-          <version>3.12.1</version>
+          <version>3.13.0</version>
         </plugin>
         <plugin>
          <groupId>org.apache.maven.plugins</groupId>

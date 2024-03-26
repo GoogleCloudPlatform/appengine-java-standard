@@ -38,7 +38,6 @@ import java.util.Objects;
 public class AppVersionHandler extends HotSwapHandler {
   private final AppVersionHandlerFactory appVersionHandlerFactory;
   private AppVersion appVersion;
-  private org.eclipse.jetty.server.Handler handler;
 
   public AppVersionHandler(AppVersionHandlerFactory appVersionHandlerFactory) {
     this.appVersionHandlerFactory = appVersionHandlerFactory;
@@ -83,6 +82,10 @@ public class AppVersionHandler extends HotSwapHandler {
     if (handler == null) {
       handler = appVersionHandlerFactory.createHandler(appVersion);
       setHandler(handler);
+
+      if (Boolean.getBoolean("jetty.server.dumpAfterStart")) {
+        handler.getServer().dumpStdErr();
+      }
     }
     return (handler != null);
   }

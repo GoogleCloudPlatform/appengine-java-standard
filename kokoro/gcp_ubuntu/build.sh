@@ -22,13 +22,16 @@ src_dir="${KOKORO_ARTIFACTS_DIR}/git/appengine-java-standard"
 cd $src_dir
 
 sudo apt-get update
-sudo apt-get install -y openjdk-17-jdk
-sudo update-java-alternatives --set java-1.17.0-openjdk-amd64
-export JAVA_HOME="$(update-java-alternatives -l | grep "1.17" | head -n 1 | tr -s " " | cut -d " " -f 3)"
+sudo apt-get install -y openjdk-21-jdk
+sudo update-java-alternatives --set java-1.21.0-openjdk-amd64
+export JAVA_HOME="$(update-java-alternatives -l | grep "1.21" | head -n 1 | tr -s " " | cut -d " " -f 3)"
 
 # Make sure `JAVA_HOME` is set.
 echo "JAVA_HOME = $JAVA_HOME"
 ./mvnw -v
+
+# Enable correct evaluation of git buildnumber value for git on borg.
+git config --global --add safe.directory /tmpfs/src/git/appengine-java-standard
 
 ./mvnw -e clean install  spdx:createSPDX
 
