@@ -786,6 +786,7 @@
           <artifactId>versions-maven-plugin</artifactId>
           <configuration>
             <rulesUri>file:///${session.executionRootDirectory}/maven-version-rules.xml</rulesUri>
+            <generateBackupPoms>false</generateBackupPoms>
           </configuration>
        </plugin>
        <plugin>
