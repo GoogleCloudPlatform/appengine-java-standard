@@ -25,6 +25,7 @@ import com.google.auto.value.AutoBuilder;
 import com.google.common.base.Ascii;
 import com.google.common.flogger.GoogleLogger;
 import com.google.common.util.concurrent.Uninterruptibles;
+
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -43,7 +44,7 @@ public class RequestRunner implements Runnable {
    * How long should we wait for {@code ApiProxyImpl} to exchange the background thread's {@code
    * Runnable}.
    */
-  private static final long WAIT_FOR_USER_RUNNABLE_DEADLINE = 60000L;
+  public static final long WAIT_FOR_USER_RUNNABLE_DEADLINE = 60000L;
 
   private final UPRequestHandler upRequestHandler;
   private final RequestManager requestManager;

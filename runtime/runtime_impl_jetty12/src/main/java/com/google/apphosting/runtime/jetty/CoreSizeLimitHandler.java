@@ -115,6 +115,7 @@ public class CoreSizeLimitHandler extends Handler.Wrapper
   {
     private final HttpFields.Mutable _httpFields;
     private long _written = 0;
+    private String failed;
 
     public SizeLimitResponseWrapper(Request request, Response wrapped) {
       super(request, wrapped);
@@ -143,12 +144,18 @@ public class CoreSizeLimitHandler extends Handler.Wrapper
     @Override
     public void write(boolean last, ByteBuffer content, Callback callback)
     {
+      if (failed != null)
+      {
+        callback.failed(new HttpException.RuntimeException(HttpStatus.INTERNAL_SERVER_ERROR_500, failed));
+        return;
+      }
+
       if (content != null && content.remaining() > 0)
       {
         if (_responseLimit >= 0 && (_written + content.remaining())  > _responseLimit)
         {
-          callback.failed(new HttpException.RuntimeException(HttpStatus.INTERNAL_SERVER_ERROR_500, "Response body is too large: " +
-                  _written + content.remaining() + ">" + _responseLimit));
+          failed = "Response body is too large: " + _written + content.remaining() + ">" + _responseLimit;
+          callback.failed(new HttpException.RuntimeException(HttpStatus.INTERNAL_SERVER_ERROR_500, failed));
           return;
         }
         _written += content.remaining();

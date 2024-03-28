@@ -16,13 +16,6 @@
 
 package com.google.apphosting.runtime;
 
-import static com.google.common.truth.Truth.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.same;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import com.google.apphosting.base.AppVersionKey;
 import com.google.apphosting.base.protos.AppinfoPb.AppInfo;
 import com.google.apphosting.base.protos.HttpPb.HttpRequest;
@@ -34,6 +27,16 @@ import com.google.apphosting.runtime.test.MockAnyRpcServerContext;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.Uninterruptibles;
 import com.google.protobuf.ByteString;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
+import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.MockitoRule;
+
+import javax.servlet.ServletException;
 import java.io.File;
 import java.io.IOException;
 import java.lang.Thread.UncaughtExceptionHandler;
@@ -47,15 +50,13 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeoutException;
-import javax.servlet.ServletException;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
-import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
+
+import static com.google.common.truth.Truth.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.same;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @RunWith(JUnit4.class)
 public final class RequestRunnerTest {
@@ -126,7 +127,7 @@ public final class RequestRunnerTest {
   public void run_dispatchesServletRequest() throws InterruptedException {
     MockAnyRpcServerContext rpc = createRpc();
 
-    when(requestManager.startRequest(any(), any(), any(), any(), any())).thenReturn(requestToken);
+    when(requestManager.startRequest(any(), any(), any(), (MutableUpResponse) any(), any())).thenReturn(requestToken);
 
     ServletEngineAdapter servletEngine =
         new JettyServletEngineAdapter() {
@@ -177,7 +178,7 @@ public final class RequestRunnerTest {
   public void run_handlesDispatchServletRequestException() throws InterruptedException {
     MockAnyRpcServerContext rpc = createRpc();
 
-    when(requestManager.startRequest(any(), any(), any(), any(), any())).thenReturn(requestToken);
+    when(requestManager.startRequest(any(), any(), any(), (MutableUpResponse) any(), any())).thenReturn(requestToken);
 
     ServletEngineAdapter servletEngine =
         new JettyServletEngineAdapter() {
@@ -232,7 +233,7 @@ public final class RequestRunnerTest {
   @Test
   public void run_backgroundRequest()
       throws InterruptedException, TimeoutException, ExecutionException {
-    when(requestManager.startRequest(any(), any(), any(), any(), any())).thenReturn(requestToken);
+    when(requestManager.startRequest(any(), any(), any(), (MutableUpResponse) any(), any())).thenReturn(requestToken);
 
     ExecutorService executor = Executors.newCachedThreadPool();
 

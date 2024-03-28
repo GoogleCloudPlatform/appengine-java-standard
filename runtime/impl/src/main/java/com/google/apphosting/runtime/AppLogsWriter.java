@@ -27,13 +27,14 @@ import com.google.common.base.Stopwatch;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.flogger.GoogleLogger;
+
+import javax.annotation.concurrent.GuardedBy;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.regex.Pattern;
-import javax.annotation.concurrent.GuardedBy;
 
 /**
  * {@code AppsLogWriter} is responsible for batching application logs for a single request and
@@ -94,7 +95,7 @@ public class AppLogsWriter {
   private final int logCutLength;
   private final int logCutLengthDiv10;
   @GuardedBy("lock")
-  private final MutableUpResponse upResponse;
+  private final GenericResponse genericResponse;
   private final long maxBytesToFlush;
   @GuardedBy("lock")
   private long currentByteCount;
@@ -106,10 +107,18 @@ public class AppLogsWriter {
   private static final Pattern PROTECTED_LOGS_CLASSES =
       Pattern.compile(PROTECTED_LOGS_CLASSES_REGEXP);
 
+  public AppLogsWriter(
+          MutableUpResponse upResponse,
+          long maxBytesToFlush,
+          int maxLogMessageLength,
+          int maxFlushSeconds) {
+    this (new GenericUpResponse(upResponse), maxBytesToFlush, maxLogMessageLength, maxFlushSeconds);
+  }
+
   /**
    * Construct an AppLogsWriter instance.
    *
-   * @param upResponse The protobuf response instance that holds the return
+   * @param genericResponse The protobuf response instance that holds the return
    *   value for EvaluationRuntime.HandleRequest. This is used to return
    *   any logs that were not sent to the appserver with an intermediate flush
    *   when the request ends.
@@ -132,11 +141,11 @@ public class AppLogsWriter {
    *   is logged.
    */
   public AppLogsWriter(
-      MutableUpResponse upResponse,
+      GenericResponse genericResponse,
       long maxBytesToFlush,
       int maxLogMessageLength,
       int maxFlushSeconds) {
-    this.upResponse = upResponse;
+    this.genericResponse = genericResponse;
     this.maxSecondsBetweenFlush = maxFlushSeconds;
 
     if (maxLogMessageLength < MIN_MAX_LOG_MESSAGE_LENGTH) {
@@ -219,7 +228,7 @@ public class AppLogsWriter {
         // the queue is empty.
         stopwatch.start();
       }
-      upResponse.addAppLog(logLine);
+      genericResponse.addAppLog(logLine);
       currentByteCount += serializedSize;
     }
 
@@ -235,7 +244,7 @@ public class AppLogsWriter {
   @GuardedBy("lock")
   private void waitForCurrentFlushAndStartNewFlush() {
     waitForCurrentFlush();
-    if (upResponse.getAppLogCount() > 0) {
+    if (genericResponse.getAppLogCount() > 0) {
       currentFlush = doFlush();
     }
   }
@@ -249,7 +258,7 @@ public class AppLogsWriter {
 
     synchronized (lock) {
       waitForCurrentFlush();
-      if (upResponse.getAppLogCount() > 0) {
+      if (genericResponse.getAppLogCount() > 0) {
         flush = currentFlush = doFlush();
       }
     }
@@ -292,7 +301,7 @@ public class AppLogsWriter {
   @GuardedBy("lock")
   private Future<byte[]> doFlush() {
     AppLogGroup.Builder group = AppLogGroup.newBuilder();
-    for (AppLogLine logLine : upResponse.getAndClearAppLogList()) {
+    for (AppLogLine logLine : genericResponse.getAndClearAppLogList()) {
       group.addLogLine(logLine);
     }
     currentByteCount = 0;

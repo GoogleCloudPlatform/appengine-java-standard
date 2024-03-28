@@ -43,6 +43,10 @@ public class AppVersionHandler extends HotSwapHandler {
     this.appVersionHandlerFactory = appVersionHandlerFactory;
   }
 
+  public AppVersion getAppVersion() {
+    return appVersion;
+  }
+
   public void addAppVersion(AppVersion appVersion) {
     if (this.appVersion != null) {
       throw new IllegalStateException("Already have an AppVersion " + this.appVersion);

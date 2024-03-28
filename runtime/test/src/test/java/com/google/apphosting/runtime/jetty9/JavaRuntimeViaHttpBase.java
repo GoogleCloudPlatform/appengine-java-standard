@@ -16,21 +16,10 @@
 
 package com.google.apphosting.runtime.jetty9;
 
-import static com.google.common.base.StandardSystemProperty.FILE_SEPARATOR;
-import static com.google.common.base.StandardSystemProperty.JAVA_HOME;
-import static com.google.common.base.StandardSystemProperty.JAVA_VERSION;
-import static com.google.common.collect.ImmutableSet.toImmutableSet;
-import static com.google.common.truth.Truth.assertThat;
-import static com.google.common.truth.Truth.assertWithMessage;
-import static java.net.HttpURLConnection.HTTP_BAD_REQUEST;
-import static java.net.HttpURLConnection.HTTP_INTERNAL_ERROR;
-import static java.net.HttpURLConnection.HTTP_OK;
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.awaitility.Awaitility.await;
-
+import com.google.appengine.repackaged.com.google.protobuf.ByteString;
+import com.google.appengine.repackaged.com.google.protobuf.ExtensionRegistry;
+import com.google.appengine.repackaged.com.google.protobuf.InvalidProtocolBufferException;
+import com.google.appengine.repackaged.com.google.protobuf.UninitializedMessageException;
 import com.google.apphosting.base.protos.api.RemoteApiPb;
 import com.google.apphosting.testing.PortPicker;
 import com.google.auto.value.AutoValue;
@@ -44,18 +33,18 @@ import com.google.common.reflect.ClassPath;
 import com.google.common.reflect.ClassPath.ResourceInfo;
 import com.google.common.reflect.Reflection;
 import com.google.errorprone.annotations.ForOverride;
-import com.google.appengine.repackaged.com.google.protobuf.ByteString;
-import com.google.appengine.repackaged.com.google.protobuf.ExtensionRegistry;
-import com.google.appengine.repackaged.com.google.protobuf.InvalidProtocolBufferException;
-import com.google.appengine.repackaged.com.google.protobuf.UninitializedMessageException;
-/*
-import com.google.appengine.repackaged.com.google.appengine.repackaged.com.google.protobuf.ByteString;
-import com.google.appengine.repackaged.com.google.appengine.repackaged.com.google.protobuf.ExtensionRegistry;
-import com.google.appengine.repackaged.com.google.appengine.repackaged.com.google.protobuf.InvalidProtocolBufferException;
-import com.google.appengine.repackaged.com.google.appengine.repackaged.com.google.protobuf.UninitializedMessageException;
-*/
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.util.EntityUtils;
+import org.junit.ClassRule;
+import org.junit.rules.TemporaryFolder;
+
 import java.io.BufferedReader;
 import java.io.Closeable;
 import java.io.File;
@@ -77,15 +66,21 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.config.RequestConfig;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.util.EntityUtils;
-import org.junit.ClassRule;
-import org.junit.rules.TemporaryFolder;
+
+import static com.google.common.base.StandardSystemProperty.FILE_SEPARATOR;
+import static com.google.common.base.StandardSystemProperty.JAVA_HOME;
+import static com.google.common.base.StandardSystemProperty.JAVA_VERSION;
+import static com.google.common.collect.ImmutableSet.toImmutableSet;
+import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
+import static java.net.HttpURLConnection.HTTP_BAD_REQUEST;
+import static java.net.HttpURLConnection.HTTP_INTERNAL_ERROR;
+import static java.net.HttpURLConnection.HTTP_OK;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.awaitility.Awaitility.await;
 
 public abstract class JavaRuntimeViaHttpBase {
   @ClassRule public static TemporaryFolder temporaryFolder = new TemporaryFolder();
@@ -255,6 +250,7 @@ public abstract class JavaRuntimeViaHttpBase {
                   "-Dcom.google.apphosting.runtime.jetty94.LEGACY_MODE=" + useJetty94LegacyMode(),
                   "-Dappengine.use.EE8=" + Boolean.getBoolean("appengine.use.EE8"),
                   "-Dappengine.use.EE10=" + Boolean.getBoolean("appengine.use.EE10"),
+                  "-Dappengine.use.HttpConnector=" + Boolean.getBoolean("appengine.use.HttpConnector"),
                   "-Duse.mavenjars=" + useMavenJars(),
                   "-cp",
                   useMavenJars()
