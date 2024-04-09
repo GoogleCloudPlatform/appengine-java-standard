@@ -17,16 +17,12 @@
 package com.google.apphosting.runtime.jetty.delegate.impl;
 
 import com.google.apphosting.base.protos.HttpPb;
+import com.google.apphosting.base.protos.HttpPb.ParsedHttpHeader;
 import com.google.apphosting.base.protos.RuntimePb;
 import com.google.apphosting.runtime.MutableUpResponse;
 import com.google.apphosting.runtime.jetty.delegate.api.DelegateExchange;
+import com.google.common.base.Ascii;
 import com.google.protobuf.ByteString;
-import java.net.InetSocketAddress;
-import java.nio.ByteBuffer;
-import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.atomic.AtomicReference;
 import org.eclipse.jetty.http.HttpFields;
 import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.io.ByteBufferAccumulator;
@@ -34,8 +30,17 @@ import org.eclipse.jetty.io.Content;
 import org.eclipse.jetty.util.Attributes;
 import org.eclipse.jetty.util.Callback;
 
+import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicReference;
+
 public class DelegateRpcExchange implements DelegateExchange {
   private static final Content.Chunk EOF = Content.Chunk.EOF;
+  private static final String X_GOOGLE_INTERNAL_SKIPADMINCHECK = "x-google-internal-skipadmincheck";
+  private static final String SKIP_ADMIN_CHECK_ATTR = "com.google.apphosting.internal.SkipAdminCheck";
   static final boolean LEGACY_MODE =
       Boolean.getBoolean("com.google.apphosting.runtime.jetty94.LEGACY_MODE");
 
@@ -46,6 +51,7 @@ public class DelegateRpcExchange implements DelegateExchange {
   private final CompletableFuture<Void> _completion = new CompletableFuture<>();
   private final Attributes _attributes = new Attributes.Lazy();
   private final String _httpMethod;
+  private final boolean _isSecure;
 
   public DelegateRpcExchange(RuntimePb.UPRequest request, MutableUpResponse response) {
     _request = request.getRequest();
@@ -56,6 +62,34 @@ public class DelegateRpcExchange implements DelegateExchange {
     HttpMethod method =
         LEGACY_MODE ? HttpMethod.INSENSITIVE_CACHE.get(protocol) : HttpMethod.CACHE.get(protocol);
     _httpMethod = method != null ? method.asString() : protocol;
+
+    final boolean skipAdmin = hasSkipAdminCheck(request);
+    // Translate the X-Google-Internal-SkipAdminCheck to a servlet attribute.
+    if (skipAdmin) {
+      setAttribute(SKIP_ADMIN_CHECK_ATTR, true);
+
+      // N.B.: If SkipAdminCheck is set, we're actually lying
+      // to Jetty here to tell it that HTTPS is in use when it may not
+      // be.  This is useful because we want to bypass Jetty's
+      // transport-guarantee checks (to match Python, which bypasses
+      // handler_security: for these requests), but unlike
+      // authentication SecurityHandler does not provide an easy way to
+      // plug in custom logic here.  I do not believe that our lie is
+      // user-visible (ServletRequest.getProtocol() is unchanged).
+      _isSecure = true;
+    }
+    else {
+      _isSecure = _request.getIsHttps();
+    }
+  }
+
+  private static boolean hasSkipAdminCheck(RuntimePb.UPRequest upRequest) {
+    for (ParsedHttpHeader header : upRequest.getRuntimeHeadersList()) {
+      if (Ascii.equalsIgnoreCase(X_GOOGLE_INTERNAL_SKIPADMINCHECK, header.getKey())) {
+        return true;
+      }
+    }
+    return false;
   }
 
   @Override
@@ -94,7 +128,7 @@ public class DelegateRpcExchange implements DelegateExchange {
 
   @Override
   public boolean isSecure() {
-    return _request.getIsHttps();
+    return _isSecure;
   }
 
   @Override
