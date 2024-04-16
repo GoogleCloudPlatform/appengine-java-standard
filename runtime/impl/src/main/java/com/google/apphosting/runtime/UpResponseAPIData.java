@@ -24,11 +24,11 @@ import com.google.protobuf.ByteString;
 
 import java.util.Collection;
 
-public class GenericUpResponse implements GenericResponse {
+public class UpResponseAPIData implements ResponseAPIData {
 
   private final MutableUpResponse response;
 
-  public GenericUpResponse(MutableUpResponse response)
+  public UpResponseAPIData(MutableUpResponse response)
   {
     this.response = response;
   }

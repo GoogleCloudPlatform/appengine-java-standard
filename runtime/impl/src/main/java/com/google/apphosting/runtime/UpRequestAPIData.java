@@ -22,11 +22,11 @@ import com.google.apphosting.base.protos.TracePb;
 
 import java.util.stream.Stream;
 
-public class GenericUpRequest implements GenericRequest {
+public class UpRequestAPIData implements RequestAPIData {
 
   private final RuntimePb.UPRequest request;
 
-  public GenericUpRequest(RuntimePb.UPRequest request)
+  public UpRequestAPIData(RuntimePb.UPRequest request)
   {
     this.request = request;
   }

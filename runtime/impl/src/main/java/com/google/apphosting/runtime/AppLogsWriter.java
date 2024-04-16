@@ -95,7 +95,7 @@ public class AppLogsWriter {
   private final int logCutLength;
   private final int logCutLengthDiv10;
   @GuardedBy("lock")
-  private final GenericResponse genericResponse;
+  private final ResponseAPIData genericResponse;
   private final long maxBytesToFlush;
   @GuardedBy("lock")
   private long currentByteCount;
@@ -112,7 +112,7 @@ public class AppLogsWriter {
           long maxBytesToFlush,
           int maxLogMessageLength,
           int maxFlushSeconds) {
-    this (new GenericUpResponse(upResponse), maxBytesToFlush, maxLogMessageLength, maxFlushSeconds);
+    this (new UpResponseAPIData(upResponse), maxBytesToFlush, maxLogMessageLength, maxFlushSeconds);
   }
 
   /**
@@ -141,7 +141,7 @@ public class AppLogsWriter {
    *   is logged.
    */
   public AppLogsWriter(
-      GenericResponse genericResponse,
+      ResponseAPIData genericResponse,
       long maxBytesToFlush,
       int maxLogMessageLength,
       int maxFlushSeconds) {

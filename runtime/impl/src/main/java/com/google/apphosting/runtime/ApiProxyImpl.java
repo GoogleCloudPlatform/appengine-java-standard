@@ -766,7 +766,7 @@ public class ApiProxyImpl implements ApiProxy.Delegate<ApiProxyImpl.EnvironmentI
           ThreadGroup requestThreadGroup,
           RequestState requestState,
           @Nullable Long millisUntilSoftDeadline) {
-    return createEnvironment(appVersion, new GenericUpRequest(request), new GenericUpResponse(response),
+    return createEnvironment(appVersion, new UpRequestAPIData(request), new UpResponseAPIData(response),
             traceWriter, requestTimer, requestId, asyncFutures, outstandingApiRpcSemaphore, requestThreadGroup,
             requestState, millisUntilSoftDeadline);
   }
@@ -774,8 +774,8 @@ public class ApiProxyImpl implements ApiProxy.Delegate<ApiProxyImpl.EnvironmentI
   /** Creates an {@link Environment} instance that is suitable for use with this class. */
   public EnvironmentImpl createEnvironment(
       AppVersion appVersion,
-      GenericRequest request,
-      GenericResponse response,
+      RequestAPIData request,
+      ResponseAPIData response,
       @Nullable TraceWriter traceWriter,
       CpuRatioTimer requestTimer,
       String requestId,
@@ -925,7 +925,7 @@ public class ApiProxyImpl implements ApiProxy.Delegate<ApiProxyImpl.EnvironmentI
         "com.google.appengine.api.ThreadManager.BACKGROUND_THREAD_FACTORY";
 
     private final AppVersion appVersion;
-    private final GenericRequest genericRequest;
+    private final RequestAPIData genericRequest;
     private final CpuRatioTimer requestTimer;
     private final Map<String, Object> attributes;
     private final String requestId;
@@ -942,8 +942,8 @@ public class ApiProxyImpl implements ApiProxy.Delegate<ApiProxyImpl.EnvironmentI
 
     EnvironmentImpl(
         AppVersion appVersion,
-        GenericRequest genericRequest,
-        GenericResponse upResponse,
+        RequestAPIData genericRequest,
+        ResponseAPIData upResponse,
         @Nullable TraceWriter traceWriter,
         CpuRatioTimer requestTimer,
         String requestId,
@@ -1075,7 +1075,7 @@ public class ApiProxyImpl implements ApiProxy.Delegate<ApiProxyImpl.EnvironmentI
     }
 
     private static Map<String, Object> createInitialAttributes(
-        GenericRequest request,
+        RequestAPIData request,
         String externalDatacenterName,
         BackgroundRequestCoordinator coordinator,
         boolean cloudSqlJdbcConnectivityEnabled) {

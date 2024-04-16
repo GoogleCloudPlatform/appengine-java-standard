@@ -18,7 +18,7 @@ package com.google.apphosting.runtime.jetty.http;
 
 import com.google.apphosting.base.protos.AppLogsPb;
 import com.google.apphosting.base.protos.RuntimePb;
-import com.google.apphosting.runtime.GenericResponse;
+import com.google.apphosting.runtime.ResponseAPIData;
 import com.google.apphosting.runtime.anyrpc.AnyRpcServerContext;
 import com.google.protobuf.ByteString;
 import org.eclipse.jetty.server.Response;
@@ -27,11 +27,11 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-public class GenericJettyResponse implements GenericResponse {
+public class JettyResponseAPIData implements ResponseAPIData {
 
   private final Response response;
 
-  public GenericJettyResponse(Response response) {
+  public JettyResponseAPIData(Response response) {
     this.response = response;
   }
 

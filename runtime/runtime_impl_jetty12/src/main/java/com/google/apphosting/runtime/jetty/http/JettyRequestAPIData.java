@@ -19,8 +19,9 @@ package com.google.apphosting.runtime.jetty.http;
 import com.google.apphosting.base.protos.HttpPb;
 import com.google.apphosting.base.protos.RuntimePb;
 import com.google.apphosting.base.protos.TracePb;
-import com.google.apphosting.runtime.GenericRequest;
+import com.google.apphosting.runtime.RequestAPIData;
 import com.google.apphosting.runtime.TraceContextHelper;
+import com.google.apphosting.runtime.jetty.AppEngineConstants;
 import com.google.apphosting.runtime.jetty.AppInfoFactory;
 import com.google.common.base.Strings;
 import com.google.common.flogger.GoogleLogger;
@@ -66,7 +67,18 @@ import static com.google.apphosting.runtime.jetty.AppEngineConstants.X_FORWARDED
 import static com.google.apphosting.runtime.jetty.AppEngineConstants.X_GOOGLE_INTERNAL_PROFILER;
 import static com.google.apphosting.runtime.jetty.AppEngineConstants.X_GOOGLE_INTERNAL_SKIPADMINCHECK;
 
-public class GenericJettyRequest implements GenericRequest {
+/**
+ * <p>
+ * Implementation for the {@link RequestAPIData} to allow for the Jetty {@link Request} to be used directly with the
+ * Java Runtime without any conversion into the RPC {@link RuntimePb.UPRequest}.
+ * </p>
+ * <p>
+ * This will interpret the AppEngine specific headers defined in {@link AppEngineConstants}.
+ * The request returned by {@link #getWrappedRequest()} is to be passed to the application and will hide
+ * any private appengine headers from {@link AppEngineConstants#PRIVATE_APPENGINE_HEADERS}.
+ * </p>
+ */
+public class JettyRequestAPIData implements RequestAPIData {
   private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
 
   private final Request originalRequest;
@@ -96,8 +108,7 @@ public class GenericJettyRequest implements GenericRequest {
   private String email = "";
   private String securityTicket;
 
-
-  public GenericJettyRequest(Request request, AppInfoFactory appInfoFactory, boolean passThroughPrivateHeaders) {
+  public JettyRequestAPIData(Request request, AppInfoFactory appInfoFactory, boolean passThroughPrivateHeaders) {
     this.appInfoFactory = appInfoFactory;
 
     // Can be overridden by X_APPENGINE_USER_IP header.

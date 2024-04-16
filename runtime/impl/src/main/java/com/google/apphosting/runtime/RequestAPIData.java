@@ -22,7 +22,10 @@ import com.google.apphosting.base.protos.TracePb;
 
 import java.util.stream.Stream;
 
-public interface GenericRequest {
+/**
+ * This interface defines a set of operations required for a Request to be used by the Java Runtime.
+ */
+public interface RequestAPIData {
   String getObfuscatedGaiaId();
 
   String getUserOrganization();

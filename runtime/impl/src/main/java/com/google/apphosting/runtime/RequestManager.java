@@ -231,7 +231,7 @@ public class RequestManager implements RequestThreadManager {
           RuntimePb.UPRequest upRequest,
           MutableUpResponse upResponse,
           ThreadGroup requestThreadGroup) {
-    return startRequest(appVersion, rpc, new GenericUpRequest(upRequest), new GenericUpResponse(upResponse), requestThreadGroup);
+    return startRequest(appVersion, rpc, new UpRequestAPIData(upRequest), new UpResponseAPIData(upResponse), requestThreadGroup);
   }
 
   /**
@@ -245,8 +245,8 @@ public class RequestManager implements RequestThreadManager {
   public RequestToken startRequest(
       AppVersion appVersion,
       AnyRpcServerContext rpc,
-      GenericRequest genericRequest,
-      GenericResponse genericResponse,
+      RequestAPIData genericRequest,
+      ResponseAPIData genericResponse,
       ThreadGroup requestThreadGroup) {
     long remainingTime = getAdjustedRpcDeadline(rpc, 60000);
     long softDeadlineMillis = Math.max(getAdjustedRpcDeadline(rpc, -1) - softDeadlineDelay, -1);
@@ -437,7 +437,7 @@ public class RequestManager implements RequestThreadManager {
     runtimeLogSink.ifPresent(x -> x.flushLogs(requestToken.getUpResponse()));
   }
 
-  private static boolean isSnapshotRequest(GenericRequest request) {
+  private static boolean isSnapshotRequest(RequestAPIData request) {
     try {
       URI uri = new URI(request.getUrl());
       if (!"/_ah/snapshot".equals(uri.getPath())) {
@@ -862,7 +862,7 @@ public class RequestManager implements RequestThreadManager {
     checkForDeadlocks(token);
     logger.atInfo().log("Calling shutdown hooks for %s", token.getAppVersionKey());
     // TODO what if there's other app/versions in this VM?
-    GenericResponse response = token.getUpResponse();
+    ResponseAPIData response = token.getUpResponse();
 
     // Set the context classloader to the UserClassLoader while invoking the
     // shutdown hooks.
@@ -976,7 +976,7 @@ public class RequestManager implements RequestThreadManager {
      */
     private final Thread requestThread;
 
-    private final GenericResponse response;
+    private final ResponseAPIData response;
 
     /**
      * A collection of {@code Future} objects that have been scheduled
@@ -1014,7 +1014,7 @@ public class RequestManager implements RequestThreadManager {
 
     RequestToken(
         Thread requestThread,
-        GenericResponse response,
+        ResponseAPIData response,
         String requestId,
         String securityTicket,
         CpuRatioTimer requestTimer,
@@ -1051,7 +1051,7 @@ public class RequestManager implements RequestThreadManager {
       return requestThread;
     }
 
-    GenericResponse getUpResponse() {
+    ResponseAPIData getUpResponse() {
       return response;
     }
 

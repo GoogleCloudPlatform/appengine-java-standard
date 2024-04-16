@@ -61,7 +61,7 @@ public class TraceWriter {
   static final int MAX_DICTIONARY_SIZE = 1024;
 
   private final CloudTraceContext context;
-  private final GenericResponse upResponse;
+  private final ResponseAPIData upResponse;
   // Also used to synchronize any mutations to the trace and its spans contained in this builder and
   // in spanEventsMap.
   private final TraceEventsProto.Builder traceEventsBuilder;
@@ -71,14 +71,14 @@ public class TraceWriter {
 
   @Deprecated
   public TraceWriter(CloudTraceContext context, MutableUpResponse upResponse) {
-    this(context, new GenericUpResponse(upResponse), false);
+    this(context, new UpResponseAPIData(upResponse), false);
   }
 
-  public TraceWriter(CloudTraceContext context, GenericResponse upResponse) {
+  public TraceWriter(CloudTraceContext context, ResponseAPIData upResponse) {
     this(context, upResponse, false);
   }
 
-  private TraceWriter(CloudTraceContext context, GenericResponse upResponse, boolean background) {
+  private TraceWriter(CloudTraceContext context, ResponseAPIData upResponse, boolean background) {
     this.context = context;
     this.upResponse = upResponse;
     // TODO: Set trace id properly. This can't be done until we define a way to parse
@@ -96,12 +96,12 @@ public class TraceWriter {
   @Nullable
   public static TraceWriter getTraceWriterForRequest(
           UPRequest upRequest, MutableUpResponse upResponse) {
-    return getTraceWriterForRequest(new GenericUpRequest(upRequest), new GenericUpResponse(upResponse));
+    return getTraceWriterForRequest(new UpRequestAPIData(upRequest), new UpResponseAPIData(upResponse));
   }
 
   @Nullable
   public static TraceWriter getTraceWriterForRequest(
-      GenericRequest request, GenericResponse response) {
+          RequestAPIData request, ResponseAPIData response) {
     if (!TraceContextHelper.needsTrace(request.getTraceContext())) {
       return null;
     }

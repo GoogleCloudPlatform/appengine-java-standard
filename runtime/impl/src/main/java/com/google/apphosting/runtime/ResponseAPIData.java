@@ -24,7 +24,10 @@ import com.google.protobuf.ByteString;
 import java.util.Collection;
 import java.util.List;
 
-public interface GenericResponse {
+/**
+ * This interface defines a set of operations required for a Response to be used by the Java Runtime.
+ */
+public interface ResponseAPIData {
   void addAppLog(AppLogsPb.AppLogLine logLine);
 
   int getAppLogCount();

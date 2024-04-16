@@ -70,7 +70,7 @@ public class RuntimeLogSink {
     pendingLogLines.add(logLine);
   }
 
-  public synchronized void flushLogs(GenericResponse response) {
+  public synchronized void flushLogs(ResponseAPIData response) {
     response.addAllRuntimeLogLine(pendingLogLines);
     pendingLogLines.clear();
     mapExceptionDate.clear();
