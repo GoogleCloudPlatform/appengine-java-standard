@@ -92,7 +92,7 @@ public class SizeLimitHandlerTest extends JavaRuntimeViaHttpBase {
     httpClient.start();
     runtime = runtimeContext();
     assertEnvironment();
-    System.err.println("==== Using Environment: " + environment + " ====");
+    System.err.println("==== Using Environment: " + environment + " " + httpMode + " ====");
   }
 
   @After
@@ -243,7 +243,11 @@ public class SizeLimitHandlerTest extends JavaRuntimeViaHttpBase {
 
     Result result = completionListener.get(5, TimeUnit.SECONDS);
     assertThat(result.getResponse().getStatus(), equalTo(HttpStatus.PAYLOAD_TOO_LARGE_413));
-    assertThat(received.toString(), containsString("Request body is too large"));
+
+    // If there is no Content-Length header the SizeLimitHandler fails the response as well.
+    if (result.getResponseFailure() == null) {
+      assertThat(received.toString(), containsString("Request body is too large"));
+    }
   }
 
   @Test
@@ -293,7 +297,11 @@ public class SizeLimitHandlerTest extends JavaRuntimeViaHttpBase {
 
     Result result = completionListener.get(5, TimeUnit.SECONDS);
     assertThat(result.getResponse().getStatus(), equalTo(HttpStatus.PAYLOAD_TOO_LARGE_413));
-    assertThat(received.toString(), containsString("Request body is too large"));
+
+    // If there is no Content-Length header the SizeLimitHandler fails the response as well.
+    if (result.getResponseFailure() == null) {
+      assertThat(received.toString(), containsString("Request body is too large"));
+    }
   }
 
   @Test
@@ -332,7 +340,11 @@ public class SizeLimitHandlerTest extends JavaRuntimeViaHttpBase {
     Result result = completionListener.get(5, TimeUnit.SECONDS);
     Response response = result.getResponse();
     assertThat(response.getStatus(), equalTo(HttpStatus.PAYLOAD_TOO_LARGE_413));
-    assertThat(received.toString(), containsString("Request body is too large"));
+
+    // If there is no Content-Length header the SizeLimitHandler fails the response as well.
+    if (result.getResponseFailure() == null) {
+      assertThat(received.toString(), containsString("Request body is too large"));
+    }
   }
 
   private RuntimeContext<?> runtimeContext() throws Exception {

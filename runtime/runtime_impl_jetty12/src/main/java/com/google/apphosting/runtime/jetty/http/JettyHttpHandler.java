@@ -115,7 +115,7 @@ public class JettyHttpHandler extends Handler.Wrapper {
       // ThreadGroupPool would use that as a signal to remove the thread from the pool; we don't
       // need that.
       handled = handleException(ex, requestToken, genericResponse);
-      callback.failed(ex); // TODO: probably not correct?
+      Response.writeError(request, response, callback, ex);
     } finally {
       requestManager.finishRequest(requestToken);
     }
