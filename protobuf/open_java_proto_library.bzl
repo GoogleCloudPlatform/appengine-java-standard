@@ -14,6 +14,9 @@
 # limitations under the License.
 #
 
+load("//third_party/protobuf/bazel:java_proto_library.bzl", "java_proto_library")
+load("//third_party/protobuf/bazel:proto_library.bzl", "proto_library")
+
 """Builds Java proto libraries using the open-source proto compiler."""
 
 def _proto_library_name(name):
@@ -41,8 +44,7 @@ def open_java_proto_library(
     """
 
     proto_library_name = _proto_library_name(name)
-
-    native.proto_library(
+    proto_library(
         name = proto_library_name,
         srcs = srcs,
         // <internal26>
@@ -50,8 +52,7 @@ def open_java_proto_library(
         compatible_with = compatible_with,
         strip_import_prefix = "/" + native.package_name(),
     )
-
-    native.java_proto_library(
+    java_proto_library(
         name = name,
         deps = [":" + proto_library_name],
         compatible_with = compatible_with,
