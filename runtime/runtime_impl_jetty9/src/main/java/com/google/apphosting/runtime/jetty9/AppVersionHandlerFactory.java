@@ -23,15 +23,6 @@ import com.google.apphosting.runtime.SessionsConfig;
 import com.google.common.collect.ImmutableList;
 import com.google.common.flogger.GoogleLogger;
 import com.google.common.html.HtmlEscapers;
-import java.io.File;
-import java.io.IOException;
-import java.io.PrintWriter;
-import javax.servlet.RequestDispatcher;
-import javax.servlet.ServletException;
-import javax.servlet.UnavailableException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.jsp.JspFactory;
 import org.eclipse.jetty.annotations.AnnotationConfiguration;
 import org.eclipse.jetty.server.Dispatcher;
 import org.eclipse.jetty.server.Handler;
@@ -42,6 +33,16 @@ import org.eclipse.jetty.webapp.FragmentConfiguration;
 import org.eclipse.jetty.webapp.MetaInfConfiguration;
 import org.eclipse.jetty.webapp.WebAppContext;
 import org.eclipse.jetty.webapp.WebXmlConfiguration;
+
+import javax.servlet.RequestDispatcher;
+import javax.servlet.ServletException;
+import javax.servlet.UnavailableException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.jsp.JspFactory;
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintWriter;
 
 /**
  * {@code AppVersionHandlerFactory} implements a {@code Handler} for a given {@code AppVersionKey}.
@@ -121,9 +122,7 @@ public class AppVersionHandlerFactory {
     ClassLoader oldContextClassLoader = Thread.currentThread().getContextClassLoader();
     Thread.currentThread().setContextClassLoader(this.getClass().getClassLoader());
     try {
-      Handler handler = doCreateHandler(appVersion);
-      server.addBean(handler);
-      return handler;
+      return doCreateHandler(appVersion);
     } finally {
       Thread.currentThread().setContextClassLoader(oldContextClassLoader);
     }

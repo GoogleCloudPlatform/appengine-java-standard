@@ -81,7 +81,12 @@ public class AppVersionHandlerMap extends AbstractHandlerContainer {
       AppVersion appVersion = appVersionMap.get(appVersionKey);
       if (appVersion != null) {
         handler = appVersionHandlerFactory.createHandler(appVersion);
-        handlerMap.put(appVersionKey, handler);
+        addManaged(handler);
+        Handler oldHandler = handlerMap.put(appVersionKey, handler);
+        if (oldHandler != null) {
+          removeBean(oldHandler);
+        }
+
         if (Boolean.getBoolean("jetty.server.dumpAfterStart")) {
           handler.getServer().dumpStdErr();
         }
