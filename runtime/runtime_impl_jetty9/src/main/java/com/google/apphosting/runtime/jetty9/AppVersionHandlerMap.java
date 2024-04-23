@@ -18,20 +18,21 @@ package com.google.apphosting.runtime.jetty9;
 
 import com.google.apphosting.base.AppVersionKey;
 import com.google.apphosting.runtime.AppVersion;
+import com.google.apphosting.runtime.JettyConstants;
 import com.google.apphosting.runtime.SessionStore;
 import com.google.apphosting.runtime.SessionStoreFactory;
-import com.google.apphosting.runtime.JettyConstants;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.AbstractHandlerContainer;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * {@code AppVersionHandlerMap} is a {@code HandlerContainer} that identifies each child {@code
@@ -80,7 +81,15 @@ public class AppVersionHandlerMap extends AbstractHandlerContainer {
       AppVersion appVersion = appVersionMap.get(appVersionKey);
       if (appVersion != null) {
         handler = appVersionHandlerFactory.createHandler(appVersion);
-        handlerMap.put(appVersionKey, handler);
+        addManaged(handler);
+        Handler oldHandler = handlerMap.put(appVersionKey, handler);
+        if (oldHandler != null) {
+          removeBean(oldHandler);
+        }
+
+        if (Boolean.getBoolean("jetty.server.dumpAfterStart")) {
+          handler.getServer().dumpStdErr();
+        }
       }
     }
     return handler;

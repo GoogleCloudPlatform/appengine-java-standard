@@ -16,7 +16,6 @@
 
 package com.google.apphosting.runtime.jetty.ee10;
 
-import com.google.apphosting.base.AppVersionKey;
 import com.google.apphosting.runtime.AppVersion;
 import com.google.apphosting.runtime.JettyConstants;
 import com.google.apphosting.runtime.SessionsConfig;
@@ -27,13 +26,8 @@ import com.google.common.html.HtmlEscapers;
 import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.UnavailableException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.io.File;
-import java.io.IOException;
-import java.io.PrintWriter;
-import javax.servlet.jsp.JspFactory;
 import org.eclipse.jetty.ee10.annotations.AnnotationConfiguration;
 import org.eclipse.jetty.ee10.quickstart.QuickStartConfiguration;
 import org.eclipse.jetty.ee10.servlet.Dispatcher;
@@ -50,6 +44,11 @@ import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Response;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.util.Callback;
+
+import javax.servlet.jsp.JspFactory;
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintWriter;
 
 /**
  * {@code AppVersionHandlerFactory} implements a {@code Handler} for a given {@code AppVersionKey}.
@@ -105,16 +104,13 @@ public class EE10AppVersionHandlerFactory implements AppVersionHandlerFactory {
     ClassLoader oldContextClassLoader = Thread.currentThread().getContextClassLoader();
     Thread.currentThread().setContextClassLoader(this.getClass().getClassLoader());
     try {
-      org.eclipse.jetty.server.Handler handler = doCreateHandler(appVersion);
-      server.addBean(handler);
-      return handler;
+      return doCreateHandler(appVersion);
     } finally {
       Thread.currentThread().setContextClassLoader(oldContextClassLoader);
     }
   }
 
   private org.eclipse.jetty.server.Handler doCreateHandler(AppVersion appVersion) throws ServletException {
-    AppVersionKey appVersionKey = appVersion.getKey();
     try {
       File contextRoot = appVersion.getRootDirectory();
 
@@ -210,24 +206,7 @@ public class EE10AppVersionHandlerFactory implements AppVersionHandlerFactory {
       // Pass the AppVersion on to any of our servlets (e.g. ResourceFileServlet).
       context.setAttribute(JettyConstants.APP_VERSION_CONTEXT_ATTR, appVersion);
 
-      context.start();
-      // Check to see if servlet filter initialization failed.
-      Throwable unavailableCause = context.getUnavailableException();
-      if (unavailableCause != null) {
-        if (unavailableCause instanceof ServletException) {
-          throw (ServletException) unavailableCause;
-        } else {
-          UnavailableException unavailableException =
-              new UnavailableException("Initialization failed.");
-          unavailableException.initCause(unavailableCause);
-          throw unavailableException;
-        }
-      }
-
       return context;
-    } catch (ServletException ex) {
-      logger.atWarning().withCause(ex).log("Exception adding %s", appVersionKey);
-      throw ex;
     } catch (Exception ex) {
       throw new ServletException(ex);
     }
