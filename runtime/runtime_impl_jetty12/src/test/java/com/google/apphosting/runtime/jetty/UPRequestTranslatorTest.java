@@ -114,7 +114,7 @@ public final class UPRequestTranslatorTest {
   public void translateWithoutAppEngineHeaders() throws Exception {
     Request httpRequest =
         mockServletRequest(
-            "http://myapp.appspot.com:80/foo/bar?a=b",
+            "http://myapp.appspot.com/foo/bar?a=b",
             "127.0.0.1",
             ImmutableMap.of("testheader", "testvalue"));
 
@@ -126,7 +126,7 @@ public final class UPRequestTranslatorTest {
     assertThat(httpRequestPb.getProtocol()).isEqualTo("GET");
     assertThat(httpRequestPb.getUserIp()).isEqualTo("127.0.0.1");
     assertThat(httpRequestPb.getIsOffline()).isFalse();
-    assertThat(httpRequestPb.getUrl()).isEqualTo("http://myapp.appspot.com:80/foo/bar?a=b");
+    assertThat(httpRequestPb.getUrl()).isEqualTo("http://myapp.appspot.com/foo/bar?a=b");
     assertThat(httpRequestPb.getHeadersList()).hasSize(2);
     for (ParsedHttpHeader header : httpRequestPb.getHeadersList()) {
       assertThat(header.getKey()).isAnyOf("testheader", "host");
@@ -173,7 +173,7 @@ public final class UPRequestTranslatorTest {
   public void translateWithAppEngineHeaders() throws Exception {
     Request httpRequest =
         mockServletRequest(
-            "http://myapp.appspot.com:80/foo/bar?a=b", "127.0.0.1", BASE_APPENGINE_HEADERS);
+            "http://myapp.appspot.com/foo/bar?a=b", "127.0.0.1", BASE_APPENGINE_HEADERS);
 
     RuntimePb.UPRequest translatedUpRequest = translator.translateRequest(httpRequest);
 
@@ -182,7 +182,7 @@ public final class UPRequestTranslatorTest {
     assertThat(httpRequestPb.getIsHttps()).isTrue();
     assertThat(httpRequestPb.getProtocol()).isEqualTo("GET");
     assertThat(httpRequestPb.getUserIp()).isEqualTo("auserip");
-    assertThat(httpRequestPb.getUrl()).isEqualTo("http://myapp.appspot.com:80/foo/bar?a=b");
+    assertThat(httpRequestPb.getUrl()).isEqualTo("http://myapp.appspot.com/foo/bar?a=b");
     assertThat(httpRequestPb.getTrusted()).isFalse();
     ImmutableSet<String> appengineHeaderNames =
         httpRequestPb.getHeadersList().stream()
@@ -225,7 +225,7 @@ public final class UPRequestTranslatorTest {
             .buildOrThrow();
     Request httpRequest =
         mockServletRequest(
-            "http://myapp.appspot.com:80/foo/bar?a=b", "127.0.0.1", appengineHeaders);
+            "http://myapp.appspot.com/foo/bar?a=b", "127.0.0.1", appengineHeaders);
 
     RuntimePb.UPRequest translatedUpRequest = translator.translateRequest(httpRequest);
     HttpPb.HttpRequest httpRequestPb = translatedUpRequest.getRequest();
@@ -251,7 +251,7 @@ public final class UPRequestTranslatorTest {
     appengineHeaders.put(X_APPENGINE_TRUSTED_IP_REQUEST, "1");
     Request httpRequest =
         mockServletRequest(
-            "http://myapp.appspot.com:80/foo/bar?a=b",
+            "http://myapp.appspot.com/foo/bar?a=b",
             "127.0.0.1",
             ImmutableMap.copyOf(appengineHeaders));
 
@@ -262,7 +262,7 @@ public final class UPRequestTranslatorTest {
     assertThat(httpRequestPb.getIsHttps()).isTrue();
     assertThat(httpRequestPb.getProtocol()).isEqualTo("GET");
     assertThat(httpRequestPb.getUserIp()).isEqualTo("auserip");
-    assertThat(httpRequestPb.getUrl()).isEqualTo("http://myapp.appspot.com:80/foo/bar?a=b");
+    assertThat(httpRequestPb.getUrl()).isEqualTo("http://myapp.appspot.com/foo/bar?a=b");
     assertThat(httpRequestPb.getTrusted()).isTrue();
     ImmutableSet<String> appengineHeaderNames =
         httpRequestPb.getHeadersList().stream()
@@ -299,7 +299,7 @@ public final class UPRequestTranslatorTest {
   public void translateEmptyGaiaIdInAppEngineHeaders() throws Exception {
     Request httpRequest =
         mockServletRequest(
-            "http://myapp.appspot.com:80/foo/bar?a=b",
+            "http://myapp.appspot.com/foo/bar?a=b",
             "127.0.0.1",
             ImmutableMap.of(X_APPENGINE_GAIA_ID, ""));
     RuntimePb.UPRequest translatedUpRequest = translator.translateRequest(httpRequest);
@@ -351,7 +351,7 @@ public final class UPRequestTranslatorTest {
   public void translateSkipAdminCheckInAppEngineHeaders() throws Exception {
     Request httpRequest =
         mockServletRequest(
-            "http://myapp.appspot.com:80/foo/bar?a=b",
+            "http://myapp.appspot.com/foo/bar?a=b",
             "127.0.0.1",
             ImmutableMap.of(X_GOOGLE_INTERNAL_SKIPADMINCHECK, "true"));
     RuntimePb.UPRequest translatedUpRequest = translator.translateRequest(httpRequest);
@@ -367,7 +367,7 @@ public final class UPRequestTranslatorTest {
   public void translateQueueNameSetsSkipAdminCheckInAppEngineHeaders() throws Exception {
     Request httpRequest =
         mockServletRequest(
-            "http://myapp.appspot.com:80/foo/bar?a=b",
+            "http://myapp.appspot.com/foo/bar?a=b",
             "127.0.0.1",
             ImmutableMap.of(X_APPENGINE_QUEUENAME, "__cron__"));
     RuntimePb.UPRequest translatedUpRequest = translator.translateRequest(httpRequest);
@@ -383,7 +383,7 @@ public final class UPRequestTranslatorTest {
   public void translateBackgroundURISetsBackgroundRequestType() throws Exception {
     Request httpRequest =
         mockServletRequest(
-            "http://myapp.appspot.com:80/_ah/background?a=b",
+            "http://myapp.appspot.com/_ah/background?a=b",
             "127.0.0.1",
             ImmutableMap.of(X_APPENGINE_USER_IP, "0.1.0.3"));
     RuntimePb.UPRequest translatedUpRequest = translator.translateRequest(httpRequest);
@@ -395,7 +395,7 @@ public final class UPRequestTranslatorTest {
   public void translateNonBackgroundURIDoesNotSetsBackgroundRequestType() throws Exception {
     Request httpRequest =
         mockServletRequest(
-            "http://myapp.appspot.com:80/foo/bar?a=b",
+            "http://myapp.appspot.com/foo/bar?a=b",
             "127.0.0.1",
             ImmutableMap.of(X_APPENGINE_USER_IP, "0.1.0.3"));
     RuntimePb.UPRequest translatedUpRequest = translator.translateRequest(httpRequest);
@@ -407,7 +407,7 @@ public final class UPRequestTranslatorTest {
   public void translateRealIpDoesNotSetsBackgroundRequestType() throws Exception {
     Request httpRequest =
         mockServletRequest(
-            "http://myapp.appspot.com:80/_ah/background?a=b",
+            "http://myapp.appspot.com/_ah/background?a=b",
             "127.0.0.1",
             ImmutableMap.of(X_APPENGINE_USER_IP, "1.2.3.4"));
     RuntimePb.UPRequest translatedUpRequest = translator.translateRequest(httpRequest);
@@ -419,7 +419,7 @@ public final class UPRequestTranslatorTest {
   public void translateCloudContextInAppEngineHeaders() throws Exception {
     Request httpRequest =
         mockServletRequest(
-            "http://myapp.appspot.com:80/_ah/background?a=b",
+            "http://myapp.appspot.com/_ah/background?a=b",
             "127.0.0.1",
             ImmutableMap.of(X_CLOUD_TRACE_CONTEXT, "000000000000007b00000000000001c8/789;o=1"));
     RuntimePb.UPRequest translatedUpRequest = translator.translateRequest(httpRequest);
