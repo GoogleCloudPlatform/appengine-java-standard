@@ -91,11 +91,9 @@ public class JettyHttpHandler extends Handler.Wrapper {
     // reporting remaining time until deadline for API calls (see b/154745969)
     Duration timeRemaining = genericRequest.getTimeRemaining();
 
-    // TODO: Can we get rid of this? or do we need to implement MessageLite?
-    LocalRpcContext<EmptyMessage> context = new LocalRpcContext<>(EmptyMessage.class, timeRemaining);
-
     boolean handled;
     ThreadGroup currentThreadGroup = Thread.currentThread().getThreadGroup();
+    LocalRpcContext<EmptyMessage> context = new LocalRpcContext<>(EmptyMessage.class, timeRemaining);
     RequestManager.RequestToken requestToken =
             requestManager.startRequest(appVersion, context, genericRequest, genericResponse, currentThreadGroup);
 
@@ -183,19 +181,6 @@ public class JettyHttpHandler extends Handler.Wrapper {
     } finally {
       Thread.currentThread().setContextClassLoader(oldClassLoader);
     }
-
-    /*
-      todo we don't really need this because jetty response has these values
-    upResponse.setError(RuntimePb.UPResponse.ERROR.OK_VALUE);
-    if (!upResponse.hasHttpResponse()) {
-      // If the servlet handler did not write an HTTPResponse
-      // already, provide a default one.  This ensures that
-      // the code receiving this response does not mistake the
-      // lack of an HTTPResponse field for an internal server
-      // error (500).
-      upResponse.setHttpResponseCodeAndResponse(200, "OK");
-    }
-     */
   }
 
   private boolean handleException(Throwable ex, RequestManager.RequestToken requestToken, ResponseAPIData response) {
