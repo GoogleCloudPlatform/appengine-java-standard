@@ -84,7 +84,10 @@ public class AppVersionHandler extends HotSwapHandler {
       setHandler(handler);
 
       if (Boolean.getBoolean("jetty.server.dumpAfterStart")) {
-        handler.getServer().dumpStdErr();
+        if (handler.isStarted())
+          handler.getServer().dumpStdErr();
+        else
+          handler.getServer().setDumpAfterStart(true);
       }
     }
     return (handler != null);

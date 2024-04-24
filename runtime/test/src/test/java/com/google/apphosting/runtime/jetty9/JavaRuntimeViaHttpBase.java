@@ -251,6 +251,7 @@ public abstract class JavaRuntimeViaHttpBase {
                   "-Dappengine.use.EE8=" + Boolean.getBoolean("appengine.use.EE8"),
                   "-Dappengine.use.EE10=" + Boolean.getBoolean("appengine.use.EE10"),
                   "-Dappengine.use.HttpConnector=" + Boolean.getBoolean("appengine.use.HttpConnector"),
+                  "-Djetty.server.dumpAfterStart=" + Boolean.getBoolean("jetty.server.dumpAfterStart"),
                   "-Duse.mavenjars=" + useMavenJars(),
                   "-cp",
                   useMavenJars()

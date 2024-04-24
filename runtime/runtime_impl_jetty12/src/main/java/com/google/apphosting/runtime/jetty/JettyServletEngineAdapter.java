@@ -139,6 +139,7 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
       server.setHandler(appVersionHandler);
     }
 
+    boolean startJettyHttpProxy = false;
     if (runtimeOptions.useJettyHttpProxy()) {
 
       AppInfoFactory appInfoFactory;
@@ -172,12 +173,16 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
       } else {
         server.setAttribute("com.google.apphosting.runtime.jetty.appYaml",
                 JettyServletEngineAdapter.getAppYaml(runtimeOptions));
-        JettyHttpProxy.startServer(runtimeOptions);
+        // Delay start of JettyHttpProxy until after the main server and application is started.
+        startJettyHttpProxy = true;
       }
     }
 
     try {
       server.start();
+      if (startJettyHttpProxy) {
+        JettyHttpProxy.startServer(runtimeOptions);
+      }
     } catch (Exception ex) {
       // TODO: Should we have a wrapper exception for this
       // type of thing in ServletEngineAdapter?
