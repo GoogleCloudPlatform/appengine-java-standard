@@ -120,6 +120,8 @@ public final class AppEngineWebXmlInitialParse {
             // appengine.use.EE10 or appengine.use.EE8
             settingDoneInAppEngineWebXml = true;
             System.setProperty(prop, value);
+          } else if (prop.equalsIgnoreCase("appengine.use.http.HttpConnector")) {
+            System.setProperty("appengine.use.HttpConnector", value);
           }
         }
       }

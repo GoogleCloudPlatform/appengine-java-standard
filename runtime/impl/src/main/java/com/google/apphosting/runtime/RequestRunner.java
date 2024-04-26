@@ -43,7 +43,7 @@ public class RequestRunner implements Runnable {
    * How long should we wait for {@code ApiProxyImpl} to exchange the background thread's {@code
    * Runnable}.
    */
-  private static final long WAIT_FOR_USER_RUNNABLE_DEADLINE = 60000L;
+  public static final long WAIT_FOR_USER_RUNNABLE_DEADLINE = 60000L;
 
   private final UPRequestHandler upRequestHandler;
   private final RequestManager requestManager;

@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.google.apphosting.runtime.jetty9;
 
 import static com.google.common.base.StandardSystemProperty.FILE_SEPARATOR;
@@ -48,12 +47,6 @@ import com.google.appengine.repackaged.com.google.protobuf.ByteString;
 import com.google.appengine.repackaged.com.google.protobuf.ExtensionRegistry;
 import com.google.appengine.repackaged.com.google.protobuf.InvalidProtocolBufferException;
 import com.google.appengine.repackaged.com.google.protobuf.UninitializedMessageException;
-/*
-import com.google.appengine.repackaged.com.google.appengine.repackaged.com.google.protobuf.ByteString;
-import com.google.appengine.repackaged.com.google.appengine.repackaged.com.google.protobuf.ExtensionRegistry;
-import com.google.appengine.repackaged.com.google.appengine.repackaged.com.google.protobuf.InvalidProtocolBufferException;
-import com.google.appengine.repackaged.com.google.appengine.repackaged.com.google.protobuf.UninitializedMessageException;
-*/
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import java.io.BufferedReader;
@@ -89,18 +82,12 @@ import org.junit.rules.TemporaryFolder;
 
 public abstract class JavaRuntimeViaHttpBase {
   @ClassRule public static TemporaryFolder temporaryFolder = new TemporaryFolder();
-
-  private static final int SERVER_START_TIMEOUT_SECONDS = 30;
-
   private static final String RUNTIME_LOCATION_ROOT = "java/com/google/apphosting";
-
   static final int RESPONSE_200 = 200;
-
   @FunctionalInterface
   interface ApiServerFactory<ApiServerT extends Closeable> {
     ApiServerT newApiServer(int apiPort, int runtimePort) throws IOException;
   }
-
   static class RuntimeContext<ApiServerT extends Closeable> implements AutoCloseable {
     private final Process runtimeProcess;
     private final ApiServerT httpApiServer;
@@ -108,7 +95,6 @@ public abstract class JavaRuntimeViaHttpBase {
     private final int jettyPort;
     private final OutputPump outPump;
     private final OutputPump errPump;
-
     private RuntimeContext(
         Process runtimeProcess,
         ApiServerT httpApiServer,
@@ -123,19 +109,14 @@ public abstract class JavaRuntimeViaHttpBase {
       this.outPump = outPump;
       this.errPump = errPump;
     }
-
     public int getPort() {
       return jettyPort;
     }
-
     @AutoValue
     abstract static class Config<ApiServerT extends Closeable> {
       abstract ImmutableMap<String, String> environmentEntries();
-
       abstract ImmutableList<String> launcherFlags();
-
       abstract ApiServerFactory<ApiServerT> apiServerFactory();
-
       // The default configuration uses an API server that rejects all API calls as unknown.
       // Individual tests can configure a different server, including the HttpApiServer from the SDK
       // which provides APIs using their dev app server implementations.
@@ -144,19 +125,16 @@ public abstract class JavaRuntimeViaHttpBase {
             (apiPort, runtimePort) -> DummyApiServer.create(apiPort, ImmutableMap.of());
         return builder(apiServerFactory);
       }
-
       static <ApiServerT extends Closeable> Builder<ApiServerT> builder(
           ApiServerFactory<ApiServerT> apiServerFactory) {
         return new AutoValue_JavaRuntimeViaHttpBase_RuntimeContext_Config.Builder<ApiServerT>()
             .setEnvironmentEntries(ImmutableMap.of())
             .setApiServerFactory(apiServerFactory);
       }
-
       @AutoValue.Builder
       abstract static class Builder<ApiServerT extends Closeable> {
         private boolean applicationPath;
         private boolean applicationRoot;
-
         /**
          * Sets the application path. In this approach, applicationPath is the complete application
          * location.
@@ -166,19 +144,16 @@ public abstract class JavaRuntimeViaHttpBase {
           launcherFlagsBuilder().add("--fixed_application_path=" + path);
           return this;
         }
-
         /** Sets Jetty's max request header size. */
         Builder<ApiServerT> setJettyRequestHeaderSize(int size) {
           launcherFlagsBuilder().add("--jetty_request_header_size=" + size);
           return this;
         }
-
         /** Sets Jetty's max response header size. */
         Builder<ApiServerT> setJettyResponseHeaderSize(int size) {
           launcherFlagsBuilder().add("--jetty_response_header_size=" + size);
           return this;
         }
-
         /**
          * Sets the application root. In this legacy case, you need to set the correct set of env
          * variables for "GAE_APPLICATION", "GAE_VERSION", "GAE_DEPLOYMENT_ID" with a correct
@@ -193,15 +168,10 @@ public abstract class JavaRuntimeViaHttpBase {
           launcherFlagsBuilder().add("--application_root=" + root);
           return this;
         }
-
         abstract Builder<ApiServerT> setEnvironmentEntries(ImmutableMap<String, String> entries);
-
         abstract ImmutableList.Builder<String> launcherFlagsBuilder();
-
         abstract Builder<ApiServerT> setApiServerFactory(ApiServerFactory<ApiServerT> factory);
-
         abstract Config<ApiServerT> autoBuild();
-
         Config<ApiServerT> build() {
           if (applicationPath == applicationRoot) {
             throw new IllegalStateException(
@@ -211,7 +181,6 @@ public abstract class JavaRuntimeViaHttpBase {
         }
       }
     }
-
     /** JVM flags needed for JDK above JDK8 */
     private static ImmutableList<String> optionalFlags() {
       if (!JAVA_VERSION.value().startsWith("1.8")) {
@@ -228,13 +197,11 @@ public abstract class JavaRuntimeViaHttpBase {
       }
       return ImmutableList.of("-showversion"); // Just so that the list is not empty.
     }
-
     static <ApiServerT extends Closeable> RuntimeContext<ApiServerT> create(
         Config<ApiServerT> config) throws IOException, InterruptedException {
       PortPicker portPicker = PortPicker.create();
       int jettyPort = portPicker.pickUnusedPort();
       int apiPort = portPicker.pickUnusedPort();
-
       String runtimeDirProperty = System.getProperty("appengine.runtime.dir");
       File runtimeDir =
           (runtimeDirProperty == null)
@@ -244,23 +211,28 @@ public abstract class JavaRuntimeViaHttpBase {
           .that(runtimeDir.isDirectory())
           .isTrue();
       InetSocketAddress apiSocketAddress = new InetSocketAddress(apiPort);
-
       ImmutableList.Builder<String> builder = ImmutableList.<String>builder();
           builder.add(JAVA_HOME.value() + "/bin/java");
           Integer debugPort = Integer.getInteger("appengine.debug.port");
           if (debugPort != null) {
-            builder.add("-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:" + debugPort);
+        builder.add("-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:" + debugPort);
           }
-          builder.add(
+      ImmutableList<String> runtimeArgs =
+          builder
+              .add(
                   "-Dcom.google.apphosting.runtime.jetty94.LEGACY_MODE=" + useJetty94LegacyMode(),
                   "-Dappengine.use.EE8=" + Boolean.getBoolean("appengine.use.EE8"),
                   "-Dappengine.use.EE10=" + Boolean.getBoolean("appengine.use.EE10"),
+                  "-Dappengine.use.HttpConnector="
+                      + Boolean.getBoolean("appengine.use.HttpConnector"),
+                  "-Djetty.server.dumpAfterStart="
+                      + Boolean.getBoolean("jetty.server.dumpAfterStart"),
                   "-Duse.mavenjars=" + useMavenJars(),
                   "-cp",
                   useMavenJars()
                       ? new File(runtimeDir, "jars/runtime-main.jar").getAbsolutePath()
-                      : new File(runtimeDir, "runtime-main.jar").getAbsolutePath());
-            builder.addAll(optionalFlags())
+                      : new File(runtimeDir, "runtime-main.jar").getAbsolutePath())
+              .addAll(optionalFlags())
               .addAll(jvmFlagsFromEnvironment(config.environmentEntries()))
               .add(
                   "com.google.apphosting.runtime.JavaRuntimeMainWithDefaults",
@@ -269,16 +241,14 @@ public abstract class JavaRuntimeViaHttpBase {
                   "--trusted_host="
                       + HostAndPort.fromParts(apiSocketAddress.getHostString(), apiPort),
                   runtimeDir.getAbsolutePath())
-              .addAll(config.launcherFlags());
-      ImmutableList<String> runtimeArgs = builder.build();
-
+              .addAll(config.launcherFlags())
+              .build();
       Process runtimeProcess = launchRuntime(runtimeArgs, config.environmentEntries());
       OutputPump outPump = new OutputPump(runtimeProcess.getInputStream(), "[stdout] ");
       OutputPump errPump = new OutputPump(runtimeProcess.getErrorStream(), "[stderr] ");
       new Thread(outPump).start();
       new Thread(errPump).start();
       await().atMost(30, SECONDS).until(() -> isPortAvailable("localhost", jettyPort));
-
       int timeoutMillis = 30_000;
       RequestConfig requestConfig =
           RequestConfig.custom()
@@ -289,11 +259,9 @@ public abstract class JavaRuntimeViaHttpBase {
       HttpClient httpClient =
           HttpClientBuilder.create().setDefaultRequestConfig(requestConfig).build();
       ApiServerT httpApiServer = config.apiServerFactory().newApiServer(apiPort, jettyPort);
-
       return new RuntimeContext<>(
           runtimeProcess, httpApiServer, httpClient, jettyPort, outPump, errPump);
     }
-
     public static boolean isPortAvailable(String host, int port) {
         try {
           Socket socket = new Socket(host, port);
@@ -303,32 +271,26 @@ public abstract class JavaRuntimeViaHttpBase {
           return false;
         }
     }
-
     private static List<String> jvmFlagsFromEnvironment(ImmutableMap<String, String> env) {
       return Splitter.on(' ').omitEmptyStrings().splitToList(env.getOrDefault("GAE_JAVA_OPTS", ""));
     }
-
     ApiServerT getApiServer() {
       return httpApiServer;
     }
-
     HttpClient getHttpClient() {
       return httpClient;
     }
-
     String jettyUrl(String urlPath) {
       return String.format(
           "http://%s%s",
           HostAndPort.fromParts(new InetSocketAddress(jettyPort).getHostString(), jettyPort),
           urlPath);
     }
-
     void executeHttpGet(String url, String expectedResponseBody, int expectedReturnCode)
         throws Exception {
       executeHttpGetWithRetries(
           url, expectedResponseBody, expectedReturnCode, /* numberOfRetries= */ 1);
     }
-
     String executeHttpGet(String urlPath, int expectedReturnCode) throws Exception {
       HttpGet get = new HttpGet(jettyUrl(urlPath));
       HttpResponse response = httpClient.execute(get);
@@ -344,7 +306,6 @@ public abstract class JavaRuntimeViaHttpBase {
         EntityUtils.consumeQuietly(entity);
       }
     }
-
     void executeHttpGetWithRetries(
         String urlPath, String expectedResponse, int expectedReturnCode, int numberOfRetries)
         throws Exception {
@@ -363,15 +324,12 @@ public abstract class JavaRuntimeViaHttpBase {
       assertThat(content).isEqualTo(expectedResponse);
       assertThat(retCode).isEqualTo(expectedReturnCode);
     }
-
     void awaitStdoutLineMatching(String pattern, long timeoutSeconds) throws InterruptedException {
       outPump.awaitOutputLineMatching(pattern, timeoutSeconds);
     }
-
     void awaitStderrLineMatching(String pattern, long timeoutSeconds) throws InterruptedException {
       errPump.awaitOutputLineMatching(pattern, timeoutSeconds);
     }
-
     private static Process launchRuntime(
         ImmutableList<String> args, ImmutableMap<String, String> environmentEntries)
         throws IOException {
@@ -379,36 +337,29 @@ public abstract class JavaRuntimeViaHttpBase {
       pb.environment().putAll(environmentEntries);
       return pb.start();
     }
-
     Process runtimeProcess() {
       return runtimeProcess;
     }
-
     @Override
     public void close() throws IOException {
       runtimeProcess.destroy();
       httpApiServer.close();
     }
   }
-
   static boolean useMavenJars() {
     return Boolean.getBoolean("use.mavenjars");
   }
-
   static boolean useJetty94LegacyMode() {
     return Boolean.getBoolean("com.google.apphosting.runtime.jetty94.LEGACY_MODE");
   }
-
   static class OutputPump implements Runnable {
     private final BufferedReader stream;
     private final String echoPrefix;
     private final BlockingQueue<String> outputQueue = new LinkedBlockingQueue<>();
-
     OutputPump(InputStream instream, String echoPrefix) {
       this.stream = new BufferedReader(new InputStreamReader(instream, UTF_8));
       this.echoPrefix = echoPrefix;
     }
-
     @Override
     public void run() {
       String line;
@@ -421,7 +372,6 @@ public abstract class JavaRuntimeViaHttpBase {
         throw new RuntimeException(e);
       }
     }
-
     void awaitOutputLineMatching(String pattern, long timeoutSeconds) throws InterruptedException {
       long timeoutMillis = MILLISECONDS.convert(timeoutSeconds, SECONDS);
       long deadline = System.currentTimeMillis() + timeoutMillis;
@@ -437,10 +387,8 @@ public abstract class JavaRuntimeViaHttpBase {
       }
     }
   }
-
   private static final Pattern JAR_URL_PATTERN = Pattern.compile("jar:file:(.*)!(.*)");
   private static final Pattern JAR_FILE_URL_PATTERN = Pattern.compile("file:(.*\\.jar)");
-
   /**
    * Extract the test app with the given name into the given output directory. The situation is that
    * we have a jar file in our classpath that contains this app, plus maybe a bunch of other stuff.
@@ -482,12 +430,10 @@ public abstract class JavaRuntimeViaHttpBase {
     Path fromJar = Paths.get(fileName);
     Path toJar = webInfLib.resolve(fromJar.getFileName());
     Files.copy(fromJar, toJar);
-
     // If the app includes APIs, like ThreadManager, then copy the API jar to WEB-INF/lib.
     copyJarContainingClass("com.google.appengine.api.ThreadManager", webInfLib);
     // Guava library.
     copyJarContainingClass("com.google.common.io.CountingInputStream", webInfLib);
-
     ImmutableSet<ResourceInfo> resources =
         ClassPath.from(myClassLoader).getResources().stream()
             .filter(info -> info.getResourceName().startsWith(appPrefix))
@@ -502,7 +448,6 @@ public abstract class JavaRuntimeViaHttpBase {
       }
     }
   }
-
   private static void copyJarContainingClass(String className, Path toPath) throws IOException {
     try {
       Class<?> threadManager = Class.forName(className);
@@ -524,7 +469,6 @@ public abstract class JavaRuntimeViaHttpBase {
       // OK: the app presumably doesn't need this.
     }
   }
-
   /**
    * An API server that handles API calls via the supplied handler map. Each incoming API call is
    * looked up as <i>{@code service.method}</i>, for example {@code urlfetch.Fetch}, to discover a
@@ -536,13 +480,11 @@ public abstract class JavaRuntimeViaHttpBase {
    */
   static class DummyApiServer implements Closeable {
     private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
-
     static DummyApiServer create(
         int apiPort, ImmutableMap<String, Function<ByteString, ByteString>> handlerMap)
         throws IOException {
       return create(apiPort, handlerMap, request -> {});
     }
-
     static DummyApiServer create(
         int apiPort,
         ImmutableMap<String, Function<ByteString, ByteString>> handlerMap,
@@ -556,16 +498,13 @@ public abstract class JavaRuntimeViaHttpBase {
       httpServer.start();
       return apiServer;
     }
-
     private final HttpServer httpServer;
     private final Function<String, Function<ByteString, ByteString>> handlerLookup;
     private final Consumer<RemoteApiPb.Request> requestObserver;
-
     DummyApiServer(
         HttpServer httpServer, Function<String, Function<ByteString, ByteString>> handlerLookup) {
       this(httpServer, handlerLookup, request -> {});
     }
-
     private DummyApiServer(
         HttpServer httpServer,
         Function<String, Function<ByteString, ByteString>> handlerLookup,
@@ -574,17 +513,14 @@ public abstract class JavaRuntimeViaHttpBase {
       this.handlerLookup = handlerLookup;
       this.requestObserver = requestObserver;
     }
-
     @Override
     public void close() {
       httpServer.stop(0);
     }
-
     @ForOverride
     RemoteApiPb.Response.Builder newResponseBuilder() {
       return RemoteApiPb.Response.newBuilder();
     }
-
     void handle(HttpExchange exchange) throws IOException {
       try (InputStream in = exchange.getRequestBody();
           OutputStream out = exchange.getResponseBody()) {

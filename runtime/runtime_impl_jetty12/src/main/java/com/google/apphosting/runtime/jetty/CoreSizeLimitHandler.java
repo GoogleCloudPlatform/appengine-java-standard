@@ -16,6 +16,7 @@
 
 package com.google.apphosting.runtime.jetty;
 
+import java.nio.ByteBuffer;
 import org.eclipse.jetty.http.BadMessageException;
 import org.eclipse.jetty.http.HttpException;
 import org.eclipse.jetty.http.HttpField;
@@ -27,8 +28,6 @@ import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Response;
 import org.eclipse.jetty.util.Callback;
-
-import java.nio.ByteBuffer;
 
 /**
  * A handler that can limit the size of message bodies in requests and responses.
@@ -101,7 +100,10 @@ public class CoreSizeLimitHandler extends Handler.Wrapper
         _read += content.remaining();
         if (_requestLimit >= 0 && _read > _requestLimit)
         {
-          BadMessageException e = new BadMessageException(HttpStatus.PAYLOAD_TOO_LARGE_413, "Request body is too large: " + _read + ">" + _requestLimit);
+          BadMessageException e =
+              new BadMessageException(
+                  HttpStatus.PAYLOAD_TOO_LARGE_413,
+                  "Request body is too large: " + _read + ">" + _requestLimit);
           getWrapped().fail(e);
           return null;
         }
@@ -115,6 +117,7 @@ public class CoreSizeLimitHandler extends Handler.Wrapper
   {
     private final HttpFields.Mutable _httpFields;
     private long _written = 0;
+    private String failed;
 
     public SizeLimitResponseWrapper(Request request, Response wrapped) {
       super(request, wrapped);
@@ -143,12 +146,24 @@ public class CoreSizeLimitHandler extends Handler.Wrapper
     @Override
     public void write(boolean last, ByteBuffer content, Callback callback)
     {
+      if (failed != null) {
+        callback.failed(
+            new HttpException.RuntimeException(HttpStatus.INTERNAL_SERVER_ERROR_500, failed));
+        return;
+      }
+
       if (content != null && content.remaining() > 0)
       {
         if (_responseLimit >= 0 && (_written + content.remaining())  > _responseLimit)
         {
-          callback.failed(new HttpException.RuntimeException(HttpStatus.INTERNAL_SERVER_ERROR_500, "Response body is too large: " +
-                  _written + content.remaining() + ">" + _responseLimit));
+          failed =
+              "Response body is too large: "
+                  + _written
+                  + content.remaining()
+                  + ">"
+                  + _responseLimit;
+          callback.failed(
+              new HttpException.RuntimeException(HttpStatus.INTERNAL_SERVER_ERROR_500, failed));
           return;
         }
         _written += content.remaining();

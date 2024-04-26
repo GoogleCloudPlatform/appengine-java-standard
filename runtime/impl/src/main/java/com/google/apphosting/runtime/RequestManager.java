@@ -24,8 +24,7 @@ import com.google.apphosting.api.ApiProxy.LogRecord.Level;
 import com.google.apphosting.api.DeadlineExceededException;
 import com.google.apphosting.base.AppVersionKey;
 import com.google.apphosting.base.protos.AppLogsPb.AppLogLine;
-import com.google.apphosting.base.protos.HttpPb;
-import com.google.apphosting.base.protos.RuntimePb.UPRequest;
+import com.google.apphosting.base.protos.RuntimePb;
 import com.google.apphosting.base.protos.RuntimePb.UPResponse;
 import com.google.apphosting.runtime.anyrpc.AnyRpcServerContext;
 import com.google.apphosting.runtime.timer.CpuRatioTimer;
@@ -33,6 +32,7 @@ import com.google.apphosting.runtime.timer.JmxGcTimerSet;
 import com.google.apphosting.runtime.timer.JmxHotspotTimerSet;
 import com.google.apphosting.runtime.timer.TimerFactory;
 import com.google.auto.value.AutoBuilder;
+import com.google.common.base.Ascii;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.flogger.GoogleLogger;
@@ -225,19 +225,32 @@ public class RequestManager implements RequestThreadManager {
     this.maxOutstandingApiRpcs = maxOutstandingApiRpcs;
   }
 
+  public RequestToken startRequest(
+      AppVersion appVersion,
+      AnyRpcServerContext rpc,
+      RuntimePb.UPRequest upRequest,
+      MutableUpResponse upResponse,
+      ThreadGroup requestThreadGroup) {
+    return startRequest(
+        appVersion,
+        rpc,
+        new UpRequestAPIData(upRequest),
+        new UpResponseAPIData(upResponse),
+        requestThreadGroup);
+  }
+
   /**
-   * Set up any state necessary to execute a new request using the
-   * specified parameters.  The current thread should be the one that
-   * will execute the new request.
+   * Set up any state necessary to execute a new request using the specified parameters. The current
+   * thread should be the one that will execute the new request.
    *
-   * @return a {@code RequestToken} that should be passed into {@code
-   * finishRequest} after the request completes.
+   * @return a {@code RequestToken} that should be passed into {@code finishRequest} after the
+   *     request completes.
    */
   public RequestToken startRequest(
       AppVersion appVersion,
       AnyRpcServerContext rpc,
-      UPRequest upRequest,
-      MutableUpResponse upResponse,
+      RequestAPIData genericRequest,
+      ResponseAPIData genericResponse,
       ThreadGroup requestThreadGroup) {
     long remainingTime = getAdjustedRpcDeadline(rpc, 60000);
     long softDeadlineMillis = Math.max(getAdjustedRpcDeadline(rpc, -1) - softDeadlineDelay, -1);
@@ -251,7 +264,7 @@ public class RequestManager implements RequestThreadManager {
     logger.atInfo().log("Beginning request %s remaining millis : %d", requestId, remainingTime);
 
     Runnable endAction;
-    if (isSnapshotRequest(upRequest)) {
+    if (isSnapshotRequest(genericRequest)) {
       logger.atInfo().log("Received snapshot request");
       endAction = new DisableApiHostAction();
     } else {
@@ -259,15 +272,15 @@ public class RequestManager implements RequestThreadManager {
       endAction = new NullAction();
     }
 
-    TraceWriter traceWriter = TraceWriter.getTraceWriterForRequest(upRequest, upResponse);
+    TraceWriter traceWriter = TraceWriter.getTraceWriterForRequest(genericRequest, genericResponse);
     if (traceWriter != null) {
       URL requestURL = null;
       try {
-        requestURL = new URL(upRequest.getRequest().getUrl());
+        requestURL = new URL(genericRequest.getUrl());
       } catch (MalformedURLException e) {
         logger.atWarning().withCause(e).log(
             "Failed to extract path for trace due to malformed request URL: %s",
-            upRequest.getRequest().getUrl());
+            genericRequest.getUrl());
       }
       if (requestURL != null) {
         traceWriter.startRequestSpan(requestURL.getPath());
@@ -292,8 +305,8 @@ public class RequestManager implements RequestThreadManager {
     ApiProxy.Environment environment =
         apiProxyImpl.createEnvironment(
             appVersion,
-            upRequest,
-            upResponse,
+            genericRequest,
+            genericResponse,
             traceWriter,
             timer,
             requestId,
@@ -315,9 +328,9 @@ public class RequestManager implements RequestThreadManager {
     RequestToken token =
         new RequestToken(
             thread,
-            upResponse,
+            genericResponse,
             requestId,
-            upRequest.getSecurityTicket(),
+            genericRequest.getSecurityTicket(),
             timer,
             asyncFutures,
             appVersion,
@@ -328,7 +341,7 @@ public class RequestManager implements RequestThreadManager {
             state,
             endAction);
 
-    requests.put(upRequest.getSecurityTicket(), token);
+    requests.put(genericRequest.getSecurityTicket(), token);
 
     // Tell the ApiProxy about our current request environment so that
     // it can make callbacks and pass along information about the
@@ -428,21 +441,19 @@ public class RequestManager implements RequestThreadManager {
     runtimeLogSink.ifPresent(x -> x.flushLogs(requestToken.getUpResponse()));
   }
 
-  private static boolean isSnapshotRequest(UPRequest request) {
+  private static boolean isSnapshotRequest(RequestAPIData request) {
     try {
-      URI uri = new URI(request.getRequest().getUrl());
+      URI uri = new URI(request.getUrl());
       if (!"/_ah/snapshot".equals(uri.getPath())) {
         return false;
       }
     } catch (URISyntaxException e) {
       return false;
     }
-    for (HttpPb.ParsedHttpHeader header : request.getRequest().getHeadersList()) {
-      if ("X-AppEngine-Snapshot".equalsIgnoreCase(header.getKey())) {
-        return true;
-      }
-    }
-    return false;
+
+    return request
+        .getHeadersList()
+        .anyMatch(header -> Ascii.equalsIgnoreCase("X-AppEngine-Snapshot", header.getKey()));
   }
 
   private class DisableApiHostAction implements Runnable {
@@ -629,11 +640,10 @@ public class RequestManager implements RequestThreadManager {
       Collection<Thread> threads;
       while (!(threads = getActiveThreads(requestToken)).isEmpty()) {
         if (state.hasHardDeadlinePassed()) {
-          requestToken.getUpResponse().setError(UPResponse.ERROR.THREADS_STILL_RUNNING_VALUE);
-          requestToken.getUpResponse().clearHttpResponse();
+          requestToken.getUpResponse().error(UPResponse.ERROR.THREADS_STILL_RUNNING_VALUE, null);
           String messageString = threadDump(threads, "Thread(s) still running after request:\n");
           logger.atWarning().log("%s", messageString);
-          requestToken.addAppLogMessage(ApiProxy.LogRecord.Level.fatal, messageString);
+          requestToken.addAppLogMessage(Level.fatal, messageString);
           return;
         } else {
           try {
@@ -658,7 +668,7 @@ public class RequestManager implements RequestThreadManager {
                 // We're probably going to block forever.
                 String message = threadDump(threads, "Threads still running after 10 seconds:\n");
                 logger.atWarning().log("%s", message);
-                requestToken.addAppLogMessage(ApiProxy.LogRecord.Level.warn, message);
+                requestToken.addAppLogMessage(Level.warn, message);
                 thread.join();
               }
             }
@@ -857,7 +867,7 @@ public class RequestManager implements RequestThreadManager {
     checkForDeadlocks(token);
     logger.atInfo().log("Calling shutdown hooks for %s", token.getAppVersionKey());
     // TODO what if there's other app/versions in this VM?
-    MutableUpResponse response = token.getUpResponse();
+    ResponseAPIData response = token.getUpResponse();
 
     // Set the context classloader to the UserClassLoader while invoking the
     // shutdown hooks.
@@ -873,8 +883,7 @@ public class RequestManager implements RequestThreadManager {
 
     logAllStackTraces();
 
-    response.setError(UPResponse.ERROR.OK_VALUE);
-    response.setHttpResponseCodeAndResponse(200, "OK");
+    response.complete();
   }
 
   @Override
@@ -972,7 +981,7 @@ public class RequestManager implements RequestThreadManager {
      */
     private final Thread requestThread;
 
-    private final MutableUpResponse upResponse;
+    private final ResponseAPIData response;
 
     /**
      * A collection of {@code Future} objects that have been scheduled
@@ -1010,7 +1019,7 @@ public class RequestManager implements RequestThreadManager {
 
     RequestToken(
         Thread requestThread,
-        MutableUpResponse upResponse,
+        ResponseAPIData response,
         String requestId,
         String securityTicket,
         CpuRatioTimer requestTimer,
@@ -1023,7 +1032,7 @@ public class RequestManager implements RequestThreadManager {
         RequestState state,
         Runnable endAction) {
       this.requestThread = requestThread;
-      this.upResponse = upResponse;
+      this.response = response;
       this.requestId = requestId;
       this.securityTicket = securityTicket;
       this.requestTimer = requestTimer;
@@ -1047,8 +1056,8 @@ public class RequestManager implements RequestThreadManager {
       return requestThread;
     }
 
-    MutableUpResponse getUpResponse() {
-      return upResponse;
+    ResponseAPIData getUpResponse() {
+      return response;
     }
 
     CpuRatioTimer getRequestTimer() {
@@ -1104,19 +1113,19 @@ public class RequestManager implements RequestThreadManager {
       finished = true;
     }
 
-    public void addAppLogMessage(ApiProxy.LogRecord.Level level, String message) {
-      upResponse.addAppLog(AppLogLine.newBuilder()
-          .setLevel(level.ordinal())
-          .setTimestampUsec(System.currentTimeMillis() * 1000)
-          .setMessage(message));
+    public void addAppLogMessage(Level level, String message) {
+      response.addAppLog(
+          AppLogLine.newBuilder()
+              .setLevel(level.ordinal())
+              .setTimestampUsec(System.currentTimeMillis() * 1000)
+              .setMessage(message)
+              .build());
     }
 
     void logAndKillRuntime(String errorMessage) {
       logger.atSevere().log("LOG(FATAL): %s", errorMessage);
-      upResponse.clearHttpResponse();
-      upResponse.setError(UPResponse.ERROR.LOG_FATAL_DEATH_VALUE);
-      upResponse.setErrorMessage(errorMessage);
-      rpc.finishWithResponse(upResponse.build());
+      response.error(UPResponse.ERROR.LOG_FATAL_DEATH_VALUE, errorMessage);
+      response.finishWithResponse(rpc);
     }
 
     void runEndAction() {

@@ -126,7 +126,8 @@ public final class RequestRunnerTest {
   public void run_dispatchesServletRequest() throws InterruptedException {
     MockAnyRpcServerContext rpc = createRpc();
 
-    when(requestManager.startRequest(any(), any(), any(), any(), any())).thenReturn(requestToken);
+    when(requestManager.startRequest(any(), any(), any(), (MutableUpResponse) any(), any()))
+        .thenReturn(requestToken);
 
     ServletEngineAdapter servletEngine =
         new JettyServletEngineAdapter() {
@@ -177,7 +178,8 @@ public final class RequestRunnerTest {
   public void run_handlesDispatchServletRequestException() throws InterruptedException {
     MockAnyRpcServerContext rpc = createRpc();
 
-    when(requestManager.startRequest(any(), any(), any(), any(), any())).thenReturn(requestToken);
+    when(requestManager.startRequest(any(), any(), any(), (MutableUpResponse) any(), any()))
+        .thenReturn(requestToken);
 
     ServletEngineAdapter servletEngine =
         new JettyServletEngineAdapter() {
@@ -232,7 +234,8 @@ public final class RequestRunnerTest {
   @Test
   public void run_backgroundRequest()
       throws InterruptedException, TimeoutException, ExecutionException {
-    when(requestManager.startRequest(any(), any(), any(), any(), any())).thenReturn(requestToken);
+    when(requestManager.startRequest(any(), any(), any(), (MutableUpResponse) any(), any()))
+        .thenReturn(requestToken);
 
     ExecutorService executor = Executors.newCachedThreadPool();
 

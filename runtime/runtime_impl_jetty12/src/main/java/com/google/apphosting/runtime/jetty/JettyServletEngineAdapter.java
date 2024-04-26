@@ -13,40 +13,44 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.google.apphosting.runtime.jetty;
+
+import static com.google.apphosting.runtime.jetty.AppEngineConstants.HTTP_CONNECTOR_MODE;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.apphosting.base.AppVersionKey;
 import com.google.apphosting.base.protos.AppinfoPb;
+import com.google.apphosting.base.protos.EmptyMessage;
 import com.google.apphosting.base.protos.RuntimePb.UPRequest;
 import com.google.apphosting.base.protos.RuntimePb.UPResponse;
 import com.google.apphosting.runtime.AppVersion;
 import com.google.apphosting.runtime.JettyConstants;
 import com.google.apphosting.runtime.MutableUpResponse;
 import com.google.apphosting.runtime.ServletEngineAdapter;
+import com.google.apphosting.runtime.anyrpc.EvaluationRuntimeServerInterface;
 import com.google.apphosting.runtime.jetty.delegate.DelegateConnector;
 import com.google.apphosting.runtime.jetty.delegate.impl.DelegateRpcExchange;
+import com.google.apphosting.runtime.jetty.http.JettyHttpHandler;
+import com.google.apphosting.runtime.jetty.http.LocalRpcContext;
 import com.google.apphosting.runtime.jetty.proxy.JettyHttpProxy;
 import com.google.apphosting.utils.config.AppEngineConfigException;
 import com.google.apphosting.utils.config.AppYaml;
 import com.google.common.flogger.GoogleLogger;
-import org.eclipse.jetty.http.CookieCompliance;
-import org.eclipse.jetty.http.UriCompliance;
-import org.eclipse.jetty.server.HttpConfiguration;
-import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.util.VirtualThreads;
-import org.eclipse.jetty.util.resource.Resource;
-import org.eclipse.jetty.util.resource.ResourceFactory;
-import org.eclipse.jetty.util.thread.QueuedThreadPool;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStreamReader;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
-
-import static java.nio.charset.StandardCharsets.UTF_8;
+import org.eclipse.jetty.http.CookieCompliance;
+import org.eclipse.jetty.http.UriCompliance;
+import org.eclipse.jetty.server.HttpConfiguration;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.util.VirtualThreads;
+import org.eclipse.jetty.util.resource.Resource;
+import org.eclipse.jetty.util.resource.ResourceFactory;
+import org.eclipse.jetty.util.thread.QueuedThreadPool;
 
 /**
  * This is an implementation of ServletEngineAdapter that uses the third-party Jetty servlet engine.
@@ -60,7 +64,7 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
   private static final long MAX_RESPONSE_SIZE = 32 * 1024 * 1024;
 
   /**
-   * If Legacy Mode is tunred on, then Jetty is configured to be more forgiving of bad requests and
+   * If Legacy Mode is turned on, then Jetty is configured to be more forgiving of bad requests and
    * to act more in the style of Jetty-9.3
    */
   public static final boolean LEGACY_MODE =
@@ -69,23 +73,21 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
   private AppVersionKey lastAppVersionKey;
 
   static {
-    // Set legacy system property to dummy value because external libraries (google-auth-library-java)
+    // Set legacy system property to dummy value because external libraries
+    // (google-auth-library-java)
     // test if this value is null to decide whether it is Java 7 runtime.
     System.setProperty("org.eclipse.jetty.util.log.class", "DEPRECATED");
-
   }
 
   private Server server;
   private DelegateConnector rpcConnector;
   private AppVersionHandler appVersionHandler;
 
-  public JettyServletEngineAdapter() {
-  }
+  public JettyServletEngineAdapter() {}
 
   private static AppYaml getAppYaml(ServletEngineAdapter.Config runtimeOptions) {
     String applicationPath = runtimeOptions.fixedApplicationPath();
     File appYamlFile = new File(applicationPath + DEFAULT_APP_YAML_PATH);
-
     AppYaml appYaml = null;
     try {
       appYaml = AppYaml.parse(new InputStreamReader(new FileInputStream(appYamlFile), UTF_8));
@@ -106,10 +108,12 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
       threadPool.setVirtualThreadsExecutor(VirtualThreads.getDefaultVirtualThreadsExecutor());
       logger.atInfo().log("Configuring Appengine web server virtual threads.");
     }
-
-    // The server.getDefaultStyleSheet() returns is returning null because of some classloading issue,
+    // The server.getDefaultStyleSheet() returns is returning null because of some classloading
+    // issue,
     // so we get the StyleSheet here to ensure it returns the correct value.
-    Resource styleSheet = ResourceFactory.root().newResource(getClass().getClassLoader().getResource("jetty-dir.css"));
+    Resource styleSheet =
+        ResourceFactory.root()
+            .newResource(getClass().getClassLoader().getResource("jetty-dir.css"));
     server =
         new Server(threadPool) {
           @Override
@@ -122,20 +126,19 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
             return styleSheet;
           }
         };
-
-    rpcConnector = new DelegateConnector(server, "RPC") {
-      @Override
-      public void run(Runnable runnable) {
-        // Override this so that it does the initial run in the same thread.
-        // Currently, we block until completion in serviceRequest() so no point starting new thread.
-        runnable.run();
-      }
-    };
-
+    rpcConnector =
+        new DelegateConnector(server, "RPC") {
+          @Override
+          public void run(Runnable runnable) {
+            // Override this so that it does the initial run in the same thread.
+            // Currently, we block until completion in serviceRequest() so no point starting new
+            // thread.
+            runnable.run();
+          }
+        };
     server.addConnector(rpcConnector);
     AppVersionHandlerFactory appVersionHandlerFactory = AppVersionHandlerFactory.newInstance(server, serverInfo);
     appVersionHandler = new AppVersionHandler(appVersionHandlerFactory);
-
     if (!"java8".equals(System.getenv("GAE_RUNTIME"))) {
       CoreSizeLimitHandler sizeLimitHandler = new CoreSizeLimitHandler(-1, MAX_RESPONSE_SIZE);
       sizeLimitHandler.setHandler(appVersionHandler);
@@ -143,15 +146,48 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
     } else {
       server.setHandler(appVersionHandler);
     }
-
+    boolean startJettyHttpProxy = false;
     if (runtimeOptions.useJettyHttpProxy()) {
-      server.setAttribute("com.google.apphosting.runtime.jetty.appYaml",
-              JettyServletEngineAdapter.getAppYaml(runtimeOptions));
-      JettyHttpProxy.startServer(runtimeOptions);
+      AppInfoFactory appInfoFactory;
+      AppVersionKey appVersionKey;
+      /* The init actions are not done in the constructor as they are not used when testing */
+      try {
+        String appRoot = runtimeOptions.applicationRoot();
+        String appPath = runtimeOptions.fixedApplicationPath();
+        appInfoFactory = new AppInfoFactory(System.getenv());
+        AppinfoPb.AppInfo appinfo = appInfoFactory.getAppInfoFromFile(appRoot, appPath);
+        // TODO Should we also call ApplyCloneSettings()?
+        LocalRpcContext<EmptyMessage> context = new LocalRpcContext<>(EmptyMessage.class);
+        EvaluationRuntimeServerInterface evaluationRuntimeServerInterface =
+            Objects.requireNonNull(runtimeOptions.evaluationRuntimeServerInterface());
+        evaluationRuntimeServerInterface.addAppVersion(context, appinfo);
+        context.getResponse();
+        appVersionKey = AppVersionKey.fromAppInfo(appinfo);
+        appVersionHandler.ensureHandler(appVersionKey);
+      } catch (Exception e) {
+        throw new IllegalStateException(e);
+      }
+      if (Boolean.getBoolean(HTTP_CONNECTOR_MODE)) {
+        logger.atInfo().log("Using HTTP_CONNECTOR_MODE to bypass RPC");
+        JettyHttpProxy.insertHandlers(server);
+        server.insertHandler(
+            new JettyHttpHandler(
+                runtimeOptions, appVersionHandler.getAppVersion(), appVersionKey, appInfoFactory));
+        ServerConnector connector = JettyHttpProxy.newConnector(server, runtimeOptions);
+        server.addConnector(connector);
+      } else {
+        server.setAttribute(
+            "com.google.apphosting.runtime.jetty.appYaml",
+            JettyServletEngineAdapter.getAppYaml(runtimeOptions));
+        // Delay start of JettyHttpProxy until after the main server and application is started.
+        startJettyHttpProxy = true;
+      }
     }
-
     try {
       server.start();
+      if (startJettyHttpProxy) {
+        JettyHttpProxy.startServer(runtimeOptions);
+      }
     } catch (Exception ex) {
       // TODO: Should we have a wrapper exception for this
       // type of thing in ServletEngineAdapter?
@@ -195,12 +231,10 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
       upResponse.setErrorMessage("Unsupported handler type: " + upRequest.getHandler().getType());
       return;
     }
-
     // Optimise this adaptor assuming one deployed appVersionKey, so use the last one if it matches
     // and only check the handler is available if we see a new/different key.
     AppVersionKey appVersionKey = AppVersionKey.fromUpRequest(upRequest);
     AppVersionKey lastVersionKey = lastAppVersionKey;
-
     if (lastVersionKey != null) {
       // We already have created the handler on the previous request, so no need to do another getHandler().
       // The two AppVersionKeys must be the same as we only support one app version.
@@ -216,10 +250,8 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
         upResponse.setErrorMessage("Unknown app: " + appVersionKey);
         return;
       }
-
       lastAppVersionKey = appVersionKey;
     }
-
     // TODO: lots of compliance modes to handle.
     HttpConfiguration httpConfiguration = rpcConnector.getHttpConfiguration();
     httpConfiguration.setSendDateHeader(false);
@@ -230,7 +262,6 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
       httpConfiguration.setResponseCookieCompliance(CookieCompliance.RFC2965);
       httpConfiguration.setUriCompliance(UriCompliance.LEGACY);
     }
-
     DelegateRpcExchange rpcExchange = new DelegateRpcExchange(upRequest, upResponse);
     rpcExchange.setAttribute(JettyConstants.APP_VERSION_KEY_REQUEST_ATTR, appVersionKey);
     rpcConnector.service(rpcExchange);
@@ -241,7 +272,6 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
       if (error instanceof ExecutionException) {
         error = error.getCause();
       }
-
       upResponse.setError(UPResponse.ERROR.UNEXPECTED_ERROR_VALUE);
       upResponse.setErrorMessage("Unexpected Error: " + error);
     }

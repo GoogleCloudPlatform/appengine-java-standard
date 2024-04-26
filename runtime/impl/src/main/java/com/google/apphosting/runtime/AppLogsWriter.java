@@ -93,8 +93,10 @@ public class AppLogsWriter {
   private final int maxLogMessageLength;
   private final int logCutLength;
   private final int logCutLengthDiv10;
+
   @GuardedBy("lock")
-  private final MutableUpResponse upResponse;
+  private final ResponseAPIData genericResponse;
+
   private final long maxBytesToFlush;
   @GuardedBy("lock")
   private long currentByteCount;
@@ -106,37 +108,40 @@ public class AppLogsWriter {
   private static final Pattern PROTECTED_LOGS_CLASSES =
       Pattern.compile(PROTECTED_LOGS_CLASSES_REGEXP);
 
-  /**
-   * Construct an AppLogsWriter instance.
-   *
-   * @param upResponse The protobuf response instance that holds the return
-   *   value for EvaluationRuntime.HandleRequest. This is used to return
-   *   any logs that were not sent to the appserver with an intermediate flush
-   *   when the request ends.
-   * @param maxBytesToFlush The maximum number of bytes of log message to
-   *   allow in a single flush. The code flushes any cached logs before
-   *   reaching this limit. If this is 0, AppLogsWriter will not start
-   *   an intermediate flush based on size.
-   * @param maxLogMessageLength The maximum length of an individual log line.
-   *   A single log line longer than this will be written as multiple log
-   *   entries (with the continuation prefix/suffixes added to indicate this).
-   * @param maxFlushSeconds The amount of time to allow a log line to sit
-   *   cached before flushing. Once a log line has been sitting for more
-   *   than the specified time, all currently cached logs are flushed. If
-   *   this is 0, no time based flushing occurs.
-   *   N.B. because we only check the time on a log call, it is possible for
-   *   a log to stay cached long after the specified time has been reached.
-   *   Consider this example (assume maxFlushSeconds=60): the app logs a message
-   *   when the handler starts but then does not log another message for 10
-   *   minutes. The initial log will stay cached until the second message
-   *   is logged.
-   */
   public AppLogsWriter(
       MutableUpResponse upResponse,
       long maxBytesToFlush,
       int maxLogMessageLength,
       int maxFlushSeconds) {
-    this.upResponse = upResponse;
+    this(new UpResponseAPIData(upResponse), maxBytesToFlush, maxLogMessageLength, maxFlushSeconds);
+  }
+
+  /**
+   * Construct an AppLogsWriter instance.
+   *
+   * @param genericResponse The protobuf response instance that holds the return value for
+   *     EvaluationRuntime.HandleRequest. This is used to return any logs that were not sent to the
+   *     appserver with an intermediate flush when the request ends.
+   * @param maxBytesToFlush The maximum number of bytes of log message to allow in a single flush.
+   *     The code flushes any cached logs before reaching this limit. If this is 0, AppLogsWriter
+   *     will not start an intermediate flush based on size.
+   * @param maxLogMessageLength The maximum length of an individual log line. A single log line
+   *     longer than this will be written as multiple log entries (with the continuation
+   *     prefix/suffixes added to indicate this).
+   * @param maxFlushSeconds The amount of time to allow a log line to sit cached before flushing.
+   *     Once a log line has been sitting for more than the specified time, all currently cached
+   *     logs are flushed. If this is 0, no time based flushing occurs. N.B. because we only check
+   *     the time on a log call, it is possible for a log to stay cached long after the specified
+   *     time has been reached. Consider this example (assume maxFlushSeconds=60): the app logs a
+   *     message when the handler starts but then does not log another message for 10 minutes. The
+   *     initial log will stay cached until the second message is logged.
+   */
+  public AppLogsWriter(
+      ResponseAPIData genericResponse,
+      long maxBytesToFlush,
+      int maxLogMessageLength,
+      int maxFlushSeconds) {
+    this.genericResponse = genericResponse;
     this.maxSecondsBetweenFlush = maxFlushSeconds;
 
     if (maxLogMessageLength < MIN_MAX_LOG_MESSAGE_LENGTH) {
@@ -219,7 +224,7 @@ public class AppLogsWriter {
         // the queue is empty.
         stopwatch.start();
       }
-      upResponse.addAppLog(logLine);
+      genericResponse.addAppLog(logLine);
       currentByteCount += serializedSize;
     }
 
@@ -235,7 +240,7 @@ public class AppLogsWriter {
   @GuardedBy("lock")
   private void waitForCurrentFlushAndStartNewFlush() {
     waitForCurrentFlush();
-    if (upResponse.getAppLogCount() > 0) {
+    if (genericResponse.getAppLogCount() > 0) {
       currentFlush = doFlush();
     }
   }
@@ -249,7 +254,7 @@ public class AppLogsWriter {
 
     synchronized (lock) {
       waitForCurrentFlush();
-      if (upResponse.getAppLogCount() > 0) {
+      if (genericResponse.getAppLogCount() > 0) {
         flush = currentFlush = doFlush();
       }
     }
@@ -292,7 +297,7 @@ public class AppLogsWriter {
   @GuardedBy("lock")
   private Future<byte[]> doFlush() {
     AppLogGroup.Builder group = AppLogGroup.newBuilder();
-    for (AppLogLine logLine : upResponse.getAndClearAppLogList()) {
+    for (AppLogLine logLine : genericResponse.getAndClearAppLogList()) {
       group.addLogLine(logLine);
     }
     currentByteCount = 0;

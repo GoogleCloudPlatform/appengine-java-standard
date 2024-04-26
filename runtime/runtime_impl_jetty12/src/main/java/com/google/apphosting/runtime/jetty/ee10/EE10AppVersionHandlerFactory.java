@@ -13,12 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.google.apphosting.runtime.jetty.ee10;
 
+import com.google.apphosting.api.ApiProxy;
 import com.google.apphosting.runtime.AppVersion;
 import com.google.apphosting.runtime.JettyConstants;
 import com.google.apphosting.runtime.SessionsConfig;
+import com.google.apphosting.runtime.jetty.AppEngineConstants;
 import com.google.apphosting.runtime.jetty.AppVersionHandlerFactory;
 import com.google.apphosting.runtime.jetty.EE10SessionManagerHandler;
 import com.google.common.flogger.GoogleLogger;
@@ -28,6 +29,10 @@ import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintWriter;
+import javax.servlet.jsp.JspFactory;
 import org.eclipse.jetty.ee10.annotations.AnnotationConfiguration;
 import org.eclipse.jetty.ee10.quickstart.QuickStartConfiguration;
 import org.eclipse.jetty.ee10.servlet.Dispatcher;
@@ -40,15 +45,12 @@ import org.eclipse.jetty.ee10.webapp.WebInfConfiguration;
 import org.eclipse.jetty.ee10.webapp.WebXmlConfiguration;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.io.Content;
+import org.eclipse.jetty.server.Context;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Response;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.util.Callback;
-
-import javax.servlet.jsp.JspFactory;
-import java.io.File;
-import java.io.IOException;
-import java.io.PrintWriter;
 
 /**
  * {@code AppVersionHandlerFactory} implements a {@code Handler} for a given {@code AppVersionKey}.
@@ -59,7 +61,6 @@ public class EE10AppVersionHandlerFactory implements AppVersionHandlerFactory {
       "org.apache.tomcat.SimpleInstanceManager";
   private static final String TOMCAT_INSTANCE_MANAGER = "org.apache.tomcat.InstanceManager";
   private static final String TOMCAT_JSP_FACTORY = "org.apache.jasper.runtime.JspFactoryImpl";
-
   /**
    * Any settings in this webdefault.xml file will be inherited by all applications. We don't want
    * to use Jetty's built-in webdefault.xml because we want to disable some of their functionality,
@@ -67,34 +68,28 @@ public class EE10AppVersionHandlerFactory implements AppVersionHandlerFactory {
    */
   public static final String WEB_DEFAULTS_XML =
           "com/google/apphosting/runtime/jetty/webdefault.xml";
-
   /**
    * This property will be used to enable/disable Annotation Scanning when quickstart-web.xml is not
    * present.
    */
   private static final String USE_ANNOTATION_SCANNING = "use.annotationscanning";
-
   /**
    * A "private" request attribute to indicate if the dispatch to a most recent error page has run
    * to completion. Note an error page itself may generate errors.
    */
   static final String ERROR_PAGE_HANDLED = ErrorHandler.ERROR_PAGE + ".handled";
-
   private final Server server;
   private final String serverInfo;
   private final boolean useJettyErrorPageHandler;
-
   public EE10AppVersionHandlerFactory(Server server, String serverInfo) {
     this(server, serverInfo, false);
   }
-
   public EE10AppVersionHandlerFactory(
       Server server, String serverInfo, boolean useJettyErrorPageHandler) {
     this.server = server;
     this.serverInfo = serverInfo;
     this.useJettyErrorPageHandler = useJettyErrorPageHandler;
   }
-
   /**
    * Returns the {@code Handler} that will handle requests for the specified application version.
    */
@@ -109,11 +104,9 @@ public class EE10AppVersionHandlerFactory implements AppVersionHandlerFactory {
       Thread.currentThread().setContextClassLoader(oldContextClassLoader);
     }
   }
-
   private org.eclipse.jetty.server.Handler doCreateHandler(AppVersion appVersion) throws ServletException {
     try {
       File contextRoot = appVersion.getRootDirectory();
-
       final AppEngineWebAppContext context =
           new AppEngineWebAppContext(
               appVersion.getRootDirectory(), serverInfo, /* extractWar=*/ false);
@@ -126,7 +119,6 @@ public class EE10AppVersionHandlerFactory implements AppVersionHandlerFactory {
       } else {
         context.setErrorHandler(new NullErrorHandler());
       }
-
       // TODO: because of the shading we do not have a correct
       // org.eclipse.jetty.ee10.webapp.Configuration file from
       //  the runtime-impl jar. It failed to merge content from various modules and only contains
@@ -140,21 +132,18 @@ public class EE10AppVersionHandlerFactory implements AppVersionHandlerFactory {
             MetaInfConfiguration.class.getCanonicalName(),
             FragmentConfiguration.class.getCanonicalName()
           });
-
       /*
        * Remove JettyWebXmlConfiguration which allows users to use jetty-web.xml files.
        * We definitely do not want to allow these files, as they allow for arbitrary method invocation.
        */
       // TODO: uncomment when shaded org.eclipse.jetty.ee10.webapp.Configuration is fixed.
       // context.removeConfiguration(new JettyWebXmlConfiguration());
-
       if (Boolean.getBoolean(USE_ANNOTATION_SCANNING)) {
         context.addConfiguration(new AnnotationConfiguration());
       }
       else {
         context.removeConfiguration(new AnnotationConfiguration());
       }
-
       File quickstartXml = new File(contextRoot, "WEB-INF/quickstart-web.xml");
       if (quickstartXml.exists()) {
         context.addConfiguration(new QuickStartConfiguration());
@@ -162,9 +151,7 @@ public class EE10AppVersionHandlerFactory implements AppVersionHandlerFactory {
       else {
         context.removeConfiguration(new QuickStartConfiguration());
       }
-
       // TODO: review which configurations are added by default.
-
       // prevent jetty from trying to delete the temp dir
       context.setTempDirectoryPersistent(true);
       // ensure jetty does not unpack, probably not necessary because the unpacking
@@ -173,7 +160,6 @@ public class EE10AppVersionHandlerFactory implements AppVersionHandlerFactory {
       // ensure exception is thrown if context startup fails
       context.setThrowUnavailableOnStartupException(true);
       // for JSP 2.2
-
       try {
         // Use the App Class loader to try to initialize the JSP machinery.
         // Not an issue if it fails: it means the app does not contain the JSP jars in WEB-INF/lib.
@@ -191,7 +177,6 @@ public class EE10AppVersionHandlerFactory implements AppVersionHandlerFactory {
         // No big deal, there are no JSPs in the App since the jsp libraries are not inside the
         // web app classloader.
       }
-
       SessionsConfig sessionsConfig = appVersion.getSessionsConfig();
       EE10SessionManagerHandler.Config.Builder builder = EE10SessionManagerHandler.Config.builder();
       if (sessionsConfig.getAsyncPersistenceQueueName() != null) {
@@ -201,17 +186,33 @@ public class EE10AppVersionHandlerFactory implements AppVersionHandlerFactory {
           .setEnableSession(sessionsConfig.isEnabled())
           .setAsyncPersistence(sessionsConfig.isAsyncPersistence())
           .setServletContextHandler(context);
-
       EE10SessionManagerHandler.create(builder.build());
       // Pass the AppVersion on to any of our servlets (e.g. ResourceFileServlet).
       context.setAttribute(JettyConstants.APP_VERSION_CONTEXT_ATTR, appVersion);
+      context.addEventListener(
+          new ContextHandler.ContextScopeListener() {
+            @Override
+            public void enterScope(Context context, Request request) {
+              if (request != null) {
+                ApiProxy.Environment environment =
+                    (ApiProxy.Environment)
+                        request.getAttribute(AppEngineConstants.ENVIRONMENT_ATTR);
+                if (environment != null) ApiProxy.setEnvironmentForCurrentThread(environment);
+              }
+            }
 
+            @Override
+            public void exitScope(Context context, Request request) {
+              if (request != null) {
+                ApiProxy.clearEnvironmentForCurrentThread();
+              }
+            }
+          });
       return context;
     } catch (Exception ex) {
       throw new ServletException(ex);
     }
   }
-
   /**
    * {@code NullErrorHandler} does nothing when an error occurs. The exception is already stored in
    * an attribute of {@code request}, but we don't do any rendering of it into the response, UNLESS
@@ -219,7 +220,6 @@ public class EE10AppVersionHandlerFactory implements AppVersionHandlerFactory {
    * condition (exception type or error code).
    */
   private static class NullErrorHandler extends ErrorPageErrorHandler {
-
     @Override
     public boolean handle(Request request, Response response, Callback callback) throws Exception {
       logger.atFine().log("Custom Jetty ErrorHandler received an error notification.");
@@ -227,7 +227,6 @@ public class EE10AppVersionHandlerFactory implements AppVersionHandlerFactory {
       // We don't want Jetty to do anything further.
       return true;
     }
-
     /**
      * Try to invoke a custom error page if a handler is available. If not, render a simple HTML
      * response for {@link HttpServletResponse#sendError} calls, but do nothing for unhandled
@@ -240,19 +239,15 @@ public class EE10AppVersionHandlerFactory implements AppVersionHandlerFactory {
      */
     private void mayHandleByErrorPage(Request request, Response response, Callback callback)
         throws IOException {
-
       ServletContextRequest contextRequest = Request.as(request, ServletContextRequest.class);
       HttpServletRequest httpServletRequest = contextRequest.getServletApiRequest();
       HttpServletResponse httpServletResponse = contextRequest.getHttpServletResponse();
-
       // Extract some error handling info from Jetty's proprietary attributes.
       Throwable error = (Throwable) contextRequest.getAttribute(RequestDispatcher.ERROR_EXCEPTION);
       Integer code = (Integer) contextRequest.getAttribute(RequestDispatcher.ERROR_STATUS_CODE);
       String message = (String) contextRequest.getAttribute(RequestDispatcher.ERROR_MESSAGE);
-
       // Now try to find an error handler...
       String errorPage = getErrorPage(httpServletRequest);
-
       // If we found an error handler, dispatch to it.
       if (errorPage != null) {
         // Check for reentry into the same error page.
@@ -278,16 +273,13 @@ public class EE10AppVersionHandlerFactory implements AppVersionHandlerFactory {
           }
         }
       }
-
       // If we got an error code (e.g. this is a call to HttpServletResponse#sendError),
       // then render our own HTML.  XFE has logic to do this, but the PFE only invokes it
       // for error conditions that it or the AppServer detect.
       if (code != null && message != null) {
         // This template is based on the default XFE error response.
         response.getHeaders().put(HttpHeader.CONTENT_TYPE, "text/html; charset=UTF-8");
-
         String messageEscaped = HtmlEscapers.htmlEscaper().escape(message);
-
         try (PrintWriter writer = new PrintWriter(Content.Sink.asOutputStream(response))) {
           writer.println("<html><head>");
           writer.println("<meta http-equiv=\"content-type\" content=\"text/html;charset=utf-8\">");
@@ -301,10 +293,8 @@ public class EE10AppVersionHandlerFactory implements AppVersionHandlerFactory {
         } catch (Throwable t) {
           callback.failed(t);
         }
-
         return;
       }
-
       // If we got this far and *did* have an exception, it will be
       // retrieved and thrown at the end of JettyServletEngineAdapter#serviceRequest.
       throw new IllegalStateException(error);

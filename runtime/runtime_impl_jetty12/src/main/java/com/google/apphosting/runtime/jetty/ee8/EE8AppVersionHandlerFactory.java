@@ -16,14 +16,17 @@
 
 package com.google.apphosting.runtime.jetty.ee8;
 
+import com.google.apphosting.api.ApiProxy;
 import com.google.apphosting.runtime.AppVersion;
 import com.google.apphosting.runtime.JettyConstants;
 import com.google.apphosting.runtime.SessionsConfig;
+import com.google.apphosting.runtime.jetty.AppEngineConstants;
 import com.google.apphosting.runtime.jetty.AppVersionHandlerFactory;
 import com.google.apphosting.runtime.jetty.SessionManagerHandler;
 import com.google.common.flogger.GoogleLogger;
 import com.google.common.html.HtmlEscapers;
 import org.eclipse.jetty.ee8.annotations.AnnotationConfiguration;
+import org.eclipse.jetty.ee8.nested.ContextHandler;
 import org.eclipse.jetty.ee8.nested.Dispatcher;
 import org.eclipse.jetty.ee8.quickstart.QuickStartConfiguration;
 import org.eclipse.jetty.ee8.servlet.ErrorPageErrorHandler;
@@ -59,7 +62,7 @@ public class EE8AppVersionHandlerFactory implements AppVersionHandlerFactory {
    * and because we want to be explicit about what functionality we are supporting.
    */
   public static final String WEB_DEFAULTS_XML =
-          "com/google/apphosting/runtime/jetty/webdefault.xml";
+      "com/google/apphosting/runtime/jetty/webdefault.xml";
 
   /**
    * This property will be used to enable/disable Annotation Scanning when quickstart-web.xml is not
@@ -96,7 +99,8 @@ public class EE8AppVersionHandlerFactory implements AppVersionHandlerFactory {
    * Returns the {@code Handler} that will handle requests for the specified application version.
    */
   @Override
-  public org.eclipse.jetty.server.Handler createHandler(AppVersion appVersion) throws ServletException {
+  public org.eclipse.jetty.server.Handler createHandler(AppVersion appVersion)
+      throws ServletException {
     // Need to set thread context classloader for the duration of the scope.
     ClassLoader oldContextClassLoader = Thread.currentThread().getContextClassLoader();
     Thread.currentThread().setContextClassLoader(this.getClass().getClassLoader());
@@ -107,7 +111,8 @@ public class EE8AppVersionHandlerFactory implements AppVersionHandlerFactory {
     }
   }
 
-  private org.eclipse.jetty.server.Handler doCreateHandler(AppVersion appVersion) throws ServletException {
+  private org.eclipse.jetty.server.Handler doCreateHandler(AppVersion appVersion)
+      throws ServletException {
     try {
       File contextRoot = appVersion.getRootDirectory();
 
@@ -124,15 +129,19 @@ public class EE8AppVersionHandlerFactory implements AppVersionHandlerFactory {
         context.setErrorHandler(new NullErrorHandler());
       }
 
-      // TODO: because of the shading we do not have a correct org.eclipse.jetty.ee8.webapp.Configuration file from
-      //  the runtime-impl jar. It failed to merge content from various modules and only contains quickstart.
-      //  Because of this the default configurations are not able to be found by WebAppContext with ServiceLoader.
-      context.setConfigurationClasses(new String[]{
-              WebInfConfiguration.class.getCanonicalName(),
-              WebXmlConfiguration.class.getCanonicalName(),
-              MetaInfConfiguration.class.getCanonicalName(),
-              FragmentConfiguration.class.getCanonicalName()
-      });
+      // TODO: because of the shading we do not have a correct
+      // org.eclipse.jetty.ee8.webapp.Configuration file from
+      //  the runtime-impl jar. It failed to merge content from various modules and only contains
+      // quickstart.
+      //  Because of this the default configurations are not able to be found by WebAppContext with
+      // ServiceLoader.
+      context.setConfigurationClasses(
+          new String[] {
+            WebInfConfiguration.class.getCanonicalName(),
+            WebXmlConfiguration.class.getCanonicalName(),
+            MetaInfConfiguration.class.getCanonicalName(),
+            FragmentConfiguration.class.getCanonicalName()
+          });
 
       /*
        * Remove JettyWebXmlConfiguration which allows users to use jetty-web.xml files.
@@ -143,16 +152,14 @@ public class EE8AppVersionHandlerFactory implements AppVersionHandlerFactory {
 
       if (Boolean.getBoolean(USE_ANNOTATION_SCANNING)) {
         context.addConfiguration(new AnnotationConfiguration());
-      }
-      else {
+      } else {
         context.removeConfiguration(new AnnotationConfiguration());
       }
 
       File quickstartXml = new File(contextRoot, "WEB-INF/quickstart-web.xml");
       if (quickstartXml.exists()) {
         context.addConfiguration(new QuickStartConfiguration());
-      }
-      else {
+      } else {
         context.removeConfiguration(new QuickStartConfiguration());
       }
 
@@ -178,8 +185,7 @@ public class EE8AppVersionHandlerFactory implements AppVersionHandlerFactory {
         klass = classLoader.loadClass(TOMCAT_JSP_FACTORY);
         JspFactory jspf = (JspFactory) klass.getConstructor().newInstance();
         JspFactory.setDefaultFactory(jspf);
-        Class.forName(
-            "org.apache.jasper.compiler.JspRuntimeContext", true, classLoader);
+        Class.forName("org.apache.jasper.compiler.JspRuntimeContext", true, classLoader);
       } catch (Throwable t) {
         // No big deal, there are no JSPs in the App since the jsp libraries are not inside the
         // web app classloader.
@@ -199,6 +205,33 @@ public class EE8AppVersionHandlerFactory implements AppVersionHandlerFactory {
       // Pass the AppVersion on to any of our servlets (e.g. ResourceFileServlet).
       context.setAttribute(JettyConstants.APP_VERSION_CONTEXT_ATTR, appVersion);
 
+      context.addEventListener(
+          new ContextHandler.ContextScopeListener() {
+
+            @Override
+            public void enterScope(
+                ContextHandler.APIContext context,
+                org.eclipse.jetty.ee8.nested.Request request,
+                Object reason) {
+              if (request != null) {
+                ApiProxy.Environment environment =
+                    (ApiProxy.Environment)
+                        request.getAttribute(AppEngineConstants.ENVIRONMENT_ATTR);
+                if (environment != null) {
+                  ApiProxy.setEnvironmentForCurrentThread(environment);
+                }
+              }
+            }
+
+            @Override
+            public void exitScope(
+                ContextHandler.APIContext context, org.eclipse.jetty.ee8.nested.Request request) {
+              if (request != null) {
+                ApiProxy.clearEnvironmentForCurrentThread();
+              }
+            }
+          });
+
       return context.get();
     } catch (Exception ex) {
       throw new ServletException(ex);
@@ -214,7 +247,12 @@ public class EE8AppVersionHandlerFactory implements AppVersionHandlerFactory {
   private static class NullErrorHandler extends ErrorPageErrorHandler {
 
     @Override
-    public void handle(String target, org.eclipse.jetty.ee8.nested.Request baseRequest, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
+    public void handle(
+        String target,
+        org.eclipse.jetty.ee8.nested.Request baseRequest,
+        HttpServletRequest request,
+        HttpServletResponse response)
+        throws IOException, ServletException {
       logger.atFine().log("Custom Jetty ErrorHandler received an error notification.");
       mayHandleByErrorPage(request, response);
       // We don't want Jetty to do anything further.
@@ -234,7 +272,7 @@ public class EE8AppVersionHandlerFactory implements AppVersionHandlerFactory {
     private void mayHandleByErrorPage(HttpServletRequest request, HttpServletResponse response)
         throws IOException {
       // Extract some error handling info from Jetty's proprietary attributes.
-      Throwable error = (Throwable)request.getAttribute(RequestDispatcher.ERROR_EXCEPTION);
+      Throwable error = (Throwable) request.getAttribute(RequestDispatcher.ERROR_EXCEPTION);
       Integer code = (Integer) request.getAttribute(RequestDispatcher.ERROR_STATUS_CODE);
       String message = (String) request.getAttribute(RequestDispatcher.ERROR_MESSAGE);
 

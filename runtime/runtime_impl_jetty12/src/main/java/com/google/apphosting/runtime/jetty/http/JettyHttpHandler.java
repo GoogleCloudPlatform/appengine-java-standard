@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.google.apphosting.runtime.jetty;
 
 import com.google.apphosting.base.AppVersionKey;
@@ -32,7 +31,6 @@ import org.eclipse.jetty.session.SessionManager;
  * <p>In order to identify which application version each request should be sent to, this class
  * assumes that an attribute will be set on the {@code HttpServletRequest} with a value of the
  * {@code AppVersionKey} that should be used.
- *
  */
 public class AppVersionHandler extends HotSwapHandler {
   private final AppVersionHandlerFactory appVersionHandlerFactory;
@@ -74,16 +72,14 @@ public class AppVersionHandler extends HotSwapHandler {
    * Returns the {@code Handler} that will handle requests for the specified application version.
    */
   public synchronized boolean ensureHandler(AppVersionKey appVersionKey) throws Exception {
-    if (!Objects.equals(appVersionKey, appVersion.getKey()))
-      return false;
-
+    if (!Objects.equals(appVersionKey, appVersion.getKey())) return false;
     Handler handler = getHandler();
     if (handler == null) {
       handler = appVersionHandlerFactory.createHandler(appVersion);
       setHandler(handler);
-
       if (Boolean.getBoolean("jetty.server.dumpAfterStart")) {
-        handler.getServer().dumpStdErr();
+        if (handler.isStarted()) handler.getServer().dumpStdErr();
+        else handler.getServer().setDumpAfterStart(true);
       }
     }
     return (handler != null);
