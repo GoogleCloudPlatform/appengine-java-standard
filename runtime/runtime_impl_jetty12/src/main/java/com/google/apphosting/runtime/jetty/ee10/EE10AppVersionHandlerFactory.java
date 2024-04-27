@@ -213,8 +213,7 @@ public class EE10AppVersionHandlerFactory implements AppVersionHandlerFactory {
       context.addEventListener(new ContextHandler.ContextScopeListener() {
         @Override
         public void enterScope(Context context, Request request) {
-          if (request != null)
-          {
+          if (request != null) {
             ApiProxy.Environment environment = (ApiProxy.Environment)request.getAttribute(AppEngineConstants.ENVIRONMENT_ATTR);
             if (environment != null)
               ApiProxy.setEnvironmentForCurrentThread(environment);
