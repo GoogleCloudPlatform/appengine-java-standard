@@ -29,6 +29,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.eclipse.jetty.ee10.servlet.ServletContextHandler;
 import org.eclipse.jetty.ee10.servlet.ServletHandler;
+import org.eclipse.jetty.ee10.servlet.ServletMapping;
 import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.util.StringUtil;
 import org.eclipse.jetty.util.URIUtil;
@@ -60,6 +61,7 @@ public class ResourceFileServlet extends HttpServlet {
   private FileSender fSender;
   ServletContextHandler chandler;
   ServletContext context;
+  String defaultServletName;
 
   /**
    * Initialize the servlet by extracting some useful configuration data from the current {@link
@@ -78,6 +80,12 @@ public class ResourceFileServlet extends HttpServlet {
     // AFAICT, there is no real API to retrieve this information, so
     // we access Jetty's internal state.
     welcomeFiles = chandler.getWelcomeFiles();
+
+    ServletMapping servletMapping = chandler.getServletHandler().getServletMapping("/");
+    if (servletMapping == null) {
+      throw new ServletException("No servlet mapping found");
+    }
+    defaultServletName = servletMapping.getServletName();
 
     try {
       // TODO: review use of root factory.
@@ -256,13 +264,12 @@ public class ResourceFileServlet extends HttpServlet {
         (AppVersion) getServletContext().getAttribute(JettyConstants.APP_VERSION_CONTEXT_ATTR);
     ServletHandler handler = chandler.getServletHandler();
 
-    ServletHandler.MappedServlet defaultEntry = handler.getMappedServlet("/");
-
     for (String welcomeName : welcomeFiles) {
       String welcomePath = path + welcomeName;
       String relativePath = welcomePath.substring(1);
 
-      if (!Objects.equals(handler.getMappedServlet(welcomePath), defaultEntry)) {
+      ServletHandler.MappedServlet mappedServlet = handler.getMappedServlet(welcomePath);
+      if (!Objects.equals(mappedServlet.getServletHolder().getName(), defaultServletName)) {
         // It's a path mapped to a servlet.  Forward to it.
         RequestDispatcher dispatcher = request.getRequestDispatcher(path + welcomeName);
         return serveWelcomeFileAsForward(dispatcher, included, request, response);
