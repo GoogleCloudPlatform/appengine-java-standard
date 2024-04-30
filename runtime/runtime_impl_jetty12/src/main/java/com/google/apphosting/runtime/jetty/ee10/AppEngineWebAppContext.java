@@ -234,64 +234,58 @@ public class AppEngineWebAppContext extends WebAppContext {
     addEventListener(new TransactionCleanupListener(getClassLoader()));
   }
 
-    @Override
-    protected void startContext() throws Exception {
-      ServletHandler servletHandler = getServletHandler();
-      getServletHandler().addListener(new ListenerHolder() {
-        @Override
-        public void doStart() throws Exception {
-          // This Listener doStart is called after the web.xml metadata has been resolved, so we can
-          // clean configuration here:
-          //  - Removed deprecated filters and servlets
-          //  - Ensure known runtime filters/servlets are instantiated from this classloader
-          //  - Ensure known runtime mappings exist.
-          setListener(new EventListener() {});
+  @Override
+  protected void startWebapp() throws Exception {
+    // startWebapp is called after the web.xml metadata has been resolved, so we can
+    // clean configuration here:
+    //  - Removed deprecated filters and servlets
+    //  - Ensure known runtime filters/servlets are instantiated from this classloader
+    //  - Ensure known runtime mappings exist.
 
-          TrimmedFilters trimmedFilters =
-              new TrimmedFilters(
-                  servletHandler.getFilters(),
-                  servletHandler.getFilterMappings(),
-                  DEPRECATED_SERVLETS_FILTERS);
-          trimmedFilters.ensure(
-              "CloudSqlConnectionCleanupFilter", JdbcMySqlConnectionCleanupFilter.class, "/*");
+    ServletHandler servletHandler = getServletHandler();
+    TrimmedFilters trimmedFilters =
+            new TrimmedFilters(
+                    servletHandler.getFilters(),
+                    servletHandler.getFilterMappings(),
+                    DEPRECATED_SERVLETS_FILTERS);
+    trimmedFilters.ensure(
+            "CloudSqlConnectionCleanupFilter", JdbcMySqlConnectionCleanupFilter.class, "/*");
 
-          TrimmedServlets trimmedServlets =
-              new TrimmedServlets(
-                  servletHandler.getServlets(),
-                  servletHandler.getServletMappings(),
-                  DEPRECATED_SERVLETS_FILTERS);
-          trimmedServlets.ensure("_ah_warmup", WarmupServlet.class, "/_ah/warmup");
-          trimmedServlets.ensure(
-              "_ah_sessioncleanup", SessionCleanupServlet.class, "/_ah/sessioncleanup");
-          trimmedServlets.ensure(
-              "_ah_queue_deferred", DeferredTaskServlet.class, "/_ah/queue/__deferred__");
-          trimmedServlets.ensure("_ah_snapshot", SnapshotServlet.class, "/_ah/snapshot");
-          trimmedServlets.ensure("_ah_default", ResourceFileServlet.class, "/");
-          trimmedServlets.ensure("default", NamedDefaultServlet.class);
-          trimmedServlets.ensure("jsp", NamedJspServlet.class);
+    TrimmedServlets trimmedServlets =
+            new TrimmedServlets(
+                    servletHandler.getServlets(),
+                    servletHandler.getServletMappings(),
+                    DEPRECATED_SERVLETS_FILTERS);
+    trimmedServlets.ensure("_ah_warmup", WarmupServlet.class, "/_ah/warmup");
+    trimmedServlets.ensure(
+            "_ah_sessioncleanup", SessionCleanupServlet.class, "/_ah/sessioncleanup");
+    trimmedServlets.ensure(
+            "_ah_queue_deferred", DeferredTaskServlet.class, "/_ah/queue/__deferred__");
+    trimmedServlets.ensure("_ah_snapshot", SnapshotServlet.class, "/_ah/snapshot");
+    trimmedServlets.ensure("_ah_default", ResourceFileServlet.class, "/");
+    trimmedServlets.ensure("default", NamedDefaultServlet.class);
+    trimmedServlets.ensure("jsp", NamedJspServlet.class);
 
-          trimmedServlets.instantiateJettyServlets();
-          trimmedFilters.instantiateJettyFilters();
-          instantiateJettyListeners();
+    trimmedServlets.instantiateJettyServlets();
+    trimmedFilters.instantiateJettyFilters();
+    instantiateJettyListeners();
 
-          servletHandler.setFilters(trimmedFilters.getHolders());
-          servletHandler.setFilterMappings(trimmedFilters.getMappings());
-          servletHandler.setServlets(trimmedServlets.getHolders());
-          servletHandler.setServletMappings(trimmedServlets.getMappings());
-          servletHandler.setAllowDuplicateMappings(true);
+    servletHandler.setFilters(trimmedFilters.getHolders());
+    servletHandler.setFilterMappings(trimmedFilters.getMappings());
+    servletHandler.setServlets(trimmedServlets.getHolders());
+    servletHandler.setServletMappings(trimmedServlets.getMappings());
+    servletHandler.setAllowDuplicateMappings(true);
 
-          // Protect deferred task queue with constraint
-          ConstraintSecurityHandler security = (ConstraintSecurityHandler) getSecurityHandler();
-          ConstraintMapping cm = new ConstraintMapping();
-          cm.setConstraint(
-              Constraint.from("deferred_queue", Constraint.Authorization.SPECIFIC_ROLE, "admin"));
-          cm.setPathSpec("/_ah/queue/__deferred__");
-          security.addConstraintMapping(cm);
-        }
-      });
+    // Protect deferred task queue with constraint
+    ConstraintSecurityHandler security = (ConstraintSecurityHandler) getSecurityHandler();
+    ConstraintMapping cm = new ConstraintMapping();
+    cm.setConstraint(
+            Constraint.from("deferred_queue", Constraint.Authorization.SPECIFIC_ROLE, "admin"));
+    cm.setPathSpec("/_ah/queue/__deferred__");
+    security.addConstraintMapping(cm);
 
     // continue starting the webapp
-    super.startContext();
+    super.startWebapp();
   }
 
   @Override
