@@ -24,12 +24,6 @@ import com.google.common.flogger.GoogleLogger;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.security.Principal;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.function.Function;
-import javax.security.auth.Subject;
 import org.eclipse.jetty.ee10.servlet.ServletContextRequest;
 import org.eclipse.jetty.ee10.servlet.security.ConstraintSecurityHandler;
 import org.eclipse.jetty.security.AuthenticationState;
@@ -45,6 +39,13 @@ import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Response;
 import org.eclipse.jetty.server.Session;
 import org.eclipse.jetty.util.Callback;
+
+import javax.security.auth.Subject;
+import java.io.IOException;
+import java.security.Principal;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.function.Function;
 
 /**
  * {@code AppEngineAuthentication} is a utility class that can configure a Jetty {@link
@@ -191,7 +192,7 @@ public class EE10AppEngineAuthentication {
           UserIdentity user = _loginService.login(null, null, null, null);
           logger.atFine().log("authenticate() returning new principal for %s", user);
           if (user != null) {
-            return new UserAuthenticationSent(getAuthenticationType(), user);
+            return new UserAuthenticationSucceeded(getAuthenticationType(), user);
           }
         }
 
