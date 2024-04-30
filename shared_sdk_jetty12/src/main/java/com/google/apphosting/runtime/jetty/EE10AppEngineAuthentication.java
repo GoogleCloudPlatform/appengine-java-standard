@@ -191,7 +191,7 @@ public class EE10AppEngineAuthentication {
           UserIdentity user = _loginService.login(null, null, null, null);
           logger.atFine().log("authenticate() returning new principal for %s", user);
           if (user != null) {
-            return new UserAuthenticationSent(getAuthenticationType(), user);
+            return new UserAuthenticationSucceeded(getAuthenticationType(), user);
           }
         }
 
