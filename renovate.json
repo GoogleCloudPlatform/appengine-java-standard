@@ -1,0 +1,35 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "packageRules": [
+    {
+      "matchPackageNames": [
+        "com.coveo:fmt-maven-plugin",
+        "com.google.googlejavaformat:google-java-format",
+        "javax.servlet:javax.servlet-api",
+        "jakarta.servlet:jakarta.servlet-api",
+        "io.grpc:grpc-stub",
+        "org.mortbay.jasper:apache-el",
+        "org.mortbay.jasper:apache-jsp",
+        "org.apache.lucene:lucene-core",
+        "javax.servlet.jsp.jstl:javax.servlet.jsp.jstl-api",
+        "com.google.protobuf:protobuf-java",
+        "com.google.protobuf:protobuf-java-util",
+        "org.eclipse.jetty.toolchain:jetty-schemas",
+        "com.google.api.grpc:proto-google-common-protos",
+        "com.google.api.grpc:proto-google-cloud-datastore-v1",
+        "com.google.cloud.datastore:datastore-v1-proto-client",
+        "org.eclipse.jetty:",
+        "org.springframework.boot:",
+        "com.google.cloud.sql:"
+      ],
+      "enabled": false
+    },
+    {
+      "major": {
+        "enabled": false
+      }
+    }
+  ],
+  "labels": ["dependencies"]
+}
