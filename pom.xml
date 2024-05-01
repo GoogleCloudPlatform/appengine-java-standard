@@ -64,7 +64,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <jetty.version>9.4.54.v20240208</jetty.version>
     <jetty12.version>12.0.8</jetty12.version>
-    <slf4j.version>2.0.9</slf4j.version>
+    <slf4j.version>2.0.13</slf4j.version>
     <distributionManagement.snapshot.url>https://oss.sonatype.org/content/repositories/google-snapshots/</distributionManagement.snapshot.url>
     <distributionManagement.snapshot.id>sonatype-nexus-snapshots</distributionManagement.snapshot.id>
     <distributionManagement.release.url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</distributionManagement.release.url>
