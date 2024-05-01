@@ -124,7 +124,7 @@
           <dependency>
             <groupId>org.aspectj</groupId>
             <artifactId>aspectjtools</artifactId>
-            <version>1.9.9.1</version>
+            <version>1.9.22</version>
           </dependency>
           <dependency>
             <groupId>org.aspectj</groupId>
