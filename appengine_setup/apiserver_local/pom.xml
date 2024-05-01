@@ -29,7 +29,7 @@
     <dependency>
       <groupId>com.google.appengine</groupId>
       <artifactId>appengine-apis-dev</artifactId>
-      <version>2.0.8</version>
+      <version>2.0.26</version>
     </dependency>
   </dependencies>
   <build>
