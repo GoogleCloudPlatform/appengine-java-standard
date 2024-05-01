@@ -101,7 +101,7 @@
     <dependency>
       <groupId>io.opencensus</groupId>
       <artifactId>opencensus-api</artifactId>
-      <version>0.31.0</version>
+      <version>0.31.1</version>
       <scope>test</scope>
       <type>jar</type>
     </dependency>
