@@ -75,7 +75,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-assembly-plugin</artifactId>
-        <version>3.4.2</version>
+        <version>3.7.1</version>
         <configuration>
           <descriptorRefs>
             <descriptorRef>jar-with-dependencies</descriptorRef>
@@ -124,7 +124,7 @@
           <dependency>
             <groupId>org.aspectj</groupId>
             <artifactId>aspectjtools</artifactId>
-            <version>1.9.9.1</version>
+            <version>1.9.22</version>
           </dependency>
           <dependency>
             <groupId>org.aspectj</groupId>
