@@ -52,7 +52,7 @@ Add the dependency for the GAE runtime jars in your application pom.xml file:
 ```
  <properties>
         <appengine.runtime.version>2.0.27-SNAPSHOT</appengine.runtime.version>
-        <appengine.runtime.location>${appengine.runtime.location}</appengine.runtime.location>
+        <appengine.runtime.location>target/${project.artifactId}-${project.version}</appengine.runtime.location>
  <properties>
  ...
 <dependency>
