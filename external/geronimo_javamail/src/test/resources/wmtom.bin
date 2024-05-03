@@ -1,0 +1,21 @@
+----MIMEBoundary258DE2D105298B756D
+content-type:application/xop+xml; charset=utf-8; type="application/soap+xml"
+content-transfer-encoding:binary
+content-id:<0.15B50EF49317518B01@apache.org>
+
+<?xml version='1.0' encoding='utf-8'?><soapenv:Envelope xmlns:soapenv="http://www.w3.org/2003/05/soap-envelope"><soapenv:Header><wsa:To xmlns:wsa="http://schemas.xmlsoap.org/ws/2004/08/addressing">http://localhost:8070/axis2/services/MTOMService/mtomSample</wsa:To></soapenv:Header><soapenv:Body><x:EchoTest xmlns:x="http://example.org/mtom/data"><x:Data><xop:Include href="cid:1.BBFC8D48A21258EBBD@apache.org" xmlns:xop="http://www.w3.org/2004/08/xop/include"></xop:Include></x:Data><x:Data><xop:Include href="cid:2.CB365E36E21BD6491A@apache.org" xmlns:xop="http://www.w3.org/2004/08/xop/include"></xop:Include></x:Data></x:EchoTest></soapenv:Body></soapenv:Envelope>
+----MIMEBoundary258DE2D105298B756D
+content-id:<11.BBFC8D48A21258EBBD@apache.org>
+content-type:application/octet-stream
+content-transfer-encoding:binary
+
+saminda saminda saminda saminda saminda saminda saminda saminda saminda saminda saminda saminda saminda saminda saminda saminda saminda saminda saminda saminda 
+
+----MIMEBoundary258DE2D105298B756D
+content-id:<2.CB365E36E21BD6491A@apache.org>
+content-type:application/octet-stream
+content-transfer-encoding:binary
+
+saminda saminda saminda saminda saminda saminda saminda saminda saminda saminda saminda saminda saminda saminda saminda saminda saminda saminda saminda saminda 
+
+----MIMEBoundary258DE2D105298B756D--
