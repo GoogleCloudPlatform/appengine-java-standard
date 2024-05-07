@@ -13,19 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.google.appengine.setup.testapps.jetty12.servlets;
 
-package com.google.appengine.setup.test;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
 
-public class SpringBootTestAppTest extends TestAppBase{
+public class HomeServlet extends HttpServlet {
 
-    @Override
-    protected String appName() {
-        return "springboot_testapp";
-    }
-
-    @Override
-    protected String relativePathForUserApplicationJar() {
-        return "../testapps/springboot_testapp/target/"
-            + "springboot_testapp-2.0.27-SNAPSHOT.jar";
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        response.getWriter().print("jetty12_testapp");
     }
 }

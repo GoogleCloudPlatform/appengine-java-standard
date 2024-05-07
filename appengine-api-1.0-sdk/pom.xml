@@ -331,6 +331,7 @@
                     <include>com/google/apphosting/api/search/AclPb*</include>
                     <include>com/google/apphosting/api/search/DocumentPb*</include>
                     <include>com/google/appengine/tools/compilation/*</include>
+                    <include>com/google/appengine/setup/**</include>
                     <include>com/google/apphosting/utils/remoteapi/RemoteApiServlet*</include>
                     <include>com/google/apphosting/utils/remoteapi/EE10RemoteApiServlet*</include>
                     <include>com/google/apphosting/utils/security/urlfetch/*</include>
@@ -349,7 +350,8 @@
                     <include>com/google/apphosting/utils/servlet/ee10/SessionCleanupServlet*</include>
                     <include>com/google/apphosting/utils/servlet/ee10/SnapshotServlet*</include>
                     <include>com/google/apphosting/utils/servlet/ee10/TransactionCleanupFilter*</include>
-                    <include>com/google/apphosting/utils/servlet/ee10/WarmupServlet*</include>                    <include>com/google/storage/onestore/PropertyType*</include>
+                    <include>com/google/apphosting/utils/servlet/ee10/WarmupServlet*</include>
+                    <include>com/google/storage/onestore/PropertyType*</include>
                     <include>javax/cache/LICENSE</include>
                     <include>javax/mail/LICENSE</include>
                     <include>org/apache/geronimo/mail/LICENSE</include>

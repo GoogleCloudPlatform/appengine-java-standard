@@ -18,18 +18,17 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <parent>
-    <artifactId>appengine_setup</artifactId>
     <groupId>com.google.appengine</groupId>
-    <version>1.0-SNAPSHOT</version>
+    <artifactId>appengine_setup</artifactId>
+    <version>2.0.27-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
-  <groupId>com.google.appengine.setup</groupId>
+  <groupId>com.google.appengine</groupId>
   <artifactId>testapps</artifactId>
-  <version>1.0-SNAPSHOT</version>
   <packaging>pom</packaging>
   <modules>
     <module>testapps_common</module>
-    <module>jetty11_testapp</module>
+    <module>jetty12_testapp</module>
     <module>springboot_testapp</module>
   </modules>
 

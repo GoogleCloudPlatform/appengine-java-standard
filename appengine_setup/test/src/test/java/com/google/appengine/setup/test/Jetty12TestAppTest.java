@@ -16,16 +16,16 @@
 
 package com.google.appengine.setup.test;
 
-public class SpringBootTestAppTest extends TestAppBase{
+public class Jetty12TestAppTest extends TestAppBase {
 
     @Override
     protected String appName() {
-        return "springboot_testapp";
+        return "jetty12_testapp";
     }
 
     @Override
     protected String relativePathForUserApplicationJar() {
-        return "../testapps/springboot_testapp/target/"
-            + "springboot_testapp-2.0.27-SNAPSHOT.jar";
+        return "../testapps/jetty12_testapp/target/"
+            + "jetty12_testapp-2.0.27-SNAPSHOT-jar-with-dependencies.jar";
     }
 }

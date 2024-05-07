@@ -34,11 +34,11 @@ public class TestUtil {
     @SneakyThrows
     public static Process initializeApp(String userAppRelativeJarPath) {
         File currentDirectory = new File("").getAbsoluteFile();
-        File jetty11TestAppJar = new File(currentDirectory, userAppRelativeJarPath);
+        File jetty12TestAppJar = new File(currentDirectory, userAppRelativeJarPath);
         ImmutableList<String> processArgs = ImmutableList.<String>builder()
             .add(StandardSystemProperty.JAVA_HOME.value() + "/bin/java")
             .add("-jar")
-            .add(jetty11TestAppJar.getAbsolutePath())
+            .add(jetty12TestAppJar.getAbsolutePath())
             .build();
         ProcessBuilder pb = new ProcessBuilder(processArgs);
         Process userApp = pb.start();
@@ -62,7 +62,7 @@ public class TestUtil {
     @SneakyThrows
     public static Process initializeHttpApiServer() {
         String apiServerRelativeJarPath = "../apiserver_local/target/"
-            + "apiserver_local-1.0-SNAPSHOT-jar-with-dependencies.jar";
+            + "apiserver_local-2.0.27-SNAPSHOT-jar-with-dependencies.jar";
         File currentDirectory = new File("").getAbsoluteFile();
         File apiServerJar = new File(currentDirectory, apiServerRelativeJarPath);
         ImmutableList<String> processArgs = ImmutableList.<String>builder()

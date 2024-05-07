@@ -784,7 +784,8 @@
         <plugin>
           <groupId>org.codehaus.mojo</groupId>
           <artifactId>versions-maven-plugin</artifactId>
-          <configuration>
+          <version>2.16.2</version>
+         <configuration>
             <rulesUri>file:///${session.executionRootDirectory}/maven-version-rules.xml</rulesUri>
             <generateBackupPoms>false</generateBackupPoms>
           </configuration>
