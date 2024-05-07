@@ -257,7 +257,7 @@ public class MainServlet extends HttpServlet {
     }
     if (req.getParameter("datastore_count") != null) {
       HttpSession s = req.getSession(true);
-      if (!s.getAttribute("storedsession").equals("sessiondata")) {
+      if (!"sessiondata".equals(s.getAttribute("storedsession"))) {
         emitf(w, "Java session NOT working");
       } else {
         performCount(w);
