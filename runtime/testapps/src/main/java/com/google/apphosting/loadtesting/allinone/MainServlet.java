@@ -49,6 +49,7 @@ import com.google.common.math.BigIntegerMath;
 import com.google.errorprone.annotations.FormatMethod;
 import com.sun.management.HotSpotDiagnosticMXBean;
 import com.sun.management.VMOption;
+import javax.servlet.http.HttpSession;
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
@@ -250,10 +251,17 @@ public class MainServlet extends HttpServlet {
     }
     Integer entitiesParam = getIntParameter("datastore_entities", req);
     if (entitiesParam != null) {
+      HttpSession s = req.getSession(true);
+      s.setAttribute("storedsession", "sessiondata");
       performAddEntities(entitiesParam, w);
     }
     if (req.getParameter("datastore_count") != null) {
-      performCount(w);
+      HttpSession s = req.getSession(true);
+      if (!s.getAttribute("storedsession").equals("sessiondata")) {
+        emitf(w, "Java session NOT working");
+      } else {
+        performCount(w);
+      }
     }
     if (req.getParameter("datastore_cron") != null) {
       performCron(req.getRequestURI(), w);

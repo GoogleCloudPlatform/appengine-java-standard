@@ -110,6 +110,7 @@ import java.util.logging.Logger;
 import java.util.stream.Stream;
 import javax.imageio.ImageIO;
 import javax.management.MBeanServer;
+import jakarta.servlet.http.HttpSession;
 import javax.swing.JEditorPane;
 
 /**
@@ -250,10 +251,17 @@ public class MainServlet extends HttpServlet {
     }
     Integer entitiesParam = getIntParameter("datastore_entities", req);
     if (entitiesParam != null) {
+      HttpSession s = req.getSession(true);
+      s.setAttribute("storedsession", "sessiondata");
       performAddEntities(entitiesParam, w);
     }
     if (req.getParameter("datastore_count") != null) {
-      performCount(w);
+      HttpSession s = req.getSession(true);
+      if (!s.getAttribute("storedsession").equals("sessiondata")) {
+        emitf(w, "Java session NOT working");
+      } else {
+        performCount(w);
+      }
     }
     if (req.getParameter("datastore_cron") != null) {
       performCron(req.getRequestURI(), w);
