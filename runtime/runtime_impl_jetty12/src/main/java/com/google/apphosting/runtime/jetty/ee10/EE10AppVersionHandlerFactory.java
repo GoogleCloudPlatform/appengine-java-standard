@@ -203,9 +203,9 @@ public class EE10AppVersionHandlerFactory implements AppVersionHandlerFactory {
 
             @Override
             public void exitScope(Context context, Request request) {
-              if (request != null) {
-                ApiProxy.clearEnvironmentForCurrentThread();
-              }
+//              if (request != null) {
+//                ApiProxy.clearEnvironmentForCurrentThread();
+//              }
             }
           });
       return context;

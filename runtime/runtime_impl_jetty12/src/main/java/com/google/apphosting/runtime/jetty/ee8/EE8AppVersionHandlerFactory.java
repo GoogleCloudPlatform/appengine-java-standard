@@ -207,7 +207,6 @@ public class EE8AppVersionHandlerFactory implements AppVersionHandlerFactory {
 
       context.addEventListener(
           new ContextHandler.ContextScopeListener() {
-
             @Override
             public void enterScope(
                 ContextHandler.APIContext context,
@@ -226,9 +225,9 @@ public class EE8AppVersionHandlerFactory implements AppVersionHandlerFactory {
             @Override
             public void exitScope(
                 ContextHandler.APIContext context, org.eclipse.jetty.ee8.nested.Request request) {
-              if (request != null) {
-                ApiProxy.clearEnvironmentForCurrentThread();
-              }
+//              if (request != null) {
+//                ApiProxy.clearEnvironmentForCurrentThread();
+//              }
             }
           });
 
