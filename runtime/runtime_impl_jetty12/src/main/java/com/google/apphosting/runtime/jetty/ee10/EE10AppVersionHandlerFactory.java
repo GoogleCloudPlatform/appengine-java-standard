@@ -29,10 +29,6 @@ import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.io.File;
-import java.io.IOException;
-import java.io.PrintWriter;
-import javax.servlet.jsp.JspFactory;
 import org.eclipse.jetty.ee10.annotations.AnnotationConfiguration;
 import org.eclipse.jetty.ee10.quickstart.QuickStartConfiguration;
 import org.eclipse.jetty.ee10.servlet.Dispatcher;
@@ -51,6 +47,13 @@ import org.eclipse.jetty.server.Response;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.util.Callback;
+
+import javax.servlet.jsp.JspFactory;
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintWriter;
+
+import static com.google.apphosting.runtime.jetty.AppEngineConstants.HTTP_CONNECTOR_MODE;
 
 /**
  * {@code AppVersionHandlerFactory} implements a {@code Handler} for a given {@code AppVersionKey}.
@@ -189,25 +192,28 @@ public class EE10AppVersionHandlerFactory implements AppVersionHandlerFactory {
       EE10SessionManagerHandler.create(builder.build());
       // Pass the AppVersion on to any of our servlets (e.g. ResourceFileServlet).
       context.setAttribute(JettyConstants.APP_VERSION_CONTEXT_ATTR, appVersion);
-      context.addEventListener(
+
+      if (Boolean.getBoolean(HTTP_CONNECTOR_MODE)) {
+        context.addEventListener(
           new ContextHandler.ContextScopeListener() {
             @Override
             public void enterScope(Context context, Request request) {
               if (request != null) {
                 ApiProxy.Environment environment =
-                    (ApiProxy.Environment)
-                        request.getAttribute(AppEngineConstants.ENVIRONMENT_ATTR);
+                        (ApiProxy.Environment)
+                                request.getAttribute(AppEngineConstants.ENVIRONMENT_ATTR);
                 if (environment != null) ApiProxy.setEnvironmentForCurrentThread(environment);
               }
             }
 
             @Override
             public void exitScope(Context context, Request request) {
-//              if (request != null) {
-//                ApiProxy.clearEnvironmentForCurrentThread();
-//              }
+              if (request != null) {
+                ApiProxy.clearEnvironmentForCurrentThread();
+              }
             }
           });
+      }
       return context;
     } catch (Exception ex) {
       throw new ServletException(ex);

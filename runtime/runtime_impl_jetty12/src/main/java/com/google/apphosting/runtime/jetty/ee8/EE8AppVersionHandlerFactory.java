@@ -46,6 +46,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 
+import static com.google.apphosting.runtime.jetty.AppEngineConstants.HTTP_CONNECTOR_MODE;
+
 /**
  * {@code AppVersionHandlerFactory} implements a {@code Handler} for a given {@code AppVersionKey}.
  */
@@ -205,17 +207,18 @@ public class EE8AppVersionHandlerFactory implements AppVersionHandlerFactory {
       // Pass the AppVersion on to any of our servlets (e.g. ResourceFileServlet).
       context.setAttribute(JettyConstants.APP_VERSION_CONTEXT_ATTR, appVersion);
 
-      context.addEventListener(
+      if (Boolean.getBoolean(HTTP_CONNECTOR_MODE)) {
+        context.addEventListener(
           new ContextHandler.ContextScopeListener() {
             @Override
             public void enterScope(
-                ContextHandler.APIContext context,
-                org.eclipse.jetty.ee8.nested.Request request,
-                Object reason) {
+                    ContextHandler.APIContext context,
+                    org.eclipse.jetty.ee8.nested.Request request,
+                    Object reason) {
               if (request != null) {
                 ApiProxy.Environment environment =
-                    (ApiProxy.Environment)
-                        request.getAttribute(AppEngineConstants.ENVIRONMENT_ATTR);
+                        (ApiProxy.Environment)
+                                request.getAttribute(AppEngineConstants.ENVIRONMENT_ATTR);
                 if (environment != null) {
                   ApiProxy.setEnvironmentForCurrentThread(environment);
                 }
@@ -224,12 +227,13 @@ public class EE8AppVersionHandlerFactory implements AppVersionHandlerFactory {
 
             @Override
             public void exitScope(
-                ContextHandler.APIContext context, org.eclipse.jetty.ee8.nested.Request request) {
-//              if (request != null) {
-//                ApiProxy.clearEnvironmentForCurrentThread();
-//              }
+                    ContextHandler.APIContext context, org.eclipse.jetty.ee8.nested.Request request) {
+              if (request != null) {
+                ApiProxy.clearEnvironmentForCurrentThread();
+              }
             }
           });
+      }
 
       return context.get();
     } catch (Exception ex) {
