@@ -562,6 +562,7 @@
                                     <include>org.eclipse.jetty.ee10:jetty-ee10-servlet</include>
                                     <include>org.eclipse.jetty.ee10:jetty-ee10-servlets</include>
                                     <include>org.eclipse.jetty.ee10:jetty-ee10-webapp</include>
+                                    <include>org.eclipse.jetty:jetty-ee</include>
                                     <include>org.eclipse.jetty:jetty-client</include>
                                     <include>org.eclipse.jetty:jetty-continuation</include>
                                     <include>org.eclipse.jetty:jetty-http</include>
