@@ -775,7 +775,7 @@
       <dependency>
         <groupId>com.google.cloud</groupId>
         <artifactId>google-cloud-logging</artifactId>
-        <version>3.17.0</version>
+        <version>3.17.1</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
