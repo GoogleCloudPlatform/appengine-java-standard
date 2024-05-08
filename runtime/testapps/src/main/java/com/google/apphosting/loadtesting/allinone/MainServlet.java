@@ -16,9 +16,6 @@
 
 package com.google.apphosting.loadtesting.allinone;
 
-import static java.nio.charset.StandardCharsets.US_ASCII;
-import static java.nio.charset.StandardCharsets.UTF_8;
-
 import com.google.appengine.api.datastore.DatastoreService;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
 import com.google.appengine.api.datastore.Entity;
@@ -49,7 +46,19 @@ import com.google.common.math.BigIntegerMath;
 import com.google.errorprone.annotations.FormatMethod;
 import com.sun.management.HotSpotDiagnosticMXBean;
 import com.sun.management.VMOption;
-import java.awt.Graphics;
+
+import javax.imageio.ImageIO;
+import javax.management.MBeanServer;
+import javax.servlet.RequestDispatcher;
+import javax.servlet.ServletConfig;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import javax.swing.*;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -101,16 +110,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
-import javax.imageio.ImageIO;
-import javax.management.MBeanServer;
-import javax.servlet.RequestDispatcher;
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.swing.JEditorPane;
+
+import static java.nio.charset.StandardCharsets.US_ASCII;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * Servlet capable of performing a variety of actions based on the value of
@@ -250,10 +252,17 @@ public class MainServlet extends HttpServlet {
     }
     Integer entitiesParam = getIntParameter("datastore_entities", req);
     if (entitiesParam != null) {
+      HttpSession s = req.getSession(true);
+      s.setAttribute("storedsession", "sessiondata");
       performAddEntities(entitiesParam, w);
     }
     if (req.getParameter("datastore_count") != null) {
-      performCount(w);
+      HttpSession s = req.getSession(true);
+      if (!"sessiondata".equals(s.getAttribute("storedsession"))) {
+        emitf(w, "Java session NOT working");
+      } else {
+        performCount(w);
+      }
     }
     if (req.getParameter("datastore_cron") != null) {
       performCron(req.getRequestURI(), w);
