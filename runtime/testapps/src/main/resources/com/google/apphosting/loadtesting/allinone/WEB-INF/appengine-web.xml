@@ -23,4 +23,5 @@
   <static-files />
   <resource-files />
   <url-stream-handler>native</url-stream-handler>
+  <sessions-enabled>true</sessions-enabled>
 </appengine-web-app>
