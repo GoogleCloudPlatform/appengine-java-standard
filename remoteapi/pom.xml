@@ -20,7 +20,7 @@
   <parent>
     <groupId>com.google.appengine</groupId>
     <artifactId>parent</artifactId>
-    <version>2.0.27-SNAPSHOT</version>
+    <version>2.0.28-SNAPSHOT</version>
   </parent>
   <packaging>jar</packaging>
   <name>AppEngine :: appengine-remote-api</name>
