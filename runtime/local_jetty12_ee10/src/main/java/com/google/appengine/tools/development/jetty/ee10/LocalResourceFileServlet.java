@@ -24,17 +24,18 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.eclipse.jetty.ee10.servlet.ServletContextHandler;
+import org.eclipse.jetty.ee10.servlet.ServletHandler;
+import org.eclipse.jetty.ee10.servlet.ServletMapping;
+import org.eclipse.jetty.util.URIUtil;
+import org.eclipse.jetty.util.resource.Resource;
+import org.eclipse.jetty.util.resource.ResourceFactory;
+
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.eclipse.jetty.ee10.servlet.ServletContextHandler;
-import org.eclipse.jetty.ee10.servlet.ServletHandler;
-import org.eclipse.jetty.http.pathmap.MatchedResource;
-import org.eclipse.jetty.util.URIUtil;
-import org.eclipse.jetty.util.resource.Resource;
-import org.eclipse.jetty.util.resource.ResourceFactory;
 
 /**
  * {@code ResourceFileServlet} is a copy of {@code org.mortbay.jetty.servlet.DefaultServlet} that
@@ -57,6 +58,7 @@ public class LocalResourceFileServlet extends HttpServlet {
   private Resource resourceBase;
   private String[] welcomeFiles;
   private String resourceRoot;
+  private String defaultServletName;
 
   /**
    * Initialize the servlet by extracting some useful configuration
@@ -72,6 +74,12 @@ public class LocalResourceFileServlet extends HttpServlet {
     ServletContextHandler contextHandler =
         ServletContextHandler.getServletContextHandler(servletContext);
     welcomeFiles = contextHandler.getWelcomeFiles();
+
+    ServletMapping servletMapping = contextHandler.getServletHandler().getServletMapping("/");
+    if (servletMapping == null) {
+      throw new ServletException("No servlet mapping found");
+    }
+    defaultServletName = servletMapping.getServletName();
 
     AppEngineWebXml appEngineWebXml =
         (AppEngineWebXml)
@@ -254,16 +262,15 @@ public class LocalResourceFileServlet extends HttpServlet {
     ServletContext context = getServletContext();
     ServletContextHandler contextHandler = ServletContextHandler.getServletContextHandler(context);
     ServletHandler handler = contextHandler.getServletHandler();
-    MatchedResource<ServletHandler.MappedServlet> defaultEntry = handler.getMatchedServlet("/");
-    MatchedResource<ServletHandler.MappedServlet> jspEntry = handler.getMatchedServlet("/foo.jsp");
+    ServletHandler.MappedServlet jspEntry = handler.getMappedServlet("/foo.jsp");
 
     // Search for dynamic welcome files.
     for (String welcomeName : welcomeFiles) {
       String welcomePath = path + welcomeName;
       String relativePath = welcomePath.substring(1);
 
-      MatchedResource<ServletHandler.MappedServlet> entry = handler.getMatchedServlet(welcomePath);
-      if (!Objects.equals(entry, defaultEntry) && !Objects.equals(entry, jspEntry)) {
+      ServletHandler.MappedServlet mappedServlet = handler.getMappedServlet(welcomePath);
+      if (!Objects.equals(mappedServlet.getServletHolder().getName(), defaultServletName) && !Objects.equals(mappedServlet, jspEntry)) {
         // It's a path mapped to a servlet.  Forward to it.
         RequestDispatcher dispatcher = request.getRequestDispatcher(path + welcomeName);
         return staticFileUtils.serveWelcomeFileAsForward(dispatcher, included, request, response);
@@ -271,7 +278,7 @@ public class LocalResourceFileServlet extends HttpServlet {
 
       Resource welcomeFile = getResource(path + welcomeName);
       if (welcomeFile != null && welcomeFile.exists()) {
-        if (!Objects.equals(entry, defaultEntry)) {
+        if (!Objects.equals(mappedServlet.getServletHolder().getName(), defaultServletName)) {
           RequestDispatcher dispatcher = request.getRequestDispatcher(path + welcomeName);
           return staticFileUtils.serveWelcomeFileAsForward(dispatcher, included, request, response);
         }
