@@ -17,6 +17,7 @@
 package com.google.appengine.tools.info;
 
 import com.google.common.base.Joiner;
+
 import java.io.File;
 import java.io.FileFilter;
 import java.net.URL;
@@ -191,6 +192,24 @@ class Jetty12Sdk extends AppengineSdk {
     return Collections.unmodifiableList(toURLs(getSharedJspLibFiles()));
   }
 
+  private File getJetty12Jar(String fileNamePattern) {
+    File path = new File(sdkRoot, JETTY12_HOME_LIB_PATH + File.separator);
+
+    if (!path.exists()) {
+      throw new IllegalArgumentException("Unable to find " + path.getAbsolutePath());
+    }
+    for (File f : listFiles(path)) {
+      if (f.getName().endsWith(".jar")) {
+        // All but CDI jar. All the tests are still passing without CDI that should not be exposed
+        // in our runtime (private Jetty dependency we do not want to expose to the customer).
+        if (f.getName().contains(fileNamePattern)) {
+          return f;
+        }
+      }
+    }
+    throw new IllegalArgumentException("Unable to find " + fileNamePattern + " at " + path.getAbsolutePath());
+  }
+
   private List<File> getJetty12Jars(String subDir) {
     File path = new File(sdkRoot, JETTY12_HOME_LIB_PATH + File.separator + subDir);
 
@@ -219,10 +238,12 @@ class Jetty12Sdk extends AppengineSdk {
     if (Boolean.getBoolean("appengine.use.EE10")) {
       List<File> lf = getJetty12Jars("ee10-apache-jsp");
       lf.addAll(getJetty12Jars("ee10-glassfish-jstl"));
+      lf.add(getJetty12Jar("ee10-servlet-"));
       return lf;
     }
     List<File> lf = getJetty12Jars("ee8-apache-jsp");
     lf.addAll(getJetty12Jars("ee8-glassfish-jstl"));
+    lf.add(getJetty12Jar("ee8-servlet-"));
     return lf;
   }
 
