@@ -122,7 +122,9 @@ public final class AppEngineWebXmlInitialParse {
             System.setProperty(prop, value);
           } else if (prop.equalsIgnoreCase("appengine.use.HttpConnector")) {
             System.setProperty("appengine.use.HttpConnector", value);
-          }
+          } else if (prop.equalsIgnoreCase("appengine.use.allheaders")) {
+            System.setProperty("appengine.use.allheaders", value);
+          } 
         }
       }
     }

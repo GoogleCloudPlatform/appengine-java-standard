@@ -31,5 +31,6 @@ public class AppEngineWebXmlInitialParseTest {
     new AppEngineWebXmlInitialParse(file).handleRuntimeProperties();
     assertTrue(Boolean.getBoolean("appengine.use.EE10"));
     assertTrue(Boolean.getBoolean("appengine.use.HttpConnector"));
+    assertTrue(Boolean.getBoolean("appengine.use.allheaders"));
   }
 }
