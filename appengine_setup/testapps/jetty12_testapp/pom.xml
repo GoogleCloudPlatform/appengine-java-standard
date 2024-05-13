@@ -27,6 +27,7 @@
   <artifactId>jetty12_testapp</artifactId>
   <properties>
     <jetty.version>12.0.9</jetty.version>
+    <aspectj.version>1.9.22.1</aspectj.version>
   </properties>
   <dependencies>
     <dependency>
@@ -65,7 +66,7 @@
     <dependency>
       <groupId>org.aspectj</groupId>
       <artifactId>aspectjrt</artifactId>
-      <version>1.9.22</version>
+      <version>${aspectj.version}</version>
       <scope>runtime</scope>
     </dependency>
 
@@ -124,12 +125,12 @@
           <dependency>
             <groupId>org.aspectj</groupId>
             <artifactId>aspectjtools</artifactId>
-            <version>1.9.22</version>
+            <version>${aspectj.version}</version>
           </dependency>
           <dependency>
             <groupId>org.aspectj</groupId>
             <artifactId>aspectjweaver</artifactId>
-            <version>1.9.22</version>
+            <version>${aspectj.version}</version>
           </dependency>
         </dependencies>
       </plugin>
