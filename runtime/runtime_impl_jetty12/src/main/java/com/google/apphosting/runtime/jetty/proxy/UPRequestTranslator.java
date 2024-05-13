@@ -16,6 +16,34 @@
 
 package com.google.apphosting.runtime.jetty.proxy;
 
+import com.google.apphosting.base.protos.AppinfoPb;
+import com.google.apphosting.base.protos.HttpPb;
+import com.google.apphosting.base.protos.HttpPb.HttpRequest;
+import com.google.apphosting.base.protos.HttpPb.ParsedHttpHeader;
+import com.google.apphosting.base.protos.RuntimePb;
+import com.google.apphosting.base.protos.RuntimePb.UPRequest;
+import com.google.apphosting.base.protos.TracePb.TraceContextProto;
+import com.google.apphosting.runtime.TraceContextHelper;
+import com.google.apphosting.runtime.jetty.AppInfoFactory;
+import com.google.common.base.Ascii;
+import com.google.common.base.Strings;
+import com.google.common.flogger.GoogleLogger;
+import com.google.common.html.HtmlEscapers;
+import com.google.protobuf.ByteString;
+import com.google.protobuf.TextFormat;
+import org.eclipse.jetty.http.HttpField;
+import org.eclipse.jetty.http.HttpStatus;
+import org.eclipse.jetty.http.HttpURI;
+import org.eclipse.jetty.io.Content;
+import org.eclipse.jetty.server.Request;
+import org.eclipse.jetty.server.Response;
+import org.eclipse.jetty.util.Callback;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PrintWriter;
+
 import static com.google.apphosting.runtime.jetty.AppEngineConstants.DEFAULT_SECRET_KEY;
 import static com.google.apphosting.runtime.jetty.AppEngineConstants.IS_ADMIN_HEADER_VALUE;
 import static com.google.apphosting.runtime.jetty.AppEngineConstants.IS_TRUSTED;
@@ -46,33 +74,6 @@ import static com.google.apphosting.runtime.jetty.AppEngineConstants.X_FORWARDED
 import static com.google.apphosting.runtime.jetty.AppEngineConstants.X_GOOGLE_INTERNAL_PROFILER;
 import static com.google.apphosting.runtime.jetty.AppEngineConstants.X_GOOGLE_INTERNAL_SKIPADMINCHECK;
 import static com.google.apphosting.runtime.jetty.AppEngineConstants.X_GOOGLE_INTERNAL_SKIPADMINCHECK_UC;
-
-import com.google.apphosting.base.protos.AppinfoPb;
-import com.google.apphosting.base.protos.HttpPb;
-import com.google.apphosting.base.protos.HttpPb.HttpRequest;
-import com.google.apphosting.base.protos.HttpPb.ParsedHttpHeader;
-import com.google.apphosting.base.protos.RuntimePb;
-import com.google.apphosting.base.protos.RuntimePb.UPRequest;
-import com.google.apphosting.base.protos.TracePb.TraceContextProto;
-import com.google.apphosting.runtime.TraceContextHelper;
-import com.google.apphosting.runtime.jetty.AppInfoFactory;
-import com.google.common.base.Ascii;
-import com.google.common.base.Strings;
-import com.google.common.flogger.GoogleLogger;
-import com.google.common.html.HtmlEscapers;
-import com.google.protobuf.ByteString;
-import com.google.protobuf.TextFormat;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.PrintWriter;
-import org.eclipse.jetty.http.HttpField;
-import org.eclipse.jetty.http.HttpStatus;
-import org.eclipse.jetty.http.HttpURI;
-import org.eclipse.jetty.io.Content;
-import org.eclipse.jetty.server.Request;
-import org.eclipse.jetty.server.Response;
-import org.eclipse.jetty.util.Callback;
 
 /** Translates HttpServletRequest to the UPRequest proto, and vice versa for the response. */
 public class UPRequestTranslator {
@@ -366,7 +367,8 @@ public class UPRequestTranslator {
     try (OutputStream outstr = Content.Sink.asOutputStream(resp)) {
       PrintWriter writer = new PrintWriter(outstr);
       writer.print("<html><head><title>Server Error</title></head>");
-      writer.print("<body>" + HtmlEscapers.htmlEscaper().escape(errMsg) + "</body></html>");
+      String escapedMessage = (errMsg == null) ? "" : HtmlEscapers.htmlEscaper().escape(errMsg);
+      writer.print("<body>" + escapedMessage + "</body></html>");
       writer.close();
       callback.succeeded();
     } catch (Throwable t) {
