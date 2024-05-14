@@ -22,7 +22,7 @@
     <parent>
         <groupId>com.google.appengine</groupId>
         <artifactId>parent</artifactId>
-        <version>2.0.27-SNAPSHOT</version>
+        <version>2.0.28-SNAPSHOT</version>
     </parent>
 
     <packaging>jar</packaging>
@@ -42,7 +42,7 @@
         <dependency>
             <groupId>jakarta.servlet</groupId>
             <artifactId>jakarta.servlet-api</artifactId>
-            <version>4.0.4</version>
+            <version>4.0.4</version> <!-- Keep, doe not use 6.0.0 as we want javax support there.-->
             <optional>true</optional>
         </dependency>
         <dependency>

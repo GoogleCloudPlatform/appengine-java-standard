@@ -118,7 +118,7 @@ public interface ServletEngineAdapter extends UPRequestHandler {
           .setJettyRequestHeaderSize(16384)
           .setJettyResponseHeaderSize(16384)
           .setApplicationRoot("/base/data/home/apps")
-          .setPassThroughPrivateHeaders(false);
+          .setPassThroughPrivateHeaders(Boolean.getBoolean("appengine.use.allheaders"));
     }
 
     /** Builder for {@code Config} instances. */

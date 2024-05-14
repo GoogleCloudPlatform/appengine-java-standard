@@ -35,6 +35,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletRequestWrapper;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpServletResponseWrapper;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -728,8 +729,8 @@ public class ResponseRewriterFilter implements Filter {
     public void sendError(int sc, String msg) throws IOException {
       checkNotCommitted();
       // This has to be re-implemented to avoid committing the response.
-      super.sendError(sc, msg);
-      setErrorBody(sc + " " + HtmlEscapers.htmlEscaper().escape(msg));
+      setStatus(sc);
+      setErrorBody(sc + " " + (msg == null ? "" : HtmlEscapers.htmlEscaper().escape(msg)));
     }
 
     /** Sets the response body to an HTML page with an error message.

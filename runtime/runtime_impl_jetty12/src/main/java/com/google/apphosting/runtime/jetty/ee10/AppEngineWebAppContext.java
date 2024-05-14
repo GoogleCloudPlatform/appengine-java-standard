@@ -241,7 +241,6 @@ public class AppEngineWebAppContext extends WebAppContext {
     //  - Removed deprecated filters and servlets
     //  - Ensure known runtime filters/servlets are instantiated from this classloader
     //  - Ensure known runtime mappings exist.
-
     ServletHandler servletHandler = getServletHandler();
     TrimmedFilters trimmedFilters =
             new TrimmedFilters(

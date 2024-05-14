@@ -366,7 +366,8 @@ public class UPRequestTranslator {
     try (OutputStream outstr = Content.Sink.asOutputStream(resp)) {
       PrintWriter writer = new PrintWriter(outstr);
       writer.print("<html><head><title>Server Error</title></head>");
-      writer.print("<body>" + HtmlEscapers.htmlEscaper().escape(errMsg) + "</body></html>");
+      String escapedMessage = (errMsg == null) ? "" : HtmlEscapers.htmlEscaper().escape(errMsg);
+      writer.print("<body>" + escapedMessage + "</body></html>");
       writer.close();
       callback.succeeded();
     } catch (Throwable t) {

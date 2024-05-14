@@ -298,9 +298,9 @@ public class ThreadGroupPool {
         for (Thread thread : threads) {
           if (thread != Thread.currentThread()
               && !(ignoreDaemonThreads && thread.isDaemon())) {
-            Throwable th = new Throwable();
-            th.setStackTrace(thread.getStackTrace());
-            logger.atSevere().withCause(th).log("Extra thread left running: %s", thread);
+ //           Throwable th = new Throwable();
+ //           th.setStackTrace(thread.getStackTrace());
+ //           logger.atSevere().withCause(th).log("Extra thread left running: %s", thread);
             otherThreads = true;
           }
         }

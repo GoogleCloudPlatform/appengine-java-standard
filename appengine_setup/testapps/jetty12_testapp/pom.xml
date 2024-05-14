@@ -20,19 +20,20 @@
   <parent>
     <artifactId>testapps</artifactId>
     <groupId>com.google.appengine</groupId>
-    <version>2.0.27-SNAPSHOT</version>
+    <version>2.0.28-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.google.appengine.setup.testapps</groupId>
   <artifactId>jetty12_testapp</artifactId>
   <properties>
-    <jetty.version>12.0.8</jetty.version>
+    <jetty.version>12.0.9</jetty.version>
+    <aspectj.version>1.9.22.1</aspectj.version>
   </properties>
   <dependencies>
     <dependency>
       <groupId>com.google.appengine.setup.testapps</groupId>
       <artifactId>testapps_common</artifactId>
-      <version>2.0.27-SNAPSHOT</version>
+      <version>2.0.28-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
@@ -65,7 +66,7 @@
     <dependency>
       <groupId>org.aspectj</groupId>
       <artifactId>aspectjrt</artifactId>
-      <version>1.9.22</version>
+      <version>${aspectj.version}</version>
       <scope>runtime</scope>
     </dependency>
 
@@ -105,7 +106,7 @@
           <projectId>srirammahavadi-dev</projectId>
           <version>GCLOUD_CONFIG</version>
           <automaticRestart>true</automaticRestart>
-          <artifact>${project.build.directory}/jetty11_testapp-2.0.27-SNAPSHOT-jar-with-dependencies.jar</artifact>
+          <artifact>${project.build.directory}/jetty11_testapp-2.0.28-SNAPSHOT-jar-with-dependencies.jar</artifact>
         </configuration>
       </plugin>
 
@@ -124,12 +125,12 @@
           <dependency>
             <groupId>org.aspectj</groupId>
             <artifactId>aspectjtools</artifactId>
-            <version>1.9.22</version>
+            <version>${aspectj.version}</version>
           </dependency>
           <dependency>
             <groupId>org.aspectj</groupId>
             <artifactId>aspectjweaver</artifactId>
-            <version>1.9.22</version>
+            <version>${aspectj.version}</version>
           </dependency>
         </dependencies>
       </plugin>
