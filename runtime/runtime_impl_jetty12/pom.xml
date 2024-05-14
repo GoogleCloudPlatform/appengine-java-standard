@@ -92,7 +92,6 @@
         <dependency>
             <groupId>com.google.flogger</groupId>
             <artifactId>flogger-system-backend</artifactId>
-            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>com.google.flogger</groupId>
@@ -156,6 +155,11 @@
             <artifactId>jetty-ee10-servlets</artifactId>
             <version>${jetty12.version}</version>
             <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-session</artifactId>
+            <version>${jetty12.version}</version>
         </dependency>
         <dependency>
             <groupId>jakarta.servlet</groupId>
@@ -376,6 +380,11 @@
             <artifactId>jetty-ee10-annotations</artifactId>
             <version>${jetty12.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.google.cloud</groupId>
+            <artifactId>google-cloud-logging</artifactId>
+        </dependency>
+
     </dependencies>
 
     <build>
