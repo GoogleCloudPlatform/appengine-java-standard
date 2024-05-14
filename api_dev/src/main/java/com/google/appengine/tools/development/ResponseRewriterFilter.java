@@ -21,6 +21,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.html.HtmlEscapers;
 import com.google.common.net.HttpHeaders;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -728,7 +729,7 @@ public class ResponseRewriterFilter implements Filter {
       checkNotCommitted();
       // This has to be re-implemented to avoid committing the response.
       setStatus(sc, msg);
-      setErrorBody(sc + " " + HtmlEscapers.htmlEscaper().escape(msg));
+      setErrorBody(sc + " " + (msg == null ? "" : HtmlEscapers.htmlEscaper().escape(msg)));
     }
 
     /** Sets the response body to an HTML page with an error message.
