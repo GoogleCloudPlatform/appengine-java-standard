@@ -238,15 +238,13 @@ public class AppEngineWebAppContext extends WebAppContext {
     addEventListener(new TransactionCleanupListener(getClassLoader()));
   }
 
-
     @Override
     protected void startWebapp() throws Exception {
-
-          // This Listener doStart is called after the web.xml metadata has been resolved, so we can
-          // clean configuration here:
-          //  - Removed deprecated filters and servlets
-          //  - Ensure known runtime filters/servlets are instantiated from this classloader
-          //  - Ensure known runtime mappings exist.
+      // This Listener doStart is called after the web.xml metadata has been resolved, so we can
+      // clean configuration here:
+      //  - Removed deprecated filters and servlets
+      //  - Ensure known runtime filters/servlets are instantiated from this classloader
+      //  - Ensure known runtime mappings exist.
       ServletHandler servletHandler = getServletHandler();
       TrimmedFilters trimmedFilters =
               new TrimmedFilters(
