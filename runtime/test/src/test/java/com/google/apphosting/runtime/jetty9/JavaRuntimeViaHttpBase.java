@@ -404,7 +404,12 @@ public abstract class JavaRuntimeViaHttpBase {
   static void copyAppToDir(String appName, Path dir) throws IOException {
     Class<?> myClass = JavaRuntimeViaHttpBase.class;
     ClassLoader myClassLoader = myClass.getClassLoader();
-    String appPrefix = Reflection.getPackageName(myClass).replace('.', '/') + "/" + appName + "/";
+    String appPrefix;
+    if (appName.contains("/")) {
+      appPrefix = appName + "/";
+    } else {
+      appPrefix = Reflection.getPackageName(myClass).replace('.', '/') + "/" + appName + "/";
+    }
     String appEngineWebXmlResource = appPrefix + "WEB-INF/appengine-web.xml";
     URL appEngineWebXmlUrl = myClassLoader.getResource(appEngineWebXmlResource);
     assertWithMessage("Resource %s not found", appEngineWebXmlResource)

@@ -92,7 +92,7 @@ public class ServletContextListenerTest extends JavaRuntimeViaHttpBase {
 
   @Before
   public void before() throws Exception {
-    String app = "servletcontextlistenerapp/" + environment;
+    String app = "com/google/apphosting/runtime/jetty9/servletcontextlistenerapp/" + environment;
     copyAppToDir(app, temp.getRoot().toPath());
     httpClient.start();
     runtime = runtimeContext();
