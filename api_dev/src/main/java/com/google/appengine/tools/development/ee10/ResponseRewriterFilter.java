@@ -730,7 +730,7 @@ public class ResponseRewriterFilter implements Filter {
     public void sendError(int sc, String msg) throws IOException {
       checkNotCommitted();
       // This has to be re-implemented to avoid committing the response.
-      super.sendError(sc, msg);
+      setStatus(sc);
       setErrorBody(sc + " " + (StringUtil.isEmpty(msg) ? "" : HtmlEscapers.htmlEscaper().escape(msg)));
     }
 
