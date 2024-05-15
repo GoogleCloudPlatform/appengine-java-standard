@@ -650,7 +650,7 @@
       <dependency>
         <groupId>io.grpc</groupId>
         <artifactId>grpc-api</artifactId>
-        <version>1.63.0</version>
+        <version>1.64.0</version>
       </dependency>
       <dependency>
         <groupId>io.grpc</groupId>
@@ -660,12 +660,12 @@
       <dependency>
         <groupId>io.grpc</groupId>
         <artifactId>grpc-protobuf</artifactId>
-        <version>1.63.0</version>
+        <version>1.64.0</version>
       </dependency>
       <dependency>
          <groupId>io.grpc</groupId>
          <artifactId>grpc-netty</artifactId>
-         <version>1.63.0</version>
+         <version>1.64.0</version>
       </dependency>
       <!-- io.netty are transitive deps needed by io.grpc-->
       <dependency>
