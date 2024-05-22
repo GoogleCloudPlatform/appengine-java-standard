@@ -16,6 +16,8 @@
 
 package com.google.apphosting.runtime;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+
 import com.google.apphosting.api.ApiProxy;
 import com.google.apphosting.base.protos.HttpPb.ParsedHttpHeader;
 import com.google.apphosting.base.protos.RuntimePb.UPRequest;
@@ -28,7 +30,9 @@ import com.google.common.util.concurrent.Uninterruptibles;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.time.Duration;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Exchanger;
 import java.util.concurrent.TimeoutException;
 
 /**
@@ -43,7 +47,7 @@ public class RequestRunner implements Runnable {
    * How long should we wait for {@code ApiProxyImpl} to exchange the background thread's {@code
    * Runnable}.
    */
-  public static final long WAIT_FOR_USER_RUNNABLE_DEADLINE = 60000L;
+  public static final Duration WAIT_FOR_USER_RUNNABLE_DEADLINE = Duration.ofSeconds(60);
 
   private final UPRequestHandler upRequestHandler;
   private final RequestManager requestManager;
@@ -235,7 +239,8 @@ public class RequestRunner implements Runnable {
     CountDownLatch latch = ThreadGroupPool.resetCurrentThread();
     Thread thread = new ThreadProxy();
     Runnable runnable =
-        coordinator.waitForUserRunnable(requestId, thread, WAIT_FOR_USER_RUNNABLE_DEADLINE);
+        coordinator.waitForUserRunnable(
+            requestId, thread, WAIT_FOR_USER_RUNNABLE_DEADLINE.toMillis());
     // Wait here until someone calls start() on the thread again.
     latch.await();
     // Now set the context class loader to the UserClassLoader for the application
@@ -255,6 +260,45 @@ public class RequestRunner implements Runnable {
       // lack of an HTTPResponse field for an internal server
       // error (500).
       upResponse.setHttpResponseCodeAndResponse(200, "OK");
+    }
+  }
+
+  /**
+   * A runnable which lets us start running before we even know what to run. The run method first
+   * waits to be given a Runnable (from another thread) via the supplyRunnable method, and then we
+   * run that.
+   */
+  public static class EagerRunner implements Runnable {
+    private final Exchanger<Runnable> runnableExchanger = new Exchanger<>();
+
+    /**
+     * Pass the given runnable to whatever thread's running our run method. This will block until
+     * run() is called if it hasn't been already.
+     */
+    public void supplyRunnable(Runnable runnable) throws InterruptedException, TimeoutException {
+      runnableExchanger.exchange(
+          runnable, WAIT_FOR_USER_RUNNABLE_DEADLINE.toMillis(), MILLISECONDS);
+    }
+
+    @Override
+    public void run() {
+      // We don't actually know what to run yet! Wait on someone to call supplyRunnable:
+      Runnable runnable;
+      try {
+        runnable =
+            runnableExchanger.exchange(
+                null, WAIT_FOR_USER_RUNNABLE_DEADLINE.toMillis(), MILLISECONDS);
+      } catch (TimeoutException ex) {
+        logger.atSevere().withCause(ex).log("Timed out while awaiting runnable");
+        return;
+      } catch (InterruptedException ex) {
+        Thread.currentThread().interrupt(); // Restore the interrupted status
+        logger.atSevere().withCause(ex).log("Interrupted while awaiting runnable");
+        return;
+      }
+
+      // Now actually run...
+      runnable.run();
     }
   }
 

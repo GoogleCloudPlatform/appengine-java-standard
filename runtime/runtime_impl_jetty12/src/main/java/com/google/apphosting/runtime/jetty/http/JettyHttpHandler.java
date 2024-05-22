@@ -16,6 +16,7 @@
 
 package com.google.apphosting.runtime.jetty.http;
 
+import com.google.appengine.api.ThreadManager;
 import com.google.apphosting.api.ApiProxy;
 import com.google.apphosting.base.AppVersionKey;
 import com.google.apphosting.base.protos.EmptyMessage;
@@ -26,14 +27,13 @@ import com.google.apphosting.runtime.BackgroundRequestCoordinator;
 import com.google.apphosting.runtime.JettyConstants;
 import com.google.apphosting.runtime.RequestManager;
 import com.google.apphosting.runtime.RequestRunner;
+import com.google.apphosting.runtime.RequestRunner.EagerRunner;
 import com.google.apphosting.runtime.ResponseAPIData;
 import com.google.apphosting.runtime.ServletEngineAdapter;
-import com.google.apphosting.runtime.ThreadGroupPool;
 import com.google.apphosting.runtime.jetty.AppEngineConstants;
 import com.google.apphosting.runtime.jetty.AppInfoFactory;
 import com.google.common.base.Ascii;
 import com.google.common.flogger.GoogleLogger;
-import com.google.common.util.concurrent.Uninterruptibles;
 import org.eclipse.jetty.http.HttpField;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Request;
@@ -46,10 +46,11 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.time.Duration;
 import java.util.Optional;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeoutException;
 
 import static com.google.apphosting.runtime.RequestRunner.WAIT_FOR_USER_RUNNABLE_DEADLINE;
+import java.util.concurrent.Exchanger;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 /**
  * This class replicates the behaviour of the {@link RequestRunner} for Requests which do not come
@@ -181,22 +182,37 @@ public class JettyHttpHandler extends Handler.Wrapper {
   private void dispatchBackgroundRequest(JettyRequestAPIData request, JettyResponseAPIData response)
       throws InterruptedException, TimeoutException {
     String requestId = getBackgroundRequestId(request);
-    // Wait here for synchronization with the ThreadFactory.
-    CountDownLatch latch = ThreadGroupPool.resetCurrentThread();
-    Thread thread = new ThreadProxy();
+    // The interface of coordinator.waitForUserRunnable() requires us to provide the app code with a
+    // working thread *in the same exchange* where we get the runnable the user wants to run in the
+    // thread. This prevents us from actually directly feeding that runnable to the thread. To work
+    // around this conundrum, we create an EagerRunner, which lets us start running the thread
+    // without knowing yet what we want to run.
+
+    // Create an ordinary request thread as a child of this background thread.
+    EagerRunner eagerRunner = new EagerRunner();
+    Thread thread = ThreadManager.createThreadForCurrentRequest(eagerRunner);
+
+    // Give this thread to the app code and get its desired runnable in response:
     Runnable runnable =
-        coordinator.waitForUserRunnable(requestId, thread, WAIT_FOR_USER_RUNNABLE_DEADLINE);
-    // Wait here until someone calls start() on the thread again.
-    latch.await();
+        coordinator.waitForUserRunnable(
+            requestId, thread, WAIT_FOR_USER_RUNNABLE_DEADLINE.toMillis());
+
+    // Finally, hand that runnable to the thread so it can actually start working.
+    // This will block until Thread.start() is called by the app code. This is by design: we must
+    // not exit this request handler until the thread has started *and* completed, otherwise the
+    // serving infrastructure will cancel our ability to make API calls. We're effectively "holding
+    // open the door" on the spawned thread's ability to make App Engine API calls.
     // Now set the context class loader to the UserClassLoader for the application
     // and pass control to the Runnable the user provided.
     ClassLoader oldClassLoader = Thread.currentThread().getContextClassLoader();
     Thread.currentThread().setContextClassLoader(appVersion.getClassLoader());
     try {
-      runnable.run();
+      eagerRunner.supplyRunnable(runnable);
     } finally {
       Thread.currentThread().setContextClassLoader(oldClassLoader);
     }
+    // Wait for the thread to end:
+    thread.join();
   }
 
   private boolean handleException(
@@ -277,34 +293,5 @@ public class JettyHttpHandler extends Handler.Wrapper {
       return match.get().getValue();
     }
     throw new IllegalArgumentException("Did not receive a background request identifier.");
-  }
-
-  /** Creates a thread which does nothing except wait on the thread that spawned it. */
-  private static class ThreadProxy extends Thread {
-
-    private final Thread proxy;
-
-    private ThreadProxy() {
-      super(
-          Thread.currentThread().getThreadGroup().getParent(),
-          Thread.currentThread().getName() + "-proxy");
-      proxy = Thread.currentThread();
-    }
-
-    @Override
-    public synchronized void start() {
-      proxy.start();
-      super.start();
-    }
-
-    @Override
-    public void setUncaughtExceptionHandler(UncaughtExceptionHandler eh) {
-      proxy.setUncaughtExceptionHandler(eh);
-    }
-
-    @Override
-    public void run() {
-      Uninterruptibles.joinUninterruptibly(proxy);
-    }
   }
 }
