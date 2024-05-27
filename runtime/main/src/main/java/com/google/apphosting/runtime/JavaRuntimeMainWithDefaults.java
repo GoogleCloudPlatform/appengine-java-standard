@@ -51,11 +51,13 @@ public class JavaRuntimeMainWithDefaults {
     System.setProperty("com.google.common.logging.EventId.allowLoopbackIP", "true");
     System.setProperty("file.encoding", "UTF-8");
     System.setProperty("java.awt.headless", "true");
-    System.setProperty(
-        "java.class.path",
-        useMavenJars()
-            ? getLocation(runtimeLocation, "jars/runtime-main.jar")
-            : getLocation(runtimeLocation, "runtime-main.jar"));
+    if (System.getProperty("java.class.path") == null) {
+      System.setProperty(
+              "java.class.path",
+              useMavenJars()
+                      ? getLocation(runtimeLocation, "jars/runtime-main.jar")
+                      : getLocation(runtimeLocation, "runtime-main.jar"));
+    }
     System.setProperty("java.library.path", getLocation(runtimeLocation, ""));
     System.setProperty("java.security.egd", "file:/dev/urandom");
     System.setProperty("java.util.Arrays.useLegacyMergeSort", "true");

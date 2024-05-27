@@ -99,6 +99,10 @@ public class NullSandboxPlugin {
     return applicationLoader;
   }
 
+  public void setApplicationClassLoader(ClassLoader applicationLoader) {
+    this.applicationLoader = applicationLoader;
+  }
+
   /**
    * Creates a {@code ClassLoader} for application code.
    *

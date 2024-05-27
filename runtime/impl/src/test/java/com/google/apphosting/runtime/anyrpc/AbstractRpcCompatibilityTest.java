@@ -39,6 +39,7 @@ import com.google.apphosting.base.protos.ModelClonePb.PerformanceDataRequest;
 import com.google.apphosting.base.protos.RuntimePb.UPRequest;
 import com.google.apphosting.base.protos.RuntimePb.UPResponse;
 import com.google.apphosting.base.protos.Status.StatusProto;
+import com.google.apphosting.runtime.AppVersion;
 import com.google.apphosting.runtime.anyrpc.ClientInterfaces.CloneControllerClient;
 import com.google.apphosting.runtime.anyrpc.ClientInterfaces.EvaluationRuntimeClient;
 import com.google.common.collect.ImmutableClassToInstanceMap;
@@ -243,6 +244,15 @@ public abstract class AbstractRpcCompatibilityTest {
 
     @Override
     public void addAppVersion(AnyRpcServerContext ctx, AppinfoPb.AppInfo req) {
+      // This doesn't return ctx.finishWithResponse, so a caller should eventually time out.
+      // We signal a semaphore so that tests can wait until the server has indeed received this
+      // request. Otherwise there is a danger that the test will shut down the server before it
+      // receives the request, which would generate a spurious log message.
+      addAppVersionReceived.release();
+    }
+
+    @Override
+    public void addAppVersion(AnyRpcServerContext ctx, AppVersion appVersion) {
       // This doesn't return ctx.finishWithResponse, so a caller should eventually time out.
       // We signal a semaphore so that tests can wait until the server has indeed received this
       // request. Otherwise there is a danger that the test will shut down the server before it

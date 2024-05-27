@@ -46,6 +46,8 @@ public interface ServletEngineAdapter extends UPRequestHandler {
    */
   void stop();
 
+  void join() throws InterruptedException;
+
   /**
    * Register the specified application version for future calls to
    * {@code serviceRequest}.

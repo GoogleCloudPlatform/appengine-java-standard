@@ -84,6 +84,7 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
   private Server server;
   private DelegateConnector rpcConnector;
   private AppVersionHandler appVersionHandler;
+  private AppVersion appVersion;
 
   public JettyServletEngineAdapter() {}
 
@@ -157,14 +158,27 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
         String appRoot = runtimeOptions.applicationRoot();
         String appPath = runtimeOptions.fixedApplicationPath();
         appInfoFactory = new AppInfoFactory(System.getenv());
-        AppinfoPb.AppInfo appinfo = appInfoFactory.getAppInfoFromFile(appRoot, appPath);
-        // TODO Should we also call ApplyCloneSettings()?
-        LocalRpcContext<EmptyMessage> context = new LocalRpcContext<>(EmptyMessage.class);
-        EvaluationRuntimeServerInterface evaluationRuntimeServerInterface =
-            Objects.requireNonNull(runtimeOptions.evaluationRuntimeServerInterface());
-        evaluationRuntimeServerInterface.addAppVersion(context, appinfo);
-        context.getResponse();
-        appVersionKey = AppVersionKey.fromAppInfo(appinfo);
+        AppinfoPb.AppInfo appinfo;
+        if (!Boolean.getBoolean("appengine.use.lite")) {
+          appinfo = appInfoFactory.getAppInfoFromFile(appRoot, appPath);
+          // TODO Should we also call ApplyCloneSettings()?
+          LocalRpcContext<EmptyMessage> context = new LocalRpcContext<>(EmptyMessage.class);
+          EvaluationRuntimeServerInterface evaluationRuntimeServerInterface =
+                  Objects.requireNonNull(runtimeOptions.evaluationRuntimeServerInterface());
+          evaluationRuntimeServerInterface.addAppVersion(context, appinfo);
+          context.getResponse();
+          appVersionKey = AppVersionKey.fromAppInfo(appinfo);
+        }
+        else
+        {
+          LocalRpcContext<EmptyMessage> context = new LocalRpcContext<>(EmptyMessage.class);
+          EvaluationRuntimeServerInterface evaluationRuntimeServerInterface =
+                  Objects.requireNonNull(runtimeOptions.evaluationRuntimeServerInterface());
+          evaluationRuntimeServerInterface.addAppVersion(context, this.appVersion);
+          context.getResponse();
+          appVersionKey = AppVersionKey.fromAppVersion(this.appVersion);
+        }
+
         appVersionHandler.ensureHandler(appVersionKey);
       } catch (Exception e) {
         throw new IllegalStateException(e);
@@ -207,7 +221,20 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
   }
 
   @Override
-  public void addAppVersion(AppVersion appVersion) throws FileNotFoundException {
+  public void join() throws InterruptedException {
+    server.join();
+  }
+
+  public void setAppVersion(AppVersion appVersion)
+  {
+    if (!Boolean.getBoolean("appengine.use.lite")) {
+      throw new IllegalStateException("only for use in runtime-lite");
+    }
+    this.appVersion = appVersion;
+  }
+
+  @Override
+  public void addAppVersion(AppVersion appVersion) {
     appVersionHandler.addAppVersion(appVersion);
   }
 

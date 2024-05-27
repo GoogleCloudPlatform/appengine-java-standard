@@ -139,6 +139,11 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
   }
 
   @Override
+  public void join() throws InterruptedException {
+    server.join();
+  }
+
+  @Override
   public void addAppVersion(AppVersion appVersion) throws FileNotFoundException {
     appVersionHandlerMap.addAppVersion(appVersion);
   }

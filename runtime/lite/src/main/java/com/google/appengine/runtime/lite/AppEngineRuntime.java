@@ -25,35 +25,30 @@ import com.google.apphosting.runtime.ApiDeadlineOracle;
 import com.google.apphosting.runtime.ApiProxyImpl;
 import com.google.apphosting.runtime.AppVersion;
 import com.google.apphosting.runtime.ApplicationEnvironment;
+import com.google.apphosting.runtime.BackgroundRequestCoordinator;
+import com.google.apphosting.runtime.JavaRuntime;
+import com.google.apphosting.runtime.NullRpcPlugin;
+import com.google.apphosting.runtime.NullSandboxPlugin;
+import com.google.apphosting.runtime.RequestManager;
+import com.google.apphosting.runtime.ServletEngineAdapter;
 import com.google.apphosting.runtime.SessionsConfig;
 import com.google.apphosting.runtime.anyrpc.APIHostClientInterface;
 import com.google.apphosting.runtime.http.HttpApiHostClientFactory;
-import com.google.apphosting.runtime.jetty9.AppEngineWebAppContext;
-import com.google.apphosting.runtime.jetty9.AppInfoFactory;
-import com.google.apphosting.runtime.jetty9.AppVersionHandlerFactory;
-import com.google.apphosting.runtime.jetty9.JettyServerConnectorWithReusePort;
-import com.google.apphosting.runtime.jetty9.WebAppContextFactory;
+import com.google.apphosting.runtime.jetty.AppInfoFactory;
+import com.google.apphosting.runtime.jetty.JettyServletEngineAdapter;
 import com.google.auto.value.AutoBuilder;
-import com.google.common.collect.ImmutableList;
 import com.google.common.flogger.GoogleLogger;
 import com.google.common.net.HostAndPort;
-import com.google.errorprone.annotations.CanIgnoreReturnValue;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.time.Duration;
-import java.util.EventListener;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
-import org.eclipse.jetty.server.Connector;
-import org.eclipse.jetty.server.HttpConfiguration;
-import org.eclipse.jetty.server.HttpConnectionFactory;
-import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.ServerConnector;
-import org.eclipse.jetty.server.handler.gzip.GzipHandler;
 
 /**
  * AppEngineRuntime is a simplified fork of {@link com.google.apphosting.runtime.JavaRuntime}.
@@ -85,9 +80,11 @@ public class AppEngineRuntime {
 
   private final AppVersion appVersion;
 
-  private final Server server;
-
   private final boolean allowWebInfJars;
+
+  private final JavaRuntime runtime;
+
+  private final ServletEngineAdapter.Config config;
 
   /** Builder for AppEngineRuntime. */
   @AutoBuilder
@@ -107,20 +104,6 @@ public class AppEngineRuntime {
 
     /** The address of the App Engine API host HTTP server. */
     public abstract Builder setApiHostAddress(HostAndPort x);
-
-    /**
-     * Listeners which will be added to the {@link org.eclipse.jetty.webapp.WebAppContext}.
-     *
-     * <p>This can be used to programmatically add ServletContextListeners (instead of configuring
-     * them in web.xml).
-     */
-    abstract ImmutableList.Builder<EventListener> listenersBuilder();
-
-    @CanIgnoreReturnValue
-    public final Builder addListener(EventListener listener) {
-      listenersBuilder().add(listener);
-      return this;
-    }
 
     /**
      * Configures App Engine's optional implementation of {@link javax.servlet.http.HttpSession}
@@ -167,71 +150,68 @@ public class AppEngineRuntime {
       HostAndPort listenAddress,
       boolean reusePort,
       HostAndPort apiHostAddress,
-      ImmutableList<EventListener> listeners,
       Optional<SessionsConfig> sessionsConfig,
       Optional<String> publicRoot,
       boolean allowWebInfJars) {
+    System.setProperty("appengine.use.lite", "true");
+    System.setProperty("appengine.use.HttpConnector", "true");
     this.allowWebInfJars = allowWebInfJars;
 
-    BackgroundRequestDispatcher backgroundRequestDispatcher = new BackgroundRequestDispatcher();
-
-    apiProxyImpl = makeApiProxyImplBuilder(apiHostAddress, backgroundRequestDispatcher).build();
-
+    BackgroundRequestCoordinator coordinator = new BackgroundRequestCoordinator();
+    apiProxyImpl = makeApiProxyImplBuilder(apiHostAddress, coordinator).build();
     RequestManager requestManager = makeRequestManagerBuilder(apiProxyImpl).build();
     apiProxyImpl.setRequestManager(requestManager);
-
     AppInfoFactory appInfoFactory = new AppInfoFactory(System.getenv());
     appInfo = appInfoFactory.getAppInfoWithApiVersion("user_defined");
+    appVersion = createAppVersion(servletWebappPath, appInfo, sessionsConfig, publicRoot);
 
-    this.appVersion = createAppVersion(servletWebappPath, appInfo, sessionsConfig, publicRoot);
+    String applicationRoot = servletWebappPath.toAbsolutePath().toString();
+    String fixedApplicationPath = servletWebappPath.toAbsolutePath().toString();
 
-    WebAppContextFactory webAppContextFactory =
-        (AppVersion appVersion, String serverInfo) -> {
-          AppEngineWebAppContext context =
-              new AppEngineWebAppContext(
-                  appVersion.getRootDirectory(), serverInfo, /*extractWar=*/ false);
-          listeners.forEach(context::addEventListener);
+    ApplicationEnvironment.RuntimeConfiguration configuration =
+            ApplicationEnvironment.RuntimeConfiguration.builder()
+                    .setCloudSqlJdbcConnectivityEnabled(false)
+                    .setUseGoogleConnectorJ(false)
+                    .build();
 
-          return context;
-        };
+    JettyServletEngineAdapter servletEngine = new JettyServletEngineAdapter();
+    servletEngine.setAppVersion(appVersion);
+    NullSandboxPlugin sandboxPlugin = new NullSandboxPlugin();
+    sandboxPlugin.setApplicationClassLoader(Thread.currentThread().getContextClassLoader());
+    NullRpcPlugin rpcPlugin = new NullRpcPlugin();
+    ApiDeadlineOracle deadlineOracle = DeadlineOracleFactory.create();
+    runtime = JavaRuntime.builder()
+            .setServletEngine(servletEngine)
+            .setSandboxPlugin(sandboxPlugin)
+            .setRpcPlugin(rpcPlugin)
+            .setSharedDirectory(new File(applicationRoot))
+            .setRequestManager(requestManager)
+            .setRuntimeVersion("Google App Engine/" + RUNTIME_VERSION)
+            .setConfiguration(configuration)
+            .setDeadlineOracle(deadlineOracle)
+            .setCoordinator(coordinator)
+            .setCompressResponse(false)
+            .setEnableHotspotPerformanceMetrics(false)
+            .setPollForNetwork(false)
+            .setDefaultToNativeUrlStreamHandler(false)
+            .setForceUrlfetchUrlStreamHandler(false)
+            .setIgnoreDaemonThreads(false)
+            .setUseEnvVarsFromAppInfo(false)
+            .setFixedApplicationPath(fixedApplicationPath)
+            .setRedirectStdoutStderr(true)
+            .setLogJsonToFile(true)
+            .build();
 
-    // Construct the Jetty server:
-    server = new Server();
-
-    // Create a factory which instantiates the app:
-    AppVersionHandlerFactory handlerFactory =
-        new AppVersionHandlerFactory(
-            server,
-            "Google App Engine/" + RUNTIME_VERSION,
-            webAppContextFactory,
-            /*useJettyErrorPageHandler=*/ true);
-
-    RequestHandler requestHandler =
-        new RequestHandler(
-            this.appVersion,
-            handlerFactory,
-            requestManager,
-            appInfoFactory,
-            backgroundRequestDispatcher.createHandler());
-
-    ServerConnector c = new JettyServerConnectorWithReusePort(server, reusePort);
-    c.setHost(listenAddress.getHost());
-    c.setPort(listenAddress.getPort());
-    server.setConnectors(new Connector[] {c});
-
-    HttpConfiguration config =
-        c.getConnectionFactory(HttpConnectionFactory.class).getHttpConfiguration();
-    config.setRequestHeaderSize(JETTY_HTTP_REQUEST_HEADER_SIZE);
-    config.setResponseHeaderSize(JETTY_HTTP_RESPONSE_HEADER_SIZE);
-    config.setSendServerVersion(false);
-
-    GzipHandler gzip = new GzipHandler();
-    gzip.setIncludedMethods("GET", "POST");
-    gzip.setInflateBufferSize(8 * 1024);
-    server.setHandler(gzip);
-    gzip.setHandler(requestHandler);
-
-    logger.atInfo().log("Starting Jetty http server for Java runtime proxy.");
+    config = ServletEngineAdapter.Config.builder()
+            .setApplicationRoot(applicationRoot)
+            .setFixedApplicationPath(fixedApplicationPath)
+            .setJettyHttpAddress(listenAddress)
+            .setJettyReusePort(reusePort)
+            .setUseJettyHttpProxy(true)
+            .setJettyRequestHeaderSize(JETTY_HTTP_REQUEST_HEADER_SIZE)
+            .setJettyResponseHeaderSize(JETTY_HTTP_RESPONSE_HEADER_SIZE)
+            .setEvaluationRuntimeServerInterface(runtime)
+            .build();
   }
 
   /** Start the runtime. Has various side effects on System properties and thread-local state. */
@@ -299,7 +279,7 @@ public class AppEngineRuntime {
       logger.atInfo().log("AppEngineRuntime starting...");
 
       try {
-        server.start();
+        runtime.start(config);
       } catch (Throwable ex) {
         if (ex instanceof InterruptedException) {
           Thread.currentThread().interrupt(); // Restore the interrupted status
@@ -311,17 +291,17 @@ public class AppEngineRuntime {
 
     @Override
     public void close() throws Exception {
-      server.stop();
-      server.join();
+      runtime.stop();
+      join();
     }
 
     public void join() throws InterruptedException {
-      server.join();
+      runtime.join();
     }
   }
 
   static ApiProxyImpl.Builder makeApiProxyImplBuilder(
-      HostAndPort apiHostAddress, BackgroundRequestDispatcher dispatcher) {
+          HostAndPort apiHostAddress, BackgroundRequestCoordinator dispatcher) {
     ApiDeadlineOracle deadlineOracle = DeadlineOracleFactory.create();
 
     APIHostClientInterface apiHost =
@@ -348,7 +328,9 @@ public class AppEngineRuntime {
         .setApiProxyImpl(apiProxyImpl)
         .setMaxOutstandingApiRpcs(CLONE_MAX_OUTSTANDING_API_RPCS)
         .setInterruptFirstOnSoftDeadline(true)
-        .setCyclesPerSecond(CYCLES_PER_SECOND);
+        .setCyclesPerSecond(CYCLES_PER_SECOND)
+        .setThreadStopTerminatesClone(false)
+        .setWaitForDaemonRequestThreads(false);
   }
 
   static AppVersion createAppVersion(

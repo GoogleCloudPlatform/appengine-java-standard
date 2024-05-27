@@ -18,6 +18,7 @@ package com.google.apphosting.runtime.anyrpc;
 
 import com.google.apphosting.base.protos.AppinfoPb.AppInfo;
 import com.google.apphosting.base.protos.RuntimePb.UPRequest;
+import com.google.apphosting.runtime.AppVersion;
 
 /**
  * RPC-agnostic version of EvaluationRuntime.ServerInterface.
@@ -28,7 +29,9 @@ import com.google.apphosting.base.protos.RuntimePb.UPRequest;
 public interface EvaluationRuntimeServerInterface {
   void handleRequest(AnyRpcServerContext ctx, UPRequest req);
 
-  void addAppVersion(AnyRpcServerContext ctx, AppInfo req);
+  void addAppVersion(AnyRpcServerContext ctx, AppInfo appInfo);
+
+  void addAppVersion(AnyRpcServerContext ctx, AppVersion appVersion);
 
   void deleteAppVersion(AnyRpcServerContext ctx, AppInfo req);
 }

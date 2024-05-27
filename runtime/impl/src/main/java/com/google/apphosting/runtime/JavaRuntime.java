@@ -334,6 +334,11 @@ public class JavaRuntime implements EvaluationRuntimeServerInterface {
     }
   }
 
+  public void join() throws InterruptedException
+  {
+    servletEngine.join();
+  }
+
   private ByteBuffer getPerformanceDataByteBuffer(String perfClassName)
       throws ReflectiveOperationException {
     // Attaching to the current process (lvmid == 0) returns a shared buffer valid
@@ -461,6 +466,57 @@ public class JavaRuntime implements EvaluationRuntimeServerInterface {
             System.getenv(GOOGLE_CLOUD_PROJECT_ENV_VAR),
             jsonLogDir.resolve(JSON_LOG_OUTPUT_FILE),
             clearLogHandlers);
+      } else {
+        sandboxPlugin.startCapturingApplicationLogs();
+      }
+      if (redirectStdoutStderr) {
+        // Reassign the standard streams so that e.g. System.out.println works as intended,
+        // i.e. it sends output to the application log.
+        logging.redirectStdoutStderr(identifier);
+      }
+      logging.applyLogProperties(userLogConfigFilePath, sandboxPlugin.getApplicationClassLoader());
+      // Now notify the servlet engine, so it can do any setup it
+      // has to do.
+      servletEngine.addAppVersion(appVersion);
+    } catch (Exception ex) {
+      logger.atWarning().withCause(ex).log("Error adding app version:");
+      rpc.finishWithAppError(UPAddDelete.ERROR.FAILURE_VALUE, ex.toString());
+      return;
+    }
+    // Do not put this in a finally block.  If we propagate an
+    // exception the callback will be invoked automatically.
+    rpc.finishWithResponse(EmptyMessage.getDefaultInstance());
+  }
+
+  public synchronized void addAppVersion(AnyRpcServerContext rpc, AppVersion appVersion) {
+    if (this.appVersion != null) {
+      rpc.finishWithAppError(
+              UPAddDelete.ERROR.FAILURE_VALUE,
+              "AddAppVersion already called with version " + this.appVersion);
+      return;
+    }
+    try {
+      this.appVersion = appVersion;
+      ApplicationEnvironment env = appVersion.getEnvironment();
+
+      if ("1.8".equals(JAVA_SPECIFICATION_VERSION.value())) {
+        setEnvironmentVariables(env.getEnvironmentVariables());
+      }
+      System.getProperties().putAll(env.getSystemProperties());
+      // NOTE: This string should be kept in sync with the one used by the
+      // Logger_.getPrivateContextName(String) method.
+      String identifier = env.getAppId() + "/" + env.getVersionId();
+      String userLogConfigFilePath = env.getSystemProperties().get("java.util.logging.config.file");
+      if (userLogConfigFilePath != null) {
+        userLogConfigFilePath =
+                env.getRootDirectory().getAbsolutePath() + "/" + userLogConfigFilePath;
+      }
+      System.setIn(new ByteArrayInputStream(new byte[0]));
+      if (logJsonToFile || "1".equals(System.getenv(VAR_LOG_ENV_VAR))) {
+        logging.logJsonToFile(
+                System.getenv(GOOGLE_CLOUD_PROJECT_ENV_VAR),
+                jsonLogDir.resolve(JSON_LOG_OUTPUT_FILE),
+                clearLogHandlers);
       } else {
         sandboxPlugin.startCapturingApplicationLogs();
       }

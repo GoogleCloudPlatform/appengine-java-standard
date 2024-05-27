@@ -1096,7 +1096,7 @@ public class RequestManager implements RequestThreadManager {
       scheduledFutures.add(future);
     }
 
-    Collection<Future<?>> getAsyncFutures() {
+    public Collection<Future<?>> getAsyncFutures() {
       return asyncFutures;
     }
 

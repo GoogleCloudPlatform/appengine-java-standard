@@ -35,9 +35,10 @@ import com.google.apphosting.runtime.ApiDeadlineOracle;
 import com.google.apphosting.runtime.ApiProxyImpl;
 import com.google.apphosting.runtime.AppVersion;
 import com.google.apphosting.runtime.ApplicationEnvironment;
+import com.google.apphosting.runtime.BackgroundRequestCoordinator;
+import com.google.apphosting.runtime.RequestManager;
 import com.google.apphosting.runtime.SessionsConfig;
-import com.google.apphosting.runtime.http.FakeHttpApiHost;
-import com.google.apphosting.runtime.jetty9.AppInfoFactory;
+import com.google.apphosting.runtime.jetty.AppInfoFactory;
 import com.google.apphosting.testing.PortPicker;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
@@ -74,11 +75,14 @@ import javax.servlet.ServletContextListener;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import org.eclipse.jetty.client.ByteBufferRequestContent;
+import org.eclipse.jetty.client.ContentResponse;
 import org.eclipse.jetty.client.HttpClient;
-import org.eclipse.jetty.client.api.ContentResponse;
-import org.eclipse.jetty.client.api.Request;
-import org.eclipse.jetty.client.util.BytesContentProvider;
+import org.eclipse.jetty.client.Request;
 import org.eclipse.jetty.http.HttpMethod;
+import org.eclipse.jetty.io.content.ByteBufferContentSource;
+import org.eclipse.jetty.util.BufferUtil;
 import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
@@ -535,11 +539,14 @@ public final class AppEngineRuntimeTest {
           httpClient
               .get()
               .newRequest(uri)
-              .header("Accept-Encoding", "gzip")
-              .header("Content-Length", Integer.toString(inputBytes.length))
-              .header("Content-type", "text/plain")
-              .header("Content-Encoding", "gzip")
-              .content(new BytesContentProvider(inputBytes));
+                  .headers(httpFields ->
+                  {
+                    httpFields.add("Accept-Encoding", "gzip");
+                    httpFields.add("Content-Length", Integer.toString(inputBytes.length));
+                    httpFields.add("Content-type", "text/plain");
+                    httpFields.add("Content-Encoding", "gzip");
+                  })
+                  .body(new ByteBufferRequestContent(BufferUtil.toBuffer(inputBytes)));
       if (testMethod == GzipTestMethod.GET) {
         req = req.method(HttpMethod.GET);
       } else {
@@ -570,7 +577,7 @@ public final class AppEngineRuntimeTest {
             .build();
     ContentResponse response;
     try (AppEngineRuntime.RunningRuntime runningRuntime = runtime.run()) {
-      response = httpClient.get().newRequest(uri).header("echo", headerVal).send();
+      response = httpClient.get().newRequest(uri).headers(httpFields -> httpFields.add("echo", headerVal)).send();
     }
 
     assertThat(response.getHeaders().get("echo")).isEqualTo(headerVal);
@@ -611,7 +618,7 @@ public final class AppEngineRuntimeTest {
               httpClient
                   .get()
                   .newRequest(uri)
-                  .header("x-appengine-user-ip", "1.2.3.4")
+                  .headers(httpFields -> httpFields.add("x-appengine-user-ip", "1.2.3.4"))
                   .send()
                   .getContent(),
               UTF_8);
@@ -629,8 +636,10 @@ public final class AppEngineRuntimeTest {
         httpClient
             .get()
             .newRequest(uri + "/_ah/background")
-            .header("x-appengine-user-ip", "0.1.0.3")
-            .header("X-AppEngine-BackgroundRequest", BACKGROUND_REQUEST_ID)
+                .headers(httpFields -> {
+                  httpFields.add("x-appengine-user-ip", "0.1.0.3");
+                  httpFields.add("X-AppEngine-BackgroundRequest", BACKGROUND_REQUEST_ID);
+                })
             .send()
             .getContent(),
         UTF_8);
@@ -738,7 +747,7 @@ public final class AppEngineRuntimeTest {
           httpClient
               .get()
               .newRequest(uri + "/_ah/background")
-              .header("x-appengine-user-ip", "0.1.0.3");
+              .headers(httpFields -> httpFields.add("x-appengine-user-ip", "0.1.0.3"));
       // We intentionally don't send the background thread ID:
       // .header("X-AppEngine-BackgroundRequest", BACKGROUND_REQUEST_ID);
       response = new String(req.send().getContent(), UTF_8);
@@ -841,7 +850,7 @@ public final class AppEngineRuntimeTest {
   @Test
   public void makeRequestManagerBuilder_validate(@TestParameter boolean reusePort) {
     HostAndPort apiHostAddress = HostAndPort.fromParts("foobar", 1212);
-    BackgroundRequestDispatcher dispatcher = new BackgroundRequestDispatcher();
+    BackgroundRequestCoordinator dispatcher = new BackgroundRequestCoordinator();
 
     ApiProxyImpl apiProxy =
         AppEngineRuntime.makeApiProxyImplBuilder(apiHostAddress, dispatcher).build();
@@ -867,7 +876,7 @@ public final class AppEngineRuntimeTest {
   @Test
   public void makeApiProxyImplBuilder_validate() {
     HostAndPort apiHostAddress = HostAndPort.fromParts("foobar", 1212);
-    BackgroundRequestDispatcher dispatcher = new BackgroundRequestDispatcher();
+    BackgroundRequestCoordinator dispatcher = new BackgroundRequestCoordinator();
 
     ApiProxyImpl.Builder builder =
         AppEngineRuntime.makeApiProxyImplBuilder(apiHostAddress, dispatcher);

@@ -18,6 +18,7 @@ package com.google.apphosting.base;
 
 import com.google.apphosting.base.protos.AppinfoPb.AppInfo;
 import com.google.apphosting.base.protos.RuntimePb.UPRequest;
+import com.google.apphosting.runtime.AppVersion;
 import com.google.auto.value.AutoValue;
 
 /**
@@ -32,6 +33,10 @@ import com.google.auto.value.AutoValue;
 public abstract class AppVersionKey {
   public static AppVersionKey fromAppInfo(AppInfo appInfo) {
     return of(appInfo.getAppId(), appInfo.getVersionId());
+  }
+
+  public static AppVersionKey fromAppVersion(AppVersion appVersion) {
+    return appVersion.getKey();
   }
 
   public static AppVersionKey fromUpRequest(UPRequest request) {

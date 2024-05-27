@@ -116,7 +116,7 @@ public class AppInfoFactory {
         AppinfoPb.AppInfo.newBuilder()
             .setAppId(gaeApplication)
             .setVersionId(gaeVersion)
-            .setRuntimeId("java8");
+            .setRuntimeId("java21");
 
     if (apiVersion != null) {
       appInfoBuilder.setApiVersion(apiVersion);
