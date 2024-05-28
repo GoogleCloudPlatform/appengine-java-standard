@@ -187,7 +187,7 @@
                   <plugin>
                     <groupId>org.sonatype.plugins</groupId>
                     <artifactId>nexus-staging-maven-plugin</artifactId>
-                    <version>1.6.13</version>
+                    <version>1.7.0</version>
                     <extensions>true</extensions>
                     <configuration>
                       <serverId>${distributionManagement.snapshot.id}</serverId>
@@ -565,7 +565,7 @@
       <dependency>
         <groupId>org.apache.maven</groupId>
         <artifactId>maven-core</artifactId>
-        <version>3.9.6</version>
+        <version>3.9.7</version>
       </dependency>
       <dependency>
         <groupId>org.apache.ant</groupId>
@@ -581,7 +581,7 @@
       <dependency>
         <groupId>org.apache.maven</groupId>
         <artifactId>maven-plugin-api</artifactId>
-        <version>3.9.6</version>
+        <version>3.9.7</version>
       </dependency>
       <dependency>
         <groupId>org.checkerframework</groupId>
