@@ -110,12 +110,7 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
       threadPool.setVirtualThreadsExecutor(VirtualThreads.getDefaultVirtualThreadsExecutor());
       logger.atInfo().log("Configuring Appengine web server virtual threads.");
     }
-    // The server.getDefaultStyleSheet() returns is returning null because of some classloading
-    // issue,
-    // so we get the StyleSheet here to ensure it returns the correct value.
-    Resource styleSheet =
-        ResourceFactory.root()
-            .newResource(getClass().getClassLoader().getResource("jetty-dir.css"));
+
     server =
         new Server(threadPool) {
           @Override
@@ -125,7 +120,16 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
 
           @Override
           public Resource getDefaultStyleSheet() {
-            return styleSheet;
+            // TODO: this is a workaround for https://github.com/jetty/jetty.project/issues/11873
+            return ResourceFactory.of(this)
+                    .newResource("/org/eclipse/jetty/server/jetty-dir.css");
+          }
+
+          @Override
+          public Resource getDefaultFavicon() {
+            // TODO: this is a workaround for https://github.com/jetty/jetty.project/issues/11873
+            return ResourceFactory.of(this)
+                    .newResource("/org/eclipse/jetty/server/favicon.ico");
           }
         };
     rpcConnector =
