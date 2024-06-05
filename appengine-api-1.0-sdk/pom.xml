@@ -514,7 +514,7 @@
                   <include>org.codehaus.jackson:jackson-core-asl:*</include>
                   <include>io.opencensus:opencensus-api:*</include>
                   <include>io.opencensus:opencensus-contrib-http-util:*</include>
-                   <include>io.grpc:grpc-context:*</include>
+                  <include>io.grpc:grpc-api:*</include>
                </includes>
               </artifactSet>
             </configuration>
