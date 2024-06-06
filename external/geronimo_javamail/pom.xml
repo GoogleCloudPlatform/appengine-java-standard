@@ -22,14 +22,14 @@
     <parent>
         <groupId>com.google.appengine</groupId>
         <artifactId>parent</artifactId>
-        <version>2.0.28</version>
+        <version>2.0.29-SNAPSHOT</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
     <artifactId>geronimo-javamail_1.4_spec</artifactId>
     <packaging>jar</packaging>
     <name>AppEngine :: JavaMail 1.4</name>
-    <version>1.4.4-2.0.28</version>
+    <version>1.4.4-3.0.28-SNAPSHOT</version>
 
     <description>Javamail 1.4 Specification with AppEngine updates.</description>
 
