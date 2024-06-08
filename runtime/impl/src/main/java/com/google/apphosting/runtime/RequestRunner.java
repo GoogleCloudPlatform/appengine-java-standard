@@ -18,6 +18,7 @@ package com.google.apphosting.runtime;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
+import com.google.appengine.api.ThreadManager;
 import com.google.apphosting.api.ApiProxy;
 import com.google.apphosting.base.protos.HttpPb.ParsedHttpHeader;
 import com.google.apphosting.base.protos.RuntimePb.UPRequest;
@@ -31,6 +32,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.time.Duration;
+import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Exchanger;
 import java.util.concurrent.TimeoutException;
@@ -235,22 +237,62 @@ public class RequestRunner implements Runnable {
 
   private void dispatchBackgroundRequest() throws InterruptedException, TimeoutException {
     String requestId = getBackgroundRequestId(upRequest);
-    // Wait here for synchronization with the ThreadFactory.
-    CountDownLatch latch = ThreadGroupPool.resetCurrentThread();
-    Thread thread = new ThreadProxy();
-    Runnable runnable =
-        coordinator.waitForUserRunnable(
-            requestId, thread, WAIT_FOR_USER_RUNNABLE_DEADLINE.toMillis());
-    // Wait here until someone calls start() on the thread again.
-    latch.await();
-    // Now set the context class loader to the UserClassLoader for the application
-    // and pass control to the Runnable the user provided.
-    ClassLoader oldClassLoader = Thread.currentThread().getContextClassLoader();
-    Thread.currentThread().setContextClassLoader(appVersion.getClassLoader());
-    try {
-      runnable.run();
-    } finally {
-      Thread.currentThread().setContextClassLoader(oldClassLoader);
+    // For java21 runtime, RPC path, do the new background thread handling for now, and keep it for
+    // other runtimes.
+    if (!Objects.equals(System.getenv("GAE_RUNTIME"), "java21")) {
+      // Wait here for synchronization with the ThreadFactory.
+      CountDownLatch latch = ThreadGroupPool.resetCurrentThread();
+      Thread thread = new ThreadProxy();
+      Runnable runnable =
+          coordinator.waitForUserRunnable(
+              requestId, thread, WAIT_FOR_USER_RUNNABLE_DEADLINE.toMillis());
+      // Wait here until someone calls start() on the thread again.
+      latch.await();
+      // Now set the context class loader to the UserClassLoader for the application
+      // and pass control to the Runnable the user provided.
+      ClassLoader oldClassLoader = Thread.currentThread().getContextClassLoader();
+      Thread.currentThread().setContextClassLoader(appVersion.getClassLoader());
+      try {
+        runnable.run();
+      } finally {
+        Thread.currentThread().setContextClassLoader(oldClassLoader);
+      }
+    } else {
+      // The interface of coordinator.waitForUserRunnable() requires us to provide the app code with
+      // a
+      // working thread *in the same exchange* where we get the runnable the user wants to run in
+      // the
+      // thread. This prevents us from actually directly feeding that runnable to the thread. To
+      // work
+      // around this conundrum, we create an EagerRunner, which lets us start running the thread
+      // without knowing yet what we want to run.
+
+      // Create an ordinary request thread as a child of this background thread.
+      EagerRunner eagerRunner = new EagerRunner();
+      Thread thread = ThreadManager.createThreadForCurrentRequest(eagerRunner);
+
+      // Give this thread to the app code and get its desired runnable in response:
+      Runnable runnable =
+          coordinator.waitForUserRunnable(
+              requestId, thread, WAIT_FOR_USER_RUNNABLE_DEADLINE.toMillis());
+
+      // Finally, hand that runnable to the thread so it can actually start working.
+      // This will block until Thread.start() is called by the app code. This is by design: we must
+      // not exit this request handler until the thread has started *and* completed, otherwise the
+      // serving infrastructure will cancel our ability to make API calls. We're effectively
+      // "holding
+      // open the door" on the spawned thread's ability to make App Engine API calls.
+      // Now set the context class loader to the UserClassLoader for the application
+      // and pass control to the Runnable the user provided.
+      ClassLoader oldClassLoader = Thread.currentThread().getContextClassLoader();
+      Thread.currentThread().setContextClassLoader(appVersion.getClassLoader());
+      try {
+        eagerRunner.supplyRunnable(runnable);
+      } finally {
+        Thread.currentThread().setContextClassLoader(oldClassLoader);
+      }
+      // Wait for the thread to end:
+      thread.join();
     }
     upResponse.setError(UPResponse.ERROR.OK_VALUE);
     if (!upResponse.hasHttpResponse()) {
