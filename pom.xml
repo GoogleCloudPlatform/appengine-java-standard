@@ -64,6 +64,8 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <jetty.version>9.4.54.v20240208</jetty.version>
     <jetty12.version>12.0.10</jetty12.version>
+    <io.grpc>1.64.0</io.grpc>
+    <io.netty>4.1.110.Final</io.netty>
     <slf4j.version>2.0.13</slf4j.version>
     <distributionManagement.snapshot.url>https://oss.sonatype.org/content/repositories/google-snapshots/</distributionManagement.snapshot.url>
     <distributionManagement.snapshot.id>sonatype-nexus-snapshots</distributionManagement.snapshot.id>
@@ -650,63 +652,63 @@
       <dependency>
         <groupId>io.grpc</groupId>
         <artifactId>grpc-api</artifactId>
-        <version>1.64.0</version>
+        <version>${io.grpc}</version>
       </dependency>
       <dependency>
         <groupId>io.grpc</groupId>
         <artifactId>grpc-stub</artifactId>
-        <version>1.64.0</version>
+        <version>${io.grpc}</version>
       </dependency>
       <dependency>
         <groupId>io.grpc</groupId>
         <artifactId>grpc-protobuf</artifactId>
-        <version>1.64.0</version>
+        <version>${io.grpc}</version>
       </dependency>
       <dependency>
          <groupId>io.grpc</groupId>
          <artifactId>grpc-netty</artifactId>
-         <version>1.64.0</version>
+        <version>${io.grpc}</version>
       </dependency>
       <!-- io.netty are transitive deps needed by io.grpc-->
       <dependency>
           <groupId>io.netty</groupId>
           <artifactId>netty-buffer</artifactId>
-          <version>4.1.110.Final</version>
+          <version>${io.netty}</version>
       </dependency>
       <dependency>
           <groupId>io.netty</groupId>
           <artifactId>netty-codec</artifactId>
-          <version>4.1.110.Final</version>
+          <version>${io.netty}</version>
       </dependency>
       <dependency>
           <groupId>io.netty</groupId>
           <artifactId>netty-codec-http</artifactId>
-          <version>4.1.110.Final</version>
+          <version>${io.netty}</version>
       </dependency>
       <dependency>
           <groupId>io.netty</groupId>
           <artifactId>netty-codec-http2</artifactId>
-          <version>4.1.110.Final</version>
+          <version>${io.netty}</version>
       </dependency>
       <dependency>
           <groupId>io.netty</groupId>
           <artifactId>netty-common</artifactId>
-          <version>4.1.110.Final</version>
+          <version>${io.netty}</version>
       </dependency>
       <dependency>
           <groupId>io.netty</groupId>
           <artifactId>netty-handler</artifactId>
-          <version>4.1.110.Final</version>
+          <version>${io.netty}</version>
       </dependency>
       <dependency>
           <groupId>io.netty</groupId>
           <artifactId>netty-transport</artifactId>
-          <version>4.1.110.Final</version>
+          <version>${io.netty}</version>
       </dependency>
       <dependency>
           <groupId>io.netty</groupId>
           <artifactId>netty-transport-native-unix-common</artifactId>
-          <version>4.1.110.Final</version>
+          <version>${io.netty}</version>
       </dependency>
       <dependency>
         <groupId>org.apache.tomcat</groupId>
