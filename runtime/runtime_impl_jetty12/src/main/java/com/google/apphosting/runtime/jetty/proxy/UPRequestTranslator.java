@@ -16,36 +16,38 @@
 
 package com.google.apphosting.runtime.jetty.proxy;
 
-import static com.google.apphosting.runtime.jetty.AppEngineConstants.DEFAULT_SECRET_KEY;
-import static com.google.apphosting.runtime.jetty.AppEngineConstants.IS_ADMIN_HEADER_VALUE;
-import static com.google.apphosting.runtime.jetty.AppEngineConstants.IS_TRUSTED;
-import static com.google.apphosting.runtime.jetty.AppEngineConstants.PRIVATE_APPENGINE_HEADERS;
-import static com.google.apphosting.runtime.jetty.AppEngineConstants.WARMUP_IP;
-import static com.google.apphosting.runtime.jetty.AppEngineConstants.X_APPENGINE_API_TICKET;
-import static com.google.apphosting.runtime.jetty.AppEngineConstants.X_APPENGINE_APPSERVER_DATACENTER;
-import static com.google.apphosting.runtime.jetty.AppEngineConstants.X_APPENGINE_APPSERVER_TASK_BNS;
-import static com.google.apphosting.runtime.jetty.AppEngineConstants.X_APPENGINE_AUTH_DOMAIN;
-import static com.google.apphosting.runtime.jetty.AppEngineConstants.X_APPENGINE_DEFAULT_VERSION_HOSTNAME;
-import static com.google.apphosting.runtime.jetty.AppEngineConstants.X_APPENGINE_GAIA_AUTHUSER;
-import static com.google.apphosting.runtime.jetty.AppEngineConstants.X_APPENGINE_GAIA_ID;
-import static com.google.apphosting.runtime.jetty.AppEngineConstants.X_APPENGINE_GAIA_SESSION;
-import static com.google.apphosting.runtime.jetty.AppEngineConstants.X_APPENGINE_HTTPS;
-import static com.google.apphosting.runtime.jetty.AppEngineConstants.X_APPENGINE_LOAS_PEER_USERNAME;
-import static com.google.apphosting.runtime.jetty.AppEngineConstants.X_APPENGINE_QUEUENAME;
-import static com.google.apphosting.runtime.jetty.AppEngineConstants.X_APPENGINE_REQUEST_LOG_ID;
-import static com.google.apphosting.runtime.jetty.AppEngineConstants.X_APPENGINE_TIMEOUT_MS;
-import static com.google.apphosting.runtime.jetty.AppEngineConstants.X_APPENGINE_TRUSTED_IP_REQUEST;
-import static com.google.apphosting.runtime.jetty.AppEngineConstants.X_APPENGINE_USER_EMAIL;
-import static com.google.apphosting.runtime.jetty.AppEngineConstants.X_APPENGINE_USER_ID;
-import static com.google.apphosting.runtime.jetty.AppEngineConstants.X_APPENGINE_USER_IP;
-import static com.google.apphosting.runtime.jetty.AppEngineConstants.X_APPENGINE_USER_IS_ADMIN;
-import static com.google.apphosting.runtime.jetty.AppEngineConstants.X_APPENGINE_USER_NICKNAME;
-import static com.google.apphosting.runtime.jetty.AppEngineConstants.X_APPENGINE_USER_ORGANIZATION;
-import static com.google.apphosting.runtime.jetty.AppEngineConstants.X_CLOUD_TRACE_CONTEXT;
-import static com.google.apphosting.runtime.jetty.AppEngineConstants.X_FORWARDED_PROTO;
-import static com.google.apphosting.runtime.jetty.AppEngineConstants.X_GOOGLE_INTERNAL_PROFILER;
-import static com.google.apphosting.runtime.jetty.AppEngineConstants.X_GOOGLE_INTERNAL_SKIPADMINCHECK;
-import static com.google.apphosting.runtime.jetty.AppEngineConstants.X_GOOGLE_INTERNAL_SKIPADMINCHECK_UC;
+import static com.google.apphosting.runtime.AppEngineConstants.BACKGROUND_REQUEST_URL;
+import static com.google.apphosting.runtime.AppEngineConstants.DEFAULT_SECRET_KEY;
+import static com.google.apphosting.runtime.AppEngineConstants.IS_ADMIN_HEADER_VALUE;
+import static com.google.apphosting.runtime.AppEngineConstants.IS_TRUSTED;
+import static com.google.apphosting.runtime.AppEngineConstants.PRIVATE_APPENGINE_HEADERS;
+import static com.google.apphosting.runtime.AppEngineConstants.WARMUP_IP;
+import static com.google.apphosting.runtime.AppEngineConstants.WARMUP_REQUEST_URL;
+import static com.google.apphosting.runtime.AppEngineConstants.X_APPENGINE_API_TICKET;
+import static com.google.apphosting.runtime.AppEngineConstants.X_APPENGINE_APPSERVER_DATACENTER;
+import static com.google.apphosting.runtime.AppEngineConstants.X_APPENGINE_APPSERVER_TASK_BNS;
+import static com.google.apphosting.runtime.AppEngineConstants.X_APPENGINE_AUTH_DOMAIN;
+import static com.google.apphosting.runtime.AppEngineConstants.X_APPENGINE_DEFAULT_VERSION_HOSTNAME;
+import static com.google.apphosting.runtime.AppEngineConstants.X_APPENGINE_GAIA_AUTHUSER;
+import static com.google.apphosting.runtime.AppEngineConstants.X_APPENGINE_GAIA_ID;
+import static com.google.apphosting.runtime.AppEngineConstants.X_APPENGINE_GAIA_SESSION;
+import static com.google.apphosting.runtime.AppEngineConstants.X_APPENGINE_HTTPS;
+import static com.google.apphosting.runtime.AppEngineConstants.X_APPENGINE_LOAS_PEER_USERNAME;
+import static com.google.apphosting.runtime.AppEngineConstants.X_APPENGINE_QUEUENAME;
+import static com.google.apphosting.runtime.AppEngineConstants.X_APPENGINE_REQUEST_LOG_ID;
+import static com.google.apphosting.runtime.AppEngineConstants.X_APPENGINE_TIMEOUT_MS;
+import static com.google.apphosting.runtime.AppEngineConstants.X_APPENGINE_TRUSTED_IP_REQUEST;
+import static com.google.apphosting.runtime.AppEngineConstants.X_APPENGINE_USER_EMAIL;
+import static com.google.apphosting.runtime.AppEngineConstants.X_APPENGINE_USER_ID;
+import static com.google.apphosting.runtime.AppEngineConstants.X_APPENGINE_USER_IP;
+import static com.google.apphosting.runtime.AppEngineConstants.X_APPENGINE_USER_IS_ADMIN;
+import static com.google.apphosting.runtime.AppEngineConstants.X_APPENGINE_USER_NICKNAME;
+import static com.google.apphosting.runtime.AppEngineConstants.X_APPENGINE_USER_ORGANIZATION;
+import static com.google.apphosting.runtime.AppEngineConstants.X_CLOUD_TRACE_CONTEXT;
+import static com.google.apphosting.runtime.AppEngineConstants.X_FORWARDED_PROTO;
+import static com.google.apphosting.runtime.AppEngineConstants.X_GOOGLE_INTERNAL_PROFILER;
+import static com.google.apphosting.runtime.AppEngineConstants.X_GOOGLE_INTERNAL_SKIPADMINCHECK;
+import static com.google.apphosting.runtime.AppEngineConstants.X_GOOGLE_INTERNAL_SKIPADMINCHECK_UC;
 
 import com.google.apphosting.base.protos.AppinfoPb;
 import com.google.apphosting.base.protos.HttpPb;
@@ -181,11 +183,11 @@ public class UPRequestTranslator {
     }
 
     String decodedPath = jettyRequest.getHttpURI().getDecodedPath();
-    if ("/_ah/background".equals(decodedPath)) {
+    if (BACKGROUND_REQUEST_URL.equals(decodedPath)) {
       if (WARMUP_IP.equals(httpRequest.getUserIp())) {
         upReqBuilder.setRequestType(UPRequest.RequestType.BACKGROUND);
       }
-    } else if ("/_ah/start".equals(decodedPath)) {
+    } else if (WARMUP_REQUEST_URL.equals(decodedPath)) {
       if (WARMUP_IP.equals(httpRequest.getUserIp())) {
         // This request came from within App Engine via secure internal channels; tell Jetty
         // it's HTTPS to avoid 403 because of web.xml security-constraint checks.

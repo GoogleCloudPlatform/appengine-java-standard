@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.apphosting.runtime.jetty.http;
+package com.google.apphosting.runtime.jetty9;
 
 import static com.google.apphosting.base.protos.RuntimePb.UPRequest.RequestType.OTHER;
 import static com.google.apphosting.runtime.AppEngineConstants.BACKGROUND_REQUEST_URL;
@@ -54,34 +54,39 @@ import static com.google.apphosting.runtime.AppEngineConstants.X_GOOGLE_INTERNAL
 import com.google.apphosting.base.protos.HttpPb;
 import com.google.apphosting.base.protos.RuntimePb;
 import com.google.apphosting.base.protos.TracePb;
+import com.google.apphosting.runtime.AppEngineConstants;
 import com.google.apphosting.runtime.RequestAPIData;
 import com.google.apphosting.runtime.TraceContextHelper;
-import com.google.apphosting.runtime.AppEngineConstants;
-import com.google.apphosting.runtime.jetty.AppInfoFactory;
 import com.google.common.base.Strings;
 import com.google.common.flogger.GoogleLogger;
 import java.time.Duration;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
-import org.eclipse.jetty.http.HttpField;
+
 import org.eclipse.jetty.http.HttpFields;
 import org.eclipse.jetty.http.HttpScheme;
 import org.eclipse.jetty.http.HttpURI;
 import org.eclipse.jetty.server.Request;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletRequestWrapper;
 
 /**
  * Implementation for the {@link RequestAPIData} to allow for the Jetty {@link Request} to be used
  * directly with the Java Runtime without any conversion into the RPC {@link RuntimePb.UPRequest}.
  *
  * <p>This will interpret the AppEngine specific headers defined in {@link AppEngineConstants}. The
- * request returned by {@link #getWrappedRequest()} is to be passed to the application and will hide
+ * request returned by {@link #getBaseRequest()} is to be passed to the application and will hide
  * any private appengine headers from {@link AppEngineConstants#PRIVATE_APPENGINE_HEADERS}.
  */
 public class JettyRequestAPIData implements RequestAPIData {
   private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
 
-  private final Request originalRequest;
-  private final Request request;
+  private final Request baseRequest;
+  private final HttpServletRequest httpServletRequest;
   private final AppInfoFactory appInfoFactory;
   private final String url;
   private Duration duration = Duration.ofNanos(Long.MAX_VALUE);
@@ -108,20 +113,21 @@ public class JettyRequestAPIData implements RequestAPIData {
   private String securityTicket;
   private String backgroundRequestId;
 
-  public JettyRequestAPIData(
-      Request request, AppInfoFactory appInfoFactory, boolean passThroughPrivateHeaders) {
+  public JettyRequestAPIData(Request request, HttpServletRequest httpServletRequest,
+                             AppInfoFactory appInfoFactory, boolean passThroughPrivateHeaders) {
     this.appInfoFactory = appInfoFactory;
 
     // Can be overridden by X_APPENGINE_USER_IP header.
-    String userIp = Request.getRemoteAddr(request);
+    String userIp = request.getRemoteAddr();
 
     // Can be overridden by X_APPENGINE_API_TICKET header.
     this.securityTicket = DEFAULT_SECRET_KEY;
 
-    HttpFields.Mutable fields = HttpFields.build();
-    for (HttpField field : request.getHeaders()) {
-      String name = field.getLowerCaseName();
-      String value = field.getValue();
+    HttpFields fields = new HttpFields();
+    List<String> headerNames = Collections.list(request.getHeaderNames());
+    for (String headerName : headerNames) {
+      String name = headerName.toLowerCase();
+      String value = request.getHeader(headerName);
       if (Strings.isNullOrEmpty(value)) {
         continue;
       }
@@ -152,7 +158,7 @@ public class JettyRequestAPIData implements RequestAPIData {
           peerUsername = value;
           break;
         case X_APPENGINE_GAIA_ID:
-          gaiaId = field.getLongValue();
+          gaiaId = Long.parseLong(value);
           break;
         case X_APPENGINE_GAIA_AUTHUSER:
           authUser = value;
@@ -230,14 +236,15 @@ public class JettyRequestAPIData implements RequestAPIData {
 
       if (passThroughPrivateHeaders || !PRIVATE_APPENGINE_HEADERS.contains(name)) {
         // Only non AppEngine specific headers are passed to the application.
-        fields.add(field);
+        fields.add(name, value);
       }
     }
 
     HttpURI httpURI;
     boolean isSecure;
     if (isHttps) {
-      httpURI = HttpURI.build(request.getHttpURI()).scheme(HttpScheme.HTTPS);
+      httpURI = new HttpURI(request.getHttpURI());
+      httpURI.setScheme(HttpScheme.HTTPS.asString());
       isSecure = true;
     } else {
       httpURI = request.getHttpURI();
@@ -257,7 +264,9 @@ public class JettyRequestAPIData implements RequestAPIData {
       }
     }
 
-    StringBuilder sb = new StringBuilder(HttpURI.build(httpURI).query(null).asString());
+    HttpURI uri = new HttpURI(httpURI);
+    uri.setQuery(null);
+    StringBuilder sb = new StringBuilder(uri.toString());
     String query = httpURI.getQuery();
     // No need to escape, URL retains any %-escaping it might have, which is what we want.
     if (query != null) {
@@ -265,41 +274,68 @@ public class JettyRequestAPIData implements RequestAPIData {
     }
     url = sb.toString();
 
-    if (traceContext == null)
+    if (traceContext == null) {
       traceContext =
           com.google.apphosting.base.protos.TracePb.TraceContextProto.getDefaultInstance();
+    }
 
-    this.originalRequest = request;
-    this.request =
-        new Request.Wrapper(request) {
-          @Override
-          public HttpURI getHttpURI() {
-            return httpURI;
-          }
+    this.httpServletRequest = new HttpServletRequestWrapper(httpServletRequest) {
 
-          @Override
-          public boolean isSecure() {
-            return isSecure;
-          }
+      @Override
+      public long getDateHeader(String name) {
+        return fields.getDateField(name);
+      }
 
-          @Override
-          public HttpFields getHeaders() {
-            return fields;
-          }
-        };
+      @Override
+      public String getHeader(String name) {
+        return fields.get(name);
+      }
+
+      @Override
+      public Enumeration<String> getHeaders(String name) {
+        return fields.getValues(name);
+      }
+
+      @Override
+      public Enumeration<String> getHeaderNames() {
+        return fields.getFieldNames();
+      }
+
+      @Override
+      public int getIntHeader(String name) {
+        return Math.toIntExact(fields.getLongField(name));
+      }
+
+      @Override
+      public String getRequestURI() {
+        return httpURI.getPath();
+      }
+
+      @Override
+      public String getScheme() {
+        return httpURI.getScheme();
+      }
+
+      @Override
+      public boolean isSecure() {
+        return isSecure;
+      }
+    };
+
+    this.baseRequest = request;
   }
 
-  public Request getOriginalRequest() {
-    return originalRequest;
+  public Request getBaseRequest() {
+    return baseRequest;
   }
 
-  public Request getWrappedRequest() {
-    return request;
+  public HttpServletRequest getHttpServletRequest() {
+    return httpServletRequest;
   }
 
   @Override
   public Stream<HttpPb.ParsedHttpHeader> getHeadersList() {
-    return request.getHeaders().stream()
+    return baseRequest.getHttpFields().stream()
         .map(
             f ->
                 HttpPb.ParsedHttpHeader.newBuilder()

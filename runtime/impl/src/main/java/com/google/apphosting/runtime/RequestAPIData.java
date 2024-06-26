@@ -84,4 +84,6 @@ public interface RequestAPIData {
   String getUrl();
 
   RuntimePb.UPRequest.RequestType getRequestType();
+
+  String getBackgroundRequestId();
 }

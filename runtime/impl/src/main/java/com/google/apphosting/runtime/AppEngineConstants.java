@@ -14,11 +14,30 @@
  * limitations under the License.
  */
 
-package com.google.apphosting.runtime.jetty;
+package com.google.apphosting.runtime;
 
 import com.google.common.collect.ImmutableSet;
 
+/** {@code AppEngineConstants} centralizes some constants that are specific to our use of Jetty. */
 public final class AppEngineConstants {
+  /**
+   * This {@code ServletContext} attribute contains the {@link
+   * AppVersion} for the current application.
+   */
+  public static final String APP_VERSION_CONTEXT_ATTR =
+          "com.google.apphosting.runtime.jetty.APP_VERSION_CONTEXT_ATTR";
+
+  /**
+   * This {@code ServletRequest} attribute contains the {@code
+   * AppVersionKey} identifying the current application.  identify
+   * which application version to use.
+   */
+  public static final String APP_VERSION_KEY_REQUEST_ATTR =
+          "com.google.apphosting.runtime.jetty.APP_VERSION_REQUEST_ATTR";
+
+  public static final String APP_YAML_ATTRIBUTE_TARGET =
+          "com.google.apphosting.runtime.jetty.appYaml";
+
   /**
    * The HTTP headers that are handled specially by this proxy are defined in lowercase because HTTP
    * headers are case-insensitive, and we look then up in a set or switch after converting to
@@ -54,6 +73,11 @@ public final class AppEngineConstants {
   public static final String X_GOOGLE_INTERNAL_PROFILER = "x-google-internal-profiler";
   public static final String X_CLOUD_TRACE_CONTEXT = "x-cloud-trace-context";
 
+  public static final String X_APPENGINE_BACKGROUNDREQUEST = "x-appengine-backgroundrequest";
+  public static final String BACKGROUND_REQUEST_URL = "/_ah/background";
+  public static final String WARMUP_REQUEST_URL = "/_ah/start";
+  public static final String BACKGROUND_REQUEST_SOURCE_IP = "0.1.0.3";
+
   public static final ImmutableSet<String> PRIVATE_APPENGINE_HEADERS =
       ImmutableSet.of(
           X_APPENGINE_API_TICKET,
@@ -83,7 +107,7 @@ public final class AppEngineConstants {
       "com.google.apphosting.internal.SkipAdminCheck";
 
   // The impersonated IP address of warmup requests (and also background)
-  //     (<internal20>)
+  //     (https://g3doc.corp.google.com/apphosting/g3doc/howto/headers.md?cl=head)
   public static final String WARMUP_IP = "0.1.0.3";
 
   public static final String DEFAULT_SECRET_KEY = "secretkey";
@@ -91,4 +115,6 @@ public final class AppEngineConstants {
   public static final String ENVIRONMENT_ATTR = "appengine.environment";
 
   public static final String HTTP_CONNECTOR_MODE = "appengine.use.HttpConnector";
+
+  private AppEngineConstants() {}
 }

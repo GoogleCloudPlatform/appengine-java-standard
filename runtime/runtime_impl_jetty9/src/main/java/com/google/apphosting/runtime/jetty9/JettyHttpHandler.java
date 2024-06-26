@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 
-package com.google.apphosting.runtime.jetty.http;
+package com.google.apphosting.runtime.jetty9;
+
+import static com.google.apphosting.runtime.RequestRunner.WAIT_FOR_USER_RUNNABLE_DEADLINE;
 
 import com.google.appengine.api.ThreadManager;
 import com.google.apphosting.api.ApiProxy;
@@ -30,25 +32,20 @@ import com.google.apphosting.runtime.RequestRunner;
 import com.google.apphosting.runtime.RequestRunner.EagerRunner;
 import com.google.apphosting.runtime.ResponseAPIData;
 import com.google.apphosting.runtime.ServletEngineAdapter;
-import com.google.apphosting.runtime.AppEngineConstants;
-import com.google.apphosting.runtime.jetty.AppInfoFactory;
-import com.google.common.base.Ascii;
 import com.google.common.flogger.GoogleLogger;
-import org.eclipse.jetty.http.HttpField;
-import org.eclipse.jetty.server.Handler;
-import org.eclipse.jetty.server.Request;
-import org.eclipse.jetty.server.Response;
-import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.util.Blocker;
-import org.eclipse.jetty.util.Callback;
-
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.time.Duration;
-import java.util.Optional;
 import java.util.concurrent.TimeoutException;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
-import static com.google.apphosting.runtime.RequestRunner.WAIT_FOR_USER_RUNNABLE_DEADLINE;
+import org.eclipse.jetty.server.Handler;
+import org.eclipse.jetty.server.Request;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.handler.HandlerWrapper;
 
 /**
  * This class replicates the behaviour of the {@link RequestRunner} for Requests which do not come
@@ -61,7 +58,7 @@ import static com.google.apphosting.runtime.RequestRunner.WAIT_FOR_USER_RUNNABLE
  * ContextScopeListener}s installed by the {@code AppVersionHandlerFactory} implementations so that
  * the {@link ApiProxy.Environment} is available all threads which are used to handle the request.
  */
-public class JettyHttpHandler extends Handler.Wrapper {
+public class JettyHttpHandler extends HandlerWrapper {
   private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
 
   private final boolean passThroughPrivateHeaders;
@@ -87,16 +84,18 @@ public class JettyHttpHandler extends Handler.Wrapper {
   }
 
   @Override
-  public boolean handle(Request request, Response response, Callback callback) throws Exception {
+  public void handle(
+      String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response)
+      throws IOException, ServletException {
+
     JettyRequestAPIData genericRequest =
-        new JettyRequestAPIData(request, appInfoFactory, passThroughPrivateHeaders);
-    JettyResponseAPIData genericResponse = new JettyResponseAPIData(response);
+        new JettyRequestAPIData(baseRequest, request, appInfoFactory, passThroughPrivateHeaders);
+    JettyResponseAPIData genericResponse = new JettyResponseAPIData(baseRequest.getResponse(), response);
 
     // Read time remaining in request from headers and pass value to LocalRpcContext for use in
     // reporting remaining time until deadline for API calls (see b/154745969)
     Duration timeRemaining = genericRequest.getTimeRemaining();
 
-    boolean handled;
     ThreadGroup currentThreadGroup = Thread.currentThread().getThreadGroup();
     LocalRpcContext<EmptyMessage> context =
         new LocalRpcContext<>(EmptyMessage.class, timeRemaining);
@@ -110,9 +109,9 @@ public class JettyHttpHandler extends Handler.Wrapper {
     request.setAttribute(AppEngineConstants.ENVIRONMENT_ATTR, currentEnvironment);
 
     try {
-      handled = dispatchRequest(requestToken, genericRequest, genericResponse, callback);
-      if (handled) {
-        callback.succeeded();
+      dispatchRequest(target, requestToken, genericRequest, genericResponse);
+      if (!baseRequest.isHandled()) {
+        response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "request not handled");
       }
     } catch (
         @SuppressWarnings("InterruptedExceptionSwallowed")
@@ -121,8 +120,8 @@ public class JettyHttpHandler extends Handler.Wrapper {
       // We will report the exception via the rpc. We don't mark this thread as interrupted because
       // ThreadGroupPool would use that as a signal to remove the thread from the pool; we don't
       // need that.
-      handled = handleException(ex, requestToken, genericResponse);
-      Response.writeError(request, response, callback, ex);
+      handleException(ex, requestToken, genericResponse);
+      response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, ex.getMessage());
     } finally {
       requestManager.finishRequest(requestToken);
     }
@@ -136,45 +135,40 @@ public class JettyHttpHandler extends Handler.Wrapper {
     if (genericRequest.getRequestType() == RuntimePb.UPRequest.RequestType.BACKGROUND) {
       Thread.currentThread().interrupt();
     }
-
-    return handled;
   }
 
   private boolean dispatchRequest(
+      String target,
       RequestManager.RequestToken requestToken,
       JettyRequestAPIData request,
-      JettyResponseAPIData response,
-      Callback callback)
+      JettyResponseAPIData response)
       throws Throwable {
     switch (request.getRequestType()) {
       case SHUTDOWN:
         logger.atInfo().log("Shutting down requests");
         requestManager.shutdownRequests(requestToken);
-        return true;
+        request.getBaseRequest().setHandled(true);
       case BACKGROUND:
         dispatchBackgroundRequest(request, response);
-        return true;
+        request.getBaseRequest().setHandled(true);
       case OTHER:
-        return dispatchServletRequest(request, response, callback);
+        dispatchServletRequest(target, request, response);
       default:
         throw new IllegalStateException(request.getRequestType().toString());
     }
   }
 
-  private boolean dispatchServletRequest(
-      JettyRequestAPIData request, JettyResponseAPIData response, Callback callback)
+  private void dispatchServletRequest(
+      String target, JettyRequestAPIData request, JettyResponseAPIData response)
       throws Throwable {
-    Request jettyRequest = request.getWrappedRequest();
-    Response jettyResponse = response.getWrappedResponse();
-    jettyRequest.setAttribute(AppEngineConstants.APP_VERSION_KEY_REQUEST_ATTR, appVersionKey);
+    Request baseRequest = request.getBaseRequest();
+    HttpServletRequest httpServletRequest = request.getHttpServletRequest();
+    HttpServletResponse httpServletResponse = response.getHttpServletResponse();
+    baseRequest.setAttribute(AppEngineConstants.APP_VERSION_KEY_REQUEST_ATTR, appVersionKey);
 
     // Environment is set in a request attribute which is set/unset for async threads by
     // a ContextScopeListener created inside the AppVersionHandlerFactory.
-    try (Blocker.Callback cb = Blocker.callback()) {
-      boolean handle = super.handle(jettyRequest, jettyResponse, cb);
-      cb.block();
-      return handle;
-    }
+    super.handle(target, baseRequest, httpServletRequest, httpServletResponse);
   }
 
   private void dispatchBackgroundRequest(JettyRequestAPIData request, JettyResponseAPIData response)

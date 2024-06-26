@@ -21,7 +21,7 @@ import com.google.apphosting.base.protos.HttpPb.HttpRequest;
 import com.google.apphosting.base.protos.HttpPb.ParsedHttpHeader;
 import com.google.apphosting.base.protos.RuntimePb.UPRequest;
 import com.google.apphosting.base.protos.RuntimePb.UPResponse;
-import com.google.apphosting.runtime.JettyConstants;
+import com.google.apphosting.runtime.AppEngineConstants;
 import com.google.apphosting.runtime.MutableUpResponse;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Ascii;
@@ -245,7 +245,7 @@ public class RpcConnection implements Connection, HttpTransport {
 
     // Tell AppVersionHandlerMap which app version should handle this
     // request.
-    request.setAttribute(JettyConstants.APP_VERSION_KEY_REQUEST_ATTR, appVersionKey);
+    request.setAttribute(AppEngineConstants.APP_VERSION_KEY_REQUEST_ATTR, appVersionKey);
 
     final boolean skipAdmin = hasSkipAdminCheck(endPoint.getUpRequest());
     // Translate the X-Google-Internal-SkipAdminCheck to a servlet attribute.

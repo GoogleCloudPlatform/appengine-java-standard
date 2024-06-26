@@ -16,6 +16,37 @@
 
 package com.google.apphosting.runtime.jetty9;
 
+import static com.google.apphosting.runtime.AppEngineConstants.BACKGROUND_REQUEST_URL;
+import static com.google.apphosting.runtime.AppEngineConstants.DEFAULT_SECRET_KEY;
+import static com.google.apphosting.runtime.AppEngineConstants.IS_ADMIN_HEADER_VALUE;
+import static com.google.apphosting.runtime.AppEngineConstants.IS_TRUSTED;
+import static com.google.apphosting.runtime.AppEngineConstants.PRIVATE_APPENGINE_HEADERS;
+import static com.google.apphosting.runtime.AppEngineConstants.WARMUP_IP;
+import static com.google.apphosting.runtime.AppEngineConstants.WARMUP_REQUEST_URL;
+import static com.google.apphosting.runtime.AppEngineConstants.X_APPENGINE_API_TICKET;
+import static com.google.apphosting.runtime.AppEngineConstants.X_APPENGINE_APPSERVER_DATACENTER;
+import static com.google.apphosting.runtime.AppEngineConstants.X_APPENGINE_APPSERVER_TASK_BNS;
+import static com.google.apphosting.runtime.AppEngineConstants.X_APPENGINE_AUTH_DOMAIN;
+import static com.google.apphosting.runtime.AppEngineConstants.X_APPENGINE_DEFAULT_VERSION_HOSTNAME;
+import static com.google.apphosting.runtime.AppEngineConstants.X_APPENGINE_GAIA_AUTHUSER;
+import static com.google.apphosting.runtime.AppEngineConstants.X_APPENGINE_GAIA_ID;
+import static com.google.apphosting.runtime.AppEngineConstants.X_APPENGINE_GAIA_SESSION;
+import static com.google.apphosting.runtime.AppEngineConstants.X_APPENGINE_HTTPS;
+import static com.google.apphosting.runtime.AppEngineConstants.X_APPENGINE_LOAS_PEER_USERNAME;
+import static com.google.apphosting.runtime.AppEngineConstants.X_APPENGINE_QUEUENAME;
+import static com.google.apphosting.runtime.AppEngineConstants.X_APPENGINE_REQUEST_LOG_ID;
+import static com.google.apphosting.runtime.AppEngineConstants.X_APPENGINE_TIMEOUT_MS;
+import static com.google.apphosting.runtime.AppEngineConstants.X_APPENGINE_TRUSTED_IP_REQUEST;
+import static com.google.apphosting.runtime.AppEngineConstants.X_APPENGINE_USER_EMAIL;
+import static com.google.apphosting.runtime.AppEngineConstants.X_APPENGINE_USER_ID;
+import static com.google.apphosting.runtime.AppEngineConstants.X_APPENGINE_USER_IP;
+import static com.google.apphosting.runtime.AppEngineConstants.X_APPENGINE_USER_IS_ADMIN;
+import static com.google.apphosting.runtime.AppEngineConstants.X_APPENGINE_USER_ORGANIZATION;
+import static com.google.apphosting.runtime.AppEngineConstants.X_CLOUD_TRACE_CONTEXT;
+import static com.google.apphosting.runtime.AppEngineConstants.X_FORWARDED_PROTO;
+import static com.google.apphosting.runtime.AppEngineConstants.X_GOOGLE_INTERNAL_PROFILER;
+import static com.google.apphosting.runtime.AppEngineConstants.X_GOOGLE_INTERNAL_SKIPADMINCHECK;
+
 import com.google.apphosting.base.protos.AppinfoPb;
 import com.google.apphosting.base.protos.HttpPb;
 import com.google.apphosting.base.protos.HttpPb.HttpRequest;
@@ -26,7 +57,6 @@ import com.google.apphosting.base.protos.TracePb.TraceContextProto;
 import com.google.apphosting.runtime.TraceContextHelper;
 import com.google.common.base.Ascii;
 import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.flogger.GoogleLogger;
 import com.google.common.html.HtmlEscapers;
 import com.google.protobuf.ByteString;
@@ -39,6 +69,9 @@ import javax.servlet.http.HttpServletResponse;
 import org.eclipse.jetty.http.HttpField;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Response;
+import static com.google.apphosting.runtime.AppEngineConstants.X_GOOGLE_INTERNAL_SKIPADMINCHECK_UC;
+import static com.google.apphosting.runtime.AppEngineConstants.X_APPENGINE_USER_NICKNAME;
+
 
 /** Translates HttpServletRequest to the UPRequest proto, and vice versa for the response. */
 public class UPRequestTranslator {
@@ -46,69 +79,7 @@ public class UPRequestTranslator {
 
   private static final String DEFAULT_SECRET_KEY = "secretkey";
 
-  /**
-   * The HTTP headers that are handled specially by this proxy are defined in lowercae because HTTP
-   * headers are case insensitive and we look then up in a set or switch after converting to
-   * lower-case.
-   */
-  private static final String X_FORWARDED_PROTO = "x-forwarded-proto";
-
-  private static final String X_APPENGINE_API_TICKET = "x-appengine-api-ticket";
-  private static final String X_APPENGINE_HTTPS = "x-appengine-https";
-  private static final String X_APPENGINE_USER_IP = "x-appengine-user-ip";
-  private static final String X_APPENGINE_USER_EMAIL = "x-appengine-user-email";
-  private static final String X_APPENGINE_AUTH_DOMAIN = "x-appengine-auth-domain";
-  private static final String X_APPENGINE_USER_ID = "x-appengine-user-id";
-  private static final String X_APPENGINE_USER_NICKNAME = "x-appengine-user-nickname";
-  private static final String X_APPENGINE_USER_ORGANIZATION = "x-appengine-user-organization";
-  private static final String X_APPENGINE_USER_IS_ADMIN = "x-appengine-user-is-admin";
-  private static final String X_APPENGINE_TRUSTED_IP_REQUEST = "x-appengine-trusted-ip-request";
-  private static final String X_APPENGINE_LOAS_PEER_USERNAME = "x-appengine-loas-peer-username";
-  private static final String X_APPENGINE_GAIA_ID = "x-appengine-gaia-id";
-  private static final String X_APPENGINE_GAIA_AUTHUSER = "x-appengine-gaia-authuser";
-  private static final String X_APPENGINE_GAIA_SESSION = "x-appengine-gaia-session";
-  private static final String X_APPENGINE_APPSERVER_DATACENTER = "x-appengine-appserver-datacenter";
-  private static final String X_APPENGINE_APPSERVER_TASK_BNS = "x-appengine-appserver-task-bns";
-  private static final String X_APPENGINE_DEFAULT_VERSION_HOSTNAME =
-      "x-appengine-default-version-hostname";
-  private static final String X_APPENGINE_REQUEST_LOG_ID = "x-appengine-request-log-id";
-  private static final String X_APPENGINE_QUEUENAME = "x-appengine-queuename";
-  private static final String X_APPENGINE_TIMEOUT_MS = "x-appengine-timeout-ms";
-  private static final String X_GOOGLE_INTERNAL_SKIPADMINCHECK = "x-google-internal-skipadmincheck";
-  private static final String X_GOOGLE_INTERNAL_SKIPADMINCHECK_UC =
-      "X-Google-Internal-SkipAdminCheck";
-  private static final String X_GOOGLE_INTERNAL_PROFILER = "x-google-internal-profiler";
-  private static final String X_CLOUD_TRACE_CONTEXT = "x-cloud-trace-context";
-
-  private static final String IS_ADMIN_HEADER_VALUE = "1";
-  private static final String IS_TRUSTED = "1";
-
-  // The impersonated IP address of warmup requests (and also background)
-  //     (<internal20>)
-  private static final String WARMUP_IP = "0.1.0.3";
-
-  private static final ImmutableSet<String> PRIVATE_APPENGINE_HEADERS =
-      ImmutableSet.of(
-          X_APPENGINE_API_TICKET,
-          X_APPENGINE_HTTPS,
-          X_APPENGINE_USER_IP,
-          X_APPENGINE_USER_EMAIL,
-          X_APPENGINE_AUTH_DOMAIN,
-          X_APPENGINE_USER_ID,
-          X_APPENGINE_USER_NICKNAME,
-          X_APPENGINE_USER_ORGANIZATION,
-          X_APPENGINE_USER_IS_ADMIN,
-          X_APPENGINE_TRUSTED_IP_REQUEST,
-          X_APPENGINE_LOAS_PEER_USERNAME,
-          X_APPENGINE_GAIA_ID,
-          X_APPENGINE_GAIA_AUTHUSER,
-          X_APPENGINE_GAIA_SESSION,
-          X_APPENGINE_APPSERVER_DATACENTER,
-          X_APPENGINE_APPSERVER_TASK_BNS,
-          X_APPENGINE_DEFAULT_VERSION_HOSTNAME,
-          X_APPENGINE_REQUEST_LOG_ID,
-          X_APPENGINE_TIMEOUT_MS,
-          X_GOOGLE_INTERNAL_PROFILER);
+ 
 
   private final AppInfoFactory appInfoFactory;
   private final boolean passThroughPrivateHeaders;
@@ -230,11 +201,11 @@ public class UPRequestTranslator {
       }
     }
 
-    if ("/_ah/background".equals(realRequest.getRequestURI())) {
+    if (BACKGROUND_REQUEST_URL.equals(realRequest.getRequestURI())) {
       if (WARMUP_IP.equals(httpRequest.getUserIp())) {
         upReqBuilder.setRequestType(UPRequest.RequestType.BACKGROUND);
       }
-    } else if ("/_ah/start".equals(realRequest.getRequestURI())) {
+    } else if (WARMUP_REQUEST_URL.equals(realRequest.getRequestURI())) {
       if (WARMUP_IP.equals(httpRequest.getUserIp())) {
         // This request came from within App Engine via secure internal channels; tell Jetty
         // it's HTTPS to avoid 403 because of web.xml security-constraint checks.

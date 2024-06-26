@@ -21,8 +21,9 @@ import com.google.apphosting.base.protos.AppinfoPb;
 import com.google.apphosting.base.protos.EmptyMessage;
 import com.google.apphosting.base.protos.RuntimePb.UPRequest;
 import com.google.apphosting.base.protos.RuntimePb.UPResponse;
+import com.google.apphosting.runtime.AppEngineConstants;
 import com.google.apphosting.runtime.AppVersion;
-import com.google.apphosting.runtime.JettyConstants;
+import com.google.apphosting.runtime.AppEngineConstants;
 import com.google.apphosting.runtime.MutableUpResponse;
 import com.google.apphosting.runtime.ServletEngineAdapter;
 import com.google.apphosting.runtime.anyrpc.EvaluationRuntimeServerInterface;
@@ -51,7 +52,7 @@ import java.io.InputStreamReader;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 
-import static com.google.apphosting.runtime.jetty.AppEngineConstants.HTTP_CONNECTOR_MODE;
+import static com.google.apphosting.runtime.AppEngineConstants.HTTP_CONNECTOR_MODE;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
@@ -269,7 +270,7 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
       httpConfiguration.setUriCompliance(UriCompliance.LEGACY);
     }
     DelegateRpcExchange rpcExchange = new DelegateRpcExchange(upRequest, upResponse);
-    rpcExchange.setAttribute(JettyConstants.APP_VERSION_KEY_REQUEST_ATTR, appVersionKey);
+    rpcExchange.setAttribute(AppEngineConstants.APP_VERSION_KEY_REQUEST_ATTR, appVersionKey);
     rpcExchange.setAttribute(AppEngineConstants.ENVIRONMENT_ATTR, ApiProxy.getCurrentEnvironment());
     rpcConnector.service(rpcExchange);
     try {

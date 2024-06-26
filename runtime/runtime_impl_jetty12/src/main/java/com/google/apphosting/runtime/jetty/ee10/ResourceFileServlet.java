@@ -17,7 +17,7 @@
 package com.google.apphosting.runtime.jetty.ee10;
 
 import com.google.apphosting.runtime.AppVersion;
-import com.google.apphosting.runtime.JettyConstants;
+import com.google.apphosting.runtime.AppEngineConstants;
 import com.google.apphosting.utils.config.AppYaml;
 import com.google.common.base.Ascii;
 import com.google.common.flogger.GoogleLogger;
@@ -71,11 +71,11 @@ public class ResourceFileServlet extends HttpServlet {
   public void init() throws ServletException {
     context = getServletContext();
     AppVersion appVersion =
-        (AppVersion) context.getAttribute(JettyConstants.APP_VERSION_CONTEXT_ATTR);
+        (AppVersion) context.getAttribute(AppEngineConstants.APP_VERSION_CONTEXT_ATTR);
     chandler = ServletContextHandler.getServletContextHandler(context);
 
     AppYaml appYaml =
-        (AppYaml) chandler.getServer().getAttribute(JettyConstants.APP_YAML_ATTRIBUTE_TARGET);
+        (AppYaml) chandler.getServer().getAttribute(AppEngineConstants.APP_YAML_ATTRIBUTE_TARGET);
     fSender = new FileSender(appYaml);
     // AFAICT, there is no real API to retrieve this information, so
     // we access Jetty's internal state.
@@ -261,7 +261,7 @@ public class ResourceFileServlet extends HttpServlet {
     }
 
     AppVersion appVersion =
-        (AppVersion) getServletContext().getAttribute(JettyConstants.APP_VERSION_CONTEXT_ATTR);
+        (AppVersion) getServletContext().getAttribute(AppEngineConstants.APP_VERSION_CONTEXT_ATTR);
     ServletHandler handler = chandler.getServletHandler();
 
     for (String welcomeName : welcomeFiles) {
