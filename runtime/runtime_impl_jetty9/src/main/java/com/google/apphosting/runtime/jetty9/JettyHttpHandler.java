@@ -27,6 +27,7 @@ import com.google.apphosting.runtime.ApiProxyImpl;
 import com.google.apphosting.runtime.AppVersion;
 import com.google.apphosting.runtime.BackgroundRequestCoordinator;
 import com.google.apphosting.runtime.AppEngineConstants;
+import com.google.apphosting.runtime.LocalRpcContext;
 import com.google.apphosting.runtime.RequestManager;
 import com.google.apphosting.runtime.RequestRunner;
 import com.google.apphosting.runtime.RequestRunner.EagerRunner;
