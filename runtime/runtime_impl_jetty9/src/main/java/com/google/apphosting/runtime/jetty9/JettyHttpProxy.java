@@ -22,20 +22,17 @@ import com.google.apphosting.base.protos.EmptyMessage;
 import com.google.apphosting.base.protos.RuntimePb;
 import com.google.apphosting.base.protos.RuntimePb.UPRequest;
 import com.google.apphosting.base.protos.RuntimePb.UPResponse;
+import com.google.apphosting.runtime.LocalRpcContext;
 import com.google.apphosting.runtime.ServletEngineAdapter;
-import com.google.apphosting.runtime.anyrpc.AnyRpcServerContext;
 import com.google.apphosting.runtime.anyrpc.EvaluationRuntimeServerInterface;
 import com.google.common.base.Ascii;
 import com.google.common.base.Throwables;
 import com.google.common.flogger.GoogleLogger;
 import com.google.common.primitives.Ints;
-import com.google.common.util.concurrent.SettableFuture;
-import com.google.protobuf.MessageLite;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -127,57 +124,6 @@ public class JettyHttpProxy {
 
     logger.atInfo().log("Starting Jetty http server for Java runtime proxy.");
     return server;
-  }
-
-  private static class LocalRpcContext<M extends MessageLite> implements AnyRpcServerContext {
-    // We just dole out sequential ids here so we can tell requests apart in the logs.
-    private static final AtomicLong globalIds = new AtomicLong();
-
-    private final Class<M> responseMessageClass;
-    private final long startTimeMillis;
-    private final Duration timeRemaining;
-    private final SettableFuture<M> futureResponse = SettableFuture.create();
-    private final long globalId = globalIds.getAndIncrement();
-
-    private LocalRpcContext(Class<M> responseMessageClass) {
-      this(responseMessageClass, Duration.ofNanos((long) Double.MAX_VALUE));
-    }
-
-    private LocalRpcContext(Class<M> responseMessageClass, Duration timeRemaining) {
-      this.responseMessageClass = responseMessageClass;
-      this.startTimeMillis = System.currentTimeMillis();
-      this.timeRemaining = timeRemaining;
-    }
-
-    @Override
-    public void finishWithResponse(MessageLite response) {
-      futureResponse.set(responseMessageClass.cast(response));
-    }
-
-    M getResponse() throws ExecutionException, InterruptedException {
-      return futureResponse.get();
-    }
-
-    @Override
-    public void finishWithAppError(int appErrorCode, String errorDetail) {
-      String message = "AppError: code " + appErrorCode + "; errorDetail " + errorDetail;
-      futureResponse.setException(new RuntimeException(message));
-    }
-
-    @Override
-    public Duration getTimeRemaining() {
-      return timeRemaining;
-    }
-
-    @Override
-    public long getGlobalId() {
-      return globalId;
-    }
-
-    @Override
-    public long getStartTimeMillis() {
-      return startTimeMillis;
-    }
   }
 
   /**
