@@ -16,15 +16,25 @@
 
 package com.google.apphosting.runtime.jetty.ee8;
 
+import static com.google.apphosting.runtime.AppEngineConstants.HTTP_CONNECTOR_MODE;
+
 import com.google.apphosting.api.ApiProxy;
+import com.google.apphosting.runtime.AppEngineConstants;
 import com.google.apphosting.runtime.AppVersion;
-import com.google.apphosting.runtime.JettyConstants;
+import com.google.apphosting.runtime.AppEngineConstants;
 import com.google.apphosting.runtime.SessionsConfig;
-import com.google.apphosting.runtime.jetty.AppEngineConstants;
 import com.google.apphosting.runtime.jetty.AppVersionHandlerFactory;
 import com.google.apphosting.runtime.jetty.SessionManagerHandler;
 import com.google.common.flogger.GoogleLogger;
 import com.google.common.html.HtmlEscapers;
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintWriter;
+import javax.servlet.RequestDispatcher;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.jsp.JspFactory;
 import org.eclipse.jetty.ee8.annotations.AnnotationConfiguration;
 import org.eclipse.jetty.ee8.nested.ContextHandler;
 import org.eclipse.jetty.ee8.nested.Dispatcher;
@@ -36,17 +46,6 @@ import org.eclipse.jetty.ee8.webapp.WebAppContext;
 import org.eclipse.jetty.ee8.webapp.WebInfConfiguration;
 import org.eclipse.jetty.ee8.webapp.WebXmlConfiguration;
 import org.eclipse.jetty.server.Server;
-
-import javax.servlet.RequestDispatcher;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.jsp.JspFactory;
-import java.io.File;
-import java.io.IOException;
-import java.io.PrintWriter;
-
-import static com.google.apphosting.runtime.jetty.AppEngineConstants.HTTP_CONNECTOR_MODE;
 
 /**
  * {@code AppVersionHandlerFactory} implements a {@code Handler} for a given {@code AppVersionKey}.
@@ -205,7 +204,7 @@ public class EE8AppVersionHandlerFactory implements AppVersionHandlerFactory {
 
       SessionManagerHandler.create(builder.build());
       // Pass the AppVersion on to any of our servlets (e.g. ResourceFileServlet).
-      context.setAttribute(JettyConstants.APP_VERSION_CONTEXT_ATTR, appVersion);
+      context.setAttribute(AppEngineConstants.APP_VERSION_CONTEXT_ATTR, appVersion);
 
       if (Boolean.getBoolean(HTTP_CONNECTOR_MODE)) {
         context.addEventListener(

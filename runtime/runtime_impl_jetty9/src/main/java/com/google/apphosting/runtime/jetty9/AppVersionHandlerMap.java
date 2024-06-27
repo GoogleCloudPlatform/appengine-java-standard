@@ -18,7 +18,7 @@ package com.google.apphosting.runtime.jetty9;
 
 import com.google.apphosting.base.AppVersionKey;
 import com.google.apphosting.runtime.AppVersion;
-import com.google.apphosting.runtime.JettyConstants;
+import com.google.apphosting.runtime.AppEngineConstants;
 import com.google.apphosting.runtime.SessionStore;
 import com.google.apphosting.runtime.SessionStoreFactory;
 import org.eclipse.jetty.server.Handler;
@@ -104,7 +104,7 @@ public class AppVersionHandlerMap extends AbstractHandlerContainer {
       String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response)
       throws IOException, ServletException {
     AppVersionKey appVersionKey =
-        (AppVersionKey) request.getAttribute(JettyConstants.APP_VERSION_KEY_REQUEST_ATTR);
+        (AppVersionKey) request.getAttribute(AppEngineConstants.APP_VERSION_KEY_REQUEST_ATTR);
     if (appVersionKey == null) {
       throw new ServletException("Request did not provide an application version");
     }

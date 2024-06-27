@@ -15,11 +15,13 @@
  */
 package com.google.apphosting.runtime.jetty.ee10;
 
+import static com.google.apphosting.runtime.AppEngineConstants.HTTP_CONNECTOR_MODE;
+
 import com.google.apphosting.api.ApiProxy;
+import com.google.apphosting.runtime.AppEngineConstants;
 import com.google.apphosting.runtime.AppVersion;
-import com.google.apphosting.runtime.JettyConstants;
+import com.google.apphosting.runtime.AppEngineConstants;
 import com.google.apphosting.runtime.SessionsConfig;
-import com.google.apphosting.runtime.jetty.AppEngineConstants;
 import com.google.apphosting.runtime.jetty.AppVersionHandlerFactory;
 import com.google.apphosting.runtime.jetty.EE10SessionManagerHandler;
 import com.google.common.flogger.GoogleLogger;
@@ -29,6 +31,10 @@ import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintWriter;
+import javax.servlet.jsp.JspFactory;
 import org.eclipse.jetty.ee10.annotations.AnnotationConfiguration;
 import org.eclipse.jetty.ee10.quickstart.QuickStartConfiguration;
 import org.eclipse.jetty.ee10.servlet.Dispatcher;
@@ -47,13 +53,6 @@ import org.eclipse.jetty.server.Response;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.util.Callback;
-
-import javax.servlet.jsp.JspFactory;
-import java.io.File;
-import java.io.IOException;
-import java.io.PrintWriter;
-
-import static com.google.apphosting.runtime.jetty.AppEngineConstants.HTTP_CONNECTOR_MODE;
 
 /**
  * {@code AppVersionHandlerFactory} implements a {@code Handler} for a given {@code AppVersionKey}.
@@ -191,7 +190,7 @@ public class EE10AppVersionHandlerFactory implements AppVersionHandlerFactory {
           .setServletContextHandler(context);
       EE10SessionManagerHandler.create(builder.build());
       // Pass the AppVersion on to any of our servlets (e.g. ResourceFileServlet).
-      context.setAttribute(JettyConstants.APP_VERSION_CONTEXT_ATTR, appVersion);
+      context.setAttribute(AppEngineConstants.APP_VERSION_CONTEXT_ATTR, appVersion);
 
       if (Boolean.getBoolean(HTTP_CONNECTOR_MODE)) {
         context.addEventListener(

@@ -16,9 +16,8 @@
 
 package com.google.apphosting.runtime.jetty9;
 
-import com.google.apphosting.base.AppVersionKey;
 import com.google.apphosting.runtime.AppVersion;
-import com.google.apphosting.runtime.JettyConstants;
+import com.google.apphosting.runtime.AppEngineConstants;
 import com.google.apphosting.runtime.SessionsConfig;
 import com.google.common.collect.ImmutableList;
 import com.google.common.flogger.GoogleLogger;
@@ -141,7 +140,6 @@ public class AppVersionHandlerFactory {
   }
 
   private Handler doCreateHandler(AppVersion appVersion) throws ServletException {
-    AppVersionKey appVersionKey = appVersion.getKey();
     try {
       File contextRoot = appVersion.getRootDirectory();
 
@@ -200,7 +198,7 @@ public class AppVersionHandlerFactory {
 
       SessionManagerHandler unused = SessionManagerHandler.create(builder.build());
       // Pass the AppVersion on to any of our servlets (e.g. ResourceFileServlet).
-      context.setAttribute(JettyConstants.APP_VERSION_CONTEXT_ATTR, appVersion);
+      context.setAttribute(AppEngineConstants.APP_VERSION_CONTEXT_ATTR, appVersion);
 
       context.start();
       // Check to see if servlet filter initialization failed.
