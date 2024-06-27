@@ -16,15 +16,19 @@
 
 package com.google.apphosting.runtime.jetty9;
 
+import static com.google.apphosting.runtime.AppEngineConstants.HTTP_CONNECTOR_MODE;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.apphosting.base.AppVersionKey;
 import com.google.apphosting.base.protos.AppinfoPb;
+import com.google.apphosting.base.protos.EmptyMessage;
 import com.google.apphosting.base.protos.RuntimePb.UPRequest;
 import com.google.apphosting.base.protos.RuntimePb.UPResponse;
 import com.google.apphosting.runtime.AppVersion;
+import com.google.apphosting.runtime.LocalRpcContext;
 import com.google.apphosting.runtime.MutableUpResponse;
 import com.google.apphosting.runtime.ServletEngineAdapter;
+import com.google.apphosting.runtime.anyrpc.EvaluationRuntimeServerInterface;
 import com.google.apphosting.utils.config.AppEngineConfigException;
 import com.google.apphosting.utils.config.AppYaml;
 import com.google.common.flogger.GoogleLogger;
@@ -38,6 +42,7 @@ import java.util.Optional;
 import javax.servlet.ServletException;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.handler.SizeLimitHandler;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
 
@@ -113,19 +118,57 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
       server.setHandler(appVersionHandlerMap);
     }
 
+    boolean startJettyHttpProxy = false;
     if (runtimeOptions.useJettyHttpProxy()) {
-      server.setAttribute(
-          "com.google.apphosting.runtime.jetty9.appYaml",
-          appYaml.orElseGet(() -> JettyServletEngineAdapter.getAppYaml(runtimeOptions)));
-      JettyHttpProxy.startServer(runtimeOptions);
+      AppInfoFactory appInfoFactory;
+      AppVersionKey appVersionKey;
+      /* The init actions are not done in the constructor as they are not used when testing */
+      try {
+        String appRoot = runtimeOptions.applicationRoot();
+        String appPath = runtimeOptions.fixedApplicationPath();
+        appInfoFactory = new AppInfoFactory(System.getenv());
+        AppinfoPb.AppInfo appinfo = appInfoFactory.getAppInfoFromFile(appRoot, appPath);
+        // TODO Should we also call ApplyCloneSettings()?
+        LocalRpcContext<EmptyMessage> context = new LocalRpcContext<>(EmptyMessage.class);
+        EvaluationRuntimeServerInterface evaluationRuntimeServerInterface =
+                Objects.requireNonNull(runtimeOptions.evaluationRuntimeServerInterface());
+        evaluationRuntimeServerInterface.addAppVersion(context, appinfo);
+        context.getResponse();
+        appVersionKey = AppVersionKey.fromAppInfo(appinfo);
+        appVersionHandlerMap.getHandler(appVersionKey);
+      } catch (Exception e) {
+        throw new IllegalStateException(e);
+      }
+      if (Boolean.getBoolean(HTTP_CONNECTOR_MODE)) {
+        logger.atInfo().log("Using HTTP_CONNECTOR_MODE to bypass RPC");
+        JettyHttpProxy.insertHandlers(server);
+        AppVersion appVersion = appVersionHandlerMap.getAppVersion(appVersionKey);
+        server.insertHandler(new JettyHttpHandler(runtimeOptions, appVersion, appVersionKey, appInfoFactory));
+        ServerConnector connector = JettyHttpProxy.newConnector(server, runtimeOptions);
+        server.addConnector(connector);
+      } else {
+        server.setAttribute(
+                "com.google.apphosting.runtime.jetty9.appYaml",
+                appYaml.orElseGet(() -> JettyServletEngineAdapter.getAppYaml(runtimeOptions)));
+        // Delay start of JettyHttpProxy until after the main server and application is started.
+        startJettyHttpProxy = true;
+      }
     }
 
+    ClassLoader oldContextClassLoader = Thread.currentThread().getContextClassLoader();
+    Thread.currentThread().setContextClassLoader(JettyServletEngineAdapter.class.getClassLoader());
     try {
       server.start();
+      if (startJettyHttpProxy) {
+        JettyHttpProxy.startServer(runtimeOptions);
+      }
     } catch (Exception ex) {
       // TODO: Should we have a wrapper exception for this
       // type of thing in ServletEngineAdapter?
       throw new RuntimeException(ex);
+    }
+    finally {
+      Thread.currentThread().setContextClassLoader(oldContextClassLoader);
     }
   }
 
@@ -152,7 +195,7 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
    * Sets the {@link com.google.apphosting.runtime.SessionStoreFactory} that will be used to create
    * the list of {@link com.google.apphosting.runtime.SessionStore SessionStores} to which the HTTP
    * Session will be stored, if sessions are enabled. This method must be invoked after {@link
-   * #start(String)}.
+   * #start(String, Config)}.
    */
   @Override
   public void setSessionStoreFactory(com.google.apphosting.runtime.SessionStoreFactory factory) {

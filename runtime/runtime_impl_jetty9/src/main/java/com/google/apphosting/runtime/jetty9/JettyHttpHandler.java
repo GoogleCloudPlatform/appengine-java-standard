@@ -138,7 +138,7 @@ public class JettyHttpHandler extends HandlerWrapper {
     }
   }
 
-  private boolean dispatchRequest(
+  private void dispatchRequest(
       String target,
       RequestManager.RequestToken requestToken,
       JettyRequestAPIData request,
@@ -149,11 +149,14 @@ public class JettyHttpHandler extends HandlerWrapper {
         logger.atInfo().log("Shutting down requests");
         requestManager.shutdownRequests(requestToken);
         request.getBaseRequest().setHandled(true);
+        break;
       case BACKGROUND:
         dispatchBackgroundRequest(request, response);
         request.getBaseRequest().setHandled(true);
+        break;
       case OTHER:
         dispatchServletRequest(target, request, response);
+        break;
       default:
         throw new IllegalStateException(request.getRequestType().toString());
     }

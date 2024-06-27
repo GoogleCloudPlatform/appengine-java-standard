@@ -230,23 +230,7 @@ public class AppVersionHandlerFactory {
             });
       }
 
-      context.start();
-      // Check to see if servlet filter initialization failed.
-      Throwable unavailableCause = context.getUnavailableException();
-      if (unavailableCause != null) {
-        if (unavailableCause instanceof ServletException) {
-          throw (ServletException) unavailableCause;
-        } else {
-          UnavailableException unavailableException =
-              new UnavailableException("Initialization failed.");
-          unavailableException.initCause(unavailableCause);
-          throw unavailableException;
-        }
-      }
-
       return context;
-    } catch (ServletException ex) {
-      throw ex;
     } catch (Exception ex) {
       throw new ServletException(ex);
     }

@@ -36,6 +36,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import org.eclipse.jetty.http.CookieCompliance;
 import org.eclipse.jetty.http.HttpCompliance;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.HttpConfiguration;
@@ -80,7 +82,6 @@ public class JettyHttpProxy {
       System.setProperty(JETTY_LOG_CLASS, JETTY_STDERRLOG);
 
       ForwardingHandler handler = new ForwardingHandler(runtimeOptions, System.getenv());
-      handler.init();
       Server server = newServer(runtimeOptions, handler);
       server.start();
     } catch (Exception ex) {
@@ -88,19 +89,15 @@ public class JettyHttpProxy {
     }
   }
 
-  public static Server newServer(
-      ServletEngineAdapter.Config runtimeOptions, ForwardingHandler handler) {
-    Server server = new Server();
+  public static ServerConnector newConnector(Server server, ServletEngineAdapter.Config runtimeOptions) {
+    ServerConnector connector =
+            new JettyServerConnectorWithReusePort(server, runtimeOptions.jettyReusePort());
+    connector.setHost(runtimeOptions.jettyHttpAddress().getHost());
+    connector.setPort(runtimeOptions.jettyHttpAddress().getPort());
 
-    ServerConnector c =
-        new JettyServerConnectorWithReusePort(server, runtimeOptions.jettyReusePort());
-    c.setHost(runtimeOptions.jettyHttpAddress().getHost());
-    c.setPort(runtimeOptions.jettyHttpAddress().getPort());
-    server.setConnectors(new Connector[] {c});
-
-    HttpConnectionFactory factory = c.getConnectionFactory(HttpConnectionFactory.class);
+    HttpConnectionFactory factory = connector.getConnectionFactory(HttpConnectionFactory.class);
     factory.setHttpCompliance(
-        RpcConnector.LEGACY_MODE ? HttpCompliance.RFC7230_LEGACY : HttpCompliance.RFC7230);
+            RpcConnector.LEGACY_MODE ? HttpCompliance.RFC7230_LEGACY : HttpCompliance.RFC7230);
 
     HttpConfiguration config = factory.getHttpConfiguration();
     config.setRequestHeaderSize(runtimeOptions.jettyRequestHeaderSize());
@@ -109,18 +106,29 @@ public class JettyHttpProxy {
     config.setSendServerVersion(false);
     config.setSendXPoweredBy(false);
 
+    return connector;
+  }
+
+  public static void insertHandlers(Server server) {
     SizeLimitHandler sizeLimitHandler = new SizeLimitHandler(MAX_REQUEST_SIZE, -1);
-    sizeLimitHandler.setHandler(handler);
+    sizeLimitHandler.setHandler(server.getHandler());
 
     GzipHandler gzip = new GzipHandler();
     gzip.setInflateBufferSize(8 * 1024);
     gzip.setHandler(sizeLimitHandler);
     gzip.setExcludedAgentPatterns();
-
-    // Include all methods for the GzipHandler.
-    gzip.setIncludedMethods();
-
+    gzip.setIncludedMethods(); // Include all methods for the GzipHandler.
     server.setHandler(gzip);
+  }
+
+  public static Server newServer(
+      ServletEngineAdapter.Config runtimeOptions, ForwardingHandler handler) {
+    Server server = new Server();
+    server.setHandler(handler);
+    insertHandlers(server);
+
+    ServerConnector connector = newConnector(server, runtimeOptions);
+    server.addConnector(connector);
 
     logger.atInfo().log("Starting Jetty http server for Java runtime proxy.");
     return server;
@@ -135,37 +143,17 @@ public class JettyHttpProxy {
 
     private static final String X_APPENGINE_TIMEOUT_MS = "x-appengine-timeout-ms";
 
-    private final String applicationRoot;
-    private final String fixedApplicationPath;
-    private final AppInfoFactory appInfoFactory;
     private final EvaluationRuntimeServerInterface evaluationRuntimeServerInterface;
     private final UPRequestTranslator upRequestTranslator;
 
-    public ForwardingHandler(ServletEngineAdapter.Config runtimeOptions, Map<String, String> env)
-        throws ExecutionException, InterruptedException, IOException {
-      this.applicationRoot = runtimeOptions.applicationRoot();
-      this.fixedApplicationPath = runtimeOptions.fixedApplicationPath();
-      this.appInfoFactory = new AppInfoFactory(env);
+    public ForwardingHandler(ServletEngineAdapter.Config runtimeOptions, Map<String, String> env) {
+      AppInfoFactory appInfoFactory = new AppInfoFactory(env);
       this.evaluationRuntimeServerInterface = runtimeOptions.evaluationRuntimeServerInterface();
       this.upRequestTranslator =
           new UPRequestTranslator(
-              this.appInfoFactory,
+                  appInfoFactory,
               runtimeOptions.passThroughPrivateHeaders(),
               /*skipPostData=*/ false);
-    }
-
-    private void init() {
-      /* The init actions are not done in the constructor as they are not used when testing */
-      try {
-        AppinfoPb.AppInfo appinfo =
-            appInfoFactory.getAppInfoFromFile(applicationRoot, fixedApplicationPath);
-        // TODO Should we also call ApplyCloneSettings()?
-        LocalRpcContext<EmptyMessage> context = new LocalRpcContext<>(EmptyMessage.class);
-        evaluationRuntimeServerInterface.addAppVersion(context, appinfo);
-        Object unused = context.getResponse();
-      } catch (Exception e) {
-        throw new IllegalStateException(e);
-      }
     }
 
     /**
