@@ -17,7 +17,6 @@
 package com.google.apphosting.runtime.jetty9;
 
 import com.google.apphosting.api.ApiProxy;
-import com.google.apphosting.base.AppVersionKey;
 import com.google.apphosting.runtime.AppVersion;
 import com.google.apphosting.runtime.AppEngineConstants;
 import com.google.apphosting.runtime.SessionsConfig;
@@ -143,7 +142,6 @@ public class AppVersionHandlerFactory {
   }
 
   private Handler doCreateHandler(AppVersion appVersion) throws ServletException {
-    AppVersionKey appVersionKey = appVersion.getKey();
     try {
       File contextRoot = appVersion.getRootDirectory();
 

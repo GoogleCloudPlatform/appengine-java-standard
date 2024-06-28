@@ -16,36 +16,33 @@
 
 package com.google.apphosting.runtime.jetty.http;
 
+import static com.google.apphosting.runtime.RequestRunner.WAIT_FOR_USER_RUNNABLE_DEADLINE;
+
 import com.google.appengine.api.ThreadManager;
 import com.google.apphosting.api.ApiProxy;
 import com.google.apphosting.base.AppVersionKey;
 import com.google.apphosting.base.protos.EmptyMessage;
 import com.google.apphosting.base.protos.RuntimePb;
 import com.google.apphosting.runtime.ApiProxyImpl;
+import com.google.apphosting.runtime.AppEngineConstants;
 import com.google.apphosting.runtime.AppVersion;
 import com.google.apphosting.runtime.BackgroundRequestCoordinator;
-import com.google.apphosting.runtime.AppEngineConstants;
 import com.google.apphosting.runtime.LocalRpcContext;
 import com.google.apphosting.runtime.RequestManager;
-import com.google.apphosting.runtime.RequestRunner;
 import com.google.apphosting.runtime.RequestRunner.EagerRunner;
 import com.google.apphosting.runtime.ResponseAPIData;
 import com.google.apphosting.runtime.ServletEngineAdapter;
 import com.google.apphosting.runtime.jetty.AppInfoFactory;
 import com.google.common.flogger.GoogleLogger;
-import org.eclipse.jetty.server.Handler;
-import org.eclipse.jetty.server.Request;
-import org.eclipse.jetty.server.Response;
-import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.util.Blocker;
-import org.eclipse.jetty.util.Callback;
-
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.time.Duration;
 import java.util.concurrent.TimeoutException;
-
-import static com.google.apphosting.runtime.RequestRunner.WAIT_FOR_USER_RUNNABLE_DEADLINE;
+import org.eclipse.jetty.server.Handler;
+import org.eclipse.jetty.server.Request;
+import org.eclipse.jetty.server.Response;
+import org.eclipse.jetty.util.Blocker;
+import org.eclipse.jetty.util.Callback;
 
 /**
  * This class replicates the behaviour of the {@link RequestRunner} for Requests which do not come

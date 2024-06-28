@@ -21,22 +21,21 @@ import com.google.common.collect.ImmutableSet;
 /** {@code AppEngineConstants} centralizes some constants that are specific to our use of Jetty. */
 public final class AppEngineConstants {
   /**
-   * This {@code ServletContext} attribute contains the {@link
-   * AppVersion} for the current application.
+   * This {@code ServletContext} attribute contains the {@link AppVersion} for the current
+   * application.
    */
   public static final String APP_VERSION_CONTEXT_ATTR =
-          "com.google.apphosting.runtime.jetty.APP_VERSION_CONTEXT_ATTR";
+      "com.google.apphosting.runtime.jetty.APP_VERSION_CONTEXT_ATTR";
 
   /**
-   * This {@code ServletRequest} attribute contains the {@code
-   * AppVersionKey} identifying the current application.  identify
-   * which application version to use.
+   * This {@code ServletRequest} attribute contains the {@code AppVersionKey} identifying the
+   * current application. identify which application version to use.
    */
   public static final String APP_VERSION_KEY_REQUEST_ATTR =
-          "com.google.apphosting.runtime.jetty.APP_VERSION_REQUEST_ATTR";
+      "com.google.apphosting.runtime.jetty.APP_VERSION_REQUEST_ATTR";
 
   public static final String APP_YAML_ATTRIBUTE_TARGET =
-          "com.google.apphosting.runtime.jetty.appYaml";
+      "com.google.apphosting.runtime.jetty.appYaml";
 
   /**
    * The HTTP headers that are handled specially by this proxy are defined in lowercase because HTTP

@@ -38,7 +38,7 @@
         <DB_REGION>us-central1</DB_REGION>
         <DB_USER>prober-user</DB_USER>
         <DB_PASSOWRD>prober_connectivity_test_database</DB_PASSOWRD>
-
+        <gax.version>2.50.0</gax.version>
         <appengine.target.version>${project.version}</appengine.target.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <appengine.runtime.location>target/${project.artifactId}-${project.version}</appengine.runtime.location>
@@ -58,22 +58,22 @@
         <dependency>
             <groupId>com.google.cloud</groupId>
             <artifactId>google-cloud-spanner</artifactId>
-            <version>6.69.0</version>
+            <version>6.70.0</version>
         </dependency>
         <dependency>
             <groupId>com.google.api</groupId>
             <artifactId>gax</artifactId>
-            <version>2.49.0</version>
+            <version>${gax.version}</version>
         </dependency>
         <dependency>
             <groupId>com.google.api</groupId>
             <artifactId>gax-httpjson</artifactId>
-            <version>2.49.0</version>
+            <version>${gax.version}</version>
         </dependency>
         <dependency>
             <groupId>com.google.api</groupId>
             <artifactId>gax-grpc</artifactId>
-            <version>2.49.0</version>
+            <version>${gax.version}</version>
         </dependency>
         <dependency>
             <groupId>com.google.api-client</groupId>
@@ -86,12 +86,12 @@
         <dependency>
             <groupId>com.google.cloud</groupId>
             <artifactId>google-cloud-bigquery</artifactId>
-            <version>2.40.3</version>
+            <version>2.41.0</version>
         </dependency>
         <dependency>
             <groupId>com.google.cloud</groupId>
             <artifactId>google-cloud-core</artifactId>
-            <version>2.39.0</version>
+            <version>2.40.0</version>
         </dependency>
         <dependency>
             <groupId>com.google.cloud</groupId>
@@ -101,12 +101,12 @@
         <dependency>
             <groupId>com.google.cloud</groupId>
             <artifactId>google-cloud-logging</artifactId>
-            <version>3.18.0</version>
+            <version>3.19.0</version>
         </dependency>
         <dependency>
             <groupId>com.google.cloud</groupId>
             <artifactId>google-cloud-storage</artifactId>
-            <version>2.40.0</version>
+            <version>2.40.1</version>
         </dependency>
         <dependency>
             <groupId>com.google.cloud.sql</groupId>

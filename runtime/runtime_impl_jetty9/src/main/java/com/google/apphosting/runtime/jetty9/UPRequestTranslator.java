@@ -17,7 +17,6 @@
 package com.google.apphosting.runtime.jetty9;
 
 import static com.google.apphosting.runtime.AppEngineConstants.BACKGROUND_REQUEST_URL;
-import static com.google.apphosting.runtime.AppEngineConstants.DEFAULT_SECRET_KEY;
 import static com.google.apphosting.runtime.AppEngineConstants.IS_ADMIN_HEADER_VALUE;
 import static com.google.apphosting.runtime.AppEngineConstants.IS_TRUSTED;
 import static com.google.apphosting.runtime.AppEngineConstants.PRIVATE_APPENGINE_HEADERS;
@@ -41,11 +40,13 @@ import static com.google.apphosting.runtime.AppEngineConstants.X_APPENGINE_USER_
 import static com.google.apphosting.runtime.AppEngineConstants.X_APPENGINE_USER_ID;
 import static com.google.apphosting.runtime.AppEngineConstants.X_APPENGINE_USER_IP;
 import static com.google.apphosting.runtime.AppEngineConstants.X_APPENGINE_USER_IS_ADMIN;
+import static com.google.apphosting.runtime.AppEngineConstants.X_APPENGINE_USER_NICKNAME;
 import static com.google.apphosting.runtime.AppEngineConstants.X_APPENGINE_USER_ORGANIZATION;
 import static com.google.apphosting.runtime.AppEngineConstants.X_CLOUD_TRACE_CONTEXT;
 import static com.google.apphosting.runtime.AppEngineConstants.X_FORWARDED_PROTO;
 import static com.google.apphosting.runtime.AppEngineConstants.X_GOOGLE_INTERNAL_PROFILER;
 import static com.google.apphosting.runtime.AppEngineConstants.X_GOOGLE_INTERNAL_SKIPADMINCHECK;
+import static com.google.apphosting.runtime.AppEngineConstants.X_GOOGLE_INTERNAL_SKIPADMINCHECK_UC;
 
 import com.google.apphosting.base.protos.AppinfoPb;
 import com.google.apphosting.base.protos.HttpPb;
@@ -63,6 +64,7 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.TextFormat;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.Objects;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -201,12 +203,12 @@ public class UPRequestTranslator {
       }
     }
 
-    if (BACKGROUND_REQUEST_URL.equals(realRequest.getRequestURI())) {
-      if (WARMUP_IP.equals(httpRequest.getUserIp())) {
+    if (Objects.equals(realRequest.getRequestURI(), BACKGROUND_REQUEST_URL)) {
+      if (Objects.equals(httpRequest.getUserIp(), WARMUP_IP)) {
         upReqBuilder.setRequestType(UPRequest.RequestType.BACKGROUND);
       }
-    } else if (WARMUP_REQUEST_URL.equals(realRequest.getRequestURI())) {
-      if (WARMUP_IP.equals(httpRequest.getUserIp())) {
+    } else if (Objects.equals(realRequest.getRequestURI(), WARMUP_REQUEST_URL)) {
+      if (Objects.equals(httpRequest.getUserIp(), WARMUP_IP)) {
         // This request came from within App Engine via secure internal channels; tell Jetty
         // it's HTTPS to avoid 403 because of web.xml security-constraint checks.
         httpRequest.setIsHttps(true);
