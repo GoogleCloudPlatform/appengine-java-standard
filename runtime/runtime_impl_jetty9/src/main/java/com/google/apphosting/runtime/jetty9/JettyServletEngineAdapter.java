@@ -118,12 +118,12 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
       server.setHandler(appVersionHandlerMap);
     }
 
-    boolean startJettyHttpProxy = false;
-    if (runtimeOptions.useJettyHttpProxy()) {
-      AppInfoFactory appInfoFactory;
-      AppVersionKey appVersionKey;
-      /* The init actions are not done in the constructor as they are not used when testing */
-      try {
+    try {
+      boolean startJettyHttpProxy = false;
+      if (runtimeOptions.useJettyHttpProxy()) {
+        AppInfoFactory appInfoFactory;
+        AppVersionKey appVersionKey;
+        /* The init actions are not done in the constructor as they are not used when testing */
         String appRoot = runtimeOptions.applicationRoot();
         String appPath = runtimeOptions.fixedApplicationPath();
         appInfoFactory = new AppInfoFactory(System.getenv());
@@ -134,41 +134,38 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
                 Objects.requireNonNull(runtimeOptions.evaluationRuntimeServerInterface());
         evaluationRuntimeServerInterface.addAppVersion(context, appinfo);
         context.getResponse();
-        appVersionKey = AppVersionKey.fromAppInfo(appinfo);
-        appVersionHandlerMap.getHandler(appVersionKey);
-      } catch (Exception e) {
-        throw new IllegalStateException(e);
-      }
-      if (Boolean.getBoolean(HTTP_CONNECTOR_MODE)) {
-        logger.atInfo().log("Using HTTP_CONNECTOR_MODE to bypass RPC");
-        JettyHttpProxy.insertHandlers(server);
-        AppVersion appVersion = appVersionHandlerMap.getAppVersion(appVersionKey);
-        server.insertHandler(new JettyHttpHandler(runtimeOptions, appVersion, appVersionKey, appInfoFactory));
-        ServerConnector connector = JettyHttpProxy.newConnector(server, runtimeOptions);
-        server.addConnector(connector);
-      } else {
-        server.setAttribute(
-                "com.google.apphosting.runtime.jetty9.appYaml",
-                appYaml.orElseGet(() -> JettyServletEngineAdapter.getAppYaml(runtimeOptions)));
-        // Delay start of JettyHttpProxy until after the main server and application is started.
-        startJettyHttpProxy = true;
-      }
-    }
 
-    ClassLoader oldContextClassLoader = Thread.currentThread().getContextClassLoader();
-    Thread.currentThread().setContextClassLoader(JettyServletEngineAdapter.class.getClassLoader());
-    try {
-      server.start();
-      if (startJettyHttpProxy) {
-        JettyHttpProxy.startServer(runtimeOptions);
+        if (Boolean.getBoolean(HTTP_CONNECTOR_MODE)) {
+          logger.atInfo().log("Using HTTP_CONNECTOR_MODE to bypass RPC");
+          appVersionKey = AppVersionKey.fromAppInfo(appinfo);
+          appVersionHandlerMap.getHandler(appVersionKey);
+          JettyHttpProxy.insertHandlers(server);
+          AppVersion appVersion = appVersionHandlerMap.getAppVersion(appVersionKey);
+          server.insertHandler(new JettyHttpHandler(runtimeOptions, appVersion, appVersionKey, appInfoFactory));
+          ServerConnector connector = JettyHttpProxy.newConnector(server, runtimeOptions);
+          server.addConnector(connector);
+        } else {
+          server.setAttribute(
+                  "com.google.apphosting.runtime.jetty9.appYaml",
+                  appYaml.orElseGet(() -> JettyServletEngineAdapter.getAppYaml(runtimeOptions)));
+          // Delay start of JettyHttpProxy until after the main server and application is started.
+          startJettyHttpProxy = true;
+        }
       }
-    } catch (Exception ex) {
-      // TODO: Should we have a wrapper exception for this
-      // type of thing in ServletEngineAdapter?
-      throw new RuntimeException(ex);
-    }
-    finally {
-      Thread.currentThread().setContextClassLoader(oldContextClassLoader);
+
+      ClassLoader oldContextClassLoader = Thread.currentThread().getContextClassLoader();
+      Thread.currentThread().setContextClassLoader(JettyServletEngineAdapter.class.getClassLoader());
+      try {
+        server.start();
+        if (startJettyHttpProxy) {
+          JettyHttpProxy.startServer(runtimeOptions);
+        }
+      }
+      finally {
+        Thread.currentThread().setContextClassLoader(oldContextClassLoader);
+      }
+    } catch (Exception e) {
+      throw new IllegalStateException(e);
     }
   }
 
