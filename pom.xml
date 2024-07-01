@@ -751,7 +751,7 @@
       <dependency>
         <groupId>com.google.truth.extensions</groupId>
         <artifactId>truth-java8-extension</artifactId>
-        <version>1.4.2</version>
+        <version>1.4.3</version>
         <scope>test</scope>
       </dependency>
 
