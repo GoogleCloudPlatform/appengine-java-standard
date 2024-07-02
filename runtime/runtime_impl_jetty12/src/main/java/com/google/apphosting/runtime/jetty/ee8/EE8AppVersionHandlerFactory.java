@@ -21,7 +21,6 @@ import static com.google.apphosting.runtime.AppEngineConstants.HTTP_CONNECTOR_MO
 import com.google.apphosting.api.ApiProxy;
 import com.google.apphosting.runtime.AppEngineConstants;
 import com.google.apphosting.runtime.AppVersion;
-import com.google.apphosting.runtime.AppEngineConstants;
 import com.google.apphosting.runtime.SessionsConfig;
 import com.google.apphosting.runtime.jetty.AppVersionHandlerFactory;
 import com.google.apphosting.runtime.jetty.SessionManagerHandler;

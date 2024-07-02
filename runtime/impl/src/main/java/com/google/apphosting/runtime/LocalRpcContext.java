@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.apphosting.runtime.jetty.http;
+package com.google.apphosting.runtime;
 
 import com.google.apphosting.runtime.anyrpc.AnyRpcServerContext;
 import com.google.common.util.concurrent.SettableFuture;

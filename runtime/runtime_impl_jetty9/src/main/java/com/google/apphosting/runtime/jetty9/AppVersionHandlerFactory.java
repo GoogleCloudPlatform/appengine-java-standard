@@ -16,12 +16,22 @@
 
 package com.google.apphosting.runtime.jetty9;
 
+import com.google.apphosting.api.ApiProxy;
 import com.google.apphosting.runtime.AppVersion;
 import com.google.apphosting.runtime.AppEngineConstants;
 import com.google.apphosting.runtime.SessionsConfig;
 import com.google.common.collect.ImmutableList;
 import com.google.common.flogger.GoogleLogger;
 import com.google.common.html.HtmlEscapers;
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintWriter;
+import javax.servlet.RequestDispatcher;
+import javax.servlet.ServletException;
+import javax.servlet.UnavailableException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.jsp.JspFactory;
 import org.eclipse.jetty.annotations.AnnotationConfiguration;
 import org.eclipse.jetty.server.Dispatcher;
 import org.eclipse.jetty.server.Handler;
@@ -32,16 +42,8 @@ import org.eclipse.jetty.webapp.FragmentConfiguration;
 import org.eclipse.jetty.webapp.MetaInfConfiguration;
 import org.eclipse.jetty.webapp.WebAppContext;
 import org.eclipse.jetty.webapp.WebXmlConfiguration;
+import org.eclipse.jetty.server.handler.ContextHandler;
 
-import javax.servlet.RequestDispatcher;
-import javax.servlet.ServletException;
-import javax.servlet.UnavailableException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.jsp.JspFactory;
-import java.io.File;
-import java.io.IOException;
-import java.io.PrintWriter;
 
 /**
  * {@code AppVersionHandlerFactory} implements a {@code Handler} for a given {@code AppVersionKey}.
@@ -199,24 +201,34 @@ public class AppVersionHandlerFactory {
       SessionManagerHandler unused = SessionManagerHandler.create(builder.build());
       // Pass the AppVersion on to any of our servlets (e.g. ResourceFileServlet).
       context.setAttribute(AppEngineConstants.APP_VERSION_CONTEXT_ATTR, appVersion);
+      if (Boolean.getBoolean(AppEngineConstants.HTTP_CONNECTOR_MODE)) {
+        context.addEventListener(
+            new ContextHandler.ContextScopeListener() {
+              @Override
+              public void enterScope(
+                  ContextHandler.Context context,
+                  org.eclipse.jetty.server.Request request,
+                  Object reason) {
+                if (request != null) {
+                  ApiProxy.Environment environment =
+                      (ApiProxy.Environment) request.getAttribute(AppEngineConstants.ENVIRONMENT_ATTR);
+                  if (environment != null) {
+                    ApiProxy.setEnvironmentForCurrentThread(environment);
+                  }
+                }
+              }
 
-      context.start();
-      // Check to see if servlet filter initialization failed.
-      Throwable unavailableCause = context.getUnavailableException();
-      if (unavailableCause != null) {
-        if (unavailableCause instanceof ServletException) {
-          throw (ServletException) unavailableCause;
-        } else {
-          UnavailableException unavailableException =
-              new UnavailableException("Initialization failed.");
-          unavailableException.initCause(unavailableCause);
-          throw unavailableException;
-        }
+              @Override
+              public void exitScope(
+                  ContextHandler.Context context, org.eclipse.jetty.server.Request request) {
+                if (request != null) {
+                  ApiProxy.clearEnvironmentForCurrentThread();
+                }
+              }
+            });
       }
 
       return context;
-    } catch (ServletException ex) {
-      throw ex;
     } catch (Exception ex) {
       throw new ServletException(ex);
     }

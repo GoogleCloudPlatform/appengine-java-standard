@@ -106,7 +106,7 @@ public final class AppEngineConstants {
       "com.google.apphosting.internal.SkipAdminCheck";
 
   // The impersonated IP address of warmup requests (and also background)
-  //     (<internal20>)
+  //     (https://g3doc.corp.google.com/apphosting/g3doc/howto/headers.md?cl=head)
   public static final String WARMUP_IP = "0.1.0.3";
 
   public static final String DEFAULT_SECRET_KEY = "secretkey";

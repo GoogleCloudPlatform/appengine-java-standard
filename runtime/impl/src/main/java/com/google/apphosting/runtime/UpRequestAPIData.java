@@ -19,6 +19,8 @@ package com.google.apphosting.runtime;
 import com.google.apphosting.base.protos.HttpPb;
 import com.google.apphosting.base.protos.RuntimePb;
 import com.google.apphosting.base.protos.TracePb;
+import com.google.common.base.Ascii;
+
 import java.util.stream.Stream;
 
 public class UpRequestAPIData implements RequestAPIData {
@@ -177,5 +179,15 @@ public class UpRequestAPIData implements RequestAPIData {
   @Override
   public RuntimePb.UPRequest.RequestType getRequestType() {
     return request.getRequestType();
+  }
+
+  @Override
+  public String getBackgroundRequestId() {
+    for (HttpPb.ParsedHttpHeader header : request.getRequest().getHeadersList()) {
+      if (Ascii.equalsIgnoreCase(header.getKey(), AppEngineConstants.X_APPENGINE_BACKGROUNDREQUEST)) {
+        return header.getValue();
+      }
+    }
+    return null;
   }
 }

@@ -71,6 +71,9 @@ import javax.servlet.http.HttpServletResponse;
 import org.eclipse.jetty.http.HttpField;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Response;
+import static com.google.apphosting.runtime.AppEngineConstants.X_GOOGLE_INTERNAL_SKIPADMINCHECK_UC;
+import static com.google.apphosting.runtime.AppEngineConstants.X_APPENGINE_USER_NICKNAME;
+
 
 /** Translates HttpServletRequest to the UPRequest proto, and vice versa for the response. */
 public class UPRequestTranslator {

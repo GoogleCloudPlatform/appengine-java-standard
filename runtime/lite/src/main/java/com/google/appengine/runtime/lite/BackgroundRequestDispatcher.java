@@ -16,6 +16,10 @@
 
 package com.google.appengine.runtime.lite;
 
+import static com.google.apphosting.runtime.AppEngineConstants.BACKGROUND_REQUEST_SOURCE_IP;
+import static com.google.apphosting.runtime.AppEngineConstants.BACKGROUND_REQUEST_URL;
+import static com.google.apphosting.runtime.AppEngineConstants.X_APPENGINE_BACKGROUNDREQUEST;
+import static com.google.apphosting.runtime.AppEngineConstants.X_APPENGINE_USER_IP;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import com.google.appengine.api.ThreadManager;
@@ -46,11 +50,6 @@ class BackgroundRequestDispatcher extends BackgroundRequestCoordinator {
    * Runnable}.
    */
   private static final Duration WAIT_FOR_USER_RUNNABLE_DEADLINE = Duration.ofSeconds(60);
-
-  private static final String X_APPENGINE_USER_IP = "x-appengine-user-ip";
-  private static final String X_APPENGINE_BACKGROUNDREQUEST = "x-appengine-backgroundrequest";
-  private static final String BACKGROUND_REQUEST_URL = "/_ah/background";
-  private static final String BACKGROUND_REQUEST_SOURCE_IP = "0.1.0.3";
 
   public AbstractHandler createHandler() {
     return new BackgroundRequestHandler();

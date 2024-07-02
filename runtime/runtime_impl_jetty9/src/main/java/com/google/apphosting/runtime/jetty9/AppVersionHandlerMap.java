@@ -95,6 +95,10 @@ public class AppVersionHandlerMap extends AbstractHandlerContainer {
     return handler;
   }
 
+  public AppVersion getAppVersion(AppVersionKey appVersionKey) {
+    return appVersionMap.get(appVersionKey);
+  }
+
   /**
    * Forward the specified request on to the {@link Handler} associated with its application
    * version.
@@ -124,24 +128,6 @@ public class AppVersionHandlerMap extends AbstractHandlerContainer {
       throw ex;
     } catch (RuntimeException ex) {
       throw new ServletException(ex);
-    }
-  }
-
-  @Override
-  protected void doStart() throws Exception {
-    for (Handler handler : getHandlers()) {
-      handler.start();
-    }
-
-    super.doStart();
-  }
-
-  @Override
-  protected void doStop() throws Exception {
-    super.doStop();
-
-    for (Handler handler : getHandlers()) {
-      handler.stop();
     }
   }
 
