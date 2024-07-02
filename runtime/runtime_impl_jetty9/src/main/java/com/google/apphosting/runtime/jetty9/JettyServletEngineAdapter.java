@@ -16,6 +16,7 @@
 
 package com.google.apphosting.runtime.jetty9;
 
+import static com.google.apphosting.runtime.AppEngineConstants.IGNORE_RESPONSE_SIZE_LIMIT;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.apphosting.base.AppVersionKey;
@@ -25,6 +26,7 @@ import com.google.apphosting.base.protos.RuntimePb.UPResponse;
 import com.google.apphosting.runtime.AppVersion;
 import com.google.apphosting.runtime.MutableUpResponse;
 import com.google.apphosting.runtime.ServletEngineAdapter;
+import com.google.apphosting.runtime.SessionStoreFactory;
 import com.google.apphosting.utils.config.AppEngineConfigException;
 import com.google.apphosting.utils.config.AppYaml;
 import com.google.common.flogger.GoogleLogger;
@@ -43,7 +45,6 @@ import org.eclipse.jetty.util.thread.QueuedThreadPool;
 
 /**
  * This is an implementation of ServletEngineAdapter that uses the third-party Jetty servlet engine.
- *
  */
 public class JettyServletEngineAdapter implements ServletEngineAdapter {
   private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
@@ -89,7 +90,8 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
     try {
       appYaml = AppYaml.parse(new InputStreamReader(new FileInputStream(appYamlFile), UTF_8));
     } catch (FileNotFoundException | AppEngineConfigException e) {
-      logger.atWarning().log("Failed to load app.yaml file at location %s - %s",
+      logger.atWarning().log(
+          "Failed to load app.yaml file at location %s - %s",
           appYamlFile.getPath(), e.getMessage());
     }
     return appYaml;
@@ -102,10 +104,11 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
     server.setConnectors(new Connector[] {rpcConnector});
     AppVersionHandlerFactory appVersionHandlerFactory =
         new AppVersionHandlerFactory(
-            server, serverInfo, contextFactory, /*useJettyErrorPageHandler=*/ false);
+            server, serverInfo, contextFactory, /* useJettyErrorPageHandler= */ false);
     appVersionHandlerMap = new AppVersionHandlerMap(appVersionHandlerFactory);
 
-    if (!"java8".equals(System.getenv("GAE_RUNTIME"))) {
+    if (!Objects.equals(System.getenv("GAE_RUNTIME"), "java8")
+        && !Boolean.getBoolean(IGNORE_RESPONSE_SIZE_LIMIT)) {
       SizeLimitHandler sizeLimitHandler = new SizeLimitHandler(-1, MAX_RESPONSE_SIZE);
       sizeLimitHandler.setHandler(appVersionHandlerMap);
       server.setHandler(sizeLimitHandler);
@@ -155,7 +158,7 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
    * #start(String)}.
    */
   @Override
-  public void setSessionStoreFactory(com.google.apphosting.runtime.SessionStoreFactory factory) {
+  public void setSessionStoreFactory(SessionStoreFactory factory) {
     appVersionHandlerMap.setSessionStoreFactory(factory);
   }
 

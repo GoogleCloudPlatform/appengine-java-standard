@@ -46,6 +46,7 @@ public final class AppEngineWebXmlInitialParse {
 
   /** a formatted build timestamp with pattern yyyy-MM-dd'T'HH:mm:ssXXX */
   public static final String BUILD_TIMESTAMP;
+
   private static final String BUILD_VERSION;
 
   private static final Properties BUILD_PROPERTIES = new Properties();
@@ -56,7 +57,7 @@ public final class AppEngineWebXmlInitialParse {
             "/com/google/appengine/init/build.properties")) {
       BUILD_PROPERTIES.load(inputStream);
     } catch (Exception ok) {
-        // File not there; that's fine, just continue.
+      // File not there; that's fine, just continue.
     }
     GIT_HASH = BUILD_PROPERTIES.getProperty("buildNumber", "unknown");
     System.setProperty("appengine.git.hash", GIT_HASH);
@@ -124,7 +125,9 @@ public final class AppEngineWebXmlInitialParse {
             System.setProperty("appengine.use.HttpConnector", value);
           } else if (prop.equalsIgnoreCase("appengine.use.allheaders")) {
             System.setProperty("appengine.use.allheaders", value);
-          } 
+          } else if (prop.equalsIgnoreCase("appengine.ignore.responseSizeLimit")) {
+            System.setProperty("appengine.ignore.responseSizeLimit", value);
+          }
         }
       }
     }

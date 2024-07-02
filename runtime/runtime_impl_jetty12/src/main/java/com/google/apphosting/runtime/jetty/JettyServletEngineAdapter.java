@@ -16,6 +16,7 @@
 package com.google.apphosting.runtime.jetty;
 
 import static com.google.apphosting.runtime.AppEngineConstants.HTTP_CONNECTOR_MODE;
+import static com.google.apphosting.runtime.AppEngineConstants.IGNORE_RESPONSE_SIZE_LIMIT;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.apphosting.api.ApiProxy;
@@ -26,7 +27,6 @@ import com.google.apphosting.base.protos.RuntimePb.UPRequest;
 import com.google.apphosting.base.protos.RuntimePb.UPResponse;
 import com.google.apphosting.runtime.AppEngineConstants;
 import com.google.apphosting.runtime.AppVersion;
-import com.google.apphosting.runtime.AppEngineConstants;
 import com.google.apphosting.runtime.MutableUpResponse;
 import com.google.apphosting.runtime.ServletEngineAdapter;
 import com.google.apphosting.runtime.anyrpc.EvaluationRuntimeServerInterface;
@@ -56,7 +56,6 @@ import org.eclipse.jetty.util.thread.QueuedThreadPool;
 
 /**
  * This is an implementation of ServletEngineAdapter that uses the third-party Jetty servlet engine.
- *
  */
 public class JettyServletEngineAdapter implements ServletEngineAdapter {
   private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
@@ -94,7 +93,8 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
     try {
       appYaml = AppYaml.parse(new InputStreamReader(new FileInputStream(appYamlFile), UTF_8));
     } catch (FileNotFoundException | AppEngineConfigException e) {
-      logger.atWarning().log("Failed to load app.yaml file at location %s - %s",
+      logger.atWarning().log(
+          "Failed to load app.yaml file at location %s - %s",
           appYamlFile.getPath(), e.getMessage());
     }
     return appYaml;
@@ -143,9 +143,10 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
           }
         };
     server.addConnector(rpcConnector);
-    AppVersionHandlerFactory appVersionHandlerFactory = AppVersionHandlerFactory.newInstance(server, serverInfo);
+    AppVersionHandlerFactory appVersionHandlerFactory =
+        AppVersionHandlerFactory.newInstance(server, serverInfo);
     appVersionHandler = new AppVersionHandler(appVersionHandlerFactory);
-    if (!"java8".equals(System.getenv("GAE_RUNTIME"))) {
+    if (!Boolean.getBoolean(IGNORE_RESPONSE_SIZE_LIMIT)) {
       CoreSizeLimitHandler sizeLimitHandler = new CoreSizeLimitHandler(-1, MAX_RESPONSE_SIZE);
       sizeLimitHandler.setHandler(appVersionHandler);
       server.setHandler(sizeLimitHandler);
@@ -223,7 +224,8 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
   /**
    * Sets the {@link com.google.apphosting.runtime.SessionStoreFactory} that will be used to create
    * the list of {@link com.google.apphosting.runtime.SessionStore SessionStores} to which the HTTP
-   * Session will be stored, if sessions are enabled. This method must be invoked after {@link #start(String, Config)}.
+   * Session will be stored, if sessions are enabled. This method must be invoked after {@link
+   * #start(String, Config)}.
    */
   @Override
   public void setSessionStoreFactory(com.google.apphosting.runtime.SessionStoreFactory factory) {
@@ -242,15 +244,15 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
     AppVersionKey appVersionKey = AppVersionKey.fromUpRequest(upRequest);
     AppVersionKey lastVersionKey = lastAppVersionKey;
     if (lastVersionKey != null) {
-      // We already have created the handler on the previous request, so no need to do another getHandler().
+      // We already have created the handler on the previous request, so no need to do another
+      // getHandler().
       // The two AppVersionKeys must be the same as we only support one app version.
       if (!Objects.equals(appVersionKey, lastVersionKey)) {
         upResponse.setError(UPResponse.ERROR.UNKNOWN_APP_VALUE);
         upResponse.setErrorMessage("Unknown app: " + appVersionKey);
         return;
       }
-    }
-    else {
+    } else {
       if (!appVersionHandler.ensureHandler(appVersionKey)) {
         upResponse.setError(UPResponse.ERROR.UNKNOWN_APP_VALUE);
         upResponse.setErrorMessage("Unknown app: " + appVersionKey);
