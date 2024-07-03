@@ -115,5 +115,7 @@ public final class AppEngineConstants {
 
   public static final String HTTP_CONNECTOR_MODE = "appengine.use.HttpConnector";
 
+  public static final String IGNORE_RESPONSE_SIZE_LIMIT = "appengine.ignore.responseSizeLimit";
+
   private AppEngineConstants() {}
 }
