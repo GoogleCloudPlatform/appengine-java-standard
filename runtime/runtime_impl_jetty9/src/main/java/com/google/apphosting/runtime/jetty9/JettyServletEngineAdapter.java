@@ -41,6 +41,7 @@ import java.util.Objects;
 import java.util.Optional;
 import javax.servlet.ServletException;
 import org.eclipse.jetty.server.Connector;
+import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.handler.SizeLimitHandler;
@@ -133,12 +134,12 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
         EvaluationRuntimeServerInterface evaluationRuntimeServerInterface =
                 Objects.requireNonNull(runtimeOptions.evaluationRuntimeServerInterface());
         evaluationRuntimeServerInterface.addAppVersion(context, appinfo);
-        context.getResponse();
+        EmptyMessage ignored = context.getResponse();
 
         if (Boolean.getBoolean(HTTP_CONNECTOR_MODE)) {
           logger.atInfo().log("Using HTTP_CONNECTOR_MODE to bypass RPC");
           appVersionKey = AppVersionKey.fromAppInfo(appinfo);
-          appVersionHandlerMap.getHandler(appVersionKey);
+          Handler unused = appVersionHandlerMap.getHandler(appVersionKey);
           JettyHttpProxy.insertHandlers(server);
           AppVersion appVersion = appVersionHandlerMap.getAppVersion(appVersionKey);
           server.insertHandler(new JettyHttpHandler(runtimeOptions, appVersion, appVersionKey, appInfoFactory));

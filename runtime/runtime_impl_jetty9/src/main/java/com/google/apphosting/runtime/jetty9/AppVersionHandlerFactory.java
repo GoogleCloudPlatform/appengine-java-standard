@@ -198,7 +198,7 @@ public class AppVersionHandlerFactory {
           .setAsyncPersistence(sessionsConfig.isAsyncPersistence())
           .setServletContextHandler(context);
 
-      SessionManagerHandler unused = SessionManagerHandler.create(builder.build());
+      SessionManagerHandler ignored = SessionManagerHandler.create(builder.build());
       // Pass the AppVersion on to any of our servlets (e.g. ResourceFileServlet).
       context.setAttribute(AppEngineConstants.APP_VERSION_CONTEXT_ATTR, appVersion);
       if (Boolean.getBoolean(AppEngineConstants.HTTP_CONNECTOR_MODE)) {
@@ -226,10 +226,26 @@ public class AppVersionHandlerFactory {
                 }
               }
             });
+      } else {
+        context.start();
+        // Check to see if servlet filter initialization failed.
+        Throwable unavailableCause = context.getUnavailableException();
+        if (unavailableCause != null) {
+          if (unavailableCause instanceof ServletException) {
+            throw (ServletException) unavailableCause;
+          } else {
+            UnavailableException unavailableException =
+                    new UnavailableException("Initialization failed.");
+            unavailableException.initCause(unavailableCause);
+            throw unavailableException;
+          }
+        }
       }
 
       return context;
-    } catch (Exception ex) {
+    } catch (ServletException ex) {
+      throw ex;
+    }  catch (Exception ex) {
       throw new ServletException(ex);
     }
   }

@@ -211,7 +211,7 @@ public class JettyHttpHandler extends HandlerWrapper {
     thread.join();
   }
 
-  private boolean handleException(
+  private void handleException(
       Throwable ex, RequestManager.RequestToken requestToken, ResponseAPIData response) {
     // Unwrap ServletException, either from javax or from jakarta exception:
     try {
@@ -234,7 +234,6 @@ public class JettyHttpHandler extends HandlerWrapper {
     }
     RuntimePb.UPResponse.ERROR error = RuntimePb.UPResponse.ERROR.APP_FAILURE;
     setFailure(response, error, "Unexpected exception from servlet: " + ex);
-    return true;
   }
 
   /** Create a failure response from the given code and message. */
