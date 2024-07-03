@@ -226,9 +226,7 @@ public class EE8AppVersionHandlerFactory implements AppVersionHandlerFactory {
             @Override
             public void exitScope(
                     ContextHandler.APIContext context, org.eclipse.jetty.ee8.nested.Request request) {
-              if (request != null) {
-                ApiProxy.clearEnvironmentForCurrentThread();
-              }
+              ApiProxy.clearEnvironmentForCurrentThread();
             }
           });
       }

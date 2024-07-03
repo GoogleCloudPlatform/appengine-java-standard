@@ -89,6 +89,9 @@ public class JettyHttpHandler extends HandlerWrapper {
       String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response)
       throws IOException, ServletException {
 
+    // This handler cannot be used with anything else which establishes an environment (e.g. RpcConnection).
+    assert (request.getAttribute(AppEngineConstants.ENVIRONMENT_ATTR) == null);
+
     JettyRequestAPIData genericRequest =
         new JettyRequestAPIData(baseRequest, request, appInfoFactory, passThroughPrivateHeaders);
     JettyResponseAPIData genericResponse = new JettyResponseAPIData(baseRequest.getResponse(), response);

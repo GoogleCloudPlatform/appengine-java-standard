@@ -221,9 +221,7 @@ public class AppVersionHandlerFactory {
               @Override
               public void exitScope(
                   ContextHandler.Context context, org.eclipse.jetty.server.Request request) {
-                if (request != null) {
-                  ApiProxy.clearEnvironmentForCurrentThread();
-                }
+                ApiProxy.clearEnvironmentForCurrentThread();
               }
             });
       } else {

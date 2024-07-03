@@ -82,6 +82,10 @@ public class JettyHttpHandler extends Handler.Wrapper {
 
   @Override
   public boolean handle(Request request, Response response, Callback callback) throws Exception {
+
+    // This handler cannot be used with anything else which establishes an environment (e.g. RpcConnection).
+    assert (request.getAttribute(AppEngineConstants.ENVIRONMENT_ATTR) == null);
+
     JettyRequestAPIData genericRequest =
         new JettyRequestAPIData(request, appInfoFactory, passThroughPrivateHeaders);
     JettyResponseAPIData genericResponse = new JettyResponseAPIData(response);
