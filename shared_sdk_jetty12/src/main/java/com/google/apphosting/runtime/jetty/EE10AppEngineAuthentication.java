@@ -179,10 +179,6 @@ public class EE10AppEngineAuthentication {
         throw new ServerAuthException("validateRequest called with null response!!!");
       }
 
-      if (AuthenticationState.Deferred.isDeferred(res)) {
-        return null;
-      }
-
       try {
         UserService userService = UserServiceFactory.getUserService();
         // If the user is authenticated already, just create a
@@ -193,6 +189,10 @@ public class EE10AppEngineAuthentication {
           if (user != null) {
             return new UserAuthenticationSucceeded(getAuthenticationType(), user);
           }
+        }
+
+        if (AuthenticationState.Deferred.isDeferred(res)) {
+          return null;
         }
 
         try {
