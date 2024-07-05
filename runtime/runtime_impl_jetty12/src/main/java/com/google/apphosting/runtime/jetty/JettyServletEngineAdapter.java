@@ -27,14 +27,15 @@ import com.google.apphosting.base.protos.RuntimePb.UPRequest;
 import com.google.apphosting.base.protos.RuntimePb.UPResponse;
 import com.google.apphosting.runtime.AppEngineConstants;
 import com.google.apphosting.runtime.AppVersion;
+import com.google.apphosting.runtime.LocalRpcContext;
 import com.google.apphosting.runtime.MutableUpResponse;
 import com.google.apphosting.runtime.ServletEngineAdapter;
 import com.google.apphosting.runtime.anyrpc.EvaluationRuntimeServerInterface;
 import com.google.apphosting.runtime.jetty.delegate.DelegateConnector;
 import com.google.apphosting.runtime.jetty.delegate.impl.DelegateRpcExchange;
 import com.google.apphosting.runtime.jetty.http.JettyHttpHandler;
-import com.google.apphosting.runtime.jetty.http.LocalRpcContext;
 import com.google.apphosting.runtime.jetty.proxy.JettyHttpProxy;
+import com.google.apphosting.runtime.jetty9.AppVersionHandlerFactory;
 import com.google.apphosting.utils.config.AppEngineConfigException;
 import com.google.apphosting.utils.config.AppYaml;
 import com.google.common.flogger.GoogleLogger;
@@ -121,15 +122,13 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
           @Override
           public Resource getDefaultStyleSheet() {
             // TODO: this is a workaround for https://github.com/jetty/jetty.project/issues/11873
-            return ResourceFactory.of(this)
-                    .newResource("/org/eclipse/jetty/server/jetty-dir.css");
+            return ResourceFactory.of(this).newResource("/org/eclipse/jetty/server/jetty-dir.css");
           }
 
           @Override
           public Resource getDefaultFavicon() {
             // TODO: this is a workaround for https://github.com/jetty/jetty.project/issues/11873
-            return ResourceFactory.of(this)
-                    .newResource("/org/eclipse/jetty/server/favicon.ico");
+            return ResourceFactory.of(this).newResource("/org/eclipse/jetty/server/favicon.ico");
           }
         };
     rpcConnector =

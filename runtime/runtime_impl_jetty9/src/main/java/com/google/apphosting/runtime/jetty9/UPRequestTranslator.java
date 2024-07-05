@@ -78,8 +78,6 @@ public class UPRequestTranslator {
 
   private static final String DEFAULT_SECRET_KEY = "secretkey";
 
- 
-
   private final AppInfoFactory appInfoFactory;
   private final boolean passThroughPrivateHeaders;
   private final boolean skipPostData;

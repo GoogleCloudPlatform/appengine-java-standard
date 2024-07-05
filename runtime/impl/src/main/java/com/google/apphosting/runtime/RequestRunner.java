@@ -154,7 +154,8 @@ public class RequestRunner implements Runnable {
 
   private String getBackgroundRequestId(UPRequest upRequest) {
     for (ParsedHttpHeader header : upRequest.getRequest().getHeadersList()) {
-      if (Ascii.equalsIgnoreCase(header.getKey(), "X-AppEngine-BackgroundRequest")) {
+      if (Ascii.equalsIgnoreCase(
+          header.getKey(), AppEngineConstants.X_APPENGINE_BACKGROUNDREQUEST)) {
         return header.getValue();
       }
     }

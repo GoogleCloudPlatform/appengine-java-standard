@@ -20,7 +20,6 @@ import static com.google.apphosting.runtime.AppEngineConstants.HTTP_CONNECTOR_MO
 import com.google.apphosting.api.ApiProxy;
 import com.google.apphosting.runtime.AppEngineConstants;
 import com.google.apphosting.runtime.AppVersion;
-import com.google.apphosting.runtime.AppEngineConstants;
 import com.google.apphosting.runtime.SessionsConfig;
 import com.google.apphosting.runtime.jetty.AppVersionHandlerFactory;
 import com.google.apphosting.runtime.jetty.EE10SessionManagerHandler;
@@ -63,40 +62,48 @@ public class EE10AppVersionHandlerFactory implements AppVersionHandlerFactory {
       "org.apache.tomcat.SimpleInstanceManager";
   private static final String TOMCAT_INSTANCE_MANAGER = "org.apache.tomcat.InstanceManager";
   private static final String TOMCAT_JSP_FACTORY = "org.apache.jasper.runtime.JspFactoryImpl";
+
   /**
    * Any settings in this webdefault.xml file will be inherited by all applications. We don't want
    * to use Jetty's built-in webdefault.xml because we want to disable some of their functionality,
    * and because we want to be explicit about what functionality we are supporting.
    */
   public static final String WEB_DEFAULTS_XML =
-          "com/google/apphosting/runtime/jetty/webdefault.xml";
+      "com/google/apphosting/runtime/jetty/webdefault.xml";
+
   /**
    * This property will be used to enable/disable Annotation Scanning when quickstart-web.xml is not
    * present.
    */
   private static final String USE_ANNOTATION_SCANNING = "use.annotationscanning";
+
   /**
    * A "private" request attribute to indicate if the dispatch to a most recent error page has run
    * to completion. Note an error page itself may generate errors.
    */
   static final String ERROR_PAGE_HANDLED = ErrorHandler.ERROR_PAGE + ".handled";
+
   private final Server server;
   private final String serverInfo;
   private final boolean useJettyErrorPageHandler;
+
   public EE10AppVersionHandlerFactory(Server server, String serverInfo) {
     this(server, serverInfo, false);
   }
+
   public EE10AppVersionHandlerFactory(
       Server server, String serverInfo, boolean useJettyErrorPageHandler) {
     this.server = server;
     this.serverInfo = serverInfo;
     this.useJettyErrorPageHandler = useJettyErrorPageHandler;
   }
+
   /**
    * Returns the {@code Handler} that will handle requests for the specified application version.
    */
   @Override
-  public org.eclipse.jetty.server.Handler createHandler(AppVersion appVersion) throws ServletException {
+  public org.eclipse.jetty.server.Handler createHandler(AppVersion appVersion)
+      throws ServletException {
     // Need to set thread context classloader for the duration of the scope.
     ClassLoader oldContextClassLoader = Thread.currentThread().getContextClassLoader();
     Thread.currentThread().setContextClassLoader(this.getClass().getClassLoader());
@@ -106,12 +113,14 @@ public class EE10AppVersionHandlerFactory implements AppVersionHandlerFactory {
       Thread.currentThread().setContextClassLoader(oldContextClassLoader);
     }
   }
-  private org.eclipse.jetty.server.Handler doCreateHandler(AppVersion appVersion) throws ServletException {
+
+  private org.eclipse.jetty.server.Handler doCreateHandler(AppVersion appVersion)
+      throws ServletException {
     try {
       File contextRoot = appVersion.getRootDirectory();
       final AppEngineWebAppContext context =
           new AppEngineWebAppContext(
-              appVersion.getRootDirectory(), serverInfo, /* extractWar=*/ false);
+              appVersion.getRootDirectory(), serverInfo, /* extractWar= */ false);
       context.setServer(server);
       context.setDefaultsDescriptor(WEB_DEFAULTS_XML);
       ClassLoader classLoader = appVersion.getClassLoader();
@@ -142,15 +151,13 @@ public class EE10AppVersionHandlerFactory implements AppVersionHandlerFactory {
       // context.removeConfiguration(new JettyWebXmlConfiguration());
       if (Boolean.getBoolean(USE_ANNOTATION_SCANNING)) {
         context.addConfiguration(new AnnotationConfiguration());
-      }
-      else {
+      } else {
         context.removeConfiguration(new AnnotationConfiguration());
       }
       File quickstartXml = new File(contextRoot, "WEB-INF/quickstart-web.xml");
       if (quickstartXml.exists()) {
         context.addConfiguration(new QuickStartConfiguration());
-      }
-      else {
+      } else {
         context.removeConfiguration(new QuickStartConfiguration());
       }
       // TODO: review which configurations are added by default.
@@ -173,8 +180,7 @@ public class EE10AppVersionHandlerFactory implements AppVersionHandlerFactory {
         klass = classLoader.loadClass(TOMCAT_JSP_FACTORY);
         JspFactory jspf = (JspFactory) klass.getConstructor().newInstance();
         JspFactory.setDefaultFactory(jspf);
-        Class.forName(
-            "org.apache.jasper.compiler.JspRuntimeContext", true, classLoader);
+        Class.forName("org.apache.jasper.compiler.JspRuntimeContext", true, classLoader);
       } catch (Throwable t) {
         // No big deal, there are no JSPs in the App since the jsp libraries are not inside the
         // web app classloader.
@@ -194,30 +200,29 @@ public class EE10AppVersionHandlerFactory implements AppVersionHandlerFactory {
 
       if (Boolean.getBoolean(HTTP_CONNECTOR_MODE)) {
         context.addEventListener(
-          new ContextHandler.ContextScopeListener() {
-            @Override
-            public void enterScope(Context context, Request request) {
-              if (request != null) {
-                ApiProxy.Environment environment =
-                        (ApiProxy.Environment)
-                                request.getAttribute(AppEngineConstants.ENVIRONMENT_ATTR);
-                if (environment != null) ApiProxy.setEnvironmentForCurrentThread(environment);
+            new ContextHandler.ContextScopeListener() {
+              @Override
+              public void enterScope(Context context, Request request) {
+                if (request != null) {
+                  ApiProxy.Environment environment =
+                      (ApiProxy.Environment)
+                          request.getAttribute(AppEngineConstants.ENVIRONMENT_ATTR);
+                  if (environment != null) ApiProxy.setEnvironmentForCurrentThread(environment);
+                }
               }
-            }
 
-            @Override
-            public void exitScope(Context context, Request request) {
-              if (request != null) {
+              @Override
+              public void exitScope(Context context, Request request) {
                 ApiProxy.clearEnvironmentForCurrentThread();
               }
-            }
-          });
+            });
       }
       return context;
     } catch (Exception ex) {
       throw new ServletException(ex);
     }
   }
+
   /**
    * {@code NullErrorHandler} does nothing when an error occurs. The exception is already stored in
    * an attribute of {@code request}, but we don't do any rendering of it into the response, UNLESS
@@ -232,6 +237,7 @@ public class EE10AppVersionHandlerFactory implements AppVersionHandlerFactory {
       // We don't want Jetty to do anything further.
       return true;
     }
+
     /**
      * Try to invoke a custom error page if a handler is available. If not, render a simple HTML
      * response for {@link HttpServletResponse#sendError} calls, but do nothing for unhandled

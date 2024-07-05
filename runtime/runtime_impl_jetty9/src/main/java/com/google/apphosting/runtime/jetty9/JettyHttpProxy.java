@@ -17,30 +17,23 @@
 package com.google.apphosting.runtime.jetty9;
 
 import com.google.apphosting.base.protos.AppLogsPb;
-import com.google.apphosting.base.protos.AppinfoPb;
-import com.google.apphosting.base.protos.EmptyMessage;
 import com.google.apphosting.base.protos.RuntimePb;
 import com.google.apphosting.base.protos.RuntimePb.UPRequest;
 import com.google.apphosting.base.protos.RuntimePb.UPResponse;
+import com.google.apphosting.runtime.LocalRpcContext;
 import com.google.apphosting.runtime.ServletEngineAdapter;
-import com.google.apphosting.runtime.anyrpc.AnyRpcServerContext;
 import com.google.apphosting.runtime.anyrpc.EvaluationRuntimeServerInterface;
 import com.google.common.base.Ascii;
 import com.google.common.base.Throwables;
 import com.google.common.flogger.GoogleLogger;
 import com.google.common.primitives.Ints;
-import com.google.common.util.concurrent.SettableFuture;
-import com.google.protobuf.MessageLite;
-import java.io.IOException;
 import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.eclipse.jetty.http.HttpCompliance;
-import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.Request;
@@ -83,7 +76,6 @@ public class JettyHttpProxy {
       System.setProperty(JETTY_LOG_CLASS, JETTY_STDERRLOG);
 
       ForwardingHandler handler = new ForwardingHandler(runtimeOptions, System.getenv());
-      handler.init();
       Server server = newServer(runtimeOptions, handler);
       server.start();
     } catch (Exception ex) {
@@ -91,17 +83,14 @@ public class JettyHttpProxy {
     }
   }
 
-  public static Server newServer(
-      ServletEngineAdapter.Config runtimeOptions, ForwardingHandler handler) {
-    Server server = new Server();
-
-    ServerConnector c =
+  public static ServerConnector newConnector(
+      Server server, ServletEngineAdapter.Config runtimeOptions) {
+    ServerConnector connector =
         new JettyServerConnectorWithReusePort(server, runtimeOptions.jettyReusePort());
-    c.setHost(runtimeOptions.jettyHttpAddress().getHost());
-    c.setPort(runtimeOptions.jettyHttpAddress().getPort());
-    server.setConnectors(new Connector[] {c});
+    connector.setHost(runtimeOptions.jettyHttpAddress().getHost());
+    connector.setPort(runtimeOptions.jettyHttpAddress().getPort());
 
-    HttpConnectionFactory factory = c.getConnectionFactory(HttpConnectionFactory.class);
+    HttpConnectionFactory factory = connector.getConnectionFactory(HttpConnectionFactory.class);
     factory.setHttpCompliance(
         RpcConnector.LEGACY_MODE ? HttpCompliance.RFC7230_LEGACY : HttpCompliance.RFC7230);
 
@@ -112,72 +101,32 @@ public class JettyHttpProxy {
     config.setSendServerVersion(false);
     config.setSendXPoweredBy(false);
 
+    return connector;
+  }
+
+  public static void insertHandlers(Server server) {
     SizeLimitHandler sizeLimitHandler = new SizeLimitHandler(MAX_REQUEST_SIZE, -1);
-    sizeLimitHandler.setHandler(handler);
+    sizeLimitHandler.setHandler(server.getHandler());
 
     GzipHandler gzip = new GzipHandler();
     gzip.setInflateBufferSize(8 * 1024);
     gzip.setHandler(sizeLimitHandler);
     gzip.setExcludedAgentPatterns();
-
-    // Include all methods for the GzipHandler.
-    gzip.setIncludedMethods();
-
+    gzip.setIncludedMethods(); // Include all methods for the GzipHandler.
     server.setHandler(gzip);
+  }
+
+  public static Server newServer(
+      ServletEngineAdapter.Config runtimeOptions, ForwardingHandler handler) {
+    Server server = new Server();
+    server.setHandler(handler);
+    insertHandlers(server);
+
+    ServerConnector connector = newConnector(server, runtimeOptions);
+    server.addConnector(connector);
 
     logger.atInfo().log("Starting Jetty http server for Java runtime proxy.");
     return server;
-  }
-
-  private static class LocalRpcContext<M extends MessageLite> implements AnyRpcServerContext {
-    // We just dole out sequential ids here so we can tell requests apart in the logs.
-    private static final AtomicLong globalIds = new AtomicLong();
-
-    private final Class<M> responseMessageClass;
-    private final long startTimeMillis;
-    private final Duration timeRemaining;
-    private final SettableFuture<M> futureResponse = SettableFuture.create();
-    private final long globalId = globalIds.getAndIncrement();
-
-    private LocalRpcContext(Class<M> responseMessageClass) {
-      this(responseMessageClass, Duration.ofNanos((long) Double.MAX_VALUE));
-    }
-
-    private LocalRpcContext(Class<M> responseMessageClass, Duration timeRemaining) {
-      this.responseMessageClass = responseMessageClass;
-      this.startTimeMillis = System.currentTimeMillis();
-      this.timeRemaining = timeRemaining;
-    }
-
-    @Override
-    public void finishWithResponse(MessageLite response) {
-      futureResponse.set(responseMessageClass.cast(response));
-    }
-
-    M getResponse() throws ExecutionException, InterruptedException {
-      return futureResponse.get();
-    }
-
-    @Override
-    public void finishWithAppError(int appErrorCode, String errorDetail) {
-      String message = "AppError: code " + appErrorCode + "; errorDetail " + errorDetail;
-      futureResponse.setException(new RuntimeException(message));
-    }
-
-    @Override
-    public Duration getTimeRemaining() {
-      return timeRemaining;
-    }
-
-    @Override
-    public long getGlobalId() {
-      return globalId;
-    }
-
-    @Override
-    public long getStartTimeMillis() {
-      return startTimeMillis;
-    }
   }
 
   /**
@@ -189,37 +138,17 @@ public class JettyHttpProxy {
 
     private static final String X_APPENGINE_TIMEOUT_MS = "x-appengine-timeout-ms";
 
-    private final String applicationRoot;
-    private final String fixedApplicationPath;
-    private final AppInfoFactory appInfoFactory;
     private final EvaluationRuntimeServerInterface evaluationRuntimeServerInterface;
     private final UPRequestTranslator upRequestTranslator;
 
-    public ForwardingHandler(ServletEngineAdapter.Config runtimeOptions, Map<String, String> env)
-        throws ExecutionException, InterruptedException, IOException {
-      this.applicationRoot = runtimeOptions.applicationRoot();
-      this.fixedApplicationPath = runtimeOptions.fixedApplicationPath();
-      this.appInfoFactory = new AppInfoFactory(env);
+    public ForwardingHandler(ServletEngineAdapter.Config runtimeOptions, Map<String, String> env) {
+      AppInfoFactory appInfoFactory = new AppInfoFactory(env);
       this.evaluationRuntimeServerInterface = runtimeOptions.evaluationRuntimeServerInterface();
       this.upRequestTranslator =
           new UPRequestTranslator(
-              this.appInfoFactory,
+              appInfoFactory,
               runtimeOptions.passThroughPrivateHeaders(),
-              /*skipPostData=*/ false);
-    }
-
-    private void init() {
-      /* The init actions are not done in the constructor as they are not used when testing */
-      try {
-        AppinfoPb.AppInfo appinfo =
-            appInfoFactory.getAppInfoFromFile(applicationRoot, fixedApplicationPath);
-        // TODO Should we also call ApplyCloneSettings()?
-        LocalRpcContext<EmptyMessage> context = new LocalRpcContext<>(EmptyMessage.class);
-        evaluationRuntimeServerInterface.addAppVersion(context, appinfo);
-        Object unused = context.getResponse();
-      } catch (Exception e) {
-        throw new IllegalStateException(e);
-      }
+              /* skipPostData= */ false);
     }
 
     /**
@@ -289,6 +218,5 @@ public class JettyHttpProxy {
     }
   }
 
-  private JettyHttpProxy() {
-  }
+  private JettyHttpProxy() {}
 }

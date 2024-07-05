@@ -20,12 +20,13 @@ import com.google.apphosting.base.protos.AppLogsPb;
 import com.google.apphosting.base.protos.RuntimePb;
 import com.google.apphosting.base.protos.RuntimePb.UPRequest;
 import com.google.apphosting.base.protos.RuntimePb.UPResponse;
+import com.google.apphosting.runtime.LocalRpcContext;
 import com.google.apphosting.runtime.ServletEngineAdapter;
 import com.google.apphosting.runtime.anyrpc.EvaluationRuntimeServerInterface;
 import com.google.apphosting.runtime.jetty.AppInfoFactory;
 import com.google.apphosting.runtime.jetty.CoreSizeLimitHandler;
 import com.google.apphosting.runtime.jetty.JettyServletEngineAdapter;
-import com.google.apphosting.runtime.jetty.http.LocalRpcContext;
+import com.google.apphosting.runtime.jetty9.JettyServerConnectorWithReusePort;
 import com.google.common.base.Ascii;
 import com.google.common.base.Throwables;
 import com.google.common.flogger.GoogleLogger;
@@ -85,13 +86,14 @@ public class JettyHttpProxy {
 
   public static ServerConnector newConnector(
       Server server, ServletEngineAdapter.Config runtimeOptions) {
-    ServerConnector connector = new JettyServerConnectorWithReusePort(server, runtimeOptions.jettyReusePort());
+    ServerConnector connector =
+        new JettyServerConnectorWithReusePort(server, runtimeOptions.jettyReusePort());
     connector.setHost(runtimeOptions.jettyHttpAddress().getHost());
     connector.setPort(runtimeOptions.jettyHttpAddress().getPort());
 
-    HttpConfiguration config = connector.getConnectionFactory(HttpConnectionFactory.class).getHttpConfiguration();
-    if (JettyServletEngineAdapter.LEGACY_MODE)
-    {
+    HttpConfiguration config =
+        connector.getConnectionFactory(HttpConnectionFactory.class).getHttpConfiguration();
+    if (JettyServletEngineAdapter.LEGACY_MODE) {
       config.setHttpCompliance(HttpCompliance.RFC7230_LEGACY);
       config.setRequestCookieCompliance(CookieCompliance.RFC2965);
       config.setResponseCookieCompliance(CookieCompliance.RFC2965);
@@ -215,6 +217,5 @@ public class JettyHttpProxy {
     }
   }
 
-  private JettyHttpProxy() {
-  }
+  private JettyHttpProxy() {}
 }

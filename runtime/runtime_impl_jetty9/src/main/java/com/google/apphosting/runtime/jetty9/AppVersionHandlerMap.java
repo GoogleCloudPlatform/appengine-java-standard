@@ -17,22 +17,20 @@
 package com.google.apphosting.runtime.jetty9;
 
 import com.google.apphosting.base.AppVersionKey;
-import com.google.apphosting.runtime.AppVersion;
 import com.google.apphosting.runtime.AppEngineConstants;
-import com.google.apphosting.runtime.SessionStore;
+import com.google.apphosting.runtime.AppVersion;
 import com.google.apphosting.runtime.SessionStoreFactory;
-import org.eclipse.jetty.server.Handler;
-import org.eclipse.jetty.server.Request;
-import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.handler.AbstractHandlerContainer;
-
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import org.eclipse.jetty.server.Handler;
+import org.eclipse.jetty.server.Request;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.handler.AbstractHandlerContainer;
 
 /**
  * {@code AppVersionHandlerMap} is a {@code HandlerContainer} that identifies each child {@code
@@ -41,7 +39,6 @@ import java.util.Map;
  * <p>In order to identify which application version each request should be sent to, this class
  * assumes that an attribute will be set on the {@code HttpServletRequest} with a value of the
  * {@code AppVersionKey} that should be used.
- *
  */
 public class AppVersionHandlerMap extends AbstractHandlerContainer {
   private final AppVersionHandlerFactory appVersionHandlerFactory;
@@ -95,6 +92,10 @@ public class AppVersionHandlerMap extends AbstractHandlerContainer {
     return handler;
   }
 
+  public AppVersion getAppVersion(AppVersionKey appVersionKey) {
+    return appVersionMap.get(appVersionKey);
+  }
+
   /**
    * Forward the specified request on to the {@link Handler} associated with its application
    * version.
@@ -128,24 +129,6 @@ public class AppVersionHandlerMap extends AbstractHandlerContainer {
   }
 
   @Override
-  protected void doStart() throws Exception {
-    for (Handler handler : getHandlers()) {
-      handler.start();
-    }
-
-    super.doStart();
-  }
-
-  @Override
-  protected void doStop() throws Exception {
-    super.doStop();
-
-    for (Handler handler : getHandlers()) {
-      handler.stop();
-    }
-  }
-
-  @Override
   public void setServer(Server server) {
     super.setServer(server);
 
@@ -159,29 +142,17 @@ public class AppVersionHandlerMap extends AbstractHandlerContainer {
     return handlerMap.values().toArray(new Handler[0]);
   }
 
-  /**
-   * Not supported.
-   *
-   * @throws UnsupportedOperationException
-   */
+  /** Not supported. */
   public void setHandlers(Handler[] handlers) {
     throw new UnsupportedOperationException();
   }
 
-  /**
-   * Not supported.
-   *
-   * @throws UnsupportedOperationException
-   */
+  /** Not supported. */
   public void addHandler(Handler handler) {
     throw new UnsupportedOperationException();
   }
 
-  /**
-   * Not supported.
-   *
-   * @throws UnsupportedOperationException
-   */
+  /** Not supported. */
   public void removeHandler(Handler handler) {
     throw new UnsupportedOperationException();
   }

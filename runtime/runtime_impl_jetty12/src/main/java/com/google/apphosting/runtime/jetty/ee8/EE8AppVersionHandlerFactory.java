@@ -21,10 +21,10 @@ import static com.google.apphosting.runtime.AppEngineConstants.HTTP_CONNECTOR_MO
 import com.google.apphosting.api.ApiProxy;
 import com.google.apphosting.runtime.AppEngineConstants;
 import com.google.apphosting.runtime.AppVersion;
-import com.google.apphosting.runtime.AppEngineConstants;
 import com.google.apphosting.runtime.SessionsConfig;
 import com.google.apphosting.runtime.jetty.AppVersionHandlerFactory;
 import com.google.apphosting.runtime.jetty.SessionManagerHandler;
+import com.google.apphosting.runtime.jetty9.AppEngineWebAppContext;
 import com.google.common.flogger.GoogleLogger;
 import com.google.common.html.HtmlEscapers;
 import java.io.File;
@@ -81,16 +81,12 @@ public class EE8AppVersionHandlerFactory implements AppVersionHandlerFactory {
   private final String serverInfo;
   private final boolean useJettyErrorPageHandler;
 
-  public EE8AppVersionHandlerFactory(
-          Server server,
-          String serverInfo) {
+  public EE8AppVersionHandlerFactory(Server server, String serverInfo) {
     this(server, serverInfo, false);
   }
 
   public EE8AppVersionHandlerFactory(
-          Server server,
-          String serverInfo,
-          boolean useJettyErrorPageHandler) {
+      Server server, String serverInfo, boolean useJettyErrorPageHandler) {
     this.server = server;
     this.serverInfo = serverInfo;
     this.useJettyErrorPageHandler = useJettyErrorPageHandler;
@@ -208,30 +204,28 @@ public class EE8AppVersionHandlerFactory implements AppVersionHandlerFactory {
 
       if (Boolean.getBoolean(HTTP_CONNECTOR_MODE)) {
         context.addEventListener(
-          new ContextHandler.ContextScopeListener() {
-            @Override
-            public void enterScope(
-                    ContextHandler.APIContext context,
-                    org.eclipse.jetty.ee8.nested.Request request,
-                    Object reason) {
-              if (request != null) {
-                ApiProxy.Environment environment =
-                        (ApiProxy.Environment)
-                                request.getAttribute(AppEngineConstants.ENVIRONMENT_ATTR);
-                if (environment != null) {
-                  ApiProxy.setEnvironmentForCurrentThread(environment);
+            new ContextHandler.ContextScopeListener() {
+              @Override
+              public void enterScope(
+                  ContextHandler.APIContext context,
+                  org.eclipse.jetty.ee8.nested.Request request,
+                  Object reason) {
+                if (request != null) {
+                  ApiProxy.Environment environment =
+                      (ApiProxy.Environment)
+                          request.getAttribute(AppEngineConstants.ENVIRONMENT_ATTR);
+                  if (environment != null) {
+                    ApiProxy.setEnvironmentForCurrentThread(environment);
+                  }
                 }
               }
-            }
 
-            @Override
-            public void exitScope(
-                    ContextHandler.APIContext context, org.eclipse.jetty.ee8.nested.Request request) {
-              if (request != null) {
+              @Override
+              public void exitScope(
+                  ContextHandler.APIContext context, org.eclipse.jetty.ee8.nested.Request request) {
                 ApiProxy.clearEnvironmentForCurrentThread();
               }
-            }
-          });
+            });
       }
 
       return context.get();
