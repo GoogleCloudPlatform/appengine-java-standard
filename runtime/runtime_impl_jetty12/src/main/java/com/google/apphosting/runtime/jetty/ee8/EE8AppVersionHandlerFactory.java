@@ -24,7 +24,6 @@ import com.google.apphosting.runtime.AppVersion;
 import com.google.apphosting.runtime.SessionsConfig;
 import com.google.apphosting.runtime.jetty.AppVersionHandlerFactory;
 import com.google.apphosting.runtime.jetty.SessionManagerHandler;
-import com.google.apphosting.runtime.jetty9.AppEngineWebAppContext;
 import com.google.common.flogger.GoogleLogger;
 import com.google.common.html.HtmlEscapers;
 import java.io.File;

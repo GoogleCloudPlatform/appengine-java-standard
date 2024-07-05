@@ -26,7 +26,6 @@ import com.google.apphosting.runtime.anyrpc.EvaluationRuntimeServerInterface;
 import com.google.apphosting.runtime.jetty.AppInfoFactory;
 import com.google.apphosting.runtime.jetty.CoreSizeLimitHandler;
 import com.google.apphosting.runtime.jetty.JettyServletEngineAdapter;
-import com.google.apphosting.runtime.jetty9.JettyServerConnectorWithReusePort;
 import com.google.common.base.Ascii;
 import com.google.common.base.Throwables;
 import com.google.common.flogger.GoogleLogger;
