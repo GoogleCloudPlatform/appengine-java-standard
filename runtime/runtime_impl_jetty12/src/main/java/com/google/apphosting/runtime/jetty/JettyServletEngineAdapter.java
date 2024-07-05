@@ -35,7 +35,6 @@ import com.google.apphosting.runtime.jetty.delegate.DelegateConnector;
 import com.google.apphosting.runtime.jetty.delegate.impl.DelegateRpcExchange;
 import com.google.apphosting.runtime.jetty.http.JettyHttpHandler;
 import com.google.apphosting.runtime.jetty.proxy.JettyHttpProxy;
-import com.google.apphosting.runtime.jetty9.AppVersionHandlerFactory;
 import com.google.apphosting.utils.config.AppEngineConfigException;
 import com.google.apphosting.utils.config.AppYaml;
 import com.google.common.flogger.GoogleLogger;
