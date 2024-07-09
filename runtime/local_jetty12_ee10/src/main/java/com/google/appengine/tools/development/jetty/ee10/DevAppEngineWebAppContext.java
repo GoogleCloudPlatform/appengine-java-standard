@@ -23,6 +23,7 @@ import com.google.apphosting.utils.io.IoUtil;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Logger;
 import org.eclipse.jetty.ee10.servlet.security.ConstraintMapping;
 import org.eclipse.jetty.ee10.servlet.security.ConstraintSecurityHandler;
@@ -197,9 +198,8 @@ public class DevAppEngineWebAppContext extends AppEngineWebAppContext {
           mappings.add(mapping);
         }
 
-        // TODO: do we need to call this with a new list or is modifying the ConstraintMapping
-        // enough?
-        securityHandler.setConstraintMappings(mappings);
+        Set<String> knownRoles = Set.copyOf(securityHandler.getKnownRoles());
+        securityHandler.setConstraintMappings(mappings, knownRoles);
       }
       transportGuaranteesDisabled = true;
     }
