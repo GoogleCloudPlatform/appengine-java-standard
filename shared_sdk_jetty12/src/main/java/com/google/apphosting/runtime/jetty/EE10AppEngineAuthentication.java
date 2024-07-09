@@ -21,24 +21,21 @@ import com.google.appengine.api.users.UserService;
 import com.google.appengine.api.users.UserServiceFactory;
 import com.google.apphosting.api.ApiProxy;
 import com.google.common.flogger.GoogleLogger;
-import jakarta.servlet.ServletRequest;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.io.IOException;
 import java.security.Principal;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.function.Function;
 import javax.security.auth.Subject;
-import org.eclipse.jetty.ee10.servlet.ServletContextRequest;
 import org.eclipse.jetty.ee10.servlet.security.ConstraintSecurityHandler;
+import org.eclipse.jetty.http.HttpURI;
 import org.eclipse.jetty.security.AuthenticationState;
 import org.eclipse.jetty.security.Authenticator;
 import org.eclipse.jetty.security.Constraint;
 import org.eclipse.jetty.security.DefaultIdentityService;
 import org.eclipse.jetty.security.IdentityService;
 import org.eclipse.jetty.security.LoginService;
-import org.eclipse.jetty.security.ServerAuthException;
+import org.eclipse.jetty.security.SecurityHandler;
 import org.eclipse.jetty.security.UserIdentity;
 import org.eclipse.jetty.security.authentication.LoginAuthenticator;
 import org.eclipse.jetty.server.Request;
@@ -157,7 +154,7 @@ public class EE10AppEngineAuthentication {
      * j.c.g.apphosting.utils.jetty.AppEngineAuthentication.AppEngineAuthenticator.authenticate().
      *
      * <p>If authentication is required but the request comes from an untrusted ip, 307s the request
-     * back to the trusted appserver. Otherwise it will auth the request and return a login url if
+     * back to the trusted appserver. Otherwise, it will auth the request and return a login url if
      * needed.
      *
      * <p>From org.eclipse.jetty.server.Authentication:
@@ -165,63 +162,38 @@ public class EE10AppEngineAuthentication {
      * @param req The request
      * @param res The response
      * @param cb The callback
-     * @throws ServerAuthException if an error occurred
      */
     @Override
-    public AuthenticationState validateRequest(Request req, Response res, Callback cb)
-        throws ServerAuthException {
+    public AuthenticationState validateRequest(Request req, Response res, Callback cb) {
+      UserService userService = UserServiceFactory.getUserService();
+      // If the user is authenticated already, just create a
+      // AppEnginePrincipal or AppEngineFederatedPrincipal for them.
+      if (userService.isUserLoggedIn()) {
+        UserIdentity user = _loginService.login(null, null, null, null);
+        logger.atFine().log("authenticate() returning new principal for %s", user);
+        if (user != null) {
+          return new UserAuthenticationSucceeded(getAuthenticationType(), user);
+        }
+      }
 
-      ServletContextRequest contextRequest = Request.as(req, ServletContextRequest.class);
-      HttpServletRequest request = contextRequest.getServletApiRequest();
-      HttpServletResponse response = contextRequest.getHttpServletResponse();
-
-      if (response == null) {
-        throw new ServerAuthException("validateRequest called with null response!!!");
+      if (AuthenticationState.Deferred.isDeferred(res)) {
+        return null;
       }
 
       try {
-        UserService userService = UserServiceFactory.getUserService();
-        // If the user is authenticated already, just create a
-        // AppEnginePrincipal or AppEngineFederatedPrincipal for them.
-        if (userService.isUserLoggedIn()) {
-          UserIdentity user = _loginService.login(null, null, null, null);
-          logger.atFine().log("authenticate() returning new principal for %s", user);
-          if (user != null) {
-            return new UserAuthenticationSucceeded(getAuthenticationType(), user);
-          }
-        }
-
-        if (AuthenticationState.Deferred.isDeferred(res)) {
-          return null;
-        }
-
-        try {
-          logger.atFine().log(
-              "Got %s but no one was logged in, redirecting.", request.getRequestURI());
-          String url = userService.createLoginURL(getFullURL(request));
-          response.sendRedirect(url);
-          // Tell Jetty that we've already committed a response here.
-          return AuthenticationState.CHALLENGE;
-        } catch (ApiProxy.ApiProxyException ex) {
-          // If we couldn't get a login URL for some reason, return a 403 instead.
-          logger.atSevere().withCause(ex).log("Could not get login URL:");
-          response.sendError(HttpServletResponse.SC_FORBIDDEN);
-          return AuthenticationState.SEND_FAILURE;
-        }
-      } catch (IOException ex) {
-        throw new ServerAuthException(ex);
+        logger.atFine().log(
+            "Got %s but no one was logged in, redirecting.", req.getHttpURI().getPath());
+        String url = userService.createLoginURL(HttpURI.build(req.getHttpURI()).asString());
+        Response.sendRedirect(req, res, cb, url);
+        // Tell Jetty that we've already committed a response here.
+        return AuthenticationState.CHALLENGE;
+      } catch (ApiProxy.ApiProxyException ex) {
+        // If we couldn't get a login URL for some reason, return a 403 instead.
+        logger.atSevere().withCause(ex).log("Could not get login URL:");
+        Response.writeError(req, res, cb, HttpServletResponse.SC_FORBIDDEN);
+        return AuthenticationState.SEND_FAILURE;
       }
     }
-  }
-
-  /** Returns the full URL of the specified request, including any query string. */
-  private static String getFullURL(HttpServletRequest request) {
-    StringBuffer buffer = request.getRequestURL();
-    if (request.getQueryString() != null) {
-      buffer.append('?');
-      buffer.append(request.getQueryString());
-    }
-    return buffer.toString();
   }
 
   /**
@@ -279,13 +251,6 @@ public class EE10AppEngineAuthentication {
       this.identityService = identityService;
     }
 
-    /**
-     * Validate a user identity. Validate that a UserIdentity previously created by a call to {@link
-     * #login(String, Object, ServletRequest)} is still valid.
-     *
-     * @param user The user to validate
-     * @return true if authentication has not been revoked for the user.
-     */
     @Override
     public boolean validate(UserIdentity user) {
       logger.atInfo().log("validate(%s) throwing UnsupportedOperationException.", user);
@@ -310,7 +275,7 @@ public class EE10AppEngineAuthentication {
 
     @Override
     public String getName() {
-      if ((user.getFederatedIdentity() != null) && (user.getFederatedIdentity().length() > 0)) {
+      if ((user.getFederatedIdentity() != null) && (!user.getFederatedIdentity().isEmpty())) {
         return user.getFederatedIdentity();
       }
       return user.getEmail();
