@@ -957,7 +957,10 @@ public class ApiProxyImplTest {
     assertStackTraceIsCorrect(e);
     assertThat(e)
         .hasMessageThat()
-        .isEqualTo("generate.feature.disabled.error. You need to turn on billing!");
+        .isEqualTo(
+            "generate.feature.disabled.error. Please, enable the Appengine APIs via"
+                + " https://cloud.google.com/appengine/docs/standard/java-gen2/services/access You"
+                + " need to turn on billing!");
   }
 
   @Test

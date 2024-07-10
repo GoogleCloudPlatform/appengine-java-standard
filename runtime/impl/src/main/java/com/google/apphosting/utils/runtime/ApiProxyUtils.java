@@ -78,7 +78,11 @@ public final class ApiProxyUtils {
         return new ApiProxy.ArgumentException(packageName, methodName);
       case FEATURE_DISABLED:
         return new ApiProxy.FeatureNotEnabledException(
-            "%s.%s " + apiResponse.getErrorMessage(), packageName, methodName);
+            "%s.%s Please, enable the Appengine APIs via "
+                + "https://cloud.google.com/appengine/docs/standard/java-gen2/services/access "
+                + apiResponse.getErrorMessage(),
+            packageName,
+            methodName);
       case RPC_ERROR:
         return convertApiResponseRpcErrorToException(
             apiResponse.getRpcError(),
