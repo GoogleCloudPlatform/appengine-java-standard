@@ -95,8 +95,8 @@ public class EE10AppEngineAuthentication {
       }
     };
 
-    LoginService loginService = new AppEngineLoginService();
-    LoginAuthenticator authenticator = new AppEngineAuthenticator();
+    AppEngineLoginService loginService = new AppEngineLoginService();
+    AppEngineAuthenticator authenticator = new AppEngineAuthenticator();
     DefaultIdentityService identityService = new DefaultIdentityService();
 
     // Set allowed roles.
@@ -112,7 +112,9 @@ public class EE10AppEngineAuthentication {
    * {@code AppEngineAuthenticator} is a custom {@link Authenticator} that knows how to redirect the
    * current request to a login URL in order to authenticate the user.
    */
-  private static class AppEngineAuthenticator extends LoginAuthenticator {
+  private static class AppEngineAuthenticator implements Authenticator {
+
+    private LoginService _loginService;
 
     /**
      * Checks if the request could go to the login page.
@@ -122,6 +124,11 @@ public class EE10AppEngineAuthentication {
      */
     private static boolean isLoginOrErrorPage(String uri) {
       return uri.startsWith(AUTH_URL_PREFIX);
+    }
+
+    @Override
+    public void setConfiguration(Configuration configuration) {
+      _loginService = configuration.getLoginService();
     }
 
     @Override
@@ -146,7 +153,7 @@ public class EE10AppEngineAuthentication {
         return Constraint.Authorization.ALLOWED;
       }
 
-      return super.getConstraintAuthentication(pathInContext, existing, getSession);
+      return Authenticator.super.getConstraintAuthentication(pathInContext, existing, getSession);
     }
 
     /**
@@ -172,7 +179,7 @@ public class EE10AppEngineAuthentication {
         UserIdentity user = _loginService.login(null, null, null, null);
         logger.atFine().log("authenticate() returning new principal for %s", user);
         if (user != null) {
-          return new UserAuthenticationSucceeded(getAuthenticationType(), user);
+          return new LoginAuthenticator.UserAuthenticationSucceeded(getAuthenticationType(), user);
         }
       }
 
