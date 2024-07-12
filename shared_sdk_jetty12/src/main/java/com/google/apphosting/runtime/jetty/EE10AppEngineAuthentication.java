@@ -20,6 +20,8 @@ import com.google.appengine.api.users.User;
 import com.google.appengine.api.users.UserService;
 import com.google.appengine.api.users.UserServiceFactory;
 import com.google.apphosting.api.ApiProxy;
+import com.google.apphosting.runtime.jetty.AppEngineAuthentication.AppEnginePrincipal;
+import com.google.apphosting.runtime.jetty.AppEngineAuthentication.AppEngineUserIdentity;
 import com.google.common.flogger.GoogleLogger;
 import jakarta.servlet.http.HttpServletResponse;
 import java.security.Principal;
@@ -95,8 +97,8 @@ public class EE10AppEngineAuthentication {
       }
     };
 
-    LoginService loginService = new AppEngineLoginService();
-    LoginAuthenticator authenticator = new AppEngineAuthenticator();
+    AppEngineLoginService loginService = new AppEngineLoginService();
+    AppEngineAuthenticator authenticator = new AppEngineAuthenticator();
     DefaultIdentityService identityService = new DefaultIdentityService();
 
     // Set allowed roles.
@@ -112,7 +114,9 @@ public class EE10AppEngineAuthentication {
    * {@code AppEngineAuthenticator} is a custom {@link Authenticator} that knows how to redirect the
    * current request to a login URL in order to authenticate the user.
    */
-  private static class AppEngineAuthenticator extends LoginAuthenticator {
+  private static class AppEngineAuthenticator implements Authenticator {
+
+    private LoginService _loginService;
 
     /**
      * Checks if the request could go to the login page.
@@ -122,6 +126,11 @@ public class EE10AppEngineAuthentication {
      */
     private static boolean isLoginOrErrorPage(String uri) {
       return uri.startsWith(AUTH_URL_PREFIX);
+    }
+
+    @Override
+    public void setConfiguration(Configuration configuration) {
+      _loginService = configuration.getLoginService();
     }
 
     @Override
@@ -146,7 +155,7 @@ public class EE10AppEngineAuthentication {
         return Constraint.Authorization.ALLOWED;
       }
 
-      return super.getConstraintAuthentication(pathInContext, existing, getSession);
+      return Authenticator.super.getConstraintAuthentication(pathInContext, existing, getSession);
     }
 
     /**
@@ -172,7 +181,7 @@ public class EE10AppEngineAuthentication {
         UserIdentity user = _loginService.login(null, null, null, null);
         logger.atFine().log("authenticate() returning new principal for %s", user);
         if (user != null) {
-          return new UserAuthenticationSucceeded(getAuthenticationType(), user);
+          return new LoginAuthenticator.UserAuthenticationSucceeded(getAuthenticationType(), user);
         }
       }
 
@@ -224,7 +233,7 @@ public class EE10AppEngineAuthentication {
      *
      * @return A AppEngineUserIdentity if a user is logged in, or null otherwise.
      */
-    private AppEngineUserIdentity loadUser() {
+    private AppEngineUserIdentity  loadUser() {
       UserService userService = UserServiceFactory.getUserService();
       User engineUser = userService.getCurrentUser();
       if (engineUser == null) {
@@ -255,111 +264,6 @@ public class EE10AppEngineAuthentication {
     public boolean validate(UserIdentity user) {
       logger.atInfo().log("validate(%s) throwing UnsupportedOperationException.", user);
       throw new UnsupportedOperationException();
-    }
-  }
-
-  /**
-   * {@code AppEnginePrincipal} is an implementation of {@link Principal} that represents a
-   * logged-in Google App Engine user.
-   */
-  public static class AppEnginePrincipal implements Principal {
-    private final User user;
-
-    public AppEnginePrincipal(User user) {
-      this.user = user;
-    }
-
-    public User getUser() {
-      return user;
-    }
-
-    @Override
-    public String getName() {
-      if ((user.getFederatedIdentity() != null) && (!user.getFederatedIdentity().isEmpty())) {
-        return user.getFederatedIdentity();
-      }
-      return user.getEmail();
-    }
-
-    @Override
-    public boolean equals(Object other) {
-      if (other instanceof AppEnginePrincipal) {
-        return user.equals(((AppEnginePrincipal) other).user);
-      } else {
-        return false;
-      }
-    }
-
-    @Override
-    public String toString() {
-      return user.toString();
-    }
-
-    @Override
-    public int hashCode() {
-      return user.hashCode();
-    }
-  }
-
-  /**
-   * {@code AppEngineUserIdentity} is an implementation of {@link UserIdentity} that represents a
-   * logged-in Google App Engine user.
-   */
-  public static class AppEngineUserIdentity implements UserIdentity {
-
-    private final AppEnginePrincipal userPrincipal;
-
-    public AppEngineUserIdentity(AppEnginePrincipal userPrincipal) {
-      this.userPrincipal = userPrincipal;
-    }
-
-    /*
-     * Only used by jaas and jaspi.
-     */
-    @Override
-    public Subject getSubject() {
-      logger.atInfo().log("getSubject() throwing UnsupportedOperationException.");
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Principal getUserPrincipal() {
-      return userPrincipal;
-    }
-
-    @Override
-    public boolean isUserInRole(String role) {
-      UserService userService = UserServiceFactory.getUserService();
-      logger.atFine().log("Checking if principal %s is in role %s", userPrincipal, role);
-      if (userPrincipal == null) {
-        logger.atInfo().log("isUserInRole() called with null principal.");
-        return false;
-      }
-
-      if (USER_ROLE.equals(role)) {
-        return true;
-      }
-
-      if (ADMIN_ROLE.equals(role)) {
-        User user = userPrincipal.getUser();
-        if (user.equals(userService.getCurrentUser())) {
-          return userService.isUserAdmin();
-        } else {
-          // TODO: I'm not sure this will happen in
-          // practice. If it does, we may need to pass an
-          // application's admin list down somehow.
-          logger.atSevere().log("Cannot tell if non-logged-in user %s is an admin.", user);
-          return false;
-        }
-      } else {
-        logger.atWarning().log("Unknown role: %s.", role);
-        return false;
-      }
-    }
-
-    @Override
-    public String toString() {
-      return AppEngineUserIdentity.class.getSimpleName() + "('" + userPrincipal + "')";
     }
   }
 }

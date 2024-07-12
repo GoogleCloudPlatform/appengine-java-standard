@@ -106,7 +106,7 @@ public class AppEngineAuthentication {
   private static class AppEngineAuthenticator extends LoginAuthenticator {
 
     /**
-     * Checks if the request could to to the login page.
+     * Checks if the request could to the login page.
      *
      * @param uri The uri requested.
      * @return True if the uri starts with "/_ah/", false otherwise.
@@ -125,7 +125,7 @@ public class AppEngineAuthentication {
      * j.c.g.apphosting.utils.jetty.AppEngineAuthentication.AppEngineAuthenticator.authenticate().
      *
      * <p>If authentication is required but the request comes from an untrusted ip, 307s the request
-     * back to the trusted appserver. Otherwise it will auth the request and return a login url if
+     * back to the trusted appserver. Otherwise, it will auth the request and return a login url if
      * needed.
      *
      * <p>From org.eclipse.jetty.server.Authentication:
@@ -138,7 +138,7 @@ public class AppEngineAuthentication {
      *     for both successful and unsuccessful authentications), then the result will implement
      *     {@link Authentication.ResponseSent}. If Authentication is not mandatory, then a {@link
      *     Authentication.Deferred} may be returned.
-     * @throws ServerAuthException
+     * @throws ServerAuthException in an error occurs during authentication.
      */
     @Override
     public Authentication validateRequest(
@@ -300,13 +300,6 @@ public class AppEngineAuthentication {
       this.identityService = identityService;
     }
 
-    /**
-     * Validate a user identity. Validate that a UserIdentity previously created by a call to {@link
-     * #login(String, Object, ServletRequest)} is still valid.
-     *
-     * @param user The user to validate
-     * @return true if authentication has not been revoked for the user.
-     */
     @Override
     public boolean validate(UserIdentity user) {
       logger.atInfo().log("validate(%s) throwing UnsupportedOperationException.", user);
@@ -331,7 +324,7 @@ public class AppEngineAuthentication {
 
     @Override
     public String getName() {
-      if ((user.getFederatedIdentity() != null) && (user.getFederatedIdentity().length() > 0)) {
+      if ((user.getFederatedIdentity() != null) && (!user.getFederatedIdentity().isEmpty())) {
         return user.getFederatedIdentity();
       }
       return user.getEmail();
@@ -402,8 +395,8 @@ public class AppEngineAuthentication {
           return userService.isUserAdmin();
         } else {
           // TODO: I'm not sure this will happen in
-          // practice. If it does, we may need to pass an
-          // application's admin list down somehow.
+          //   practice. If it does, we may need to pass an
+          //   application's admin list down somehow.
           logger.atSevere().log("Cannot tell if non-logged-in user %s is an admin.", user);
           return false;
         }
