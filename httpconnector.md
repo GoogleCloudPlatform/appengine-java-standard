@@ -14,24 +14,6 @@
 <p style="color: red; font-weight: bold">>>>>> PLEASE check and correct alert issues and delete this message and the inline alerts.<hr></p>
 
 
-
-# **GAE HTTP Path Benchmarks**
-
-May 2024
-
-rlachan@, ludo@
-
-
-# **Related Bugs and Documents**
-
-
-
-* Bug: 
-* Original grpc design 
-* 
-* 
-
-
 # **Code History**
 
 Gen1 AppEngine runtimes (so Java8 for example) have been using a proprietary RPC path to communicate back and forth with the AppServer. So the customers HTTP requests are given to a Gen1 clone as a protocol buffer containing all the request information and via complex Jetty customization, is processing this request and returns another protocol buffer containing the HTTP response.
@@ -68,7 +50,7 @@ Heap memory usage was measured inside the `HttpServlet.service()` method for var
 <p id="gdcalert1" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: inline image link here (to images/image1.png). Store image on your image server and adjust path/filename/extension if necessary. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert2">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
 
 
-<img width="964" alt="image1" src="https://github.com/GoogleCloudPlatform/appengine-java-standard/blob/main/image1.png">
+<img width="964" alt="image1" src="https://github.com/GoogleCloudPlatform/appengine-java-standard/blob/doc/image1.png">
 
 
 <table>
@@ -115,7 +97,7 @@ By examining the memory usage before and after the `System.gc()` call, we can me
 <p id="gdcalert2" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: inline image link here (to images/image2.png). Store image on your image server and adjust path/filename/extension if necessary. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert3">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
 
 
-<img width="964" alt="image2" src="https://github.com/GoogleCloudPlatform/appengine-java-standard/blob/main/image2.png">
+<img width="964" alt="image2" src="https://github.com/GoogleCloudPlatform/appengine-java-standard/doc/main/image2.png">
 
 
 <table>
@@ -176,7 +158,7 @@ The native memory usage was measured inside the `HttpServlet.service()` method f
 <p id="gdcalert3" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: inline image link here (to images/image3.png). Store image on your image server and adjust path/filename/extension if necessary. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert4">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
 
 
-<img width="964" alt="image3" src="https://github.com/GoogleCloudPlatform/appengine-java-standard/blob/main/image3.png">
+<img width="964" alt="image3" src="https://github.com/GoogleCloudPlatform/appengine-java-standard/blob/doc/image3.png">
 
 
 <table>
@@ -237,7 +219,7 @@ In our CPU benchmark, we subjected both deployments on GAE to a steady load of 1
 <p id="gdcalert4" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: inline image link here (to images/image4.png). Store image on your image server and adjust path/filename/extension if necessary. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert5">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
 
 
-<img width="964" alt="image4" src="https://github.com/GoogleCloudPlatform/appengine-java-standard/blob/main/image4.png">
+<img width="964" alt="image4" src="https://github.com/GoogleCloudPlatform/appengine-java-standard/blob/doc/image4.png">
 
 
 <table>
@@ -289,9 +271,8 @@ We also benchmarked AppEngine on the Webtide Load testing machines. This tested 
 <p id="gdcalert5" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: inline image link here (to images/image5.png). Store image on your image server and adjust path/filename/extension if necessary. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert6">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
 
 
-<img width="964" alt="image5" src="https://github.com/GoogleCloudPlatform/appengine-java-standard/blob/main/image5.png">
+<img width="964" alt="image5" src="https://github.com/GoogleCloudPlatform/appengine-java-standard/blob/doc/image5.png">
 
-<img width="964" alt="image1" src="g3doc/image1.png">
 
 We can see that the new HttpMode uses far less memory, and also has much lower latency times across the board, and performs much better at the 99th percentile. This is likely due to the amount of garbage produced by the RPC mode as seen previously.
 
