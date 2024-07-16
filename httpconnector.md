@@ -1,5 +1,5 @@
 
-# **Ap pEngine Java new performant HTTP connector**
+# **Google App Engine Java new performant HTTP connector**
 
 Webtide/Jetty has implemented a new App Engine Java Runtime mode to use an HTTP-only path to the instance, avoiding the need to proxy to/from RPC UP request/response instances. This document reports on the benchmarks carried out to compare the old and new modes of operation.
 
