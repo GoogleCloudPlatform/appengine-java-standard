@@ -1,19 +1,3 @@
-
-
-
-
-<p style="color: red; font-weight: bold">>>>>>  gd2md-html alert:  ERRORs: 0; WARNINGs: 1; ALERTS: 5.</p>
-<ul style="color: red; font-weight: bold"><li>See top comment block for details on ERRORs and WARNINGs. <li>In the converted Markdown or HTML, search for inline alerts that start with >>>>>  gd2md-html alert:  for specific instances that need correction.</ul>
-
-<p style="color: red; font-weight: bold">Links to alert messages:</p><a href="#gdcalert1">alert1</a>
-<a href="#gdcalert2">alert2</a>
-<a href="#gdcalert3">alert3</a>
-<a href="#gdcalert4">alert4</a>
-<a href="#gdcalert5">alert5</a>
-
-<p style="color: red; font-weight: bold">>>>>> PLEASE check and correct alert issues and delete this message and the inline alerts.<hr></p>
-
-
 # **Code History**
 
 Gen1 AppEngine runtimes (so Java8 for example) have been using a proprietary RPC path to communicate back and forth with the AppServer. So the customers HTTP requests are given to a Gen1 clone as a protocol buffer containing all the request information and via complex Jetty customization, is processing this request and returns another protocol buffer containing the HTTP response.
@@ -50,7 +34,7 @@ Heap memory usage was measured inside the `HttpServlet.service()` method for var
 <p id="gdcalert1" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: inline image link here (to images/image1.png). Store image on your image server and adjust path/filename/extension if necessary. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert2">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
 
 
-<img width="964" alt="image1" src="https://github.com/GoogleCloudPlatform/appengine-java-standard/blob/doc/image1.png">
+<img  alt="image1" src="https://github.com/GoogleCloudPlatform/appengine-java-standard/blob/doc/image1.png">
 
 
 <table>
@@ -158,7 +142,7 @@ The native memory usage was measured inside the `HttpServlet.service()` method f
 <p id="gdcalert3" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: inline image link here (to images/image3.png). Store image on your image server and adjust path/filename/extension if necessary. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert4">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
 
 
-<img width="964" alt="image3" src="https://github.com/GoogleCloudPlatform/appengine-java-standard/blob/doc/image3.png">
+<img width="500" alt="image3" src="https://github.com/GoogleCloudPlatform/appengine-java-standard/blob/doc/image3.png">
 
 
 <table>
