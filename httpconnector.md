@@ -31,10 +31,8 @@ Requests were sent one at a time so that memory usage for a single request could
 
 Heap memory usage was measured inside the `HttpServlet.service()` method for varying sizes of request/responses. A `System.gc()` was performed first so that garbage is not included. 
 
-<p id="gdcalert1" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: inline image link here (to images/image1.png). Store image on your image server and adjust path/filename/extension if necessary. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert2">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
 
-
-<img  alt="image1" src="https://github.com/GoogleCloudPlatform/appengine-java-standard/blob/doc/image1.png">
+<img width="800" alt="image1" src="https://github.com/GoogleCloudPlatform/appengine-java-standard/blob/doc/image1.png">
 
 
 <table>
@@ -81,7 +79,7 @@ By examining the memory usage before and after the `System.gc()` call, we can me
 <p id="gdcalert2" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: inline image link here (to images/image2.png). Store image on your image server and adjust path/filename/extension if necessary. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert3">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
 
 
-<img width="964" alt="image2" src="https://github.com/GoogleCloudPlatform/appengine-java-standard/doc/main/image2.png">
+<img width="800" alt="image2" src="https://github.com/GoogleCloudPlatform/appengine-java-standard/doc/main/image2.png">
 
 
 <table>
@@ -138,11 +136,7 @@ We can see from these results that the new HttpMode produces 90%+ less garbage a
 The native memory usage was measured inside the `HttpServlet.service()` method for varying sizes of request/responses.
 
 
-
-<p id="gdcalert3" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: inline image link here (to images/image3.png). Store image on your image server and adjust path/filename/extension if necessary. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert4">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
-
-
-<img width="500" alt="image3" src="https://github.com/GoogleCloudPlatform/appengine-java-standard/blob/doc/image3.png">
+<img width="800" alt="image3" src="https://github.com/GoogleCloudPlatform/appengine-java-standard/blob/doc/image3.png">
 
 
 <table>
@@ -199,11 +193,7 @@ Native memory was pretty similar for all request sizes, with the HttpMode using 
 In our CPU benchmark, we subjected both deployments on GAE to a steady load of 100 requests per second for a duration of one hour. Each request was 1KB in size, and the corresponding response was 32KB. By reading the **/proc/[pid]/stat** file, we were able to gather detailed information about the CPU usage of the process.
 
 
-
-<p id="gdcalert4" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: inline image link here (to images/image4.png). Store image on your image server and adjust path/filename/extension if necessary. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert5">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
-
-
-<img width="964" alt="image4" src="https://github.com/GoogleCloudPlatform/appengine-java-standard/blob/doc/image4.png">
+<img width="800" alt="image4" src="https://github.com/GoogleCloudPlatform/appengine-java-standard/blob/doc/image4.png">
 
 
 <table>
@@ -250,12 +240,7 @@ From these results we can see that the HTTP mode used approximately 15% less CPU
 
 We also benchmarked AppEngine on the Webtide Load testing machines. This tested a Web Application sending back 1MB responses by sending 3k requests/second for 2 minutes. By running the code on the Webtide machines we are able to see how the runtime behaves under higher loads than possible in the production environment, as we have more available memory and allow more concurrent requests.
 
-
-
-<p id="gdcalert5" ><span style="color: red; font-weight: bold">>>>>>  gd2md-html alert: inline image link here (to images/image5.png). Store image on your image server and adjust path/filename/extension if necessary. </span><br>(<a href="#">Back to top</a>)(<a href="#gdcalert6">Next alert</a>)<br><span style="color: red; font-weight: bold">>>>>> </span></p>
-
-
-<img width="964" alt="image5" src="https://github.com/GoogleCloudPlatform/appengine-java-standard/blob/doc/image5.png">
+<img width="800" alt="image5" src="https://github.com/GoogleCloudPlatform/appengine-java-standard/blob/doc/image5.png">
 
 
 We can see that the new HttpMode uses far less memory, and also has much lower latency times across the board, and performs much better at the 99th percentile. This is likely due to the amount of garbage produced by the RPC mode as seen previously.
@@ -266,14 +251,12 @@ Source code for this benchmark can be found here [lachlan-roberts/appengine-perf
 ### **Memory**
 
 
-
 * Reduction in total committed memory 682MB to 202MB (70% reduction).
 * Reduction is RSS 688MB to 253MB (63% reduction).
 * Reduction in Java Heap committed size 422MB to 70MB (83% reduction).
 
 
 ### **Latency**
-
 
 
 * Reduction in median latency 222µs to 153µs (31% reduction).
