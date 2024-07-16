@@ -1,25 +1,25 @@
 
-# **AppEngine new performant HTTP connector**
+# **Ap pEngine Java new performant HTTP connector**
 
-Webtide/Jetty has implemented a new AppEngine Java Runtime mode to use an HTTP-only path to the instance, avoiding the need to proxy to/from RPC UP request/response instances. This document reports on the benchmarks carried out to compare the old and new modes of operation.
+Webtide/Jetty has implemented a new App Engine Java Runtime mode to use an HTTP-only path to the instance, avoiding the need to proxy to/from RPC UP request/response instances. This document reports on the benchmarks carried out to compare the old and new modes of operation.
 
 The new HTTP-only path gives memory savings in all areas compared to the currently used RPC path. The savings are quite significant for larger requests and responses.
 
-These benchmarks were carried out by deploying to AppEngine on an F2 instance. We compared two deployments using the same runtime-deployment jars and the same Web Application. One app enabled the HttpMode via the system property in appengine-web.xml the other did not.
+These benchmarks were carried out by deploying to App Engine on an F2 instance. We compared two deployments using the same runtime-deployment jars and the same Web Application. One app enabled the HttpMode via the system property in appengine-web.xml the other did not.
 
 Requests were sent one at a time so that memory usage for a single request could be measured. We measured the memory usage and garbage generated for each request. We measured this using java.lang.management.MemoryMXBean from inside the HttpServlet.service() method.
 
 # **Code History**
 
-Original Gen1 AppEngine runtimes (Java7, Java8) have been using a proprietary RPC path to communicate back and forth with the AppServer. So the customers HTTP requests are given to a Gen1 clone as a protocol buffer containing all the request information and via complex Jetty customization, is processing this request and returns another protocol buffer containing the HTTP response.
+Original Gen1 App Engine runtimes (Java7, Java8) have been using a proprietary RPC path to communicate back and forth with the AppServer. So the customers HTTP requests are given to a Gen1 clone as a protocol buffer containing all the request information and via complex Jetty customization, is processing this request and returns another protocol buffer containing the HTTP response.
 
 Gen2 runtimes removed this internal GRPC communication and switched to standard HTTP protocol to receive and process HTTP requests via a standard HTTP port (8080).
 
-In order to accommodate both the widely used Gen1 Java8 runtime and the new Gen2 runtimes, we decided to reuse as much of the gen1 code for the gen2 runtimes, and introduced on the gen2 Java code a layer that transforms the new HTTP path to the old gen1 RPC path so that the exact same gen1 code could be used as is with gen2 runtimes. This helped us launch Java 11, 17, and now 21. 
+In order to accommodate both the widely used Gen1 Java8 runtime and the new Gen2 runtimes, we originally decided to reuse as much of the gen1 code for the gen2 runtimes, and introduced on the gen2 Java code a layer that transforms the new HTTP path to the old gen1 RPC path so that the exact same gen1 code could be used as is with gen2 runtimes. This helped us launch Java 11, 17, and now 21, but introduced memory and CPU overhead.
 
 Java 8 gen1 runtime is now EOL and it is about time to remove this extra layer in our code that is both complex and introduce memory duplication when copying HTTP memory buffers to GRPC internal protocol buffers. Jetty can understand natively HTTP requests, so the code simplification and optimization is the right path now we can stop supporting Java8 runtimes. 
 
-This code simplification is now available optionally via a customer flag in appengine-web.xml:
+This code optimization is now available optionally via a customer flag in appengine-web.xml:
 
 ```
    <system-properties>
