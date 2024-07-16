@@ -1,3 +1,18 @@
+<!--
+ Copyright 2021 Google LLC
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     https://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+-->
 
 # **Google App Engine Java new performant HTTP connector**
 
@@ -5,21 +20,21 @@ Webtide/Jetty has implemented a new App Engine Java Runtime mode to use an HTTP-
 
 The new HTTP-only path gives memory savings in all areas compared to the currently used RPC path. The savings are quite significant for larger requests and responses.
 
-These benchmarks were carried out by deploying to App Engine on an F2 instance. We compared two deployments using the same runtime-deployment jars and the same Web Application. One app enabled the HttpMode via the system property in appengine-web.xml the other did not.
+These benchmarks were carried out by deploying to App Engine on an F2 instance. We compared two deployments using the same runtime-deployment jars and the same Web Application. One app enabled the HttpMode via the system property in `appengine-web.xml`, the other did not.
 
-Requests were sent one at a time so that memory usage for a single request could be measured. We measured the memory usage and garbage generated for each request. We measured this using java.lang.management.MemoryMXBean from inside the HttpServlet.service() method.
+Requests were sent one at a time so that memory usage for a single request could be measured. We measured the memory usage and garbage generated for each request. We measured this using `java.lang.management.MemoryMXBean` from inside the `HttpServlet.service()` method.
 
 # **Code History**
 
-Original Gen1 App Engine runtimes (Java7, Java8) have been using a proprietary RPC path to communicate back and forth with the AppServer. So the customers HTTP requests are given to a Gen1 clone as a protocol buffer containing all the request information and via complex Jetty customization, is processing this request and returns another protocol buffer containing the HTTP response.
+Original Gen1 App Engine runtimes (Java7, Java8) have been using a proprietary RPC path to communicate back and forth with the AppServer. So the customers HTTP requests are given to a Gen1 clone as a protocol buffer containing all the request information and via complex Jetty customization, the web server is processing this request and returns another protocol buffer containing the HTTP response.
 
-Gen2 runtimes removed this internal GRPC communication and switched to standard HTTP protocol to receive and process HTTP requests via a standard HTTP port (8080).
+Gen2 runtimes removed this internal gRPC communication and switched to standard HTTP protocol to receive and process HTTP requests via a standard HTTP port (8080).
 
 In order to accommodate both the widely used Gen1 Java8 runtime and the new Gen2 runtimes, we originally decided to reuse as much of the gen1 code for the gen2 runtimes, and introduced on the gen2 Java code a layer that transforms the new HTTP path to the old gen1 RPC path so that the exact same gen1 code could be used as is with gen2 runtimes. This helped us launch Java 11, 17, and now 21, but introduced memory and CPU overhead.
 
-Java 8 gen1 runtime is now EOL and it is about time to remove this extra layer in our code that is both complex and introduce memory duplication when copying HTTP memory buffers to GRPC internal protocol buffers. Jetty can understand natively HTTP requests, so the code simplification and optimization is the right path now we can stop supporting Java8 runtimes. 
+Java 8 gen1 runtime is now EOL and it is about time to remove this extra layer in our code that is complex and introduce memory duplication when copying HTTP memory buffers to gRPC internal protocol buffers. Jetty can understand natively HTTP requests, so the code simplification and optimization is the right path now we can stop supporting Java8 runtimes. 
 
-This code optimization is now available optionally via a customer flag in appengine-web.xml:
+This code optimization is now available optionally via a customer flag in `appengine-web.xml`:
 
 ```
    <system-properties>
@@ -35,7 +50,7 @@ and this document presents some initial benchmark numbers, comparing the new HTT
 Heap memory usage was measured inside the `HttpServlet.service()` method for varying sizes of request/responses. A `System.gc()` was performed first so that garbage is not included. 
 
 
-<img width="800" alt="image1" src="https://github.com/GoogleCloudPlatform/appengine-java-standard/blob/doc/image1.png">
+<img width="800" alt="image1" src="https://github.com/GoogleCloudPlatform/appengine-java-standard/blob/main/images/image1.png">
 
 
 <table>
@@ -80,7 +95,7 @@ We can see that even for these requests the new HttpMode uses less memory per re
 By examining the memory usage before and after the `System.gc()` call, we can measure how much garbage was created per request. 
 
 
-<img width="800" alt="image2" src="https://github.com/GoogleCloudPlatform/appengine-java-standard/blob/doc/image2.png">
+<img width="800" alt="image2" src="https://github.com/GoogleCloudPlatform/appengine-java-standard/blob/main/images/image2.png">
 
 
 <table>
@@ -137,7 +152,7 @@ We can see from these results that the new HttpMode produces 90%+ less garbage a
 The native memory usage was measured inside the `HttpServlet.service()` method for varying sizes of request/responses.
 
 
-<img width="800" alt="image3" src="https://github.com/GoogleCloudPlatform/appengine-java-standard/blob/doc/image3.png">
+<img width="800" alt="image3" src="https://github.com/GoogleCloudPlatform/appengine-java-standard/blob/main/images/image3.png">
 
 
 <table>
@@ -194,7 +209,7 @@ Native memory was pretty similar for all request sizes, with the HttpMode using 
 In our CPU benchmark, we subjected both deployments on GAE to a steady load of 100 requests per second for a duration of one hour. Each request was 1KB in size, and the corresponding response was 32KB. By reading the **/proc/[pid]/stat** file, we were able to gather detailed information about the CPU usage of the process.
 
 
-<img width="800" alt="image4" src="https://github.com/GoogleCloudPlatform/appengine-java-standard/blob/doc/image4.png">
+<img width="800" alt="image4" src="https://github.com/GoogleCloudPlatform/appengine-java-standard/blob/main/images/image4.png">
 
 
 <table>
@@ -241,7 +256,7 @@ From these results we can see that the HTTP mode used approximately 15% less CPU
 
 We also benchmarked AppEngine on the Webtide Load testing machines. This tested a Web Application sending back 1MB responses by sending 3k requests/second for 2 minutes. By running the code on the Webtide machines we are able to see how the runtime behaves under higher loads than possible in the production environment, as we have more available memory and allow more concurrent requests.
 
-<img width="800" alt="image5" src="https://github.com/GoogleCloudPlatform/appengine-java-standard/blob/doc/image5.png">
+<img width="800" alt="image5" src="https://github.com/GoogleCloudPlatform/appengine-java-standard/blob/main/images/image5.png">
 
 
 We can see that the new HttpMode uses far less memory, and also has much lower latency times across the board, and performs much better at the 99th percentile. This is likely due to the amount of garbage produced by the RPC mode as seen previously.
