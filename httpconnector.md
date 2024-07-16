@@ -1,12 +1,9 @@
 
-# **Synopsis**
+# **AppEngine new performant HTTP connector**
 
-Webtide has implemented GAE Java Runtime mode to use an HTTP-only path to the instance, avoiding the need to proxy to/from RPC UP request/response instances. This document reports on the benchmarks carried out to compare the old and new modes of operation.
+Webtide/Jetty has implemented a new AppEngine Java Runtime mode to use an HTTP-only path to the instance, avoiding the need to proxy to/from RPC UP request/response instances. This document reports on the benchmarks carried out to compare the old and new modes of operation.
 
 The new HTTP-only path gives memory savings in all areas compared to the currently used RPC path. The savings are quite significant for larger requests and responses.
-
-
-# **Introduction**
 
 These benchmarks were carried out by deploying to AppEngine on an F2 instance. We compared two deployments using the same runtime-deployment jars and the same Web Application. One app enabled the HttpMode via the system property in appengine-web.xml the other did not.
 
@@ -22,7 +19,7 @@ In order to accommodate both the widely used Gen1 Java8 runtime and the new Gen2
 
 Java 8 gen1 runtime is now EOL and it is about time to remove this extra layer in our code that is both complex and introduce memory duplication when copying HTTP memory buffers to GRPC internal protocol buffers. Jetty can understand natively HTTP requests, so the code simplification and optimization is the right path now we can stop supporting Java8 runtimes. 
 
-This code simplification is now done via a customer flag in appengine-web.xml:
+This code simplification is now available optionally via a customer flag in appengine-web.xml:
 
 ```
    <system-properties>
@@ -30,10 +27,10 @@ This code simplification is now done via a customer flag in appengine-web.xml:
     </system-properties>
 ```
 
- and this document presents some initial benchmark numbers, comparing the new HTTP mode versus the original RPC mode. As you can see, both memory and CPU usage show significant improvement. You can test on your own AppEngine application by redeploying with the new system property.
+and this document presents some initial benchmark numbers, comparing the new HTTP mode versus the original RPC mode. As you can see, both memory and CPU usage show significant improvement. You can test on your own AppEngine application by redeploying with the new system property.
 
 
-# **Heap Memory Usage**
+# **Heap Memory Uage Improvement**
 
 Heap memory usage was measured inside the `HttpServlet.service()` method for varying sizes of request/responses. A `System.gc()` was performed first so that garbage is not included. 
 
@@ -78,7 +75,7 @@ Heap memory usage was measured inside the `HttpServlet.service()` method for var
 We can see that even for these requests the new HttpMode uses less memory per request, significantly less for larger requests.
 
 
-# **Garbage Generation**
+# **Garbage Generation Improvement**
 
 By examining the memory usage before and after the `System.gc()` call, we can measure how much garbage was created per request. 
 
@@ -135,7 +132,7 @@ By examining the memory usage before and after the `System.gc()` call, we can me
 We can see from these results that the new HttpMode produces 90%+ less garbage at all request sizes.
 
 
-# **Native Memory Usage**
+# **Native Memory Usage Improvement**
 
 The native memory usage was measured inside the `HttpServlet.service()` method for varying sizes of request/responses.
 
@@ -192,7 +189,7 @@ The native memory usage was measured inside the `HttpServlet.service()` method f
 Native memory was pretty similar for all request sizes, with the HttpMode using slightly less across all three sizes measured.
 
 
-# **CPU Usage**
+# **CPU Usage Improvement**
 
 In our CPU benchmark, we subjected both deployments on GAE to a steady load of 100 requests per second for a duration of one hour. Each request was 1KB in size, and the corresponding response was 32KB. By reading the **/proc/[pid]/stat** file, we were able to gather detailed information about the CPU usage of the process.
 
