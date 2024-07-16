@@ -14,7 +14,7 @@ Requests were sent one at a time so that memory usage for a single request could
 
 # **Code History**
 
-Original Gen1 AppEngine runtimes (Java 7Java8) have been using a proprietary RPC path to communicate back and forth with the AppServer. So the customers HTTP requests are given to a Gen1 clone as a protocol buffer containing all the request information and via complex Jetty customization, is processing this request and returns another protocol buffer containing the HTTP response.
+Original Gen1 AppEngine runtimes (Java7, Java8) have been using a proprietary RPC path to communicate back and forth with the AppServer. So the customers HTTP requests are given to a Gen1 clone as a protocol buffer containing all the request information and via complex Jetty customization, is processing this request and returns another protocol buffer containing the HTTP response.
 
 Gen2 runtimes removed this internal GRPC communication and switched to standard HTTP protocol to receive and process HTTP requests via a standard HTTP port (8080).
 
