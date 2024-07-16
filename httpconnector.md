@@ -83,7 +83,7 @@ We can see that even for these requests the new HttpMode uses less memory per re
 By examining the memory usage before and after the `System.gc()` call, we can measure how much garbage was created per request. 
 
 
-<img width="800" alt="image2" src="https://github.com/GoogleCloudPlatform/appengine-java-standard/doc/image2.png">
+<img width="800" alt="image2" src="https://github.com/GoogleCloudPlatform/appengine-java-standard/blob/doc/image2.png">
 
 
 <table>
