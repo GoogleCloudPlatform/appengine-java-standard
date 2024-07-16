@@ -279,3 +279,15 @@ Source code for this benchmark can be found here [lachlan-roberts/appengine-perf
 * Reduction of mean latency 14111µs to 208µs (98.5% reduction).
 * Reduction in min latency 153µs to 127µs (16% reduction).
 * Reduction of latency in 99th percentile 254541µs to 752µs (99.7% reduction).
+
+# **Conclusion**
+
+You can now benefit better memory and CPU usage by enabling this property in `appengine-web.xml`:
+
+```
+   <system-properties>
+        <property name="appengine.use.httpconnector" value="true"/>
+    </system-properties>
+```
+
+Soon, this setting will be turn on by default, and the old legacy Java8 path will be removed.
