@@ -22,16 +22,14 @@ import java.io.IOException;
 import java.io.PrintWriter;
 
 @SuppressWarnings("serial")
-public class RequestUrlServlet extends HttpServlet
-{
-    @Override
-    protected void doGet(HttpServletRequest request,
-                         HttpServletResponse response) throws IOException
-    {
-        response.setContentType("text/plain");
-        response.setStatus(HttpServletResponse.SC_OK);
-        PrintWriter out = response.getWriter();
-        out.println("requestURL=" + request.getRequestURL().toString());
-        out.println("isSecure=" +  request.isSecure());
-    }
+public class RequestUrlServletEE8 extends HttpServlet {
+  @Override
+  protected void doGet(HttpServletRequest request, HttpServletResponse response)
+      throws IOException {
+    response.setContentType("text/plain");
+    response.setStatus(HttpServletResponse.SC_OK);
+    PrintWriter out = response.getWriter();
+    out.println("requestURL=" + request.getRequestURL().toString());
+    out.println("isSecure=" + request.isSecure());
+  }
 }

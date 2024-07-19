@@ -16,6 +16,14 @@
 
 package com.google.apphosting.runtime.jetty9;
 
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.startsWith;
+import static org.hamcrest.MatcherAssert.assertThat;
+
+import com.google.common.flogger.GoogleLogger;
+import java.util.Arrays;
+import java.util.Collection;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.http.HttpStatus;
@@ -26,51 +34,72 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import org.junit.runners.Parameterized;
 
-import static org.hamcrest.CoreMatchers.containsString;
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.startsWith;
-import static org.hamcrest.MatcherAssert.assertThat;
+@RunWith(Parameterized.class)
+public class TransportGuaranteeTest extends JavaRuntimeViaHttpBase {
 
-@RunWith(JUnit4.class)
-public class TransportGuarenteeTest extends JavaRuntimeViaHttpBase {
+  @Parameterized.Parameters
+  public static Collection<Object[]> data() {
+    return Arrays.asList(
+        new Object[][] {
+          {"jetty94", false},
+          {"jetty94", true},
+          {"ee8", false},
+          {"ee8", true},
+          {"ee10", false},
+          {"ee10", true},
+        });
+  }
 
+  private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
   @Rule public TemporaryFolder temp = new TemporaryFolder();
   private HttpClient httpClient;
   private RuntimeContext<?> runtime;
+  private final boolean httpMode;
+  private final String environment;
+
+  public TransportGuaranteeTest(String environment, boolean httpMode) {
+    this.environment = environment;
+    this.httpMode = httpMode;
+    System.setProperty("appengine.use.HttpConnector", Boolean.toString(httpMode));
+  }
 
   private RuntimeContext<?> runtimeContext() throws Exception {
     RuntimeContext.Config<?> config =
-            RuntimeContext.Config.builder().setApplicationPath(temp.getRoot().toString()).build();
+        RuntimeContext.Config.builder().setApplicationPath(temp.getRoot().toString()).build();
     return RuntimeContext.create(config);
   }
 
   @Before
   public void before() throws Exception {
-    copyAppToDir("transportguaranteeapp", temp.getRoot().toPath());
+    String app = "transportguaranteeapp-" + environment;
+    copyAppToDir(app, temp.getRoot().toPath());
 
     SslContextFactory ssl = new SslContextFactory.Client(true);
     httpClient = new HttpClient(ssl);
     httpClient.start();
     runtime = runtimeContext();
+    logger.atInfo().log(
+        "%s: env=%s, httpMode=%s", this.getClass().getSimpleName(), environment, httpMode);
   }
 
   @After
-  public void after() throws Exception
-  {
-    httpClient.stop();
-    runtime.close();
+  public void after() throws Exception {
+    if (httpClient != null) {
+      httpClient.stop();
+    }
+    if (runtime != null) {
+      runtime.close();
+    }
   }
 
   @Test
   public void testSecureRequest() throws Exception {
     String url = runtime.jettyUrl("/");
     assertThat(url, startsWith("http://"));
-    ContentResponse response = httpClient.newRequest(url)
-            .header("x-appengine-https", "on")
-            .send();
 
+    ContentResponse response = httpClient.newRequest(url).header("x-appengine-https", "on").send();
     assertThat(response.getStatus(), equalTo(HttpStatus.OK_200));
     String expectedUrl = url.replace("http://", "https://");
     assertThat(response.getContentAsString(), containsString("requestURL=" + expectedUrl));
@@ -82,10 +111,10 @@ public class TransportGuarenteeTest extends JavaRuntimeViaHttpBase {
     String url = runtime.jettyUrl("/");
     assertThat(url, startsWith("http://"));
 
-    ContentResponse response = httpClient.newRequest(url)
-            .send();
-
+    ContentResponse response = httpClient.newRequest(url).send();
     assertThat(response.getStatus(), equalTo(HttpStatus.FORBIDDEN_403));
-    assertThat(response.getContentAsString(), containsString("!Secure"));
+    if (!"ee10".equals(environment)) {
+      assertThat(response.getContentAsString(), containsString("!Secure"));
+    }
   }
 }

@@ -325,6 +325,8 @@ public class JettyRequestAPIData implements RequestAPIData {
         };
 
     this.baseRequest = request;
+    this.baseRequest.setSecure(isSecure);
+    this.baseRequest.setHttpURI(httpUri);
   }
 
   public Request getBaseRequest() {
