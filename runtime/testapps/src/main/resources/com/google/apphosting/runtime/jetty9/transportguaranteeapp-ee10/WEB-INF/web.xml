@@ -15,12 +15,15 @@
  limitations under the License.
 -->
 
-<web-app xmlns="http://java.sun.com/xml/ns/javaee"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="3.1"
-    xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_1.xsd">
+<web-app
+        xmlns="http://java.sun.com/xml/ns/javaee"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
+        metadata-complete="false"
+        version="3.0">
   <servlet>
     <servlet-name>RequestUrlServlet</servlet-name>
-    <servlet-class>com.google.apphosting.runtime.jetty9.transportguaranteeapp.RequestUrlServlet</servlet-class>
+    <servlet-class>com.google.apphosting.runtime.jetty9.transportguaranteeapp.RequestUrlServletEE10</servlet-class>
   </servlet>
   <servlet-mapping>
     <servlet-name>RequestUrlServlet</servlet-name>
