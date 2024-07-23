@@ -33,7 +33,8 @@ echo "JAVA_HOME = $JAVA_HOME"
 # Enable correct evaluation of git buildnumber value for git on borg.
 git config --global --add safe.directory /tmpfs/src/git/appengine-java-standard
 
-./mvnw -e clean install  spdx:createSPDX
+# Force usage of the aoss profile to point to google artifacts repository to be MOSS compliant.
+./mvnw -e clean install  spdx:createSPDX -Paoss
 
 # The artifacts under `${KOKORO_ARTIFACTS_DIR}/maven-artifacts` will be uploaded as a zip file named maven_jars.binary
 TMP_STAGING_LOCATION=${KOKORO_ARTIFACTS_DIR}/tmp

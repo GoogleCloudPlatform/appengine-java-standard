@@ -38,6 +38,13 @@ create_settings_xml_file() {
          <properties>
              <gpg.passphrase>${GPG_PASSPHRASE}</gpg.passphrase>
          </properties>
+         <repositories>
+          <repository>
+             <id>aoss-artifact-registry</id>
+             <name>AOSS Repository</name>
+             <url>artifactregistry://us-maven.pkg.dev/cloud-aoss-1p/cloud-aoss-1p-java</url>
+           </repository>
+        </repositories>
      </profile>
   </profiles>
   <servers>
@@ -64,8 +71,12 @@ create_settings_xml_file() {
 setup_environment_secrets
 create_settings_xml_file "settings.xml"
 
-git clone https://github.com/GoogleCloudPlatform/appengine-java-standard.git
-cd appengine-java-standard
+src_dir="${KOKORO_ARTIFACTS_DIR}/git/appengine-java-standard"
+cd $src_dir
+
+# Enable correct evaluation of git buildnumber value for git on borg.
+git config --global --add safe.directory /tmpfs/src/git/appengine-java-standard
+
 # Get the current version from pom.xml
 POM_VERSION=$(
  awk '
@@ -99,16 +110,17 @@ git config user.email gae-java-bot@google.com
 git config user.name gae-java-bot
 
 sudo apt-get update
-sudo apt-get install -y openjdk-17-jdk
-sudo update-java-alternatives --set java-1.17.0-openjdk-amd64
-export JAVA_HOME="$(update-java-alternatives -l | grep "1.17" | head -n 1 | tr -s " " | cut -d " " -f 3)"
+sudo apt-get install -y openjdk-21-jdk
+sudo update-java-alternatives --set java-1.21.0-openjdk-amd64
+export JAVA_HOME="$(update-java-alternatives -l | grep "1.21" | head -n 1 | tr -s " " | cut -d " " -f 3)"
 
 # Make sure `JAVA_HOME` is set.
 echo "JAVA_HOME = $JAVA_HOME"
 
 # compile all packages
 echo "Calling release:prepare and release:perform."
-./mvnw release:prepare release:perform -B -q --settings=../settings.xml -DskipTests -Darguments=-DskipTests -Dgpg.homedir=${GNUPGHOME} -Dgpg.passphrase=${GPG_PASSPHRASE}
+# Force usage of the aoss profile to point to google artifacts repository to be MOSS compliant.
+./mvnw release:prepare release:perform -B -q --settings=../settings.xml -Paoss -DskipTests -Darguments=-DskipTests -Dgpg.homedir=${GNUPGHOME} -Dgpg.passphrase=${GPG_PASSPHRASE}
 
 git remote set-url origin https://gae-java-bot:${GAE_JAVA_BOT_GITHUB_TOKEN}@github.com/GoogleCloudPlatform/appengine-java-standard
 echo "Doing git tag and push."
