@@ -131,6 +131,68 @@
   </distributionManagement>
   <profiles>
       <profile>
+          <id>sonatype-release</id>
+          <build>
+              <plugins>
+                  <plugin>
+                      <groupId>org.apache.maven.plugins</groupId>
+                      <artifactId>maven-source-plugin</artifactId>
+                      <version>3.3.1</version>
+                      <executions>
+                          <execution>
+                              <id>attach-sources</id>
+                              <goals>
+                                  <goal>jar</goal>
+                              </goals>
+                          </execution>
+                      </executions>
+                  </plugin>
+                  <plugin>
+                      <groupId>org.apache.maven.plugins</groupId>
+                      <artifactId>maven-javadoc-plugin</artifactId>
+                      <executions>
+                          <execution>
+                              <id>attach-javadocs</id>
+                              <goals>
+                                  <goal>jar</goal>
+                              </goals>
+                          </execution>
+                      </executions>
+                  </plugin>
+                  <plugin>
+                      <groupId>org.apache.maven.plugins</groupId>
+                      <artifactId>maven-gpg-plugin</artifactId>
+                      <version>3.2.4</version>
+                      <configuration>
+                         <gpgArguments>
+                             <arg>--batch</arg>
+                         </gpgArguments>
+                       </configuration>
+                       <executions>
+                          <execution>
+                              <id>sign-artifacts</id>
+                              <phase>verify</phase>
+                              <goals>
+                                  <goal>sign</goal>
+                              </goals>
+                          </execution>
+                      </executions>
+                  </plugin>
+                  <plugin>
+                    <groupId>org.sonatype.plugins</groupId>
+                    <artifactId>nexus-staging-maven-plugin</artifactId>
+                    <version>1.7.0</version>
+                    <extensions>true</extensions>
+                    <configuration>
+                      <serverId>${distributionManagement.snapshot.id}</serverId>
+                      <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+                      <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                    </configuration>
+                  </plugin>
+              </plugins>
+          </build>
+      </profile>
+   <profile>
           <id>aoss</id>
           <activation>
               <jdk>[17,)</jdk>
@@ -677,61 +739,7 @@
 </extensions>
    
    <plugins>
-                  <plugin>
-                      <groupId>org.apache.maven.plugins</groupId>
-                      <artifactId>maven-source-plugin</artifactId>
-                      <version>3.3.1</version>
-                      <executions>
-                          <execution>
-                              <id>attach-sources</id>
-                              <goals>
-                                  <goal>jar</goal>
-                              </goals>
-                          </execution>
-                      </executions>
-                  </plugin>
-                  <plugin>
-                      <groupId>org.apache.maven.plugins</groupId>
-                      <artifactId>maven-javadoc-plugin</artifactId>
-                      <executions>
-                          <execution>
-                              <id>attach-javadocs</id>
-                              <goals>
-                                  <goal>jar</goal>
-                              </goals>
-                          </execution>
-                      </executions>
-                  </plugin>
-                  <plugin>
-                      <groupId>org.apache.maven.plugins</groupId>
-                      <artifactId>maven-gpg-plugin</artifactId>
-                      <version>3.2.4</version>
-                      <configuration>
-                         <gpgArguments>
-                             <arg>--batch</arg>
-                         </gpgArguments>
-                       </configuration>
-                       <executions>
-                          <execution>
-                              <id>sign-artifacts</id>
-                              <phase>verify</phase>
-                              <goals>
-                                  <goal>sign</goal>
-                              </goals>
-                          </execution>
-                      </executions>
-                  </plugin>
-                  <plugin>
-                    <groupId>org.sonatype.plugins</groupId>
-                    <artifactId>nexus-staging-maven-plugin</artifactId>
-                    <version>1.7.0</version>
-                    <extensions>true</extensions>
-                    <configuration>
-                      <serverId>${distributionManagement.snapshot.id}</serverId>
-                      <nexusUrl>https://oss.sonatype.org/</nexusUrl>
-                      <autoReleaseAfterClose>true</autoReleaseAfterClose>
-                    </configuration>
-                  </plugin>     
+                    
                   <plugin>
                       <groupId>org.apache.maven.plugins</groupId>
                       <artifactId>maven-surefire-plugin</artifactId>
