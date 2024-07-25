@@ -18,6 +18,7 @@ package com.google.appengine.init;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -66,6 +67,10 @@ public final class AppEngineWebXmlInitialParse {
   }
 
   public void handleRuntimeProperties() {
+    // See if the Mendel experiment to enable HttpConnector is set automatically via env var:
+    if (Objects.equals(System.getenv("EXPERIMENT_ENABLE_HTTP_CONNECTOR_FOR_JAVA"), "true")) {
+      System.setProperty("appengine.use.HttpConnector", "true");
+    }
     try (final InputStream stream = new FileInputStream(file)) {
       final XMLEventReader reader = XMLInputFactory.newInstance().createXMLEventReader(stream);
       while (reader.hasNext()) {
