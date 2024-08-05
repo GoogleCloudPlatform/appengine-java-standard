@@ -68,7 +68,8 @@ public final class AppEngineWebXmlInitialParse {
 
   public void handleRuntimeProperties() {
     // See if the Mendel experiment to enable HttpConnector is set automatically via env var:
-    if (Objects.equals(System.getenv("EXPERIMENT_ENABLE_HTTP_CONNECTOR_FOR_JAVA"), "true")) {
+    if (Objects.equals(System.getenv("EXPERIMENT_ENABLE_HTTP_CONNECTOR_FOR_JAVA"), "true")
+        && !Objects.equals(System.getenv("GAE_RUNTIME"), "java8")) {
       System.setProperty("appengine.use.HttpConnector", "true");
     }
     try (final InputStream stream = new FileInputStream(file)) {
@@ -126,7 +127,8 @@ public final class AppEngineWebXmlInitialParse {
             // appengine.use.EE10 or appengine.use.EE8
             settingDoneInAppEngineWebXml = true;
             System.setProperty(prop, value);
-          } else if (prop.equalsIgnoreCase("appengine.use.HttpConnector")) {
+          } else if (prop.equalsIgnoreCase("appengine.use.HttpConnector")
+              && !Objects.equals(System.getenv("GAE_RUNTIME"), "java8")) {
             System.setProperty("appengine.use.HttpConnector", value);
           } else if (prop.equalsIgnoreCase("appengine.use.allheaders")) {
             System.setProperty("appengine.use.allheaders", value);
