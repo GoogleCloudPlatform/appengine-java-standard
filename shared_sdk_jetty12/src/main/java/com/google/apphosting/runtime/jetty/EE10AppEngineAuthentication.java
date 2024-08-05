@@ -111,13 +111,10 @@ public class EE10AppEngineAuthentication {
   }
 
   /**
-   * {@code AppEngineAuthenticator} is a custom {@link Authenticator} that knows how to redirect the
+   * {@code AppEngineAuthenticator} is a custom {@link LoginAuthenticator} that knows how to redirect the
    * current request to a login URL in order to authenticate the user.
    */
-  private static class AppEngineAuthenticator implements Authenticator {
-
-    private LoginService _loginService;
-
+  private static class AppEngineAuthenticator extends LoginAuthenticator {
     /**
      * Checks if the request could go to the login page.
      *
@@ -126,11 +123,6 @@ public class EE10AppEngineAuthentication {
      */
     private static boolean isLoginOrErrorPage(String uri) {
       return uri.startsWith(AUTH_URL_PREFIX);
-    }
-
-    @Override
-    public void setConfiguration(Configuration configuration) {
-      _loginService = configuration.getLoginService();
     }
 
     @Override
@@ -155,7 +147,7 @@ public class EE10AppEngineAuthentication {
         return Constraint.Authorization.ALLOWED;
       }
 
-      return Authenticator.super.getConstraintAuthentication(pathInContext, existing, getSession);
+      return super.getConstraintAuthentication(pathInContext, existing, getSession);
     }
 
     /**
