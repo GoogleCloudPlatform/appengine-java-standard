@@ -196,7 +196,8 @@
       <id>aoss</id>
       <activation>
           <jdk>[17,)</jdk>
-      </activation>
+          <activeByDefault>false</activeByDefault>
+    </activation>
       <repositories>
         <repository>
           <id>aoss-artifact-registry</id>
