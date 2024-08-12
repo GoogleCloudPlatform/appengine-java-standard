@@ -16,13 +16,13 @@
 
 package com.google.appengine.api.datastore;
 
-import com.google.apphosting.datastore.DatastoreV3Pb;
-import com.google.apphosting.datastore.DatastoreV3Pb.Query.Filter;
-import com.google.apphosting.datastore.DatastoreV3Pb.Query.Filter.Operator;
-import com.google.apphosting.datastore.DatastoreV3Pb.Query.Order;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.Query.Filter;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.Query.Filter.Operator;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.Query.Order;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.google.storage.onestore.v3.OnestoreEntity.Index.Property;
+import com.google.storage.onestore.v3.proto2api.OnestoreEntity.Index.Property;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;

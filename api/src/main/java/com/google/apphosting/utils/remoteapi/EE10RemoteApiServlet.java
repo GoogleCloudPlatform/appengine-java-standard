@@ -16,8 +16,8 @@
 
 package com.google.apphosting.utils.remoteapi;
 
-import static com.google.apphosting.datastore.DatastoreV3Pb.Error.ErrorCode.BAD_REQUEST;
-import static com.google.apphosting.datastore.DatastoreV3Pb.Error.ErrorCode.CONCURRENT_TRANSACTION;
+import static com.google.apphosting.datastore.proto2api.DatastoreV3Pb.Error.ErrorCode.BAD_REQUEST;
+import static com.google.apphosting.datastore.proto2api.DatastoreV3Pb.Error.ErrorCode.CONCURRENT_TRANSACTION;
 
 import com.google.appengine.api.oauth.OAuthRequestException;
 import com.google.appengine.api.oauth.OAuthService;
@@ -25,14 +25,14 @@ import com.google.appengine.api.oauth.OAuthServiceFactory;
 import com.google.appengine.api.users.UserService;
 import com.google.appengine.api.users.UserServiceFactory;
 import com.google.apphosting.api.ApiProxy;
-import com.google.apphosting.datastore.DatastoreV3Pb.BeginTransactionRequest;
-import com.google.apphosting.datastore.DatastoreV3Pb.DeleteRequest;
-import com.google.apphosting.datastore.DatastoreV3Pb.GetRequest;
-import com.google.apphosting.datastore.DatastoreV3Pb.GetResponse;
-import com.google.apphosting.datastore.DatastoreV3Pb.NextRequest;
-import com.google.apphosting.datastore.DatastoreV3Pb.PutRequest;
-import com.google.apphosting.datastore.DatastoreV3Pb.Query;
-import com.google.apphosting.datastore.DatastoreV3Pb.QueryResult;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.BeginTransactionRequest;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.DeleteRequest;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.GetRequest;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.GetResponse;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.NextRequest;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.PutRequest;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.Query;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.QueryResult;
 import com.google.apphosting.utils.remoteapi.RemoteApiPb.ApplicationError;
 import com.google.apphosting.utils.remoteapi.RemoteApiPb.Request;
 import com.google.apphosting.utils.remoteapi.RemoteApiPb.Response;
@@ -40,10 +40,11 @@ import com.google.apphosting.utils.remoteapi.RemoteApiPb.TransactionQueryResult;
 import com.google.apphosting.utils.remoteapi.RemoteApiPb.TransactionRequest;
 import com.google.apphosting.utils.remoteapi.RemoteApiPb.TransactionRequest.Precondition;
 import com.google.io.protocol.ProtocolMessage;
+import com.google.protobuf.ByteString;
 // <internal24>
-import com.google.storage.onestore.v3.OnestoreEntity;
-import com.google.storage.onestore.v3.OnestoreEntity.EntityProto;
-import com.google.storage.onestore.v3.OnestoreEntity.Path.Element;
+import com.google.storage.onestore.v3.proto2api.OnestoreEntity;
+import com.google.storage.onestore.v3.proto2api.OnestoreEntity.EntityProto;
+import com.google.storage.onestore.v3.proto2api.OnestoreEntity.Path.Element;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -114,7 +115,7 @@ public class EE10RemoteApiServlet extends HttpServlet {
   private synchronized boolean checkIsKnownInbound(HttpServletRequest req)
       throws java.io.IOException {
     if (allowedApps == null) {
-      allowedApps = new HashSet<String>();
+      allowedApps = new HashSet<>();
       String allowedAppsStr = System.getProperty(INBOUND_APP_SYSTEM_PROPERTY);
       if (allowedAppsStr != null) {
         String[] apps = allowedAppsStr.split(",");
@@ -216,11 +217,11 @@ public class EE10RemoteApiServlet extends HttpServlet {
     }
     res.setContentType("application/octet-stream");
 
-    Response response = new Response();
+    Response.Builder response =  Response.newBuilder();
 
     try {
       byte[] responseData = executeRequest(req);
-      response.setResponseAsBytes(responseData);
+      response.mergeFrom(responseData);
       res.setStatus(200);
     } catch (Exception e) {
       log.warning("Caught exception while executing remote_api command:\n" + e);
@@ -230,15 +231,15 @@ public class EE10RemoteApiServlet extends HttpServlet {
       out.writeObject(e);
       out.close();
       byte[] serializedException = byteStream.toByteArray();
-      response.setJavaExceptionAsBytes(serializedException);
+      response.setJavaException(ByteString.copyFrom(serializedException));
       if (e instanceof ApiProxy.ApplicationException) {
         ApiProxy.ApplicationException ae = (ApiProxy.ApplicationException) e;
-        ApplicationError appError = response.getMutableApplicationError();
+        ApplicationError.Builder appError = response.getApplicationErrorBuilder();
         appError.setCode(ae.getApplicationError());
         appError.setDetail(ae.getErrorDetail());
       }
     }
-    res.getOutputStream().write(response.toByteArray());
+    res.getOutputStream().write(response.build().toByteArray());
   }
 
   private byte[] executeRunQuery(Request request) {
@@ -405,7 +406,7 @@ public class EE10RemoteApiServlet extends HttpServlet {
   }
 
   private byte[] executeRequest(HttpServletRequest req) throws java.io.IOException {
-    Request request = new Request();
+    Request.Builder request =  Request.newBuilder();
     parseFromInputStream(request, req.getInputStream());
     String service = request.getServiceName();
     String method = request.getMethod();
@@ -414,20 +415,20 @@ public class EE10RemoteApiServlet extends HttpServlet {
 
     if (service.equals("remote_datastore")) {
       if (method.equals("RunQuery")) {
-        return executeRunQuery(request);
+        return executeRunQuery(request.build());
       } else if (method.equals("Transaction")) {
-        return executeTx(request);
+        return executeTx(request.build());
       } else if (method.equals("TransactionQuery")) {
-        return executeTxQuery(request);
+        return executeTxQuery(request.build());
       } else if (method.equals("GetIDs")) {
-        return executeGetIDs(request, false);
+        return executeGetIDs(request.build(), false);
       } else if (method.equals("GetIDsXG")) {
-        return executeGetIDs(request, true);
+        return executeGetIDs(request.build(), true);
       } else {
         throw new ApiProxy.CallNotFoundException(service, method);
       }
     } else {
-      return ApiProxy.makeSyncCall(service, method, request.getRequestAsBytes());
+      return ApiProxy.makeSyncCall(service, method, request.build().toByteArray());
     }
   }
 

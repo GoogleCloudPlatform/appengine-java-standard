@@ -18,7 +18,7 @@ package com.google.appengine.api.datastore.dev;
 
 import com.google.appengine.tools.development.DynamicLatencyAdjuster;
 import com.google.appengine.tools.development.LocalRpcService;
-import com.google.apphosting.datastore.DatastoreV3Pb;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb;
 
 /**
  * {@link DynamicLatencyAdjuster} that adds the paxos penalty for writes and takes the fact that

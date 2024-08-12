@@ -19,7 +19,7 @@ package com.google.appengine.api.datastore;
 import static com.google.common.io.BaseEncoding.base64Url;
 
 import com.google.common.base.CharMatcher;
-import com.google.storage.onestore.v3.OnestoreEntity.Reference;
+import com.google.storage.onestore.v3.proto2api.OnestoreEntity.Reference;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**

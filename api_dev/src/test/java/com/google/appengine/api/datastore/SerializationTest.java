@@ -27,7 +27,7 @@ import com.google.appengine.api.testing.LocalServiceTestHelperRule;
 import com.google.appengine.api.testing.SerializationTestBase;
 import com.google.appengine.tools.development.testing.LocalDatastoreServiceTestConfig;
 import com.google.appengine.tools.development.testing.LocalServiceTestHelper;
-import com.google.apphosting.datastore.DatastoreV3Pb;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb;
 import com.google.common.collect.ImmutableList;
 import com.google.storage.onestore.v3.OnestoreEntity.PropertyValue;
 import java.io.IOException;

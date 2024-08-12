@@ -20,7 +20,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 import com.google.common.collect.Lists;
 import com.google.io.protocol.ProtocolType;
-import com.google.storage.onestore.v3.OnestoreEntity.PropertyValue;
+import com.google.storage.onestore.v3.proto2api.OnestoreEntity.PropertyValue;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.SortedMap;

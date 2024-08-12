@@ -18,10 +18,10 @@ package com.google.cloud.datastore.core.appengv3.converter;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-import com.google.apphosting.datastore.DatastoreV3Pb;
-import com.google.apphosting.datastore.DatastoreV3Pb.CompiledCursor;
-import com.google.apphosting.datastore.DatastoreV3Pb.CompiledCursor.Position;
-import com.google.apphosting.datastore.DatastoreV3Pb.CompiledCursor.PositionIndexValue;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.CompiledCursor;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.CompiledCursor.Position;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.CompiledCursor.PositionIndexValue;
 import com.google.cloud.datastore.core.exception.InvalidConversionException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.storage.onestore.v3.OnestoreEntity.IndexPosition;

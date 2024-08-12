@@ -19,7 +19,7 @@ package com.google.appengine.api.datastore.dev;
 import static com.google.appengine.api.datastore.dev.LocalDatastoreService.equalProperties;
 
 import com.google.appengine.api.datastore.Entity;
-import com.google.apphosting.datastore.DatastoreV3Pb.Cost;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.Cost;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Iterables;

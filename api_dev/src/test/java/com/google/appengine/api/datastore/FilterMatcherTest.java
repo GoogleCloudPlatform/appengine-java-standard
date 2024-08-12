@@ -18,11 +18,11 @@ package com.google.appengine.api.datastore;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.google.apphosting.datastore.DatastoreV3Pb.GeoRegion;
-import com.google.apphosting.datastore.DatastoreV3Pb.Query.Filter;
-import com.google.apphosting.datastore.DatastoreV3Pb.Query.Filter.Operator;
-import com.google.apphosting.datastore.DatastoreV3Pb.RectangleRegion;
-import com.google.apphosting.datastore.DatastoreV3Pb.RegionPoint;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.GeoRegion;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.Query.Filter;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.Query.Filter.Operator;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.RectangleRegion;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.RegionPoint;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.Test;

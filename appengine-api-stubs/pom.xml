@@ -72,7 +72,7 @@
               <shadeSourcesContent>true</shadeSourcesContent>
               <relocations>
                 <relocation>
-                  <pattern>com.google.apphosting.datastore.DatastoreV3Pb</pattern>
+                  <pattern>com.google.apphosting.datastore.proto2api.DatastoreV3Pb</pattern>
                   <shadedPattern>com.google.apphosting.api.DatastorePb</shadedPattern>
                 </relocation>
                 <relocation>

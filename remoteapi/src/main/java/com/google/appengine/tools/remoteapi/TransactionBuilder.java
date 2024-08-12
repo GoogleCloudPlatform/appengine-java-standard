@@ -16,7 +16,7 @@
 
 package com.google.appengine.tools.remoteapi;
 
-import com.google.apphosting.datastore.DatastoreV3Pb;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb;
 import com.google.apphosting.utils.remoteapi.RemoteApiPb;
 import com.google.io.protocol.ProtocolMessage;
 import com.google.protobuf.ByteString;

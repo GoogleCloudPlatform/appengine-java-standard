@@ -24,7 +24,7 @@ import com.google.appengine.api.datastore.Key;
 import com.google.appengine.api.datastore.dev.LocalCompositeIndexManager.KeyTranslator;
 import com.google.appengine.api.datastore.dev.LocalDatastoreService.Extent;
 import com.google.appengine.api.datastore.dev.LocalDatastoreService.Profile;
-import com.google.apphosting.datastore.DatastoreV3Pb.Query;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.Query;
 import com.google.common.collect.Lists;
 import com.google.common.collect.SortedSetMultimap;
 import com.google.common.collect.TreeMultimap;

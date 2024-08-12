@@ -16,8 +16,8 @@
 
 package com.google.apphosting.utils.remoteapi;
 
-import static com.google.apphosting.datastore.DatastoreV3Pb.Error.ErrorCode.BAD_REQUEST;
-import static com.google.apphosting.datastore.DatastoreV3Pb.Error.ErrorCode.CONCURRENT_TRANSACTION;
+import static com.google.apphosting.datastore.proto2api.DatastoreV3Pb.Error.ErrorCode.BAD_REQUEST;
+import static com.google.apphosting.datastore.proto2api.DatastoreV3Pb.Error.ErrorCode.CONCURRENT_TRANSACTION;
 
 import com.google.appengine.api.oauth.OAuthRequestException;
 import com.google.appengine.api.oauth.OAuthService;
@@ -25,14 +25,14 @@ import com.google.appengine.api.oauth.OAuthServiceFactory;
 import com.google.appengine.api.users.UserService;
 import com.google.appengine.api.users.UserServiceFactory;
 import com.google.apphosting.api.ApiProxy;
-import com.google.apphosting.datastore.DatastoreV3Pb.BeginTransactionRequest;
-import com.google.apphosting.datastore.DatastoreV3Pb.DeleteRequest;
-import com.google.apphosting.datastore.DatastoreV3Pb.GetRequest;
-import com.google.apphosting.datastore.DatastoreV3Pb.GetResponse;
-import com.google.apphosting.datastore.DatastoreV3Pb.NextRequest;
-import com.google.apphosting.datastore.DatastoreV3Pb.PutRequest;
-import com.google.apphosting.datastore.DatastoreV3Pb.Query;
-import com.google.apphosting.datastore.DatastoreV3Pb.QueryResult;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.BeginTransactionRequest;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.DeleteRequest;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.GetRequest;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.GetResponse;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.NextRequest;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.PutRequest;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.Query;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.QueryResult;
 import com.google.apphosting.utils.remoteapi.RemoteApiPb.ApplicationError;
 import com.google.apphosting.utils.remoteapi.RemoteApiPb.Request;
 import com.google.apphosting.utils.remoteapi.RemoteApiPb.Response;
@@ -41,9 +41,9 @@ import com.google.apphosting.utils.remoteapi.RemoteApiPb.TransactionRequest;
 import com.google.apphosting.utils.remoteapi.RemoteApiPb.TransactionRequest.Precondition;
 import com.google.io.protocol.ProtocolMessage;
 // <internal24>
-import com.google.storage.onestore.v3.OnestoreEntity;
-import com.google.storage.onestore.v3.OnestoreEntity.EntityProto;
-import com.google.storage.onestore.v3.OnestoreEntity.Path.Element;
+import com.google.storage.onestore.v3.proto2api.OnestoreEntity;
+import com.google.storage.onestore.v3.proto2api.OnestoreEntity.EntityProto;
+import com.google.storage.onestore.v3.proto2api.OnestoreEntity.Path.Element;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.ObjectOutput;

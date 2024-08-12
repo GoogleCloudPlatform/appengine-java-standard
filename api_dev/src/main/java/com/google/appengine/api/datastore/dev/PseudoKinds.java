@@ -21,7 +21,7 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.appengine.api.datastore.dev.LocalDatastoreService.LiveTxn;
 import com.google.appengine.api.datastore.dev.LocalDatastoreService.Profile.EntityGroup;
-import com.google.apphosting.datastore.DatastoreV3Pb.Query;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.Query;
 import com.google.storage.onestore.v3.OnestoreEntity.EntityProto;
 import com.google.storage.onestore.v3.OnestoreEntity.Reference;
 import java.util.List;

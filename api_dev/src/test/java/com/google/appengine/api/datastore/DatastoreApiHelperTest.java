@@ -28,9 +28,9 @@ import static org.mockito.Mockito.when;
 
 import com.google.appengine.api.testing.LocalServiceTestHelperRule;
 import com.google.apphosting.api.ApiProxy;
-import com.google.apphosting.datastore.DatastoreV3Pb;
-import com.google.apphosting.datastore.DatastoreV3Pb.DatastoreService_3.Method;
-import com.google.apphosting.datastore.DatastoreV3Pb.Error.ErrorCode;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.DatastoreService_3.Method;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.Error.ErrorCode;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.rpc.Code;
 import java.util.ConcurrentModificationException;
