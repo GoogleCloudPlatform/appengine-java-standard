@@ -21,9 +21,9 @@ import com.google.appengine.api.datastore.CompositeIndexManager.IndexSource;
 import com.google.appengine.api.datastore.ReadPolicy.Consistency;
 import com.google.appengine.api.utils.FutureWrapper;
 import com.google.apphosting.api.ApiProxy.ApiConfig;
-import com.google.apphosting.datastore.DatastoreV3Pb;
-import com.google.apphosting.datastore.DatastoreV3Pb.DatastoreService_3.Method;
-import com.google.storage.onestore.v3.OnestoreEntity;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.DatastoreService_3.Method;
+import com.google.storage.onestore.v3.proto2api.OnestoreEntity;
 import java.util.concurrent.Future;
 
 /**

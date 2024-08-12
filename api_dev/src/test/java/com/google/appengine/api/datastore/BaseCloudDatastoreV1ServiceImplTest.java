@@ -25,7 +25,7 @@ import static org.mockito.Mockito.when;
 
 import com.google.appengine.api.datastore.DatastoreAttributes.DatastoreType;
 import com.google.apphosting.api.ApiProxy;
-import com.google.apphosting.datastore.DatastoreV3Pb.CompiledCursor;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.CompiledCursor;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterators;

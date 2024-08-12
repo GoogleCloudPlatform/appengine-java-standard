@@ -19,8 +19,8 @@ package com.google.appengine.api.datastore;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertThrows;
 
-import com.google.apphosting.datastore.DatastoreV3Pb.CompiledCursor;
-import com.google.apphosting.datastore.DatastoreV3Pb.Query;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.CompiledCursor;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.Query;
 import com.google.protobuf.ByteString;
 import com.google.storage.onestore.v3.OnestoreEntity.IndexPosition;
 import com.google.storage.onestore.v3.OnestoreEntity.IndexPostfix;

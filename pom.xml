@@ -475,12 +475,12 @@
       <dependency>
         <groupId>com.google.protobuf</groupId>
         <artifactId>protobuf-java</artifactId>
-        <version>3.21.12</version> <!-- keep -->
+        <version>3.25.1</version> <!-- keep -->
       </dependency>
       <dependency>
         <groupId>com.google.protobuf</groupId>
         <artifactId>protobuf-java-util</artifactId>
-        <version>3.21.12</version> <!-- keep -->
+        <version>3.25.1</version> <!-- keep -->
       </dependency>
       <dependency>
         <groupId>javax.activation</groupId>
@@ -851,7 +851,7 @@
                  https://github.com/protocolbuffers/protobuf/blob/master/java/pom.xml#L7
                  Read https://github.com/os72/protoc-jar-maven-plugin/issues/107 for context.
              -->
-             <protocVersion>3.21.12</protocVersion>
+             <protocVersion>3.25.1</protocVersion>
           </configuration>
         </plugin>
         <plugin>

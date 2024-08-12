@@ -17,14 +17,14 @@
 package com.google.appengine.api.datastore;
 
 import com.google.apphosting.api.AppEngineInternal;
-import com.google.storage.onestore.v3.OnestoreEntity;
+import com.google.storage.onestore.v3.proto2api.OnestoreEntity;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 /**
  * Helper class to translate between {@link Index} to {@link
- * com.google.storage.onestore.v3.OnestoreEntity.Index}.
+ * com.google.storage.onestore.v3.proto2api.OnestoreEntity.Index}.
  *
  */
 @AppEngineInternal

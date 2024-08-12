@@ -29,7 +29,7 @@ import com.google.appengine.api.datastore.TransactionImpl.TransactionState;
 import com.google.appengine.api.datastore.TransactionStackImpl.TransactionDataMap;
 import com.google.appengine.tools.development.testing.LocalServiceTestHelper;
 import com.google.apphosting.api.ApiProxy;
-import com.google.apphosting.datastore.DatastoreV3Pb;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;

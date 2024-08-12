@@ -278,7 +278,7 @@ abstract class BaseQueryResultsSource<InitialResultT, NextRequestT, NextResultT>
    *
    * <p>This function adds results to the given buffer and updates {@link #skippedResults}.
    *
-   * @param res The {@link com.google.apphosting.datastore.DatastoreV3Pb.QueryResult} to process
+   * @param res The {@link com.google.apphosting.datastore.proto2api.DatastoreV3Pb.QueryResult} to process
    * @param buffer the buffer to which to add results
    * @return The number of new results added to buffer.
    */

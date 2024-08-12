@@ -17,7 +17,7 @@
 package com.google.appengine.api.datastore;
 
 import static com.google.appengine.api.datastore.FetchOptions.Builder.withDefaults;
-import static com.google.apphosting.datastore.DatastoreV3Pb.Error.ErrorCode.INTERNAL_ERROR;
+import static com.google.apphosting.datastore.proto2api.DatastoreV3Pb.Error.ErrorCode.INTERNAL_ERROR;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.util.concurrent.Futures.immediateFailedFuture;
 import static com.google.common.util.concurrent.Futures.immediateFuture;

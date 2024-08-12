@@ -23,7 +23,7 @@ import com.google.appengine.api.datastore.CompositeIndexManager.IndexComponentsO
 import com.google.appengine.api.datastore.Index.IndexState;
 import com.google.appengine.api.datastore.Query.FilterPredicate;
 import com.google.apphosting.api.AppEngineInternal;
-import com.google.apphosting.datastore.DatastoreV3Pb;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.storage.onestore.v3.OnestoreEntity;

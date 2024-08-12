@@ -71,7 +71,7 @@ import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueServiceError.Erro
 import com.google.apphosting.api.ApiProxy;
 import com.google.apphosting.api.ApiProxy.ApiConfig;
 import com.google.apphosting.api.ApiProxy.Environment;
-import com.google.apphosting.datastore.DatastoreV3Pb;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
 import com.google.common.truth.Correspondence;

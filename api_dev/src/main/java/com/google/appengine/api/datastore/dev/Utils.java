@@ -20,7 +20,7 @@ import static com.google.common.collect.Iterables.getLast;
 
 import com.google.apphosting.api.ApiProxy;
 import com.google.apphosting.api.ApiProxy.ApplicationException;
-import com.google.apphosting.datastore.DatastoreV3Pb.Error.ErrorCode;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.Error.ErrorCode;
 import com.google.storage.onestore.v3.OnestoreEntity.Path.Element;
 import com.google.storage.onestore.v3.OnestoreEntity.Reference;
 

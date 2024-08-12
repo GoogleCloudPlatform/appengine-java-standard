@@ -18,10 +18,10 @@ package com.google.appengine.api.datastore;
 
 import com.google.appengine.api.datastore.CompositeIndexManager.IndexSource;
 import com.google.apphosting.api.AppEngineInternal;
-import com.google.storage.onestore.v3.OnestoreEntity.Index;
-import com.google.storage.onestore.v3.OnestoreEntity.Index.Property;
-import com.google.storage.onestore.v3.OnestoreEntity.Index.Property.Direction;
-import com.google.storage.onestore.v3.OnestoreEntity.Index.Property.Mode;
+import com.google.storage.onestore.v3.proto2api.OnestoreEntity.Index;
+import com.google.storage.onestore.v3.proto2api.OnestoreEntity.Index.Property;
+import com.google.storage.onestore.v3.proto2api.OnestoreEntity.Index.Property.Direction;
+import com.google.storage.onestore.v3.proto2api.OnestoreEntity.Index.Property.Mode;
 
 /** Static utilities for working with composite indexes. */
 @AppEngineInternal
