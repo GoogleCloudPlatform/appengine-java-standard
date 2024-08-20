@@ -118,6 +118,7 @@ public class DelegateConnection implements Connection {
           new DelegateConnectionMetadata(_endpoint, this, _connector);
       HttpChannelState httpChannel = new HttpChannelState(connectionMetaData);
       httpChannel.setHttpStream(new DelegateHttpStream(_endpoint, this, httpChannel));
+      httpChannel.initialize();
 
       // Generate the Request MetaData.
       String method = delegateExchange.getMethod();
