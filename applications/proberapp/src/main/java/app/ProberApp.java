@@ -802,7 +802,8 @@ public final class ProberApp extends HttpServlet {
             : cookie.get();
     httpRequest.setHeader(new HTTPHeader("Cookie", jSessionId));
 
-    // Second request
+    // Second request, but wait a bit that the session is saved, to avoid flakes.
+    Thread.sleep(500);
     HTTPResponse response2 = getResponse(httpRequest);
     String content2 = new String(response2.getContent(), UTF_8);
     Matcher matcher2 = COUNT_PATTERN.matcher(content2);
