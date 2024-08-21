@@ -765,6 +765,8 @@ public final class ProberApp extends HttpServlet {
 
   /** Test sessions. Hit servlet twice and verify session count changes. */
   private static void testSessions(HttpServletRequest request) throws Exception {
+    // Avoid jetty12 introspection class loader useless issues:
+    System.setProperty("com.google.common.truth.disable_stack_trace_cleaning", "true");
     String baseUrl = request.getRequestURL().toString();
     URL url = new URL(baseUrl + "/session");
 
@@ -792,7 +794,13 @@ public final class ProberApp extends HttpServlet {
     assertThat(cookie).isPresent();
 
     // Set cookie on subsequent request
-    httpRequest.setHeader(new HTTPHeader("Cookie", cookie.get()));
+    // Stripping the last 2 fields "JSESSIONID=XqmmOsTY2SLPIamiDtIHHQ.node0; Path=/; Secure"
+    // b/359557991
+    String jSessionId =
+        cookie.get().endsWith("; Path=/; Secure")
+            ? cookie.get().substring(0, cookie.get().length() - "; Path=/; Secure".length())
+            : cookie.get();
+    httpRequest.setHeader(new HTTPHeader("Cookie", jSessionId));
 
     // Second request
     HTTPResponse response2 = getResponse(httpRequest);
