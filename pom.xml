@@ -459,7 +459,7 @@
       <dependency>
         <groupId>com.google.http-client</groupId>
         <artifactId>google-http-client</artifactId>
-        <version>1.44.2</version>
+        <version>1.45.0</version>
       </dependency>
       <dependency>
         <groupId>com.google.http-client</groupId>
@@ -590,7 +590,7 @@
       <dependency>
         <groupId>com.google.http-client</groupId>
         <artifactId>google-http-client-appengine</artifactId>
-        <version>1.44.2</version>
+        <version>1.45.0</version>
       </dependency>
       <dependency>
         <groupId>com.google.oauth-client</groupId>
@@ -725,7 +725,7 @@
       <dependency>
         <groupId>com.google.cloud</groupId>
         <artifactId>google-cloud-logging</artifactId>
-        <version>3.20.0</version>
+        <version>3.20.1</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
@@ -896,7 +896,7 @@
         <groupId>org.spdx</groupId>
         <artifactId>spdx-maven-plugin</artifactId>
         <!-- please check for updates on https://search.maven.org/search?q=a:spdx-maven-plugin -->
-        <version>0.7.3</version>
+        <version>0.7.4</version>
         <executions>
             <execution>
                 <id>build-spdx</id>
