@@ -809,6 +809,14 @@ public final class ProberApp extends HttpServlet {
     Matcher matcher2 = COUNT_PATTERN.matcher(content2);
     assertWithMessage("Should start with 'Count=N': %s", content2).that(matcher2.find()).isTrue();
     String count2 = matcher2.group(1);
+    if (count1.equals(count2)) {
+      // Flake, so do another retry.
+      response2 = getResponse(httpRequest);
+      content2 = new String(response2.getContent(), UTF_8);
+      matcher2 = COUNT_PATTERN.matcher(content2);
+      assertWithMessage("Should start with 'Count=N': %s", content2).that(matcher2.find()).isTrue();
+      count2 = matcher2.group(1);
+    }
     assertThat(count2).isNotEqualTo(count1);
   }
 
