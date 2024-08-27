@@ -105,6 +105,11 @@ public class LocalURLFetchServiceTest {
           public void log(Level level, String msg) {
             sb.append(msg);
           }
+
+          @Override
+          public void logp(Level level, String className, String methodName, String msg) {
+            sb.append(msg);
+          }
         };
     lufs.hasValidURL(
         URLFetchRequest.newBuilder()
