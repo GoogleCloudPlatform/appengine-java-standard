@@ -167,6 +167,7 @@ public class SessionManagerHandler {
       super(handler);
       // Saves a call to the SessionDataStore.
       setSaveOnCreate(false);
+      setFlushOnResponseCommit(true);
       setRemoveUnloadableSessions(false);
     }
 
@@ -278,6 +279,7 @@ public class SessionManagerHandler {
     AppEngineSessionCache(SessionHandler handler) {
       super(handler);
       setSaveOnCreate(true);
+      setFlushOnResponseCommit(true);
     }
 
     @Override
