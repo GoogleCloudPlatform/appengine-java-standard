@@ -164,6 +164,7 @@ public class SessionManagerHandler {
       super(handler.getSessionManager());
       // Saves a call to the SessionDataStore.
       setSaveOnCreate(false);
+      setFlushOnResponseCommit(true);
       setRemoveUnloadableSessions(false);
     }
 
@@ -264,6 +265,7 @@ public class SessionManagerHandler {
     AppEngineSessionCache(SessionHandler handler) {
       super(handler.getSessionManager());
       setSaveOnCreate(true);
+      setFlushOnResponseCommit(true);
     }
 
     @Override
