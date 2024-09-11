@@ -67,6 +67,7 @@ public interface ServletEngineAdapter extends UPRequestHandler {
    * stored, if sessions are enabled. This method must be invoked after
    * {@link #start}.
    */
+  @Deprecated
   void setSessionStoreFactory(SessionStoreFactory factory);
 
   /**

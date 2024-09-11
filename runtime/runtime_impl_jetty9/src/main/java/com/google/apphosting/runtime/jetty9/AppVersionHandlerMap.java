@@ -19,7 +19,6 @@ package com.google.apphosting.runtime.jetty9;
 import com.google.apphosting.base.AppVersionKey;
 import com.google.apphosting.runtime.AppEngineConstants;
 import com.google.apphosting.runtime.AppVersion;
-import com.google.apphosting.runtime.SessionStoreFactory;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
@@ -57,16 +56,6 @@ public class AppVersionHandlerMap extends AbstractHandlerContainer {
 
   public void removeAppVersion(AppVersionKey appVersionKey) {
     appVersionMap.remove(appVersionKey);
-  }
-
-  /**
-   * Sets the {@link SessionStoreFactory} that will be used for generating the list of {@link
-   * SessionStore SessionStores} that will be passed to {@link SessionManager} for apps for which
-   * sessions are enabled. This setter is currently used only for testing purposes. Normally the
-   * default factory is sufficient.
-   */
-  public void setSessionStoreFactory(SessionStoreFactory factory) {
-    // No op with the new Jetty Session management.
   }
 
   /**
