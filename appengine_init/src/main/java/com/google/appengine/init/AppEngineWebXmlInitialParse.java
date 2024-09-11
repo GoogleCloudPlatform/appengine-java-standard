@@ -99,8 +99,15 @@ public final class AppEngineWebXmlInitialParse {
           System.clearProperty("appengine.use.EE8");
           System.setProperty("appengine.use.EE10", "true");
           break;
+        case "java17":
+          // See if the Mendel experiment to enable Jetty12 for java17 is set
+          // automatically via env var:
+          if (Objects.equals(System.getenv("EXPERIMENT_ENABLE_JETTY12_FOR_JAVA"), "true")) {
+            System.setProperty("appengine.use.EE8", "true");
+          }
+          break;
         case "java11": // EE8 and EE10 not supported
-        case "java8":
+        case "java8":  // EE8 and EE10 not supported
           System.clearProperty("appengine.use.EE8");
           System.clearProperty("appengine.use.EE10");
           break;
