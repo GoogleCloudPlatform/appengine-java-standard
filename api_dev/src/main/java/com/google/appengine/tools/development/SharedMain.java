@@ -31,7 +31,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Properties;
 import java.util.TimeZone;
 
@@ -230,10 +229,18 @@ public abstract class SharedMain {
     if (runtime.equals("java7")) {
       throw new IllegalArgumentException("the Java7 runtime is not supported anymore.");
     }
-    if (Objects.equals(runtime, "java21")) {
-      System.setProperty("appengine.use.EE8", "true");
+    // Locally set the correct values for all runtimes, for EE8 and EE10 system properties to the
+    // process of the devappserver.
+    Map<String, String> props = appEngineWebXml.getSystemProperties();
+    if (props.containsKey("appengine.use.EE8")) {
+      System.setProperty("appengine.use.EE8", props.get("appengine.use.EE8"));
       AppengineSdk.resetSdk();
     }
+    if (props.containsKey("appengine.use.EE10")) {
+      System.setProperty("appengine.use.EE10", props.get("appengine.use.EE10"));
+      AppengineSdk.resetSdk();
+    }
+
     sharedInit();
   }
 
