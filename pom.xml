@@ -829,7 +829,7 @@
             <preparationGoals>clean install</preparationGoals>
             <mavenExecutorId>forked-path</mavenExecutorId>
             <pushChanges>false</pushChanges>
-            <localCheckout>true</localCheckout>
+            <localCheckout>false</localCheckout>
           </configuration>
         </plugin>
          <plugin>
