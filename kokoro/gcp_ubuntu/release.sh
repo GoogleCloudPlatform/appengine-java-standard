@@ -132,4 +132,3 @@ git push --set-upstream origin $RELEASE_NUMBER
 git push origin v$RELEASE_NUMBER
 
 echo "Done doing a release."
-
