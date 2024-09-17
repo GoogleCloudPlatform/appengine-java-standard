@@ -69,13 +69,15 @@ create_settings_xml_file() {
 
 
 setup_environment_secrets
+
+cd ${KOKORO_ARTIFACTS_DIR}/git
 create_settings_xml_file "settings.xml"
 
 src_dir="${KOKORO_ARTIFACTS_DIR}/git/appengine-java-standard"
 cd $src_dir
 
 # Enable correct evaluation of git buildnumber value for git on borg.
-git config --global --add safe.directory /tmpfs/src/git/appengine-java-standard
+git config --global --add safe.directory ${src_dir}
 
 # Get the current version from pom.xml
 POM_VERSION=$(
