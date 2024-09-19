@@ -30,6 +30,7 @@ import com.google.apphosting.runtime.AppVersion;
 import com.google.apphosting.runtime.BackgroundRequestCoordinator;
 import com.google.apphosting.runtime.LocalRpcContext;
 import com.google.apphosting.runtime.RequestManager;
+import com.google.apphosting.runtime.RequestRunner;
 import com.google.apphosting.runtime.RequestRunner.EagerRunner;
 import com.google.apphosting.runtime.ResponseAPIData;
 import com.google.apphosting.runtime.ServletEngineAdapter;
@@ -42,7 +43,9 @@ import java.util.concurrent.TimeoutException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Request;
+import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.HandlerWrapper;
 
 /**

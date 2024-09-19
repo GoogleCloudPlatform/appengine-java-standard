@@ -36,17 +36,16 @@ public class SessionCountingServlet extends HttpServlet {
       throws IOException {
     Integer count;
 
-    response.setContentType("text/html;charset=UTF-8");
-
     HttpSession session = request.getSession(true);
     synchronized (session) {
-      count = (Integer) session.getAttribute("count");
+      count = (Integer) session.getAttribute("count" + System.getenv("GAE_DEPLOYMENT_ID"));
       if (count == null) {
         count = 0;
       }
-      session.setAttribute("count", count + 1);
+      session.setAttribute("count" + System.getenv("GAE_DEPLOYMENT_ID") , count + 1);
     }
 
+    response.setContentType("text/html;charset=UTF-8");
     PrintWriter writer = response.getWriter();
     writer.println("Count=" + count);
   }

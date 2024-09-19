@@ -43,15 +43,30 @@ top of your web application and change the entrypoint to boot with these jars in
 ```
  git clone https://github.com/GoogleCloudPlatform/appengine-java-standard.git
  cd appengine-java-standard
- mvn clean install
+ ./mvnw clean install
 ```
 
-Let's assume the current built version is `2.0.30-SNAPSHOT`.
+Let's assume the current build version is `2.0.31-SNAPSHOT`.
+
+See the output of the runtime deployment module which contains all the jars needed by the runtime:
+
+
+```
+ls  runtime/deployment/target/runtime-deployment-*/
+runtime-impl-jetty12.jar	runtime-main.jar		runtime-shared-jetty12.jar
+runtime-impl-jetty9.jar		runtime-shared-jetty12-ee10.jar	runtime-shared-jetty9.jar
+```
+
+These jars are pushed in Maven Central as well under artifact com.google.appengine:runtime-deployment.
+For example, look at all the pushed versions in https://repo1.maven.org/maven2/com/google/appengine/runtime-deployment
+
+The idea is to add these runtime jars inside your web application during deployment and change the entry point to start using these runtime jars instead of the ones provided by default by the App Engine runtime.
+
 Add the dependency for the GAE runtime jars in your application pom.xml file:
 
 ```
  <properties>
-        <appengine.runtime.version>2.0.30-SNAPSHOT</appengine.runtime.version>
+        <appengine.runtime.version>2.0.31-SNAPSHOT</appengine.runtime.version>
         <appengine.runtime.location>target/${project.artifactId}-${project.version}</appengine.runtime.location>
  <properties>
  ...

@@ -765,6 +765,8 @@ public final class ProberApp extends HttpServlet {
 
   /** Test sessions. Hit servlet twice and verify session count changes. */
   private static void testSessions(HttpServletRequest request) throws Exception {
+    // Avoid jetty12 introspection class loader useless issues:
+    System.setProperty("com.google.common.truth.disable_stack_trace_cleaning", "true");
     String baseUrl = request.getRequestURL().toString();
     URL url = new URL(baseUrl + "/session");
 
@@ -792,14 +794,29 @@ public final class ProberApp extends HttpServlet {
     assertThat(cookie).isPresent();
 
     // Set cookie on subsequent request
-    httpRequest.setHeader(new HTTPHeader("Cookie", cookie.get()));
+    // Stripping the last 2 fields "JSESSIONID=XqmmOsTY2SLPIamiDtIHHQ.node0; Path=/; Secure"
+    // b/359557991
+    String jSessionId =
+        cookie.get().endsWith("; Path=/; Secure")
+            ? cookie.get().substring(0, cookie.get().length() - "; Path=/; Secure".length())
+            : cookie.get();
+    httpRequest.setHeader(new HTTPHeader("Cookie", jSessionId));
 
-    // Second request
+    // Second request, but wait a bit that the session is saved, to avoid flakes.
+    Thread.sleep(500);
     HTTPResponse response2 = getResponse(httpRequest);
     String content2 = new String(response2.getContent(), UTF_8);
     Matcher matcher2 = COUNT_PATTERN.matcher(content2);
     assertWithMessage("Should start with 'Count=N': %s", content2).that(matcher2.find()).isTrue();
     String count2 = matcher2.group(1);
+    if (count1.equals(count2)) {
+      // Flake, so do another retry.
+      response2 = getResponse(httpRequest);
+      content2 = new String(response2.getContent(), UTF_8);
+      matcher2 = COUNT_PATTERN.matcher(content2);
+      assertWithMessage("Should start with 'Count=N': %s", content2).that(matcher2.find()).isTrue();
+      count2 = matcher2.group(1);
+    }
     assertThat(count2).isNotEqualTo(count1);
   }
 

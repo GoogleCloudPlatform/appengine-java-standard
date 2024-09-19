@@ -117,18 +117,6 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
           public InvocationType getInvocationType() {
             return InvocationType.BLOCKING;
           }
-
-          @Override
-          public Resource getDefaultStyleSheet() {
-            // TODO: this is a workaround for https://github.com/jetty/jetty.project/issues/11873
-            return ResourceFactory.of(this).newResource("/org/eclipse/jetty/server/jetty-dir.css");
-          }
-
-          @Override
-          public Resource getDefaultFavicon() {
-            // TODO: this is a workaround for https://github.com/jetty/jetty.project/issues/11873
-            return ResourceFactory.of(this).newResource("/org/eclipse/jetty/server/favicon.ico");
-          }
         };
     rpcConnector =
         new DelegateConnector(server, "RPC") {
@@ -168,7 +156,6 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
         evaluationRuntimeServerInterface.addAppVersion(context, appinfo);
         context.getResponse();
         appVersionKey = AppVersionKey.fromAppInfo(appinfo);
-        appVersionHandler.ensureHandler(appVersionKey);
       } catch (Exception e) {
         throw new IllegalStateException(e);
       }
@@ -219,15 +206,9 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
     appVersionHandler.removeAppVersion(appVersion.getKey());
   }
 
-  /**
-   * Sets the {@link com.google.apphosting.runtime.SessionStoreFactory} that will be used to create
-   * the list of {@link com.google.apphosting.runtime.SessionStore SessionStores} to which the HTTP
-   * Session will be stored, if sessions are enabled. This method must be invoked after {@link
-   * #start(String, Config)}.
-   */
   @Override
   public void setSessionStoreFactory(com.google.apphosting.runtime.SessionStoreFactory factory) {
-    appVersionHandler.setSessionStoreFactory(factory);
+    // No op with the new Jetty Session management.
   }
 
   @Override

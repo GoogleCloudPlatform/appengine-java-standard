@@ -137,7 +137,7 @@ public class DevAppServerMain extends SharedMain {
               }
 
               @Override
-              public List<String> getHelpLines() {
+              public ImmutableList<String> getHelpLines() {
                 return ImmutableList.of(
                     " --default_gcs_bucket=NAME  Set the default Google Cloud Storage bucket"
                         + " name.");
@@ -294,6 +294,8 @@ public class DevAppServerMain extends SharedMain {
       TreeSet<String> contextRootNames = new TreeSet<>();
       for (String service : services) {
         File serviceFile = new File(service);
+        // Set the correct runtimeId from appengine-web.xml.
+        configureRuntime(serviceFile);
         fw.write("<module>");
         fw.write("<web>");
         // Absolute URI for the given service/module.

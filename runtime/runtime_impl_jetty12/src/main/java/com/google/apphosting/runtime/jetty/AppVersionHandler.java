@@ -17,13 +17,14 @@
 package com.google.apphosting.runtime.jetty;
 
 import com.google.apphosting.base.AppVersionKey;
+import com.google.apphosting.runtime.AppEngineConstants;
 import com.google.apphosting.runtime.AppVersion;
-import com.google.apphosting.runtime.SessionStore;
-import com.google.apphosting.runtime.SessionStoreFactory;
 import java.util.Objects;
 import org.eclipse.jetty.server.Handler;
+import org.eclipse.jetty.server.Request;
+import org.eclipse.jetty.server.Response;
 import org.eclipse.jetty.server.handler.HotSwapHandler;
-import org.eclipse.jetty.session.SessionManager;
+import org.eclipse.jetty.util.Callback;
 
 /**
  * {@code AppVersionHandlerMap} is a {@code HandlerContainer} that identifies each child {@code
@@ -37,6 +38,7 @@ import org.eclipse.jetty.session.SessionManager;
 public class AppVersionHandler extends HotSwapHandler {
   private final AppVersionHandlerFactory appVersionHandlerFactory;
   private AppVersion appVersion;
+  private volatile boolean initialized;
 
   public AppVersionHandler(AppVersionHandlerFactory appVersionHandlerFactory) {
     this.appVersionHandlerFactory = appVersionHandlerFactory;
@@ -50,6 +52,7 @@ public class AppVersionHandler extends HotSwapHandler {
     if (this.appVersion != null) {
       throw new IllegalStateException("Already have an AppVersion " + this.appVersion);
     }
+    this.initialized = false;
     this.appVersion = Objects.requireNonNull(appVersion);
   }
 
@@ -57,17 +60,28 @@ public class AppVersionHandler extends HotSwapHandler {
     if (!Objects.equals(appVersionKey, appVersion.getKey()))
       throw new IllegalArgumentException(
           "AppVersionKey does not match AppVersion " + appVersion.getKey());
+    this.initialized = false;
     this.appVersion = null;
+    setHandler((Handler)null);
   }
 
-  /**
-   * Sets the {@link SessionStoreFactory} that will be used for generating the list of {@link
-   * SessionStore SessionStores} that will be passed to {@link SessionManager} for apps for which
-   * sessions are enabled. This setter is currently used only for testing purposes. Normally the
-   * default factory is sufficient.
-   */
-  public void setSessionStoreFactory(SessionStoreFactory factory) {
-    // No op with the new Jetty Session management.
+  @Override
+  public boolean handle(Request request, Response response, Callback callback) throws Exception {
+    // In RPC mode, this initialization is done by JettyServletEngineAdapter.serviceRequest().
+    if (!initialized) {
+      AppVersionKey appVersionKey =
+              (AppVersionKey) request.getAttribute(AppEngineConstants.APP_VERSION_KEY_REQUEST_ATTR);
+      if (appVersionKey == null) {
+        Response.writeError(request, response, callback, 500, "Request did not provide an application version");
+        return true;
+      }
+
+      if (!ensureHandler(appVersionKey)) {
+        Response.writeError(request, response, callback, 500, "Unknown app: " + appVersionKey);
+        return true;
+      }
+    }
+    return super.handle(request, response, callback);
   }
 
   /**
@@ -86,6 +100,8 @@ public class AppVersionHandler extends HotSwapHandler {
         handler.getServer().dumpStdErr();
       }
     }
+
+    initialized = true;
     return (handler != null);
   }
 }

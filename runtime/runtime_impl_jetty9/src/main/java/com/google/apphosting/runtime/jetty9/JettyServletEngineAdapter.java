@@ -141,7 +141,6 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
         if (Boolean.getBoolean(HTTP_CONNECTOR_MODE)) {
           logger.atInfo().log("Using HTTP_CONNECTOR_MODE to bypass RPC");
           appVersionKey = AppVersionKey.fromAppInfo(appinfo);
-          Handler unused2 = appVersionHandlerMap.getHandler(appVersionKey);
           JettyHttpProxy.insertHandlers(server);
           AppVersion appVersion = appVersionHandlerMap.getAppVersion(appVersionKey);
           server.insertHandler(
@@ -195,15 +194,9 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
     appVersionHandlerMap.removeAppVersion(appVersion.getKey());
   }
 
-  /**
-   * Sets the {@link com.google.apphosting.runtime.SessionStoreFactory} that will be used to create
-   * the list of {@link com.google.apphosting.runtime.SessionStore SessionStores} to which the HTTP
-   * Session will be stored, if sessions are enabled. This method must be invoked after {@link
-   * #start(String, Config)}.
-   */
   @Override
   public void setSessionStoreFactory(SessionStoreFactory factory) {
-    appVersionHandlerMap.setSessionStoreFactory(factory);
+    // No op with the new Jetty Session management.
   }
 
   @Override
