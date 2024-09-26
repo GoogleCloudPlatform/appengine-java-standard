@@ -139,6 +139,14 @@ public class JettyHttpHandler extends HandlerWrapper {
       // need that.
       handleException(ex, requestToken, genericResponse);
       response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, ex.getMessage());
+    } finally {
+      // We don't want threads used for background requests to go back
+      // in the thread pool, because users may have stashed references
+      // to them or may be expecting them to exit.  Setting the
+      // interrupt bit causes the pool to drop them.
+      if (genericRequest.getRequestType() == RuntimePb.UPRequest.RequestType.BACKGROUND) {
+        Thread.currentThread().interrupt();
+      }
     }
   }
 
@@ -152,14 +160,6 @@ public class JettyHttpHandler extends HandlerWrapper {
     // Do not put this in a final block.  If we propagate an
     // exception the callback will be invoked automatically.
     response.finishWithResponse(context);
-
-    // We don't want threads used for background requests to go back
-    // in the thread pool, because users may have stashed references
-    // to them or may be expecting them to exit.  Setting the
-    // interrupt bit causes the pool to drop them.
-    if (request.getRequestType() == RuntimePb.UPRequest.RequestType.BACKGROUND) {
-      Thread.currentThread().interrupt();
-    }
   }
 
   private void dispatchRequest(

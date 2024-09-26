@@ -141,6 +141,14 @@ public class JettyHttpHandler extends Handler.Wrapper {
       // need that.
       handled = handleException(ex, requestToken, genericResponse);
       Response.writeError(request, response, callback, ex);
+    } finally {
+      // We don't want threads used for background requests to go back
+      // in the thread pool, because users may have stashed references
+      // to them or may be expecting them to exit.  Setting the
+      // interrupt bit causes the pool to drop them.
+      if (genericRequest.getRequestType() == RuntimePb.UPRequest.RequestType.BACKGROUND) {
+        Thread.currentThread().interrupt();
+      }
     }
 
     return handled;
@@ -156,14 +164,6 @@ public class JettyHttpHandler extends Handler.Wrapper {
     // Do not put this in a final block.  If we propagate an
     // exception the callback will be invoked automatically.
     response.finishWithResponse(context);
-
-    // We don't want threads used for background requests to go back
-    // in the thread pool, because users may have stashed references
-    // to them or may be expecting them to exit.  Setting the
-    // interrupt bit causes the pool to drop them.
-    if (request.getRequestType() == RuntimePb.UPRequest.RequestType.BACKGROUND) {
-      Thread.currentThread().interrupt();
-    }
   }
 
   private boolean dispatchRequest(
