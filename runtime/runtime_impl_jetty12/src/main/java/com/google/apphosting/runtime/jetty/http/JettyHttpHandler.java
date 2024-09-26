@@ -33,6 +33,7 @@ import com.google.apphosting.runtime.RequestRunner;
 import com.google.apphosting.runtime.RequestRunner.EagerRunner;
 import com.google.apphosting.runtime.ResponseAPIData;
 import com.google.apphosting.runtime.ServletEngineAdapter;
+import com.google.apphosting.runtime.anyrpc.AnyRpcServerContext;
 import com.google.apphosting.runtime.jetty.AppInfoFactory;
 import com.google.common.flogger.GoogleLogger;
 import java.io.PrintWriter;
@@ -40,6 +41,7 @@ import java.io.StringWriter;
 import java.time.Duration;
 import java.util.concurrent.TimeoutException;
 import org.eclipse.jetty.server.Handler;
+import org.eclipse.jetty.server.HttpStream;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Response;
 import org.eclipse.jetty.server.Server;
@@ -108,8 +110,25 @@ public class JettyHttpHandler extends Handler.Wrapper {
     ApiProxy.Environment currentEnvironment = ApiProxy.getCurrentEnvironment();
     request.setAttribute(AppEngineConstants.ENVIRONMENT_ATTR, currentEnvironment);
 
+    // Only run code to finish request with the RequestManager once the stream is complete.
+    request.addHttpStreamWrapper(
+        httpStream ->
+            new HttpStream.Wrapper(httpStream) {
+              @Override
+              public void succeeded() {
+                super.succeeded();
+                finishRequest(requestToken, genericRequest, genericResponse, context);
+              }
+
+              @Override
+              public void failed(Throwable x) {
+                super.failed(x);
+                finishRequest(requestToken, genericRequest, genericResponse, context);
+              }
+            });
+
     try {
-      handled = dispatchRequest(requestToken, genericRequest, genericResponse, callback);
+      handled = dispatchRequest(requestToken, genericRequest, genericResponse);
       if (handled) {
         callback.succeeded();
       }
@@ -122,28 +141,35 @@ public class JettyHttpHandler extends Handler.Wrapper {
       // need that.
       handled = handleException(ex, requestToken, genericResponse);
       Response.writeError(request, response, callback, ex);
-    } finally {
-      requestManager.finishRequest(requestToken);
-    }
-    // Do not put this in a final block.  If we propagate an
-    // exception the callback will be invoked automatically.
-    genericResponse.finishWithResponse(context);
-    // We don't want threads used for background requests to go back
-    // in the thread pool, because users may have stashed references
-    // to them or may be expecting them to exit.  Setting the
-    // interrupt bit causes the pool to drop them.
-    if (genericRequest.getRequestType() == RuntimePb.UPRequest.RequestType.BACKGROUND) {
-      Thread.currentThread().interrupt();
     }
 
     return handled;
   }
 
-  private boolean dispatchRequest(
+  private void finishRequest(
       RequestManager.RequestToken requestToken,
       JettyRequestAPIData request,
       JettyResponseAPIData response,
-      Callback callback)
+      AnyRpcServerContext context) {
+    requestManager.finishRequest(requestToken);
+
+    // Do not put this in a final block.  If we propagate an
+    // exception the callback will be invoked automatically.
+    response.finishWithResponse(context);
+
+    // We don't want threads used for background requests to go back
+    // in the thread pool, because users may have stashed references
+    // to them or may be expecting them to exit.  Setting the
+    // interrupt bit causes the pool to drop them.
+    if (request.getRequestType() == RuntimePb.UPRequest.RequestType.BACKGROUND) {
+      Thread.currentThread().interrupt();
+    }
+  }
+
+  private boolean dispatchRequest(
+      RequestManager.RequestToken requestToken,
+      JettyRequestAPIData request,
+      JettyResponseAPIData response)
       throws Throwable {
     switch (request.getRequestType()) {
       case SHUTDOWN:
@@ -154,14 +180,13 @@ public class JettyHttpHandler extends Handler.Wrapper {
         dispatchBackgroundRequest(request, response);
         return true;
       case OTHER:
-        return dispatchServletRequest(request, response, callback);
+        return dispatchServletRequest(request, response);
       default:
         throw new IllegalStateException(request.getRequestType().toString());
     }
   }
 
-  private boolean dispatchServletRequest(
-      JettyRequestAPIData request, JettyResponseAPIData response, Callback callback)
+  private boolean dispatchServletRequest(JettyRequestAPIData request, JettyResponseAPIData response)
       throws Throwable {
     Request jettyRequest = request.getWrappedRequest();
     Response jettyResponse = response.getWrappedResponse();
