@@ -122,7 +122,7 @@ public class JettyHttpHandler extends HandlerWrapper {
     request.setAttribute(AppEngineConstants.ENVIRONMENT_ATTR, currentEnvironment);
 
     Runnable finishRequest =
-        () -> finishRequest(requestToken, genericRequest, genericResponse, context);
+        () -> finishRequest(currentEnvironment, requestToken, genericResponse, context);
     baseRequest.setAttribute(FINISH_REQUEST_ATTRIBUTE, finishRequest);
 
     try {
@@ -151,15 +151,23 @@ public class JettyHttpHandler extends HandlerWrapper {
   }
 
   private void finishRequest(
+      ApiProxy.Environment env,
       RequestManager.RequestToken requestToken,
-      JettyRequestAPIData request,
       JettyResponseAPIData response,
       AnyRpcServerContext context) {
-    requestManager.finishRequest(requestToken);
 
-    // Do not put this in a final block.  If we propagate an
-    // exception the callback will be invoked automatically.
-    response.finishWithResponse(context);
+    ApiProxy.Environment oldEnv = ApiProxy.getCurrentEnvironment();
+    try {
+      ApiProxy.setEnvironmentForCurrentThread(env);
+      requestManager.finishRequest(requestToken);
+
+      // Do not put this in a final block.  If we propagate an
+      // exception the callback will be invoked automatically.
+      response.finishWithResponse(context);
+    }
+    finally {
+      ApiProxy.setEnvironmentForCurrentThread(oldEnv);
+    }
   }
 
   private void dispatchRequest(
@@ -312,6 +320,7 @@ public class JettyHttpHandler extends HandlerWrapper {
   private static class CompletionListener implements HttpChannel.Listener {
     @Override
     public void onComplete(Request request) {
+      System.err.println("CompletionListener " + request + "  thread " + Thread.currentThread().getName());
       Runnable finishRequest =
           (Runnable) request.getAttribute(JettyHttpHandler.FINISH_REQUEST_ATTRIBUTE);
       if (finishRequest != null) {

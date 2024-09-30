@@ -117,13 +117,13 @@ public class JettyHttpHandler extends Handler.Wrapper {
               @Override
               public void succeeded() {
                 super.succeeded();
-                finishRequest(requestToken, genericRequest, genericResponse, context);
+                finishRequest(currentEnvironment, requestToken, genericResponse, context);
               }
 
               @Override
               public void failed(Throwable x) {
                 super.failed(x);
-                finishRequest(requestToken, genericRequest, genericResponse, context);
+                finishRequest(currentEnvironment, requestToken, genericResponse, context);
               }
             });
 
@@ -155,15 +155,23 @@ public class JettyHttpHandler extends Handler.Wrapper {
   }
 
   private void finishRequest(
+      ApiProxy.Environment env,
       RequestManager.RequestToken requestToken,
-      JettyRequestAPIData request,
       JettyResponseAPIData response,
       AnyRpcServerContext context) {
-    requestManager.finishRequest(requestToken);
 
-    // Do not put this in a final block.  If we propagate an
-    // exception the callback will be invoked automatically.
-    response.finishWithResponse(context);
+    ApiProxy.Environment oldEnv = ApiProxy.getCurrentEnvironment();
+    try {
+      ApiProxy.setEnvironmentForCurrentThread(env);
+      requestManager.finishRequest(requestToken);
+
+      // Do not put this in a final block.  If we propagate an
+      // exception the callback will be invoked automatically.
+      response.finishWithResponse(context);
+    }
+    finally {
+      ApiProxy.setEnvironmentForCurrentThread(oldEnv);
+    }
   }
 
   private boolean dispatchRequest(
