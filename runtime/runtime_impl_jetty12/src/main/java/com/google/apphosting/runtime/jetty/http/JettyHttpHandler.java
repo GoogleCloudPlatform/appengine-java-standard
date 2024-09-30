@@ -111,21 +111,8 @@ public class JettyHttpHandler extends Handler.Wrapper {
     request.setAttribute(AppEngineConstants.ENVIRONMENT_ATTR, currentEnvironment);
 
     // Only run code to finish request with the RequestManager once the stream is complete.
-    request.addHttpStreamWrapper(
-        httpStream ->
-            new HttpStream.Wrapper(httpStream) {
-              @Override
-              public void succeeded() {
-                super.succeeded();
-                finishRequest(currentEnvironment, requestToken, genericResponse, context);
-              }
-
-              @Override
-              public void failed(Throwable x) {
-                super.failed(x);
-                finishRequest(currentEnvironment, requestToken, genericResponse, context);
-              }
-            });
+    Request.addCompletionListener(
+        request, t -> finishRequest(currentEnvironment, requestToken, genericResponse, context));
 
     try {
       handled = dispatchRequest(requestToken, genericRequest, genericResponse);
@@ -168,8 +155,7 @@ public class JettyHttpHandler extends Handler.Wrapper {
       // Do not put this in a final block.  If we propagate an
       // exception the callback will be invoked automatically.
       response.finishWithResponse(context);
-    }
-    finally {
+    } finally {
       ApiProxy.setEnvironmentForCurrentThread(oldEnv);
     }
   }

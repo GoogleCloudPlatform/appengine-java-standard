@@ -164,8 +164,7 @@ public class JettyHttpHandler extends HandlerWrapper {
       // Do not put this in a final block.  If we propagate an
       // exception the callback will be invoked automatically.
       response.finishWithResponse(context);
-    }
-    finally {
+    } finally {
       ApiProxy.setEnvironmentForCurrentThread(oldEnv);
     }
   }
@@ -320,7 +319,6 @@ public class JettyHttpHandler extends HandlerWrapper {
   private static class CompletionListener implements HttpChannel.Listener {
     @Override
     public void onComplete(Request request) {
-      System.err.println("CompletionListener " + request + "  thread " + Thread.currentThread().getName());
       Runnable finishRequest =
           (Runnable) request.getAttribute(JettyHttpHandler.FINISH_REQUEST_ATTRIBUTE);
       if (finishRequest != null) {
