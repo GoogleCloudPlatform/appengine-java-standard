@@ -93,8 +93,8 @@ public class CompositeIndexManager {
 
     boolean hasKind = query.hasKind();
     boolean isAncestor = query.hasAncestor();
-    List<Filter> filters = query.filters();
-    List<Order> orders = query.orders();
+    List<Filter> filters = query.getFilterList();
+    List<Order> orders = query.getOrderList();
 
     if (filters.isEmpty() && orders.isEmpty()) {
       // If there are no filters or sorts no composite index is needed; the
@@ -128,7 +128,7 @@ public class CompositeIndexManager {
         && indexProperties.size() <= 1
         && !indexOnlyQuery.isGeo()
         && (!indexOnlyQuery.hasKeyProperty()
-            || indexProperties.get(0).getDirectionEnum() == Property.Direction.ASCENDING)) {
+            || indexProperties.get(0).getDirection() == Property.Direction.ASCENDING)) {
       // For traditional indexes, we never need kind-only or
       // single-property composite indexes unless it's a single
       // property, descending index on key. The built-in primary key

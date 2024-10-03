@@ -19,7 +19,8 @@ package com.google.storage.onestore;
 import static com.google.common.base.Preconditions.checkArgument;
 
 import com.google.common.collect.Lists;
-import com.google.io.protocol.ProtocolType;
+// import com.google.io.protocol.ProtocolType;
+import com.google.protobuf.Type;
 import com.google.storage.onestore.v3.proto2api.OnestoreEntity.PropertyValue;
 import java.util.EnumSet;
 import java.util.List;
@@ -163,7 +164,7 @@ public enum PropertyType {
   private static List<Integer> findTags(PropertyValue value) {
     List<Integer> tags = Lists.newArrayList();
 
-    for (ProtocolType.FieldType field : ProtocolType.getTags(value)) {
+    for (Type.FieldType field : Type.getTags(value)) {
       if (field.size(value) == 1) {
         tags.add(field.getTag());
       }

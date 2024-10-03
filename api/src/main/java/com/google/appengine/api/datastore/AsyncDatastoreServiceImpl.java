@@ -42,7 +42,8 @@ import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.PutRequest;
 import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.PutResponse;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.io.protocol.ProtocolMessage;
+// import com.google.io.protocol.ProtocolMessage;
+import com.google.protobuf.Message;
 import com.google.storage.onestore.v3.proto2api.OnestoreEntity.CompositeIndex;
 import com.google.storage.onestore.v3.proto2api.OnestoreEntity.EntityProto;
 import com.google.storage.onestore.v3.proto2api.OnestoreEntity.Reference;
@@ -77,10 +78,10 @@ class AsyncDatastoreServiceImpl extends BaseAsyncDatastoreServiceImpl {
    * @param <T> the proto representation of value
    */
   private abstract class V3Batcher<
-          S extends ProtocolMessage<S>,
-          R extends ProtocolMessage<R>,
+          S extends Message,
+          R extends Message,
           F,
-          T extends ProtocolMessage<T>>
+          T extends Message>
       extends BaseRpcBatcher<S, R, F, T> {
     @Override
     final R newBatch(R baseBatch) {
@@ -94,7 +95,7 @@ class AsyncDatastoreServiceImpl extends BaseAsyncDatastoreServiceImpl {
    * @param <S> the response message type
    * @param <R> the request message type
    */
-  private abstract class V3KeyBatcher<S extends ProtocolMessage<S>, R extends ProtocolMessage<R>>
+  private abstract class V3KeyBatcher<S extends Message, R extends Message>
       extends V3Batcher<S, R, Key, Reference> {
     @Override
     final Object getGroup(Key value) {

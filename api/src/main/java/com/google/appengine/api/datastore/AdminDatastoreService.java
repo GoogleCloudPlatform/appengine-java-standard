@@ -26,7 +26,7 @@ import com.google.apphosting.api.AppEngineInternal;
 import com.google.apphosting.datastore.proto2api.DatastoreV3Pb;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.google.storage.onestore.v3.OnestoreEntity;
+import com.google.storage.onestore.v3.proto2api.OnestoreEntity;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;

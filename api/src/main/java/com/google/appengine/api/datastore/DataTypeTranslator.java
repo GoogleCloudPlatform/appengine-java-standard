@@ -48,7 +48,6 @@ import com.google.storage.onestore.v3.proto2api.OnestoreEntity.Property;
 import com.google.storage.onestore.v3.proto2api.OnestoreEntity.Property.Meaning;
 import com.google.storage.onestore.v3.proto2api.OnestoreEntity.PropertyValue;
 import com.google.storage.onestore.v3.proto2api.OnestoreEntity.PropertyValue.ReferenceValue;
-import com.google.storage.onestore.v3.proto2api.OnestoreEntity.PropertyValue.ReferenceValuePathElement;
 import com.google.storage.onestore.v3.proto2api.OnestoreEntity.PropertyValue.UserValue;
 import com.google.storage.onestore.v3.proto2api.OnestoreEntity.Reference;
 import java.util.ArrayList;

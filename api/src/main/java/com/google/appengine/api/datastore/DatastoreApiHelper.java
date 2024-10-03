@@ -25,8 +25,9 @@ import com.google.apphosting.api.ApiProxy;
 import com.google.apphosting.api.ApiProxy.ApiConfig;
 import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.DatastoreService_3;
 import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.Error;
-import com.google.io.protocol.ProtocolMessage;
+// import com.google.io.protocol.ProtocolMessage;
 import com.google.protobuf.InvalidProtocolBufferException;
+import com.google.protobuf.Message;
 import com.google.protobuf.MessageLite;
 import com.google.rpc.Code;
 import java.util.ConcurrentModificationException;
@@ -117,7 +118,7 @@ public final class DatastoreApiHelper {
     }
   }
 
-  static <T extends ProtocolMessage<T>> Future<T> makeAsyncCall(
+  static <T extends Message> Future<T> makeAsyncCall(
       ApiConfig apiConfig,
       final DatastoreService_3.Method method,
       MessageLite request,

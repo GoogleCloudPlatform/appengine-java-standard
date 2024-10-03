@@ -39,7 +39,8 @@ import com.google.apphosting.utils.remoteapi.RemoteApiPb.Response;
 import com.google.apphosting.utils.remoteapi.RemoteApiPb.TransactionQueryResult;
 import com.google.apphosting.utils.remoteapi.RemoteApiPb.TransactionRequest;
 import com.google.apphosting.utils.remoteapi.RemoteApiPb.TransactionRequest.Precondition;
-import com.google.io.protocol.ProtocolMessage;
+// import com.google.io.protocol.ProtocolMessage;
+import com.google.protobuf.Message;
 import com.google.protobuf.ByteString;
 // <internal24>
 import com.google.storage.onestore.v3.proto2api.OnestoreEntity;
@@ -486,17 +487,17 @@ public class EE10RemoteApiServlet extends HttpServlet {
     return md.digest();
   }
 
-  private static void parseFromBytes(ProtocolMessage<?> message, byte[] bytes) {
+  private static void parseFromBytes(Message message, byte[] bytes) {
     boolean parsed = message.parseFrom(bytes);
     checkParse(message, parsed);
   }
 
-  private static void parseFromInputStream(ProtocolMessage<?> message, InputStream inputStream) {
+  private static void parseFromInputStream(Message message, InputStream inputStream) {
     boolean parsed = message.parseFrom(inputStream);
     checkParse(message, parsed);
   }
 
-  private static void checkParse(ProtocolMessage<?> message, boolean parsed) {
+  private static void checkParse(Message message, boolean parsed) {
     if (!parsed) {
       throw new ApiProxy.ApiProxyException("Could not parse protobuf");
     }
