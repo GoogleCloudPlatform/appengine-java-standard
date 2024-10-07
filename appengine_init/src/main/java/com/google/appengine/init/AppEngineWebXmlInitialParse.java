@@ -70,6 +70,7 @@ public final class AppEngineWebXmlInitialParse {
     // See if the Mendel experiment to enable HttpConnector is set automatically via env var:
     if (Objects.equals(System.getenv("EXPERIMENT_ENABLE_HTTP_CONNECTOR_FOR_JAVA"), "true")
         && !Objects.equals(System.getenv("GAE_RUNTIME"), "java8")) {
+      System.setProperty("appengine.ignore.cancelerror", "true");
       System.setProperty("appengine.use.HttpConnector", "true");
     }
     try (final InputStream stream = new FileInputStream(file)) {
