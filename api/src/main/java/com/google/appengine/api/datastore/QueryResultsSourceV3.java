@@ -99,13 +99,13 @@ class QueryResultsSourceV3 extends BaseQueryResultsSource<QueryResult, NextReque
 
     @Override
     public List<Entity> getEntities(Collection<Projection> projections) {
-      List<Entity> entities = Lists.newArrayListWithCapacity(res.resultSize());
+      List<Entity> entities = Lists.newArrayListWithCapacity(res.getResultCount());
       if (projections.isEmpty()) {
-        for (EntityProto entityProto : res.results()) {
+        for (EntityProto entityProto : res.getResultList()) {
           entities.add(EntityTranslator.createFromPb(entityProto));
         }
       } else {
-        for (EntityProto entityProto : res.results()) {
+        for (EntityProto entityProto : res.getResultList()) {
           entities.add(EntityTranslator.createFromPb(entityProto, projections));
         }
       }
@@ -114,12 +114,12 @@ class QueryResultsSourceV3 extends BaseQueryResultsSource<QueryResult, NextReque
 
     @Override
     public List<Cursor> getResultCursors() {
-      List<Cursor> cursors = Lists.newArrayListWithCapacity(res.resultSize());
+      List<Cursor> cursors = Lists.newArrayListWithCapacity(res.getResultCount());
 
-      for (CompiledCursor compiledCursor : res.resultCompiledCursors()) {
+      for (CompiledCursor compiledCursor : res.getResultCompiledCursorList()) {
         cursors.add(new Cursor(compiledCursor.toByteString()));
       }
-      cursors.addAll(Collections.<Cursor>nCopies(res.resultSize() - cursors.size(), null));
+      cursors.addAll(Collections.<Cursor>nCopies(res.getResultCount() - cursors.size(), null));
       return cursors;
     }
 
@@ -137,7 +137,7 @@ class QueryResultsSourceV3 extends BaseQueryResultsSource<QueryResult, NextReque
 
     @Override
     public boolean hasMoreResults() {
-      return res.isMoreResults();
+      return res.getMoreResults();
     }
 
     @Override
@@ -149,11 +149,11 @@ class QueryResultsSourceV3 extends BaseQueryResultsSource<QueryResult, NextReque
     // query result, or the query result future, or even the index pb list.
     @Override
     public List<Index> getIndexInfo(Collection<Index> monitoredIndexBuffer) {
-      List<Index> indexList = Lists.newArrayListWithCapacity(res.indexSize());
-      for (CompositeIndex indexProtobuf : res.indexs()) {
+      List<Index> indexList = Lists.newArrayListWithCapacity(res.getIndexCount());
+      for (CompositeIndex indexProtobuf : res.getIndexList()) {
         Index index = IndexTranslator.convertFromPb(indexProtobuf);
         indexList.add(index);
-        if (indexProtobuf.isOnlyUseIfRequired()) {
+        if (indexProtobuf.getOnlyUseIfRequired()) {
           monitoredIndexBuffer.add(index);
         }
       }

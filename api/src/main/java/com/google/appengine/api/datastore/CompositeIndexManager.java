@@ -137,11 +137,11 @@ public class CompositeIndexManager {
       return null;
     }
 
-    Index index = new Index();
+    Index.Builder index = Index.newBuilder();
     index.setEntityType(query.getKind());
     index.setAncestor(isAncestor);
-    index.mutablePropertys().addAll(indexProperties);
-    return index;
+    index.addAllProperty(indexProperties);
+    return index.build();
   }
 
   /** We compare {@link Property Properties} by comparing their names. */
@@ -182,12 +182,12 @@ public class CompositeIndexManager {
 
     @Override
     public Property apply(String name) {
-      Property p = new Property();
+      Property.Builder p = Property.newBuilder();
       p.setName(name);
       if (mode != null) {
         p.setMode(mode);
       }
-      return p;
+      return p.build();
     }
   }
 
@@ -258,16 +258,16 @@ public class CompositeIndexManager {
       !indexOnlyQuery.getQuery().getKind().equals(index.getEntityType())
           ||
           // Ancestor indexes can only be used on ancestor queries.
-          (!indexOnlyQuery.getQuery().hasAncestor() && index.isAncestor())) {
+          (!indexOnlyQuery.getQuery().hasAncestor() && index.getAncestor())) {
         continue;
       }
 
       // Matching the postfix.
-      int postfixSplit = index.propertySize();
+      int postfixSplit = index.getPropertyCount();
       for (IndexComponent component : Lists.reverse(indexOnlyQuery.getPostfix())) {
         if (!component.matches(
             index
-                .propertys()
+                .getPropertyList()
                 .subList(Math.max(postfixSplit - component.size(), 0), postfixSplit))) {
           continue index_for;
         }
@@ -276,7 +276,7 @@ public class CompositeIndexManager {
 
       // Postfix matches! Now checking the prefix.
       Set<String> indexEqProps = Sets.newHashSetWithExpectedSize(postfixSplit);
-      for (Property prop : index.propertys().subList(0, postfixSplit)) {
+      for (Property prop : index.getPropertyList().subList(0, postfixSplit)) {
         // Index must not contain extra properties in the prefix.
         if (!indexOnlyQuery.getPrefix().contains(prop.getName())) {
           continue index_for;
@@ -287,7 +287,7 @@ public class CompositeIndexManager {
       // Index matches!
 
       // Find the matching remaining requirements.
-      List<Property> indexPostfix = index.propertys().subList(postfixSplit, index.propertySize());
+      List<Property> indexPostfix = index.getPropertyList().subList(postfixSplit, index.getPropertyCount());
 
       Set<String> remainingEqProps;
       boolean remainingAncestor;
@@ -304,7 +304,7 @@ public class CompositeIndexManager {
 
       // Remove any remaining requirements handled by this index.
       boolean modified = remainingEqProps.removeAll(indexEqProps);
-      if (remainingAncestor && index.isAncestor()) {
+      if (remainingAncestor && index.getAncestor()) {
         modified = true;
         remainingAncestor = false;
       }

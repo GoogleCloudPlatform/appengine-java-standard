@@ -58,30 +58,30 @@ public class EntityTranslator {
   }
 
   public static Entity createFromPbBytes(byte[] pbBytes) {
-    EntityProto proto = new EntityProto();
+    EntityProto.Builder proto = EntityProto.newBuilder();
     boolean parsed = proto.mergeFrom(pbBytes);
     if (!parsed || !proto.isInitialized()) {
       throw new IllegalArgumentException("Could not parse EntityProto bytes");
     }
-    return createFromPb(proto);
+    return createFromPb(proto.build());
   }
 
   public static EntityProto convertToPb(Entity entity) {
     Reference reference = KeyTranslator.convertToPb(entity.getKey());
 
-    EntityProto proto = new EntityProto();
+    EntityProto.Builder proto = EntityProto.newBuilder();
     proto.setKey(reference);
 
     // If we've already been stored, make sure the entity group is set
     // to match our key.
-    Path entityGroup = proto.getMutableEntityGroup();
+    Path.Builder entityGroup = proto.getEntityGroup().toBuilder();
     Key key = entity.getKey();
     if (key.isComplete()) {
-      entityGroup.addElement(reference.getPath().elements().get(0));
+      entityGroup.addElement(reference.getPath().getElement(0));
     }
 
-    DataTypeTranslator.addPropertiesToPb(entity.getPropertyMap(), proto);
-    return proto;
+    DataTypeTranslator.addPropertiesToPb(entity.getPropertyMap(), proto.build());
+    return proto.build();
   }
 
   // All methods are static.  Do not instantiate.

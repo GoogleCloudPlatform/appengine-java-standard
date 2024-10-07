@@ -107,7 +107,7 @@ public final class RawValue implements Serializable {
   public @Nullable Object getValue() {
     if (valueV3 != null) {
       if (valueV3.hasBooleanValue()) {
-        return valueV3.isBooleanValue();
+        return valueV3.getBooleanValue();
       } else if (valueV3.hasDoubleValue()) {
         return valueV3.getDoubleValue();
       } else if (valueV3.hasInt64Value()) {
@@ -117,7 +117,7 @@ public final class RawValue implements Serializable {
       } else if (valueV3.hasReferenceValue()) {
         return asType(Key.class);
       } else if (valueV3.hasStringValue()) {
-        return valueV3.getStringValueAsBytes();
+        return valueV3.getStringValueBytes();
       } else if (valueV3.hasUserValue()) {
         return asType(User.class);
       }

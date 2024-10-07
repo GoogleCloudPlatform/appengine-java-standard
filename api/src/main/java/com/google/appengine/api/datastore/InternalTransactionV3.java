@@ -76,15 +76,15 @@ class InternalTransactionV3 implements TransactionImpl.InternalTransaction {
 
   private <T extends Message> Future<Void> makeAsyncTxnCall(
       DatastoreService_3.Method method, T response) {
-    DatastoreV3Pb.Transaction txn = new DatastoreV3Pb.Transaction();
+    DatastoreV3Pb.Transaction.Builder txn = DatastoreV3Pb.Transaction.newBuilder();
     txn.setApp(app);
     txn.setHandle(getHandle());
-    return makeAsyncCall(method, txn, response);
+    return makeAsyncCall(method, txn.build(), response);
   }
 
   @Override
   public Future<Void> doCommitAsync() {
-    return makeAsyncTxnCall(DatastoreService_3.Method.Commit, new CommitResponse());
+    return makeAsyncTxnCall(DatastoreService_3.Method.Commit, CommitResponse.newBuilder().build());
   }
 
   @Override
@@ -119,10 +119,10 @@ class InternalTransactionV3 implements TransactionImpl.InternalTransaction {
   }
 
   static DatastoreV3Pb.Transaction toProto(Transaction txn) {
-    DatastoreV3Pb.Transaction txnProto = new DatastoreV3Pb.Transaction();
+    DatastoreV3Pb.Transaction.Builder txnProto = DatastoreV3Pb.Transaction.newBuilder();
     txnProto.setApp(txn.getApp());
     txnProto.setHandle(Long.parseLong(txn.getId()));
-    return txnProto;
+    return txnProto.build();
   }
 
   static com.google.apphosting.datastore.proto2api.DatastoreV3Pb.Transaction toProto2(
