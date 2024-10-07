@@ -44,8 +44,10 @@ abstract class BaseEntityComparator<EntityT> implements Comparator<EntityT> {
       };
 
   // default sort order is by Key in ascending order
-  static final Order KEY_ASC_ORDER =
-      new Order().setProperty(Entity.KEY_RESERVED_PROPERTY).setDirection(Order.Direction.ASCENDING);
+  static final Order KEY_ASC_ORDER = Order.newBuilder()
+      .setProperty(Entity.KEY_RESERVED_PROPERTY)
+      .setDirection(Order.Direction.ASCENDING)
+      .build();
 
   final List<Order> orders;
   final Map<String, FilterMatcher> filters;
@@ -69,11 +71,12 @@ abstract class BaseEntityComparator<EntityT> implements Comparator<EntityT> {
     // Making arbitrary guess about order implied by exists filters.
     List<Order> existsOrders = Lists.newArrayList();
     for (Filter filter : filters) {
-      if (filter.getOpEnum() == Filter.Operator.EXISTS) {
+      if (filter.getOp() == Filter.Operator.EXISTS) {
         existsOrders.add(
-            new Order()
+            Order.newBuilder()
                 .setProperty(filter.getProperty(0).getName())
-                .setDirection(Direction.ASCENDING));
+                .setDirection(Direction.ASCENDING)
+                .build());
       }
     }
     Collections.sort(existsOrders, ORDER_PROPERTY_COMPARATOR);
@@ -84,12 +87,13 @@ abstract class BaseEntityComparator<EntityT> implements Comparator<EntityT> {
     if (adjusted.isEmpty()) {
       // Check for a inequality filter to order by
       for (Filter filter : filters) {
-        if (ValidatedQuery.INEQUALITY_OPERATORS.contains(filter.getOpEnum())) {
+        if (ValidatedQuery.INEQUALITY_OPERATORS.contains(filter.getOp())) {
           // Only the first inequality is applied natively
           adjusted.add(
-              new Order()
+              Order.newBuilder()
                   .setProperty(filter.getProperty(0).getName())
-                  .setDirection(Direction.ASCENDING));
+                  .setDirection(Direction.ASCENDING)
+                  .build());
           break;
         }
       }
@@ -153,7 +157,7 @@ abstract class BaseEntityComparator<EntityT> implements Comparator<EntityT> {
       // sorting in ascending order we want to compare the minimum values.
       // If we're sorting in descending order we want to compare the maximum
       // values.
-      boolean findMin = order.getDirectionEnum() == DatastoreV3Pb.Query.Order.Direction.ASCENDING;
+      boolean findMin = order.getDirection() == DatastoreV3Pb.Query.Order.Direction.ASCENDING;
       FilterMatcher matcher = filters.get(property);
       if (matcher == null) {
         matcher = FilterMatcher.MATCH_ALL;
@@ -166,7 +170,7 @@ abstract class BaseEntityComparator<EntityT> implements Comparator<EntityT> {
       result = MULTI_TYPE_COMPARATOR.compare(extremeA, extremeB);
 
       if (result != 0) {
-        if (order.getDirectionEnum() == DatastoreV3Pb.Query.Order.Direction.DESCENDING) {
+        if (order.getDirection() == DatastoreV3Pb.Query.Order.Direction.DESCENDING) {
           result = -result;
         }
         return result;

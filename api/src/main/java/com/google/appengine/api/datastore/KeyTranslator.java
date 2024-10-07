@@ -33,7 +33,7 @@ class KeyTranslator {
     // Check that the reference contains elements first.
     Key parentKey = null;
     Path path = reference.getPath();
-    List<Element> elements = path.elements();
+    List<Element> elements = path.getElementList();
     if (elements.isEmpty()) {
       throw new IllegalArgumentException("Invalid Key PB: no elements.");
     }
@@ -62,8 +62,8 @@ class KeyTranslator {
     return parentKey;
   }
 
-  public static Reference convertToPb(Key key) {
-    Reference reference = new Reference();
+  public static Reference.Builder convertToPb(Key key) {
+    Reference.Builder reference = Reference.newBuilder();
 
     reference.setApp(key.getAppId());
     String nameSpace = key.getNamespace();
@@ -71,19 +71,19 @@ class KeyTranslator {
       reference.setNameSpace(nameSpace);
     }
 
-    Path path = reference.getMutablePath();
+    Path.Builder path = reference.build().getPath().toBuilder();
     while (key != null) {
-      Element pathElement = new Element();
+      Element.Builder pathElement = Element.newBuilder();
       pathElement.setType(key.getKind());
       if (key.getName() != null) {
         pathElement.setName(key.getName());
       } else if (key.getId() != Key.NOT_ASSIGNED) {
         pathElement.setId(key.getId());
       }
-      path.addElement(pathElement);
+      path.addElement(pathElement.build());
       key = key.getParent();
     }
-    Collections.reverse(path.mutableElements());
+    Collections.reverse(path.build().getElementList());
     return reference;
   }
 
@@ -93,7 +93,7 @@ class KeyTranslator {
     // Can only have id or name, not both.
     if (key.getName() == null) {
       Path path = reference.getPath();
-      key.setId(path.getElement(path.elementSize() - 1).getId());
+      key.setId(path.getElement(path.getElementCount() - 1).getId());
     }
   }
 

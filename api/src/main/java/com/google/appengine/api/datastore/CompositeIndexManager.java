@@ -88,13 +88,13 @@ public class CompositeIndexManager {
    * @return The index that must be present in order to fulfill the query, or {@code null} if no
    *     index is needed.
    */
-  protected @Nullable Index compositeIndexForQuery(final IndexComponentsOnlyQuery indexOnlyQuery) {
-    DatastoreV3Pb.Query query = indexOnlyQuery.getQuery();
+  protected Index.Builder compositeIndexForQuery(final IndexComponentsOnlyQuery indexOnlyQuery) {
+    DatastoreV3Pb.Query.Builder query = indexOnlyQuery.getQuery();
 
     boolean hasKind = query.hasKind();
     boolean isAncestor = query.hasAncestor();
-    List<Filter> filters = query.filters();
-    List<Order> orders = query.orders();
+    List<Filter> filters = query.getFilterList();
+    List<Order> orders = query.getOrderList();
 
     if (filters.isEmpty() && orders.isEmpty()) {
       // If there are no filters or sorts no composite index is needed; the
@@ -128,7 +128,7 @@ public class CompositeIndexManager {
         && indexProperties.size() <= 1
         && !indexOnlyQuery.isGeo()
         && (!indexOnlyQuery.hasKeyProperty()
-            || indexProperties.get(0).getDirectionEnum() == Property.Direction.ASCENDING)) {
+            || indexProperties.get(0).getDirection() == Property.Direction.ASCENDING)) {
       // For traditional indexes, we never need kind-only or
       // single-property composite indexes unless it's a single
       // property, descending index on key. The built-in primary key
@@ -137,10 +137,10 @@ public class CompositeIndexManager {
       return null;
     }
 
-    Index index = new Index();
+    Index.Builder index = Index.newBuilder();
     index.setEntityType(query.getKind());
     index.setAncestor(isAncestor);
-    index.mutablePropertys().addAll(indexProperties);
+    index.addAllProperty(indexProperties);
     return index;
   }
 
@@ -182,12 +182,12 @@ public class CompositeIndexManager {
 
     @Override
     public Property apply(String name) {
-      Property p = new Property();
+      Property.Builder p = Property.newBuilder();
       p.setName(name);
       if (mode != null) {
         p.setMode(mode);
       }
-      return p;
+      return p.build();
     }
   }
 
@@ -226,10 +226,10 @@ public class CompositeIndexManager {
    * @return The minimum index that must be present in order to fulfill the query, or {@code null}
    *     if no index is needed.
    */
-  protected @Nullable Index minimumCompositeIndexForQuery(
+  protected Index.Builder minimumCompositeIndexForQuery(
       IndexComponentsOnlyQuery indexOnlyQuery, Collection<Index> indexes) {
 
-    Index suggestedIndex = compositeIndexForQuery(indexOnlyQuery);
+    Index.Builder suggestedIndex = compositeIndexForQuery(indexOnlyQuery);
     if (suggestedIndex == null) {
       return null;
     }
@@ -258,16 +258,16 @@ public class CompositeIndexManager {
       !indexOnlyQuery.getQuery().getKind().equals(index.getEntityType())
           ||
           // Ancestor indexes can only be used on ancestor queries.
-          (!indexOnlyQuery.getQuery().hasAncestor() && index.isAncestor())) {
+          (!indexOnlyQuery.getQuery().hasAncestor() && index.getAncestor())) {
         continue;
       }
 
       // Matching the postfix.
-      int postfixSplit = index.propertySize();
+      int postfixSplit = index.getPropertyCount();
       for (IndexComponent component : Lists.reverse(indexOnlyQuery.getPostfix())) {
         if (!component.matches(
             index
-                .propertys()
+                .getPropertyList()
                 .subList(Math.max(postfixSplit - component.size(), 0), postfixSplit))) {
           continue index_for;
         }
@@ -276,7 +276,7 @@ public class CompositeIndexManager {
 
       // Postfix matches! Now checking the prefix.
       Set<String> indexEqProps = Sets.newHashSetWithExpectedSize(postfixSplit);
-      for (Property prop : index.propertys().subList(0, postfixSplit)) {
+      for (Property prop : index.getPropertyList().subList(0, postfixSplit)) {
         // Index must not contain extra properties in the prefix.
         if (!indexOnlyQuery.getPrefix().contains(prop.getName())) {
           continue index_for;
@@ -287,7 +287,7 @@ public class CompositeIndexManager {
       // Index matches!
 
       // Find the matching remaining requirements.
-      List<Property> indexPostfix = index.propertys().subList(postfixSplit, index.propertySize());
+      List<Property> indexPostfix = index.getPropertyList().subList(postfixSplit, index.getPropertyCount());
 
       Set<String> remainingEqProps;
       boolean remainingAncestor;
@@ -304,7 +304,7 @@ public class CompositeIndexManager {
 
       // Remove any remaining requirements handled by this index.
       boolean modified = remainingEqProps.removeAll(indexEqProps);
-      if (remainingAncestor && index.isAncestor()) {
+      if (remainingAncestor && index.getAncestor()) {
         modified = true;
         remainingAncestor = false;
       }
@@ -348,11 +348,11 @@ public class CompositeIndexManager {
     suggestedIndex.clearProperty();
     suggestedIndex.setAncestor(minimumRemaining.ancestorConstraint);
     for (String name : minimumRemaining.equalityProperties) {
-      suggestedIndex.addProperty().setName(name).setDirection(Direction.ASCENDING);
+      suggestedIndex.addPropertyBuilder().setName(name).setDirection(Direction.ASCENDING);
     }
-    Collections.sort(suggestedIndex.mutablePropertys(), PROPERTY_NAME_COMPARATOR);
+    Collections.sort(suggestedIndex.getPropertyList(), PROPERTY_NAME_COMPARATOR);
 
-    suggestedIndex.mutablePropertys().addAll(minimumPostfix);
+    suggestedIndex.getPropertyList().addAll(minimumPostfix);
     return suggestedIndex;
   }
 

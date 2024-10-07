@@ -107,7 +107,7 @@ public final class RawValue implements Serializable {
   public @Nullable Object getValue() {
     if (valueV3 != null) {
       if (valueV3.hasBooleanValue()) {
-        return valueV3.isBooleanValue();
+        return valueV3.getBooleanValue();
       } else if (valueV3.hasDoubleValue()) {
         return valueV3.getDoubleValue();
       } else if (valueV3.hasInt64Value()) {
@@ -117,7 +117,7 @@ public final class RawValue implements Serializable {
       } else if (valueV3.hasReferenceValue()) {
         return asType(Key.class);
       } else if (valueV3.hasStringValue()) {
-        return valueV3.getStringValueAsBytes();
+        return valueV3.getStringValueBytes();
       } else if (valueV3.hasUserValue()) {
         return asType(User.class);
       }
@@ -145,7 +145,7 @@ public final class RawValue implements Serializable {
           // TODO: return a Date? (not currently possible to get here).
           return DatastoreHelper.getTimestamp(valueV1);
         case GEO_POINT_VALUE:
-          if (valueV1.getMeaning() == 0 || valueV1.getMeaning() == Meaning.INDEX_VALUE.getValue()) {
+          if (valueV1.getMeaning() == 0 || valueV1.getMeaning() == Meaning.INDEX_VALUE.getNumber()) {
             return asType(GeoPt.class);
           }
           break; // GeoPt with meaning becomes null.
@@ -174,7 +174,7 @@ public final class RawValue implements Serializable {
   private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
     int version = in.read();
     if (version == 1) {
-      valueV3 = new PropertyValue();
+      valueV3 = PropertyValue.newBuilder().build();
       boolean parsed = valueV3.parseFrom(in);
       if (!parsed || !valueV3.isInitialized()) {
         throw new InvalidProtocolBufferException("Could not parse PropertyValue");

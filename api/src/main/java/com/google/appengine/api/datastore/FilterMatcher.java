@@ -174,7 +174,7 @@ class FilterMatcher {
 
   public void addFilter(Filter filter) {
     Comparable<Object> value = DataTypeTranslator.getComparablePropertyValue(filter.getProperty(0));
-    switch (filter.getOpEnum()) {
+    switch (filter.getOp()) {
       case EQUAL:
         equalValues.add(value);
         break;
