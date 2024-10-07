@@ -34,11 +34,11 @@ import java.util.List;
 final class QueryTranslator {
 
   @SuppressWarnings("deprecation")
-  public static DatastoreV3Pb.Query convertToPb(Query query, FetchOptions fetchOptions) {
+  public static DatastoreV3Pb.Query.Builder convertToPb(Query query, FetchOptions fetchOptions) {
     Key ancestor = query.getAncestor();
     List<Query.SortPredicate> sortPredicates = query.getSortPredicates();
 
-    DatastoreV3Pb.Query proto = new DatastoreV3Pb.Query();
+    DatastoreV3Pb.Query.Builder proto = DatastoreV3Pb.Query.newBuilder();
 
     if (query.getKind() != null) {
       proto.setKind(query.getKind());
@@ -66,7 +66,7 @@ final class QueryTranslator {
 
     if (fetchOptions.getStartCursor() != null) {
       if (!proto
-          .getMutableCompiledCursor()
+          .getCompiledCursor()
           .parseFrom(fetchOptions.getStartCursor().toByteString())) {
         throw new IllegalArgumentException("Invalid cursor");
       }
@@ -74,7 +74,7 @@ final class QueryTranslator {
 
     if (fetchOptions.getEndCursor() != null) {
       if (!proto
-          .getMutableEndCompiledCursor()
+          .getEndCompiledCursor()
           .parseFrom(fetchOptions.getEndCursor().toByteString())) {
         throw new IllegalArgumentException("Invalid cursor");
       }
@@ -85,7 +85,7 @@ final class QueryTranslator {
     }
 
     if (ancestor != null) {
-      Reference ref = KeyTranslator.convertToPb(ancestor);
+      Reference.Builder ref = KeyTranslator.convertToPb(ancestor);
       if (!ref.getApp().equals(proto.getApp())) {
         throw new IllegalArgumentException("Query and ancestor appid/namespace mismatch");
       }
@@ -112,13 +112,13 @@ final class QueryTranslator {
       copyGeoFilterToPb(filter, proto);
     } else {
       for (Query.FilterPredicate filterPredicate : query.getFilterPredicates()) {
-        Filter filterPb = proto.addFilter();
+        Filter.Builder filterPb = proto.addFilterBuilder();
         filterPb.copyFrom(convertFilterPredicateToPb(filterPredicate));
       }
     }
 
     for (Query.SortPredicate sortPredicate : sortPredicates) {
-      Order order = proto.addOrder();
+      Order.Builder order = proto.addOrderBuilder();
       order.copyFrom(convertSortPredicateToPb(sortPredicate));
     }
 
@@ -130,10 +130,10 @@ final class QueryTranslator {
   }
 
   static Order convertSortPredicateToPb(Query.SortPredicate predicate) {
-    Order order = new Order();
+    Order.Builder order = Order.newBuilder();
     order.setProperty(predicate.getPropertyName());
     order.setDirection(getSortOp(predicate.getDirection()));
-    return order;
+    return order.build();
   }
 
   private static Direction getSortOp(Query.SortDirection direction) {
@@ -152,7 +152,7 @@ final class QueryTranslator {
    * the filter indeed has a geo-spatial term; but the filter as a whole has not yet been entirely
    * validated, so we complete the validation here.
    */
-  private static void copyGeoFilterToPb(Query.Filter filter, DatastoreV3Pb.Query proto) {
+  private static void copyGeoFilterToPb(Query.Filter filter, DatastoreV3Pb.Query.Builder proto) {
     if (filter instanceof Query.CompositeFilter) {
       Query.CompositeFilter conjunction = (Query.CompositeFilter) filter;
       checkArgument(
@@ -163,30 +163,30 @@ final class QueryTranslator {
       }
     } else if (filter instanceof Query.StContainsFilter) {
       Query.StContainsFilter containmentFilter = (Query.StContainsFilter) filter;
-      Filter f = proto.addFilter();
+      Filter.Builder f = proto.addFilterBuilder();
       f.setOp(Operator.CONTAINED_IN_REGION);
       f.setGeoRegion(convertGeoRegionToPb(containmentFilter.getRegion()));
       // It's a bit weird to add a Value with nothing in it; but we
       // need Property in order to convey the property name, and Value
       // is required in Property.  But in our case there is no value:
       // the geo region acts as the thing to which we "compare" the property.
-      f.addProperty()
+      f.addPropertyBuilder()
           .setName(containmentFilter.getPropertyName())
           .setMultiple(false)
-          .setValue(new PropertyValue());
+          .setValue(PropertyValue.newBuilder().build());
     } else {
       checkArgument(filter instanceof Query.FilterPredicate);
       Query.FilterPredicate predicate = (Query.FilterPredicate) filter;
       checkArgument(
           predicate.getOperator() == Query.FilterOperator.EQUAL,
           "Geo-spatial filters may only be combined with equality comparisons");
-      Filter f = proto.addFilter();
+      Filter.Builder f = proto.addFilterBuilder();
       f.copyFrom(convertFilterPredicateToPb(predicate));
     }
   }
 
   private static Filter convertFilterPredicateToPb(Query.FilterPredicate predicate) {
-    Filter filterPb = new Filter();
+    Filter.Builder filterPb = Filter.newBuilder();
     filterPb.setOp(getFilterOp(predicate.getOperator()));
 
     if (predicate.getValue() instanceof Iterable<?>) {
@@ -195,45 +195,45 @@ final class QueryTranslator {
       }
       for (Object value : (Iterable<?>) predicate.getValue()) {
         filterPb
-            .addProperty()
+            .addPropertyBuilder()
             .setName(predicate.getPropertyName())
             .setValue(DataTypeTranslator.toV3Value(value));
       }
     } else {
       filterPb
-          .addProperty()
+          .addPropertyBuilder()
           .setName(predicate.getPropertyName())
           .setValue(DataTypeTranslator.toV3Value(predicate.getValue()));
     }
 
-    return filterPb;
+    return filterPb.build();
   }
 
   private static DatastoreV3Pb.GeoRegion convertGeoRegionToPb(Query.GeoRegion region) {
-    DatastoreV3Pb.GeoRegion geoRegion = new DatastoreV3Pb.GeoRegion();
+    DatastoreV3Pb.GeoRegion.Builder geoRegion = DatastoreV3Pb.GeoRegion.newBuilder();
     if (region instanceof Query.GeoRegion.Circle) {
       Query.GeoRegion.Circle circle = (Query.GeoRegion.Circle) region;
-      DatastoreV3Pb.CircleRegion circlePb = new DatastoreV3Pb.CircleRegion();
+      DatastoreV3Pb.CircleRegion.Builder circlePb = DatastoreV3Pb.CircleRegion.newBuilder();
       circlePb.setCenter(convertGeoPtToPb(circle.getCenter()));
       circlePb.setRadiusMeters(circle.getRadius());
       geoRegion.setCircle(circlePb);
     } else if (region instanceof Query.GeoRegion.Rectangle) {
       Query.GeoRegion.Rectangle rect = (Query.GeoRegion.Rectangle) region;
-      DatastoreV3Pb.RectangleRegion rectPb = new DatastoreV3Pb.RectangleRegion();
+      DatastoreV3Pb.RectangleRegion.Builder rectPb = DatastoreV3Pb.RectangleRegion.newBuilder();
       rectPb.setSouthwest(convertGeoPtToPb(rect.getSouthwest()));
       rectPb.setNortheast(convertGeoPtToPb(rect.getNortheast()));
       geoRegion.setRectangle(rectPb);
     } else {
       throw new IllegalArgumentException("missing or unknown-type region in StContainsFilter");
     }
-    return geoRegion;
+    return geoRegion.build();
   }
 
   private static DatastoreV3Pb.RegionPoint convertGeoPtToPb(GeoPt point) {
-    DatastoreV3Pb.RegionPoint pointPb = new DatastoreV3Pb.RegionPoint();
+    DatastoreV3Pb.RegionPoint.Builder pointPb = DatastoreV3Pb.RegionPoint.newBuilder();
     pointPb.setLatitude(point.getLatitude());
     pointPb.setLongitude(point.getLongitude());
-    return pointPb;
+    return pointPb.build();
   }
 
   private static Operator getFilterOp(Query.FilterOperator operator) {

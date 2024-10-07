@@ -57,10 +57,10 @@ class UnorderedIndexComponent implements IndexComponent {
   public List<Property> preferredIndexProperties() {
     List<Property> indexProps = Lists.newArrayListWithExpectedSize(matcherProperties.size());
     for (String name : matcherProperties) {
-      Property indexProperty = new Property();
+      Property.Builder indexProperty = Property.newBuilder();
       indexProperty.setName(name);
       indexProperty.setDirection(Direction.ASCENDING);
-      indexProps.add(indexProperty);
+      indexProps.add(indexProperty.build());
     }
     return indexProps;
   }

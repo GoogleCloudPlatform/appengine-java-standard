@@ -22,7 +22,8 @@ import com.google.apphosting.api.ApiProxy.ApiConfig;
 import com.google.apphosting.datastore.proto2api.DatastoreV3Pb;
 import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.CommitResponse;
 import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.DatastoreService_3;
-import com.google.io.protocol.ProtocolMessage;
+// import com.google.io.protocol.ProtocolMessage;
+import com.google.protobuf.Message;
 import com.google.protobuf.MessageLite;
 import java.util.concurrent.Future;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -57,7 +58,7 @@ class InternalTransactionV3 implements TransactionImpl.InternalTransaction {
   }
 
   // extracted method to facilitate testing
-  <T extends ProtocolMessage<T>> Future<Void> makeAsyncCall(
+  <T extends Message> Future<Void> makeAsyncCall(
       DatastoreService_3.Method method, MessageLite request, T response) {
     Future<T> resultProto = DatastoreApiHelper.makeAsyncCall(apiConfig, method, request, response);
     return new FutureWrapper<T, Void>(resultProto) {
@@ -73,17 +74,17 @@ class InternalTransactionV3 implements TransactionImpl.InternalTransaction {
     };
   }
 
-  private <T extends ProtocolMessage<T>> Future<Void> makeAsyncTxnCall(
+  private <T extends Message> Future<Void> makeAsyncTxnCall(
       DatastoreService_3.Method method, T response) {
-    DatastoreV3Pb.Transaction txn = new DatastoreV3Pb.Transaction();
+    DatastoreV3Pb.Transaction.Builder txn = DatastoreV3Pb.Transaction.newBuilder();
     txn.setApp(app);
     txn.setHandle(getHandle());
-    return makeAsyncCall(method, txn, response);
+    return makeAsyncCall(method, txn.build(), response);
   }
 
   @Override
   public Future<Void> doCommitAsync() {
-    return makeAsyncTxnCall(DatastoreService_3.Method.Commit, new CommitResponse());
+    return makeAsyncTxnCall(DatastoreService_3.Method.Commit, CommitResponse.newBuilder().build());
   }
 
   @Override
@@ -118,10 +119,10 @@ class InternalTransactionV3 implements TransactionImpl.InternalTransaction {
   }
 
   static DatastoreV3Pb.Transaction toProto(Transaction txn) {
-    DatastoreV3Pb.Transaction txnProto = new DatastoreV3Pb.Transaction();
+    DatastoreV3Pb.Transaction.Builder txnProto = DatastoreV3Pb.Transaction.newBuilder();
     txnProto.setApp(txn.getApp());
     txnProto.setHandle(Long.parseLong(txn.getId()));
-    return txnProto;
+    return txnProto.build();
   }
 
   static com.google.apphosting.datastore.proto2api.DatastoreV3Pb.Transaction toProto2(

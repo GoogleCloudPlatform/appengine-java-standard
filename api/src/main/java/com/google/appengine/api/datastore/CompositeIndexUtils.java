@@ -68,20 +68,20 @@ public final class CompositeIndexUtils {
     // Careful with pb method names - index.hasAncestor just returns whether or not
     // the ancestor was set, not the value of the field itself.  We always provide
     // a value for this field, so we just want the value.
-    boolean isAncestor = index.isAncestor();
-    if (index.propertySize() == 0) {
+    boolean isAncestor = index.getAncestor();
+    if (index.getPropertyCount() == 0) {
       return String.format(
           DATASTORE_INDEX_NO_PROPERTIES_XML_FORMAT, index.getEntityType(), isAncestor, source);
     }
     boolean isSearchIndex = false;
     StringBuilder sb = new StringBuilder();
-    for (Property prop : index.propertys()) {
+    for (Property prop : index.getPropertyList()) {
       String extraAttribute;
-      if (prop.getDirectionEnum() == Direction.ASCENDING) {
+      if (prop.getDirection() == Direction.ASCENDING) {
         extraAttribute = ASC_ATTRIBUTE;
-      } else if (prop.getDirectionEnum() == Direction.DESCENDING) {
+      } else if (prop.getDirection() == Direction.DESCENDING) {
         extraAttribute = DESC_ATTRIBUTE;
-      } else if (prop.getModeEnum() == Mode.GEOSPATIAL) {
+      } else if (prop.getMode() == Mode.GEOSPATIAL) {
         isSearchIndex = true;
         extraAttribute = GEOSPATIAL_ATTRIBUTE;
       } else {
