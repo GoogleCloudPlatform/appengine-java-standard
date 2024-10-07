@@ -244,52 +244,54 @@ public class EE10RemoteApiServlet extends HttpServlet {
   }
 
   private byte[] executeRunQuery(Request request) {
-    Query queryRequest = new Query();
-    parseFromBytes(queryRequest, request.getRequestAsBytes());
+    Query.Builder queryRequest = Query.newBuilder();
+    parseFromBytes(queryRequest.build(), request.getRequest().toByteArray());
     int batchSize = Math.max(1000, queryRequest.getLimit());
     queryRequest.setCount(batchSize);
 
-    QueryResult runQueryResponse = new QueryResult();
-    byte[] res = ApiProxy.makeSyncCall("datastore_v3", "RunQuery", request.getRequestAsBytes());
-    parseFromBytes(runQueryResponse, res);
+    QueryResult.Builder runQueryResponse = QueryResult.newBuilder();
+    byte[] res = ApiProxy.makeSyncCall("datastore_v3", "RunQuery", request.getRequest()
+        .toByteArray());
+    parseFromBytes(runQueryResponse.build(), res);
 
     if (queryRequest.hasLimit()) {
       // Try to pull all results
-      while (runQueryResponse.isMoreResults()) {
-        NextRequest nextRequest = new NextRequest();
-        nextRequest.getMutableCursor().mergeFrom(runQueryResponse.getCursor());
+      while (runQueryResponse.getMoreResults()) {
+        NextRequest.Builder nextRequest = NextRequest.newBuilder();
+        nextRequest.getCursor().mergeFrom(runQueryResponse.getCursor());
         nextRequest.setCount(batchSize);
-        byte[] nextRes = ApiProxy.makeSyncCall("datastore_v3", "Next", nextRequest.toByteArray());
-        parseFromBytes(runQueryResponse, nextRes);
+        byte[] nextRes = ApiProxy.makeSyncCall("datastore_v3", "Next", nextRequest.build()
+            .toByteArray());
+        parseFromBytes(runQueryResponse.build(), nextRes);
       }
     }
-    return runQueryResponse.toByteArray();
+    return runQueryResponse.build().toByteArray();
   }
 
   private byte[] executeTxQuery(Request request) {
-    TransactionQueryResult result = new TransactionQueryResult();
+    TransactionQueryResult.Builder result = TransactionQueryResult.newBuilder();
 
-    Query query = new Query();
-    parseFromBytes(query, request.getRequestAsBytes());
+    Query.Builder query = Query.newBuilder();
+    parseFromBytes(query.build(), request.getRequest().toByteArray());
 
     if (!query.hasAncestor()) {
-      throw new ApiProxy.ApplicationException(BAD_REQUEST.getValue(),
+      throw new ApiProxy.ApplicationException(BAD_REQUEST.getNumber(),
                                               "No ancestor in transactional query.");
     }
     // Make __entity_group__ key
     OnestoreEntity.Reference egKey =
-        result.getMutableEntityGroupKey().mergeFrom(query.getAncestor());
+        result.build().getEntityGroupKey().mergeFrom(query.getAncestor());
     OnestoreEntity.Path.Element root = egKey.getPath().getElement(0);
-    egKey.getMutablePath().clearElement().addElement(root);
-    OnestoreEntity.Path.Element egElement = new OnestoreEntity.Path.Element();
+    egKey.getPath().clearElement().addElement(root);
+    OnestoreEntity.Path.Element.Builder egElement = OnestoreEntity.Path.Element.newBuilder();
     egElement.setType("__entity_group__").setId(1);
-    egKey.getMutablePath().addElement(egElement);
+    egKey.getPath().addElement(egElement);
 
     // And then perform the transaction with the ancestor query and __entity_group__ fetch.
     byte[] tx = beginTransaction(false);
-    parseFromBytes(query.getMutableTransaction(), tx);
+    parseFromBytes(query.getTransaction(), tx);
     byte[] queryBytes = ApiProxy.makeSyncCall("datastore_v3", "RunQuery", query.toByteArray());
-    parseFromBytes(result.getMutableResult(), queryBytes);
+    parseFromBytes(result.getResult(), queryBytes);
 
     GetRequest egRequest = new GetRequest();
     egRequest.addKey(egKey);

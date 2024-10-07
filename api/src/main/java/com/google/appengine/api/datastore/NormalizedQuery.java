@@ -35,14 +35,14 @@ class NormalizedQuery {
           Operator.LESS_THAN,
           Operator.LESS_THAN_OR_EQUAL);
 
-  protected final Query query;
+  protected final Query.Builder query;
 
   public NormalizedQuery(Query query) {
-    this.query = query.clone();
+    this.query = query.toBuilder().clone();
     normalizeQuery();
   }
 
-  public Query getQuery() {
+  public Query.Builder getQuery() {
     return query;
   }
 
@@ -56,10 +56,10 @@ class NormalizedQuery {
     Set<String> inequalityProperties = new HashSet<String>();
 
     for (Iterator<Filter> itr = query.getFilterList().iterator(); itr.hasNext(); ) {
-      Filter f = itr.next();
+      Filter.Builder f = itr.next().toBuilder();
       /* Normalize IN filters to EQUAL. */
       if (f.getPropertyCount() == 1 && f.getOp() == Operator.IN) {
-        f.set(Operator.EQUAL);
+        f.setOp(Operator.EQUAL);
       }
       if (f.getPropertyCount() >= 1) {
         String name = f.getProperty(0).getName();
@@ -102,12 +102,12 @@ class NormalizedQuery {
     for (String propName : Iterables.concat(query.getPropertyNameList(), query.getGroupByPropertyNameList())) {
       if (allProperties.add(propName)) {
         query
-            .addFilter()
+            .addFilterBuilder()
             .setOp(Operator.EXISTS)
-            .addProperty()
+            .addPropertyBuilder()
             .setName(propName)
             .setMultiple(false)
-            .getMutableValue();
+            .getValue();
       }
     }
 

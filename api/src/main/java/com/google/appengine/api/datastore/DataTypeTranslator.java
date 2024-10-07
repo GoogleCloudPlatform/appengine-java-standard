@@ -162,6 +162,7 @@ public final class DataTypeTranslator {
 
   static {
     Type<?>[] meaningIntToType = new Type<?>[Meaning.Meaning_MAX.getValue()];
+    Meaning.
     Set<Type<?>> typesWithoutMeaning = new HashSet<>();
     for (Type<?> type : TYPE_MAP.values()) {
       int meaningInt = type.getV3Meaning().getNumber();
@@ -508,7 +509,7 @@ public final class DataTypeTranslator {
    * @return {@code null} if no value was set for {@code property}
    */
   public static @Nullable Object getPropertyValue(Property property) {
-    int meaningInt = property.getMeaning();
+    int meaningInt = property.getMeaning().getNumber();
     PropertyValue value = property.getValue();
     if (meaningInt == 0) {
       // The value has no meaning.  Check possible types, most likely first.

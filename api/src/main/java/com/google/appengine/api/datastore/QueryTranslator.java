@@ -34,7 +34,7 @@ import java.util.List;
 final class QueryTranslator {
 
   @SuppressWarnings("deprecation")
-  public static DatastoreV3Pb.Query convertToPb(Query query, FetchOptions fetchOptions) {
+  public static DatastoreV3Pb.Query.Builder convertToPb(Query query, FetchOptions fetchOptions) {
     Key ancestor = query.getAncestor();
     List<Query.SortPredicate> sortPredicates = query.getSortPredicates();
 
@@ -112,13 +112,13 @@ final class QueryTranslator {
       copyGeoFilterToPb(filter, proto);
     } else {
       for (Query.FilterPredicate filterPredicate : query.getFilterPredicates()) {
-        Filter filterPb = proto.addFilter();
+        Filter.Builder filterPb = proto.addFilterBuilder();
         filterPb.copyFrom(convertFilterPredicateToPb(filterPredicate));
       }
     }
 
     for (Query.SortPredicate sortPredicate : sortPredicates) {
-      Order order = proto.addOrder();
+      Order.Builder order = proto.addOrderBuilder();
       order.copyFrom(convertSortPredicateToPb(sortPredicate));
     }
 
@@ -152,7 +152,7 @@ final class QueryTranslator {
    * the filter indeed has a geo-spatial term; but the filter as a whole has not yet been entirely
    * validated, so we complete the validation here.
    */
-  private static void copyGeoFilterToPb(Query.Filter filter, DatastoreV3Pb.Query proto) {
+  private static void copyGeoFilterToPb(Query.Filter filter, DatastoreV3Pb.Query.Builder proto) {
     if (filter instanceof Query.CompositeFilter) {
       Query.CompositeFilter conjunction = (Query.CompositeFilter) filter;
       checkArgument(
@@ -163,30 +163,30 @@ final class QueryTranslator {
       }
     } else if (filter instanceof Query.StContainsFilter) {
       Query.StContainsFilter containmentFilter = (Query.StContainsFilter) filter;
-      Filter f = proto.addFilter();
+      Filter.Builder f = proto.addFilterBuilder();
       f.setOp(Operator.CONTAINED_IN_REGION);
       f.setGeoRegion(convertGeoRegionToPb(containmentFilter.getRegion()));
       // It's a bit weird to add a Value with nothing in it; but we
       // need Property in order to convey the property name, and Value
       // is required in Property.  But in our case there is no value:
       // the geo region acts as the thing to which we "compare" the property.
-      f.addProperty()
+      f.addPropertyBuilder()
           .setName(containmentFilter.getPropertyName())
           .setMultiple(false)
-          .setValue(new PropertyValue());
+          .setValue(PropertyValue.newBuilder().build());
     } else {
       checkArgument(filter instanceof Query.FilterPredicate);
       Query.FilterPredicate predicate = (Query.FilterPredicate) filter;
       checkArgument(
           predicate.getOperator() == Query.FilterOperator.EQUAL,
           "Geo-spatial filters may only be combined with equality comparisons");
-      Filter f = proto.addFilter();
+      Filter.Builder f = proto.addFilterBuilder();
       f.copyFrom(convertFilterPredicateToPb(predicate));
     }
   }
 
   private static Filter convertFilterPredicateToPb(Query.FilterPredicate predicate) {
-    Filter filterPb = new Filter();
+    Filter.Builder filterPb = Filter.newBuilder();
     filterPb.setOp(getFilterOp(predicate.getOperator()));
 
     if (predicate.getValue() instanceof Iterable<?>) {
@@ -195,18 +195,18 @@ final class QueryTranslator {
       }
       for (Object value : (Iterable<?>) predicate.getValue()) {
         filterPb
-            .addProperty()
+            .addPropertyBuilder()
             .setName(predicate.getPropertyName())
             .setValue(DataTypeTranslator.toV3Value(value));
       }
     } else {
       filterPb
-          .addProperty()
+          .addPropertyBuilder()
           .setName(predicate.getPropertyName())
           .setValue(DataTypeTranslator.toV3Value(predicate.getValue()));
     }
 
-    return filterPb;
+    return filterPb.build();
   }
 
   private static DatastoreV3Pb.GeoRegion convertGeoRegionToPb(Query.GeoRegion region) {
@@ -226,7 +226,7 @@ final class QueryTranslator {
     } else {
       throw new IllegalArgumentException("missing or unknown-type region in StContainsFilter");
     }
-    return geoRegion;
+    return geoRegion.build();
   }
 
   private static DatastoreV3Pb.RegionPoint convertGeoPtToPb(GeoPt point) {

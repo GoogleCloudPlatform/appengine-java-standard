@@ -88,8 +88,8 @@ public class CompositeIndexManager {
    * @return The index that must be present in order to fulfill the query, or {@code null} if no
    *     index is needed.
    */
-  protected @Nullable Index compositeIndexForQuery(final IndexComponentsOnlyQuery indexOnlyQuery) {
-    DatastoreV3Pb.Query query = indexOnlyQuery.getQuery();
+  protected Index.Builder compositeIndexForQuery(final IndexComponentsOnlyQuery indexOnlyQuery) {
+    DatastoreV3Pb.Query.Builder query = indexOnlyQuery.getQuery();
 
     boolean hasKind = query.hasKind();
     boolean isAncestor = query.hasAncestor();
@@ -141,7 +141,7 @@ public class CompositeIndexManager {
     index.setEntityType(query.getKind());
     index.setAncestor(isAncestor);
     index.addAllProperty(indexProperties);
-    return index.build();
+    return index;
   }
 
   /** We compare {@link Property Properties} by comparing their names. */
@@ -226,10 +226,10 @@ public class CompositeIndexManager {
    * @return The minimum index that must be present in order to fulfill the query, or {@code null}
    *     if no index is needed.
    */
-  protected @Nullable Index minimumCompositeIndexForQuery(
+  protected Index.Builder minimumCompositeIndexForQuery(
       IndexComponentsOnlyQuery indexOnlyQuery, Collection<Index> indexes) {
 
-    Index suggestedIndex = compositeIndexForQuery(indexOnlyQuery);
+    Index.Builder suggestedIndex = compositeIndexForQuery(indexOnlyQuery);
     if (suggestedIndex == null) {
       return null;
     }
@@ -348,11 +348,11 @@ public class CompositeIndexManager {
     suggestedIndex.clearProperty();
     suggestedIndex.setAncestor(minimumRemaining.ancestorConstraint);
     for (String name : minimumRemaining.equalityProperties) {
-      suggestedIndex.addProperty().setName(name).setDirection(Direction.ASCENDING);
+      suggestedIndex.addPropertyBuilder().setName(name).setDirection(Direction.ASCENDING);
     }
-    Collections.sort(suggestedIndex.mutablePropertys(), PROPERTY_NAME_COMPARATOR);
+    Collections.sort(suggestedIndex.getPropertyList(), PROPERTY_NAME_COMPARATOR);
 
-    suggestedIndex.mutablePropertys().addAll(minimumPostfix);
+    suggestedIndex.getPropertyList().addAll(minimumPostfix);
     return suggestedIndex;
   }
 
