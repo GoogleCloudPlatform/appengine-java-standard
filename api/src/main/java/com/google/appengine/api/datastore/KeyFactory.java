@@ -202,14 +202,14 @@ public class KeyFactory {
       throw new IllegalArgumentException("Cannot parse: " + encoded, ex);
     }
 
-    Reference reference = new Reference();
+    Reference.Builder reference = Reference.newBuilder();
     boolean parsed = reference.parseFrom(decodedBytes);
     if (!parsed) {
       throw new IllegalArgumentException("Could not parse Reference");
     }
     // The validation in createFromPb should cover missing required fields, so no need for
     // an isInitialized check.
-    return KeyTranslator.createFromPb(reference);
+    return KeyTranslator.createFromPb(reference.build());
   }
 
   /**

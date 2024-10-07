@@ -31,6 +31,7 @@ import com.google.protobuf.Message;
 import com.google.protobuf.MessageLite;
 import com.google.rpc.Code;
 import java.util.ConcurrentModificationException;
+import java.util.List;
 import java.util.concurrent.Future;
 
 /**
@@ -137,9 +138,9 @@ public final class DatastoreApiHelper {
             throw new InvalidProtocolBufferException(
                 String.format("Invalid %s.%s response", DATASTORE_V3_PACKAGE, method.name()));
           }
-          String initializationError = responseProto.findInitializationError();
-          if (initializationError != null) {
-            throw new InvalidProtocolBufferException(initializationError);
+          List<String> initializationErrors = responseProto.findInitializationErrors();
+          if (initializationErrors != null && !initializationErrors.isEmpty()) {
+            throw new InvalidProtocolBufferException(initializationErrors.toString());
           }
         }
         return responseProto;

@@ -77,7 +77,7 @@ class IndexComponentsOnlyQuery extends ValidatedQuery {
       Order lastOrder = query.getOrder(query.getCount() - 1);
       if (lastOrder.getProperty().equals(Entity.KEY_RESERVED_PROPERTY)) {
         if (lastOrder.getDirection() == Order.Direction.ASCENDING) {
-          query.toBuilder().removeOrder(query.getOrderCount() - 1).build();
+          query.removeOrder(query.getOrderCount() - 1).build();
         } else {
           hasKeyDescOrder = true;
         }

@@ -82,9 +82,9 @@ final class QueryRunnerV3 implements QueryRunner {
   private void addMissingIndexData(DatastoreV3Pb.Query queryProto, DatastoreNeedIndexException e) {
     IndexComponentsOnlyQuery indexQuery = new IndexComponentsOnlyQuery(queryProto);
     CompositeIndexManager mgr = new CompositeIndexManager();
-    OnestoreEntity.Index index = mgr.compositeIndexForQuery(indexQuery);
+    OnestoreEntity.Index.Builder index = mgr.compositeIndexForQuery(indexQuery);
     if (index != null) {
-      String xml = mgr.generateXmlForIndex(index, IndexSource.manual);
+      String xml = mgr.generateXmlForIndex(index.build(), IndexSource.manual);
       e.setMissingIndexDefinitionXml(xml);
     } else {
       // Prod says we need an index but the index manager says we don't.

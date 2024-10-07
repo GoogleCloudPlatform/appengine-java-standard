@@ -85,7 +85,7 @@ final class QueryTranslator {
     }
 
     if (ancestor != null) {
-      Reference ref = KeyTranslator.convertToPb(ancestor);
+      Reference.Builder ref = KeyTranslator.convertToPb(ancestor);
       if (!ref.getApp().equals(proto.getApp())) {
         throw new IllegalArgumentException("Query and ancestor appid/namespace mismatch");
       }

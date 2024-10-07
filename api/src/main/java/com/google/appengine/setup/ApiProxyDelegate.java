@@ -23,6 +23,7 @@ import com.google.apphosting.api.ApiProxy.ApiProxyException;
 import com.google.apphosting.api.ApiProxy.LogRecord;
 import com.google.apphosting.api.ApiProxy.RPCFailedException;
 import com.google.apphosting.utils.remoteapi.RemoteApiPb;
+import com.google.protobuf.ByteString;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.util.List;
@@ -184,7 +185,7 @@ public class ApiProxyDelegate implements ApiProxy.Delegate<LazyApiProxyEnvironme
         remoteRequest.setMethod(methodName);
         // Commenting below line to validate the use-cases where security ticket may be needed. So far we did not need.
         //remoteRequest.setRequestId(environment.getTicket());
-        remoteRequest.setRequestAsBytes(requestData);
+        remoteRequest.setRequest(ByteString.copyFrom(requestData));
 
         HttpPost request = new HttpPost("http://" + environment.getServer() + REQUEST_ENDPOINT);
         request.setHeader(RPC_STUB_ID_HEADER, REQUEST_STUB_ID);

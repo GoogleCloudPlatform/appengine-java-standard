@@ -40,6 +40,7 @@ import com.google.apphosting.utils.remoteapi.RemoteApiPb.TransactionQueryResult;
 import com.google.apphosting.utils.remoteapi.RemoteApiPb.TransactionRequest;
 import com.google.apphosting.utils.remoteapi.RemoteApiPb.TransactionRequest.Precondition;
 // import com.google.io.protocol.ProtocolMessage;
+import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
 // <internal24>
 import com.google.storage.onestore.v3.proto2api.OnestoreEntity;
@@ -224,7 +225,7 @@ public class RemoteApiServlet extends HttpServlet {
 
     try {
       byte[] responseData = executeRequest(req);
-      response.setResponse(responseData);
+      response.setResponse(ByteString.copyFrom(responseData));
       res.setStatus(200);
     } catch (Exception e) {
       log.warning("Caught exception while executing remote_api command:\n" + e);
@@ -234,7 +235,7 @@ public class RemoteApiServlet extends HttpServlet {
       out.writeObject(e);
       out.close();
       byte[] serializedException = byteStream.toByteArray();
-      response.setJavaException(serializedException);
+      response.setJavaException(ByteString.copyFrom(serializedException));
       if (e instanceof ApiProxy.ApplicationException) {
         ApiProxy.ApplicationException ae = (ApiProxy.ApplicationException) e;
         ApplicationError.Builder appError = response.getApplicationErrorBuilder();

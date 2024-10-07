@@ -266,10 +266,10 @@ public final class AdminDatastoreService implements AsyncDatastoreService {
     for (DatastoreV3Pb.Query queryProto : pbQueries) {
       IndexComponentsOnlyQuery indexQuery = new IndexComponentsOnlyQuery(queryProto);
 
-      OnestoreEntity.Index index =
+      OnestoreEntity.Index.Builder index =
           factory.getCompositeIndexManager().compositeIndexForQuery(indexQuery);
       if (index != null) {
-        resultSet.add(IndexTranslator.convertFromPb(index));
+        resultSet.add(IndexTranslator.convertFromPb(index.build()));
       }
     }
     return resultSet;
@@ -293,10 +293,10 @@ public final class AdminDatastoreService implements AsyncDatastoreService {
     for (DatastoreV3Pb.Query queryProto : pbQueries) {
       IndexComponentsOnlyQuery indexQuery = new IndexComponentsOnlyQuery(queryProto);
 
-      OnestoreEntity.Index index =
+      OnestoreEntity.Index.Builder index =
           factory.getCompositeIndexManager().minimumCompositeIndexForQuery(indexQuery, indexPbs);
       if (index != null) {
-        resultSet.add(IndexTranslator.convertFromPb(index));
+        resultSet.add(IndexTranslator.convertFromPb(index.build()));
       }
     }
     return resultSet;
@@ -316,8 +316,8 @@ public final class AdminDatastoreService implements AsyncDatastoreService {
         for (List<FilterPredicate> singleQuery : parallelQueries) {
           Query newQuery = new Query(query);
           newQuery.getFilterPredicates().addAll(singleQuery);
-          DatastoreV3Pb.Query queryProto = QueryTranslator.convertToPb(newQuery, fetchOptions);
-          resultQueries.add(queryProto);
+          DatastoreV3Pb.Query.Builder queryProto = QueryTranslator.convertToPb(newQuery, fetchOptions);
+          resultQueries.add(queryProto.build());
         }
       }
     }

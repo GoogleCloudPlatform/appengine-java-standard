@@ -62,7 +62,7 @@ class KeyTranslator {
     return parentKey;
   }
 
-  public static Reference convertToPb(Key key) {
+  public static Reference.Builder convertToPb(Key key) {
     Reference.Builder reference = Reference.newBuilder();
 
     reference.setApp(key.getAppId());
@@ -84,7 +84,7 @@ class KeyTranslator {
       key = key.getParent();
     }
     Collections.reverse(path.build().getElementList());
-    return reference.build();
+    return reference;
   }
 
   public static void updateKey(Reference reference, Key key) {

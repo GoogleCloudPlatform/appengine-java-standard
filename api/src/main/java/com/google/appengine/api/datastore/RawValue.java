@@ -145,7 +145,7 @@ public final class RawValue implements Serializable {
           // TODO: return a Date? (not currently possible to get here).
           return DatastoreHelper.getTimestamp(valueV1);
         case GEO_POINT_VALUE:
-          if (valueV1.getMeaning() == 0 || valueV1.getMeaning() == Meaning.INDEX_VALUE.getValue()) {
+          if (valueV1.getMeaning() == 0 || valueV1.getMeaning() == Meaning.INDEX_VALUE.getNumber()) {
             return asType(GeoPt.class);
           }
           break; // GeoPt with meaning becomes null.
@@ -174,7 +174,7 @@ public final class RawValue implements Serializable {
   private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
     int version = in.read();
     if (version == 1) {
-      valueV3 = new PropertyValue();
+      valueV3 = PropertyValue.newBuilder().build();
       boolean parsed = valueV3.parseFrom(in);
       if (!parsed || !valueV3.isInitialized()) {
         throw new InvalidProtocolBufferException("Could not parse PropertyValue");

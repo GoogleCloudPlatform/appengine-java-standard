@@ -104,7 +104,7 @@ class AsyncDatastoreServiceImpl extends BaseAsyncDatastoreServiceImpl {
 
     @Override
     final Reference toPb(Key value) {
-      return KeyTranslator.convertToPb(value);
+      return KeyTranslator.convertToPb(value).build();
     }
   }
 
@@ -378,7 +378,7 @@ class AsyncDatastoreServiceImpl extends BaseAsyncDatastoreServiceImpl {
 
                 // Hack for Remote API which rewrites App Ids on Keys.
                 if (!keysToGet.contains(responseKey)) {
-                  responseKey = findKeyFromRequestIgnoringAppId(entityResult.getEntity().getKey());
+                  responseKey = findKeyFromRequestIgnoringAppId(entityResult.getEntity().getKey().toBuilder());
                 }
                 resultMap.put(responseKey, responseEntity);
               }
@@ -407,14 +407,14 @@ class AsyncDatastoreServiceImpl extends BaseAsyncDatastoreServiceImpl {
            * @return the Key from the request that corresponds to the given Reference from the
            *     Response (ignoring AppId.)
            */
-          private Key findKeyFromRequestIgnoringAppId(Reference referenceFromResponse) {
+          private Key findKeyFromRequestIgnoringAppId(Reference.Builder referenceFromResponse) {
             // We'll create this Map lazily the first time, then cache it for future calls.
             if (keyMapIgnoringAppId == null) {
               keyMapIgnoringAppId = Maps.newHashMap();
               for (Key requestKey : keysToGet) {
-                Reference requestKeyAsRefWithoutApp =
+                Reference.Builder requestKeyAsRefWithoutApp =
                     KeyTranslator.convertToPb(requestKey).clearApp();
-                keyMapIgnoringAppId.put(requestKeyAsRefWithoutApp, requestKey);
+                keyMapIgnoringAppId.put(requestKeyAsRefWithoutApp.build(), requestKey);
               }
             }
 
@@ -506,7 +506,7 @@ class AsyncDatastoreServiceImpl extends BaseAsyncDatastoreServiceImpl {
     }
     // the datastore just ignores the name component
     Key key = new Key(kind, parent, Key.NOT_ASSIGNED, "ignored", appIdNamespace);
-    return KeyTranslator.convertToPb(key);
+    return KeyTranslator.convertToPb(key).build();
   }
 
   @Override
