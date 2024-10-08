@@ -1418,8 +1418,8 @@ public final class DataTypeTranslator {
   private static final class KeyType extends Type<Key> {
     @Override
     public void toV3Value(Object value, PropertyValue.Builder propertyValue) {
-      Reference keyRef = KeyTranslator.convertToPb((Key) value);
-      propertyValue.setReferenceValue(toReferenceValue(keyRef));
+      Reference.Builder keyRef = KeyTranslator.convertToPb((Key) value);
+      propertyValue.setReferenceValue(toReferenceValue(keyRef.build()));
     }
 
     @Override
@@ -1643,8 +1643,9 @@ public final class DataTypeTranslator {
     @Override
     public EmbeddedEntity getValue(PropertyValue propertyValue) {
       EntityProto.Builder proto = EntityProto.newBuilder();
-      boolean parsed = proto.mergeFrom(propertyValue.getStringValueBytes());
-      if (!parsed) {
+      try{
+        proto.mergeFrom(propertyValue.getStringValueBytes());
+      } catch (InvalidProtocolBufferException e){
         throw new IllegalArgumentException("Could not parse EntityProto value");
       }
       EmbeddedEntity result = new EmbeddedEntity();

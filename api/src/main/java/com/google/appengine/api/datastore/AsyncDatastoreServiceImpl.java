@@ -85,7 +85,7 @@ class AsyncDatastoreServiceImpl extends BaseAsyncDatastoreServiceImpl {
       extends BaseRpcBatcher<S, R, F, T> {
     @Override
     final R newBatch(R baseBatch) {
-      return baseBatch.clone();
+      return (R) baseBatch.toBuilder().clone().build();
     }
   }
 
