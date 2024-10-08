@@ -175,7 +175,12 @@ public final class RawValue implements Serializable {
     int version = in.read();
     if (version == 1) {
       valueV3 = PropertyValue.newBuilder().build();
-      boolean parsed = valueV3.parseFrom(in);
+      boolean parsed = true;
+      try{
+        valueV3.getParserForType().parseFrom(in);
+      } catch (InvalidProtocolBufferException e) {
+        parsed = false;
+      }
       if (!parsed || !valueV3.isInitialized()) {
         throw new InvalidProtocolBufferException("Could not parse PropertyValue");
       }

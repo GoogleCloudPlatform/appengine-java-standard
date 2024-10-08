@@ -172,6 +172,7 @@ public enum PropertyType {
       }
     }
 
+
     return tags;
   }
 }

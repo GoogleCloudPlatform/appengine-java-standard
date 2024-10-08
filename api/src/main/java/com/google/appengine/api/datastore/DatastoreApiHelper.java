@@ -134,7 +134,10 @@ public final class DatastoreApiHelper {
         // (specifically ones using EasyMock, where the default behavior
         // is to return null).
         if (responseBytes != null && responseProto != null) {
-          if (!responseProto.parseFrom(responseBytes)) {
+          try {
+            responseProto.getParserForType().parseFrom(responseBytes);
+          }
+          catch(InvalidProtocolBufferException e) {
             throw new InvalidProtocolBufferException(
                 String.format("Invalid %s.%s response", DATASTORE_V3_PACKAGE, method.name()));
           }

@@ -40,6 +40,7 @@ import com.google.apphosting.utils.remoteapi.RemoteApiPb.TransactionQueryResult;
 import com.google.apphosting.utils.remoteapi.RemoteApiPb.TransactionRequest;
 import com.google.apphosting.utils.remoteapi.RemoteApiPb.TransactionRequest.Precondition;
 // import com.google.io.protocol.ProtocolMessage;
+import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
 import com.google.protobuf.ByteString;
 // <internal24>
@@ -491,12 +492,22 @@ public class EE10RemoteApiServlet extends HttpServlet {
   }
 
   private static void parseFromBytes(Message message, byte[] bytes) {
-    boolean parsed = message.parseFrom(bytes);
+    boolean parsed = true;
+    try {
+      message.getParserForType().parseFrom(bytes);
+    } catch (InvalidProtocolBufferException e) {
+      parsed = false;
+    }
     checkParse(message, parsed);
   }
 
   private static void parseFromInputStream(Message message, InputStream inputStream) {
-    boolean parsed = message.parseFrom(inputStream);
+    boolean parsed = true;
+    try {
+      message.getParserForType().parseFrom(inputStream);
+    } catch (InvalidProtocolBufferException e) {
+      parsed = false;
+    }
     checkParse(message, parsed);
   }
 

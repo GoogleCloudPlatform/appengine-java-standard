@@ -19,6 +19,7 @@ package com.google.appengine.api.datastore;
 import static com.google.common.io.BaseEncoding.base64Url;
 
 import com.google.common.base.CharMatcher;
+import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.storage.onestore.v3.proto2api.OnestoreEntity.Reference;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -169,8 +170,8 @@ public class KeyFactory {
     if (!key.isComplete()) {
       throw new IllegalArgumentException("Key is incomplete.");
     } else {
-      Reference reference = KeyTranslator.convertToPb(key);
-      return base64Url().omitPadding().encode(reference.toByteArray());
+      Reference.Builder reference = KeyTranslator.convertToPb(key);
+      return base64Url().omitPadding().encode(reference.build().toByteArray());
     }
   }
 
@@ -202,14 +203,15 @@ public class KeyFactory {
       throw new IllegalArgumentException("Cannot parse: " + encoded, ex);
     }
 
-    Reference.Builder reference = Reference.newBuilder();
-    boolean parsed = reference.parseFrom(decodedBytes);
-    if (!parsed) {
+    Reference reference = Reference.newBuilder().build();
+    try{
+      reference.getParserForType().parseFrom(decodedBytes);
+    } catch (InvalidProtocolBufferException e){
       throw new IllegalArgumentException("Could not parse Reference");
     }
     // The validation in createFromPb should cover missing required fields, so no need for
     // an isInitialized check.
-    return KeyTranslator.createFromPb(reference.build());
+    return KeyTranslator.createFromPb(reference);
   }
 
   /**

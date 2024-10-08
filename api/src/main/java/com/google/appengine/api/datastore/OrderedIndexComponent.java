@@ -53,8 +53,8 @@ class OrderedIndexComponent implements IndexComponent {
     List<Property> indexProps = Lists.newArrayListWithExpectedSize(matcherProperties.size());
     for (Property prop : matcherProperties) {
       if (!prop.hasDirection()) {
-        prop = prop.clone();
-        prop.setDirection(Direction.ASCENDING);
+        prop = prop.toBuilder().clone().build();
+        prop.toBuilder().setDirection(Direction.ASCENDING).build();
       }
       indexProps.add(prop);
     }
