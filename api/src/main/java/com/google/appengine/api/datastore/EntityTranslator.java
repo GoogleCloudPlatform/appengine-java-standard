@@ -17,6 +17,7 @@
 package com.google.appengine.api.datastore;
 
 import com.google.common.collect.Maps;
+import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.storage.onestore.v3.proto2api.OnestoreEntity.EntityProto;
 import com.google.storage.onestore.v3.proto2api.OnestoreEntity.Path;
 import com.google.storage.onestore.v3.proto2api.OnestoreEntity.Reference;
@@ -59,7 +60,12 @@ public class EntityTranslator {
 
   public static Entity createFromPbBytes(byte[] pbBytes) {
     EntityProto.Builder proto = EntityProto.newBuilder();
-    boolean parsed = proto.mergeFrom(pbBytes);
+    boolean parsed = true;
+    try{
+      proto.mergeFrom(pbBytes);
+    }catch (InvalidProtocolBufferException e){
+      parsed = false;
+    }
     if (!parsed || !proto.isInitialized()) {
       throw new IllegalArgumentException("Could not parse EntityProto bytes");
     }
@@ -67,7 +73,7 @@ public class EntityTranslator {
   }
 
   public static EntityProto convertToPb(Entity entity) {
-    Reference reference = KeyTranslator.convertToPb(entity.getKey());
+    Reference.Builder reference = KeyTranslator.convertToPb(entity.getKey());
 
     EntityProto.Builder proto = EntityProto.newBuilder();
     proto.setKey(reference);

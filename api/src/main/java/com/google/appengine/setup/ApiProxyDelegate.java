@@ -24,6 +24,7 @@ import com.google.apphosting.api.ApiProxy.LogRecord;
 import com.google.apphosting.api.ApiProxy.RPCFailedException;
 import com.google.apphosting.utils.remoteapi.RemoteApiPb;
 import com.google.protobuf.ByteString;
+import com.google.protobuf.InvalidProtocolBufferException;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.util.List;
@@ -148,14 +149,16 @@ public class ApiProxyDelegate implements ApiProxy.Delegate<LazyApiProxyEnvironme
                 }
             }
             try (BufferedInputStream bis = new BufferedInputStream(response.getEntity().getContent())) {
-                RemoteApiPb.Response.Builder remoteResponse = RemoteApiPb.Response.newBuilder();
-                if (!remoteResponse.parseFrom(bis)) {
+                RemoteApiPb.Response remoteResponse = RemoteApiPb.Response.newBuilder().build();
+                try{
+                    remoteResponse.getParserForType().parseFrom(bis);
+                } catch (InvalidProtocolBufferException e){
                     logger.info(
-                            "HTTP ApiProxy unable to parse response for " + packageName + "." + methodName);
+                        "HTTP ApiProxy unable to parse response for " + packageName + "." + methodName);
                     throw new RPCFailedException(packageName, methodName);
                 }
                 if (remoteResponse.hasRpcError() || remoteResponse.hasApplicationError()) {
-                    throw convertRemoteError(remoteResponse.build(), packageName, methodName, logger);
+                    throw convertRemoteError(remoteResponse, packageName, methodName, logger);
                 }
                 return remoteResponse.getResponse().toByteArray();
             }

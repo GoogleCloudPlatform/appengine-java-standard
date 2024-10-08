@@ -23,6 +23,7 @@ import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.Query.Filter;
 import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.Query.Filter.Operator;
 import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.Query.Order;
 import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.Query.Order.Direction;
+import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.storage.onestore.v3.proto2api.OnestoreEntity.PropertyValue;
 import com.google.storage.onestore.v3.proto2api.OnestoreEntity.Reference;
 import java.util.List;
@@ -65,17 +66,23 @@ final class QueryTranslator {
     }
 
     if (fetchOptions.getStartCursor() != null) {
-      if (!proto
-          .getCompiledCursor()
-          .parseFrom(fetchOptions.getStartCursor().toByteString())) {
+      try{
+        proto
+            .getCompiledCursor()
+            .getParserForType()
+            .parseFrom(fetchOptions.getStartCursor().toByteString());
+      } catch (InvalidProtocolBufferException e){
         throw new IllegalArgumentException("Invalid cursor");
       }
     }
 
     if (fetchOptions.getEndCursor() != null) {
-      if (!proto
-          .getEndCompiledCursor()
-          .parseFrom(fetchOptions.getEndCursor().toByteString())) {
+      try{
+        proto
+            .getEndCompiledCursor()
+            .getParserForType()
+            .parseFrom(fetchOptions.getEndCursor().toByteString());
+      }catch (InvalidProtocolBufferException e){
         throw new IllegalArgumentException("Invalid cursor");
       }
     }
@@ -113,13 +120,13 @@ final class QueryTranslator {
     } else {
       for (Query.FilterPredicate filterPredicate : query.getFilterPredicates()) {
         Filter.Builder filterPb = proto.addFilterBuilder();
-        filterPb.copyFrom(convertFilterPredicateToPb(filterPredicate));
+        filterPb.mergeFrom(convertFilterPredicateToPb(filterPredicate));
       }
     }
 
     for (Query.SortPredicate sortPredicate : sortPredicates) {
       Order.Builder order = proto.addOrderBuilder();
-      order.copyFrom(convertSortPredicateToPb(sortPredicate));
+      order.mergeFrom(convertSortPredicateToPb(sortPredicate));
     }
 
     for (Projection projection : query.getProjections()) {
@@ -181,7 +188,7 @@ final class QueryTranslator {
           predicate.getOperator() == Query.FilterOperator.EQUAL,
           "Geo-spatial filters may only be combined with equality comparisons");
       Filter.Builder f = proto.addFilterBuilder();
-      f.copyFrom(convertFilterPredicateToPb(predicate));
+      f.mergeFrom(convertFilterPredicateToPb(predicate));
     }
   }
 
