@@ -16,6 +16,8 @@
 
 package com.google.apphosting.runtime;
 
+import static com.google.apphosting.base.protos.RuntimePb.APIResponse.ERROR.CANCELLED;
+
 import com.google.appengine.tools.development.TimedFuture;
 import com.google.apphosting.api.ApiProxy;
 import com.google.apphosting.api.ApiProxy.ApiResultFuture;
@@ -687,8 +689,13 @@ public class ApiProxyImpl implements ApiProxy.Delegate<ApiProxyImpl.EnvironmentI
         }
         settable.set(apiResponse.getPb().toByteArray());
       } else {
-        settable.setException(
-            ApiProxyUtils.getApiError(packageName, methodName, apiResponse, logger));
+        if ((APIResponse.ERROR.forNumber(apiResponse.getError()) == CANCELLED)
+            && Boolean.getBoolean("appengine.ignore.cancelerror")) {
+          settable.set(apiResponse.getPb().toByteArray());
+        } else {
+          settable.setException(
+              ApiProxyUtils.getApiError(packageName, methodName, apiResponse, logger));
+        }
       }
       environment.removeAsyncFuture(this);
     }
@@ -1281,9 +1288,7 @@ public class ApiProxyImpl implements ApiProxy.Delegate<ApiProxyImpl.EnvironmentI
     }
   }
 
-  /**
-   * A thread created by {@code ThreadManager.currentRequestThreadFactory().
-   */
+  /** A thread created by {@code ThreadManager.currentRequestThreadFactory()}. */
   public static class CurrentRequestThread extends Thread {
     private final Runnable userRunnable;
     private final RequestState requestState;
