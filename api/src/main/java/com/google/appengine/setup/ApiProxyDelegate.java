@@ -158,7 +158,7 @@ public class ApiProxyDelegate implements ApiProxy.Delegate<LazyApiProxyEnvironme
                     throw new RPCFailedException(packageName, methodName);
                 }
                 if (remoteResponse.hasRpcError() || remoteResponse.hasApplicationError()) {
-                    throw convertRemoteError(remoteResponse.build(), packageName, methodName, logger);
+                    throw convertRemoteError(remoteResponse, packageName, methodName, logger);
                 }
                 return remoteResponse.getResponse().toByteArray();
             }
