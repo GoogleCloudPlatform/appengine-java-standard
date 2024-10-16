@@ -162,7 +162,7 @@ public final class DataTypeTranslator {
   static final Type<?>[] MEANING_INT_TO_TYPE;
 
   static {
-    Type<?>[] meaningIntToType = new Type<?>[Meaning.Meaning_MAX.getValue()];
+    Type<?>[] meaningIntToType = new Type<?>[39]; // Meaning.Meaning_MAX.getValue() = 39
     Set<Type<?>> typesWithoutMeaning = new HashSet<>();
     for (Type<?> type : TYPE_MAP.values()) {
       int meaningInt = type.getV3Meaning().getNumber();
@@ -1212,7 +1212,7 @@ public final class DataTypeTranslator {
   private static final class BoolType extends Type<Boolean> {
     @Override
     public void toV3Value(Object value, PropertyValue.Builder propertyValue) {
-      propertyValue.getBooleanValue((Boolean) value);
+      propertyValue.setBooleanValue((Boolean) value);
     }
 
     @Override
