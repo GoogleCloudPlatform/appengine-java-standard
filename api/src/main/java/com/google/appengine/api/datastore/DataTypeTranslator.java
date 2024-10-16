@@ -162,7 +162,13 @@ public final class DataTypeTranslator {
   static final Type<?>[] MEANING_INT_TO_TYPE;
 
   static {
-    Type<?>[] meaningIntToType = new Type<?>[39]; // Meaning.Meaning_MAX.getValue() = 39
+    int meaningMax = 0;
+    for (Meaning meaning : Meaning.values()) {
+      if (meaning.getNumber() > meaningMax) {
+        meaningMax = meaning.getNumber();
+      }
+    }
+    Type<?>[] meaningIntToType = new Type<?>[meaningMax];
     Set<Type<?>> typesWithoutMeaning = new HashSet<>();
     for (Type<?> type : TYPE_MAP.values()) {
       int meaningInt = type.getV3Meaning().getNumber();
