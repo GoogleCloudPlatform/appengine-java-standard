@@ -143,10 +143,11 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
           appVersionKey = AppVersionKey.fromAppInfo(appinfo);
           JettyHttpProxy.insertHandlers(server);
           AppVersion appVersion = appVersionHandlerMap.getAppVersion(appVersionKey);
-          server.insertHandler(
-              new JettyHttpHandler(runtimeOptions, appVersion, appVersionKey, appInfoFactory));
           ServerConnector connector = JettyHttpProxy.newConnector(server, runtimeOptions);
           server.addConnector(connector);
+          server.insertHandler(
+              new JettyHttpHandler(
+                  runtimeOptions, appVersion, appVersionKey, appInfoFactory, connector));
         } else {
           server.setAttribute(
               "com.google.apphosting.runtime.jetty9.appYaml",
