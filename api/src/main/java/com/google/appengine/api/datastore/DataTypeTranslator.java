@@ -163,7 +163,6 @@ public final class DataTypeTranslator {
 
   static {
     Type<?>[] meaningIntToType = new Type<?>[Meaning.Meaning_MAX.getValue()];
-    Meaning.
     Set<Type<?>> typesWithoutMeaning = new HashSet<>();
     for (Type<?> type : TYPE_MAP.values()) {
       int meaningInt = type.getV3Meaning().getNumber();
@@ -183,13 +182,13 @@ public final class DataTypeTranslator {
       new HashMap<Class<? extends Comparable<?>>, Integer>();
 
   static {
-    comparableTypeMap.put(ComparableByteArray.class, PropertyValue.kstringValue);
-    comparableTypeMap.put(Long.class, PropertyValue.kint64Value);
-    comparableTypeMap.put(Double.class, PropertyValue.kdoubleValue);
-    comparableTypeMap.put(Boolean.class, PropertyValue.kbooleanValue);
-    comparableTypeMap.put(User.class, PropertyValue.kUserValueGroup);
-    comparableTypeMap.put(Key.class, PropertyValue.kReferenceValueGroup);
-    comparableTypeMap.put(GeoPt.class, PropertyValue.kPointValueGroup);
+    comparableTypeMap.put(ComparableByteArray.class, 3);
+    comparableTypeMap.put(Long.class, 1);
+    comparableTypeMap.put(Double.class, 4);
+    comparableTypeMap.put(Boolean.class, 2);
+    comparableTypeMap.put(User.class, 8);
+    comparableTypeMap.put(Key.class, 12);
+    comparableTypeMap.put(GeoPt.class, 5);
   }
 
   /**

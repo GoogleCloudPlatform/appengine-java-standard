@@ -166,10 +166,26 @@ public enum PropertyType {
   private static List<Integer> findTags(PropertyValue value) {
     List<Integer> tags = Lists.newArrayList();
 
-    for (Type.FieldType field : Type.getTags(value)) {
-      if (field.size(value) == 1) {
-        tags.add(field.getTag());
-      }
+    if (value.hasInt64Value()) {
+      tags.add(1);
+    }
+    if (value.hasBooleanValue()) {
+      tags.add(2);
+    }
+    if(value.hasStringValue()) {
+      tags.add(3);
+    }
+    if(value.hasDoubleValue()) {
+      tags.add(4);
+    }
+    if(value.hasPointValue()) {
+      tags.add(5);
+    }
+    if(value.hasUserValue()) {
+      tags.add(8);
+    }
+    if(value.hasReferenceValue()) {
+      tags.add(12);
     }
 
 
