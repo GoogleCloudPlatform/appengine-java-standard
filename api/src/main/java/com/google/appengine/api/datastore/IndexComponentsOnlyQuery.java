@@ -20,6 +20,7 @@ import com.google.apphosting.datastore.proto2api.DatastoreV3Pb;
 import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.Query.Filter;
 import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.Query.Filter.Operator;
 import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.Query.Order;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.Query.Order.Direction;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.storage.onestore.v3.proto2api.OnestoreEntity.Index.Property;
@@ -164,9 +165,18 @@ class IndexComponentsOnlyQuery extends ValidatedQuery {
       orderProps.add(
           Property.newBuilder()
               .setName(order.getProperty())
-              .setDirection(order.getDirection())
+              .setDirection(convertDirection(order.getDirection()))
               .build());
     }
+  }
+  private Property.Direction convertDirection(Direction direction){
+    switch (direction){
+      case ASCENDING:
+        return Property.Direction.ASCENDING;
+      case DESCENDING:
+        return Property.Direction.DESCENDING;
+     }
+     return Property.Direction.DIRECTION_UNSPECIFIED;
   }
 
   /**

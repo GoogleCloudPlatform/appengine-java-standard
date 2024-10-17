@@ -161,16 +161,38 @@ public enum PropertyType {
   }
 
   /**
-   * @return the tag numbers of the top-level field that are set.
+   * Finds the tags of the fields set in a PropertyValue.
+   * This method only returns the tags for the top-level fields in the PropertyValue message as defined in appengine-java-standard/protobuf/api/entity.proto.
+   * It does not include tags for fields nested within PointValue, UserValue, or ReferenceValue.
+   * @return A list of the tags of the fields set in the PropertyValue.
    */
   private static List<Integer> findTags(PropertyValue value) {
     List<Integer> tags = Lists.newArrayList();
 
-    for (Type.FieldType field : Type.getTags(value)) {
-      if (field.size(value) == 1) {
-        tags.add(field.getTag());
-      }
+    if (value.hasInt64Value()) {
+      tags.add(1);
     }
+    if (value.hasBooleanValue()) {
+      tags.add(2);
+    }
+    if(value.hasStringValue()) {
+      tags.add(3);
+    }
+    if(value.hasDoubleValue()) {
+      tags.add(4);
+    }
+    if(value.hasPointValue()) {
+      tags.add(5);
+    }
+    // Missing tags 6 and 7 because they are fields within PointValue, not direct fields of PropertyValue.
+    if(value.hasUserValue()) {
+      tags.add(8);
+    }
+    // Missing tags 9, 10, 11, 18, 19, 21, and 22 because they are fields within UserValue.
+    if(value.hasReferenceValue()) {
+      tags.add(12);
+    }
+    // Missing tags 13, 14, 15, 16, 17, 20, and 23 because they are fields within ReferenceValue.
 
 
     return tags;
