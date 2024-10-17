@@ -188,13 +188,14 @@ public final class DataTypeTranslator {
       new HashMap<Class<? extends Comparable<?>>, Integer>();
 
   static {
-    comparableTypeMap.put(ComparableByteArray.class, 3);
-    comparableTypeMap.put(Long.class, 1);
-    comparableTypeMap.put(Double.class, 4);
-    comparableTypeMap.put(Boolean.class, 2);
-    comparableTypeMap.put(User.class, 8);
-    comparableTypeMap.put(Key.class, 12);
-    comparableTypeMap.put(GeoPt.class, 5);
+    // hardcoding the tag numbers from google3/storage/onestore/v3/entity.proto
+    comparableTypeMap.put(ComparableByteArray.class, 3); // stringValue = 3
+    comparableTypeMap.put(Long.class, 1); // int64Value = 1
+    comparableTypeMap.put(Double.class, 4); // doubleValue = 4
+    comparableTypeMap.put(Boolean.class, 2); // booleanValue = 2
+    comparableTypeMap.put(User.class, 8); // UserValue = 8
+    comparableTypeMap.put(Key.class, 12); // ReferenceValue = 12
+    comparableTypeMap.put(GeoPt.class, 5); // PointValue = 5
   }
 
   /**
