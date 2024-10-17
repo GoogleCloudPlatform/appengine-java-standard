@@ -162,9 +162,9 @@ public enum PropertyType {
 
   /**
    * Finds the tags of the fields set in a PropertyValue.
-   * This method only returns the tags for the top-level fields in the PropertyValue message as defined in google3/storage/onestore/v3/entity.proto.
+   * This method only returns the tags for the top-level fields in the PropertyValue message as defined in appengine-java-standard/protobuf/api/entity.proto.
    * It does not include tags for fields nested within PointValue, UserValue, or ReferenceValue.
-   * @return A list of the tags of the fields set in the PropertyValue..
+   * @return A list of the tags of the fields set in the PropertyValue.
    */
   private static List<Integer> findTags(PropertyValue value) {
     List<Integer> tags = Lists.newArrayList();

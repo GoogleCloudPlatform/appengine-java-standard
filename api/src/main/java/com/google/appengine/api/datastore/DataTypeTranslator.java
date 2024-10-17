@@ -188,7 +188,7 @@ public final class DataTypeTranslator {
       new HashMap<Class<? extends Comparable<?>>, Integer>();
 
   static {
-    // hardcoding the tag numbers from google3/storage/onestore/v3/entity.proto
+    // hardcoding the tag numbers from appengine-java-standard/protobuf/api/entity.proto
     comparableTypeMap.put(ComparableByteArray.class, 3); // stringValue = 3
     comparableTypeMap.put(Long.class, 1); // int64Value = 1
     comparableTypeMap.put(Double.class, 4); // doubleValue = 4
