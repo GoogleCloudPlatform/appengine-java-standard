@@ -162,8 +162,13 @@ public final class DataTypeTranslator {
   static final Type<?>[] MEANING_INT_TO_TYPE;
 
   static {
-    Type<?>[] meaningIntToType = new Type<?>[Meaning.Meaning_MAX.getValue()];
-    Meaning.
+    int meaningMax = 0;
+    for (Meaning meaning : Meaning.values()) {
+      if (meaning.getNumber() > meaningMax) {
+        meaningMax = meaning.getNumber();
+      }
+    }
+    Type<?>[] meaningIntToType = new Type<?>[meaningMax];
     Set<Type<?>> typesWithoutMeaning = new HashSet<>();
     for (Type<?> type : TYPE_MAP.values()) {
       int meaningInt = type.getV3Meaning().getNumber();
@@ -183,13 +188,14 @@ public final class DataTypeTranslator {
       new HashMap<Class<? extends Comparable<?>>, Integer>();
 
   static {
-    comparableTypeMap.put(ComparableByteArray.class, PropertyValue.kstringValue);
-    comparableTypeMap.put(Long.class, PropertyValue.kint64Value);
-    comparableTypeMap.put(Double.class, PropertyValue.kdoubleValue);
-    comparableTypeMap.put(Boolean.class, PropertyValue.kbooleanValue);
-    comparableTypeMap.put(User.class, PropertyValue.kUserValueGroup);
-    comparableTypeMap.put(Key.class, PropertyValue.kReferenceValueGroup);
-    comparableTypeMap.put(GeoPt.class, PropertyValue.kPointValueGroup);
+    // hardcoding the tag numbers from appengine-java-standard/protobuf/api/entity.proto
+    comparableTypeMap.put(ComparableByteArray.class, 3); // stringValue = 3
+    comparableTypeMap.put(Long.class, 1); // int64Value = 1
+    comparableTypeMap.put(Double.class, 4); // doubleValue = 4
+    comparableTypeMap.put(Boolean.class, 2); // booleanValue = 2
+    comparableTypeMap.put(User.class, 8); // UserValue = 8
+    comparableTypeMap.put(Key.class, 12); // ReferenceValue = 12
+    comparableTypeMap.put(GeoPt.class, 5); // PointValue = 5
   }
 
   /**
@@ -1213,7 +1219,7 @@ public final class DataTypeTranslator {
   private static final class BoolType extends Type<Boolean> {
     @Override
     public void toV3Value(Object value, PropertyValue.Builder propertyValue) {
-      propertyValue.getBooleanValue((Boolean) value);
+      propertyValue.setBooleanValue((Boolean) value);
     }
 
     @Override
