@@ -17,8 +17,8 @@
 package com.google.appengine.api.datastore;
 
 import com.google.common.collect.Lists;
-import com.google.storage.onestore.v3.OnestoreEntity.Index.Property;
-import com.google.storage.onestore.v3.OnestoreEntity.Index.Property.Direction;
+import com.google.storage.onestore.v3.proto2api.OnestoreEntity.Index.Property;
+import com.google.storage.onestore.v3.proto2api.OnestoreEntity.Index.Property.Direction;
 import java.util.List;
 
 /**
@@ -44,6 +44,6 @@ public class IndexComponentTestCase {
   }
 
   protected Property newProperty(String propertyName, Direction direction) {
-    return new Property().setName(propertyName).setDirection(direction);
+    return Property.newBuilder().setName(propertyName).setDirection(direction).build();
   }
 }

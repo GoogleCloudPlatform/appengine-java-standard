@@ -18,6 +18,8 @@ package com.google.appengine.tools.remoteapi;
 
 import com.google.apphosting.utils.remoteapi.RemoteApiPb;
 // <internal22>
+import com.google.protobuf.ByteString;
+import com.google.protobuf.InvalidProtocolBufferException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -89,7 +91,7 @@ class RemoteRpc {
               requestProto.getServiceName(), requestProto.getMethod(), null);
         }
       } else if (responseProto.hasException()) {
-        String pickle = responseProto.getException();
+        String pickle = responseProto.getException().toString();
 
         logger.log(Level.FINE,
             "remote API call: failed due to a server-side Python exception:\n{0}", pickle);
@@ -97,7 +99,7 @@ class RemoteRpc {
             requestProto.getServiceName(), requestProto.getMethod(), null);
       }
 
-      return responseProto.getResponseAsBytes();
+      return responseProto.getResponse().toByteArray();
 
     } finally {
       long elapsedTime = System.currentTimeMillis() - startTime;
@@ -124,8 +126,13 @@ class RemoteRpc {
     }
 
     // parse the response
-    RemoteApiPb.Response parsedResponse = new RemoteApiPb.Response();
-    boolean parsed = parsedResponse.parseFrom(httpResponse.getBodyAsBytes());
+    RemoteApiPb.Response parsedResponse = RemoteApiPb.Response.newBuilder().build();
+    boolean parsed = true;
+    try {
+      parsedResponse.getParserForType().parseFrom(httpResponse.getBodyAsBytes());
+    } catch (InvalidProtocolBufferException e){
+      parsed = false;
+    }
     if (!parsed || !parsedResponse.isInitialized()) {
       throw makeException("Could not parse response bytes", null, requestProto);
     }
@@ -144,20 +151,20 @@ class RemoteRpc {
 
   private static RemoteApiPb.Request makeRequest(String packageName, String methodName,
       byte[] payload) {
-    RemoteApiPb.Request result = new RemoteApiPb.Request();
+    RemoteApiPb.Request.Builder result = RemoteApiPb.Request.newBuilder();
     result.setServiceName(packageName);
     result.setMethod(methodName);
-    result.setRequestAsBytes(payload);
+    result.setRequest(ByteString.copyFrom(payload));
     result.setRequestId(Long.toString(requestId.incrementAndGet()));
 
-    return result;
+    return result.build();
   }
 
   // <internal23>
   private static Object parseJavaException(
       RemoteApiPb.Response parsedResponse, String packageName, String methodName) {
     try {
-      InputStream ins = new ByteArrayInputStream(parsedResponse.getJavaExceptionAsBytes());
+      InputStream ins = new ByteArrayInputStream(parsedResponse.getJavaException().toByteArray());
       ObjectInputStream in = new ObjectInputStream(ins);
       return in.readObject();
     } catch (IOException e) {

@@ -35,7 +35,7 @@ import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.PutResponse;
 import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.Query;
 import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.QueryResult;
 import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.Transaction;
-import com.google.storage.onestore.v3.OnestoreEntity.CompositeIndex;
+import com.google.storage.onestore.v3.proto2api.OnestoreEntity.CompositeIndex;
 
 /**
  * An implementation {@link DatastoreV3} which wraps a {@link LocalDatastoreService}.

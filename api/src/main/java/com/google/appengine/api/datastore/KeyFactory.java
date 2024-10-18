@@ -170,8 +170,8 @@ public class KeyFactory {
     if (!key.isComplete()) {
       throw new IllegalArgumentException("Key is incomplete.");
     } else {
-      Reference.Builder reference = KeyTranslator.convertToPb(key);
-      return base64Url().omitPadding().encode(reference.build().toByteArray());
+      Reference reference = KeyTranslator.convertToPb(key);
+      return base64Url().omitPadding().encode(reference.toByteArray());
     }
   }
 

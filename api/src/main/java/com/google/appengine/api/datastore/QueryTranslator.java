@@ -35,7 +35,7 @@ import java.util.List;
 final class QueryTranslator {
 
   @SuppressWarnings("deprecation")
-  public static DatastoreV3Pb.Query.Builder convertToPb(Query query, FetchOptions fetchOptions) {
+  public static DatastoreV3Pb.Query convertToPb(Query query, FetchOptions fetchOptions) {
     Key ancestor = query.getAncestor();
     List<Query.SortPredicate> sortPredicates = query.getSortPredicates();
 
@@ -92,7 +92,7 @@ final class QueryTranslator {
     }
 
     if (ancestor != null) {
-      Reference.Builder ref = KeyTranslator.convertToPb(ancestor);
+      Reference ref = KeyTranslator.convertToPb(ancestor);
       if (!ref.getApp().equals(proto.getApp())) {
         throw new IllegalArgumentException("Query and ancestor appid/namespace mismatch");
       }
@@ -133,7 +133,7 @@ final class QueryTranslator {
       proto.addPropertyName(projection.getPropertyName());
     }
 
-    return proto;
+    return proto.build();
   }
 
   static Order convertSortPredicateToPb(Query.SortPredicate predicate) {

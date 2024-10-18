@@ -16,7 +16,7 @@
 
 package com.google.appengine.tools.development;
 
-import com.google.io.protocol.ProtocolMessage;
+import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
 import com.google.protobuf.MessageLite;
 import java.lang.reflect.InvocationTargetException;
@@ -30,15 +30,20 @@ public class ApiUtils {
 
   /**
    * Convert the specified byte array to a protocol buffer representation of the specified type.
-   * This type can either be a subclass of {@link ProtocolMessage} (a legacy protocol buffer
-   * implementation), or {@link Message} (the open-sourced protocol buffer implementation).
+   * This type is {@link Message} (the open-sourced protocol buffer implementation).
    */
   public static <T> T convertBytesToPb(byte[] bytes, Class<T> messageClass)
       throws IllegalAccessException, InstantiationException, InvocationTargetException,
           NoSuchMethodException {
-    if (ProtocolMessage.class.isAssignableFrom(messageClass)) {
-      ProtocolMessage<?> proto = (ProtocolMessage<?>) messageClass.getConstructor().newInstance();
-      boolean parsed = proto.mergeFrom(bytes);
+    if (Message.class.isAssignableFrom(messageClass)) {
+      Message.Builder proto = (Message.Builder) messageClass.getConstructor().newInstance();
+      boolean parsed = true;
+      try{
+        proto.mergeFrom(bytes);
+      }
+      catch (InvalidProtocolBufferException e){
+        parsed = false;
+      }
       if (!parsed || !proto.isInitialized()) {
         throw new RuntimeException(
             "Could not parse request bytes into " + classDescription(messageClass));
@@ -52,12 +57,11 @@ public class ApiUtils {
     throw new UnsupportedOperationException(
         String.format(
             "Cannot assign %s to either %s or %s",
-            classDescription(messageClass), ProtocolMessage.class, Message.class));
+            classDescription(messageClass), Message.class, Message.class));
   }
 
   /**
-   * Convert the protocol buffer representation to a byte array. The object can either be an
-   * instance of {@link ProtocolMessage} (a legacy protocol buffer implementation), or {@link
+   * Convert the protocol buffer representation to a byte array. The object is an instance of {@link
    * Message} (the open-sourced protocol buffer implementation).
    */
   public static byte[] convertPbToBytes(Object object) {
@@ -67,7 +71,7 @@ public class ApiUtils {
     throw new UnsupportedOperationException(
         String.format(
             "%s is neither %s nor %s",
-            classDescription(object.getClass()), ProtocolMessage.class, Message.class));
+            classDescription(object.getClass()), Message.class, Message.class));
   }
 
   /**

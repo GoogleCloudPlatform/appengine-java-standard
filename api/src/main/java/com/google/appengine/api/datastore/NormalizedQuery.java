@@ -42,8 +42,8 @@ class NormalizedQuery {
     normalizeQuery();
   }
 
-  public Query.Builder getQuery() {
-    return query;
+  public Query getQuery() {
+    return query.build();
   }
 
   private void normalizeQuery() {

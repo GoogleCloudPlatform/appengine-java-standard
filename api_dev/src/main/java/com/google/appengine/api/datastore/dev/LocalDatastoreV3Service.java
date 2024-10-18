@@ -41,7 +41,7 @@ import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.Query;
 import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.QueryResult;
 import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.Transaction;
 import com.google.auto.service.AutoService;
-import com.google.storage.onestore.v3.OnestoreEntity.CompositeIndex;
+import com.google.storage.onestore.v3.proto2api.OnestoreEntity.CompositeIndex;
 
 /**
  * Provides an implementation of {@link LocalDatastoreService} that is compatible with API Proxy.

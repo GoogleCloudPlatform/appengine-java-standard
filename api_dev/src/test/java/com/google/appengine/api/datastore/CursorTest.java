@@ -22,9 +22,10 @@ import static org.junit.Assert.assertThrows;
 import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.CompiledCursor;
 import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.Query;
 import com.google.protobuf.ByteString;
-import com.google.storage.onestore.v3.OnestoreEntity.IndexPosition;
-import com.google.storage.onestore.v3.OnestoreEntity.IndexPostfix;
-import com.google.storage.onestore.v3.OnestoreEntity.Reference;
+import com.google.protobuf.InvalidProtocolBufferException;
+import com.google.storage.onestore.v3.proto2api.OnestoreEntity.IndexPosition;
+import com.google.storage.onestore.v3.proto2api.OnestoreEntity.IndexPostfix;
+import com.google.storage.onestore.v3.proto2api.OnestoreEntity.Reference;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
@@ -41,8 +42,8 @@ public class CursorTest {
 
   @Before
   public void setUp() throws Exception {
-    compiledCursor = new CompiledCursor();
-    CompiledCursor.Position position = compiledCursor.getMutablePosition();
+    compiledCursor = CompiledCursor.newBuilder().build();
+    CompiledCursor.Position.Builder position = compiledCursor.getPosition().toBuilder();
     position.setStartKey("Hello World");
     position.setStartInclusive(true);
 
@@ -54,7 +55,7 @@ public class CursorTest {
     Cursor reconstituted = Cursor.fromWebSafeString(cursor.toWebSafeString());
     assertThat(reconstituted).isEqualTo(cursor);
 
-    Query query = new Query();
+    Query.Builder query = Query.newBuilder();
     query.setOffset(3);
 
     query.setCompiledCursor(toPb(reconstituted));
@@ -76,8 +77,8 @@ public class CursorTest {
   @SuppressWarnings("deprecation")
   @Test
   public void testReverseCursorPostfix() {
-    IndexPostfix postfixPosition = new IndexPostfix().setKey(new Reference()).setBefore(true);
-    Cursor pfCursor = toCursor(new CompiledCursor().setPostfixPosition(postfixPosition));
+    IndexPostfix postfixPosition = IndexPostfix.newBuilder().setKey(Reference.newBuilder().build()).setBefore(true).build();
+    Cursor pfCursor = toCursor(CompiledCursor.newBuilder().setPostfixPosition(postfixPosition).build());
 
     // reverse() is a no-op.
     Cursor pfReverse = pfCursor.reverse();
@@ -88,8 +89,8 @@ public class CursorTest {
   @SuppressWarnings("deprecation")
   @Test
   public void testReverseCursorAbsolutePosition() {
-    IndexPosition absolutePosition = new IndexPosition().setKey("Goodnight moon").setBefore(true);
-    Cursor absCursor = toCursor(new CompiledCursor().setAbsolutePosition(absolutePosition));
+    IndexPosition absolutePosition = IndexPosition.newBuilder().setKey("Goodnight moon").setBefore(true).build();
+    Cursor absCursor = toCursor(CompiledCursor.newBuilder().setAbsolutePosition(absolutePosition).build());
 
     // reverse() is a no-op.
     Cursor absReverse = absCursor.reverse();
@@ -99,12 +100,12 @@ public class CursorTest {
 
   @Test
   public void testSerialization() throws Exception {
-    CompiledCursor compiledCursor = new CompiledCursor();
-    CompiledCursor.Position position = compiledCursor.getMutablePosition();
+    CompiledCursor.Builder compiledCursor = CompiledCursor.newBuilder();
+    CompiledCursor.Position.Builder position = compiledCursor.getPositionBuilder();
     position.setStartKey("Hello World");
     position.setStartInclusive(true);
 
-    Cursor original = toCursor(compiledCursor);
+    Cursor original = toCursor(compiledCursor.build());
 
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     ObjectOutputStream oos = new ObjectOutputStream(baos);
@@ -117,7 +118,7 @@ public class CursorTest {
 
     assertThat(readCursor).isNotSameInstanceAs(original);
     assertThat(readCursor).isEqualTo(original);
-    Query query = new Query();
+    Query.Builder query = Query.newBuilder();
     query.setOffset(3);
 
     query.setCompiledCursor(toPb(readCursor));
@@ -145,8 +146,14 @@ public class CursorTest {
   }
 
   private static CompiledCursor toPb(Cursor cursor) {
-    CompiledCursor pb = new CompiledCursor();
-    assertThat(pb.parseFrom(cursor.toByteString())).isTrue();
+    CompiledCursor pb = CompiledCursor.newBuilder().build();
+    boolean parse = true;
+    try{
+      pb.parseFrom(cursor.toByteString());
+    } catch (InvalidProtocolBufferException e){
+      parse = false;
+    }
+    assertThat(parse).isTrue();
     return pb;
   }
 }

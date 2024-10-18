@@ -32,7 +32,8 @@ import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.Transaction;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.MessageLite;
 import com.google.protobuf.Parser;
-import com.google.storage.onestore.v3.OnestoreEntity.CompositeIndex;
+import com.google.storage.onestore.v3.proto2api.OnestoreEntity.CompositeIndex;
+// import com.google.storage.onestore.v3.OnestoreEntity.CompositeIndex;
 
 /** A {@link DatastoreV3} which delegates to V3 using ApiProxy. */
 class ApiProxyDatastoreV3 implements DatastoreV3 {
@@ -122,7 +123,7 @@ class ApiProxyDatastoreV3 implements DatastoreV3 {
     try {
       return respParser.parseFrom(responseBytes);
     } catch (InvalidProtocolBufferException e) {
-      throw new ApiProxy.ApplicationException(ErrorCode.INTERNAL_ERROR.getValue(), e.toString());
+      throw new ApiProxy.ApplicationException(ErrorCode.INTERNAL_ERROR.getNumber(), e.toString());
     }
   }
 }

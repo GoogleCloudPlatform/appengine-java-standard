@@ -89,7 +89,7 @@ public class CompositeIndexManager {
    *     index is needed.
    */
   protected Index.Builder compositeIndexForQuery(final IndexComponentsOnlyQuery indexOnlyQuery) {
-    DatastoreV3Pb.Query.Builder query = indexOnlyQuery.getQuery();
+    DatastoreV3Pb.Query.Builder query = indexOnlyQuery.getQuery().toBuilder();
 
     boolean hasKind = query.hasKind();
     boolean isAncestor = query.hasAncestor();

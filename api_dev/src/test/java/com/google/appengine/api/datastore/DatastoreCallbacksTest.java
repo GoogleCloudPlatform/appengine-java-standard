@@ -497,7 +497,7 @@ public class DatastoreCallbacksTest {
     AsyncDatastoreService datastore = DatastoreServiceFactory.getAsyncDatastoreService();
     ApiProxy.Delegate<?> original = ApiProxy.getDelegate();
     Future<byte[]> explosiveFuture =
-        immediateFailedFuture(new ApiProxy.ApplicationException(INTERNAL_ERROR.getValue()));
+        immediateFailedFuture(new ApiProxy.ApplicationException(INTERNAL_ERROR.getNumber()));
     when(explosiveDelegate.makeAsyncCall(any(), any(), any(), any(), any()))
         .thenReturn(explosiveFuture);
     ApiProxy.setDelegate(explosiveDelegate);
@@ -884,7 +884,7 @@ public class DatastoreCallbacksTest {
     ApiProxy.Delegate<ApiProxy.Environment> explosiveDelegate = mock(ApiProxy.Delegate.class);
     ApiProxy.Delegate<?> original = ApiProxy.getDelegate();
     Future<byte[]> explosiveFuture =
-        immediateFailedFuture(new ApiProxy.ApplicationException(INTERNAL_ERROR.getValue()));
+        immediateFailedFuture(new ApiProxy.ApplicationException(INTERNAL_ERROR.getNumber()));
     when(explosiveDelegate.makeAsyncCall(any(), any(), any(), any(), any()))
         .thenReturn(explosiveFuture);
     ApiProxy.setDelegate(explosiveDelegate);

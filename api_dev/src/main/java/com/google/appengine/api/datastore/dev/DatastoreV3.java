@@ -33,7 +33,8 @@ import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.PutResponse;
 import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.Query;
 import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.QueryResult;
 import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.Transaction;
-import com.google.storage.onestore.v3.OnestoreEntity.CompositeIndex;
+import com.google.storage.onestore.v3.proto2api.OnestoreEntity.CompositeIndex;
+// import com.google.storage.onestore.v3.OnestoreEntity.CompositeIndex;
 
 /** An interface for an implementation of a local version of the Datastore V3 service. */
 public interface DatastoreV3 {

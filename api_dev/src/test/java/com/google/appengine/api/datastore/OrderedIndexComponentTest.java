@@ -19,8 +19,8 @@ package com.google.appengine.api.datastore;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.collect.Lists;
-import com.google.storage.onestore.v3.OnestoreEntity.Index.Property;
-import com.google.storage.onestore.v3.OnestoreEntity.Index.Property.Direction;
+import com.google.storage.onestore.v3.proto2api.OnestoreEntity.Index.Property;
+import com.google.storage.onestore.v3.proto2api.OnestoreEntity.Index.Property.Direction;
 import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
@@ -82,7 +82,7 @@ public class OrderedIndexComponentTest extends IndexComponentTestCase {
   /** Tests that properties that do not have directions specified can match on any direction. */
   @Test
   public void testNoDirection() {
-    Property noDirectionProperty = new Property().setName("P1");
+    Property noDirectionProperty = Property.newBuilder().setName("P1").build();
 
     List<Property> indexDesc = newIndex(newProperty("P1", Direction.DESCENDING), "P2", "P3");
     List<Property> indexAsc = newIndex("P1", "P2", "P3");
@@ -106,7 +106,7 @@ public class OrderedIndexComponentTest extends IndexComponentTestCase {
     List<Property> preferredIndex = newIndex("P1", "P2", "P3");
     assertThat(orderedComponent.preferredIndexProperties()).isEqualTo(preferredIndex);
 
-    Property noDirectionProperty = new Property().setName("P1");
+    Property noDirectionProperty = Property.newBuilder().setName("P1").build();
 
     IndexComponent directionlessComponent =
         new OrderedIndexComponent(

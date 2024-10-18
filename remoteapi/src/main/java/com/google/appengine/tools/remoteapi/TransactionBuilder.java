@@ -18,10 +18,11 @@ package com.google.appengine.tools.remoteapi;
 
 import com.google.apphosting.datastore.proto2api.DatastoreV3Pb;
 import com.google.apphosting.utils.remoteapi.RemoteApiPb;
-import com.google.io.protocol.ProtocolMessage;
 import com.google.protobuf.ByteString;
 // <internal24>
-import com.google.storage.onestore.v3.OnestoreEntity;
+import com.google.protobuf.InvalidProtocolBufferException;
+import com.google.protobuf.Message;
+import com.google.storage.onestore.v3.proto2api.OnestoreEntity;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ConcurrentModificationException;
@@ -108,8 +109,13 @@ class TransactionBuilder {
    * Update transaction with result from a TransactionQuery call.
    */
   public DatastoreV3Pb.QueryResult handleQueryResult(byte[] resultBytes) {
-    RemoteApiPb.TransactionQueryResult result = new RemoteApiPb.TransactionQueryResult();
-    boolean parsed = result.mergeFrom(resultBytes);
+    RemoteApiPb.TransactionQueryResult.Builder result = RemoteApiPb.TransactionQueryResult.newBuilder();
+    boolean parsed = true;
+    try {
+      result.mergeFrom(resultBytes);
+    } catch (InvalidProtocolBufferException e){
+      parsed = false;
+    }
     if (!parsed || !result.isInitialized()) {
       throw new IllegalArgumentException("Could not parse TransactionQueryResult");
     }
@@ -142,7 +148,7 @@ class TransactionBuilder {
    * Creates a request to perform this transaction on the server.
    */
   public RemoteApiPb.TransactionRequest makeCommitRequest() {
-    RemoteApiPb.TransactionRequest result = new RemoteApiPb.TransactionRequest();
+    RemoteApiPb.TransactionRequest.Builder result = RemoteApiPb.TransactionRequest.newBuilder();
     result.setAllowMultipleEg(isXG);
     for (Map.Entry<ByteString, OnestoreEntity.EntityProto> entry : getCache.entrySet()) {
       if (entry.getValue() == null) {
@@ -154,41 +160,51 @@ class TransactionBuilder {
     for (Map.Entry<ByteString, OnestoreEntity.EntityProto> entry : updates.entrySet()) {
       OnestoreEntity.EntityProto entityPb = entry.getValue();
       if (entityPb == null) {
-        ProtocolMessage<?> newKey = result.getMutableDeletes().addKey();
-        boolean parsed = newKey.mergeFrom(entry.getKey().toByteArray());
+        Message.Builder newKey = result.getDeletesBuilder().addKeyBuilder();
+        boolean parsed = true;
+        try {
+          newKey.mergeFrom(entry.getKey().toByteArray());
+        } catch (InvalidProtocolBufferException e) {
+          parsed = false;
+        }
         if (!parsed || !newKey.isInitialized()) {
           throw new IllegalStateException("Could not parse serialized key");
         }
       } else {
-        result.getMutablePuts().addEntity(entityPb);
+        result.getPutsBuilder().addEntity(entityPb);
       }
     }
-    return result;
+    return result.build();
   }
 
   // === end of public methods ===
 
   private static RemoteApiPb.TransactionRequest.Precondition makeEntityNotFoundPrecondition(
       ByteString key) {
-    OnestoreEntity.Reference ref = new OnestoreEntity.Reference();
-    boolean parsed = ref.mergeFrom(key.toByteArray());
+    OnestoreEntity.Reference.Builder ref = OnestoreEntity.Reference.newBuilder();
+    boolean parsed = true;
+    try {
+      ref.mergeFrom(key.toByteArray());
+    } catch (InvalidProtocolBufferException e) {
+      parsed = false;
+    }
     if (!parsed || !ref.isInitialized()) {
       throw new IllegalArgumentException("Could not parse Reference");
     }
 
-    RemoteApiPb.TransactionRequest.Precondition result =
-        new RemoteApiPb.TransactionRequest.Precondition();
+    RemoteApiPb.TransactionRequest.Precondition.Builder result =
+        RemoteApiPb.TransactionRequest.Precondition.newBuilder();
     result.setKey(ref);
-    return result;
+    return result.build();
   }
 
   private static RemoteApiPb.TransactionRequest.Precondition makeEqualEntityPrecondition(
       OnestoreEntity.EntityProto entityPb) {
-    RemoteApiPb.TransactionRequest.Precondition result =
-        new RemoteApiPb.TransactionRequest.Precondition();
+    RemoteApiPb.TransactionRequest.Precondition.Builder result =
+        RemoteApiPb.TransactionRequest.Precondition.newBuilder();
     result.setKey(entityPb.getKey());
-    result.setHashAsBytes(computeSha1(entityPb));
-    return result;
+    result.setHashBytes(ByteString.copyFrom(computeSha1(entityPb)));
+    return result.build();
   }
 
   // <internal25>

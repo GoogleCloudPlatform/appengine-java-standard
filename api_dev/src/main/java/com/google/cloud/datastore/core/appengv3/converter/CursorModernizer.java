@@ -21,12 +21,10 @@ import static com.google.common.base.Preconditions.checkArgument;
 import com.google.apphosting.datastore.proto2api.DatastoreV3Pb;
 import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.CompiledCursor;
 import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.CompiledCursor.Position;
-import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.CompiledCursor.PositionIndexValue;
 import com.google.cloud.datastore.core.exception.InvalidConversionException;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.storage.onestore.v3.OnestoreEntity.IndexPosition;
-import com.google.storage.onestore.v3.OnestoreEntity.IndexPostfix;
-import com.google.storage.onestore.v3.OnestoreEntity.IndexPostfix_IndexValue;
+import com.google.storage.onestore.v3.proto2api.OnestoreEntity.IndexPosition;
+import com.google.storage.onestore.v3.proto2api.OnestoreEntity.IndexPostfix;
 import javax.annotation.Nullable;
 
 /** Utility methods for compiled cursors. */
@@ -63,7 +61,7 @@ public class CursorModernizer {
   @Nullable
   public static DatastoreV3Pb.Query.Order.Direction firstSortDirection(
       DatastoreV3Pb.Query originalQuery) {
-    return originalQuery.orderSize() == 0 ? null : originalQuery.getOrder(0).getDirectionEnum();
+    return originalQuery.getOrderCount() == 0 ? null : originalQuery.getOrder(0).getDirection();
   }
 
   /**
@@ -109,46 +107,46 @@ public class CursorModernizer {
           "A cursor cannot specify both position and absolute position.");
       Position pos = cursor.getPosition();
       if (pos.hasStartKey()) {
-        IndexPosition indexPos = cursor.getMutableAbsolutePosition();
-        indexPos.setKeyAsBytes(pos.getStartKeyAsBytes());
+        IndexPosition.Builder indexPos = cursor.getAbsolutePosition().toBuilder();
+        indexPos.setKeyBytes(pos.getStartKeyBytes());
         if (pos.hasStartInclusive()) {
-          indexPos.setBefore(pos.isStartInclusive());
+          indexPos.setBefore(pos.hasStartInclusive());
         }
         if (pos.hasBeforeAscending()) {
-          indexPos.setBeforeAscending(pos.isBeforeAscending());
+          indexPos.setBeforeAscending(pos.hasBeforeAscending());
         }
-      } else if (pos.hasKey() || pos.indexValueSize() > 0) {
-        IndexPostfix postfixPos = cursor.getMutablePostfixPosition();
-        for (PositionIndexValue value : pos.indexValues()) {
-          IndexPostfix_IndexValue indexValue =
-              postfixPos.addIndexValue().setPropertyName(value.getProperty());
-          indexValue.getMutableValue().mergeFrom(value.getValue());
+      } else if (pos.hasKey() || pos.getIndexValueCount() > 0) {
+        IndexPostfix.Builder postfixPos = cursor.getPostfixPosition().toBuilder();
+        for (Position.IndexValue value : pos.getIndexValueList()) {
+          IndexPostfix.IndexValue.Builder indexValue =
+              postfixPos.addIndexValueBuilder().setPropertyName(value.getProperty());
+          indexValue.getValue().toBuilder().mergeFrom(value.getValue());
         }
         if (pos.hasKey()) {
-          postfixPos.getMutableKey().mergeFrom(pos.getKey());
+          postfixPos.getKey().toBuilder().mergeFrom(pos.getKey());
         }
         if (pos.hasStartInclusive()) {
-          postfixPos.setBefore(pos.isStartInclusive());
+          postfixPos.setBefore(pos.hasStartInclusive());
         }
         if (pos.hasBeforeAscending()) {
-          postfixPos.setBeforeAscending(pos.isBeforeAscending());
+          postfixPos.setBeforeAscending(pos.hasBeforeAscending());
         }
       }
-      cursor.clearPosition();
+      cursor.toBuilder().clearPosition().build();
     }
 
     // Next, populate before_ascending or before.
     if (isEmpty(cursor)) {
       return;
     } else if (cursor.hasAbsolutePosition()) {
-      IndexPosition indexPosition = cursor.getAbsolutePosition();
+      IndexPosition.Builder indexPosition = cursor.getAbsolutePosition().toBuilder();
       if (indexPosition.hasBeforeAscending()) {
         setBefore(indexPosition, firstSortDirection);
       } else {
         setBeforeAscending(indexPosition, firstSortDirection);
       }
     } else if (cursor.hasPostfixPosition()) {
-      IndexPostfix indexPostfix = cursor.getPostfixPosition();
+      IndexPostfix.Builder indexPostfix = cursor.getPostfixPosition().toBuilder();
       if (indexPostfix.hasBeforeAscending()) {
         setBefore(indexPostfix, firstSortDirection);
       } else {
@@ -165,8 +163,8 @@ public class CursorModernizer {
    */
   @VisibleForTesting
   static void setBefore(
-      IndexPosition position, @Nullable DatastoreV3Pb.Query.Order.Direction firstSortDirection) {
-    position.setBefore(computeBefore(position.isBeforeAscending(), firstSortDirection));
+      IndexPosition.Builder position, @Nullable DatastoreV3Pb.Query.Order.Direction firstSortDirection) {
+    position.setBefore(computeBefore(position.hasBeforeAscending(), firstSortDirection));
   }
 
   /**
@@ -177,8 +175,8 @@ public class CursorModernizer {
    */
   @VisibleForTesting
   static void setBefore(
-      IndexPostfix position, @Nullable DatastoreV3Pb.Query.Order.Direction firstSortDirection) {
-    position.setBefore(computeBefore(position.isBeforeAscending(), firstSortDirection));
+      IndexPostfix.Builder position, @Nullable DatastoreV3Pb.Query.Order.Direction firstSortDirection) {
+    position.setBefore(computeBefore(position.hasBeforeAscending(), firstSortDirection));
   }
 
   /**
@@ -189,8 +187,8 @@ public class CursorModernizer {
    */
   @VisibleForTesting
   static void setBeforeAscending(
-      IndexPosition position, @Nullable DatastoreV3Pb.Query.Order.Direction firstSortDirection) {
-    position.setBeforeAscending(computeBeforeAscending(position.isBefore(), firstSortDirection));
+      IndexPosition.Builder position, @Nullable DatastoreV3Pb.Query.Order.Direction firstSortDirection) {
+    position.setBeforeAscending(computeBeforeAscending(position.hasBefore(), firstSortDirection));
   }
 
   /**
@@ -203,8 +201,8 @@ public class CursorModernizer {
   // Please check that removing it is correct, and remove this comment along with it.
   // @VisibleForTesting
   public static void setBeforeAscending(
-      IndexPostfix position, @Nullable DatastoreV3Pb.Query.Order.Direction firstSortDirection) {
-    position.setBeforeAscending(computeBeforeAscending(position.isBefore(), firstSortDirection));
+      IndexPostfix.Builder position, @Nullable DatastoreV3Pb.Query.Order.Direction firstSortDirection) {
+    position.setBeforeAscending(computeBeforeAscending(position.hasBefore(), firstSortDirection));
   }
 
   private static boolean computeBefore(

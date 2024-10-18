@@ -316,8 +316,8 @@ public final class AdminDatastoreService implements AsyncDatastoreService {
         for (List<FilterPredicate> singleQuery : parallelQueries) {
           Query newQuery = new Query(query);
           newQuery.getFilterPredicates().addAll(singleQuery);
-          DatastoreV3Pb.Query.Builder queryProto = QueryTranslator.convertToPb(newQuery, fetchOptions);
-          resultQueries.add(queryProto.build());
+          DatastoreV3Pb.Query queryProto = QueryTranslator.convertToPb(newQuery, fetchOptions);
+          resultQueries.add(queryProto);
         }
       }
     }
