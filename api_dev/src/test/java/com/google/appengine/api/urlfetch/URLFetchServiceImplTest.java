@@ -1144,7 +1144,7 @@ public class URLFetchServiceImplTest {
             any(), eq(URLFetchServiceImpl.PACKAGE), eq("Fetch"), requestProtoCaptor.capture());
     URLFetchRequest urlFetchRequest =
         URLFetchRequest.parseFrom(
-            requestProtoCaptor.getValue(), ExtensionRegistry.getGeneratedRegistry());
+            requestProtoCaptor.getValue(), ExtensionRegistry.getEmptyRegistry());
     check.accept(urlFetchRequest);
   }
 }

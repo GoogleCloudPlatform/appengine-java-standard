@@ -1424,8 +1424,8 @@ public final class DataTypeTranslator {
   private static final class KeyType extends Type<Key> {
     @Override
     public void toV3Value(Object value, PropertyValue.Builder propertyValue) {
-      Reference.Builder keyRef = KeyTranslator.convertToPb((Key) value);
-      propertyValue.setReferenceValue(toReferenceValue(keyRef.build()));
+      Reference keyRef = KeyTranslator.convertToPb((Key) value);
+      propertyValue.setReferenceValue(toReferenceValue(keyRef));
     }
 
     @Override

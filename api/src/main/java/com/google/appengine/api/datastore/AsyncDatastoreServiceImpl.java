@@ -104,7 +104,7 @@ class AsyncDatastoreServiceImpl extends BaseAsyncDatastoreServiceImpl {
 
     @Override
     final Reference toPb(Key value) {
-      return KeyTranslator.convertToPb(value).build();
+      return KeyTranslator.convertToPb(value);
     }
   }
 
@@ -413,7 +413,7 @@ class AsyncDatastoreServiceImpl extends BaseAsyncDatastoreServiceImpl {
               keyMapIgnoringAppId = Maps.newHashMap();
               for (Key requestKey : keysToGet) {
                 Reference.Builder requestKeyAsRefWithoutApp =
-                    KeyTranslator.convertToPb(requestKey).clearApp();
+                    KeyTranslator.convertToPb(requestKey).toBuilder().clearApp();
                 keyMapIgnoringAppId.put(requestKeyAsRefWithoutApp.build(), requestKey);
               }
             }
@@ -506,7 +506,7 @@ class AsyncDatastoreServiceImpl extends BaseAsyncDatastoreServiceImpl {
     }
     // the datastore just ignores the name component
     Key key = new Key(kind, parent, Key.NOT_ASSIGNED, "ignored", appIdNamespace);
-    return KeyTranslator.convertToPb(key).build();
+    return KeyTranslator.convertToPb(key);
   }
 
   @Override

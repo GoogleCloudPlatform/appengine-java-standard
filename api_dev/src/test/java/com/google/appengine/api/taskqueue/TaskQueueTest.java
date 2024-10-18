@@ -1730,7 +1730,7 @@ public class TaskQueueTest {
 
   private void doBulkAddDatastoreApplicationErrorTest(
       DatastoreV3Pb.Error.ErrorCode code, Class<?> class1) {
-    int errorCode = ErrorCode.DATASTORE_ERROR_VALUE + code.getValue();
+    int errorCode = ErrorCode.DATASTORE_ERROR_VALUE + code.getNumber();
     TransactionalTaskException exception =
         assertThrows(
             TransactionalTaskException.class,
@@ -1755,7 +1755,7 @@ public class TaskQueueTest {
 
   private void doBulkAddDatastoreTaskResultErrorTest(
       DatastoreV3Pb.Error.ErrorCode code, Class<?> class1) {
-    int errorCode = ErrorCode.DATASTORE_ERROR_VALUE + code.getValue();
+    int errorCode = ErrorCode.DATASTORE_ERROR_VALUE + code.getNumber();
     TransactionalTaskException exception =
         assertThrows(
             TransactionalTaskException.class,

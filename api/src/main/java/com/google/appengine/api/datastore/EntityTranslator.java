@@ -73,7 +73,7 @@ public class EntityTranslator {
   }
 
   public static EntityProto convertToPb(Entity entity) {
-    Reference.Builder reference = KeyTranslator.convertToPb(entity.getKey());
+    Reference reference = KeyTranslator.convertToPb(entity.getKey());
 
     EntityProto.Builder proto = EntityProto.newBuilder();
     proto.setKey(reference);

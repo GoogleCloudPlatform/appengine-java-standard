@@ -21,7 +21,7 @@ import static com.google.common.truth.Truth.assertThat;
 import com.google.appengine.api.datastore.Index.Property;
 import com.google.appengine.api.datastore.Query.SortDirection;
 import com.google.common.collect.ImmutableList;
-import com.google.storage.onestore.v3.OnestoreEntity;
+import com.google.storage.onestore.v3.proto2api.OnestoreEntity;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -49,9 +49,9 @@ public class IndexTranslatorTest {
     pb = IndexTranslator.convertToPb(INDEX_2);
     assertThat(IndexTranslator.convertFromPb(pb)).isEqualTo(INDEX_2);
     pb = IndexTranslator.convertToPb(INDEX_3);
-    OnestoreEntity.CompositeIndex ci = new OnestoreEntity.CompositeIndex();
+    OnestoreEntity.CompositeIndex.Builder ci = OnestoreEntity.CompositeIndex.newBuilder();
     ci.setId(10).setDefinition(pb);
-    assertThat(IndexTranslator.convertFromPb(ci)).isEqualTo(INDEX_3);
+    assertThat(IndexTranslator.convertFromPb(ci.build())).isEqualTo(INDEX_3);
     pb = IndexTranslator.convertToPb(INDEX_4);
     assertThat(IndexTranslator.convertFromPb(pb)).isEqualTo(INDEX_4);
   }
@@ -63,18 +63,18 @@ public class IndexTranslatorTest {
   // TODO add support for Mode, so that it can be surfaced to the app
   @Test
   public void testIgnoreGeoMode() {
-    OnestoreEntity.CompositeIndex ci = new OnestoreEntity.CompositeIndex();
+    OnestoreEntity.CompositeIndex.Builder ci = OnestoreEntity.CompositeIndex.newBuilder();
     ci.setAppId("foo");
     ci.setId(1);
     ci.setState(OnestoreEntity.CompositeIndex.State.WRITE_ONLY);
-    OnestoreEntity.Index indexPb =
-        new OnestoreEntity.Index().setEntityType("Mountain").setAncestor(false);
+    OnestoreEntity.Index.Builder indexPb =
+        OnestoreEntity.Index.newBuilder().setEntityType("Mountain").setAncestor(false);
     indexPb.addProperty(
-        new OnestoreEntity.Index.Property()
+         OnestoreEntity.Index.Property.newBuilder()
             .setName("location")
             .setMode(OnestoreEntity.Index.Property.Mode.GEOSPATIAL));
     ci.setDefinition(indexPb);
-    Index index = IndexTranslator.convertFromPb(ci);
+    Index index = IndexTranslator.convertFromPb(ci.build());
     assertThat(index.getProperties()).hasSize(1);
     Property property = index.getProperties().get(0);
     assertThat(property.getName()).isEqualTo("location");
