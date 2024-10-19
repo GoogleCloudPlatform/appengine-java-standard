@@ -21,7 +21,7 @@ import static org.junit.Assert.assertThrows;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.testing.EqualsTester;
-import com.google.storage.onestore.v3.OnestoreEntity.PropertyValue;
+import com.google.storage.onestore.v3.proto2api.OnestoreEntity.PropertyValue;
 import java.util.Collections;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -58,12 +58,12 @@ public class PropertyProjectionTest {
     assertThat(projection.getName()).isEqualTo("Foo");
     assertThat(projection.getPropertyName()).isEqualTo("Foo");
 
-    Object value = new RawValue(new PropertyValue().setBooleanValue(true));
+    Object value = new RawValue(PropertyValue.newBuilder().setBooleanValue(true).build());
     assertThat(projection.getValue(Collections.singletonMap("Foo", null))).isNull();
     assertThat(projection.getValue(ImmutableMap.of("Foo", value))).isEqualTo(true);
     assertThat(projection.getValue(Collections.singletonMap("Foo", null))).isNull();
     assertThat(
-            projection.getValue(ImmutableMap.of("Foo", (Object) new RawValue(new PropertyValue()))))
+            projection.getValue(ImmutableMap.of("Foo", (Object) new RawValue(PropertyValue.newBuilder().build()))))
         .isNull();
 
     assertThrows(IllegalArgumentException.class, () -> projection.getValue(ImmutableMap.of()));
@@ -81,6 +81,6 @@ public class PropertyProjectionTest {
         () ->
             projection.getValue(
                 ImmutableMap.of(
-                    "Foo", (Object) new RawValue(new PropertyValue().setStringValue("Hi")))));
+                    "Foo", (Object) new RawValue(PropertyValue.newBuilder().setStringValue("Hi").build()))));
   }
 }

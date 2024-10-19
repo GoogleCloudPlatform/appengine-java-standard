@@ -94,7 +94,7 @@ final class QueryRunnerV3 implements QueryRunner {
   }
 
   private DatastoreV3Pb.Query.Builder convertToPb(Query q, Transaction txn, FetchOptions fetchOptions) {
-    DatastoreV3Pb.Query.Builder queryProto = QueryTranslator.convertToPb(q, fetchOptions);
+    DatastoreV3Pb.Query.Builder queryProto = QueryTranslator.convertToPb(q, fetchOptions).toBuilder();
     if (txn != null) {
       TransactionImpl.ensureTxnActive(txn);
       queryProto.setTransaction(InternalTransactionV3.toProto(txn));

@@ -130,12 +130,6 @@
               </relocations>
               <filters>
                 <filter>
-                  <artifact>com.google.appengine:proto1</artifact>
-                  <includes>
-                    <include>com/google/common/util/concurrent/internal/**</include>
-                  </includes>
-                </filter>
-                <filter>
                   <artifact>org.codehaus.jackson:jackson-core-asl</artifact>
                   <excludes>
                     <exclude>META-INF/services/com.fasterxml.jackson.core.JsonFactory</exclude>
@@ -145,7 +139,6 @@
               <artifactSet>
                 <includes>
                   <include>com.google.api-client:google-api-client:*</include>
-                  <include>com.google.appengine:proto1:*</include>
                   <include>com.google.appengine:utils:*</include>
                   <include>com.google.http-client:google-http-client-apache-v2:*</include>
                   <include>com.google.http-client:google-http-client-appengine:*</include>

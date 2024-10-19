@@ -18,8 +18,9 @@ package com.google.appengine.tools.remoteapi;
 
 import com.google.apphosting.api.ApiProxy;
 import com.google.apphosting.datastore.proto2api.DatastoreV3Pb;
-import com.google.io.protocol.ProtocolMessage;
-import com.google.storage.onestore.v3.OnestoreEntity;
+import com.google.protobuf.InvalidProtocolBufferException;
+import com.google.protobuf.Message;
+import com.google.storage.onestore.v3.proto2api.OnestoreEntity;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -121,11 +122,11 @@ class RemoteDatastore {
   private byte[] runQuery(byte[] request, long localCursorId) {
 
     // force query compilation so we get a compiled cursor back
-    DatastoreV3Pb.Query query = new DatastoreV3Pb.Query();
-    mergeFromBytes(query, request);
+    DatastoreV3Pb.Query.Builder query = DatastoreV3Pb.Query.newBuilder();
+    mergeFromBytes(query.build(), request);
 
-    if (rewriteQueryAppIds(query, remoteAppId)) {
-      request = query.toByteArray();
+    if (rewriteQueryAppIds(query.build(), remoteAppId)) {
+      request = query.build().toByteArray();
     }
     query.setCompile(true);
 
@@ -150,12 +151,13 @@ class RemoteDatastore {
     DatastoreV3Pb.QueryResult result;
     if (tx != null) {
       byte[] resultBytes = remoteRpc.call(REMOTE_API_SERVICE, "TransactionQuery", "",
-                                          query.toByteArray());
+                                          query.build().toByteArray());
       result = tx.handleQueryResult(resultBytes);
     } else {
-      byte[] resultBytes = remoteRpc.call(DATASTORE_SERVICE, "RunQuery", "", query.toByteArray());
+      byte[] resultBytes = remoteRpc.call(DATASTORE_SERVICE, "RunQuery", "", query.build()
+          .toByteArray());
 
-      result = new DatastoreV3Pb.QueryResult();
+      result = DatastoreV3Pb.QueryResult.newBuilder().build();
       mergeFromBytes(result, resultBytes);
 
       if (tx != null) {
@@ -168,20 +170,20 @@ class RemoteDatastore {
         // This consistency check will not detect "phantom" rows. If we wanted
         // that, we would have to change the remote API protocol so that we can
         // re-run all the queries in the transaction at commit time.
-        for (OnestoreEntity.EntityProto entity : result.results()) {
+        for (OnestoreEntity.EntityProto entity : result.getResultList()) {
           tx.addEntityToCache(entity);
         }
       }
     }
 
-    if (result.isMoreResults() && result.hasCompiledCursor()) {
+    if (result.hasMoreResults() && result.hasCompiledCursor()) {
       // create a query to continue from after the results we already got.
       idToCursor.put(localCursorId, new QueryState(request, result.getCompiledCursor()));
     } else {
       idToCursor.put(localCursorId, QueryState.NO_MORE_RESULTS);
     }
     // replace cursor id with our own cursor, to be used in handleNext() to look up the query.
-    result.getMutableCursor().setCursor(localCursorId);
+    result.getCursor().toBuilder().setCursor(localCursorId);
 
     return result.toByteArray();
   }
@@ -195,17 +197,18 @@ class RemoteDatastore {
     boolean reserialize = false;
     if (!query.getApp().equals(remoteAppId)) {
       reserialize = true;
-      query.setApp(remoteAppId);
+      query.toBuilder().setApp(remoteAppId);
     }
     if (query.hasAncestor() && !query.getAncestor().getApp().equals(remoteAppId)) {
       reserialize = true;
-      query.getAncestor().setApp(remoteAppId);
+      query.getAncestor().toBuilder().setApp(remoteAppId);
     }
-    for (DatastoreV3Pb.Query.Filter filter : query.filters()) {
-      for (OnestoreEntity.Property prop : filter.propertys()) {
-        OnestoreEntity.PropertyValue propValue = prop.getMutableValue();
+    for (DatastoreV3Pb.Query.Filter filter : query.getFilterList()) {
+      for (OnestoreEntity.Property prop : filter.getPropertyList()) {
+        OnestoreEntity.PropertyValue propValue = prop.getValue();
         if (propValue.hasReferenceValue()) {
-          OnestoreEntity.PropertyValue.ReferenceValue ref = propValue.getMutableReferenceValue();
+          OnestoreEntity.PropertyValue.ReferenceValue.Builder ref = propValue.getReferenceValue()
+              .toBuilder();
           if (!ref.getApp().equals(remoteAppId)) {
             reserialize = true;
             ref.setApp(remoteAppId);
@@ -217,8 +220,8 @@ class RemoteDatastore {
   }
 
   private byte[] handleNext(byte[] request) {
-    DatastoreV3Pb.NextRequest nextRequest = new DatastoreV3Pb.NextRequest();
-    mergeFromBytes(nextRequest, request);
+    DatastoreV3Pb.NextRequest.Builder nextRequest = DatastoreV3Pb.NextRequest.newBuilder();
+    mergeFromBytes(nextRequest.build(), request);
 
     long cursorId = nextRequest.getCursor().getCursor();
     QueryState queryState = idToCursor.get(cursorId);
@@ -227,59 +230,58 @@ class RemoteDatastore {
     }
 
     if (!queryState.hasMoreResults()) {
-      DatastoreV3Pb.QueryResult result = new DatastoreV3Pb.QueryResult();
+      DatastoreV3Pb.QueryResult.Builder result = DatastoreV3Pb.QueryResult.newBuilder();
       result.setMoreResults(false);
-      return result.toByteArray();
+      return result.build().toByteArray();
     } else {
-      return runQuery(queryState.makeNextQuery(nextRequest).toByteArray(), cursorId);
+      return runQuery(queryState.makeNextQuery(nextRequest.build()).toByteArray(), cursorId);
     }
   }
 
   private byte[] handleBeginTransaction(byte[] request) {
-    DatastoreV3Pb.BeginTransactionRequest beginTxnRequest =
-        new DatastoreV3Pb.BeginTransactionRequest();
+    DatastoreV3Pb.BeginTransactionRequest beginTxnRequest = DatastoreV3Pb.BeginTransactionRequest.newBuilder().build();
     parseFromBytes(beginTxnRequest, request);
 
     // Create the transaction builder.
     long txId = nextTransactionId.getAndIncrement();
-    idToTransaction.put(txId, new TransactionBuilder(beginTxnRequest.isAllowMultipleEg()));
+    idToTransaction.put(txId, new TransactionBuilder(beginTxnRequest.hasAllowMultipleEg()));
 
     // return a Transaction response with the new id
-    DatastoreV3Pb.Transaction tx = new DatastoreV3Pb.Transaction();
+    DatastoreV3Pb.Transaction.Builder tx = DatastoreV3Pb.Transaction.newBuilder();
     tx.setHandle(txId);
     tx.setApp(remoteAppId);
-    return tx.toByteArray();
+    return tx.build().toByteArray();
   }
 
   private byte[] handleCommit(byte[] requestBytes) {
-    DatastoreV3Pb.Transaction request = new DatastoreV3Pb.Transaction();
-    mergeFromBytes(request, requestBytes);
+    DatastoreV3Pb.Transaction.Builder request = DatastoreV3Pb.Transaction.newBuilder();
+    mergeFromBytes(request.build(), requestBytes);
     request.setApp(remoteAppId);
-    TransactionBuilder tx = removeTransactionBuilder("Commit", request);
+    TransactionBuilder tx = removeTransactionBuilder("Commit", request.build());
 
     // Replay the transaction and do the commit on the server. (Throws an exception
     // if the commit fails.)
     remoteRpc.call(REMOTE_API_SERVICE, "Transaction", "", tx.makeCommitRequest().toByteArray());
 
     // Return success.
-    return new DatastoreV3Pb.CommitResponse().toByteArray();
+    return DatastoreV3Pb.CommitResponse.newBuilder().build().toByteArray();
   }
 
   private byte[] handleRollback(byte[] requestBytes) {
-    DatastoreV3Pb.Transaction request = new DatastoreV3Pb.Transaction();
-    mergeFromBytes(request, requestBytes);
+    DatastoreV3Pb.Transaction.Builder request = DatastoreV3Pb.Transaction.newBuilder();
+    mergeFromBytes(request.build(), requestBytes);
     request.setApp(remoteAppId);
-    removeTransactionBuilder("Rollback", request);
+    removeTransactionBuilder("Rollback", request.build());
 
     return new byte[0]; // this is ApiBasePb.VoidProto.getDefaultInstance().toByteArray();
   }
 
   private byte[] handleGet(byte[] originalRequestBytes) {
-    DatastoreV3Pb.GetRequest rewrittenReq = new DatastoreV3Pb.GetRequest();
+    DatastoreV3Pb.GetRequest rewrittenReq = DatastoreV3Pb.GetRequest.newBuilder().build();
     mergeFromBytes(rewrittenReq, originalRequestBytes);
 
     // Update the Request so that all References have the remoteAppId.
-    boolean reserialize = rewriteRequestReferences(rewrittenReq.mutableKeys(), remoteAppId);
+    boolean reserialize = rewriteRequestReferences(rewrittenReq.getKeyList(), remoteAppId);
 
     if (rewrittenReq.hasTransaction()) {
       return handleGetWithTransaction(rewrittenReq);
@@ -291,7 +293,7 @@ class RemoteDatastore {
   }
 
   private byte[] handlePut(byte[] requestBytes) {
-    DatastoreV3Pb.PutRequest request = new DatastoreV3Pb.PutRequest();
+    DatastoreV3Pb.PutRequest request = DatastoreV3Pb.PutRequest.newBuilder().build();
     mergeFromBytes(request, requestBytes);
     boolean reserialize = rewritePutAppIds(request, remoteAppId);
     if (request.hasTransaction()) {
@@ -313,16 +315,16 @@ class RemoteDatastore {
   static boolean rewritePutAppIds(DatastoreV3Pb.PutRequest request, String remoteAppId) {
     boolean reserialize = false;
     // rewrite the app on the key of every entity
-    for (OnestoreEntity.EntityProto entity : request.mutableEntitys()) {
-      if (!entity.getMutableKey().getApp().equals(remoteAppId)) {
+    for (OnestoreEntity.EntityProto entity : request.getEntityList()) {
+      if (!entity.getKey().getApp().equals(remoteAppId)) {
         reserialize = true;
-        entity.getMutableKey().setApp(remoteAppId);
+        entity.getKey().toBuilder().setApp(remoteAppId);
       }
       // rewrite the app on all reference properties
-      for (OnestoreEntity.Property prop : entity.mutablePropertys()) {
-        if (prop.hasValue() && prop.getMutableValue().hasReferenceValue()) {
-          OnestoreEntity.PropertyValue.ReferenceValue ref =
-              prop.getMutableValue().getReferenceValue();
+      for (OnestoreEntity.Property prop : entity.getPropertyList()) {
+        if (prop.hasValue() && prop.getValue().hasReferenceValue()) {
+          OnestoreEntity.PropertyValue.ReferenceValue.Builder ref =
+              prop.getValue().getReferenceValue().toBuilder();
           if (ref.hasApp() && !ref.getApp().equals(remoteAppId)) {
             reserialize = true;
             ref.setApp(remoteAppId);
@@ -334,10 +336,10 @@ class RemoteDatastore {
   }
 
   private byte[] handleDelete(byte[] requestBytes) {
-    DatastoreV3Pb.DeleteRequest request = new DatastoreV3Pb.DeleteRequest();
+    DatastoreV3Pb.DeleteRequest request = DatastoreV3Pb.DeleteRequest.newBuilder().build();
     mergeFromBytes(request, requestBytes);
 
-    boolean reserialize = rewriteRequestReferences(request.mutableKeys(), remoteAppId);
+    boolean reserialize = rewriteRequestReferences(request.getKeyList(), remoteAppId);
     if (reserialize) {
       // The request was mutated, so we need to reserialize it.
       requestBytes = request.toByteArray();
@@ -364,7 +366,7 @@ class RemoteDatastore {
     boolean reserialize = false;
     for (OnestoreEntity.Reference refToCheck : references) {
       if (!refToCheck.getApp().equals(remoteAppId)) {
-        refToCheck.setApp(remoteAppId);
+        refToCheck.toBuilder().setApp(remoteAppId);
         reserialize = true;
       }
     }
@@ -378,10 +380,10 @@ class RemoteDatastore {
     // References have already been rewritten to have the remoteAppId.  Also note that this request
     // does not actually use a transaction.  Instead, all transactional checks will be done at
     // commit time.
-    DatastoreV3Pb.GetRequest requestForKeysNotInCache = rewrittenReq.clone();
+    DatastoreV3Pb.GetRequest.Builder requestForKeysNotInCache = rewrittenReq.toBuilder().clone();
     requestForKeysNotInCache.clearTransaction();
     requestForKeysNotInCache.clearKey();
-    for (OnestoreEntity.Reference key : rewrittenReq.keys()) {
+    for (OnestoreEntity.Reference key : rewrittenReq.getKeyList()) {
       if (!tx.isCachedEntity(key)) {
         requestForKeysNotInCache.addKey(key);
       }
@@ -389,15 +391,16 @@ class RemoteDatastore {
 
     // If we need any entities, do the RPC
     Set<OnestoreEntity.Reference> deferredRefs = new HashSet<>();
-    if (requestForKeysNotInCache.keySize() > 0) {
+    if (requestForKeysNotInCache.getKeyCount() > 0) {
       byte[] respBytesFromRemoteApp = remoteRpc.call(
-          RemoteDatastore.DATASTORE_SERVICE, "Get", "", requestForKeysNotInCache.toByteArray());
+          RemoteDatastore.DATASTORE_SERVICE, "Get", "", requestForKeysNotInCache.build()
+              .toByteArray());
 
       //  Add new entities to the cache (these have the remote app id.)
-      DatastoreV3Pb.GetResponse respFromRemoteApp = new DatastoreV3Pb.GetResponse();
+      DatastoreV3Pb.GetResponse respFromRemoteApp = DatastoreV3Pb.GetResponse.newBuilder().build();
       mergeFromBytes(respFromRemoteApp, respBytesFromRemoteApp);
 
-      for (DatastoreV3Pb.GetResponse.Entity entityResult : respFromRemoteApp.entitys()) {
+      for (DatastoreV3Pb.GetResponse.Entity entityResult : respFromRemoteApp.getEntityList()) {
         if (entityResult.hasEntity()) {
           tx.addEntityToCache(entityResult.getEntity());
         } else {
@@ -407,13 +410,13 @@ class RemoteDatastore {
 
       // We don't update the cache for deferred Keys, but we'll make sure they flow back out
       // through the returned GetResponse.
-      deferredRefs.addAll(respFromRemoteApp.deferreds());
+      deferredRefs.addAll(respFromRemoteApp.getDeferredList());
     }
 
     // The cache is now up to date.  We'll build the response by pulling values from it.
-    DatastoreV3Pb.GetResponse mergedResponse = new DatastoreV3Pb.GetResponse();
+    DatastoreV3Pb.GetResponse.Builder mergedResponse = DatastoreV3Pb.GetResponse.newBuilder();
     mergedResponse.setInOrder(deferredRefs.isEmpty());
-    for (OnestoreEntity.Reference key : rewrittenReq.keys()) {
+    for (OnestoreEntity.Reference key : rewrittenReq.getKeyList()) {
       // Check for deferred keys first, because they were not put in the cache.
       if (deferredRefs.contains(key)) {
         mergedResponse.addDeferred(key);
@@ -421,14 +424,14 @@ class RemoteDatastore {
         // Otherwise, it should be in the cache (perhaps as a MISSING entry.)
         OnestoreEntity.EntityProto entity = tx.getCachedEntity(key);
         if (entity == null) {
-          mergedResponse.addEntity().setKey(key);
+          mergedResponse.addEntityBuilder().setKey(key);
         } else {
-          mergedResponse.addEntity().setEntity(entity);
+          mergedResponse.addEntityBuilder().setEntity(entity);
         }
       }
     }
 
-    return mergedResponse.toByteArray();
+    return mergedResponse.build().toByteArray();
   }
 
   byte[] handlePutForTransaction(DatastoreV3Pb.PutRequest request) {
@@ -436,7 +439,7 @@ class RemoteDatastore {
 
     // Find the entities for which we need to allocate a new id.
     List<OnestoreEntity.EntityProto> entitiesWithoutIds = new ArrayList<>();
-    for (OnestoreEntity.EntityProto entity : request.entitys()) {
+    for (OnestoreEntity.EntityProto entity : request.getEntityList()) {
       if (requiresId(entity)) {
         entitiesWithoutIds.add(entity);
       }
@@ -445,10 +448,10 @@ class RemoteDatastore {
     // Allocate an id for each entity that needs one.
     if (!entitiesWithoutIds.isEmpty()) {
 
-      DatastoreV3Pb.PutRequest subRequest = new DatastoreV3Pb.PutRequest();
+      DatastoreV3Pb.PutRequest.Builder subRequest = DatastoreV3Pb.PutRequest.newBuilder();
       for (OnestoreEntity.EntityProto entity : entitiesWithoutIds) {
-        OnestoreEntity.EntityProto subEntity = subRequest.addEntity();
-        subEntity.getKey().mergeFrom(entity.getKey());
+        OnestoreEntity.EntityProto.Builder subEntity = subRequest.addEntityBuilder();
+        subEntity.getKeyBuilder().mergeFrom(entity.getKey());
         subEntity.getEntityGroup();
       }
 
@@ -457,37 +460,37 @@ class RemoteDatastore {
       // txn options we'll need to come up with something else.
       String getIdsRpc = tx.isXG() ? "GetIDsXG" : "GetIDs";
       byte[] subResponseBytes =
-          remoteRpc.call(REMOTE_API_SERVICE, getIdsRpc, "", subRequest.toByteArray());
-      DatastoreV3Pb.PutResponse subResponse = new DatastoreV3Pb.PutResponse();
-      mergeFromBytes(subResponse, subResponseBytes);
+          remoteRpc.call(REMOTE_API_SERVICE, getIdsRpc, "", subRequest.build().toByteArray());
+      DatastoreV3Pb.PutResponse.Builder subResponse = DatastoreV3Pb.PutResponse.newBuilder();
+      mergeFromBytes(subResponse.build(), subResponseBytes);
 
       // Add the new id and its entity group to the original entity (still in the request).
       Iterator<OnestoreEntity.EntityProto> it = entitiesWithoutIds.iterator();
-      for (OnestoreEntity.Reference newKey : subResponse.keys()) {
+      for (OnestoreEntity.Reference newKey : subResponse.getKeyList()) {
         OnestoreEntity.EntityProto entity = it.next();
-        entity.getKey().copyFrom(newKey);
-        entity.getEntityGroup().addElement().copyFrom(newKey.getPath().getElement(0));
+        entity.getKey().toBuilder().mergeFrom(newKey);
+        entity.getEntityGroup().toBuilder().addElementBuilder().mergeFrom(newKey.getPath().getElement(0));
       }
     }
 
     // Copy all the entities in this put() request into the transaction, to be submitted
     // to the server on commit. Also, create a response that has the key of each entity.
-    DatastoreV3Pb.PutResponse response = new DatastoreV3Pb.PutResponse();
-    for (OnestoreEntity.EntityProto entityProto : request.entitys()) {
+    DatastoreV3Pb.PutResponse.Builder response = DatastoreV3Pb.PutResponse.newBuilder();
+    for (OnestoreEntity.EntityProto entityProto : request.getEntityList()) {
       tx.putEntityOnCommit(entityProto);
-      response.addKey().copyFrom(entityProto.getKey());
+      response.addKeyBuilder().mergeFrom(entityProto.getKey());
     }
-    return response.toByteArray();
+    return response.build().toByteArray();
   }
 
   byte[] handleDeleteForTransaction(DatastoreV3Pb.DeleteRequest request) {
     TransactionBuilder tx = getTransactionBuilder("Delete", request.getTransaction());
 
-    for (OnestoreEntity.Reference key : request.keys()) {
+    for (OnestoreEntity.Reference key : request.getKeyList()) {
       tx.deleteEntityOnCommit(key);
     }
 
-    DatastoreV3Pb.DeleteResponse response = new DatastoreV3Pb.DeleteResponse();
+    DatastoreV3Pb.DeleteResponse response = DatastoreV3Pb.DeleteResponse.newBuilder().build();
     return response.toByteArray();
   }
 
@@ -513,12 +516,12 @@ class RemoteDatastore {
    */
   private boolean requiresId(OnestoreEntity.EntityProto entity) {
     OnestoreEntity.Path path = entity.getKey().getPath();
-    OnestoreEntity.Path.Element lastElement = path.elements().get(path.elementSize() - 1);
+    OnestoreEntity.Path.Element lastElement = path.getElementList().get(path.getElementCount() - 1);
     return lastElement.getId() == 0 && !lastElement.hasName();
   }
 
   private static String describePutRequestForLog(DatastoreV3Pb.PutRequest putRequest) {
-    int count = putRequest.entitySize();
+    int count = putRequest.getEntityCount();
     if (count <= 0) {
       return "()";
     }
@@ -533,7 +536,7 @@ class RemoteDatastore {
   private static String describeKeyForLog(OnestoreEntity.Reference keyProto) {
     StringBuilder pathString = new StringBuilder();
     OnestoreEntity.Path path = keyProto.getPath();
-    for (OnestoreEntity.Path.Element element : path.elements()) {
+    for (OnestoreEntity.Path.Element element : path.getElementList()) {
       if (pathString.length() > 0) {
         pathString.append(",");
       }
@@ -573,8 +576,8 @@ class RemoteDatastore {
     }
 
     private DatastoreV3Pb.Query makeNextQuery(DatastoreV3Pb.NextRequest nextRequest) {
-      DatastoreV3Pb.Query result = new DatastoreV3Pb.Query();
-      mergeFromBytes(result, query);
+      DatastoreV3Pb.Query.Builder result = DatastoreV3Pb.Query.newBuilder();
+      mergeFromBytes(result.build(), query);
       result.setOffset(0);
       result.setCompiledCursor(cursor);
       result.setCompile(true);
@@ -584,19 +587,30 @@ class RemoteDatastore {
       } else {
         result.clearCount();
       }
-      return result;
+      return result.build();
     }
   }
 
-  private static void parseFromBytes(ProtocolMessage<?> message, byte[] bytes) {
-    boolean parsed = message.parseFrom(bytes);
+  private static void parseFromBytes(Message message, byte[] bytes) {
+    boolean parsed = true;
+    try{
+      message.getParserForType().parseFrom(bytes);
+    } catch (InvalidProtocolBufferException e){
+      parsed = false;
+    }
     if (!parsed || !message.isInitialized()) {
       throw new ApiProxy.ApiProxyException("Could not parse protobuf bytes");
     }
   }
 
-  private static void mergeFromBytes(ProtocolMessage<?> message, byte[] bytes) {
-    boolean parsed = message.mergeFrom(bytes);
+  private static void mergeFromBytes(Message message, byte[] bytes) {
+    boolean parsed = true;
+    try {
+      message.toBuilder().mergeFrom(bytes);
+    } catch (InvalidProtocolBufferException e) {
+      parsed = false;
+    }
+
     if (!parsed || !message.isInitialized()) {
       throw new ApiProxy.ApiProxyException("Could not parse protobuf bytes");
     }
