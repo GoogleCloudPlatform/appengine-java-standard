@@ -25,7 +25,7 @@ import com.google.appengine.api.datastore.IMHandle.Scheme;
 import com.google.appengine.api.users.User;
 import com.google.common.collect.ImmutableList;
 import com.google.datastore.v1.Value;
-import com.google.storage.onestore.v3.OnestoreEntity.PropertyValue;
+import com.google.storage.onestore.v3.proto2api.OnestoreEntity.PropertyValue;
 import java.util.Date;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -46,7 +46,7 @@ public class RawValueTest {
           Key.class,
           GeoPt.class,
           User.class);
-  private final RawValue NULL_VALUE = new RawValue(new PropertyValue());
+  private final RawValue NULL_VALUE = new RawValue(PropertyValue.newBuilder().build());
 
   private void assertTypeMatch(RawValue value, Class<?> validType) {
     value.asType(validType); // Does not throw an exception.
@@ -71,7 +71,7 @@ public class RawValueTest {
 
   @Test
   public void testBoolean() {
-    RawValue value = new RawValue(new PropertyValue().setBooleanValue(true));
+    RawValue value = new RawValue(PropertyValue.newBuilder().setBooleanValue(true).build());
     assertTypeMatch(value, Boolean.class);
     assertThat(value.getValue()).isEqualTo(Boolean.TRUE);
     assertValue(true, value);
@@ -79,14 +79,14 @@ public class RawValueTest {
 
   @Test
   public void testDouble() {
-    RawValue value = new RawValue(new PropertyValue().setDoubleValue(3.3));
+    RawValue value = new RawValue(PropertyValue.newBuilder().setDoubleValue(3.3).build());
     assertTypeMatch(value, Double.class);
     assertValue(3.3, value, Float.class);
   }
 
   @Test
   public void testInt64() {
-    RawValue value = new RawValue(new PropertyValue().setInt64Value(1L));
+    RawValue value = new RawValue(PropertyValue.newBuilder().setInt64Value(1L).build());
     assertTypeMatch(value, Long.class);
     assertThat(value.getValue()).isEqualTo(1L);
     assertValue(1L, value, Byte.class, Short.class, Integer.class);
@@ -96,7 +96,7 @@ public class RawValueTest {
 
   @Test
   public void testString() {
-    RawValue value = new RawValue(new PropertyValue().setStringValue("xmpp hi"));
+    RawValue value = new RawValue(PropertyValue.newBuilder().setStringValue("xmpp hi").build());
     assertTypeMatch(value, String.class);
     assertThat((byte[]) value.getValue()).isEqualTo("xmpp hi".getBytes(UTF_8));
     assertValue("xmpp hi", value);
@@ -115,7 +115,7 @@ public class RawValueTest {
 
   @Test
   public void testNull() {
-    RawValue value = new RawValue(new PropertyValue());
+    RawValue value = new RawValue(PropertyValue.newBuilder().build());
     assertThat(value.getValue()).isNull();
     assertThat(value.asType(String.class)).isNull();
     assertThat(value.asStrictType(String.class)).isNull();

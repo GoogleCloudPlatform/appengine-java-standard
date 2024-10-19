@@ -38,10 +38,10 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.io.Closeables;
-import com.google.storage.onestore.v3.OnestoreEntity.Index;
-import com.google.storage.onestore.v3.OnestoreEntity.Index.Property;
-import com.google.storage.onestore.v3.OnestoreEntity.Index.Property.Direction;
-import com.google.storage.onestore.v3.OnestoreEntity.Index.Property.Mode;
+import com.google.storage.onestore.v3.proto2api.OnestoreEntity.Index;
+import com.google.storage.onestore.v3.proto2api.OnestoreEntity.Index.Property;
+import com.google.storage.onestore.v3.proto2api.OnestoreEntity.Index.Property.Direction;
+import com.google.storage.onestore.v3.proto2api.OnestoreEntity.Index.Property.Mode;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -392,7 +392,7 @@ class LocalCompositeIndexManager extends CompositeIndexManager {
     }
 
     private static Index toIndex(Element datastoreIndexElement) {
-      Index index = new Index();
+      Index.Builder index = Index.newBuilder();
       // TODO: Should we be doing more validation here?
       // TODO: surely we should instead be reusing the parse
       // validation that we're already doing in IndexesXml,
@@ -405,7 +405,7 @@ class LocalCompositeIndexManager extends CompositeIndexManager {
 
       for (Element propertyElement :
           XmlUtils.getChildren(datastoreIndexElement, IndexesXmlReader.PROPERTY_TAG)) {
-        Property prop = index.addProperty();
+        Property.Builder prop = index.addPropertyBuilder();
         prop.setName(trim(propertyElement.getAttribute(IndexesXmlReader.NAME_PROP)));
         String directionValue =
             XmlUtils.getAttributeOrNull(propertyElement, IndexesXmlReader.DIRECTION_PROP);
@@ -417,7 +417,7 @@ class LocalCompositeIndexManager extends CompositeIndexManager {
           prop.setMode(toMode(trim(modeValue)));
         }
       }
-      return index;
+      return index.build();
     }
 
     private static boolean isAutoGenerateIndexes(Element datastoreIndexesElement) {
@@ -463,23 +463,23 @@ class LocalCompositeIndexManager extends CompositeIndexManager {
 
     private IndexesXml.Index toConfigIndex(Index index) {
       IndexesXml.Index configIndex =
-          new IndexesXml.Index(index.getEntityType(), index.isAncestor());
-      for (Property property : index.propertys()) {
+          new IndexesXml.Index(index.getEntityType(), index.hasAncestor());
+      for (Property property : index.getPropertyList()) {
         configIndex.addNewProperty(
             property.getName(),
-            toConfigDirection(property.getDirectionEnum()),
-            toConfigMode(property.getModeEnum()));
+            toConfigDirection(property.getDirection()),
+            toConfigMode(property.getMode()));
       }
       return configIndex;
     }
 
     private Index toIndex(IndexesXml.Index configIndex) {
-      Index index =
-          new Index()
+      Index.Builder index =
+          Index.newBuilder()
               .setEntityType(configIndex.getKind())
               .setAncestor(configIndex.doIndexAncestors());
       for (IndexesXml.PropertySort propertySort : configIndex.getProperties()) {
-        Property property = index.addProperty().setName(propertySort.getPropertyName());
+        Property.Builder property = index.addPropertyBuilder().setName(propertySort.getPropertyName());
         // Always set direction.
         property.setDirection(toDirection(propertySort.getDirection()));
         // Only set mode if present.
@@ -487,7 +487,7 @@ class LocalCompositeIndexManager extends CompositeIndexManager {
           property.setMode(toMode(propertySort.getMode()));
         }
       }
-      return index;
+      return index.build();
     }
 
     // @Nullable
@@ -914,18 +914,18 @@ class LocalCompositeIndexManager extends CompositeIndexManager {
       }
 
       // returns null if no index needed for query
-      Index index = compositeIndexForQuery(query);
+      Index.Builder index = compositeIndexForQuery(query);
       if (index != null && !indexCache.contains(index)) {
         // See if other indexes in the cache can satisfy the query.
-        Index minimumIndex = minimumCompositeIndexForQuery(query, indexCache);
+        Index.Builder minimumIndex = minimumCompositeIndexForQuery(query, indexCache);
 
         if (minimumIndex != null) {
           // NOTE: The SDK will add index to the exception, so we are only adding the
           // minimum index if it is different.
-          Index minimumIndexForMessage = minimumIndex.equals(index) ? null : minimumIndex;
+          Index.Builder minimumIndexForMessage = minimumIndex.equals(index) ? null : minimumIndex;
           String message =
-              fileManager.getMissingCompositeIndexMessage(query, minimumIndexForMessage);
-          throw new ApiProxy.ApplicationException(ErrorCode.NEED_INDEX.getValue(), message);
+              fileManager.getMissingCompositeIndexMessage(query, minimumIndexForMessage.build());
+          throw new ApiProxy.ApplicationException(ErrorCode.NEED_INDEX.getNumber(), message);
         }
       }
     }
@@ -938,7 +938,7 @@ class LocalCompositeIndexManager extends CompositeIndexManager {
     Map<Index, Integer> indexMap = Maps.newLinkedHashMap();
     synchronized (queryHistory) {
       for (Map.Entry<IndexComponentsOnlyQuery, AtomicInteger> entry : queryHistory.entrySet()) {
-        Index index = compositeIndexForQuery(entry.getKey());
+        Index.Builder index = compositeIndexForQuery(entry.getKey());
         if (index == null) {
           // not interested in queries that don't need an index
           continue;
@@ -948,7 +948,7 @@ class LocalCompositeIndexManager extends CompositeIndexManager {
           count = 0;
         }
         count += entry.getValue().intValue();
-        indexMap.put(index, count);
+        indexMap.put(index.build(), count);
       }
     }
     return indexMap;
@@ -957,10 +957,10 @@ class LocalCompositeIndexManager extends CompositeIndexManager {
   /** Get the single composite index used by this query, if any, as a list. */
   public List<Index> queryIndexList(DatastoreV3Pb.Query query) {
     IndexComponentsOnlyQuery indexOnlyQuery = new IndexComponentsOnlyQuery(query);
-    Index index = compositeIndexForQuery(indexOnlyQuery);
+    Index.Builder index = compositeIndexForQuery(indexOnlyQuery);
     List<Index> indexList;
     if (index != null) {
-      indexList = Collections.singletonList(index);
+      indexList = Collections.singletonList(index.build());
     } else {
       indexList = Collections.emptyList();
     }
@@ -981,12 +981,12 @@ class LocalCompositeIndexManager extends CompositeIndexManager {
   }
 
   /** Aliasing to make the method available in the package. */
-  protected Index compositeIndexForQuery(IndexComponentsOnlyQuery indexOnlyQuery) {
+  protected Index.Builder compositeIndexForQuery(IndexComponentsOnlyQuery indexOnlyQuery) {
     return super.compositeIndexForQuery(indexOnlyQuery);
   }
 
   /** Aliasing to make the method available in the package. */
-  protected Index minimumCompositeIndexForQuery(
+  protected Index.Builder minimumCompositeIndexForQuery(
       IndexComponentsOnlyQuery indexOnlyQuery, Collection<Index> indexes) {
     return super.minimumCompositeIndexForQuery(indexOnlyQuery, indexes);
   }
