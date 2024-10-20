@@ -38,7 +38,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  */
 class PseudoKinds {
   // Marker to indicate get() was not called on a pseudo-kind
-  static final EntityProto NOT_A_PSEUDO_KIND = EntityProto.newBuilder().build();
+  static final EntityProto NOT_A_PSEUDO_KIND = EntityProto.newBuilder().buildPartial();
 
   // Key is kind name
   private final Map<String, PseudoKind> pseudoKinds;

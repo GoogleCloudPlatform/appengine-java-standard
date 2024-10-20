@@ -50,7 +50,7 @@ final class QueryRunnerV3 implements QueryRunner {
 
     Future<DatastoreV3Pb.QueryResult> result =
         DatastoreApiHelper.makeAsyncCall(
-            apiConfig, Method.RunQuery, queryProto.build(), DatastoreV3Pb.QueryResult.newBuilder().build());
+            apiConfig, Method.RunQuery, queryProto.build(), DatastoreV3Pb.QueryResult.newBuilder().buildPartial());
 
     // Adding more info to DatastoreNeedIndexException if thrown
     result =
