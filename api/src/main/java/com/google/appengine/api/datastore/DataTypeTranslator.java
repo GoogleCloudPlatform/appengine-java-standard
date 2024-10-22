@@ -260,9 +260,9 @@ public final class DataTypeTranslator {
       }
       property.getValue(); // Indicate to the proto that we have set this field
       if (indexed) {
-        proto = proto.toBuilder().addProperty(property.build()).build();
+        proto.toBuilder().addProperty(property.buildPartial()).buildPartial();
       } else {
-        proto = proto.toBuilder().addRawProperty(property.build()).build();
+        proto.toBuilder().addRawProperty(property.buildPartial()).buildPartial();
       }
     } else {
       // Write every element to the PB
@@ -317,9 +317,9 @@ public final class DataTypeTranslator {
       }
     }
     if (indexed) {
-      entity = entity.toBuilder().addProperty(property).build();
+      entity = entity.toBuilder().addProperty(property).buildPartial();
     } else {
-      entity = entity.toBuilder().addRawProperty(property).build();
+      entity = entity.toBuilder().addRawProperty(property).buildPartial();
     }
   }
 
