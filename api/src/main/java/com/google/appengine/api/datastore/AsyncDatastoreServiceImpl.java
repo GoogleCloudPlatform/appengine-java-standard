@@ -247,7 +247,7 @@ class AsyncDatastoreServiceImpl extends BaseAsyncDatastoreServiceImpl {
 
     Future<DatastoreV3Pb.Transaction> future =
         DatastoreApiHelper.makeAsyncCall(
-            apiConfig, DatastoreService_3.Method.BeginTransaction, request.build(), remoteTxn.build());
+            apiConfig, DatastoreService_3.Method.BeginTransaction, request.build(), remoteTxn.buildPartial());
 
     return new InternalTransactionV3(apiConfig, request.getApp(), future);
   }

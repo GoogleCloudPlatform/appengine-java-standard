@@ -73,6 +73,6 @@ public class IndexTranslator {
   }
 
   public static Index convertFromPb(OnestoreEntity.Index index) {
-    return convertFromPb(OnestoreEntity.CompositeIndex.newBuilder().setId(0).setDefinition(index).build());
+    return convertFromPb(OnestoreEntity.CompositeIndex.newBuilder().setId(0).setDefinition(index).buildPartial());
   }
 }

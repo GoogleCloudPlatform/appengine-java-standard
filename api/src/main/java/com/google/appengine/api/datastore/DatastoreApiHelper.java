@@ -130,23 +130,25 @@ public final class DatastoreApiHelper {
     return new FutureWrapper<byte[], T>(response) {
       @Override
       protected T wrap(byte[] responseBytes) throws InvalidProtocolBufferException {
+        T updatedResponseProto = null;
         // This null check is mainly for the benefit of unit tests
         // (specifically ones using EasyMock, where the default behavior
         // is to return null).
         if (responseBytes != null && responseProto != null) {
+
           try {
-            responseProto.getParserForType().parseFrom(responseBytes);
+            updatedResponseProto = (T) responseProto.getParserForType().parseFrom(responseBytes);
           }
           catch(InvalidProtocolBufferException e) {
             throw new InvalidProtocolBufferException(
                 String.format("Invalid %s.%s response", DATASTORE_V3_PACKAGE, method.name()));
           }
-          List<String> initializationErrors = responseProto.findInitializationErrors();
+          List<String> initializationErrors = updatedResponseProto.findInitializationErrors();
           if (initializationErrors != null && !initializationErrors.isEmpty()) {
             throw new InvalidProtocolBufferException(initializationErrors.toString());
           }
         }
-        return responseProto;
+        return updatedResponseProto;
       }
 
       @Override
