@@ -152,6 +152,6 @@ public class FilterMatcherTest {
     result.setOp(Operator.CONTAINED_IN_REGION);
     result.addPropertyBuilder().setName("noname");
     result.setGeoRegion(region);
-    return result.build();
+    return result.buildPartial();
   }
 }

@@ -203,9 +203,9 @@ public class KeyFactory {
       throw new IllegalArgumentException("Cannot parse: " + encoded, ex);
     }
 
-    Reference reference = Reference.newBuilder().build();
+    Reference reference = Reference.newBuilder().buildPartial();
     try{
-      reference.getParserForType().parseFrom(decodedBytes);
+      reference = reference.getParserForType().parseFrom(decodedBytes);
     } catch (InvalidProtocolBufferException e){
       throw new IllegalArgumentException("Could not parse Reference");
     }
