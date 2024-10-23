@@ -209,7 +209,7 @@ public final class DataTypeTranslator {
    * @param map A not {@code null} map of all the properties which will be set on {@code proto}
    * @param proto A not {@code null} protocol buffer
    */
-  public static void addPropertiesToPb(Map<String, ?> map, EntityProto proto) {
+  public static void addPropertiesToPb(Map<String, ?> map, EntityProto.Builder proto) {
     for (Map.Entry<String, ?> entry : map.entrySet()) {
       String name = entry.getKey();
 
@@ -241,7 +241,7 @@ public final class DataTypeTranslator {
   }
 
   private static void addListPropertyToPb(
-      EntityProto proto,
+      EntityProto.Builder proto,
       String name,
       boolean indexed,
       Collection<?> values,
@@ -260,9 +260,9 @@ public final class DataTypeTranslator {
       }
       property.getValue(); // Indicate to the proto that we have set this field
       if (indexed) {
-        proto.toBuilder().addProperty(property.buildPartial()).buildPartial();
+        proto.addProperty(property.buildPartial());
       } else {
-        proto.toBuilder().addRawProperty(property.buildPartial()).buildPartial();
+        proto.addRawProperty(property.buildPartial());
       }
     } else {
       // Write every element to the PB
@@ -291,7 +291,7 @@ public final class DataTypeTranslator {
       boolean indexed,
       boolean forceIndexedEmbeddedEntity,
       boolean multiple,
-      EntityProto entity) {
+      EntityProto.Builder entity) {
     Property.Builder property = Property.newBuilder();
     property.setName(name);
     property.setMultiple(multiple);
@@ -317,9 +317,9 @@ public final class DataTypeTranslator {
       }
     }
     if (indexed) {
-      entity = entity.toBuilder().addProperty(property).buildPartial();
+      entity.addProperty(property);
     } else {
-      entity = entity.toBuilder().addRawProperty(property).buildPartial();
+      entity.addRawProperty(property);
     }
   }
 
@@ -1683,7 +1683,7 @@ public final class DataTypeTranslator {
       if (structProp.getKey() != null) {
         proto.setKey(KeyTranslator.convertToPb(structProp.getKey()));
       }
-      addPropertiesToPb(structProp.getPropertyMap(), proto.buildPartial());
+      addPropertiesToPb(structProp.getPropertyMap(), proto);
       // TODO: Figure out how to do partial serialization.
       propertyValue.setStringValueBytes(proto.buildPartial().toByteString()).buildPartial();
     }

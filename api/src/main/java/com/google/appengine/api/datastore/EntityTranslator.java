@@ -86,7 +86,7 @@ public class EntityTranslator {
       entityGroup.addElement(reference.getPath().getElement(0));
     }
 
-    DataTypeTranslator.addPropertiesToPb(entity.getPropertyMap(), proto.buildPartial());
+    DataTypeTranslator.addPropertiesToPb(entity.getPropertyMap(), proto);
     return proto.buildPartial();
   }
 
