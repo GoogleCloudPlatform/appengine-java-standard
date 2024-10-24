@@ -17,8 +17,8 @@
 package com.google.appengine.api.datastore;
 
 import com.google.common.collect.Lists;
-import com.google.storage.onestore.v3.OnestoreEntity.Index.Property;
-import com.google.storage.onestore.v3.OnestoreEntity.Index.Property.Direction;
+import com.google.storage.onestore.v3.proto2api.OnestoreEntity.Index.Property;
+import com.google.storage.onestore.v3.proto2api.OnestoreEntity.Index.Property.Direction;
 import java.util.List;
 import java.util.ListIterator;
 
@@ -53,8 +53,8 @@ class OrderedIndexComponent implements IndexComponent {
     List<Property> indexProps = Lists.newArrayListWithExpectedSize(matcherProperties.size());
     for (Property prop : matcherProperties) {
       if (!prop.hasDirection()) {
-        prop = prop.clone();
-        prop.setDirection(Direction.ASCENDING);
+        prop = prop.toBuilder().clone().build();
+        prop.toBuilder().setDirection(Direction.ASCENDING).build();
       }
       indexProps.add(prop);
     }

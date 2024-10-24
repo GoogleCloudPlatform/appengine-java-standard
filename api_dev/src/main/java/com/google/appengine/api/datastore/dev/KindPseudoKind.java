@@ -22,11 +22,11 @@ import static com.google.appengine.api.datastore.dev.Utils.checkRequest;
 import com.google.appengine.api.datastore.Key;
 import com.google.appengine.api.datastore.dev.LocalDatastoreService.Extent;
 import com.google.appengine.api.datastore.dev.LocalDatastoreService.Profile;
-import com.google.apphosting.datastore.DatastoreV3Pb.Query;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.Query;
 import com.google.common.collect.Lists;
-import com.google.storage.onestore.v3.OnestoreEntity.EntityProto;
-import com.google.storage.onestore.v3.OnestoreEntity.Path;
-import com.google.storage.onestore.v3.OnestoreEntity.Reference;
+import com.google.storage.onestore.v3.proto2api.OnestoreEntity.EntityProto;
+import com.google.storage.onestore.v3.proto2api.OnestoreEntity.Path;
+import com.google.storage.onestore.v3.proto2api.OnestoreEntity.Reference;
 import java.util.List;
 import java.util.Map;
 
@@ -123,17 +123,17 @@ class KindPseudoKind extends KeyFilteredPseudoKind {
 
   /** Creates a __kind__ entity */
   private static EntityProto makeKindEntity(String kind, String app, String namespace) {
-    EntityProto kindEntity = new EntityProto();
-    Path path = new Path();
-    path.addElement().setType(KIND_METADATA_KIND).setName(kind);
-    Reference key = new Reference().setApp(app).setPath(path);
+    EntityProto.Builder kindEntity = EntityProto.newBuilder();
+    Path.Builder path = Path.newBuilder();
+    path.addElementBuilder().setType(KIND_METADATA_KIND).setName(kind);
+    Reference.Builder key = Reference.newBuilder().setApp(app).setPath(path);
     if (namespace.length() > 0) {
       key.setNameSpace(namespace);
     }
     kindEntity.setKey(key);
     // EntityProto.entity_group is a required PB field.
-    kindEntity.getMutableEntityGroup().addElement(path.getElement(0));
+    kindEntity.getEntityGroupBuilder().addElement(path.getElement(0));
 
-    return kindEntity;
+    return kindEntity.build();
   }
 }

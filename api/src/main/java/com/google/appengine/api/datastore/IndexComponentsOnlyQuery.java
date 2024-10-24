@@ -16,13 +16,14 @@
 
 package com.google.appengine.api.datastore;
 
-import com.google.apphosting.datastore.DatastoreV3Pb;
-import com.google.apphosting.datastore.DatastoreV3Pb.Query.Filter;
-import com.google.apphosting.datastore.DatastoreV3Pb.Query.Filter.Operator;
-import com.google.apphosting.datastore.DatastoreV3Pb.Query.Order;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.Query.Filter;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.Query.Filter.Operator;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.Query.Order;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.Query.Order.Direction;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.google.storage.onestore.v3.OnestoreEntity.Index.Property;
+import com.google.storage.onestore.v3.proto2api.OnestoreEntity.Index.Property;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -62,8 +63,8 @@ class IndexComponentsOnlyQuery extends ValidatedQuery {
   private void removeNativelySupportedComponents() {
     /* NOTE: Keep in sync with datastore_index.py:RemoveNativelySupportedComponents() */
 
-    for (Filter filter : query.filters()) {
-      if (filter.getOpEnum() == Operator.EXISTS) {
+    for (Filter filter : query.getFilterList()) {
+      if (filter.getOp() == Operator.EXISTS) {
         // Exists filters cause properties to appear after the sort order specified
         // in the query, so the native key sort is actually not the next order in
         // the index (and thus cannot be removed).
@@ -73,11 +74,11 @@ class IndexComponentsOnlyQuery extends ValidatedQuery {
 
     // Pulling out __key__ asc orders since is supported natively for perfect plans
     boolean hasKeyDescOrder = false;
-    if (query.orderSize() > 0) {
-      Order lastOrder = query.getOrder(query.orderSize() - 1);
+    if (query.getOrderCount() > 0) {
+      Order lastOrder = query.getOrder(query.getCount() - 1);
       if (lastOrder.getProperty().equals(Entity.KEY_RESERVED_PROPERTY)) {
-        if (lastOrder.getDirection() == Order.Direction.ASCENDING.getValue()) {
-          query.removeOrder(query.orderSize() - 1);
+        if (lastOrder.getDirection() == Order.Direction.ASCENDING) {
+          query.removeOrder(query.getOrderCount() - 1).build();
         } else {
           hasKeyDescOrder = true;
         }
@@ -92,8 +93,8 @@ class IndexComponentsOnlyQuery extends ValidatedQuery {
      */
     if (!hasKeyDescOrder) {
       boolean hasNonKeyInequality = false;
-      for (Filter f : query.filters()) {
-        if (ValidatedQuery.INEQUALITY_OPERATORS.contains(f.getOpEnum())
+      for (Filter f : query.getFilterList()) {
+        if (ValidatedQuery.INEQUALITY_OPERATORS.contains(f.getOp())
             && !Entity.KEY_RESERVED_PROPERTY.equals(f.getProperty(0).getName())) {
           hasNonKeyInequality = true;
           break;
@@ -102,7 +103,7 @@ class IndexComponentsOnlyQuery extends ValidatedQuery {
 
       if (!hasNonKeyInequality) {
         // __key__ filters can be planned natively, so remove them
-        Iterator<Filter> itr = query.mutableFilters().iterator();
+        Iterator<Filter> itr = query.getFilterList().iterator();
         while (itr.hasNext()) {
           if (itr.next().getProperty(0).getName().equals(Entity.KEY_RESERVED_PROPERTY)) {
             itr.remove();
@@ -115,9 +116,9 @@ class IndexComponentsOnlyQuery extends ValidatedQuery {
   private void categorizeQuery() {
     Set<String> ineqProps = Sets.newHashSet();
     hasKeyProperty = false;
-    for (Filter filter : query.filters()) {
+    for (Filter filter : query.getFilterList()) {
       String propName = filter.getProperty(0).getName();
-      switch (filter.getOpEnum()) {
+      switch (filter.getOp()) {
         case EQUAL:
           equalityProps.add(propName);
           break;
@@ -143,27 +144,39 @@ class IndexComponentsOnlyQuery extends ValidatedQuery {
     }
 
     // Add the inequality filter properties, if any.
-    if (query.orderSize() == 0 && !ineqProps.isEmpty()) {
+    if (query.getOrderCount() == 0 && !ineqProps.isEmpty()) {
       // We do not add an index property for the inequality filter because
       // it will be taken care of when we add the sort on that same property
       // down below.
-      orderProps.add(new Property().setName(ineqProps.iterator().next()));
+      orderProps.add(Property.newBuilder().setName(ineqProps.iterator().next()).build());
     }
 
-    groupByProps.addAll(query.groupByPropertyNames());
+    groupByProps.addAll(query.getGroupByPropertyNameList());
     // If a property is included in the group by, its existance will be satisfied.
     existsProps.removeAll(groupByProps);
 
     // Add orders.
-    for (Order order : query.orders()) {
+    for (Order order : query.getOrderList()) {
       if (order.getProperty().equals(Entity.KEY_RESERVED_PROPERTY)) {
         hasKeyProperty = true;
       }
       // If a property is in the ordering, it has already been satisfied.
       groupByProps.remove(order.getProperty());
       orderProps.add(
-          new Property().setName(order.getProperty()).setDirection(order.getDirection()));
+          Property.newBuilder()
+              .setName(order.getProperty())
+              .setDirection(convertDirection(order.getDirection()))
+              .build());
     }
+  }
+  private Property.Direction convertDirection(Direction direction){
+    switch (direction){
+      case ASCENDING:
+        return Property.Direction.ASCENDING;
+      case DESCENDING:
+        return Property.Direction.DESCENDING;
+     }
+     return Property.Direction.DIRECTION_UNSPECIFIED;
   }
 
   /**

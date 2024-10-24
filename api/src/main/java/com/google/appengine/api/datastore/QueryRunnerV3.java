@@ -21,9 +21,9 @@ import com.google.appengine.api.datastore.CompositeIndexManager.IndexSource;
 import com.google.appengine.api.datastore.ReadPolicy.Consistency;
 import com.google.appengine.api.utils.FutureWrapper;
 import com.google.apphosting.api.ApiProxy.ApiConfig;
-import com.google.apphosting.datastore.DatastoreV3Pb;
-import com.google.apphosting.datastore.DatastoreV3Pb.DatastoreService_3.Method;
-import com.google.storage.onestore.v3.OnestoreEntity;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.DatastoreService_3.Method;
+import com.google.storage.onestore.v3.proto2api.OnestoreEntity;
 import java.util.concurrent.Future;
 
 /**
@@ -42,7 +42,7 @@ final class QueryRunnerV3 implements QueryRunner {
 
   @Override
   public QueryResultsSource runQuery(FetchOptions fetchOptions, Query query, Transaction txn) {
-    final DatastoreV3Pb.Query queryProto = convertToPb(query, txn, fetchOptions);
+    final DatastoreV3Pb.Query.Builder queryProto = convertToPb(query, txn, fetchOptions);
     if (datastoreServiceConfig.getReadPolicy().getConsistency() == Consistency.EVENTUAL) {
       queryProto.setFailoverMs(BaseAsyncDatastoreServiceImpl.ARBITRARY_FAILOVER_READ_MS);
       queryProto.setStrong(false); // Allows the datastore to always use READ_CONSISTENT.
@@ -50,7 +50,7 @@ final class QueryRunnerV3 implements QueryRunner {
 
     Future<DatastoreV3Pb.QueryResult> result =
         DatastoreApiHelper.makeAsyncCall(
-            apiConfig, Method.RunQuery, queryProto, new DatastoreV3Pb.QueryResult());
+            apiConfig, Method.RunQuery, queryProto.build(), DatastoreV3Pb.QueryResult.newBuilder().buildPartial());
 
     // Adding more info to DatastoreNeedIndexException if thrown
     result =
@@ -58,7 +58,7 @@ final class QueryRunnerV3 implements QueryRunner {
           @Override
           protected Throwable convertException(Throwable cause) {
             if (cause instanceof DatastoreNeedIndexException) {
-              addMissingIndexData(queryProto, (DatastoreNeedIndexException) cause);
+              addMissingIndexData(queryProto.build(), (DatastoreNeedIndexException) cause);
             }
             return cause;
           }
@@ -82,9 +82,9 @@ final class QueryRunnerV3 implements QueryRunner {
   private void addMissingIndexData(DatastoreV3Pb.Query queryProto, DatastoreNeedIndexException e) {
     IndexComponentsOnlyQuery indexQuery = new IndexComponentsOnlyQuery(queryProto);
     CompositeIndexManager mgr = new CompositeIndexManager();
-    OnestoreEntity.Index index = mgr.compositeIndexForQuery(indexQuery);
+    OnestoreEntity.Index.Builder index = mgr.compositeIndexForQuery(indexQuery);
     if (index != null) {
-      String xml = mgr.generateXmlForIndex(index, IndexSource.manual);
+      String xml = mgr.generateXmlForIndex(index.build(), IndexSource.manual);
       e.setMissingIndexDefinitionXml(xml);
     } else {
       // Prod says we need an index but the index manager says we don't.
@@ -93,8 +93,8 @@ final class QueryRunnerV3 implements QueryRunner {
     }
   }
 
-  private DatastoreV3Pb.Query convertToPb(Query q, Transaction txn, FetchOptions fetchOptions) {
-    DatastoreV3Pb.Query queryProto = QueryTranslator.convertToPb(q, fetchOptions);
+  private DatastoreV3Pb.Query.Builder convertToPb(Query q, Transaction txn, FetchOptions fetchOptions) {
+    DatastoreV3Pb.Query.Builder queryProto = QueryTranslator.convertToPb(q, fetchOptions).toBuilder();
     if (txn != null) {
       TransactionImpl.ensureTxnActive(txn);
       queryProto.setTransaction(InternalTransactionV3.toProto(txn));

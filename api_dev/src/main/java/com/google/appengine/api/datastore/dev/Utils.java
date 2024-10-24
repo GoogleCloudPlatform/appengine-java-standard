@@ -20,9 +20,10 @@ import static com.google.common.collect.Iterables.getLast;
 
 import com.google.apphosting.api.ApiProxy;
 import com.google.apphosting.api.ApiProxy.ApplicationException;
-import com.google.apphosting.datastore.DatastoreV3Pb.Error.ErrorCode;
-import com.google.storage.onestore.v3.OnestoreEntity.Path.Element;
-import com.google.storage.onestore.v3.OnestoreEntity.Reference;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.Error.ErrorCode;
+import com.google.storage.onestore.v3.proto2api.OnestoreEntity;
+import com.google.storage.onestore.v3.proto2api.OnestoreEntity.Path.Element;
+import com.google.storage.onestore.v3.proto2api.OnestoreEntity.Reference;
 
 /**
  * Utility functions for the development datastore.
@@ -37,11 +38,11 @@ class Utils {
   }
 
   static ApplicationException newError(ErrorCode error, String message) {
-    return new ApiProxy.ApplicationException(error.getValue(), message);
+    return new ApiProxy.ApplicationException(error.getNumber(), message);
   }
 
   static Element getLastElement(Reference key) {
-    return getLast(key.getPath().elements());
+    return getLast(key.getPath().getElementList());
   }
 
   static String getKind(Reference key) {

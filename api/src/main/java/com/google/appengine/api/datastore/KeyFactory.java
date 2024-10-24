@@ -19,7 +19,8 @@ package com.google.appengine.api.datastore;
 import static com.google.common.io.BaseEncoding.base64Url;
 
 import com.google.common.base.CharMatcher;
-import com.google.storage.onestore.v3.OnestoreEntity.Reference;
+import com.google.protobuf.InvalidProtocolBufferException;
+import com.google.storage.onestore.v3.proto2api.OnestoreEntity.Reference;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -202,9 +203,10 @@ public class KeyFactory {
       throw new IllegalArgumentException("Cannot parse: " + encoded, ex);
     }
 
-    Reference reference = new Reference();
-    boolean parsed = reference.parseFrom(decodedBytes);
-    if (!parsed) {
+    Reference reference = Reference.newBuilder().build();
+    try{
+      reference.getParserForType().parseFrom(decodedBytes);
+    } catch (InvalidProtocolBufferException e){
       throw new IllegalArgumentException("Could not parse Reference");
     }
     // The validation in createFromPb should cover missing required fields, so no need for

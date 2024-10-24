@@ -254,11 +254,6 @@
         </dependency>
         <!-- Test dependencies. -->
         <dependency>
-            <groupId>com.google.appengine</groupId>
-            <artifactId>proto1</artifactId>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
            <groupId>javax.activation</groupId>
            <artifactId>activation</artifactId>
        </dependency>
@@ -406,7 +401,6 @@
                                     <include>com.google.api.grpc:proto-google-common-protos</include>
                                     <include>com.google.appengine:appengine-utils</include>
                                     <include>com.google.appengine:runtime-impl</include>
-                                    <include>com.google.appengine:proto1</include>
                                     <include>com.google.appengine:protos</include>
                                     <include>com.google.appengine:runtime-util</include>
                                     <include>com.google.appengine:appengine-apis</include>

@@ -28,9 +28,10 @@ import com.google.appengine.api.testing.LocalServiceTestHelperRule;
 import com.google.appengine.tools.development.testing.LocalDatastoreServiceTestConfig;
 import com.google.appengine.tools.development.testing.LocalServiceTestHelper;
 import com.google.apphosting.api.ApiProxy;
-import com.google.apphosting.datastore.DatastoreV3Pb;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
+import com.google.protobuf.InvalidProtocolBufferException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -95,12 +96,18 @@ public class LazyListImplTest {
         ApiProxy.ApiConfig apiConfig) {
       if (packageName.equals("datastore_v3")) {
         if (methodName.equals("RunQuery")) {
-          DatastoreV3Pb.Query query = new DatastoreV3Pb.Query();
-          boolean unused = query.parseFrom(request);
+          DatastoreV3Pb.Query query = DatastoreV3Pb.Query.newBuilder().build();
+          try {
+            query.parseFrom(request);
+          }catch (InvalidProtocolBufferException e) {
+          }
           runQueryCalls.add(query);
         } else if (methodName.equals("Next")) {
-          DatastoreV3Pb.NextRequest next = new DatastoreV3Pb.NextRequest();
-          boolean unused = next.parseFrom(request);
+          DatastoreV3Pb.NextRequest next = DatastoreV3Pb.NextRequest.newBuilder().build();
+          try {
+            next.parseFrom(request);
+          } catch (InvalidProtocolBufferException e) {
+          }
           nextCalls.add(next);
         }
       }
@@ -536,7 +543,7 @@ public class LazyListImplTest {
     Query q = new Query("foo");
     FetchOptions opts = FetchOptions.Builder.withLimit(100);
     PreparedQuery pq = ds.prepare(q);
-    DatastoreV3Pb.QueryResult result = new DatastoreV3Pb.QueryResult();
+    DatastoreV3Pb.QueryResult.Builder result = DatastoreV3Pb.QueryResult.newBuilder();
     result.addResult(EntityTranslator.convertToPb(new Entity("blar1")));
     result.addResult(EntityTranslator.convertToPb(new Entity("blar2")));
     QueryResultsSource source =
@@ -545,7 +552,7 @@ public class LazyListImplTest {
             opts,
             null,
             new Query(q),
-            new FutureHelper.FakeFuture<DatastoreV3Pb.QueryResult>(result),
+            new FutureHelper.FakeFuture<DatastoreV3Pb.QueryResult>(result.build()),
             new ApiProxy.ApiConfig());
     return new QueryResultIteratorImpl(pq, source, opts, null);
   }

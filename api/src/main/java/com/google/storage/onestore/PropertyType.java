@@ -19,8 +19,10 @@ package com.google.storage.onestore;
 import static com.google.common.base.Preconditions.checkArgument;
 
 import com.google.common.collect.Lists;
-import com.google.io.protocol.ProtocolType;
-import com.google.storage.onestore.v3.OnestoreEntity.PropertyValue;
+// import com.google.io.protocol.ProtocolType;
+import com.google.protobuf.Type;
+import com.google.storage.onestore.v3.proto2api.OnestoreEntity.PropertyValue;
+import com.google.storage.onestore.v3.proto2api.OnestoreEntity.PropertyValue.PointValue;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.SortedMap;
@@ -37,39 +39,40 @@ import java.util.TreeMap;
  */
 public enum PropertyType {
 
-  NULL(new PropertyValue(),
-       new PropertyValue()),
+  NULL(PropertyValue.newBuilder().build(),
+      PropertyValue.newBuilder().build()),
 
-  INT64(new PropertyValue().setInt64Value(Long.MIN_VALUE),
-        new PropertyValue().setInt64Value(0L)),
+  INT64(PropertyValue.newBuilder().setInt64Value(Long.MIN_VALUE).build(),
+      PropertyValue.newBuilder().setInt64Value(0L).build()),
 
-  BOOLEAN(new PropertyValue().setBooleanValue(false),
-          new PropertyValue().setBooleanValue(false)),
+  BOOLEAN(PropertyValue.newBuilder().setBooleanValue(false).build(),
+      PropertyValue.newBuilder().setBooleanValue(false).build()),
 
-  STRING(new PropertyValue().setStringValue(""),
-         new PropertyValue().setStringValue("none")),
+  STRING(PropertyValue.newBuilder().setStringValue("").build(),
+      PropertyValue.newBuilder().setStringValue("none").build()),
 
-  DOUBLE(new PropertyValue().setDoubleValue(Double.NEGATIVE_INFINITY),
-         new PropertyValue().setDoubleValue(0.0)),
+  DOUBLE(PropertyValue.newBuilder().setDoubleValue(Double.NEGATIVE_INFINITY).build(),
+      PropertyValue.newBuilder().setDoubleValue(0.0).build()),
 
-  POINT(new PropertyValue().setPointValue(
-            new PropertyValue.PointValue().setX(Double.NEGATIVE_INFINITY)
-                                          .setY(Double.NEGATIVE_INFINITY)),
-        new PropertyValue().setPointValue(
-            new PropertyValue.PointValue().setX(0.0).setY(0.0))),
+  POINT(PropertyValue.newBuilder().setPointValue(PointValue.newBuilder()
+          .setX(Double.NEGATIVE_INFINITY)
+          .setY(Double.NEGATIVE_INFINITY).build()).build(),
+      PropertyValue.newBuilder().setPointValue(PointValue.newBuilder()
+          .setX(0.0)
+          .setY(0.0).build()).build()),
 
-  USER(new PropertyValue().setUserValue(
-           new PropertyValue.UserValue().setEmail("")
+  USER(PropertyValue.newBuilder().setUserValue(
+           PropertyValue.newBuilder().getUserValueBuilder().setEmail("")
                                         .setAuthDomain("")
-                                        .setGaiaid(Long.MIN_VALUE)),
-       new PropertyValue().setUserValue(
-           new PropertyValue.UserValue().setEmail("none")
+                                        .setGaiaid(Long.MIN_VALUE)).build(),
+       PropertyValue.newBuilder().setUserValue(
+           PropertyValue.newBuilder().getUserValueBuilder().setEmail("none")
                                         .setAuthDomain("none")
-                                        .setGaiaid(0))),
+                                        .setGaiaid(0)).build()),
 
   // These are filled in in the static initializer block.
-  REFERENCE(new PropertyValue().setReferenceValue(new PropertyValue.ReferenceValue()),
-            new PropertyValue().setReferenceValue(new PropertyValue.ReferenceValue()));
+  REFERENCE(PropertyValue.newBuilder().setReferenceValue(PropertyValue.newBuilder().getReferenceValue()).build(),
+      PropertyValue.newBuilder().setReferenceValue(PropertyValue.newBuilder().getReferenceValue()).build());
 
   /**
    * Maps the tag numbers of top-level PropertyValue field to their
@@ -83,10 +86,10 @@ public enum PropertyType {
     }
 
     /* Fill in the reference property values. */
-    REFERENCE.minValue.getMutableReferenceValue().setApp("");
-    REFERENCE.placeholderValue.getMutableReferenceValue()
+    REFERENCE.minValue.getReferenceValue().toBuilder().setApp("");
+    REFERENCE.placeholderValue.getReferenceValue().toBuilder()
         .setApp("none")
-        .addPathElement().setType("none").setName("none");
+        .addPathElementBuilder().setType("none").setName("none");
   }
 
   /**
@@ -158,16 +161,39 @@ public enum PropertyType {
   }
 
   /**
-   * @return the tag numbers of the top-level field that are set.
+   * Finds the tags of the fields set in a PropertyValue.
+   * This method only returns the tags for the top-level fields in the PropertyValue message as defined in appengine-java-standard/protobuf/api/entity.proto.
+   * It does not include tags for fields nested within PointValue, UserValue, or ReferenceValue.
+   * @return A list of the tags of the fields set in the PropertyValue.
    */
   private static List<Integer> findTags(PropertyValue value) {
     List<Integer> tags = Lists.newArrayList();
 
-    for (ProtocolType.FieldType field : ProtocolType.getTags(value)) {
-      if (field.size(value) == 1) {
-        tags.add(field.getTag());
-      }
+    if (value.hasInt64Value()) {
+      tags.add(1);
     }
+    if (value.hasBooleanValue()) {
+      tags.add(2);
+    }
+    if(value.hasStringValue()) {
+      tags.add(3);
+    }
+    if(value.hasDoubleValue()) {
+      tags.add(4);
+    }
+    if(value.hasPointValue()) {
+      tags.add(5);
+    }
+    // Missing tags 6 and 7 because they are fields within PointValue, not direct fields of PropertyValue.
+    if(value.hasUserValue()) {
+      tags.add(8);
+    }
+    // Missing tags 9, 10, 11, 18, 19, 21, and 22 because they are fields within UserValue.
+    if(value.hasReferenceValue()) {
+      tags.add(12);
+    }
+    // Missing tags 13, 14, 15, 16, 17, 20, and 23 because they are fields within ReferenceValue.
+
 
     return tags;
   }

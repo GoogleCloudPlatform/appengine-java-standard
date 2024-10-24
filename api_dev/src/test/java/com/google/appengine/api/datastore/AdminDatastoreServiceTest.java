@@ -35,12 +35,12 @@ import com.google.appengine.api.datastore.Query.FilterOperator;
 import com.google.appengine.api.datastore.Query.FilterPredicate;
 import com.google.appengine.tools.development.testing.LocalDatastoreServiceTestConfig;
 import com.google.appengine.tools.development.testing.LocalServiceTestHelper;
-import com.google.apphosting.datastore.DatastoreV3Pb;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.primitives.Primitives;
-import com.google.storage.onestore.v3.OnestoreEntity;
+import com.google.storage.onestore.v3.proto2api.OnestoreEntity;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Collection;
@@ -212,7 +212,7 @@ public class AdminDatastoreServiceTest {
             true,
             ImmutableList.of(new Index.Property("p1", Query.SortDirection.DESCENDING)));
     OnestoreEntity.Index indexPb = IndexTranslator.convertToPb(index);
-    when(indexManager.compositeIndexForQuery(ic)).thenReturn(indexPb);
+    when(indexManager.compositeIndexForQuery(ic)).thenReturn(indexPb.toBuilder());
     assertThat(adminDsWithMockDelegate.compositeIndexForQuery(query)).isEqualTo(index);
   }
 
@@ -231,7 +231,7 @@ public class AdminDatastoreServiceTest {
             ImmutableList.of(new Index.Property("p1", Query.SortDirection.DESCENDING)));
     OnestoreEntity.Index indexPb = IndexTranslator.convertToPb(index);
     Collection<OnestoreEntity.Index> indexPbList = ImmutableList.of(indexPb);
-    when(indexManager.minimumCompositeIndexForQuery(ic, indexPbList)).thenReturn(indexPb);
+    when(indexManager.minimumCompositeIndexForQuery(ic, indexPbList)).thenReturn(indexPb.toBuilder());
     Index minimumIndex =
         adminDsWithMockDelegate.minimumCompositeIndexForQuery(query, ImmutableList.of(index));
     assertThat(minimumIndex).isEqualTo(index);
@@ -264,7 +264,7 @@ public class AdminDatastoreServiceTest {
     OnestoreEntity.Index expectedIndexPb = IndexTranslator.convertToPb(expectedIndex);
     // We cannot predict the order of predicates in the IndexComponentsOnlyQuery.
     when(indexManager.minimumCompositeIndexForQuery(notNull(), eq(indexPbList)))
-        .thenReturn(expectedIndexPb);
+        .thenReturn(expectedIndexPb.toBuilder());
     Index minimumIndex = adminDsWithMockDelegate.minimumCompositeIndexForQuery(query, indexList);
     assertThat(minimumIndex).isEqualTo(expectedIndex);
   }
@@ -313,8 +313,8 @@ public class AdminDatastoreServiceTest {
 
     // We cannot predict the order of predicates in the IndexComponentsOnlyQuery.
     when(indexManager.minimumCompositeIndexForQuery(notNull(), eq(indexPbList)))
-        .thenReturn(expectedFirstIndexPb)
-        .thenReturn(expectedSecondIndexPb);
+        .thenReturn(expectedFirstIndexPb.toBuilder())
+        .thenReturn(expectedSecondIndexPb.toBuilder());
 
     Set<Index> minimumIndexes =
         adminDsWithMockDelegate.minimumCompositeIndexesForQuery(query, indexList);

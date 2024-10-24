@@ -223,11 +223,6 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.google.appengine</groupId>
-            <artifactId>proto1</artifactId>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
            <groupId>javax.activation</groupId>
            <artifactId>activation</artifactId>
        </dependency>

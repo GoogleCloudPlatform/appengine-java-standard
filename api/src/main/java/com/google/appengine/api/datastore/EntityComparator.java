@@ -19,9 +19,9 @@ package com.google.appengine.api.datastore;
 import static com.google.appengine.api.datastore.DataTypeTranslator.getComparablePropertyValue;
 
 import com.google.appengine.api.datastore.Query.SortPredicate;
-import com.google.apphosting.datastore.DatastoreV3Pb;
-import com.google.apphosting.datastore.DatastoreV3Pb.Query.Filter;
-import com.google.apphosting.datastore.DatastoreV3Pb.Query.Order;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.Query.Filter;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.Query.Order;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;

@@ -28,9 +28,9 @@ import static org.mockito.Mockito.when;
 
 import com.google.appengine.api.testing.LocalServiceTestHelperRule;
 import com.google.apphosting.api.ApiProxy;
-import com.google.apphosting.datastore.DatastoreV3Pb;
-import com.google.apphosting.datastore.DatastoreV3Pb.DatastoreService_3.Method;
-import com.google.apphosting.datastore.DatastoreV3Pb.Error.ErrorCode;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.DatastoreService_3.Method;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.Error.ErrorCode;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.rpc.Code;
 import java.util.ConcurrentModificationException;
@@ -90,13 +90,13 @@ public class DatastoreApiHelperTest {
   private <E extends RuntimeException> void assertMakeAsyncCallThrows(
       DatastoreV3Pb.Error.ErrorCode errorCode, Class<E> clazz)
       throws InterruptedException, ExecutionException {
-    DatastoreV3Pb.Query queryProto = new DatastoreV3Pb.Query();
+    DatastoreV3Pb.Query queryProto = DatastoreV3Pb.Query.newBuilder().build();
     Future<byte[]> future =
-        immediateFailedFuture(new ApiProxy.ApplicationException(errorCode.getValue()));
+        immediateFailedFuture(new ApiProxy.ApplicationException(errorCode.getNumber()));
     expectMakeAsyncCall(queryProto.toByteArray(), future);
     Future<DatastoreV3Pb.QueryResult> result =
         DatastoreApiHelper.makeAsyncCall(
-            new ApiProxy.ApiConfig(), Method.Commit, queryProto, new DatastoreV3Pb.QueryResult());
+            new ApiProxy.ApiConfig(), Method.Commit, queryProto, DatastoreV3Pb.QueryResult.newBuilder().build());
     RuntimeException rte =
         assertThrows(RuntimeException.class, () -> FutureHelper.quietGet(result));
     assertThat(rte.getClass()).isEqualTo(clazz);
@@ -182,18 +182,18 @@ public class DatastoreApiHelperTest {
   }
 
   private Future<DatastoreV3Pb.Transaction> makeTestCall(byte[] response) {
-    DatastoreV3Pb.GetRequest request = new DatastoreV3Pb.GetRequest();
+    DatastoreV3Pb.GetRequest request = DatastoreV3Pb.GetRequest.newBuilder().build();
     expectMakeAsyncCall(request.toByteArray(), immediateFuture(response));
 
     return DatastoreApiHelper.makeAsyncCall(
-        new ApiProxy.ApiConfig(), Method.Commit, request, new DatastoreV3Pb.Transaction());
+        new ApiProxy.ApiConfig(), Method.Commit, request, DatastoreV3Pb.Transaction.newBuilder().build());
   }
 
   @Test
   public void testAsyncCall_ValidResponse() throws InterruptedException, ExecutionException {
-    DatastoreV3Pb.Transaction response = new DatastoreV3Pb.Transaction();
+    DatastoreV3Pb.Transaction.Builder response = DatastoreV3Pb.Transaction.newBuilder();
     response.setHandle(23).setApp("foo");
-    assertThat(makeTestCall(response.toByteArray()).get()).isEqualTo(response);
+    assertThat(makeTestCall(response.build().toByteArray()).get()).isEqualTo(response);
   }
 
   @Test

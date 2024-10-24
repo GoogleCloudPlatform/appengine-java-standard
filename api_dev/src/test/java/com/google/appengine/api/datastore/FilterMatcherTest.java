@@ -18,11 +18,11 @@ package com.google.appengine.api.datastore;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.google.apphosting.datastore.DatastoreV3Pb.GeoRegion;
-import com.google.apphosting.datastore.DatastoreV3Pb.Query.Filter;
-import com.google.apphosting.datastore.DatastoreV3Pb.Query.Filter.Operator;
-import com.google.apphosting.datastore.DatastoreV3Pb.RectangleRegion;
-import com.google.apphosting.datastore.DatastoreV3Pb.RegionPoint;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.GeoRegion;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.Query.Filter;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.Query.Filter.Operator;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.RectangleRegion;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.RegionPoint;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.Test;
@@ -97,10 +97,10 @@ public class FilterMatcherTest {
 
   @Test
   public void testGeo_Rectangle() {
-    RegionPoint sw = new RegionPoint().setLatitude(0).setLongitude(-180);
-    RegionPoint ne = new RegionPoint().setLatitude(90).setLongitude(0);
-    RectangleRegion rect = new RectangleRegion().setSouthwest(sw).setNortheast(ne);
-    filterMatcher.addFilter(geoFilter(new GeoRegion().setRectangle(rect)));
+    RegionPoint sw = RegionPoint.newBuilder().setLatitude(0).setLongitude(-180).build();
+    RegionPoint ne = RegionPoint.newBuilder().setLatitude(90).setLongitude(0).build();
+    RectangleRegion rect = RectangleRegion.newBuilder().setSouthwest(sw).setNortheast(ne).build();
+    filterMatcher.addFilter(geoFilter(GeoRegion.newBuilder().setRectangle(rect).build()));
     assertNoMatch("bob");
     assertMatch("bob", new GeoPt(12, -100));
 
@@ -110,10 +110,10 @@ public class FilterMatcherTest {
 
   @Test
   public void testGeo_MultiPreintersection() {
-    RegionPoint sw = new RegionPoint().setLatitude(0).setLongitude(-180);
-    RegionPoint ne = new RegionPoint().setLatitude(90).setLongitude(0);
-    RectangleRegion rect = new RectangleRegion().setSouthwest(sw).setNortheast(ne);
-    filterMatcher.addFilter(geoFilter(new GeoRegion().setRectangle(rect)));
+    RegionPoint sw = RegionPoint.newBuilder().setLatitude(0).setLongitude(-180).build();
+    RegionPoint ne = RegionPoint.newBuilder().setLatitude(90).setLongitude(0).build();
+    RectangleRegion rect = RectangleRegion.newBuilder().setSouthwest(sw).setNortheast(ne).build();
+    filterMatcher.addFilter(geoFilter(GeoRegion.newBuilder().setRectangle(rect).build()));
     filterMatcher.addFilter(filter(Operator.EQUAL, 1732));
     filterMatcher.addFilter(filter(Operator.EQUAL, 87));
 
@@ -141,17 +141,17 @@ public class FilterMatcherTest {
   }
 
   private Filter filter(Filter.Operator op, Object value) {
-    Filter result = new Filter();
+    Filter.Builder result = Filter.newBuilder();
     result.setOp(op);
-    result.addProperty().setName("noname").setValue(DataTypeTranslator.toV3Value(value));
-    return result;
+    result.addPropertyBuilder().setName("noname").setValue(DataTypeTranslator.toV3Value(value));
+    return result.build();
   }
 
   private Filter geoFilter(GeoRegion region) {
-    Filter result = new Filter();
+    Filter.Builder result = Filter.newBuilder();
     result.setOp(Operator.CONTAINED_IN_REGION);
-    result.addProperty().setName("noname");
+    result.addPropertyBuilder().setName("noname");
     result.setGeoRegion(region);
-    return result;
+    return result.build();
   }
 }

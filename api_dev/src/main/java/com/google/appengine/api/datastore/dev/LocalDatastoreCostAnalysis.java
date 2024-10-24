@@ -19,7 +19,7 @@ package com.google.appengine.api.datastore.dev;
 import static com.google.appengine.api.datastore.dev.LocalDatastoreService.equalProperties;
 
 import com.google.appengine.api.datastore.Entity;
-import com.google.apphosting.datastore.DatastoreV3Pb.Cost;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.Cost;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Iterables;
@@ -28,10 +28,10 @@ import com.google.common.collect.Multiset;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Sets;
-import com.google.storage.onestore.v3.OnestoreEntity.EntityProto;
-import com.google.storage.onestore.v3.OnestoreEntity.Index;
-import com.google.storage.onestore.v3.OnestoreEntity.Index.Property.Direction;
-import com.google.storage.onestore.v3.OnestoreEntity.Property;
+import com.google.storage.onestore.v3.proto2api.OnestoreEntity.EntityProto;
+import com.google.storage.onestore.v3.proto2api.OnestoreEntity.Index;
+import com.google.storage.onestore.v3.proto2api.OnestoreEntity.Index.Property.Direction;
+import com.google.storage.onestore.v3.proto2api.OnestoreEntity.Property;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Set;
@@ -80,11 +80,11 @@ public class LocalDatastoreCostAnalysis {
    * @return The cost of writing {@code newEntity}.
    */
   public Cost getWriteOps(@Nullable EntityProto oldEntity, EntityProto newEntity) {
-    Cost cost = new Cost().setEntityWrites(0).setIndexWrites(0);
+    Cost.Builder cost = Cost.newBuilder().setEntityWrites(0).setIndexWrites(0);
 
     // check for a no-op write, only possible if an entity already existed
     if (equalProperties(oldEntity, newEntity)) {
-      return cost;
+      return cost.build();
     }
     // Not a no-op write, so one write for the entity.
     cost.setEntityWrites(1);
@@ -95,7 +95,7 @@ public class LocalDatastoreCostAnalysis {
       // writing an entity for the first time (kind is immutable).
       indexWrites++;
     }
-    return cost.setIndexWrites(indexWrites);
+    return cost.setIndexWrites(indexWrites).build();
   }
 
   /**
@@ -112,12 +112,12 @@ public class LocalDatastoreCostAnalysis {
     // HashMultimap enforces uniqueness of key-value pairs.
     SetMultimap<String, Property> uniqueOldProperties = HashMultimap.create();
     if (oldEntity != null) {
-      for (Property oldProp : oldEntity.propertys()) {
+      for (Property oldProp : oldEntity.getPropertyList()) {
         // A given name may only have one property value on the old entity but multiple values on
         // the new entity. If that's the case, two Properties that are equal will be considered not
         // equal due to different values of the "multiple" attribute. We want these Properties to be
         // considered equal so we hard-code "multiple" to be false in the map.
-        oldProp = oldProp.isMultiple() ? oldProp.clone().setMultiple(false) : oldProp;
+        oldProp = oldProp.hasMultiple() ? oldProp.toBuilder().clone().setMultiple(false).build() : oldProp;
         uniqueOldProperties.put(oldProp.getName(), oldProp);
       }
     }
@@ -128,10 +128,10 @@ public class LocalDatastoreCostAnalysis {
 
     // Number of properties per name that have not changed between old and new.
     Multiset<String> unchanged = HashMultiset.create();
-    for (Property newProp : newEntity.propertys()) {
+    for (Property newProp : newEntity.getPropertyList()) {
       // See the comment in the loop where we populate uniqueOldProperties for an explanation of why
       // we do this.
-      newProp = newProp.isMultiple() ? newProp.clone().setMultiple(false) : newProp;
+      newProp = newProp.hasMultiple() ? newProp.toBuilder().clone().setMultiple(false).build() : newProp;
       uniqueNewProperties.put(newProp.getName(), newProp);
       if (uniqueOldProperties.containsEntry(newProp.getName(), newProp)) {
         unchanged.add(newProp.getName());
@@ -149,13 +149,13 @@ public class LocalDatastoreCostAnalysis {
             getEntityByPropertyIndexes(allPropertyNames));
     Multiset<String> uniqueOldPropertyNames = uniqueOldProperties.keys();
     Multiset<String> uniqueNewPropertyNames = uniqueNewProperties.keys();
-    int pathSize = newEntity.getKey().getPath().elementSize();
+    int pathSize = newEntity.getKey().getPath().getElementCount();
     int writes = 0;
     for (Index index : allIndexes) {
       // Take ancestor indexes into account.
       // Ancestor doesn't matter for EntityByProperty indexes, and these are the only indexes that
       // have a single property.
-      int ancestorMultiplier = index.isAncestor() && index.propertySize() > 1 ? pathSize : 1;
+      int ancestorMultiplier = index.hasAncestor() && index.getPropertyCount() > 1 ? pathSize : 1;
       writes +=
           (calculateWritesForCompositeIndex(
                   index, uniqueOldPropertyNames, uniqueNewPropertyNames, unchanged)
@@ -186,7 +186,7 @@ public class LocalDatastoreCostAnalysis {
     int oldCount = 1;
     int newCount = 1;
     int commonCount = 1;
-    for (Index.Property prop : index.propertys()) {
+    for (Index.Property prop : index.getPropertyList()) {
       oldCount *= uniqueOldProperties.count(prop.getName());
       newCount *= uniqueNewProperties.count(prop.getName());
       commonCount *= commonProperties.count(prop.getName());
@@ -207,13 +207,13 @@ public class LocalDatastoreCostAnalysis {
     List<Index> indexes = Lists.newArrayList();
     for (String propName : sortedPropertyNames) {
       // EnititiesByProperty
-      Index index = new Index();
-      index.addProperty(new Index.Property().setName(propName).setDirection(Direction.ASCENDING));
-      indexes.add(index);
+      Index.Builder index = Index.newBuilder();
+      index.addProperty(Index.Property.newBuilder().setName(propName).setDirection(Direction.ASCENDING));
+      indexes.add(index.build());
       // EnititiesByPropertyDesc
-      index = new Index();
-      index.addProperty(new Index.Property().setName(propName).setDirection(Direction.DESCENDING));
-      indexes.add(index);
+      index = Index.newBuilder();
+      index.addProperty(Index.Property.newBuilder().setName(propName).setDirection(Direction.DESCENDING));
+      indexes.add(index.build());
     }
     return indexes;
   }

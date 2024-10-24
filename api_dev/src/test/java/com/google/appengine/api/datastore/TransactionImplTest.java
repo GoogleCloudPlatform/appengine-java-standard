@@ -29,13 +29,13 @@ import com.google.appengine.api.datastore.TransactionImpl.TransactionState;
 import com.google.appengine.api.datastore.TransactionStackImpl.TransactionDataMap;
 import com.google.appengine.tools.development.testing.LocalServiceTestHelper;
 import com.google.apphosting.api.ApiProxy;
-import com.google.apphosting.datastore.DatastoreV3Pb;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.Futures;
-import com.google.io.protocol.ProtocolMessage;
+import com.google.protobuf.Message;
 import com.google.protobuf.MessageLite;
 import java.util.LinkedHashSet;
 import java.util.concurrent.ExecutionException;
@@ -83,7 +83,7 @@ public class TransactionImplTest {
         true,
         new InternalTransactionV3(apiConfig, APP, newBeginTransactionFuture()) {
           @Override
-          <T extends ProtocolMessage<T>> Future<Void> makeAsyncCall(
+          <T extends Message> Future<Void> makeAsyncCall(
               DatastoreV3Pb.DatastoreService_3.Method method, MessageLite request, T response) {
             // no-op
             return new FutureHelper.FakeFuture<Void>(null);
@@ -101,7 +101,7 @@ public class TransactionImplTest {
         true,
         new InternalTransactionV3(apiConfig, APP, newBeginTransactionFuture()) {
           @Override
-          <T extends ProtocolMessage<T>> Future<Void> makeAsyncCall(
+          <T extends Message> Future<Void> makeAsyncCall(
               DatastoreV3Pb.DatastoreService_3.Method method, MessageLite request, T response) {
             return newImmediateFailedFuture();
           }
@@ -121,7 +121,7 @@ public class TransactionImplTest {
         true,
         new InternalTransactionV3(apiConfig, APP, newFailedBeginTransactionFuture()) {
           @Override
-          <T extends ProtocolMessage<T>> Future<Void> makeAsyncCall(
+          <T extends Message> Future<Void> makeAsyncCall(
               DatastoreV3Pb.DatastoreService_3.Method method, MessageLite request, T response) {
             return newImmediateFailedFuture();
           }
@@ -129,9 +129,9 @@ public class TransactionImplTest {
   }
 
   private static Future<DatastoreV3Pb.Transaction> newBeginTransactionFuture() {
-    DatastoreV3Pb.Transaction txn = new DatastoreV3Pb.Transaction();
+    DatastoreV3Pb.Transaction.Builder txn = DatastoreV3Pb.Transaction.newBuilder();
     txn.setHandle(123);
-    return new FutureHelper.FakeFuture<DatastoreV3Pb.Transaction>(txn);
+    return new FutureHelper.FakeFuture<DatastoreV3Pb.Transaction>(txn.build());
   }
 
   private static Future<DatastoreV3Pb.Transaction> newFailedBeginTransactionFuture() {

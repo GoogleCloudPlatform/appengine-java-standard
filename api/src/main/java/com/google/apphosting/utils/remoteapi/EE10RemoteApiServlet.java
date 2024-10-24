@@ -16,8 +16,8 @@
 
 package com.google.apphosting.utils.remoteapi;
 
-import static com.google.apphosting.datastore.DatastoreV3Pb.Error.ErrorCode.BAD_REQUEST;
-import static com.google.apphosting.datastore.DatastoreV3Pb.Error.ErrorCode.CONCURRENT_TRANSACTION;
+import static com.google.apphosting.datastore.proto2api.DatastoreV3Pb.Error.ErrorCode.BAD_REQUEST;
+import static com.google.apphosting.datastore.proto2api.DatastoreV3Pb.Error.ErrorCode.CONCURRENT_TRANSACTION;
 
 import com.google.appengine.api.oauth.OAuthRequestException;
 import com.google.appengine.api.oauth.OAuthService;
@@ -25,25 +25,28 @@ import com.google.appengine.api.oauth.OAuthServiceFactory;
 import com.google.appengine.api.users.UserService;
 import com.google.appengine.api.users.UserServiceFactory;
 import com.google.apphosting.api.ApiProxy;
-import com.google.apphosting.datastore.DatastoreV3Pb.BeginTransactionRequest;
-import com.google.apphosting.datastore.DatastoreV3Pb.DeleteRequest;
-import com.google.apphosting.datastore.DatastoreV3Pb.GetRequest;
-import com.google.apphosting.datastore.DatastoreV3Pb.GetResponse;
-import com.google.apphosting.datastore.DatastoreV3Pb.NextRequest;
-import com.google.apphosting.datastore.DatastoreV3Pb.PutRequest;
-import com.google.apphosting.datastore.DatastoreV3Pb.Query;
-import com.google.apphosting.datastore.DatastoreV3Pb.QueryResult;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.BeginTransactionRequest;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.DeleteRequest;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.GetRequest;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.GetResponse;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.NextRequest;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.PutRequest;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.Query;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.QueryResult;
 import com.google.apphosting.utils.remoteapi.RemoteApiPb.ApplicationError;
 import com.google.apphosting.utils.remoteapi.RemoteApiPb.Request;
 import com.google.apphosting.utils.remoteapi.RemoteApiPb.Response;
 import com.google.apphosting.utils.remoteapi.RemoteApiPb.TransactionQueryResult;
 import com.google.apphosting.utils.remoteapi.RemoteApiPb.TransactionRequest;
 import com.google.apphosting.utils.remoteapi.RemoteApiPb.TransactionRequest.Precondition;
-import com.google.io.protocol.ProtocolMessage;
+// import com.google.io.protocol.ProtocolMessage;
+import com.google.protobuf.InvalidProtocolBufferException;
+import com.google.protobuf.Message;
+import com.google.protobuf.ByteString;
 // <internal24>
-import com.google.storage.onestore.v3.OnestoreEntity;
-import com.google.storage.onestore.v3.OnestoreEntity.EntityProto;
-import com.google.storage.onestore.v3.OnestoreEntity.Path.Element;
+import com.google.storage.onestore.v3.proto2api.OnestoreEntity;
+import com.google.storage.onestore.v3.proto2api.OnestoreEntity.EntityProto;
+import com.google.storage.onestore.v3.proto2api.OnestoreEntity.Path.Element;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -114,7 +117,7 @@ public class EE10RemoteApiServlet extends HttpServlet {
   private synchronized boolean checkIsKnownInbound(HttpServletRequest req)
       throws java.io.IOException {
     if (allowedApps == null) {
-      allowedApps = new HashSet<String>();
+      allowedApps = new HashSet<>();
       String allowedAppsStr = System.getProperty(INBOUND_APP_SYSTEM_PROPERTY);
       if (allowedAppsStr != null) {
         String[] apps = allowedAppsStr.split(",");
@@ -216,11 +219,11 @@ public class EE10RemoteApiServlet extends HttpServlet {
     }
     res.setContentType("application/octet-stream");
 
-    Response response = new Response();
+    Response.Builder response =  Response.newBuilder();
 
     try {
       byte[] responseData = executeRequest(req);
-      response.setResponseAsBytes(responseData);
+      response.mergeFrom(responseData);
       res.setStatus(200);
     } catch (Exception e) {
       log.warning("Caught exception while executing remote_api command:\n" + e);
@@ -230,74 +233,77 @@ public class EE10RemoteApiServlet extends HttpServlet {
       out.writeObject(e);
       out.close();
       byte[] serializedException = byteStream.toByteArray();
-      response.setJavaExceptionAsBytes(serializedException);
+      response.setJavaException(ByteString.copyFrom(serializedException));
       if (e instanceof ApiProxy.ApplicationException) {
         ApiProxy.ApplicationException ae = (ApiProxy.ApplicationException) e;
-        ApplicationError appError = response.getMutableApplicationError();
+        ApplicationError.Builder appError = response.getApplicationErrorBuilder();
         appError.setCode(ae.getApplicationError());
         appError.setDetail(ae.getErrorDetail());
       }
     }
-    res.getOutputStream().write(response.toByteArray());
+    res.getOutputStream().write(response.build().toByteArray());
   }
 
   private byte[] executeRunQuery(Request request) {
-    Query queryRequest = new Query();
-    parseFromBytes(queryRequest, request.getRequestAsBytes());
+    Query.Builder queryRequest = Query.newBuilder();
+    parseFromBytes(queryRequest.build(), request.getRequest().toByteArray());
     int batchSize = Math.max(1000, queryRequest.getLimit());
     queryRequest.setCount(batchSize);
 
-    QueryResult runQueryResponse = new QueryResult();
-    byte[] res = ApiProxy.makeSyncCall("datastore_v3", "RunQuery", request.getRequestAsBytes());
-    parseFromBytes(runQueryResponse, res);
+    QueryResult.Builder runQueryResponse = QueryResult.newBuilder();
+    byte[] res = ApiProxy.makeSyncCall("datastore_v3", "RunQuery", request.getRequest()
+        .toByteArray());
+    parseFromBytes(runQueryResponse.build(), res);
 
     if (queryRequest.hasLimit()) {
       // Try to pull all results
-      while (runQueryResponse.isMoreResults()) {
-        NextRequest nextRequest = new NextRequest();
-        nextRequest.getMutableCursor().mergeFrom(runQueryResponse.getCursor());
+      while (runQueryResponse.getMoreResults()) {
+        NextRequest.Builder nextRequest = NextRequest.newBuilder();
+        nextRequest.getCursorBuilder().mergeFrom(runQueryResponse.getCursor());
         nextRequest.setCount(batchSize);
-        byte[] nextRes = ApiProxy.makeSyncCall("datastore_v3", "Next", nextRequest.toByteArray());
-        parseFromBytes(runQueryResponse, nextRes);
+        byte[] nextRes = ApiProxy.makeSyncCall("datastore_v3", "Next", nextRequest.build()
+            .toByteArray());
+        parseFromBytes(runQueryResponse.build(), nextRes);
       }
     }
-    return runQueryResponse.toByteArray();
+    return runQueryResponse.build().toByteArray();
   }
 
   private byte[] executeTxQuery(Request request) {
-    TransactionQueryResult result = new TransactionQueryResult();
+    TransactionQueryResult.Builder result = TransactionQueryResult.newBuilder();
 
-    Query query = new Query();
-    parseFromBytes(query, request.getRequestAsBytes());
+    Query.Builder query = Query.newBuilder();
+    parseFromBytes(query.build(), request.getRequest().toByteArray());
 
     if (!query.hasAncestor()) {
-      throw new ApiProxy.ApplicationException(BAD_REQUEST.getValue(),
+      throw new ApiProxy.ApplicationException(BAD_REQUEST.getNumber(),
                                               "No ancestor in transactional query.");
     }
     // Make __entity_group__ key
-    OnestoreEntity.Reference egKey =
-        result.getMutableEntityGroupKey().mergeFrom(query.getAncestor());
+    OnestoreEntity.Reference.Builder egKey =
+        result.build().getEntityGroupKey().toBuilder().mergeFrom(query.getAncestor());
     OnestoreEntity.Path.Element root = egKey.getPath().getElement(0);
-    egKey.getMutablePath().clearElement().addElement(root);
-    OnestoreEntity.Path.Element egElement = new OnestoreEntity.Path.Element();
+    egKey.getPathBuilder().clearElement().addElement(root);
+    OnestoreEntity.Path.Element.Builder egElement = OnestoreEntity.Path.Element.newBuilder();
     egElement.setType("__entity_group__").setId(1);
-    egKey.getMutablePath().addElement(egElement);
+    egKey.getPathBuilder().addElement(egElement);
 
     // And then perform the transaction with the ancestor query and __entity_group__ fetch.
     byte[] tx = beginTransaction(false);
-    parseFromBytes(query.getMutableTransaction(), tx);
-    byte[] queryBytes = ApiProxy.makeSyncCall("datastore_v3", "RunQuery", query.toByteArray());
-    parseFromBytes(result.getMutableResult(), queryBytes);
+    parseFromBytes(query.getTransaction(), tx);
+    byte[] queryBytes = ApiProxy.makeSyncCall("datastore_v3", "RunQuery", query.build()
+        .toByteArray());
+    parseFromBytes(result.getResult(), queryBytes);
 
-    GetRequest egRequest = new GetRequest();
+    GetRequest.Builder egRequest = GetRequest.newBuilder();
     egRequest.addKey(egKey);
-    GetResponse egResponse = txGet(tx, egRequest);
+    GetResponse.Builder egResponse = txGet(tx, egRequest);
     if (egResponse.getEntity(0).hasEntity()) {
       result.setEntityGroup(egResponse.getEntity(0).getEntity());
     }
     rollback(tx);
 
-    return result.toByteArray();
+    return result.build().toByteArray();
   }
 
   /**
@@ -307,47 +313,47 @@ public class EE10RemoteApiServlet extends HttpServlet {
       GetResponse.Entity entityResult, Precondition precondition) {
     // This handles the case where the Entity was missing in one of the two params.
     if (precondition.hasHash() != entityResult.hasEntity()) {
-      throw new ApiProxy.ApplicationException(CONCURRENT_TRANSACTION.getValue(),
+      throw new ApiProxy.ApplicationException(CONCURRENT_TRANSACTION.getNumber(),
           "Transaction precondition failed");
     }
 
     if (entityResult.hasEntity()) {
       // Both params have an Entity.  Make sure the Entities match using a SHA-1 hash.
       EntityProto entity = entityResult.getEntity();
-      if (Arrays.equals(precondition.getHashAsBytes(), computeSha1(entity))) {
+      if (Arrays.equals(precondition.getHashBytes().toByteArray(), computeSha1(entity))) {
         // They match.  We're done.
         return;
       }
 
       // See javadoc of computeSha1OmittingLastByteForBackwardsCompatibility for explanation.
       byte[] backwardsCompatibleHash = computeSha1OmittingLastByteForBackwardsCompatibility(entity);
-      if (!Arrays.equals(precondition.getHashAsBytes(), backwardsCompatibleHash)) {
+      if (!Arrays.equals(precondition.getHashBytes().toByteArray(), backwardsCompatibleHash)) {
         throw new ApiProxy.ApplicationException(
-            CONCURRENT_TRANSACTION.getValue(), "Transaction precondition failed");
+            CONCURRENT_TRANSACTION.getNumber(), "Transaction precondition failed");
       }
     }
     // Else, the Entity was missing from both.
   }
 
   private byte[] executeTx(Request request) {
-    TransactionRequest txRequest = new TransactionRequest();
-    parseFromBytes(txRequest, request.getRequestAsBytes());
+    TransactionRequest.Builder txRequest = TransactionRequest.newBuilder();
+    parseFromBytes(txRequest.build(), request.getRequest().toByteArray());
 
-    byte[] tx = beginTransaction(txRequest.isAllowMultipleEg());
+    byte[] tx = beginTransaction(txRequest.hasAllowMultipleEg());
 
-    List<Precondition> preconditions = txRequest.preconditions();
+    List<Precondition> preconditions = txRequest.getPreconditionList();
 
     // Check transaction preconditions
     if (!preconditions.isEmpty()) {
-      GetRequest getRequest = new GetRequest();
+      GetRequest.Builder getRequest = GetRequest.newBuilder();
       for (Precondition precondition : preconditions) {
         OnestoreEntity.Reference key = precondition.getKey();
-        OnestoreEntity.Reference requestKey = getRequest.addKey();
+        OnestoreEntity.Reference.Builder requestKey = getRequest.addKeyBuilder();
         requestKey.mergeFrom(key);
       }
 
-      GetResponse getResponse = txGet(tx, getRequest);
-      List<GetResponse.Entity> entities = getResponse.entitys();
+      GetResponse.Builder getResponse = txGet(tx, getRequest);
+      List<GetResponse.Entity> entities = getResponse.getEntityList();
 
       // Note that this is guaranteed because we don't specify allow_deferred on the GetRequest.
       // TODO: Consider supporting deferred gets here.
@@ -362,13 +368,13 @@ public class EE10RemoteApiServlet extends HttpServlet {
     byte[] res = new byte[0]; // a serialized VoidProto
     if (txRequest.hasPuts()) {
       PutRequest putRequest = txRequest.getPuts();
-      parseFromBytes(putRequest.getMutableTransaction(), tx);
+      parseFromBytes(putRequest.getTransaction(), tx);
       res = ApiProxy.makeSyncCall("datastore_v3", "Put", putRequest.toByteArray());
     }
     // Perform deletes.
     if (txRequest.hasDeletes()) {
       DeleteRequest deleteRequest = txRequest.getDeletes();
-      parseFromBytes(deleteRequest.getMutableTransaction(), tx);
+      parseFromBytes(deleteRequest.getTransaction(), tx);
       ApiProxy.makeSyncCall("datastore_v3", "Delete", deleteRequest.toByteArray());
     }
     // Commit transaction.
@@ -377,13 +383,13 @@ public class EE10RemoteApiServlet extends HttpServlet {
   }
 
   private byte[] executeGetIDs(Request request, boolean isXG) {
-    PutRequest putRequest = new PutRequest();
-    parseFromBytes(putRequest, request.getRequestAsBytes());
-    for (EntityProto entity : putRequest.entitys()) {
-      assert (entity.propertySize() == 0);
-      assert (entity.rawPropertySize() == 0);
-      assert (entity.getEntityGroup().elementSize() == 0);
-      List<Element> elementList = entity.getKey().getPath().elements();
+    PutRequest.Builder putRequest = PutRequest.newBuilder();
+    parseFromBytes(putRequest.build(), request.getRequestIdBytes().toByteArray());
+    for (EntityProto entity : putRequest.getEntityList()) {
+      assert (entity.getPropertyCount() == 0);
+      assert (entity.getRawPropertyCount() == 0);
+      assert (entity.getEntityGroup().getElementCount() == 0);
+      List<Element> elementList = entity.getKey().getPath().getElementList();
       Element lastPart = elementList.get(elementList.size() - 1);
       assert (lastPart.getId() == 0);
       assert (!lastPart.hasName());
@@ -393,11 +399,11 @@ public class EE10RemoteApiServlet extends HttpServlet {
 
     // TODO: Shouldn't this use allocateIds instead?
     byte[] tx = beginTransaction(isXG);
-    parseFromBytes(putRequest.getMutableTransaction(), tx);
+    parseFromBytes(putRequest.getTransaction(), tx);
 
     // Make a put request for a bunch of empty entities with the requisite
     // paths.
-    byte[] res = ApiProxy.makeSyncCall("datastore_v3", "Put", putRequest.toByteArray());
+    byte[] res = ApiProxy.makeSyncCall("datastore_v3", "Put", putRequest.build().toByteArray());
 
     // Roll back the transaction so we don't actually insert anything.
     rollback(tx);
@@ -405,8 +411,8 @@ public class EE10RemoteApiServlet extends HttpServlet {
   }
 
   private byte[] executeRequest(HttpServletRequest req) throws java.io.IOException {
-    Request request = new Request();
-    parseFromInputStream(request, req.getInputStream());
+    Request.Builder request =  Request.newBuilder();
+    parseFromInputStream(request.build(), req.getInputStream());
     String service = request.getServiceName();
     String method = request.getMethod();
 
@@ -414,20 +420,20 @@ public class EE10RemoteApiServlet extends HttpServlet {
 
     if (service.equals("remote_datastore")) {
       if (method.equals("RunQuery")) {
-        return executeRunQuery(request);
+        return executeRunQuery(request.build());
       } else if (method.equals("Transaction")) {
-        return executeTx(request);
+        return executeTx(request.build());
       } else if (method.equals("TransactionQuery")) {
-        return executeTxQuery(request);
+        return executeTxQuery(request.build());
       } else if (method.equals("GetIDs")) {
-        return executeGetIDs(request, false);
+        return executeGetIDs(request.build(), false);
       } else if (method.equals("GetIDsXG")) {
-        return executeGetIDs(request, true);
+        return executeGetIDs(request.build(), true);
       } else {
         throw new ApiProxy.CallNotFoundException(service, method);
       }
     } else {
-      return ApiProxy.makeSyncCall(service, method, request.getRequestAsBytes());
+      return ApiProxy.makeSyncCall(service, method, request.build().toByteArray());
     }
   }
 
@@ -435,8 +441,8 @@ public class EE10RemoteApiServlet extends HttpServlet {
 
   private static byte[] beginTransaction(boolean allowMultipleEg) {
     String appId = ApiProxy.getCurrentEnvironment().getAppId();
-    byte[] req = new BeginTransactionRequest().setApp(appId)
-        .setAllowMultipleEg(allowMultipleEg).toByteArray();
+    byte[] req = BeginTransactionRequest.newBuilder().setApp(appId)
+        .setAllowMultipleEg(allowMultipleEg).build().toByteArray();
     return ApiProxy.makeSyncCall("datastore_v3", "BeginTransaction", req);
   }
 
@@ -444,11 +450,11 @@ public class EE10RemoteApiServlet extends HttpServlet {
     ApiProxy.makeSyncCall("datastore_v3", "Rollback", tx);
   }
 
-  private static GetResponse txGet(byte[] tx, GetRequest request) {
-    parseFromBytes(request.getMutableTransaction(), tx);
-    GetResponse response = new GetResponse();
-    byte[] resultBytes = ApiProxy.makeSyncCall("datastore_v3", "Get", request.toByteArray());
-    parseFromBytes(response, resultBytes);
+  private static GetResponse.Builder txGet(byte[] tx, GetRequest.Builder request) {
+    parseFromBytes(request.getTransaction(), tx);
+    GetResponse.Builder response = GetResponse.newBuilder();
+    byte[] resultBytes = ApiProxy.makeSyncCall("datastore_v3", "Get", request.build().toByteArray());
+    parseFromBytes(response.build(), resultBytes);
     return response;
   }
 
@@ -478,29 +484,39 @@ public class EE10RemoteApiServlet extends HttpServlet {
       md = MessageDigest.getInstance("SHA-1");
     } catch (NoSuchAlgorithmException e) {
       throw new ApiProxy.ApplicationException(
-          CONCURRENT_TRANSACTION.getValue(), "Transaction precondition could not be computed");
+          CONCURRENT_TRANSACTION.getNumber(), "Transaction precondition could not be computed");
     }
 
     md.update(bytes, 0, length);
     return md.digest();
   }
 
-  private static void parseFromBytes(ProtocolMessage<?> message, byte[] bytes) {
-    boolean parsed = message.parseFrom(bytes);
+  private static void parseFromBytes(Message message, byte[] bytes) {
+    boolean parsed = true;
+    try {
+      message.getParserForType().parseFrom(bytes);
+    } catch (InvalidProtocolBufferException e) {
+      parsed = false;
+    }
     checkParse(message, parsed);
   }
 
-  private static void parseFromInputStream(ProtocolMessage<?> message, InputStream inputStream) {
-    boolean parsed = message.parseFrom(inputStream);
+  private static void parseFromInputStream(Message message, InputStream inputStream) {
+    boolean parsed = true;
+    try {
+      message.getParserForType().parseFrom(inputStream);
+    } catch (InvalidProtocolBufferException e) {
+      parsed = false;
+    }
     checkParse(message, parsed);
   }
 
-  private static void checkParse(ProtocolMessage<?> message, boolean parsed) {
+  private static void checkParse(Message message, boolean parsed) {
     if (!parsed) {
       throw new ApiProxy.ApiProxyException("Could not parse protobuf");
     }
-    String error = message.findInitializationError();
-    if (error != null) {
+    List<String> error = message.findInitializationErrors();
+    if (error != null && !error.isEmpty()) {
       throw new ApiProxy.ApiProxyException("Could not parse protobuf: " + error);
     }
   }

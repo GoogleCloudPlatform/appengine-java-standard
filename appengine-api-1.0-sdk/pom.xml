@@ -55,7 +55,7 @@
                   <shadedPattern>com.google.apphosting.api.proto2api.DatastorePb</shadedPattern>
                 </relocation>
                 <relocation>
-                  <pattern>com.google.apphosting.datastore.DatastoreV3Pb</pattern>
+                  <pattern>com.google.apphosting.datastore.proto2api.DatastoreV3Pb</pattern>
                   <shadedPattern>com.google.apphosting.api.DatastorePb</shadedPattern>
                 </relocation>
                 <relocation>
@@ -366,40 +366,10 @@
                 <filter>
                   <artifact>com.google.appengine:protos</artifact>
                   <includes>
-                    <include>com/google/appengine/api/**</include>
-                    <include>com/google/apphosting/api/**</include>
-                    <include>com/google/apphosting/datastore/proto2api/**</include>
-                    <include>com/google/apphosting/base/protos/Codes*</include>
-                    <include>com/google/apphosting/base/protos/SourcePb*</include>
-                    <include>com/google/apphosting/base/protos/api/ApiBasePb*</include>
-                    <include>com/google/apphosting/base/protos/api/RemoteApiPb*</include>
-                    <include>com/google/protos/proto2/bridge/*</include>
-                    <include>com/google/storage/onestore/v3/proto2api/*</include>
-                    <include>com/google/apphosting/executor/*</include>
+                    <include>com/**</include>
                   </includes>
                 </filter>
-                <filter>
-                  <artifact>com.google.appengine:proto1</artifact>
-                  <includes>
-                    <include>com/google/appengine/api/taskqueue/*</include>
-                    <include>com/google/apphosting/datastore/**</include>
-                    <include>com/google/apphosting/utils/remoteapi/*</include>
-                    <include>com/google/common/annotations/GoogleInternal*</include>
-                    <include>com/google/common/base/StringUtil*</include>
-                    <include>com/google/common/util/concurrent/internal/*</include>
-                    <include>com/google/common/flags/*</include>
-                    <include>com/google/common/flags/ext/*</include>
-                    <include>com/google/io/base/**</include>
-                    <include>com/google/io/protocol/**</include>
-                    <include>com/google/protobuf/**</include>
-                    <include>com/google/storage/onestore/v3/OnestoreAction*</include>
-                    <include>com/google/storage/onestore/v3/OnestoreEntity*</include>
-                    <include>com/google/storage/onestore/v3/OnestoreSnapshot*</include>
-                    <include>com/google/storage/onestore/v3/proto2api/OnestoreAction*</include>
-                    <include>com/google/storage/onestore/v3/proto2api/OnestoreEntity*</include>
-                    <include>com/google/storage/onestore/v3/proto2api/OnestoreSnapshot*</include>
-                  </includes>
-                </filter>
+
                 <filter>
                   <artifact>com.google.appengine:runtime-shared</artifact>
                   <excludes>
@@ -487,7 +457,6 @@
                   <include>com.google.appengine:appengine-apis:*</include>
                   <include>com.google.appengine:appengine-utils:*</include>
                   <include>com.google.appengine:geronimo-javamail_1.4_spec:*</include>
-                  <include>com.google.appengine:proto1:*</include>
                   <include>com.google.appengine:protos:*</include>
                   <include>com.google.appengine:runtime-shared:*</include>
                   <include>com.google.cloud.datastore:datastore-v1-proto-client:*</include>

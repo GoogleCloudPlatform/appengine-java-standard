@@ -17,14 +17,14 @@
 package com.google.appengine.api.datastore;
 
 import com.google.apphosting.api.AppEngineInternal;
-import com.google.storage.onestore.v3.OnestoreEntity;
+import com.google.storage.onestore.v3.proto2api.OnestoreEntity;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 /**
  * Helper class to translate between {@link Index} to {@link
- * com.google.storage.onestore.v3.OnestoreEntity.Index}.
+ * com.google.storage.onestore.v3.proto2api.OnestoreEntity.Index}.
  *
  */
 @AppEngineInternal
@@ -32,47 +32,47 @@ public class IndexTranslator {
   // TODO: Support mode? and unspecified direction.
 
   public static OnestoreEntity.Index convertToPb(Index index) {
-    OnestoreEntity.Index value = new OnestoreEntity.Index();
+    OnestoreEntity.Index.Builder value = OnestoreEntity.Index.newBuilder();
     value.setEntityType(index.getKind());
     value.setAncestor(index.isAncestor());
     for (Index.Property property : index.getProperties()) {
-      value.mutablePropertys().add(convertToPb(property));
+      value.addProperty(convertToPb(property));
     }
-    return value;
+    return value.build();
   }
 
   public static OnestoreEntity.Index.Property convertToPb(Index.Property property) {
-    OnestoreEntity.Index.Property value = new OnestoreEntity.Index.Property();
+    OnestoreEntity.Index.Property.Builder value = OnestoreEntity.Index.Property.newBuilder();
     value.setName(property.getName());
     Query.SortDirection dir = property.getDirection();
     if (dir != null) {
       value.setDirection(OnestoreEntity.Index.Property.Direction.valueOf(dir.name()));
     }
-    return value;
+    return value.build();
   }
 
   public static Index convertFromPb(OnestoreEntity.CompositeIndex ci) {
     OnestoreEntity.Index index = ci.getDefinition();
     List<Index.Property> properties = new ArrayList<>();
-    for (OnestoreEntity.Index.Property protoProperty : index.propertys()) {
+    for (OnestoreEntity.Index.Property protoProperty : index.getPropertyList()) {
       properties.add(convertFromPb(protoProperty));
     }
     return new Index(
         ci.getId(),
         index.getEntityType(),
-        index.isAncestor(),
+        index.getAncestor(),
         Collections.unmodifiableList(properties));
   }
 
   public static Index.Property convertFromPb(OnestoreEntity.Index.Property property) {
     Query.SortDirection dir =
         property.hasDirection()
-            ? Query.SortDirection.valueOf(property.getDirectionEnum().name())
+            ? Query.SortDirection.valueOf(property.getDirection().name())
             : null;
     return new Index.Property(property.getName(), dir);
   }
 
   public static Index convertFromPb(OnestoreEntity.Index index) {
-    return convertFromPb(new OnestoreEntity.CompositeIndex().setId(0).setDefinition(index));
+    return convertFromPb(OnestoreEntity.CompositeIndex.newBuilder().setId(0).setDefinition(index).build());
   }
 }

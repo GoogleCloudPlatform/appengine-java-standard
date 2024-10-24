@@ -74,10 +74,6 @@
       <artifactId>protobuf-java</artifactId>
    </dependency>
     <dependency>
-      <groupId>com.google.appengine</groupId>
-      <artifactId>proto1</artifactId>
-    </dependency>
-    <dependency>
       <groupId>org.eclipse.jetty.ee10</groupId>
       <artifactId>jetty-ee10-webapp</artifactId>
        <version>${jetty12.version}</version>
