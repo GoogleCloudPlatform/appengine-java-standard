@@ -34,6 +34,7 @@ import com.google.apphosting.runtime.RequestRunner;
 import com.google.apphosting.runtime.RequestRunner.EagerRunner;
 import com.google.apphosting.runtime.ResponseAPIData;
 import com.google.apphosting.runtime.ServletEngineAdapter;
+import com.google.apphosting.runtime.anyrpc.AnyRpcServerContext;
 import com.google.common.flogger.GoogleLogger;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -44,8 +45,10 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.eclipse.jetty.server.Handler;
+import org.eclipse.jetty.server.HttpChannel;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.handler.HandlerWrapper;
 
 /**
@@ -62,6 +65,9 @@ import org.eclipse.jetty.server.handler.HandlerWrapper;
 public class JettyHttpHandler extends HandlerWrapper {
   private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
 
+  public static final String FINISH_REQUEST_ATTRIBUTE =
+      "com.google.apphosting.runtime.jetty9.finishRequestAttribute";
+
   private final boolean passThroughPrivateHeaders;
   private final AppInfoFactory appInfoFactory;
   private final AppVersionKey appVersionKey;
@@ -73,7 +79,8 @@ public class JettyHttpHandler extends HandlerWrapper {
       ServletEngineAdapter.Config runtimeOptions,
       AppVersion appVersion,
       AppVersionKey appVersionKey,
-      AppInfoFactory appInfoFactory) {
+      AppInfoFactory appInfoFactory,
+      ServerConnector connector) {
     this.passThroughPrivateHeaders = runtimeOptions.passThroughPrivateHeaders();
     this.appInfoFactory = appInfoFactory;
     this.appVersionKey = appVersionKey;
@@ -82,6 +89,7 @@ public class JettyHttpHandler extends HandlerWrapper {
     ApiProxyImpl apiProxyImpl = (ApiProxyImpl) ApiProxy.getDelegate();
     coordinator = apiProxyImpl.getBackgroundRequestCoordinator();
     requestManager = (RequestManager) apiProxyImpl.getRequestThreadManager();
+    connector.addBean(new CompletionListener());
   }
 
   @Override
@@ -113,6 +121,10 @@ public class JettyHttpHandler extends HandlerWrapper {
     ApiProxy.Environment currentEnvironment = ApiProxy.getCurrentEnvironment();
     request.setAttribute(AppEngineConstants.ENVIRONMENT_ATTR, currentEnvironment);
 
+    Runnable finishRequest =
+        () -> finishRequest(currentEnvironment, requestToken, genericResponse, context);
+    baseRequest.setAttribute(FINISH_REQUEST_ATTRIBUTE, finishRequest);
+
     try {
       dispatchRequest(target, requestToken, genericRequest, genericResponse);
       if (!baseRequest.isHandled()) {
@@ -128,17 +140,32 @@ public class JettyHttpHandler extends HandlerWrapper {
       handleException(ex, requestToken, genericResponse);
       response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, ex.getMessage());
     } finally {
-      requestManager.finishRequest(requestToken);
+      // We don't want threads used for background requests to go back
+      // in the thread pool, because users may have stashed references
+      // to them or may be expecting them to exit.  Setting the
+      // interrupt bit causes the pool to drop them.
+      if (genericRequest.getRequestType() == RuntimePb.UPRequest.RequestType.BACKGROUND) {
+        Thread.currentThread().interrupt();
+      }
     }
-    // Do not put this in a final block.  If we propagate an
-    // exception the callback will be invoked automatically.
-    genericResponse.finishWithResponse(context);
-    // We don't want threads used for background requests to go back
-    // in the thread pool, because users may have stashed references
-    // to them or may be expecting them to exit.  Setting the
-    // interrupt bit causes the pool to drop them.
-    if (genericRequest.getRequestType() == RuntimePb.UPRequest.RequestType.BACKGROUND) {
-      Thread.currentThread().interrupt();
+  }
+
+  private void finishRequest(
+      ApiProxy.Environment env,
+      RequestManager.RequestToken requestToken,
+      JettyResponseAPIData response,
+      AnyRpcServerContext context) {
+
+    ApiProxy.Environment oldEnv = ApiProxy.getCurrentEnvironment();
+    try {
+      ApiProxy.setEnvironmentForCurrentThread(env);
+      requestManager.finishRequest(requestToken);
+
+      // Do not put this in a final block.  If we propagate an
+      // exception the callback will be invoked automatically.
+      response.finishWithResponse(context);
+    } finally {
+      ApiProxy.setEnvironmentForCurrentThread(oldEnv);
     }
   }
 
@@ -287,5 +314,16 @@ public class JettyHttpHandler extends HandlerWrapper {
       throw new IllegalArgumentException("Did not receive a background request identifier.");
     }
     return backgroundRequestId;
+  }
+
+  private static class CompletionListener implements HttpChannel.Listener {
+    @Override
+    public void onComplete(Request request) {
+      Runnable finishRequest =
+          (Runnable) request.getAttribute(JettyHttpHandler.FINISH_REQUEST_ATTRIBUTE);
+      if (finishRequest != null) {
+        finishRequest.run();
+      }
+    }
   }
 }
