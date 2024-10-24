@@ -106,7 +106,7 @@ public class OrderedIndexComponentTest extends IndexComponentTestCase {
     List<Property> preferredIndex = newIndex("P1", "P2", "P3");
     assertThat(orderedComponent.preferredIndexProperties()).isEqualTo(preferredIndex);
 
-    Property noDirectionProperty = Property.newBuilder().setName("P1").build();
+    Property noDirectionProperty = Property.newBuilder().setName("P1").setDirection(Direction.ASCENDING).build();
 
     IndexComponent directionlessComponent =
         new OrderedIndexComponent(
