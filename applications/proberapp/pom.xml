@@ -38,7 +38,7 @@
         <DB_REGION>us-central1</DB_REGION>
         <DB_USER>prober-user</DB_USER>
         <DB_PASSOWRD>prober_connectivity_test_database</DB_PASSOWRD>
-        <gax.version>2.55.0</gax.version>
+        <gax.version>2.56.0</gax.version>
         <appengine.target.version>${project.version}</appengine.target.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <appengine.runtime.location>target/${project.artifactId}-${project.version}</appengine.runtime.location>
@@ -59,6 +59,31 @@
             <groupId>com.google.cloud</groupId>
             <artifactId>google-cloud-spanner</artifactId>
             <version>6.79.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.appengine</groupId>
+            <artifactId>runtime-impl-jetty9</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.appengine</groupId>
+            <artifactId>runtime-shared-jetty9</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.appengine</groupId>
+            <artifactId>runtime-impl-jetty12</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.appengine</groupId>
+            <artifactId>runtime-shared-jetty12</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.appengine</groupId>
+            <artifactId>runtime-main</artifactId>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.google.api</groupId>
@@ -91,7 +116,7 @@
         <dependency>
             <groupId>com.google.cloud</groupId>
             <artifactId>google-cloud-core</artifactId>
-            <version>2.45.0</version>
+            <version>2.46.0</version>
         </dependency>
         <dependency>
             <groupId>com.google.cloud</groupId>
@@ -106,7 +131,7 @@
         <dependency>
             <groupId>com.google.cloud</groupId>
             <artifactId>google-cloud-storage</artifactId>
-            <version>2.43.2</version>
+            <version>2.44.0</version>
         </dependency>
         <dependency>
             <groupId>com.google.cloud.sql</groupId>
