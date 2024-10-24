@@ -395,7 +395,7 @@ public final class DataTypeTranslator {
     PropertyValue.Builder propVal = PropertyValue.newBuilder();
     propVal.setReferenceValue(KeyType.toReferenceValue(proto.getKey()));
     keyProp.setValue(propVal.build());
-    return keyProp.build();
+    return keyProp.buildPartial();
   }
 
   /**
@@ -1137,6 +1137,8 @@ public final class DataTypeTranslator {
       // All possible values except byte[] are already comparable.
       if (value2 instanceof byte[]) {
         return new ComparableByteArray((byte[]) value2);
+      } else if (value2 instanceof ByteString) {
+        return new ComparableByteArray(((ByteString) value2).toByteArray());
       }
       return (Comparable<?>) value2;
     }
@@ -1661,7 +1663,7 @@ public final class DataTypeTranslator {
       if (proto.hasKey() && !proto.getKey().getApp().isEmpty()) {
         result.setKey(KeyTranslator.createFromPb(proto.getKey()));
       }
-      extractPropertiesFromPb(proto.build(), result.getPropertyMap());
+      extractPropertiesFromPb(proto.buildPartial(), result.getPropertyMap());
       return result;
     }
 

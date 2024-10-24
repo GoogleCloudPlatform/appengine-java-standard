@@ -80,7 +80,7 @@ public class EntityComparatorTests {
     Filter.Builder filter = Filter.newBuilder().setOp(Operator.GREATER_THAN);
     filter.addPropertyBuilder().setName("a").getValueBuilder().setInt64Value(3);
     matcher.addFilter(filter.buildPartial());
-    filter.setOp(Operator.LESS_THAN).getProperty(0).getValue().toBuilder().setInt64Value(5);
+    filter.setOp(Operator.LESS_THAN).getPropertyBuilder(0).getValueBuilder().setInt64Value(5);
     matcher.addFilter(filter.buildPartial());
 
     assertThat(BaseEntityComparator.multiTypeExtreme(nastyCast(5L, 4L, 3L), true, matcher))
@@ -120,7 +120,7 @@ public class EntityComparatorTests {
     orders.add(notAKeySort.buildPartial());
     entityComps = Arrays.asList(new EntityProtoComparator(orders), new EntityComparator(orders));
     for (BaseEntityComparator<?> comp : entityComps) {
-      assertThat(comp.orders).containsExactly(notAKeySort, KEY_ASC_ORDER).inOrder();
+      assertThat(comp.orders).containsExactly(notAKeySort.buildPartial(), KEY_ASC_ORDER).inOrder();
     }
 
     // if we explicitly add the default sort to the end we don't end up with
@@ -128,7 +128,7 @@ public class EntityComparatorTests {
     orders.add(KEY_ASC_ORDER);
     entityComps = Arrays.asList(new EntityProtoComparator(orders), new EntityComparator(orders));
     for (BaseEntityComparator<?> comp : entityComps) {
-      assertThat(comp.orders).containsExactly(notAKeySort, KEY_ASC_ORDER).inOrder();
+      assertThat(comp.orders).containsExactly(notAKeySort.buildPartial(), KEY_ASC_ORDER).inOrder();
     }
   }
 

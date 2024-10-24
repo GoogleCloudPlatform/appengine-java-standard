@@ -552,7 +552,7 @@ public class LazyListImplTest {
             opts,
             null,
             new Query(q),
-            new FutureHelper.FakeFuture<DatastoreV3Pb.QueryResult>(result.build()),
+            new FutureHelper.FakeFuture<DatastoreV3Pb.QueryResult>(result.buildPartial()),
             new ApiProxy.ApiConfig());
     return new QueryResultIteratorImpl(pq, source, opts, null);
   }

@@ -61,7 +61,7 @@ class QueryResultsSourceV3 extends BaseQueryResultsSource<QueryResult, NextReque
       req.setCompile(true);
     }
     // This used to call .freeze() but that method has been deleted, see go/javaproto1freezeremoval
-    return req.build();
+    return req.buildPartial();
   }
 
   @Override

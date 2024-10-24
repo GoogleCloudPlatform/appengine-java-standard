@@ -58,7 +58,7 @@ final class QueryRunnerV3 implements QueryRunner {
           @Override
           protected Throwable convertException(Throwable cause) {
             if (cause instanceof DatastoreNeedIndexException) {
-              addMissingIndexData(queryProto.build(), (DatastoreNeedIndexException) cause);
+              addMissingIndexData(queryProto.buildPartial(), (DatastoreNeedIndexException) cause);
             }
             return cause;
           }
