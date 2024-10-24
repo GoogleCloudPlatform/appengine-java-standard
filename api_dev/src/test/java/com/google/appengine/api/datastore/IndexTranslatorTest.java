@@ -51,7 +51,7 @@ public class IndexTranslatorTest {
     pb = IndexTranslator.convertToPb(INDEX_3);
     OnestoreEntity.CompositeIndex.Builder ci = OnestoreEntity.CompositeIndex.newBuilder();
     ci.setId(10).setDefinition(pb);
-    assertThat(IndexTranslator.convertFromPb(ci.build())).isEqualTo(INDEX_3);
+    assertThat(IndexTranslator.convertFromPb(ci.buildPartial())).isEqualTo(INDEX_3);
     pb = IndexTranslator.convertToPb(INDEX_4);
     assertThat(IndexTranslator.convertFromPb(pb)).isEqualTo(INDEX_4);
   }

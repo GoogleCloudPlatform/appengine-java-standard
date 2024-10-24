@@ -131,7 +131,7 @@ public class TransactionImplTest {
   private static Future<DatastoreV3Pb.Transaction> newBeginTransactionFuture() {
     DatastoreV3Pb.Transaction.Builder txn = DatastoreV3Pb.Transaction.newBuilder();
     txn.setHandle(123);
-    return new FutureHelper.FakeFuture<DatastoreV3Pb.Transaction>(txn.build());
+    return new FutureHelper.FakeFuture<DatastoreV3Pb.Transaction>(txn.buildPartial());
   }
 
   private static Future<DatastoreV3Pb.Transaction> newFailedBeginTransactionFuture() {

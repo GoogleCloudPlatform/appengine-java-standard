@@ -133,7 +133,7 @@ final class QueryTranslator {
       proto.addPropertyName(projection.getPropertyName());
     }
 
-    return proto.build();
+    return proto.buildPartial();
   }
 
   static Order convertSortPredicateToPb(Query.SortPredicate predicate) {
@@ -213,7 +213,7 @@ final class QueryTranslator {
           .setValue(DataTypeTranslator.toV3Value(predicate.getValue()));
     }
 
-    return filterPb.build();
+    return filterPb.buildPartial();
   }
 
   private static DatastoreV3Pb.GeoRegion convertGeoRegionToPb(Query.GeoRegion region) {

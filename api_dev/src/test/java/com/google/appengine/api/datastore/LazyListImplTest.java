@@ -96,7 +96,7 @@ public class LazyListImplTest {
         ApiProxy.ApiConfig apiConfig) {
       if (packageName.equals("datastore_v3")) {
         if (methodName.equals("RunQuery")) {
-          DatastoreV3Pb.Query query = DatastoreV3Pb.Query.newBuilder().build();
+          DatastoreV3Pb.Query query = DatastoreV3Pb.Query.newBuilder().buildPartial();
           try {
             query.parseFrom(request);
           }catch (InvalidProtocolBufferException e) {
@@ -552,7 +552,7 @@ public class LazyListImplTest {
             opts,
             null,
             new Query(q),
-            new FutureHelper.FakeFuture<DatastoreV3Pb.QueryResult>(result.build()),
+            new FutureHelper.FakeFuture<DatastoreV3Pb.QueryResult>(result.buildPartial()),
             new ApiProxy.ApiConfig());
     return new QueryResultIteratorImpl(pq, source, opts, null);
   }

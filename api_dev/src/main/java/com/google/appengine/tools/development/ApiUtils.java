@@ -19,6 +19,7 @@ package com.google.appengine.tools.development;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
 import com.google.protobuf.MessageLite;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
@@ -36,7 +37,8 @@ public class ApiUtils {
       throws IllegalAccessException, InstantiationException, InvocationTargetException,
           NoSuchMethodException {
     if (Message.class.isAssignableFrom(messageClass)) {
-      Message.Builder proto = (Message.Builder) messageClass.getConstructor().newInstance();
+      Method newBuilderMethod = messageClass.getMethod("newBuilder");
+      Message.Builder proto = (Message.Builder) newBuilderMethod.invoke(null);
       boolean parsed = true;
       try{
         proto.mergeFrom(bytes);
@@ -48,7 +50,7 @@ public class ApiUtils {
         throw new RuntimeException(
             "Could not parse request bytes into " + classDescription(messageClass));
       }
-      return messageClass.cast(proto);
+      return messageClass.cast(proto.buildPartial());
     }
     if (Message.class.isAssignableFrom(messageClass)) {
       Method method = messageClass.getMethod("parseFrom", byte[].class);

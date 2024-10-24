@@ -75,7 +75,7 @@ class IndexComponentsOnlyQuery extends ValidatedQuery {
     // Pulling out __key__ asc orders since is supported natively for perfect plans
     boolean hasKeyDescOrder = false;
     if (query.getOrderCount() > 0) {
-      Order lastOrder = query.getOrder(query.getCount() - 1);
+      Order lastOrder = query.getOrder(query.getOrderCount() - 1);
       if (lastOrder.getProperty().equals(Entity.KEY_RESERVED_PROPERTY)) {
         if (lastOrder.getDirection() == Order.Direction.ASCENDING) {
           query.removeOrder(query.getOrderCount() - 1).build();

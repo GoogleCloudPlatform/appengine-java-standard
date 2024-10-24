@@ -25,6 +25,7 @@ import com.google.appengine.api.datastore.IMHandle.Scheme;
 import com.google.appengine.api.users.User;
 import com.google.common.collect.ImmutableList;
 import com.google.datastore.v1.Value;
+import com.google.protobuf.ByteString;
 import com.google.storage.onestore.v3.proto2api.OnestoreEntity.PropertyValue;
 import java.util.Date;
 import org.junit.Test;
@@ -98,7 +99,7 @@ public class RawValueTest {
   public void testString() {
     RawValue value = new RawValue(PropertyValue.newBuilder().setStringValue("xmpp hi").build());
     assertTypeMatch(value, String.class);
-    assertThat((byte[]) value.getValue()).isEqualTo("xmpp hi".getBytes(UTF_8));
+    assertThat(((ByteString) value.getValue()).toByteArray()).isEqualTo("xmpp hi".getBytes(UTF_8));
     assertValue("xmpp hi", value);
     assertValue(new ShortBlob("xmpp hi".getBytes(UTF_8)), value);
     assertValue(new Link("xmpp hi"), value);
