@@ -211,43 +211,64 @@
 
         <plugins>
             <plugin>
-                <groupId>com.coderplus.maven.plugins</groupId>
-                <artifactId>copy-rename-maven-plugin</artifactId>
-                <version>1.0.1</version>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <!-- TODO it would good to have this version only in pluginManagement in top pom -->
+                <version>3.8.0</version>
                 <executions>
                     <execution>
                         <id>copy-file</id>
                         <phase>pre-integration-test</phase>
                         <goals>
-                            <goal>copy</goal>
+                            <goal>copy-dependencies</goal>
                         </goals>
                         <configuration>
-                              <fileSets>
-                                <fileSet>
-                                    <sourceFile>../../runtime/deployment/target/runtime-deployment-${project.version}/runtime-impl-jetty9.jar</sourceFile>
-                                    <destinationFile>${appengine.runtime.location}/runtime-impl-jetty9.jar</destinationFile>
-                                </fileSet>
-                                <fileSet>
-                                    <sourceFile>../../runtime/deployment/target/runtime-deployment-${project.version}/runtime-shared-jetty9.jar</sourceFile>
-                                    <destinationFile>${appengine.runtime.location}/runtime-shared-jetty9.jar</destinationFile>
-                                </fileSet>
-                                <fileSet>
-                                    <sourceFile>../../runtime/deployment/target/runtime-deployment-${project.version}/runtime-impl-jetty12.jar</sourceFile>
-                                    <destinationFile>${appengine.runtime.location}/runtime-impl-jetty12.jar</destinationFile>
-                                </fileSet>
-                                <fileSet>
-                                    <sourceFile>../../runtime/deployment/target/runtime-deployment-${project.version}/runtime-shared-jetty12.jar</sourceFile>
-                                    <destinationFile>${appengine.runtime.location}/runtime-shared-jetty12.jar</destinationFile>
-                                </fileSet>
-                                <fileSet>
-                                    <sourceFile>../../runtime/deployment/target/runtime-deployment-${project.version}/runtime-main.jar</sourceFile>
-                                    <destinationFile>${appengine.runtime.location}/runtime-main.jar</destinationFile>
-                                </fileSet>
-                            </fileSets>
+                            <excludeTransitive>true</excludeTransitive>
+                            <includeGroupIds>com.google.appengine</includeGroupIds>
+                            <stripVersion>true</stripVersion>
+                            <outputDirectory>${appengine.runtime.location}</outputDirectory>
                         </configuration>
                     </execution>
                 </executions>
             </plugin>
+<!--            <plugin>-->
+<!--                <groupId>com.coderplus.maven.plugins</groupId>-->
+<!--                <artifactId>copy-rename-maven-plugin</artifactId>-->
+<!--                <version>1.0.1</version>-->
+<!--                <executions>-->
+<!--                    <execution>-->
+<!--                        <id>copy-file</id>-->
+<!--                        <phase>pre-integration-test</phase>-->
+<!--                        <goals>-->
+<!--                            <goal>copy</goal>-->
+<!--                        </goals>-->
+<!--                        <configuration>-->
+<!--                              <fileSets>-->
+<!--                                <fileSet>-->
+<!--                                    <sourceFile>../../runtime/deployment/target/runtime-deployment-${project.version}/runtime-impl-jetty9.jar</sourceFile>-->
+<!--                                    <destinationFile>${appengine.runtime.location}/runtime-impl-jetty9.jar</destinationFile>-->
+<!--                                </fileSet>-->
+<!--                                <fileSet>-->
+<!--                                    <sourceFile>../../runtime/deployment/target/runtime-deployment-${project.version}/runtime-shared-jetty9.jar</sourceFile>-->
+<!--                                    <destinationFile>${appengine.runtime.location}/runtime-shared-jetty9.jar</destinationFile>-->
+<!--                                </fileSet>-->
+<!--                                <fileSet>-->
+<!--                                    <sourceFile>../../runtime/deployment/target/runtime-deployment-${project.version}/runtime-impl-jetty12.jar</sourceFile>-->
+<!--                                    <destinationFile>${appengine.runtime.location}/runtime-impl-jetty12.jar</destinationFile>-->
+<!--                                </fileSet>-->
+<!--                                <fileSet>-->
+<!--                                    <sourceFile>../../runtime/deployment/target/runtime-deployment-${project.version}/runtime-shared-jetty12.jar</sourceFile>-->
+<!--                                    <destinationFile>${appengine.runtime.location}/runtime-shared-jetty12.jar</destinationFile>-->
+<!--                                </fileSet>-->
+<!--                                <fileSet>-->
+<!--                                    <sourceFile>../../runtime/deployment/target/runtime-deployment-${project.version}/runtime-main.jar</sourceFile>-->
+<!--                                    <destinationFile>${appengine.runtime.location}/runtime-main.jar</destinationFile>-->
+<!--                                </fileSet>-->
+<!--                            </fileSets>-->
+<!--                        </configuration>-->
+<!--                    </execution>-->
+<!--                </executions>-->
+<!--            </plugin>-->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-war-plugin</artifactId>
