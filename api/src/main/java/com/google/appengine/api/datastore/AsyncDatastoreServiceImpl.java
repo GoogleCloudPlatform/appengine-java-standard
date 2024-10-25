@@ -123,7 +123,7 @@ class AsyncDatastoreServiceImpl extends BaseAsyncDatastoreServiceImpl {
         @Override
         protected Future<DeleteResponse> makeCall(DeleteRequest batch) {
           return makeAsyncCall(
-              apiConfig, DatastoreService_3.Method.Delete, batch, DeleteResponse.newBuilder().build());
+              apiConfig, DatastoreService_3.Method.Delete, batch, DeleteResponse.getDefaultInstance());
         }
       };
 
@@ -141,7 +141,7 @@ class AsyncDatastoreServiceImpl extends BaseAsyncDatastoreServiceImpl {
 
         @Override
         protected Future<GetResponse> makeCall(GetRequest batch) {
-          return makeAsyncCall(apiConfig, DatastoreService_3.Method.Get, batch, GetResponse.newBuilder().build());
+          return makeAsyncCall(apiConfig, DatastoreService_3.Method.Get, batch, GetResponse.getDefaultInstance());
         }
       };
 
@@ -169,7 +169,7 @@ class AsyncDatastoreServiceImpl extends BaseAsyncDatastoreServiceImpl {
 
         @Override
         protected Future<GetResponse> makeCall(GetRequest batch) {
-          return makeAsyncCall(apiConfig, DatastoreService_3.Method.Get, batch, GetResponse.newBuilder().build());
+          return makeAsyncCall(apiConfig, DatastoreService_3.Method.Get, batch, GetResponse.getDefaultInstance());
         }
       };
 
@@ -192,7 +192,7 @@ class AsyncDatastoreServiceImpl extends BaseAsyncDatastoreServiceImpl {
 
         @Override
         protected Future<PutResponse> makeCall(PutRequest batch) {
-          return makeAsyncCall(apiConfig, DatastoreService_3.Method.Put, batch, PutResponse.newBuilder().build());
+          return makeAsyncCall(apiConfig, DatastoreService_3.Method.Put, batch, PutResponse.getDefaultInstance());
         }
 
         @Override
@@ -596,7 +596,7 @@ class AsyncDatastoreServiceImpl extends BaseAsyncDatastoreServiceImpl {
             .build();
     return new FutureWrapper<CompositeIndices, Map<Index, IndexState>>(
         makeAsyncCall(
-            apiConfig, DatastoreService_3.Method.GetIndices, req, CompositeIndices.newBuilder().build())) {
+            apiConfig, DatastoreService_3.Method.GetIndices, req, CompositeIndices.getDefaultInstance())) {
       @Override
       protected Map<Index, IndexState> wrap(CompositeIndices indices) throws Exception {
         Map<Index, IndexState> answer = new LinkedHashMap<Index, IndexState>();

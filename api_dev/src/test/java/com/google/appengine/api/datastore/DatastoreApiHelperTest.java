@@ -182,7 +182,7 @@ public class DatastoreApiHelperTest {
   }
 
   private Future<DatastoreV3Pb.Transaction> makeTestCall(byte[] response) {
-    DatastoreV3Pb.GetRequest request = DatastoreV3Pb.GetRequest.newBuilder().build();
+    DatastoreV3Pb.GetRequest request = DatastoreV3Pb.GetRequest.getDefaultInstance();
     expectMakeAsyncCall(request.toByteArray(), immediateFuture(response));
 
     return DatastoreApiHelper.makeAsyncCall(

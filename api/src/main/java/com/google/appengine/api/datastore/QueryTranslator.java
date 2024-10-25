@@ -180,7 +180,7 @@ final class QueryTranslator {
       f.addPropertyBuilder()
           .setName(containmentFilter.getPropertyName())
           .setMultiple(false)
-          .setValue(PropertyValue.newBuilder().build());
+          .setValue(PropertyValue.getDefaultInstance());
     } else {
       checkArgument(filter instanceof Query.FilterPredicate);
       Query.FilterPredicate predicate = (Query.FilterPredicate) filter;

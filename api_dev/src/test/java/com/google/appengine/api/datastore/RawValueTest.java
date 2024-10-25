@@ -47,7 +47,7 @@ public class RawValueTest {
           Key.class,
           GeoPt.class,
           User.class);
-  private final RawValue NULL_VALUE = new RawValue(PropertyValue.newBuilder().build());
+  private final RawValue NULL_VALUE = new RawValue(PropertyValue.getDefaultInstance());
 
   private void assertTypeMatch(RawValue value, Class<?> validType) {
     value.asType(validType); // Does not throw an exception.
@@ -116,7 +116,7 @@ public class RawValueTest {
 
   @Test
   public void testNull() {
-    RawValue value = new RawValue(PropertyValue.newBuilder().build());
+    RawValue value = new RawValue(PropertyValue.getDefaultInstance());
     assertThat(value.getValue()).isNull();
     assertThat(value.asType(String.class)).isNull();
     assertThat(value.asStrictType(String.class)).isNull();

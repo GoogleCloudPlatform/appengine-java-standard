@@ -2348,7 +2348,7 @@ public abstract class LocalDatastoreService {
      * #serializeEntity(VersionedEntity)}.
      */
     private VersionedEntity deserializeEntity(byte[] serialized) throws IOException {
-      EntityProto entityProto = EntityProto.newBuilder().build();
+      EntityProto entityProto = EntityProto.getDefaultInstance();
       try {
         entityProto.parseFrom(serialized);
       }catch (InvalidProtocolBufferException e) {

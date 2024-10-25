@@ -137,7 +137,7 @@ public class QueryTranslatorTest {
 
     Filter filter3 = proto.getFilter(2);
     assertThat(filter3.getProperty(0).getName()).isEqualTo("nullProp");
-    assertThat(filter3.getProperty(0).getValue()).isEqualTo(PropertyValue.newBuilder().build());
+    assertThat(filter3.getProperty(0).getValue()).isEqualTo(PropertyValue.getDefaultInstance());
     assertThat(filter3.getOp()).isEqualTo(Operator.EQUAL);
 
     Filter filter4 = proto.getFilter(3);
@@ -363,17 +363,17 @@ public class QueryTranslatorTest {
     Query query = new Query("foo");
     assertThat(query.isKeysOnly()).isFalse();
     DatastoreV3Pb.Query proto = QueryTranslator.convertToPb(query, withChunkSize(10));
-    assertThat(proto.hasKeysOnly()).isFalse();
+    assertThat(proto.getKeysOnly()).isFalse();
 
     query.setKeysOnly();
     assertThat(query.isKeysOnly()).isTrue();
     proto = QueryTranslator.convertToPb(query, withDefaults());
-    assertThat(proto.hasKeysOnly()).isTrue();
+    assertThat(proto.getKeysOnly()).isTrue();
 
     query.clearKeysOnly();
     assertThat(query.isKeysOnly()).isFalse();
     proto = QueryTranslator.convertToPb(query, withChunkSize(10));
-    assertThat(proto.hasKeysOnly()).isFalse();
+    assertThat(proto.getKeysOnly()).isFalse();
   }
 
   @Test

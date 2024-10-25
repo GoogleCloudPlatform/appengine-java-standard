@@ -126,7 +126,7 @@ class RemoteRpc {
     }
 
     // parse the response
-    RemoteApiPb.Response parsedResponse = RemoteApiPb.Response.newBuilder().build();
+    RemoteApiPb.Response parsedResponse = RemoteApiPb.Response.getDefaultInstance();
     boolean parsed = true;
     try {
       parsedResponse.getParserForType().parseFrom(httpResponse.getBodyAsBytes());

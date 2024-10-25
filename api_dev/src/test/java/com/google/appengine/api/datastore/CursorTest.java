@@ -42,7 +42,7 @@ public class CursorTest {
 
   @Before
   public void setUp() throws Exception {
-    compiledCursor = CompiledCursor.newBuilder().build();
+    compiledCursor = CompiledCursor.getDefaultInstance();
     CompiledCursor.Position.Builder position = compiledCursor.getPosition().toBuilder();
     position.setStartKey("Hello World");
     position.setStartInclusive(true);
@@ -146,7 +146,7 @@ public class CursorTest {
   }
 
   private static CompiledCursor toPb(Cursor cursor) {
-    CompiledCursor pb = CompiledCursor.newBuilder().build();
+    CompiledCursor pb = CompiledCursor.getDefaultInstance();
     boolean parse = true;
     try{
       pb = pb.parseFrom(cursor.toByteString());

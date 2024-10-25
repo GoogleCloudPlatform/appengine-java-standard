@@ -84,7 +84,7 @@ class InternalTransactionV3 implements TransactionImpl.InternalTransaction {
 
   @Override
   public Future<Void> doCommitAsync() {
-    return makeAsyncTxnCall(DatastoreService_3.Method.Commit, CommitResponse.newBuilder().build());
+    return makeAsyncTxnCall(DatastoreService_3.Method.Commit, CommitResponse.getDefaultInstance());
   }
 
   @Override
