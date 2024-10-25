@@ -64,26 +64,31 @@
             <groupId>com.google.appengine</groupId>
             <artifactId>runtime-impl-jetty9</artifactId>
             <version>${project.version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.google.appengine</groupId>
             <artifactId>runtime-shared-jetty9</artifactId>
             <version>${project.version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.google.appengine</groupId>
             <artifactId>runtime-impl-jetty12</artifactId>
             <version>${project.version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.google.appengine</groupId>
             <artifactId>runtime-shared-jetty12</artifactId>
             <version>${project.version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.google.appengine</groupId>
             <artifactId>runtime-main</artifactId>
             <version>${project.version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.google.api</groupId>
@@ -227,6 +232,7 @@
                             <excludeTransitive>true</excludeTransitive>
                             <includeGroupIds>com.google.appengine</includeGroupIds>
                             <stripVersion>true</stripVersion>
+                            <includeScope>provided</includeScope>
                             <outputDirectory>${appengine.runtime.location}</outputDirectory>
                         </configuration>
                     </execution>
