@@ -61,31 +61,6 @@
             <version>6.79.0</version>
         </dependency>
         <dependency>
-            <groupId>com.google.appengine</groupId>
-            <artifactId>runtime-impl-jetty9</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.google.appengine</groupId>
-            <artifactId>runtime-shared-jetty9</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.google.appengine</groupId>
-            <artifactId>runtime-impl-jetty12</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.google.appengine</groupId>
-            <artifactId>runtime-shared-jetty12</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.google.appengine</groupId>
-            <artifactId>runtime-main</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
             <groupId>com.google.api</groupId>
             <artifactId>gax</artifactId>
             <version>${gax.version}</version>
@@ -187,6 +162,16 @@
             <artifactId>google-http-client-jackson</artifactId>
             <version>1.29.2</version>
         </dependency>
+        <!-- This is only needed to enforce runtime-deployment is built before this, which is needed
+             because the runtime-deployment jars are copied to ${appengine.runtime.location} by this module.
+             The test scope is used to ensure the Jars are not packaged in WEB-INF/lib. -->
+        <dependency>
+            <groupId>com.google.appengine</groupId>
+            <artifactId>runtime-deployment</artifactId>
+            <version>${project.version}</version>
+            <type>zip</type>
+            <scope>test</scope>
+        </dependency>
         <!-- Test Dependencies -->
         <dependency>
             <groupId>org.mockito</groupId>
@@ -208,7 +193,6 @@
 
     <build>
         <outputDirectory>target/${project.artifactId}-${project.version}/WEB-INF/classes</outputDirectory>
-
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
