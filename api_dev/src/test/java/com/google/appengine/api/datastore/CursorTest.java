@@ -77,7 +77,7 @@ public class CursorTest {
   @SuppressWarnings("deprecation")
   @Test
   public void testReverseCursorPostfix() {
-    IndexPostfix postfixPosition = IndexPostfix.newBuilder().setKey(Reference.newBuilder().buildPartial()).setBefore(true).buildPartial();
+    IndexPostfix postfixPosition = IndexPostfix.newBuilder().setKey(Reference.getDefaultInstance()).setBefore(true).buildPartial();
     Cursor pfCursor = toCursor(CompiledCursor.newBuilder().setPostfixPosition(postfixPosition).buildPartial());
 
     // reverse() is a no-op.
