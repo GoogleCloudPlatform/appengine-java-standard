@@ -233,7 +233,7 @@ public final class DataTypeTranslator {
     }
   }
 
-  /** @see #addPropertiesToPb(Map, EntityProto) */
+  /** @see #addPropertiesToPb(Map, EntityProto.Builder) */
   static void addPropertiesToPb(Map<String, ?> map, com.google.datastore.v1.Entity.Builder proto) {
     for (Map.Entry<String, ?> entry : map.entrySet()) {
       proto.putProperties(entry.getKey(), toV1Value(entry.getValue()).build());
@@ -260,9 +260,9 @@ public final class DataTypeTranslator {
       }
       property.getValue(); // Indicate to the proto that we have set this field
       if (indexed) {
-        proto.addProperty(property.build());
+        proto.addProperty(property);
       } else {
-        proto.addRawProperty(property.build());
+        proto.addRawProperty(property);
       }
     } else {
       // Write every element to the PB

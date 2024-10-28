@@ -80,12 +80,11 @@ public class EntityTranslator {
 
     // If we've already been stored, make sure the entity group is set
     // to match our key.
-    Path.Builder entityGroup = proto.getEntityGroup().toBuilder();
+    Path.Builder entityGroup = proto.getEntityGroupBuilder();
     Key key = entity.getKey();
     if (key.isComplete()) {
       entityGroup.addElement(reference.getPath().getElement(0));
     }
-
     DataTypeTranslator.addPropertiesToPb(entity.getPropertyMap(), proto);
     return proto.build();
   }
