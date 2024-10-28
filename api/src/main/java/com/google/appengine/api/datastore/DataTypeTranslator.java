@@ -260,9 +260,9 @@ public final class DataTypeTranslator {
       }
       property.getValue(); // Indicate to the proto that we have set this field
       if (indexed) {
-        proto.addProperty(property.buildPartial());
+        proto.addProperty(property.build());
       } else {
-        proto.addRawProperty(property.buildPartial());
+        proto.addRawProperty(property.build());
       }
     } else {
       // Write every element to the PB
@@ -395,7 +395,7 @@ public final class DataTypeTranslator {
     PropertyValue.Builder propVal = PropertyValue.newBuilder();
     propVal.setReferenceValue(KeyType.toReferenceValue(proto.getKey()));
     keyProp.setValue(propVal.build());
-    return keyProp.buildPartial();
+    return keyProp.build();
   }
 
   /**
@@ -1663,7 +1663,7 @@ public final class DataTypeTranslator {
       if (proto.hasKey() && !proto.getKey().getApp().isEmpty()) {
         result.setKey(KeyTranslator.createFromPb(proto.getKey()));
       }
-      extractPropertiesFromPb(proto.buildPartial(), result.getPropertyMap());
+      extractPropertiesFromPb(proto.build(), result.getPropertyMap());
       return result;
     }
 
@@ -1687,7 +1687,7 @@ public final class DataTypeTranslator {
       }
       addPropertiesToPb(structProp.getPropertyMap(), proto);
       // TODO: Figure out how to do partial serialization.
-      propertyValue.setStringValueBytes(proto.buildPartial().toByteString()).buildPartial();
+      propertyValue.setStringValueBytes(proto.build().toByteString()).build();
     }
 
     @Override

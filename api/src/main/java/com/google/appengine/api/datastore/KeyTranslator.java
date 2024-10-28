@@ -72,7 +72,7 @@ class KeyTranslator {
       reference.setNameSpace(nameSpace);
     }
 
-    Path.Builder path = reference.buildPartial().getPath().toBuilder();
+    Path.Builder path = reference.getPathBuilder();
     while (key != null) {
       Element.Builder pathElement = Element.newBuilder();
       pathElement.setType(key.getKind());
@@ -91,7 +91,7 @@ class KeyTranslator {
       reversedPath.addElement(element);
     }
     reference.setPath(reversedPath.build());
-    return reference.buildPartial();
+    return reference.build();
   }
 
   public static void updateKey(Reference reference, Key key) {

@@ -88,7 +88,7 @@ public class CompositeIndexManager {
    * @return The index that must be present in order to fulfill the query, or {@code null} if no
    *     index is needed.
    */
-  protected Index.Builder  compositeIndexForQuery(final IndexComponentsOnlyQuery indexOnlyQuery) {
+  protected Index.Builder compositeIndexForQuery(final IndexComponentsOnlyQuery indexOnlyQuery) {
     DatastoreV3Pb.Query.Builder query = indexOnlyQuery.getQuery().toBuilder();
 
     boolean hasKind = query.hasKind();

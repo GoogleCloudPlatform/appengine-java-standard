@@ -50,7 +50,7 @@ final class QueryRunnerV3 implements QueryRunner {
 
     Future<DatastoreV3Pb.QueryResult> result =
         DatastoreApiHelper.makeAsyncCall(
-            apiConfig, Method.RunQuery, queryProto.buildPartial(), DatastoreV3Pb.QueryResult.newBuilder().buildPartial());
+            apiConfig, Method.RunQuery, queryProto.build(), DatastoreV3Pb.QueryResult.getDefaultInstance());
 
     // Adding more info to DatastoreNeedIndexException if thrown
     result =
@@ -58,7 +58,7 @@ final class QueryRunnerV3 implements QueryRunner {
           @Override
           protected Throwable convertException(Throwable cause) {
             if (cause instanceof DatastoreNeedIndexException) {
-              addMissingIndexData(queryProto.buildPartial(), (DatastoreNeedIndexException) cause);
+              addMissingIndexData(queryProto.build(), (DatastoreNeedIndexException) cause);
             }
             return cause;
           }

@@ -87,7 +87,7 @@ public class EntityTranslator {
     }
 
     DataTypeTranslator.addPropertiesToPb(entity.getPropertyMap(), proto);
-    return proto.buildPartial();
+    return proto.build();
   }
 
   // All methods are static.  Do not instantiate.
