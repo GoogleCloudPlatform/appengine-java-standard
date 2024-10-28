@@ -362,7 +362,7 @@ public class CompositeIndexManager {
    */
   protected static class IndexComponentsOnlyQuery
       extends com.google.appengine.api.datastore.IndexComponentsOnlyQuery {
-    public IndexComponentsOnlyQuery(DatastoreV3Pb.Query query) {
+    public IndexComponentsOnlyQuery(DatastoreV3Pb.Query.Builder query) {
       super(query);
     }
   }
@@ -372,7 +372,7 @@ public class CompositeIndexManager {
    * publicly exposing it in the api.
    */
   protected static class ValidatedQuery extends com.google.appengine.api.datastore.ValidatedQuery {
-    public ValidatedQuery(DatastoreV3Pb.Query query) {
+    public ValidatedQuery(DatastoreV3Pb.Query.Builder query) {
       super(query);
     }
   }

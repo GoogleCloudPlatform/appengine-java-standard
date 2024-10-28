@@ -1215,7 +1215,7 @@ public abstract class LocalDatastoreService {
     // Construct a validated query right away so we can fail fast
     // if something is wrong.
     final LocalCompositeIndexManager.ValidatedQuery validatedQuery =
-        new LocalCompositeIndexManager.ValidatedQuery(query);
+        new LocalCompositeIndexManager.ValidatedQuery(query.toBuilder());
     query = validatedQuery.getV3Query();
 
     // Modernize the query's cursors.

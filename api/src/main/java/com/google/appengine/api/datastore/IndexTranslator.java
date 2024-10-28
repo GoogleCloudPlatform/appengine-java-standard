@@ -18,6 +18,7 @@ package com.google.appengine.api.datastore;
 
 import com.google.apphosting.api.AppEngineInternal;
 import com.google.storage.onestore.v3.proto2api.OnestoreEntity;
+import com.google.storage.onestore.v3.proto2api.OnestoreEntity.CompositeIndex.State;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -73,6 +74,7 @@ public class IndexTranslator {
   }
 
   public static Index convertFromPb(OnestoreEntity.Index index) {
-    return convertFromPb(OnestoreEntity.CompositeIndex.newBuilder().setId(0).setDefinition(index).build());
+    return convertFromPb(OnestoreEntity.CompositeIndex.newBuilder().setId(0).setDefinition(index).setAppId("").setState(
+            State.WRITE_ONLY).build());
   }
 }

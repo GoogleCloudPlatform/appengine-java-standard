@@ -247,7 +247,7 @@ class AsyncDatastoreServiceImpl extends BaseAsyncDatastoreServiceImpl {
 
     Future<DatastoreV3Pb.Transaction> future =
         DatastoreApiHelper.makeAsyncCall(
-            apiConfig, DatastoreService_3.Method.BeginTransaction, request.build(), remoteTxn.build());
+            apiConfig, DatastoreService_3.Method.BeginTransaction, request.build(), remoteTxn.buildPartial());
 
     return new InternalTransactionV3(apiConfig, request.getApp(), future);
   }
@@ -527,7 +527,7 @@ class AsyncDatastoreServiceImpl extends BaseAsyncDatastoreServiceImpl {
     req.setModelKey(allocateIdsRef);
     AllocateIdsResponse.Builder resp = AllocateIdsResponse.newBuilder();
     Future<AllocateIdsResponse> future =
-        makeAsyncCall(apiConfig, DatastoreService_3.Method.AllocateIds, req.build(), resp.build());
+        makeAsyncCall(apiConfig, DatastoreService_3.Method.AllocateIds, req.build(), resp.buildPartial());
     return new FutureWrapper<AllocateIdsResponse, KeyRange>(future) {
       @Override
       protected KeyRange wrap(AllocateIdsResponse resp) throws Exception {

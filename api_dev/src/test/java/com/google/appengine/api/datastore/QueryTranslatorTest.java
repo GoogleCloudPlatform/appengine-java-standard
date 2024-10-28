@@ -49,14 +49,14 @@ public class QueryTranslatorTest {
   @Test
   public void testKind() {
     Query query = new Query("foo");
-    DatastoreV3Pb.Query proto = QueryTranslator.convertToPb(query, withLimit(42));
+    DatastoreV3Pb.Query.Builder proto = QueryTranslator.convertToPb(query, withLimit(42));
     assertThat(proto.getKind()).isEqualTo("foo");
   }
 
   @Test
   public void testAppId() {
     Query query = new Query("foo");
-    DatastoreV3Pb.Query proto = QueryTranslator.convertToPb(query, withLimit(42));
+    DatastoreV3Pb.Query.Builder proto = QueryTranslator.convertToPb(query, withLimit(42));
     assertThat(proto.getApp()).isEqualTo(getAppId());
   }
 
@@ -68,7 +68,7 @@ public class QueryTranslatorTest {
     Query query = new Query("foo");
     query.setAncestor(key);
 
-    DatastoreV3Pb.Query proto = QueryTranslator.convertToPb(query, withLimit(42));
+    DatastoreV3Pb.Query.Builder proto = QueryTranslator.convertToPb(query, withLimit(42));
     assertThat(proto.hasAncestor()).isTrue();
     assertThat(proto.getAncestor().getPath().getElementCount()).isEqualTo(1);
     assertThat(proto.getAncestor().getPath().getElementList().get(0).getType()).isEqualTo("foo");
@@ -78,7 +78,7 @@ public class QueryTranslatorTest {
   @Test
   public void testPrefetchChunkSize() {
     Query query = new Query("foo");
-    DatastoreV3Pb.Query proto = QueryTranslator.convertToPb(query, withDefaults());
+    DatastoreV3Pb.Query.Builder proto = QueryTranslator.convertToPb(query, withDefaults());
     assertThat(proto.hasCount()).isFalse();
 
     proto = QueryTranslator.convertToPb(query, withChunkSize(5));
@@ -94,7 +94,7 @@ public class QueryTranslatorTest {
   @Test
   public void testSelectDistinct() {
     Query query = new Query("foo");
-    DatastoreV3Pb.Query proto;
+    DatastoreV3Pb.Query.Builder proto;
 
     query.setDistinct(true);
     assertThrows(
@@ -122,7 +122,7 @@ public class QueryTranslatorTest {
     query.addFilter("multiValuedProp1", Query.FilterOperator.IN, Lists.newArrayList(31));
     query.addFilter("multiValuedProp2", Query.FilterOperator.IN, Lists.newArrayList(31, 32));
 
-    DatastoreV3Pb.Query proto = QueryTranslator.convertToPb(query, withDefaults());
+    DatastoreV3Pb.Query.Builder proto = QueryTranslator.convertToPb(query, withDefaults());
     assertThat(proto.getFilterCount()).isEqualTo(5);
 
     Filter filter1 = proto.getFilter(0);
@@ -162,7 +162,7 @@ public class QueryTranslatorTest {
     query.setFilter(
         new Query.StContainsFilter("location", new Query.GeoRegion.Circle(point, radius)));
 
-    DatastoreV3Pb.Query proto = QueryTranslator.convertToPb(query, withDefaults());
+    DatastoreV3Pb.Query.Builder proto = QueryTranslator.convertToPb(query, withDefaults());
     assertThat(proto.getFilterCount()).isEqualTo(1);
 
     Filter filter1 = proto.getFilter(0);
@@ -188,7 +188,7 @@ public class QueryTranslatorTest {
     query.setFilter(
         new Query.StContainsFilter("location", new Query.GeoRegion.Rectangle(point1, point2)));
 
-    DatastoreV3Pb.Query proto = QueryTranslator.convertToPb(query, withDefaults());
+    DatastoreV3Pb.Query.Builder proto = QueryTranslator.convertToPb(query, withDefaults());
     assertThat(proto.getFilterCount()).isEqualTo(1);
 
     Filter filter1 = proto.getFilter(0);
@@ -222,7 +222,7 @@ public class QueryTranslatorTest {
                 new Query.StContainsFilter("location", new Query.GeoRegion.Circle(point, radius)),
                 Query.FilterOperator.EQUAL.of("rating", rating))));
 
-    DatastoreV3Pb.Query proto = QueryTranslator.convertToPb(query, withDefaults());
+    DatastoreV3Pb.Query.Builder proto = QueryTranslator.convertToPb(query, withDefaults());
     assertThat(proto.getFilterCount()).isEqualTo(2);
 
     Filter filter1 = proto.getFilter(0);
@@ -263,7 +263,7 @@ public class QueryTranslatorTest {
                         Query.FilterOperator.EQUAL.of("rating", rating))),
                 Query.FilterOperator.EQUAL.of("bar", bar))));
 
-    DatastoreV3Pb.Query proto = QueryTranslator.convertToPb(query, withDefaults());
+    DatastoreV3Pb.Query.Builder proto = QueryTranslator.convertToPb(query, withDefaults());
     assertThat(proto.getFilterCount()).isEqualTo(3);
 
     Filter filter1 = proto.getFilter(0);
@@ -322,7 +322,7 @@ public class QueryTranslatorTest {
     query.addSort("stringProp");
     query.addSort("doubleProp", Query.SortDirection.DESCENDING);
 
-    DatastoreV3Pb.Query proto = QueryTranslator.convertToPb(query, withDefaults());
+    DatastoreV3Pb.Query.Builder proto = QueryTranslator.convertToPb(query, withDefaults());
     assertThat(proto.getOrderCount()).isEqualTo(2);
 
     Order order1 = proto.getOrder(0);
@@ -337,7 +337,7 @@ public class QueryTranslatorTest {
   @Test
   public void testConvertToPbNoLimitNoOffset() {
     Query query = new Query("foo");
-    DatastoreV3Pb.Query proto = QueryTranslator.convertToPb(query, withDefaults());
+    DatastoreV3Pb.Query.Builder proto = QueryTranslator.convertToPb(query, withDefaults());
     assertThat(proto.hasLimit()).isFalse();
     assertThat(proto.hasOffset()).isFalse();
   }
@@ -345,7 +345,7 @@ public class QueryTranslatorTest {
   @Test
   public void testConvertToPbWithLimit() {
     Query query = new Query("foo");
-    DatastoreV3Pb.Query proto = QueryTranslator.convertToPb(query, withLimit(42));
+    DatastoreV3Pb.Query.Builder proto = QueryTranslator.convertToPb(query, withLimit(42));
     assertThat(proto.getLimit()).isEqualTo(42);
     assertThat(proto.getOffset()).isEqualTo(0);
   }
@@ -353,7 +353,7 @@ public class QueryTranslatorTest {
   @Test
   public void testConvertToPbWithOffset() {
     Query query = new Query("foo");
-    DatastoreV3Pb.Query proto = QueryTranslator.convertToPb(query, withOffset(10));
+    DatastoreV3Pb.Query.Builder proto = QueryTranslator.convertToPb(query, withOffset(10));
     assertThat(proto.hasLimit()).isFalse();
     assertThat(proto.getOffset()).isEqualTo(10);
   }
@@ -362,7 +362,7 @@ public class QueryTranslatorTest {
   public void testKeysOnly() {
     Query query = new Query("foo");
     assertThat(query.isKeysOnly()).isFalse();
-    DatastoreV3Pb.Query proto = QueryTranslator.convertToPb(query, withChunkSize(10));
+    DatastoreV3Pb.Query.Builder proto = QueryTranslator.convertToPb(query, withChunkSize(10));
     assertThat(proto.getKeysOnly()).isFalse();
 
     query.setKeysOnly();
@@ -380,7 +380,7 @@ public class QueryTranslatorTest {
   public void testPropertyNames() {
     Query query = new Query("foo");
     assertThat(query.getProjections()).isEmpty();
-    DatastoreV3Pb.Query proto = QueryTranslator.convertToPb(query, withChunkSize(10));
+    DatastoreV3Pb.Query.Builder proto = QueryTranslator.convertToPb(query, withChunkSize(10));
     assertThat(proto.getPropertyNameCount()).isEqualTo(0);
 
     query
@@ -398,7 +398,7 @@ public class QueryTranslatorTest {
   @Test
   public void testPrefetch() {
     Query query = new Query("foo");
-    DatastoreV3Pb.Query proto = QueryTranslator.convertToPb(query, withDefaults());
+    DatastoreV3Pb.Query.Builder proto = QueryTranslator.convertToPb(query, withDefaults());
     assertThat(proto.hasCount()).isFalse();
 
     proto = QueryTranslator.convertToPb(query, withPrefetchSize(10));
@@ -409,7 +409,7 @@ public class QueryTranslatorTest {
   @Test
   public void testNamespaceDefault() {
     Query query = new Query("foo");
-    DatastoreV3Pb.Query proto = QueryTranslator.convertToPb(query, withDefaults());
+    DatastoreV3Pb.Query.Builder proto = QueryTranslator.convertToPb(query, withDefaults());
     assertThat(getAppId()).isEqualTo(proto.getApp());
     assertThat(proto.hasNameSpace()).isFalse();
   }
@@ -418,7 +418,7 @@ public class QueryTranslatorTest {
   public void testNamespaceNonDefault() {
     setNonEmptyDefaultApiNamespace();
     Query query = new Query("foo");
-    DatastoreV3Pb.Query proto = QueryTranslator.convertToPb(query, withDefaults());
+    DatastoreV3Pb.Query.Builder proto = QueryTranslator.convertToPb(query, withDefaults());
     AppIdNamespace appIdNamespace =
         AppIdNamespace.parseEncodedAppIdNamespace(getAppIdWithNamespace());
     assertThat(appIdNamespace.getAppId()).isEqualTo(proto.getApp());

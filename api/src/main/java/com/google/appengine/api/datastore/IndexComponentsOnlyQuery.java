@@ -54,7 +54,7 @@ class IndexComponentsOnlyQuery extends ValidatedQuery {
 
   private boolean hasKeyProperty = false;
 
-  public IndexComponentsOnlyQuery(DatastoreV3Pb.Query query) {
+  public IndexComponentsOnlyQuery(DatastoreV3Pb.Query.Builder query) {
     super(query);
     removeNativelySupportedComponents();
     categorizeQuery();

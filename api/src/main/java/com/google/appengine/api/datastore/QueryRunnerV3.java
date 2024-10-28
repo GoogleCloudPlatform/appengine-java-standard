@@ -80,7 +80,7 @@ final class QueryRunnerV3 implements QueryRunner {
   }
 
   private void addMissingIndexData(DatastoreV3Pb.Query queryProto, DatastoreNeedIndexException e) {
-    IndexComponentsOnlyQuery indexQuery = new IndexComponentsOnlyQuery(queryProto);
+    IndexComponentsOnlyQuery indexQuery = new IndexComponentsOnlyQuery(queryProto.toBuilder());
     CompositeIndexManager mgr = new CompositeIndexManager();
     OnestoreEntity.Index.Builder index = mgr.compositeIndexForQuery(indexQuery);
     if (index != null) {
@@ -94,7 +94,7 @@ final class QueryRunnerV3 implements QueryRunner {
   }
 
   private DatastoreV3Pb.Query.Builder convertToPb(Query q, Transaction txn, FetchOptions fetchOptions) {
-    DatastoreV3Pb.Query.Builder queryProto = QueryTranslator.convertToPb(q, fetchOptions).toBuilder();
+    DatastoreV3Pb.Query.Builder queryProto = QueryTranslator.convertToPb(q, fetchOptions);
     if (txn != null) {
       TransactionImpl.ensureTxnActive(txn);
       queryProto.setTransaction(InternalTransactionV3.toProto(txn));

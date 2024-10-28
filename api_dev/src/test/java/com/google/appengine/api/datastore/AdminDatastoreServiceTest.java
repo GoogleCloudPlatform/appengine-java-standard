@@ -20,6 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.common.util.concurrent.Futures.immediateFuture;
 import static org.junit.Assert.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.notNull;
@@ -202,7 +203,7 @@ public class AdminDatastoreServiceTest {
   public void testCompositeIndexForQuery() {
     Query query = new Query("kind1");
     FetchOptions fo = FetchOptions.Builder.withDefaults();
-    DatastoreV3Pb.Query queryPb = QueryTranslator.convertToPb(query, fo);
+    DatastoreV3Pb.Query.Builder queryPb = QueryTranslator.convertToPb(query, fo);
     CompositeIndexManager.IndexComponentsOnlyQuery ic =
         new CompositeIndexManager.IndexComponentsOnlyQuery(queryPb);
     Index index =
@@ -212,15 +213,19 @@ public class AdminDatastoreServiceTest {
             true,
             ImmutableList.of(new Index.Property("p1", Query.SortDirection.DESCENDING)));
     OnestoreEntity.Index indexPb = IndexTranslator.convertToPb(index);
-    when(indexManager.compositeIndexForQuery(ic)).thenReturn(indexPb.toBuilder());
+    when(indexManager.compositeIndexForQuery(any(CompositeIndexManager.IndexComponentsOnlyQuery.class)))
+        .thenReturn(indexPb.toBuilder());
     assertThat(adminDsWithMockDelegate.compositeIndexForQuery(query)).isEqualTo(index);
   }
-
+  // indexManager = compositeIndexManager@4659
+  // ic = compositeIndexManager$IndexComponentOnlyQuery@4655
+  // queryPb = DatastoreV3Pb$Query$Builder@3648
+  // query = Query@3645
   @Test
   public void testMinimumCompositeIndexForQuery() {
     Query query = new Query("kind1");
     FetchOptions fo = FetchOptions.Builder.withDefaults();
-    DatastoreV3Pb.Query queryPb = QueryTranslator.convertToPb(query, fo);
+    DatastoreV3Pb.Query.Builder queryPb = QueryTranslator.convertToPb(query, fo);
     CompositeIndexManager.IndexComponentsOnlyQuery ic =
         new CompositeIndexManager.IndexComponentsOnlyQuery(queryPb);
     Index index =

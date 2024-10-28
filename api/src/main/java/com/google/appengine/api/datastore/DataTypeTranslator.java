@@ -258,6 +258,7 @@ public final class DataTypeTranslator {
         // If the value is indexed it appears in queries, but distinction between
         // null and empty list is lost.
       }
+      property.setValue(PropertyValue.getDefaultInstance());
       property.getValue(); // Indicate to the proto that we have set this field
       if (indexed) {
         proto.addProperty(property);
@@ -395,6 +396,7 @@ public final class DataTypeTranslator {
     PropertyValue.Builder propVal = PropertyValue.newBuilder();
     propVal.setReferenceValue(KeyType.toReferenceValue(proto.getKey()));
     keyProp.setValue(propVal.build());
+    keyProp.setMultiple(false);
     return keyProp.build();
   }
 

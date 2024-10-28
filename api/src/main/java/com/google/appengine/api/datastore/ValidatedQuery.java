@@ -40,7 +40,7 @@ class ValidatedQuery extends NormalizedQuery {
   private boolean isGeo;
 
   /** @throws IllegalQueryException If the provided query fails validation. */
-  ValidatedQuery(Query query) {
+  ValidatedQuery(Query.Builder query) {
     super(query);
     validateQuery();
   }

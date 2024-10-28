@@ -37,8 +37,8 @@ class NormalizedQuery {
 
   protected final Query.Builder query;
 
-  public NormalizedQuery(Query query) {
-    this.query = query.toBuilder().clone();
+  public NormalizedQuery(Query.Builder query) {
+    this.query = query.clone();
     normalizeQuery();
   }
 
