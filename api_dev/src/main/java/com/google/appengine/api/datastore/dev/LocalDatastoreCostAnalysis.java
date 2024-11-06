@@ -209,11 +209,11 @@ public class LocalDatastoreCostAnalysis {
       // EnititiesByProperty
       Index.Builder index = Index.newBuilder();
       index.addProperty(Index.Property.newBuilder().setName(propName).setDirection(Direction.ASCENDING));
-      indexes.add(index.build());
+      indexes.add(index.buildPartial());
       // EnititiesByPropertyDesc
       index = Index.newBuilder();
       index.addProperty(Index.Property.newBuilder().setName(propName).setDirection(Direction.DESCENDING));
-      indexes.add(index.build());
+      indexes.add(index.buildPartial());
     }
     return indexes;
   }

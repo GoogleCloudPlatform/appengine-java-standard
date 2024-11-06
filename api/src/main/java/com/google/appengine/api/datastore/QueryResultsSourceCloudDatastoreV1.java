@@ -16,6 +16,7 @@
 
 package com.google.appengine.api.datastore;
 
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb;
 import com.google.datastore.v1.QueryResultBatch;
 import com.google.datastore.v1.RunQueryRequest;
 import com.google.datastore.v1.RunQueryResponse;

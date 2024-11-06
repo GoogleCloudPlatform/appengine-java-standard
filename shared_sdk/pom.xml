@@ -56,5 +56,9 @@
             <artifactId>auto-value</artifactId>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>com.google.appengine</groupId>
+            <artifactId>appengine-apis</artifactId>
+        </dependency>
     </dependencies>
 </project>

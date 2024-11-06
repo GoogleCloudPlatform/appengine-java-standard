@@ -90,13 +90,13 @@ public class DatastoreApiHelperTest {
   private <E extends RuntimeException> void assertMakeAsyncCallThrows(
       DatastoreV3Pb.Error.ErrorCode errorCode, Class<E> clazz)
       throws InterruptedException, ExecutionException {
-    DatastoreV3Pb.Query queryProto = DatastoreV3Pb.Query.newBuilder().buildPartial();
+    DatastoreV3Pb.Query.Builder queryProto = DatastoreV3Pb.Query.newBuilder();
     Future<byte[]> future =
         immediateFailedFuture(new ApiProxy.ApplicationException(errorCode.getNumber()));
-    expectMakeAsyncCall(queryProto.toByteArray(), future);
+    expectMakeAsyncCall(queryProto.buildPartial().toByteArray(), future);
     Future<DatastoreV3Pb.QueryResult> result =
         DatastoreApiHelper.makeAsyncCall(
-            new ApiProxy.ApiConfig(), Method.Commit, queryProto, DatastoreV3Pb.QueryResult.newBuilder().buildPartial());
+            new ApiProxy.ApiConfig(), Method.Commit, queryProto, DatastoreV3Pb.QueryResult.newBuilder());
     RuntimeException rte =
         assertThrows(RuntimeException.class, () -> FutureHelper.quietGet(result));
     assertThat(rte.getClass()).isEqualTo(clazz);
@@ -182,11 +182,11 @@ public class DatastoreApiHelperTest {
   }
 
   private Future<DatastoreV3Pb.Transaction> makeTestCall(byte[] response) {
-    DatastoreV3Pb.GetRequest request = DatastoreV3Pb.GetRequest.getDefaultInstance();
-    expectMakeAsyncCall(request.toByteArray(), immediateFuture(response));
+    DatastoreV3Pb.GetRequest.Builder request = DatastoreV3Pb.GetRequest.newBuilder();
+    expectMakeAsyncCall(request.buildPartial().toByteArray(), immediateFuture(response));
 
     return DatastoreApiHelper.makeAsyncCall(
-        new ApiProxy.ApiConfig(), Method.Commit, request, DatastoreV3Pb.Transaction.newBuilder().buildPartial());
+        new ApiProxy.ApiConfig(), Method.Commit, request, DatastoreV3Pb.Transaction.newBuilder());
   }
 
   @Test

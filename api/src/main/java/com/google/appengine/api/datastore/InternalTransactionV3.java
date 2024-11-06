@@ -58,8 +58,8 @@ class InternalTransactionV3 implements TransactionImpl.InternalTransaction {
   }
 
   // extracted method to facilitate testing
-  <T extends Message> Future<Void> makeAsyncCall(
-      DatastoreService_3.Method method, MessageLite request, T response) {
+  <T extends Message, S extends Message.Builder> Future<Void> makeAsyncCall(
+      DatastoreService_3.Method method, Message.Builder request, S response) {
     Future<T> resultProto = DatastoreApiHelper.makeAsyncCall(apiConfig, method, request, response);
     return new FutureWrapper<T, Void>(resultProto) {
       @Override
@@ -74,17 +74,17 @@ class InternalTransactionV3 implements TransactionImpl.InternalTransaction {
     };
   }
 
-  private <T extends Message> Future<Void> makeAsyncTxnCall(
+  private <T extends Message.Builder> Future<Void> makeAsyncTxnCall(
       DatastoreService_3.Method method, T response) {
     DatastoreV3Pb.Transaction.Builder txn = DatastoreV3Pb.Transaction.newBuilder();
     txn.setApp(app);
     txn.setHandle(getHandle());
-    return makeAsyncCall(method, txn.build(), response);
+    return makeAsyncCall(method, txn, response);
   }
 
   @Override
   public Future<Void> doCommitAsync() {
-    return makeAsyncTxnCall(DatastoreService_3.Method.Commit, CommitResponse.getDefaultInstance());
+    return makeAsyncTxnCall(DatastoreService_3.Method.Commit, CommitResponse.newBuilder());
   }
 
   @Override

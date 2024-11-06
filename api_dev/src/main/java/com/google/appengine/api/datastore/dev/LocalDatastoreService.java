@@ -923,7 +923,7 @@ public abstract class LocalDatastoreService {
           }
           entities.add(clone);
         }
-        response.getKeyList().add(clone.getKey());
+        response.addKey(clone.getKey());
       }
       for (final Map.Entry<Path, List<EntityProto>> entry : entitiesByEntityGroup.entrySet()) {
         Profile.EntityGroup eg = profile.getGroup(entry.getKey());
@@ -1436,7 +1436,7 @@ public abstract class LocalDatastoreService {
       for (Index index : LocalCompositeIndexManager.getInstance().queryIndexList(query)) {
         result.addIndex(wrapIndexInCompositeIndex(app, index));
       } // for
-      return result.build();
+      return result.buildPartial();
     }
   }
 
@@ -2094,7 +2094,7 @@ public abstract class LocalDatastoreService {
       public Key pathAsKey() {
         Reference.Builder entityGroupRef = Reference.newBuilder();
         entityGroupRef.setPath(path);
-        return LocalCompositeIndexManager.KeyTranslator.createFromPb(entityGroupRef.build());
+        return LocalCompositeIndexManager.KeyTranslator.createFromPb(entityGroupRef.buildPartial());
       }
     }
 
@@ -2719,9 +2719,9 @@ public abstract class LocalDatastoreService {
         // Offset has been satisfied so return real results
         List<EntityProto> entities = removeEntities(Math.min(MAX_QUERY_RESULTS, count));
         for (EntityProto entity : entities) {
-          result.getResultBuilderList().add(postProcessEntityForQuery(entity));
+          result.addResult(postProcessEntityForQuery(entity).buildPartial());
           if (!versions.isEmpty()) {
-            result.getVersionList().add(versions.get(entity.getKey()));
+            result.addVersion(versions.get(entity.getKey()));
           }
           if (compile) {
             result.addResultCompiledCursorBuilder().setPostfixPosition(compilePosition(entity));

@@ -217,7 +217,7 @@ class IndexComponentsOnlyQuery extends ValidatedQuery {
 
     IndexComponentsOnlyQuery that = (IndexComponentsOnlyQuery) o;
 
-    if (!query.equals(that.query)) {
+    if (!query.build().equals(that.query.build())) {
       return false;
     }
 

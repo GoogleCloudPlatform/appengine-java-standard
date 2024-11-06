@@ -309,14 +309,15 @@ public final class AdminDatastoreService implements AsyncDatastoreService {
     List<MultiQueryBuilder> queriesToRun = QuerySplitHelper.splitQuery(query);
     // All Filters should be in queriesToRun
     query.setFilter(null);
-    query.getFilterPredicates().clear();
+    // query.getFilterPredicates().clear();
     List<DatastoreV3Pb.Query.Builder> resultQueries = new ArrayList<DatastoreV3Pb.Query.Builder>();
     for (MultiQueryBuilder multiQuery : queriesToRun) {
       for (List<List<FilterPredicate>> parallelQueries : multiQuery) {
         for (List<FilterPredicate> singleQuery : parallelQueries) {
-          Query newQuery = new Query(query);
-          newQuery.getFilterPredicates().addAll(singleQuery);
-          DatastoreV3Pb.Query.Builder queryProto = QueryTranslator.convertToPb(newQuery, fetchOptions);
+          // Query newQuery = new Query(query);
+          query.getFilterPredicates().clear();
+          query.getFilterPredicates().addAll(singleQuery);
+          DatastoreV3Pb.Query.Builder queryProto = QueryTranslator.convertToPb(query, fetchOptions);
           resultQueries.add(queryProto);
         }
       }

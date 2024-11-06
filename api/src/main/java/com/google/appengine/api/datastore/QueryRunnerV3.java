@@ -50,7 +50,7 @@ final class QueryRunnerV3 implements QueryRunner {
 
     Future<DatastoreV3Pb.QueryResult> result =
         DatastoreApiHelper.makeAsyncCall(
-            apiConfig, Method.RunQuery, queryProto.build(), DatastoreV3Pb.QueryResult.getDefaultInstance());
+            apiConfig, Method.RunQuery, queryProto, DatastoreV3Pb.QueryResult.newBuilder());
 
     // Adding more info to DatastoreNeedIndexException if thrown
     result =
@@ -69,7 +69,6 @@ final class QueryRunnerV3 implements QueryRunner {
             return result;
           }
         };
-
     return new QueryResultsSourceV3(
         datastoreServiceConfig.getDatastoreCallbacks(),
         fetchOptions,

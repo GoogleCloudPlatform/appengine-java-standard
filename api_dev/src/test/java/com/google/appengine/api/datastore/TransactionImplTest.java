@@ -83,8 +83,8 @@ public class TransactionImplTest {
         true,
         new InternalTransactionV3(apiConfig, APP, newBeginTransactionFuture()) {
           @Override
-          <T extends Message> Future<Void> makeAsyncCall(
-              DatastoreV3Pb.DatastoreService_3.Method method, MessageLite request, T response) {
+          <T extends Message, S extends Message.Builder> Future<Void> makeAsyncCall(
+              DatastoreV3Pb.DatastoreService_3.Method method, Message.Builder request, S response) {
             // no-op
             return new FutureHelper.FakeFuture<Void>(null);
           }
@@ -101,8 +101,8 @@ public class TransactionImplTest {
         true,
         new InternalTransactionV3(apiConfig, APP, newBeginTransactionFuture()) {
           @Override
-          <T extends Message> Future<Void> makeAsyncCall(
-              DatastoreV3Pb.DatastoreService_3.Method method, MessageLite request, T response) {
+          <T extends Message, S extends Message.Builder> Future<Void> makeAsyncCall(
+              DatastoreV3Pb.DatastoreService_3.Method method, Message.Builder request, S response) {
             return newImmediateFailedFuture();
           }
         });
@@ -121,8 +121,8 @@ public class TransactionImplTest {
         true,
         new InternalTransactionV3(apiConfig, APP, newFailedBeginTransactionFuture()) {
           @Override
-          <T extends Message> Future<Void> makeAsyncCall(
-              DatastoreV3Pb.DatastoreService_3.Method method, MessageLite request, T response) {
+          <T extends Message, S extends Message.Builder> Future<Void> makeAsyncCall(
+              DatastoreV3Pb.DatastoreService_3.Method method, Message.Builder request, S response) {
             return newImmediateFailedFuture();
           }
         });

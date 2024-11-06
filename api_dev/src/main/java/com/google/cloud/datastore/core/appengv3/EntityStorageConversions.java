@@ -41,7 +41,7 @@ public final class EntityStorageConversions {
     // This call may add EMPTY_LIST meanings to properties.  In order to keep code
     // somewhat orthogonal, we remove any EMPTY_LISTs with computed set from properties
     // below. (We never want to index EMPTY_LIST)
-    createComputedAndStashedValuesForEntityValues(diskEntity);
+    createComputedAndStashedValuesForEntityValues(diskEntity.toBuilder());
     // Must happen after createComputedAndStashedValuesForEntityValues has already flattened
     // indexed properties
     markEmptyListsForStashing(diskEntity);
@@ -61,7 +61,7 @@ public final class EntityStorageConversions {
     // This call may add EMPTY_LIST meanings to properties.  In order to keep code
     // somewhat orthogonal, we remove any EMPTY_LISTs with computed set from properties
     // below. (We never want to index EMPTY_LIST)
-    createComputedAndStashedValuesForEntityValues(diskEntity.build());
+    createComputedAndStashedValuesForEntityValues(diskEntity);
     // Must happen after all computed properties are generated and all stashed properties have been
     // marked for stashing.
     stashProperties(diskEntity);
@@ -79,7 +79,7 @@ public final class EntityStorageConversions {
     checkNotNull(storageEntity);
 
     // Computed properties have to be removed before stashed properties are restored.
-    removeComputedProperties(storageEntity.build());
+    removeComputedProperties(storageEntity.buildPartial());
     restoreStashedProperties(storageEntity);
   }
 
@@ -138,11 +138,8 @@ public final class EntityStorageConversions {
       }
     }
 
-    storageEntity
-        .getPropertyList()
-        .addAll(properties.subList(propertyListIndex, properties.size()));
-
-    storageEntity.getPropertyList().addAll(badlyStashedProperties.build());
+    storageEntity.addAllProperty(properties.subList(propertyListIndex, properties.size()));
+    storageEntity.addAllProperty(badlyStashedProperties.build());
   }
 
   /**
@@ -192,7 +189,7 @@ public final class EntityStorageConversions {
    *
    * @param diskEntity The EntityProto to modify.
    */
-  private static void createComputedAndStashedValuesForEntityValues(EntityProto diskEntity) {
+  private static void createComputedAndStashedValuesForEntityValues(EntityProto.Builder diskEntity) {
     ImmutableList.Builder<Property> computedProperties = ImmutableList.builder();
 
     for (int i = 0; i < diskEntity.getPropertyCount(); i++) {
@@ -207,7 +204,7 @@ public final class EntityStorageConversions {
       }
     }
 
-    diskEntity.getPropertyList().addAll(computedProperties.build());
+    diskEntity.addAllProperty(computedProperties.build());
   }
 
   /**

@@ -77,7 +77,7 @@ class QueryResultsSourceV3 extends BaseQueryResultsSource<QueryResult, NextReque
     if (offsetOrNull != null) {
       req.setOffset(offsetOrNull);
     }
-    return makeAsyncCall(apiConfig, Method.Next, req.build(), DatastoreV3Pb.QueryResult.getDefaultInstance());
+    return makeAsyncCall(apiConfig, Method.Next, req, DatastoreV3Pb.QueryResult.newBuilder());
   }
 
   @Override

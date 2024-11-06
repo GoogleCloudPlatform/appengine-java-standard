@@ -119,36 +119,36 @@ public final class DatastoreApiHelper {
     }
   }
 
-  static <T extends Message> Future<T> makeAsyncCall(
+  static <T extends Message, S extends Message.Builder> Future<T> makeAsyncCall(
       ApiConfig apiConfig,
       final DatastoreService_3.Method method,
-      MessageLite request,
-      final T responseProto) {
+      MessageLite.Builder request,
+      final S responseProto) {
     Future<byte[]> response =
         ApiProxy.makeAsyncCall(
-            DATASTORE_V3_PACKAGE, method.name(), request.toByteArray(), apiConfig);
+            DATASTORE_V3_PACKAGE, method.name(), request.buildPartial().toByteArray(), apiConfig);
     return new FutureWrapper<byte[], T>(response) {
       @Override
       protected T wrap(byte[] responseBytes) throws InvalidProtocolBufferException {
-        T updatedResponseProto = null;
         // This null check is mainly for the benefit of unit tests
         // (specifically ones using EasyMock, where the default behavior
         // is to return null).
         if (responseBytes != null && responseProto != null) {
 
           try {
-            updatedResponseProto = (T) responseProto.getParserForType().parseFrom(responseBytes);
+            responseProto.clear();
+            responseProto.mergeFrom(responseBytes);
           }
           catch(InvalidProtocolBufferException e) {
             throw new InvalidProtocolBufferException(
                 String.format("Invalid %s.%s response", DATASTORE_V3_PACKAGE, method.name()));
           }
-          List<String> initializationErrors = updatedResponseProto.findInitializationErrors();
+          List<String> initializationErrors = responseProto.findInitializationErrors();
           if (initializationErrors != null && !initializationErrors.isEmpty()) {
             throw new InvalidProtocolBufferException(initializationErrors.toString());
           }
         }
-        return updatedResponseProto;
+        return (T) responseProto.build();
       }
 
       @Override
