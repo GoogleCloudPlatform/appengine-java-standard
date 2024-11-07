@@ -158,7 +158,7 @@ public class KeyTranslatorTest {
     Path.Builder path = Path.newBuilder();
     Element.Builder ele = path.addElementBuilder();
     ele.setId(23);
-    ref.setPath(path);
+    ref.setPath(path.buildPartial());
     KeyTranslator.updateKey(ref.buildPartial(), key);
     assertThat(key.getAppIdNamespace()).isEqualTo(appIdNamespace);
     assertThat(key.getAppId()).isEqualTo(appIdNamespace.getAppId()); // coverage
