@@ -43,6 +43,7 @@ import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.PutResponse;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.protobuf.Message;
+import com.google.protobuf.MessageLite;
 import com.google.protobuf.MessageLiteOrBuilder;
 import com.google.storage.onestore.v3.proto2api.OnestoreEntity.CompositeIndex;
 import com.google.storage.onestore.v3.proto2api.OnestoreEntity.EntityProto;
@@ -79,13 +80,13 @@ class AsyncDatastoreServiceImpl extends BaseAsyncDatastoreServiceImpl {
    */
   private abstract class V3Batcher<
           S extends Message,
-          R extends MessageLiteOrBuilder,
+          R extends MessageLite.Builder,
           F,
           T extends Message>
       extends BaseRpcBatcher<S, R, F, T> {
     @Override
     final R newBatch(R baseBatch) {
-      return (R) baseBatch.getDefaultInstanceForType().toBuilder().clone();
+      return (R) baseBatch.clone();
     }
   }
 

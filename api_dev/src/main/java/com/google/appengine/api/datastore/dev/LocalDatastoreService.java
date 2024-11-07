@@ -864,12 +864,12 @@ public abstract class LocalDatastoreService {
       EntityProto.Builder clone = entity.toBuilder().clone();
       clones.add(clone.build());
       checkArgument(clone.hasKey());
-      Reference key = clone.getKey();
+      Reference.Builder key = clone.getKeyBuilder();
       checkArgument(key.getPath().getElementCount() > 0);
 
-      clone.getKey().toBuilder().setApp(app);
+      clone.getKeyBuilder().setApp(app);
 
-      Element.Builder lastPath = getLastElement(key).toBuilder();
+      Element.Builder lastPath = getLastElement(key.build()).toBuilder();
 
       if (lastPath.getId() == 0 && !lastPath.hasName()) {
         if (autoIdAllocationPolicy == AutoIdAllocationPolicy.SEQUENTIAL) {
@@ -878,12 +878,12 @@ public abstract class LocalDatastoreService {
           lastPath.setId(toScatteredId(entityIdScattered.getAndIncrement()));
         }
       }
-
+      key.getPathBuilder().setElement(key.getPath().getElementCount() - 1, lastPath);
       preprocessEntity(clone);
 
       if (clone.getEntityGroup().getElementCount() == 0) {
         // The entity needs its entity group set.
-        Path.Builder group = clone.getEntityGroup().toBuilder();
+        Path.Builder group = clone.getEntityGroupBuilder();
         Element root = key.getPath().getElementList().get(0);
         Element.Builder pathElement = group.addElementBuilder();
         pathElement.setType(root.getType());
@@ -2775,7 +2775,7 @@ public abstract class LocalDatastoreService {
                 .mergeFrom(prop.getValue());
           }
         }
-      } else if (query.hasKeysOnly()) {
+      } else if (query.getKeysOnly()) {
         result = EntityProto.newBuilder();
         result.getKeyBuilder().mergeFrom(entity.getKey());
         result.getEntityGroup();

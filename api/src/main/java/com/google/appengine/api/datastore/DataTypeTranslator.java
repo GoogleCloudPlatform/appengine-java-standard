@@ -1665,7 +1665,7 @@ public final class DataTypeTranslator {
       if (proto.hasKey() && !proto.getKey().getApp().isEmpty()) {
         result.setKey(KeyTranslator.createFromPb(proto.getKey()));
       }
-      extractPropertiesFromPb(proto.build(), result.getPropertyMap());
+      extractPropertiesFromPb(proto.buildPartial(), result.getPropertyMap());
       return result;
     }
 
@@ -1689,7 +1689,7 @@ public final class DataTypeTranslator {
       }
       addPropertiesToPb(structProp.getPropertyMap(), proto);
       // TODO: Figure out how to do partial serialization.
-      propertyValue.setStringValueBytes(proto.build().toByteString()).build();
+      propertyValue.setStringValueBytes(proto.buildPartial().toByteString()).build();
     }
 
     @Override
