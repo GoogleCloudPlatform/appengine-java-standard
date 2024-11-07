@@ -834,17 +834,20 @@ public abstract class LocalDatastoreService {
    * @param store true if we're storing the entity, false if we're loading it.
    */
   private void processEntityForSpecialProperties(EntityProto.Builder entity, boolean store) {
-    for (Iterator<Property> iter = entity.getPropertyList().iterator(); iter.hasNext(); ) {
-      if (specialPropertyMap.containsKey(iter.next().getName())) {
-        iter.remove();
+    List<Property> properties = new ArrayList<>();
+    for (Property property : entity.getPropertyList()) {
+      if (!specialPropertyMap.containsKey(property.getName())) {
+        properties.add(property);
       }
     }
+    entity.clearProperty();
+    entity.addAllProperty(properties);
 
     for (SpecialProperty specialProp : specialPropertyMap.values()) {
       if (store ? specialProp.isStored() : specialProp.isVisible()) {
         PropertyValue value = specialProp.getValue(entity.build());
         if (value != null) {
-          entity.addProperty(specialProp.getProperty(value)).build();
+          entity.addProperty(specialProp.getProperty(value));
         }
       }
     }
@@ -862,7 +865,7 @@ public abstract class LocalDatastoreService {
     for (EntityProto entity : request.getEntityList()) {
       validateAndProcessEntityProto(entity);
       EntityProto.Builder clone = entity.toBuilder().clone();
-      clones.add(clone.build());
+
       checkArgument(clone.hasKey());
       Reference.Builder key = clone.getKeyBuilder();
       checkArgument(key.getPath().getElementCount() > 0);
@@ -896,6 +899,7 @@ public abstract class LocalDatastoreService {
         // update an existing entity
         checkState(clone.hasEntityGroup() && clone.getEntityGroup().getElementCount() > 0);
       }
+      clones.add(clone.build());
     }
 
     Map<Path, List<EntityProto>> entitiesByEntityGroup = new LinkedHashMap<>();

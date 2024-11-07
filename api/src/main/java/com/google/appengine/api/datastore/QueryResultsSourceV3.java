@@ -70,7 +70,7 @@ class QueryResultsSourceV3 extends BaseQueryResultsSource<QueryResult, NextReque
       WrappedQueryResult unused,
       @Nullable Integer fetchCount, /* Nullable */
       Integer offsetOrNull) {
-    DatastoreV3Pb.NextRequest.Builder req = reqPrototype.newBuilder().clone();
+    DatastoreV3Pb.NextRequest.Builder req = reqPrototype.toBuilder().clone();
     if (fetchCount != null) {
       req.setCount(fetchCount);
     }
