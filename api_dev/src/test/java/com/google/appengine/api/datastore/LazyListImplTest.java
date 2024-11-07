@@ -98,14 +98,14 @@ public class LazyListImplTest {
         if (methodName.equals("RunQuery")) {
           DatastoreV3Pb.Query query = DatastoreV3Pb.Query.getDefaultInstance();
           try {
-            query.parseFrom(request);
+            query = query.parseFrom(request);
           }catch (InvalidProtocolBufferException e) {
           }
           runQueryCalls.add(query);
         } else if (methodName.equals("Next")) {
           DatastoreV3Pb.NextRequest next = DatastoreV3Pb.NextRequest.getDefaultInstance();
           try {
-            next.parseFrom(request);
+            next = next.parseFrom(request);
           } catch (InvalidProtocolBufferException e) {
           }
           nextCalls.add(next);

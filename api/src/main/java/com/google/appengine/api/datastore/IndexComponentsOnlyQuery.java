@@ -103,12 +103,15 @@ class IndexComponentsOnlyQuery extends ValidatedQuery {
 
       if (!hasNonKeyInequality) {
         // __key__ filters can be planned natively, so remove them
-        Iterator<Filter> itr = query.getFilterList().iterator();
-        while (itr.hasNext()) {
-          if (itr.next().getProperty(0).getName().equals(Entity.KEY_RESERVED_PROPERTY)) {
-            itr.remove();
+        List<Filter> filters = new ArrayList<>();
+        for (Filter filter : query.getFilterList()) {
+          if (!filter.getProperty(0).getName().equals(Entity.KEY_RESERVED_PROPERTY)) {
+            filters.add(filter);
           }
         }
+        query.clearFilter();
+        query.addAllFilter(filters);
+
       }
     }
   }

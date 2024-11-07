@@ -2343,7 +2343,7 @@ public abstract class LocalDatastoreService {
       Property.Builder version = stored.addPropertyBuilder();
       version.setName(ENTITY_VERSION_RESERVED_PROPERTY);
       version.setValue(PropertyValue.newBuilder().setInt64Value(entity.version()).build());
-
+      version.setMultiple(true);
       return stored.build().toByteArray();
     }
 
@@ -2869,7 +2869,7 @@ public abstract class LocalDatastoreService {
 
       // saving the entire original query as the index
       scan.setIndexNameBytes(query.toByteString());
-
+      result.setKeysOnly(false);
       return result.build();
     }
   }
