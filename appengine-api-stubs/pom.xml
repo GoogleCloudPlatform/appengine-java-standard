@@ -73,10 +73,6 @@
               <relocations>
                 <relocation>
                   <pattern>com.google.apphosting.datastore.proto2api.DatastoreV3Pb</pattern>
-                  <shadedPattern>com.google.apphosting.api.DatastorePb</shadedPattern>
-                </relocation>
-                <relocation>
-                  <pattern>com.google.apphosting.datastore.proto2api.DatastoreV3Pb</pattern>
                   <shadedPattern>com.google.apphosting.api.proto2api.DatastorePb</shadedPattern>
                 </relocation>
                 <relocation>
