@@ -61,7 +61,7 @@ class QueryResultsSourceV3 extends BaseQueryResultsSource<QueryResult, NextReque
       req.setCompile(true);
     }
     // This used to call .freeze() but that method has been deleted, see go/javaproto1freezeremoval
-    return req.build();
+    return req.buildPartial();
   }
 
   @Override
@@ -70,14 +70,14 @@ class QueryResultsSourceV3 extends BaseQueryResultsSource<QueryResult, NextReque
       WrappedQueryResult unused,
       @Nullable Integer fetchCount, /* Nullable */
       Integer offsetOrNull) {
-    DatastoreV3Pb.NextRequest.Builder req = reqPrototype.newBuilder().clone();
+    DatastoreV3Pb.NextRequest.Builder req = reqPrototype.toBuilder().clone();
     if (fetchCount != null) {
       req.setCount(fetchCount);
     }
     if (offsetOrNull != null) {
       req.setOffset(offsetOrNull);
     }
-    return makeAsyncCall(apiConfig, Method.Next, req.build(), DatastoreV3Pb.QueryResult.newBuilder().build());
+    return makeAsyncCall(apiConfig, Method.Next, req, DatastoreV3Pb.QueryResult.newBuilder());
   }
 
   @Override

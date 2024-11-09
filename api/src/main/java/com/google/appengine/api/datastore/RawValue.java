@@ -174,7 +174,7 @@ public final class RawValue implements Serializable {
   private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
     int version = in.read();
     if (version == 1) {
-      valueV3 = PropertyValue.newBuilder().build();
+      valueV3 = PropertyValue.getDefaultInstance();
       boolean parsed = true;
       try{
         valueV3.getParserForType().parseFrom(in);

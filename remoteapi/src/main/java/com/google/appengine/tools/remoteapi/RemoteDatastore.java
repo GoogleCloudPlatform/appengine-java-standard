@@ -157,7 +157,7 @@ class RemoteDatastore {
       byte[] resultBytes = remoteRpc.call(DATASTORE_SERVICE, "RunQuery", "", query.build()
           .toByteArray());
 
-      result = DatastoreV3Pb.QueryResult.newBuilder().build();
+      result = DatastoreV3Pb.QueryResult.getDefaultInstance();
       mergeFromBytes(result, resultBytes);
 
       if (tx != null) {
@@ -239,7 +239,7 @@ class RemoteDatastore {
   }
 
   private byte[] handleBeginTransaction(byte[] request) {
-    DatastoreV3Pb.BeginTransactionRequest beginTxnRequest = DatastoreV3Pb.BeginTransactionRequest.newBuilder().build();
+    DatastoreV3Pb.BeginTransactionRequest beginTxnRequest = DatastoreV3Pb.BeginTransactionRequest.getDefaultInstance();
     parseFromBytes(beginTxnRequest, request);
 
     // Create the transaction builder.
@@ -264,7 +264,7 @@ class RemoteDatastore {
     remoteRpc.call(REMOTE_API_SERVICE, "Transaction", "", tx.makeCommitRequest().toByteArray());
 
     // Return success.
-    return DatastoreV3Pb.CommitResponse.newBuilder().build().toByteArray();
+    return DatastoreV3Pb.CommitResponse.getDefaultInstance().toByteArray();
   }
 
   private byte[] handleRollback(byte[] requestBytes) {
@@ -277,7 +277,7 @@ class RemoteDatastore {
   }
 
   private byte[] handleGet(byte[] originalRequestBytes) {
-    DatastoreV3Pb.GetRequest rewrittenReq = DatastoreV3Pb.GetRequest.newBuilder().build();
+    DatastoreV3Pb.GetRequest rewrittenReq = DatastoreV3Pb.GetRequest.getDefaultInstance();
     mergeFromBytes(rewrittenReq, originalRequestBytes);
 
     // Update the Request so that all References have the remoteAppId.
@@ -293,7 +293,7 @@ class RemoteDatastore {
   }
 
   private byte[] handlePut(byte[] requestBytes) {
-    DatastoreV3Pb.PutRequest request = DatastoreV3Pb.PutRequest.newBuilder().build();
+    DatastoreV3Pb.PutRequest request = DatastoreV3Pb.PutRequest.getDefaultInstance();
     mergeFromBytes(request, requestBytes);
     boolean reserialize = rewritePutAppIds(request, remoteAppId);
     if (request.hasTransaction()) {
@@ -336,7 +336,7 @@ class RemoteDatastore {
   }
 
   private byte[] handleDelete(byte[] requestBytes) {
-    DatastoreV3Pb.DeleteRequest request = DatastoreV3Pb.DeleteRequest.newBuilder().build();
+    DatastoreV3Pb.DeleteRequest request = DatastoreV3Pb.DeleteRequest.getDefaultInstance();
     mergeFromBytes(request, requestBytes);
 
     boolean reserialize = rewriteRequestReferences(request.getKeyList(), remoteAppId);
@@ -397,7 +397,7 @@ class RemoteDatastore {
               .toByteArray());
 
       //  Add new entities to the cache (these have the remote app id.)
-      DatastoreV3Pb.GetResponse respFromRemoteApp = DatastoreV3Pb.GetResponse.newBuilder().build();
+      DatastoreV3Pb.GetResponse respFromRemoteApp = DatastoreV3Pb.GetResponse.getDefaultInstance();
       mergeFromBytes(respFromRemoteApp, respBytesFromRemoteApp);
 
       for (DatastoreV3Pb.GetResponse.Entity entityResult : respFromRemoteApp.getEntityList()) {
@@ -490,7 +490,7 @@ class RemoteDatastore {
       tx.deleteEntityOnCommit(key);
     }
 
-    DatastoreV3Pb.DeleteResponse response = DatastoreV3Pb.DeleteResponse.newBuilder().build();
+    DatastoreV3Pb.DeleteResponse response = DatastoreV3Pb.DeleteResponse.getDefaultInstance();
     return response.toByteArray();
   }
 

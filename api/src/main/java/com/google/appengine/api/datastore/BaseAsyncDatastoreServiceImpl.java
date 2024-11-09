@@ -22,6 +22,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import com.google.appengine.api.datastore.DatastoreAttributes.DatastoreType;
 import com.google.appengine.api.datastore.TransactionOptions.Mode;
 import com.google.appengine.api.utils.FutureWrapper;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.GetResponse;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;

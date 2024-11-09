@@ -144,7 +144,7 @@ public class FilterMatcherTest {
     Filter.Builder result = Filter.newBuilder();
     result.setOp(op);
     result.addPropertyBuilder().setName("noname").setValue(DataTypeTranslator.toV3Value(value));
-    return result.build();
+    return result.buildPartial();
   }
 
   private Filter geoFilter(GeoRegion region) {
@@ -152,6 +152,6 @@ public class FilterMatcherTest {
     result.setOp(Operator.CONTAINED_IN_REGION);
     result.addPropertyBuilder().setName("noname");
     result.setGeoRegion(region);
-    return result.build();
+    return result.buildPartial();
   }
 }

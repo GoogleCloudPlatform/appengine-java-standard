@@ -63,7 +63,7 @@ public class PropertyProjectionTest {
     assertThat(projection.getValue(ImmutableMap.of("Foo", value))).isEqualTo(true);
     assertThat(projection.getValue(Collections.singletonMap("Foo", null))).isNull();
     assertThat(
-            projection.getValue(ImmutableMap.of("Foo", (Object) new RawValue(PropertyValue.newBuilder().build()))))
+            projection.getValue(ImmutableMap.of("Foo", (Object) new RawValue(PropertyValue.getDefaultInstance()))))
         .isNull();
 
     assertThrows(IllegalArgumentException.class, () -> projection.getValue(ImmutableMap.of()));

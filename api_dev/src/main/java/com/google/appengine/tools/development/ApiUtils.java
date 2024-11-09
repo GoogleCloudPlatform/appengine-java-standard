@@ -36,7 +36,8 @@ public class ApiUtils {
       throws IllegalAccessException, InstantiationException, InvocationTargetException,
           NoSuchMethodException {
     if (Message.class.isAssignableFrom(messageClass)) {
-      Message.Builder proto = (Message.Builder) messageClass.getConstructor().newInstance();
+      Method newBuilderMethod = messageClass.getMethod("newBuilder");
+      Message.Builder proto = (Message.Builder) newBuilderMethod.invoke(null);
       boolean parsed = true;
       try{
         proto.mergeFrom(bytes);
@@ -48,7 +49,7 @@ public class ApiUtils {
         throw new RuntimeException(
             "Could not parse request bytes into " + classDescription(messageClass));
       }
-      return messageClass.cast(proto);
+      return messageClass.cast(proto.build());
     }
     if (Message.class.isAssignableFrom(messageClass)) {
       Method method = messageClass.getMethod("parseFrom", byte[].class);

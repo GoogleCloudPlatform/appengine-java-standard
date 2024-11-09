@@ -54,7 +54,7 @@ class IndexComponentsOnlyQuery extends ValidatedQuery {
 
   private boolean hasKeyProperty = false;
 
-  public IndexComponentsOnlyQuery(DatastoreV3Pb.Query query) {
+  public IndexComponentsOnlyQuery(DatastoreV3Pb.Query.Builder query) {
     super(query);
     removeNativelySupportedComponents();
     categorizeQuery();
@@ -75,7 +75,7 @@ class IndexComponentsOnlyQuery extends ValidatedQuery {
     // Pulling out __key__ asc orders since is supported natively for perfect plans
     boolean hasKeyDescOrder = false;
     if (query.getOrderCount() > 0) {
-      Order lastOrder = query.getOrder(query.getCount() - 1);
+      Order lastOrder = query.getOrder(query.getOrderCount() - 1);
       if (lastOrder.getProperty().equals(Entity.KEY_RESERVED_PROPERTY)) {
         if (lastOrder.getDirection() == Order.Direction.ASCENDING) {
           query.removeOrder(query.getOrderCount() - 1).build();
@@ -103,12 +103,15 @@ class IndexComponentsOnlyQuery extends ValidatedQuery {
 
       if (!hasNonKeyInequality) {
         // __key__ filters can be planned natively, so remove them
-        Iterator<Filter> itr = query.getFilterList().iterator();
-        while (itr.hasNext()) {
-          if (itr.next().getProperty(0).getName().equals(Entity.KEY_RESERVED_PROPERTY)) {
-            itr.remove();
+        List<Filter> filters = new ArrayList<>();
+        for (Filter filter : query.getFilterList()) {
+          if (!filter.getProperty(0).getName().equals(Entity.KEY_RESERVED_PROPERTY)) {
+            filters.add(filter);
           }
         }
+        query.clearFilter();
+        query.addAllFilter(filters);
+
       }
     }
   }
@@ -217,7 +220,7 @@ class IndexComponentsOnlyQuery extends ValidatedQuery {
 
     IndexComponentsOnlyQuery that = (IndexComponentsOnlyQuery) o;
 
-    if (!query.equals(that.query)) {
+    if (!query.build().equals(that.query.build())) {
       return false;
     }
 

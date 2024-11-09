@@ -116,7 +116,7 @@ public class SerializationTest extends SerializationTestBase {
         new PropertyProjection("prop", String.class),
         new MonitoredIndexUsageTracker.UsageIdCacheMap(1),
         DataTypeUtils.CheckValueOption.ALLOW_MULTI_VALUE,
-        new RawValue(PropertyValue.newBuilder().build()),
+        new RawValue(PropertyValue.getDefaultInstance()),
         CloudDatastoreRemoteServiceConfig.AppId.Location.US_CENTRAL,
         Mode.READ_WRITE);
   }

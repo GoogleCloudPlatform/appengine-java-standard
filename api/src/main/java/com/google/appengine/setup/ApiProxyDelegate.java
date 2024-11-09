@@ -149,7 +149,7 @@ public class ApiProxyDelegate implements ApiProxy.Delegate<LazyApiProxyEnvironme
                 }
             }
             try (BufferedInputStream bis = new BufferedInputStream(response.getEntity().getContent())) {
-                RemoteApiPb.Response remoteResponse = RemoteApiPb.Response.newBuilder().build();
+                RemoteApiPb.Response remoteResponse = RemoteApiPb.Response.getDefaultInstance();
                 try{
                     remoteResponse.getParserForType().parseFrom(bis);
                 } catch (InvalidProtocolBufferException e){

@@ -779,7 +779,7 @@ class LocalCompositeIndexManager extends CompositeIndexManager {
    *     index file.
    */
   public void processQuery(DatastoreV3Pb.Query query) {
-    IndexComponentsOnlyQuery indexOnlyQuery = new IndexComponentsOnlyQuery(query);
+    IndexComponentsOnlyQuery indexOnlyQuery = new IndexComponentsOnlyQuery(query.toBuilder());
     boolean isNewQuery = updateQueryHistory(indexOnlyQuery);
     if (isNewQuery) {
       maybeUpdateIndexFile(indexOnlyQuery);
@@ -956,7 +956,7 @@ class LocalCompositeIndexManager extends CompositeIndexManager {
 
   /** Get the single composite index used by this query, if any, as a list. */
   public List<Index> queryIndexList(DatastoreV3Pb.Query query) {
-    IndexComponentsOnlyQuery indexOnlyQuery = new IndexComponentsOnlyQuery(query);
+    IndexComponentsOnlyQuery indexOnlyQuery = new IndexComponentsOnlyQuery(query.toBuilder());
     Index.Builder index = compositeIndexForQuery(indexOnlyQuery);
     List<Index> indexList;
     if (index != null) {
@@ -993,7 +993,7 @@ class LocalCompositeIndexManager extends CompositeIndexManager {
 
   /** Aliasing to make the class available in the package. */
   protected static class ValidatedQuery extends CompositeIndexManager.ValidatedQuery {
-    protected ValidatedQuery(DatastoreV3Pb.Query query) {
+    protected ValidatedQuery(DatastoreV3Pb.Query.Builder query) {
       super(query);
     }
 
@@ -1010,7 +1010,7 @@ class LocalCompositeIndexManager extends CompositeIndexManager {
   /** Aliasing to make the class available in the package. */
   protected static class IndexComponentsOnlyQuery
       extends CompositeIndexManager.IndexComponentsOnlyQuery {
-    protected IndexComponentsOnlyQuery(DatastoreV3Pb.Query query) {
+    protected IndexComponentsOnlyQuery(DatastoreV3Pb.Query.Builder query) {
       super(query);
     }
 

@@ -42,7 +42,7 @@ public class CursorTest {
 
   @Before
   public void setUp() throws Exception {
-    compiledCursor = CompiledCursor.newBuilder().build();
+    compiledCursor = CompiledCursor.getDefaultInstance();
     CompiledCursor.Position.Builder position = compiledCursor.getPosition().toBuilder();
     position.setStartKey("Hello World");
     position.setStartInclusive(true);
@@ -77,8 +77,8 @@ public class CursorTest {
   @SuppressWarnings("deprecation")
   @Test
   public void testReverseCursorPostfix() {
-    IndexPostfix postfixPosition = IndexPostfix.newBuilder().setKey(Reference.newBuilder().build()).setBefore(true).build();
-    Cursor pfCursor = toCursor(CompiledCursor.newBuilder().setPostfixPosition(postfixPosition).build());
+    IndexPostfix postfixPosition = IndexPostfix.newBuilder().setKey(Reference.getDefaultInstance()).setBefore(true).buildPartial();
+    Cursor pfCursor = toCursor(CompiledCursor.newBuilder().setPostfixPosition(postfixPosition).buildPartial());
 
     // reverse() is a no-op.
     Cursor pfReverse = pfCursor.reverse();
@@ -122,7 +122,7 @@ public class CursorTest {
     query.setOffset(3);
 
     query.setCompiledCursor(toPb(readCursor));
-    assertThat(query.getCompiledCursor()).isEqualTo(compiledCursor);
+    assertThat(query.getCompiledCursor()).isEqualTo(compiledCursor.build());
     assertThat(query.getOffset()).isEqualTo(3);
   }
 
@@ -146,10 +146,10 @@ public class CursorTest {
   }
 
   private static CompiledCursor toPb(Cursor cursor) {
-    CompiledCursor pb = CompiledCursor.newBuilder().build();
+    CompiledCursor pb = CompiledCursor.getDefaultInstance();
     boolean parse = true;
     try{
-      pb.parseFrom(cursor.toByteString());
+      pb = pb.parseFrom(cursor.toByteString());
     } catch (InvalidProtocolBufferException e){
       parse = false;
     }

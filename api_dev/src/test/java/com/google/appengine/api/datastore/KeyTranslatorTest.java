@@ -145,7 +145,7 @@ public class KeyTranslatorTest {
 
   @Test
   public void testConvertFromPbNoElements() throws Exception {
-    Reference ref = Reference.newBuilder().build();
+    Reference ref = Reference.newBuilder().buildPartial();
     assertThrows(IllegalArgumentException.class, () -> KeyTranslator.createFromPb(ref));
   }
 
@@ -158,8 +158,8 @@ public class KeyTranslatorTest {
     Path.Builder path = Path.newBuilder();
     Element.Builder ele = path.addElementBuilder();
     ele.setId(23);
-    ref.setPath(path);
-    KeyTranslator.updateKey(ref.build(), key);
+    ref.setPath(path.buildPartial());
+    KeyTranslator.updateKey(ref.buildPartial(), key);
     assertThat(key.getAppIdNamespace()).isEqualTo(appIdNamespace);
     assertThat(key.getAppId()).isEqualTo(appIdNamespace.getAppId()); // coverage
     assertThat(key.getId()).isEqualTo(23);

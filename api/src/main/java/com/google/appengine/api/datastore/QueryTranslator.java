@@ -24,6 +24,7 @@ import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.Query.Filter.Oper
 import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.Query.Order;
 import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.Query.Order.Direction;
 import com.google.protobuf.InvalidProtocolBufferException;
+import com.google.storage.onestore.v3.proto2api.OnestoreEntity.Property;
 import com.google.storage.onestore.v3.proto2api.OnestoreEntity.PropertyValue;
 import com.google.storage.onestore.v3.proto2api.OnestoreEntity.Reference;
 import java.util.List;
@@ -35,7 +36,7 @@ import java.util.List;
 final class QueryTranslator {
 
   @SuppressWarnings("deprecation")
-  public static DatastoreV3Pb.Query convertToPb(Query query, FetchOptions fetchOptions) {
+  public static DatastoreV3Pb.Query.Builder convertToPb(Query query, FetchOptions fetchOptions) {
     Key ancestor = query.getAncestor();
     List<Query.SortPredicate> sortPredicates = query.getSortPredicates();
 
@@ -133,7 +134,7 @@ final class QueryTranslator {
       proto.addPropertyName(projection.getPropertyName());
     }
 
-    return proto.build();
+    return proto;
   }
 
   static Order convertSortPredicateToPb(Query.SortPredicate predicate) {
@@ -180,7 +181,7 @@ final class QueryTranslator {
       f.addPropertyBuilder()
           .setName(containmentFilter.getPropertyName())
           .setMultiple(false)
-          .setValue(PropertyValue.newBuilder().build());
+          .setValue(PropertyValue.getDefaultInstance());
     } else {
       checkArgument(filter instanceof Query.FilterPredicate);
       Query.FilterPredicate predicate = (Query.FilterPredicate) filter;
@@ -204,13 +205,15 @@ final class QueryTranslator {
         filterPb
             .addPropertyBuilder()
             .setName(predicate.getPropertyName())
-            .setValue(DataTypeTranslator.toV3Value(value));
+            .setValue(DataTypeTranslator.toV3Value(value))
+            .setMultiple(false);
       }
     } else {
       filterPb
           .addPropertyBuilder()
           .setName(predicate.getPropertyName())
-          .setValue(DataTypeTranslator.toV3Value(predicate.getValue()));
+          .setValue(DataTypeTranslator.toV3Value(predicate.getValue()))
+          .setMultiple(false);
     }
 
     return filterPb.build();

@@ -39,8 +39,8 @@ import java.util.TreeMap;
  */
 public enum PropertyType {
 
-  NULL(PropertyValue.newBuilder().build(),
-      PropertyValue.newBuilder().build()),
+  NULL(PropertyValue.getDefaultInstance(),
+      PropertyValue.getDefaultInstance()),
 
   INT64(PropertyValue.newBuilder().setInt64Value(Long.MIN_VALUE).build(),
       PropertyValue.newBuilder().setInt64Value(0L).build()),

@@ -119,14 +119,14 @@ public final class DatastoreApiHelper {
     }
   }
 
-  static <T extends Message> Future<T> makeAsyncCall(
+  static <T extends Message, S extends Message.Builder> Future<T> makeAsyncCall(
       ApiConfig apiConfig,
       final DatastoreService_3.Method method,
-      MessageLite request,
-      final T responseProto) {
+      MessageLite.Builder request,
+      final S responseProto) {
     Future<byte[]> response =
         ApiProxy.makeAsyncCall(
-            DATASTORE_V3_PACKAGE, method.name(), request.toByteArray(), apiConfig);
+            DATASTORE_V3_PACKAGE, method.name(), request.buildPartial().toByteArray(), apiConfig);
     return new FutureWrapper<byte[], T>(response) {
       @Override
       protected T wrap(byte[] responseBytes) throws InvalidProtocolBufferException {
@@ -134,8 +134,10 @@ public final class DatastoreApiHelper {
         // (specifically ones using EasyMock, where the default behavior
         // is to return null).
         if (responseBytes != null && responseProto != null) {
+
           try {
-            responseProto.getParserForType().parseFrom(responseBytes);
+            responseProto.clear();
+            responseProto.mergeFrom(responseBytes);
           }
           catch(InvalidProtocolBufferException e) {
             throw new InvalidProtocolBufferException(
@@ -146,7 +148,7 @@ public final class DatastoreApiHelper {
             throw new InvalidProtocolBufferException(initializationErrors.toString());
           }
         }
-        return responseProto;
+        return (T) responseProto.build();
       }
 
       @Override

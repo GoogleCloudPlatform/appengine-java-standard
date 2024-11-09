@@ -19,6 +19,7 @@ package com.google.appengine.api.datastore;
 import com.google.storage.onestore.v3.proto2api.OnestoreEntity.Path;
 import com.google.storage.onestore.v3.proto2api.OnestoreEntity.Path.Element;
 import com.google.storage.onestore.v3.proto2api.OnestoreEntity.Reference;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -71,7 +72,7 @@ class KeyTranslator {
       reference.setNameSpace(nameSpace);
     }
 
-    Path.Builder path = reference.build().getPath().toBuilder();
+    Path.Builder path = reference.getPathBuilder();
     while (key != null) {
       Element.Builder pathElement = Element.newBuilder();
       pathElement.setType(key.getKind());
@@ -83,7 +84,13 @@ class KeyTranslator {
       path.addElement(pathElement.build());
       key = key.getParent();
     }
-    Collections.reverse(path.build().getElementList());
+    List<Element> elements = new ArrayList<>(path.getElementList());
+    Collections.reverse(elements);
+    Path.Builder reversedPath = Path.newBuilder();
+    for(Element element : elements){
+      reversedPath.addElement(element);
+    }
+    reference.setPath(reversedPath.build());
     return reference.build();
   }
 

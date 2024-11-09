@@ -834,17 +834,20 @@ public abstract class LocalDatastoreService {
    * @param store true if we're storing the entity, false if we're loading it.
    */
   private void processEntityForSpecialProperties(EntityProto.Builder entity, boolean store) {
-    for (Iterator<Property> iter = entity.getPropertyList().iterator(); iter.hasNext(); ) {
-      if (specialPropertyMap.containsKey(iter.next().getName())) {
-        iter.remove();
+    List<Property> properties = new ArrayList<>();
+    for (Property property : entity.getPropertyList()) {
+      if (!specialPropertyMap.containsKey(property.getName())) {
+        properties.add(property);
       }
     }
+    entity.clearProperty();
+    entity.addAllProperty(properties);
 
     for (SpecialProperty specialProp : specialPropertyMap.values()) {
       if (store ? specialProp.isStored() : specialProp.isVisible()) {
         PropertyValue value = specialProp.getValue(entity.build());
         if (value != null) {
-          entity.addProperty(specialProp.getProperty(value)).build();
+          entity.addProperty(specialProp.getProperty(value));
         }
       }
     }
@@ -862,14 +865,14 @@ public abstract class LocalDatastoreService {
     for (EntityProto entity : request.getEntityList()) {
       validateAndProcessEntityProto(entity);
       EntityProto.Builder clone = entity.toBuilder().clone();
-      clones.add(clone.build());
+
       checkArgument(clone.hasKey());
-      Reference key = clone.getKey();
+      Reference.Builder key = clone.getKeyBuilder();
       checkArgument(key.getPath().getElementCount() > 0);
 
-      clone.getKey().toBuilder().setApp(app);
+      clone.getKeyBuilder().setApp(app);
 
-      Element.Builder lastPath = getLastElement(key).toBuilder();
+      Element.Builder lastPath = getLastElement(key.build()).toBuilder();
 
       if (lastPath.getId() == 0 && !lastPath.hasName()) {
         if (autoIdAllocationPolicy == AutoIdAllocationPolicy.SEQUENTIAL) {
@@ -878,12 +881,12 @@ public abstract class LocalDatastoreService {
           lastPath.setId(toScatteredId(entityIdScattered.getAndIncrement()));
         }
       }
-
+      key.getPathBuilder().setElement(key.getPath().getElementCount() - 1, lastPath);
       preprocessEntity(clone);
 
       if (clone.getEntityGroup().getElementCount() == 0) {
         // The entity needs its entity group set.
-        Path.Builder group = clone.getEntityGroup().toBuilder();
+        Path.Builder group = clone.getEntityGroupBuilder();
         Element root = key.getPath().getElementList().get(0);
         Element.Builder pathElement = group.addElementBuilder();
         pathElement.setType(root.getType());
@@ -896,6 +899,7 @@ public abstract class LocalDatastoreService {
         // update an existing entity
         checkState(clone.hasEntityGroup() && clone.getEntityGroup().getElementCount() > 0);
       }
+      clones.add(clone.build());
     }
 
     Map<Path, List<EntityProto>> entitiesByEntityGroup = new LinkedHashMap<>();
@@ -923,7 +927,7 @@ public abstract class LocalDatastoreService {
           }
           entities.add(clone);
         }
-        response.getKeyList().add(clone.getKey());
+        response.addKey(clone.getKey());
       }
       for (final Map.Entry<Path, List<EntityProto>> entry : entitiesByEntityGroup.entrySet()) {
         Profile.EntityGroup eg = profile.getGroup(entry.getKey());
@@ -1215,7 +1219,7 @@ public abstract class LocalDatastoreService {
     // Construct a validated query right away so we can fail fast
     // if something is wrong.
     final LocalCompositeIndexManager.ValidatedQuery validatedQuery =
-        new LocalCompositeIndexManager.ValidatedQuery(query);
+        new LocalCompositeIndexManager.ValidatedQuery(query.toBuilder());
     query = validatedQuery.getV3Query();
 
     // Modernize the query's cursors.
@@ -1436,7 +1440,7 @@ public abstract class LocalDatastoreService {
       for (Index index : LocalCompositeIndexManager.getInstance().queryIndexList(query)) {
         result.addIndex(wrapIndexInCompositeIndex(app, index));
       } // for
-      return result.build();
+      return result.buildPartial();
     }
   }
 
@@ -2094,7 +2098,7 @@ public abstract class LocalDatastoreService {
       public Key pathAsKey() {
         Reference.Builder entityGroupRef = Reference.newBuilder();
         entityGroupRef.setPath(path);
-        return LocalCompositeIndexManager.KeyTranslator.createFromPb(entityGroupRef.build());
+        return LocalCompositeIndexManager.KeyTranslator.createFromPb(entityGroupRef.buildPartial());
       }
     }
 
@@ -2339,7 +2343,7 @@ public abstract class LocalDatastoreService {
       Property.Builder version = stored.addPropertyBuilder();
       version.setName(ENTITY_VERSION_RESERVED_PROPERTY);
       version.setValue(PropertyValue.newBuilder().setInt64Value(entity.version()).build());
-
+      version.setMultiple(true);
       return stored.build().toByteArray();
     }
 
@@ -2348,7 +2352,7 @@ public abstract class LocalDatastoreService {
      * #serializeEntity(VersionedEntity)}.
      */
     private VersionedEntity deserializeEntity(byte[] serialized) throws IOException {
-      EntityProto entityProto = EntityProto.newBuilder().build();
+      EntityProto entityProto = EntityProto.getDefaultInstance();
       try {
         entityProto.parseFrom(serialized);
       }catch (InvalidProtocolBufferException e) {
@@ -2719,9 +2723,9 @@ public abstract class LocalDatastoreService {
         // Offset has been satisfied so return real results
         List<EntityProto> entities = removeEntities(Math.min(MAX_QUERY_RESULTS, count));
         for (EntityProto entity : entities) {
-          result.getResultBuilderList().add(postProcessEntityForQuery(entity));
+          result.addResult(postProcessEntityForQuery(entity).buildPartial());
           if (!versions.isEmpty()) {
-            result.getVersionList().add(versions.get(entity.getKey()));
+            result.addVersion(versions.get(entity.getKey()));
           }
           if (compile) {
             result.addResultCompiledCursorBuilder().setPostfixPosition(compilePosition(entity));
@@ -2775,7 +2779,7 @@ public abstract class LocalDatastoreService {
                 .mergeFrom(prop.getValue());
           }
         }
-      } else if (query.hasKeysOnly()) {
+      } else if (query.getKeysOnly()) {
         result = EntityProto.newBuilder();
         result.getKeyBuilder().mergeFrom(entity.getKey());
         result.getEntityGroup();
@@ -2865,7 +2869,7 @@ public abstract class LocalDatastoreService {
 
       // saving the entire original query as the index
       scan.setIndexNameBytes(query.toByteString());
-
+      result.setKeysOnly(false);
       return result.build();
     }
   }

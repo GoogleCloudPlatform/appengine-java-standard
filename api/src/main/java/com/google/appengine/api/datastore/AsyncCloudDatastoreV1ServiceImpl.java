@@ -23,6 +23,7 @@ import com.google.appengine.api.datastore.DatastoreService.KeyRangeState;
 import com.google.appengine.api.datastore.FutureHelper.MultiFuture;
 import com.google.appengine.api.datastore.Index.IndexState;
 import com.google.appengine.api.utils.FutureWrapper;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.GetResponse;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;

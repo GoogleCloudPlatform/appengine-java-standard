@@ -16,6 +16,7 @@
 
 package com.google.appengine.api.datastore;
 
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb;
 import com.google.common.collect.Sets;
 import java.util.Collection;
 import java.util.List;

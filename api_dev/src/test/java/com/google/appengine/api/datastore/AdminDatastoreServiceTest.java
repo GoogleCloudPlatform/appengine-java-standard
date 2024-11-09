@@ -202,7 +202,7 @@ public class AdminDatastoreServiceTest {
   public void testCompositeIndexForQuery() {
     Query query = new Query("kind1");
     FetchOptions fo = FetchOptions.Builder.withDefaults();
-    DatastoreV3Pb.Query queryPb = QueryTranslator.convertToPb(query, fo);
+    DatastoreV3Pb.Query.Builder queryPb = QueryTranslator.convertToPb(query, fo);
     CompositeIndexManager.IndexComponentsOnlyQuery ic =
         new CompositeIndexManager.IndexComponentsOnlyQuery(queryPb);
     Index index =
@@ -212,7 +212,8 @@ public class AdminDatastoreServiceTest {
             true,
             ImmutableList.of(new Index.Property("p1", Query.SortDirection.DESCENDING)));
     OnestoreEntity.Index indexPb = IndexTranslator.convertToPb(index);
-    when(indexManager.compositeIndexForQuery(ic)).thenReturn(indexPb.toBuilder());
+    when(indexManager.compositeIndexForQuery(ic))
+        .thenReturn(indexPb.toBuilder());
     assertThat(adminDsWithMockDelegate.compositeIndexForQuery(query)).isEqualTo(index);
   }
 
@@ -220,7 +221,7 @@ public class AdminDatastoreServiceTest {
   public void testMinimumCompositeIndexForQuery() {
     Query query = new Query("kind1");
     FetchOptions fo = FetchOptions.Builder.withDefaults();
-    DatastoreV3Pb.Query queryPb = QueryTranslator.convertToPb(query, fo);
+    DatastoreV3Pb.Query.Builder queryPb = QueryTranslator.convertToPb(query, fo);
     CompositeIndexManager.IndexComponentsOnlyQuery ic =
         new CompositeIndexManager.IndexComponentsOnlyQuery(queryPb);
     Index index =

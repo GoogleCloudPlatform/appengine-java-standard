@@ -79,9 +79,9 @@ public class EntityComparatorTests {
     FilterMatcher matcher = new FilterMatcher();
     Filter.Builder filter = Filter.newBuilder().setOp(Operator.GREATER_THAN);
     filter.addPropertyBuilder().setName("a").getValueBuilder().setInt64Value(3);
-    matcher.addFilter(filter.build());
-    filter.setOp(Operator.LESS_THAN).getProperty(0).getValue().toBuilder().setInt64Value(5);
-    matcher.addFilter(filter.build());
+    matcher.addFilter(filter.buildPartial());
+    filter.setOp(Operator.LESS_THAN).getPropertyBuilder(0).getValueBuilder().setInt64Value(5);
+    matcher.addFilter(filter.buildPartial());
 
     assertThat(BaseEntityComparator.multiTypeExtreme(nastyCast(5L, 4L, 3L), true, matcher))
         .isEqualTo(4L);
@@ -117,10 +117,10 @@ public class EntityComparatorTests {
     // if a sort a non-key field is provided we add the default sort to the
     // end.
     Order.Builder notAKeySort = Order.newBuilder().setProperty("not a key");
-    orders.add(notAKeySort.build());
+    orders.add(notAKeySort.buildPartial());
     entityComps = Arrays.asList(new EntityProtoComparator(orders), new EntityComparator(orders));
     for (BaseEntityComparator<?> comp : entityComps) {
-      assertThat(comp.orders).containsExactly(notAKeySort, KEY_ASC_ORDER).inOrder();
+      assertThat(comp.orders).containsExactly(notAKeySort.buildPartial(), KEY_ASC_ORDER).inOrder();
     }
 
     // if we explicitly add the default sort to the end we don't end up with
@@ -128,7 +128,7 @@ public class EntityComparatorTests {
     orders.add(KEY_ASC_ORDER);
     entityComps = Arrays.asList(new EntityProtoComparator(orders), new EntityComparator(orders));
     for (BaseEntityComparator<?> comp : entityComps) {
-      assertThat(comp.orders).containsExactly(notAKeySort, KEY_ASC_ORDER).inOrder();
+      assertThat(comp.orders).containsExactly(notAKeySort.buildPartial(), KEY_ASC_ORDER).inOrder();
     }
   }
 
@@ -139,7 +139,7 @@ public class EntityComparatorTests {
     Filter.Builder filter = Filter.newBuilder().setOp(Operator.GREATER_THAN);
     String ineq = "ineq";
     filter.addPropertyBuilder().setName(ineq).getValueBuilder().setInt64Value(0);
-    List<Filter> filters = Arrays.asList(filter.build());
+    List<Filter> filters = Arrays.asList(filter.buildPartial());
 
     // Should default to having the ineq prop first that key asc
     EntityProtoComparator epc = new EntityProtoComparator(orders, filters);
@@ -217,14 +217,14 @@ public class EntityComparatorTests {
     Order.Builder desc = Order.newBuilder().setProperty("a").setDirection(Direction.DESCENDING);
     EntityProtoComparator epc =
         new EntityProtoComparator(
-            Collections.singletonList(desc.build()), Collections.singletonList(filter.build()));
-    assertThat(epc.compare(p1.build(), p2.build())).isEqualTo(-1);
+            Collections.singletonList(desc.buildPartial()), Collections.singletonList(filter.buildPartial()));
+    assertThat(epc.compare(p1.buildPartial(), p2.buildPartial())).isEqualTo(-1);
 
     Order asc = Order.newBuilder().setProperty("a").setDirection(Direction.ASCENDING).build();
     epc =
         new EntityProtoComparator(
-            Collections.singletonList(asc), Collections.singletonList(filter.build()));
-    assertThat(epc.compare(p1.build(), p2.build())).isEqualTo(1);
+            Collections.singletonList(asc), Collections.singletonList(filter.buildPartial()));
+    assertThat(epc.compare(p1.buildPartial(), p2.buildPartial())).isEqualTo(1);
   }
 
   private static DataTypeTranslator.ComparableByteArray byteArray(String val) {

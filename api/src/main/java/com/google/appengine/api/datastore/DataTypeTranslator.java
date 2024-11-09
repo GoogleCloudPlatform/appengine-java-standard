@@ -209,7 +209,7 @@ public final class DataTypeTranslator {
    * @param map A not {@code null} map of all the properties which will be set on {@code proto}
    * @param proto A not {@code null} protocol buffer
    */
-  public static void addPropertiesToPb(Map<String, ?> map, EntityProto proto) {
+  public static void addPropertiesToPb(Map<String, ?> map, EntityProto.Builder proto) {
     for (Map.Entry<String, ?> entry : map.entrySet()) {
       String name = entry.getKey();
 
@@ -233,7 +233,7 @@ public final class DataTypeTranslator {
     }
   }
 
-  /** @see #addPropertiesToPb(Map, EntityProto) */
+  /** @see #addPropertiesToPb(Map, EntityProto.Builder) */
   static void addPropertiesToPb(Map<String, ?> map, com.google.datastore.v1.Entity.Builder proto) {
     for (Map.Entry<String, ?> entry : map.entrySet()) {
       proto.putProperties(entry.getKey(), toV1Value(entry.getValue()).build());
@@ -241,7 +241,7 @@ public final class DataTypeTranslator {
   }
 
   private static void addListPropertyToPb(
-      EntityProto proto,
+      EntityProto.Builder proto,
       String name,
       boolean indexed,
       Collection<?> values,
@@ -258,11 +258,12 @@ public final class DataTypeTranslator {
         // If the value is indexed it appears in queries, but distinction between
         // null and empty list is lost.
       }
+      property.setValue(PropertyValue.getDefaultInstance());
       property.getValue(); // Indicate to the proto that we have set this field
       if (indexed) {
-        proto = proto.toBuilder().addProperty(property.build()).build();
+        proto.addProperty(property);
       } else {
-        proto = proto.toBuilder().addRawProperty(property.build()).build();
+        proto.addRawProperty(property);
       }
     } else {
       // Write every element to the PB
@@ -291,7 +292,7 @@ public final class DataTypeTranslator {
       boolean indexed,
       boolean forceIndexedEmbeddedEntity,
       boolean multiple,
-      EntityProto entity) {
+      EntityProto.Builder entity) {
     Property.Builder property = Property.newBuilder();
     property.setName(name);
     property.setMultiple(multiple);
@@ -317,9 +318,9 @@ public final class DataTypeTranslator {
       }
     }
     if (indexed) {
-      entity = entity.toBuilder().addProperty(property).build();
+      entity.addProperty(property);
     } else {
-      entity = entity.toBuilder().addRawProperty(property).build();
+      entity.addRawProperty(property);
     }
   }
 
@@ -395,6 +396,7 @@ public final class DataTypeTranslator {
     PropertyValue.Builder propVal = PropertyValue.newBuilder();
     propVal.setReferenceValue(KeyType.toReferenceValue(proto.getKey()));
     keyProp.setValue(propVal.build());
+    keyProp.setMultiple(false);
     return keyProp.build();
   }
 
@@ -1137,6 +1139,8 @@ public final class DataTypeTranslator {
       // All possible values except byte[] are already comparable.
       if (value2 instanceof byte[]) {
         return new ComparableByteArray((byte[]) value2);
+      } else if (value2 instanceof ByteString) {
+        return new ComparableByteArray(((ByteString) value2).toByteArray());
       }
       return (Comparable<?>) value2;
     }
@@ -1661,7 +1665,7 @@ public final class DataTypeTranslator {
       if (proto.hasKey() && !proto.getKey().getApp().isEmpty()) {
         result.setKey(KeyTranslator.createFromPb(proto.getKey()));
       }
-      extractPropertiesFromPb(proto.build(), result.getPropertyMap());
+      extractPropertiesFromPb(proto.buildPartial(), result.getPropertyMap());
       return result;
     }
 
@@ -1683,9 +1687,9 @@ public final class DataTypeTranslator {
       if (structProp.getKey() != null) {
         proto.setKey(KeyTranslator.convertToPb(structProp.getKey()));
       }
-      addPropertiesToPb(structProp.getPropertyMap(), proto.build());
+      addPropertiesToPb(structProp.getPropertyMap(), proto);
       // TODO: Figure out how to do partial serialization.
-      propertyValue.setStringValueBytes(proto.build().toByteString()).build();
+      propertyValue.setStringValueBytes(proto.buildPartial().toByteString()).build();
     }
 
     @Override
