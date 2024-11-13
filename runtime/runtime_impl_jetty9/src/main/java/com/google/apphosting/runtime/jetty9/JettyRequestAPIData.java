@@ -68,6 +68,8 @@ import java.util.Objects;
 import java.util.stream.Stream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
+
+import org.eclipse.jetty.http.HttpField;
 import org.eclipse.jetty.http.HttpFields;
 import org.eclipse.jetty.http.HttpScheme;
 import org.eclipse.jetty.http.HttpURI;
@@ -126,15 +128,20 @@ public class JettyRequestAPIData implements RequestAPIData {
     this.securityTicket = DEFAULT_SECRET_KEY;
 
     HttpFields fields = new HttpFields();
-    List<String> headerNames = Collections.list(request.getHeaderNames());
-    for (String headerName : headerNames) {
-      String name = headerName.toLowerCase(Locale.ROOT);
-      String value = request.getHeader(headerName);
+    for (HttpField field : request.getHttpFields()) {
+      // If it has a HttpHeader it is one of the standard headers so won't match any appengine specific header.
+      if (field.getHeader() != null) {
+        fields.add(field);
+        continue;
+      }
+
+      String lowerCaseName = field.getName().toLowerCase(Locale.ROOT);
+      String value = field.getValue();
       if (Strings.isNullOrEmpty(value)) {
         continue;
       }
 
-      switch (name) {
+      switch (lowerCaseName) {
         case X_APPENGINE_TRUSTED_IP_REQUEST:
           // If there is a value, then the application is trusted
           // If the value is IS_TRUSTED, then the user is trusted
@@ -236,9 +243,9 @@ public class JettyRequestAPIData implements RequestAPIData {
           break;
       }
 
-      if (passThroughPrivateHeaders || !PRIVATE_APPENGINE_HEADERS.contains(name)) {
+      if (passThroughPrivateHeaders || !PRIVATE_APPENGINE_HEADERS.contains(lowerCaseName)) {
         // Only non AppEngine specific headers are passed to the application.
-        fields.add(name, value);
+        fields.add(field);
       }
     }
 
