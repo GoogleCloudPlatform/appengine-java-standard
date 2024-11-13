@@ -135,13 +135,13 @@ public class JettyRequestAPIData implements RequestAPIData {
         continue;
       }
 
-      String lowerCaseName = field.getName().toLowerCase(Locale.ROOT);
+      String name = field.getName().toLowerCase(Locale.ROOT);
       String value = field.getValue();
       if (Strings.isNullOrEmpty(value)) {
         continue;
       }
 
-      switch (lowerCaseName) {
+      switch (name) {
         case X_APPENGINE_TRUSTED_IP_REQUEST:
           // If there is a value, then the application is trusted
           // If the value is IS_TRUSTED, then the user is trusted
@@ -243,7 +243,7 @@ public class JettyRequestAPIData implements RequestAPIData {
           break;
       }
 
-      if (passThroughPrivateHeaders || !PRIVATE_APPENGINE_HEADERS.contains(lowerCaseName)) {
+      if (passThroughPrivateHeaders || !PRIVATE_APPENGINE_HEADERS.contains(name)) {
         // Only non AppEngine specific headers are passed to the application.
         fields.add(field);
       }

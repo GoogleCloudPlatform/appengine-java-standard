@@ -119,6 +119,12 @@ public class JettyRequestAPIData implements RequestAPIData {
 
     HttpFields.Mutable fields = HttpFields.build();
     for (HttpField field : request.getHeaders()) {
+      // If it has a HttpHeader it is one of the standard headers so won't match any appengine specific header.
+      if (field.getHeader() != null) {
+        fields.add(field);
+        continue;
+      }
+
       String name = field.getLowerCaseName();
       String value = field.getValue();
       if (Strings.isNullOrEmpty(value)) {
