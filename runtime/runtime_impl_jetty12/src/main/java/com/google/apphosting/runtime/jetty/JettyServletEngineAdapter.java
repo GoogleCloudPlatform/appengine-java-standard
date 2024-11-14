@@ -49,6 +49,7 @@ import org.eclipse.jetty.http.UriCompliance;
 import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.server.SizeLimitHandler;
 import org.eclipse.jetty.util.VirtualThreads;
 import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.util.resource.ResourceFactory;
@@ -102,6 +103,7 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
 
   @Override
   public void start(String serverInfo, ServletEngineAdapter.Config runtimeOptions) {
+    boolean isHttpConnectorMode = Boolean.getBoolean(HTTP_CONNECTOR_MODE);
     QueuedThreadPool threadPool =
         new QueuedThreadPool(MAX_THREAD_POOL_THREADS, MIN_THREAD_POOL_THREADS);
     // Try to enable virtual threads if requested and on java21:
@@ -118,27 +120,45 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
             return InvocationType.BLOCKING;
           }
         };
-    rpcConnector =
-        new DelegateConnector(server, "RPC") {
-          @Override
-          public void run(Runnable runnable) {
-            // Override this so that it does the initial run in the same thread.
-            // Currently, we block until completion in serviceRequest() so no point starting new
-            // thread.
-            runnable.run();
-          }
-        };
-    server.addConnector(rpcConnector);
+
+    // Don't add the RPC Connector if in HttpConnector mode.
+    if (!isHttpConnectorMode)
+    {
+      rpcConnector =
+          new DelegateConnector(server, "RPC") {
+            @Override
+            public void run(Runnable runnable) {
+              // Override this so that it does the initial run in the same thread.
+              // Currently, we block until completion in serviceRequest() so no point starting new
+              // thread.
+              runnable.run();
+            }
+          };
+
+      HttpConfiguration httpConfiguration = rpcConnector.getHttpConfiguration();
+      httpConfiguration.setSendDateHeader(false);
+      httpConfiguration.setSendServerVersion(false);
+      httpConfiguration.setSendXPoweredBy(false);
+      if (LEGACY_MODE) {
+        httpConfiguration.setRequestCookieCompliance(CookieCompliance.RFC2965);
+        httpConfiguration.setResponseCookieCompliance(CookieCompliance.RFC2965);
+        httpConfiguration.setUriCompliance(UriCompliance.LEGACY);
+      }
+
+      server.addConnector(rpcConnector);
+    }
+
     AppVersionHandlerFactory appVersionHandlerFactory =
         AppVersionHandlerFactory.newInstance(server, serverInfo);
     appVersionHandler = new AppVersionHandler(appVersionHandlerFactory);
-    if (!Boolean.getBoolean(IGNORE_RESPONSE_SIZE_LIMIT)) {
-      CoreSizeLimitHandler sizeLimitHandler = new CoreSizeLimitHandler(-1, MAX_RESPONSE_SIZE);
-      sizeLimitHandler.setHandler(appVersionHandler);
-      server.setHandler(sizeLimitHandler);
-    } else {
-      server.setHandler(appVersionHandler);
+    server.setHandler(appVersionHandler);
+
+    // In HttpConnector mode we will combine both SizeLimitHandlers.
+    boolean ignoreResponseSizeLimit = Boolean.getBoolean(IGNORE_RESPONSE_SIZE_LIMIT);
+    if (!ignoreResponseSizeLimit && !isHttpConnectorMode) {
+      server.insertHandler(new SizeLimitHandler(-1, MAX_RESPONSE_SIZE));
     }
+
     boolean startJettyHttpProxy = false;
     if (runtimeOptions.useJettyHttpProxy()) {
       AppInfoFactory appInfoFactory;
@@ -159,14 +179,13 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
       } catch (Exception e) {
         throw new IllegalStateException(e);
       }
-      if (Boolean.getBoolean(HTTP_CONNECTOR_MODE)) {
+      if (isHttpConnectorMode) {
         logger.atInfo().log("Using HTTP_CONNECTOR_MODE to bypass RPC");
-        JettyHttpProxy.insertHandlers(server);
         server.insertHandler(
             new JettyHttpHandler(
                 runtimeOptions, appVersionHandler.getAppVersion(), appVersionKey, appInfoFactory));
-        ServerConnector connector = JettyHttpProxy.newConnector(server, runtimeOptions);
-        server.addConnector(connector);
+        JettyHttpProxy.insertHandlers(server, ignoreResponseSizeLimit);
+        server.addConnector(JettyHttpProxy.newConnector(server, runtimeOptions));
       } else {
         server.setAttribute(
             "com.google.apphosting.runtime.jetty.appYaml",
@@ -197,7 +216,7 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
   }
 
   @Override
-  public void addAppVersion(AppVersion appVersion) throws FileNotFoundException {
+  public void addAppVersion(AppVersion appVersion) {
     appVersionHandler.addAppVersion(appVersion);
   }
 
@@ -239,16 +258,7 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
       }
       lastAppVersionKey = appVersionKey;
     }
-    // TODO: lots of compliance modes to handle.
-    HttpConfiguration httpConfiguration = rpcConnector.getHttpConfiguration();
-    httpConfiguration.setSendDateHeader(false);
-    httpConfiguration.setSendServerVersion(false);
-    httpConfiguration.setSendXPoweredBy(false);
-    if (LEGACY_MODE) {
-      httpConfiguration.setRequestCookieCompliance(CookieCompliance.RFC2965);
-      httpConfiguration.setResponseCookieCompliance(CookieCompliance.RFC2965);
-      httpConfiguration.setUriCompliance(UriCompliance.LEGACY);
-    }
+
     DelegateRpcExchange rpcExchange = new DelegateRpcExchange(upRequest, upResponse);
     rpcExchange.setAttribute(AppEngineConstants.APP_VERSION_KEY_REQUEST_ATTR, appVersionKey);
     rpcExchange.setAttribute(AppEngineConstants.ENVIRONMENT_ATTR, ApiProxy.getCurrentEnvironment());

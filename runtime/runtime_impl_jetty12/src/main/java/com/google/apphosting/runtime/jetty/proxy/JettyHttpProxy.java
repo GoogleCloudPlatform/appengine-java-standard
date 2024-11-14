@@ -24,7 +24,6 @@ import com.google.apphosting.runtime.LocalRpcContext;
 import com.google.apphosting.runtime.ServletEngineAdapter;
 import com.google.apphosting.runtime.anyrpc.EvaluationRuntimeServerInterface;
 import com.google.apphosting.runtime.jetty.AppInfoFactory;
-import com.google.apphosting.runtime.jetty.CoreSizeLimitHandler;
 import com.google.apphosting.runtime.jetty.JettyServletEngineAdapter;
 import com.google.common.base.Ascii;
 import com.google.common.base.Throwables;
@@ -44,8 +43,11 @@ import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Response;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.server.SizeLimitHandler;
 import org.eclipse.jetty.server.handler.gzip.GzipHandler;
 import org.eclipse.jetty.util.Callback;
+
+import static com.google.apphosting.runtime.AppEngineConstants.IGNORE_RESPONSE_SIZE_LIMIT;
 
 /**
  * A Jetty web server handling HTTP requests on a given port and forwarding them via gRPC to the
@@ -68,6 +70,7 @@ import org.eclipse.jetty.util.Callback;
 public class JettyHttpProxy {
   private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
   private static final long MAX_REQUEST_SIZE = 32 * 1024 * 1024;
+  private static final long MAX_RESPONSE_SIZE = 32 * 1024 * 1024;
 
   /**
    * Based on the adapter configuration, this will start a new Jetty server in charge of proxying
@@ -108,22 +111,26 @@ public class JettyHttpProxy {
     return connector;
   }
 
-  public static void insertHandlers(Server server) {
-    CoreSizeLimitHandler sizeLimitHandler = new CoreSizeLimitHandler(MAX_REQUEST_SIZE, -1);
-    sizeLimitHandler.setHandler(server.getHandler());
+  public static void insertHandlers(Server server, boolean ignoreResponseSizeLimit) {
+
+    long responseLimit = -1;
+    if (!ignoreResponseSizeLimit) {
+      responseLimit = MAX_RESPONSE_SIZE;
+    }
+    SizeLimitHandler sizeLimitHandler = new SizeLimitHandler(MAX_REQUEST_SIZE, responseLimit);
+    server.insertHandler(sizeLimitHandler);
 
     GzipHandler gzip = new GzipHandler();
     gzip.setInflateBufferSize(8 * 1024);
-    gzip.setHandler(sizeLimitHandler);
     gzip.setIncludedMethods(); // Include all methods for the GzipHandler.
-    server.setHandler(gzip);
+    server.insertHandler(gzip);
   }
 
   public static Server newServer(
       ServletEngineAdapter.Config runtimeOptions, ForwardingHandler forwardingHandler) {
     Server server = new Server();
     server.setHandler(forwardingHandler);
-    insertHandlers(server);
+    insertHandlers(server, true);
 
     ServerConnector connector = newConnector(server, runtimeOptions);
     server.addConnector(connector);
