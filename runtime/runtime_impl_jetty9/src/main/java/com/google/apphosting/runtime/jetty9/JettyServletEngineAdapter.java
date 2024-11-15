@@ -116,7 +116,8 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
     appVersionHandlerMap = new AppVersionHandlerMap(appVersionHandlerFactory);
     server.setHandler(appVersionHandlerMap);
 
-    boolean ignoreResponseSizeLimit = Objects.equals(System.getenv("GAE_RUNTIME"), "java8")
+    boolean ignoreResponseSizeLimit =
+        Objects.equals(System.getenv("GAE_RUNTIME"), "java8")
             || Boolean.getBoolean(IGNORE_RESPONSE_SIZE_LIMIT);
     if (!ignoreResponseSizeLimit && !isHttpConnectorMode) {
       server.insertHandler(new SizeLimitHandler(-1, MAX_RESPONSE_SIZE));

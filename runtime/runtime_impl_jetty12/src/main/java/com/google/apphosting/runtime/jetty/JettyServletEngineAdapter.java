@@ -122,8 +122,7 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
         };
 
     // Don't add the RPC Connector if in HttpConnector mode.
-    if (!isHttpConnectorMode)
-    {
+    if (!isHttpConnectorMode) {
       rpcConnector =
           new DelegateConnector(server, "RPC") {
             @Override
