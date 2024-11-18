@@ -43,7 +43,6 @@ import java.util.Objects;
 import java.util.Optional;
 import javax.servlet.ServletException;
 import org.eclipse.jetty.server.Connector;
-import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.handler.SizeLimitHandler;
@@ -141,10 +140,10 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
         if (Boolean.getBoolean(HTTP_CONNECTOR_MODE)) {
           logger.atInfo().log("Using HTTP_CONNECTOR_MODE to bypass RPC");
           appVersionKey = AppVersionKey.fromAppInfo(appinfo);
-          JettyHttpProxy.insertHandlers(server);
           AppVersion appVersion = appVersionHandlerMap.getAppVersion(appVersionKey);
           server.insertHandler(
               new JettyHttpHandler(runtimeOptions, appVersion, appVersionKey, appInfoFactory));
+          JettyHttpProxy.insertHandlers(server);
           ServerConnector connector = JettyHttpProxy.newConnector(server, runtimeOptions);
           server.addConnector(connector);
         } else {
