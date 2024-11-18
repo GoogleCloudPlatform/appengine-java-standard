@@ -59,6 +59,8 @@ import com.google.apphosting.runtime.TraceContextHelper;
 import com.google.apphosting.runtime.jetty.AppInfoFactory;
 import com.google.common.base.Strings;
 import com.google.common.flogger.GoogleLogger;
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.time.Duration;
 import java.util.Objects;
 import java.util.stream.Stream;
@@ -66,7 +68,9 @@ import org.eclipse.jetty.http.HttpField;
 import org.eclipse.jetty.http.HttpFields;
 import org.eclipse.jetty.http.HttpScheme;
 import org.eclipse.jetty.http.HttpURI;
+import org.eclipse.jetty.server.ConnectionMetaData;
 import org.eclipse.jetty.server.Request;
+import org.eclipse.jetty.util.HostPort;
 
 /**
  * Implementation for the {@link RequestAPIData} to allow for the Jetty {@link Request} to be used
@@ -274,6 +278,7 @@ public class JettyRequestAPIData implements RequestAPIData {
       traceContext =
           com.google.apphosting.base.protos.TracePb.TraceContextProto.getDefaultInstance();
 
+    String finalUserIp = userIp;
     this.originalRequest = request;
     this.request =
         new Request.Wrapper(request) {
@@ -290,6 +295,26 @@ public class JettyRequestAPIData implements RequestAPIData {
           @Override
           public HttpFields getHeaders() {
             return fields;
+          }
+
+          @Override
+          public ConnectionMetaData getConnectionMetaData() {
+            return new ConnectionMetaData.Wrapper(super.getConnectionMetaData()) {
+              @Override
+              public SocketAddress getRemoteSocketAddress() {
+                return InetSocketAddress.createUnresolved(finalUserIp, 0);
+              }
+
+              @Override
+              public HostPort getServerAuthority() {
+                return new HostPort("0.0.0.0", 0);
+              }
+
+              @Override
+              public SocketAddress getLocalSocketAddress() {
+                return InetSocketAddress.createUnresolved("0.0.0.0", 0);
+              }
+            };
           }
         };
   }

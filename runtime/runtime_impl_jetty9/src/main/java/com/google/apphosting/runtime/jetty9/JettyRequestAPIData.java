@@ -60,15 +60,12 @@ import com.google.apphosting.runtime.TraceContextHelper;
 import com.google.common.base.Strings;
 import com.google.common.flogger.GoogleLogger;
 import java.time.Duration;
-import java.util.Collections;
 import java.util.Enumeration;
-import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.stream.Stream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
-
 import org.eclipse.jetty.http.HttpField;
 import org.eclipse.jetty.http.HttpFields;
 import org.eclipse.jetty.http.HttpScheme;
@@ -287,6 +284,7 @@ public class JettyRequestAPIData implements RequestAPIData {
       traceContext = TraceContextProto.getDefaultInstance();
     }
 
+    String finalUserIp = userIp;
     this.httpServletRequest =
         new HttpServletRequestWrapper(httpServletRequest) {
 
@@ -328,6 +326,41 @@ public class JettyRequestAPIData implements RequestAPIData {
           @Override
           public boolean isSecure() {
             return isSecure;
+          }
+
+          @Override
+          public String getRemoteAddr() {
+            return finalUserIp;
+          }
+
+          @Override
+          public String getServerName() {
+            return "0.0.0.0";
+          }
+
+          @Override
+          public String getRemoteHost() {
+            return finalUserIp;
+          }
+
+          @Override
+          public int getRemotePort() {
+            return 0;
+          }
+
+          @Override
+          public String getLocalName() {
+            return "0.0.0.0";
+          }
+
+          @Override
+          public String getLocalAddr() {
+            return "0.0.0.0";
+          }
+
+          @Override
+          public int getLocalPort() {
+            return 0;
           }
         };
 
