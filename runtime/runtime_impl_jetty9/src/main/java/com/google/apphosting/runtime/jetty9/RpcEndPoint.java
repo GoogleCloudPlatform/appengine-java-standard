@@ -16,6 +16,8 @@
 
 package com.google.apphosting.runtime.jetty9;
 
+import static com.google.apphosting.runtime.AppEngineConstants.UNSPECIFIED_IP;
+
 import com.google.apphosting.base.protos.RuntimePb.UPRequest;
 import com.google.apphosting.base.protos.RuntimePb.UPResponse;
 import com.google.apphosting.runtime.MutableUpResponse;
@@ -55,7 +57,7 @@ public class RpcEndPoint implements EndPoint {
 
   @Override
   public InetSocketAddress getLocalAddress() {
-    return InetSocketAddress.createUnresolved("0.0.0.0", 0);
+    return InetSocketAddress.createUnresolved(UNSPECIFIED_IP, 0);
   }
 
   @Override

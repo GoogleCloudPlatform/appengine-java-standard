@@ -23,6 +23,7 @@ import static com.google.apphosting.runtime.AppEngineConstants.IS_ADMIN_HEADER_V
 import static com.google.apphosting.runtime.AppEngineConstants.IS_TRUSTED;
 import static com.google.apphosting.runtime.AppEngineConstants.PRIVATE_APPENGINE_HEADERS;
 import static com.google.apphosting.runtime.AppEngineConstants.SKIP_ADMIN_CHECK_ATTR;
+import static com.google.apphosting.runtime.AppEngineConstants.UNSPECIFIED_IP;
 import static com.google.apphosting.runtime.AppEngineConstants.WARMUP_IP;
 import static com.google.apphosting.runtime.AppEngineConstants.WARMUP_REQUEST_URL;
 import static com.google.apphosting.runtime.AppEngineConstants.X_APPENGINE_API_TICKET;
@@ -335,7 +336,7 @@ public class JettyRequestAPIData implements RequestAPIData {
 
           @Override
           public String getServerName() {
-            return "0.0.0.0";
+            return UNSPECIFIED_IP;
           }
 
           @Override
@@ -350,12 +351,12 @@ public class JettyRequestAPIData implements RequestAPIData {
 
           @Override
           public String getLocalName() {
-            return "0.0.0.0";
+            return UNSPECIFIED_IP;
           }
 
           @Override
           public String getLocalAddr() {
-            return "0.0.0.0";
+            return UNSPECIFIED_IP;
           }
 
           @Override
