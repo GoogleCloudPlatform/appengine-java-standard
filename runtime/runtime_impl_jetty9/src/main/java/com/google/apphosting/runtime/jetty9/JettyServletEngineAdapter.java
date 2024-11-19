@@ -42,10 +42,7 @@ import java.io.InputStreamReader;
 import java.util.Objects;
 import java.util.Optional;
 import javax.servlet.ServletException;
-import org.eclipse.jetty.server.Connector;
-import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.handler.SizeLimitHandler;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
 
@@ -105,21 +102,25 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
 
   @Override
   public void start(String serverInfo, ServletEngineAdapter.Config runtimeOptions) {
+    boolean isHttpConnectorMode = Boolean.getBoolean(HTTP_CONNECTOR_MODE);
     server = new Server(new QueuedThreadPool(MAX_THREAD_POOL_THREADS, MIN_THREAD_POOL_THREADS));
-    rpcConnector = new RpcConnector(server);
-    server.setConnectors(new Connector[] {rpcConnector});
+
+    if (!isHttpConnectorMode) {
+      rpcConnector = new RpcConnector(server);
+      server.addConnector(rpcConnector);
+    }
+
     AppVersionHandlerFactory appVersionHandlerFactory =
         new AppVersionHandlerFactory(
             server, serverInfo, contextFactory, /* useJettyErrorPageHandler= */ false);
     appVersionHandlerMap = new AppVersionHandlerMap(appVersionHandlerFactory);
+    server.setHandler(appVersionHandlerMap);
 
-    if (!Objects.equals(System.getenv("GAE_RUNTIME"), "java8")
-        && !Boolean.getBoolean(IGNORE_RESPONSE_SIZE_LIMIT)) {
-      SizeLimitHandler sizeLimitHandler = new SizeLimitHandler(-1, MAX_RESPONSE_SIZE);
-      sizeLimitHandler.setHandler(appVersionHandlerMap);
-      server.setHandler(sizeLimitHandler);
-    } else {
-      server.setHandler(appVersionHandlerMap);
+    boolean ignoreResponseSizeLimit =
+        Objects.equals(System.getenv("GAE_RUNTIME"), "java8")
+            || Boolean.getBoolean(IGNORE_RESPONSE_SIZE_LIMIT);
+    if (!ignoreResponseSizeLimit && !isHttpConnectorMode) {
+      server.insertHandler(new SizeLimitHandler(-1, MAX_RESPONSE_SIZE));
     }
 
     try {
@@ -138,15 +139,14 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
         evaluationRuntimeServerInterface.addAppVersion(context, appinfo);
         EmptyMessage unused = context.getResponse();
 
-        if (Boolean.getBoolean(HTTP_CONNECTOR_MODE)) {
+        if (isHttpConnectorMode) {
           logger.atInfo().log("Using HTTP_CONNECTOR_MODE to bypass RPC");
           appVersionKey = AppVersionKey.fromAppInfo(appinfo);
-          JettyHttpProxy.insertHandlers(server);
           AppVersion appVersion = appVersionHandlerMap.getAppVersion(appVersionKey);
           server.insertHandler(
               new JettyHttpHandler(runtimeOptions, appVersion, appVersionKey, appInfoFactory));
-          ServerConnector connector = JettyHttpProxy.newConnector(server, runtimeOptions);
-          server.addConnector(connector);
+          JettyHttpProxy.insertHandlers(server, ignoreResponseSizeLimit);
+          server.addConnector(JettyHttpProxy.newConnector(server, runtimeOptions));
         } else {
           server.setAttribute(
               "com.google.apphosting.runtime.jetty9.appYaml",
@@ -185,7 +185,7 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
   }
 
   @Override
-  public void addAppVersion(AppVersion appVersion) throws FileNotFoundException {
+  public void addAppVersion(AppVersion appVersion) {
     appVersionHandlerMap.addAppVersion(appVersion);
   }
 
