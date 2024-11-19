@@ -23,6 +23,7 @@ import static com.google.apphosting.runtime.AppEngineConstants.IS_ADMIN_HEADER_V
 import static com.google.apphosting.runtime.AppEngineConstants.IS_TRUSTED;
 import static com.google.apphosting.runtime.AppEngineConstants.PRIVATE_APPENGINE_HEADERS;
 import static com.google.apphosting.runtime.AppEngineConstants.SKIP_ADMIN_CHECK_ATTR;
+import static com.google.apphosting.runtime.AppEngineConstants.UNSPECIFIED_IP;
 import static com.google.apphosting.runtime.AppEngineConstants.WARMUP_IP;
 import static com.google.apphosting.runtime.AppEngineConstants.WARMUP_REQUEST_URL;
 import static com.google.apphosting.runtime.AppEngineConstants.X_APPENGINE_API_TICKET;
@@ -60,9 +61,7 @@ import com.google.apphosting.runtime.TraceContextHelper;
 import com.google.common.base.Strings;
 import com.google.common.flogger.GoogleLogger;
 import java.time.Duration;
-import java.util.Collections;
 import java.util.Enumeration;
-import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.stream.Stream;
@@ -287,6 +286,7 @@ public class JettyRequestAPIData implements RequestAPIData {
       traceContext = TraceContextProto.getDefaultInstance();
     }
 
+    String finalUserIp = userIp;
     this.httpServletRequest =
         new HttpServletRequestWrapper(httpServletRequest) {
 
@@ -328,6 +328,41 @@ public class JettyRequestAPIData implements RequestAPIData {
           @Override
           public boolean isSecure() {
             return isSecure;
+          }
+
+          @Override
+          public String getRemoteAddr() {
+            return finalUserIp;
+          }
+
+          @Override
+          public String getServerName() {
+            return UNSPECIFIED_IP;
+          }
+
+          @Override
+          public String getRemoteHost() {
+            return finalUserIp;
+          }
+
+          @Override
+          public int getRemotePort() {
+            return 0;
+          }
+
+          @Override
+          public String getLocalName() {
+            return UNSPECIFIED_IP;
+          }
+
+          @Override
+          public String getLocalAddr() {
+            return UNSPECIFIED_IP;
+          }
+
+          @Override
+          public int getLocalPort() {
+            return 0;
           }
         };
 
