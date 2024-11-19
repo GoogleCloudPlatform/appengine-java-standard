@@ -23,6 +23,7 @@ import static com.google.apphosting.runtime.AppEngineConstants.IS_ADMIN_HEADER_V
 import static com.google.apphosting.runtime.AppEngineConstants.IS_TRUSTED;
 import static com.google.apphosting.runtime.AppEngineConstants.PRIVATE_APPENGINE_HEADERS;
 import static com.google.apphosting.runtime.AppEngineConstants.SKIP_ADMIN_CHECK_ATTR;
+import static com.google.apphosting.runtime.AppEngineConstants.UNSPECIFIED_IP;
 import static com.google.apphosting.runtime.AppEngineConstants.WARMUP_IP;
 import static com.google.apphosting.runtime.AppEngineConstants.WARMUP_REQUEST_URL;
 import static com.google.apphosting.runtime.AppEngineConstants.X_APPENGINE_API_TICKET;
@@ -60,14 +61,13 @@ import com.google.apphosting.runtime.TraceContextHelper;
 import com.google.common.base.Strings;
 import com.google.common.flogger.GoogleLogger;
 import java.time.Duration;
-import java.util.Collections;
 import java.util.Enumeration;
-import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.stream.Stream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
+import org.eclipse.jetty.http.HttpField;
 import org.eclipse.jetty.http.HttpFields;
 import org.eclipse.jetty.http.HttpScheme;
 import org.eclipse.jetty.http.HttpURI;
@@ -126,10 +126,15 @@ public class JettyRequestAPIData implements RequestAPIData {
     this.securityTicket = DEFAULT_SECRET_KEY;
 
     HttpFields fields = new HttpFields();
-    List<String> headerNames = Collections.list(request.getHeaderNames());
-    for (String headerName : headerNames) {
-      String name = headerName.toLowerCase(Locale.ROOT);
-      String value = request.getHeader(headerName);
+    for (HttpField field : request.getHttpFields()) {
+      // If it has a HttpHeader it is one of the standard headers so won't match any appengine specific header.
+      if (field.getHeader() != null) {
+        fields.add(field);
+        continue;
+      }
+
+      String name = field.getName().toLowerCase(Locale.ROOT);
+      String value = field.getValue();
       if (Strings.isNullOrEmpty(value)) {
         continue;
       }
@@ -238,7 +243,7 @@ public class JettyRequestAPIData implements RequestAPIData {
 
       if (passThroughPrivateHeaders || !PRIVATE_APPENGINE_HEADERS.contains(name)) {
         // Only non AppEngine specific headers are passed to the application.
-        fields.add(name, value);
+        fields.add(field);
       }
     }
 
@@ -280,6 +285,7 @@ public class JettyRequestAPIData implements RequestAPIData {
       traceContext = TraceContextProto.getDefaultInstance();
     }
 
+    String finalUserIp = userIp;
     this.httpServletRequest =
         new HttpServletRequestWrapper(httpServletRequest) {
 
@@ -321,6 +327,41 @@ public class JettyRequestAPIData implements RequestAPIData {
           @Override
           public boolean isSecure() {
             return isSecure;
+          }
+
+          @Override
+          public String getRemoteAddr() {
+            return finalUserIp;
+          }
+
+          @Override
+          public String getServerName() {
+            return UNSPECIFIED_IP;
+          }
+
+          @Override
+          public String getRemoteHost() {
+            return finalUserIp;
+          }
+
+          @Override
+          public int getRemotePort() {
+            return 0;
+          }
+
+          @Override
+          public String getLocalName() {
+            return UNSPECIFIED_IP;
+          }
+
+          @Override
+          public String getLocalAddr() {
+            return UNSPECIFIED_IP;
+          }
+
+          @Override
+          public int getLocalPort() {
+            return 0;
           }
         };
 

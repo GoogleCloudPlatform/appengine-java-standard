@@ -69,13 +69,17 @@ create_settings_xml_file() {
 
 
 setup_environment_secrets
+## double commented lines are for attempting to use the git on borg repository.
+## cd ${KOKORO_ARTIFACTS_DIR}/git
 create_settings_xml_file "settings.xml"
 
-src_dir="${KOKORO_ARTIFACTS_DIR}/git/appengine-java-standard"
-cd $src_dir
+git clone https://github.com/GoogleCloudPlatform/appengine-java-standard.git
+cd appengine-java-standard
+## src_dir="${KOKORO_ARTIFACTS_DIR}/git/appengine-java-standard"
+## cd $src_dir
 
 # Enable correct evaluation of git buildnumber value for git on borg.
-git config --global --add safe.directory /tmpfs/src/git/appengine-java-standard
+## git config --global --add safe.directory /tmpfs/src/git/appengine-java-standard
 
 # Get the current version from pom.xml
 POM_VERSION=$(
@@ -130,4 +134,3 @@ git push --set-upstream origin $RELEASE_NUMBER
 git push origin v$RELEASE_NUMBER
 
 echo "Done doing a release."
-

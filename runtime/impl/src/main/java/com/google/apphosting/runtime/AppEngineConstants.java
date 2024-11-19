@@ -109,6 +109,8 @@ public final class AppEngineConstants {
   //     (<internal20>)
   public static final String WARMUP_IP = "0.1.0.3";
 
+  public static final String UNSPECIFIED_IP = "0.0.0.0";
+
   public static final String DEFAULT_SECRET_KEY = "secretkey";
 
   public static final String ENVIRONMENT_ATTR = "appengine.environment";

@@ -23,6 +23,7 @@ import static com.google.apphosting.runtime.AppEngineConstants.IS_ADMIN_HEADER_V
 import static com.google.apphosting.runtime.AppEngineConstants.IS_TRUSTED;
 import static com.google.apphosting.runtime.AppEngineConstants.PRIVATE_APPENGINE_HEADERS;
 import static com.google.apphosting.runtime.AppEngineConstants.SKIP_ADMIN_CHECK_ATTR;
+import static com.google.apphosting.runtime.AppEngineConstants.UNSPECIFIED_IP;
 import static com.google.apphosting.runtime.AppEngineConstants.WARMUP_IP;
 import static com.google.apphosting.runtime.AppEngineConstants.WARMUP_REQUEST_URL;
 import static com.google.apphosting.runtime.AppEngineConstants.X_APPENGINE_API_TICKET;
@@ -59,6 +60,8 @@ import com.google.apphosting.runtime.TraceContextHelper;
 import com.google.apphosting.runtime.jetty.AppInfoFactory;
 import com.google.common.base.Strings;
 import com.google.common.flogger.GoogleLogger;
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.time.Duration;
 import java.util.Objects;
 import java.util.stream.Stream;
@@ -66,7 +69,9 @@ import org.eclipse.jetty.http.HttpField;
 import org.eclipse.jetty.http.HttpFields;
 import org.eclipse.jetty.http.HttpScheme;
 import org.eclipse.jetty.http.HttpURI;
+import org.eclipse.jetty.server.ConnectionMetaData;
 import org.eclipse.jetty.server.Request;
+import org.eclipse.jetty.util.HostPort;
 
 /**
  * Implementation for the {@link RequestAPIData} to allow for the Jetty {@link Request} to be used
@@ -119,6 +124,12 @@ public class JettyRequestAPIData implements RequestAPIData {
 
     HttpFields.Mutable fields = HttpFields.build();
     for (HttpField field : request.getHeaders()) {
+      // If it has a HttpHeader it is one of the standard headers so won't match any appengine specific header.
+      if (field.getHeader() != null) {
+        fields.add(field);
+        continue;
+      }
+
       String name = field.getLowerCaseName();
       String value = field.getValue();
       if (Strings.isNullOrEmpty(value)) {
@@ -268,6 +279,7 @@ public class JettyRequestAPIData implements RequestAPIData {
       traceContext =
           com.google.apphosting.base.protos.TracePb.TraceContextProto.getDefaultInstance();
 
+    String finalUserIp = userIp;
     this.originalRequest = request;
     this.request =
         new Request.Wrapper(request) {
@@ -284,6 +296,26 @@ public class JettyRequestAPIData implements RequestAPIData {
           @Override
           public HttpFields getHeaders() {
             return fields;
+          }
+
+          @Override
+          public ConnectionMetaData getConnectionMetaData() {
+            return new ConnectionMetaData.Wrapper(super.getConnectionMetaData()) {
+              @Override
+              public SocketAddress getRemoteSocketAddress() {
+                return InetSocketAddress.createUnresolved(finalUserIp, 0);
+              }
+
+              @Override
+              public HostPort getServerAuthority() {
+                return new HostPort(UNSPECIFIED_IP, 0);
+              }
+
+              @Override
+              public SocketAddress getLocalSocketAddress() {
+                return InetSocketAddress.createUnresolved(UNSPECIFIED_IP, 0);
+              }
+            };
           }
         };
   }
