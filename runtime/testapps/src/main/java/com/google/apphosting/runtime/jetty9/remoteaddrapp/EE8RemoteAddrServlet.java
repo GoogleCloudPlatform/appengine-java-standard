@@ -14,31 +14,24 @@
  * limitations under the License.
  */
 
-package com.google.apphosting.runtime.jetty9.gzipapp;
+package com.google.apphosting.runtime.jetty9.remoteaddrapp;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.Enumeration;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.eclipse.jetty.util.IO;
 
-public class EE8EchoServlet extends HttpServlet {
+public class EE8RemoteAddrServlet extends HttpServlet {
   @Override
   protected void service(HttpServletRequest req, HttpServletResponse resp) throws IOException {
     resp.setContentType("text/plain");
-
     PrintWriter writer = resp.getWriter();
-    writer.println();
-    Enumeration<String> headerNames = req.getHeaderNames();
-    while (headerNames.hasMoreElements()) {
-      String headerName = headerNames.nextElement();
-      writer.println(headerName + ": " + req.getHeader(headerName));
-    }
-    writer.println();
-
-    String string = IO.toString(req.getInputStream());
-    writer.print(string);
+    writer.println("getRemoteAddr: " + req.getRemoteAddr());
+    writer.println("getLocalAddr: " + req.getLocalAddr());
+    writer.println("getServerPort: " + req.getServerPort());
+    writer.println("getRemotePort: " + req.getRemotePort());
+    writer.println("getLocalPort: " + req.getLocalPort());
+    writer.println("getServerName: " + req.getServerName());
   }
 }
