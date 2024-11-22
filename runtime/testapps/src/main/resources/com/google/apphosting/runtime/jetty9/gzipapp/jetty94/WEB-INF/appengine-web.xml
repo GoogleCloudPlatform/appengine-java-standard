@@ -20,6 +20,6 @@
   <application>gzip</application>
   <threadsafe>true</threadsafe>
   <system-properties>
-    <property name="appengine.use.EE8" value="true"/>
+    <property name="appengine.use.EE8" value="false"/>
   </system-properties>
 </appengine-web-app>
