@@ -316,7 +316,7 @@ public class SizeLimitHandlerTest extends JavaRuntimeViaHttpBase {
         .header(HttpHeader.CONTENT_ENCODING, "gzip")
         .send(completionListener::complete);
 
-    Result result = completionListener.get(5000, TimeUnit.SECONDS);
+    Result result = completionListener.get(5, TimeUnit.SECONDS);
     assertThat(result.getResponse().getStatus(), equalTo(HttpStatus.PAYLOAD_TOO_LARGE_413));
 
     // If there is no Content-Length header the SizeLimitHandler fails the response as well.
