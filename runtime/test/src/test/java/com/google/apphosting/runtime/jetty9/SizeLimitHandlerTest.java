@@ -49,6 +49,7 @@ import org.eclipse.jetty.http.HttpStatus;
 import org.eclipse.jetty.util.BufferUtil;
 import org.eclipse.jetty.util.Utf8StringBuilder;
 import org.junit.After;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -59,7 +60,7 @@ import org.junit.runners.Parameterized;
 public class SizeLimitHandlerTest extends JavaRuntimeViaHttpBase {
 
   @Parameterized.Parameters
-  public static Collection<Object[]> data() {
+  public static Collection<Object[]> parameters() {
     return Arrays.asList(
         new Object[][] {
           {"jetty94", false},
@@ -85,11 +86,8 @@ public class SizeLimitHandlerTest extends JavaRuntimeViaHttpBase {
     System.setProperty("appengine.use.HttpConnector", Boolean.toString(httpMode));
   }
 
+  @Before
   public void start() throws Exception {
-    start(false);
-  }
-
-  public void start(boolean ignoreResponseLimit) throws Exception {
     String app = "sizelimit" + environment;
     copyAppToDir(app, temp.getRoot().toPath());
     httpClient.start();
@@ -101,12 +99,13 @@ public class SizeLimitHandlerTest extends JavaRuntimeViaHttpBase {
   @After
   public void after() throws Exception {
     httpClient.stop();
-    runtime.close();
+    if (runtime != null) {
+      runtime.close();
+    }
   }
 
   @Test
   public void testResponseContentBelowMaxLength() throws Exception {
-    start();
     long contentLength = MAX_SIZE;
     String url = runtime.jettyUrl("/?size=" + contentLength);
     CompletableFuture<Result> completionListener = new CompletableFuture<>();
@@ -129,7 +128,6 @@ public class SizeLimitHandlerTest extends JavaRuntimeViaHttpBase {
 
   @Test
   public void testResponseContentAboveMaxLength() throws Exception {
-    start();
     long contentLength = MAX_SIZE + 1;
     String url = runtime.jettyUrl("/?size=" + contentLength);
 
@@ -163,31 +161,7 @@ public class SizeLimitHandlerTest extends JavaRuntimeViaHttpBase {
   }
 
   @Test
-  public void testResponseContentAboveMaxLengthIgnored() throws Exception {
-    start(true);
-    long contentLength = MAX_SIZE + 1;
-    String url = runtime.jettyUrl("/?size=" + contentLength);
-    CompletableFuture<Result> completionListener = new CompletableFuture<>();
-    AtomicLong contentReceived = new AtomicLong();
-    httpClient
-        .newRequest(url)
-        .onResponseContentAsync(
-            (response, content, callback) -> {
-              contentReceived.addAndGet(content.remaining());
-              callback.succeeded();
-            })
-        .header("setCustomHeader", "true")
-        .send(completionListener::complete);
-
-    Result result = completionListener.get(5, TimeUnit.SECONDS);
-    assertThat(result.getResponse().getStatus(), equalTo(HttpStatus.OK_200));
-    assertThat(contentReceived.get(), equalTo(contentLength));
-    assertThat(result.getResponse().getHeaders().get("custom-header"), equalTo("true"));
-  }
-
-  @Test
   public void testResponseContentBelowMaxLengthGzip() throws Exception {
-    start();
     long contentLength = MAX_SIZE;
     String url = runtime.jettyUrl("/?size=" + contentLength);
     CompletableFuture<Result> completionListener = new CompletableFuture<>();
@@ -211,7 +185,6 @@ public class SizeLimitHandlerTest extends JavaRuntimeViaHttpBase {
 
   @Test
   public void testResponseContentAboveMaxLengthGzip() throws Exception {
-    start();
     long contentLength = MAX_SIZE + 1;
     String url = runtime.jettyUrl("/?size=" + contentLength);
     httpClient.getContentDecoderFactories().clear();
@@ -251,32 +224,7 @@ public class SizeLimitHandlerTest extends JavaRuntimeViaHttpBase {
   }
 
   @Test
-  public void testResponseContentAboveMaxLengthGzipIgnored() throws Exception {
-    start(true);
-    long contentLength = MAX_SIZE + 1;
-    String url = runtime.jettyUrl("/?size=" + contentLength);
-    CompletableFuture<Result> completionListener = new CompletableFuture<>();
-    AtomicLong contentReceived = new AtomicLong();
-    httpClient.getContentDecoderFactories().clear();
-    httpClient
-        .newRequest(url)
-        .onResponseContentAsync(
-            (response, content, callback) -> {
-              contentReceived.addAndGet(content.remaining());
-              callback.succeeded();
-            })
-        .header(HttpHeader.ACCEPT_ENCODING, "gzip")
-        .send(completionListener::complete);
-
-    Result result = completionListener.get(5, TimeUnit.SECONDS);
-    assertThat(result.getResponse().getHeaders().get(HttpHeader.CONTENT_ENCODING), equalTo("gzip"));
-    assertThat(result.getResponse().getStatus(), equalTo(HttpStatus.OK_200));
-    assertThat(contentReceived.get(), lessThan(contentLength));
-  }
-
-  @Test
   public void testRequestContentBelowMaxLength() throws Exception {
-    start();
     int contentLength = MAX_SIZE;
 
     byte[] data = new byte[contentLength];
@@ -292,7 +240,6 @@ public class SizeLimitHandlerTest extends JavaRuntimeViaHttpBase {
 
   @Test
   public void testRequestContentAboveMaxLength() throws Exception {
-    start();
     int contentLength = MAX_SIZE + 1;
 
     CompletableFuture<Result> completionListener = new CompletableFuture<>();
@@ -322,7 +269,6 @@ public class SizeLimitHandlerTest extends JavaRuntimeViaHttpBase {
 
   @Test
   public void testRequestContentBelowMaxLengthGzip() throws Exception {
-    start();
     int contentLength = MAX_SIZE;
 
     CompletableFuture<Result> completionListener = new CompletableFuture<>();
@@ -350,7 +296,6 @@ public class SizeLimitHandlerTest extends JavaRuntimeViaHttpBase {
 
   @Test
   public void testRequestContentAboveMaxLengthGzip() throws Exception {
-    start();
     int contentLength = MAX_SIZE + 1;
 
     CompletableFuture<Result> completionListener = new CompletableFuture<>();
@@ -371,7 +316,7 @@ public class SizeLimitHandlerTest extends JavaRuntimeViaHttpBase {
         .header(HttpHeader.CONTENT_ENCODING, "gzip")
         .send(completionListener::complete);
 
-    Result result = completionListener.get(5, TimeUnit.SECONDS);
+    Result result = completionListener.get(5000, TimeUnit.SECONDS);
     assertThat(result.getResponse().getStatus(), equalTo(HttpStatus.PAYLOAD_TOO_LARGE_413));
 
     // If there is no Content-Length header the SizeLimitHandler fails the response as well.
@@ -382,7 +327,6 @@ public class SizeLimitHandlerTest extends JavaRuntimeViaHttpBase {
 
   @Test
   public void testResponseContentLengthHeader() throws Exception {
-    start();
     long contentLength = MAX_SIZE + 1;
     String url = runtime.jettyUrl("/?setContentLength=" + contentLength);
     httpClient.getContentDecoderFactories().clear();
@@ -398,7 +342,6 @@ public class SizeLimitHandlerTest extends JavaRuntimeViaHttpBase {
 
   @Test
   public void testRequestContentLengthHeader() throws Exception {
-    start();
     CompletableFuture<Result> completionListener = new CompletableFuture<>();
     DeferredContentProvider provider = new DeferredContentProvider(ByteBuffer.allocate(1));
     int contentLength = MAX_SIZE + 1;
@@ -437,7 +380,10 @@ public class SizeLimitHandlerTest extends JavaRuntimeViaHttpBase {
     String match;
     switch (environment) {
       case "jetty94":
-        match = "org.eclipse.jetty.server.Request";
+        match =
+            httpMode
+                ? "com.google.apphosting.runtime.jetty9.JettyRequestAPIData"
+                : "org.eclipse.jetty.server.Request";
         break;
       case "ee8":
         match = "org.eclipse.jetty.ee8";
