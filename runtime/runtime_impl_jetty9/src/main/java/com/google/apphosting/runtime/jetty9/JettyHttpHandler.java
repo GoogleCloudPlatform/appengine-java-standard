@@ -46,6 +46,7 @@ import javax.servlet.UnavailableException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.eclipse.jetty.http.BadMessageException;
+import org.eclipse.jetty.http.HttpStatus;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.HttpChannel;
 import org.eclipse.jetty.server.Request;
@@ -134,26 +135,31 @@ public class JettyHttpHandler extends HandlerWrapper {
       }
     } catch (
         @SuppressWarnings("InterruptedExceptionSwallowed")
-        Throwable ex) {
+        Throwable th) {
       // Note we do intentionally swallow InterruptException.
       // We will report the exception via the rpc. We don't mark this thread as interrupted because
       // ThreadGroupPool would use that as a signal to remove the thread from the pool; we don't
       // need that.
-      Throwable cause = unwrap(ex, BadMessageException.class, UnavailableException.class);
-      handleException(cause, requestToken, genericResponse);
+      final int code;
+      final String message;
+      Throwable cause = unwrap(th, BadMessageException.class, UnavailableException.class);
       if (cause instanceof BadMessageException) {
         BadMessageException bme = (BadMessageException) cause;
-        response.sendError(bme.getCode(), cause.getMessage());
+        code = bme.getCode();
+        message = bme.getReason();
       } else if (cause instanceof UnavailableException) {
-        UnavailableException ue = (UnavailableException) cause;
-        response.sendError(
-            ue.isPermanent()
-                ? HttpServletResponse.SC_NOT_FOUND
-                : HttpServletResponse.SC_SERVICE_UNAVAILABLE,
-            cause.getMessage());
+        message = cause.toString();
+        if (((UnavailableException)cause).isPermanent())
+          code = HttpStatus.NOT_FOUND_404;
+        else
+          code = HttpStatus.SERVICE_UNAVAILABLE_503;
       } else {
-        response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, cause.getMessage());
+        code = HttpStatus.INTERNAL_SERVER_ERROR_500;
+        message = th.toString();
       }
+
+      handleException(th, requestToken, genericResponse);
+      response.sendError(code, message);
     } finally {
       // We don't want threads used for background requests to go back
       // in the thread pool, because users may have stashed references
