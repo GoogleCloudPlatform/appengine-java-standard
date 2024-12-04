@@ -30,7 +30,7 @@ import com.google.apphosting.base.protos.AppinfoPb;
 import com.google.apphosting.base.protos.SystemServicePb.StartBackgroundRequestRequest;
 import com.google.apphosting.base.protos.SystemServicePb.StartBackgroundRequestResponse;
 import com.google.apphosting.base.protos.api.RemoteApiPb;
-import com.google.apphosting.datastore.DatastoreV3Pb.PutResponse;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.PutResponse;
 import com.google.apphosting.runtime.ApiDeadlineOracle;
 import com.google.apphosting.runtime.ApiProxyImpl;
 import com.google.apphosting.runtime.AppVersion;

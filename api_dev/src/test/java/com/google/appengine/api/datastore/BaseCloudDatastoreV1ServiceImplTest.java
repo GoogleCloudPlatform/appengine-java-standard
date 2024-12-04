@@ -25,7 +25,7 @@ import static org.mockito.Mockito.when;
 
 import com.google.appengine.api.datastore.DatastoreAttributes.DatastoreType;
 import com.google.apphosting.api.ApiProxy;
-import com.google.apphosting.datastore.DatastoreV3Pb.CompiledCursor;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.CompiledCursor;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterators;
@@ -53,7 +53,7 @@ import com.google.datastore.v1.RunQueryResponse;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.rpc.Code;
-import com.google.storage.onestore.v3.OnestoreEntity.IndexPosition;
+import com.google.storage.onestore.v3.proto2api.OnestoreEntity.IndexPosition;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -365,10 +365,11 @@ public abstract class BaseCloudDatastoreV1ServiceImplTest {
         QueryResultBatch.newBuilder()
             .setMoreResults(moreResults)
             .setEndCursor(
-                new CompiledCursor()
+                CompiledCursor
+                    .newBuilder()
                     .setAbsolutePosition(
-                        new IndexPosition().setKey("f" + cursorIndex.incrementAndGet()))
-                    .toByteString())
+                        IndexPosition.newBuilder().setKey("f" + cursorIndex.incrementAndGet()).build())
+                    .build().toByteString())
             .setEntityResultType(EntityResult.ResultType.FULL);
 
     if (skippedResults != 0) {

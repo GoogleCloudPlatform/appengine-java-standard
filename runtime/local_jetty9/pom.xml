@@ -69,10 +69,6 @@
       <artifactId>protobuf-java</artifactId>
    </dependency>
     <dependency>
-      <groupId>com.google.appengine</groupId>
-      <artifactId>proto1</artifactId>
-    </dependency>
-    <dependency>
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-webapp</artifactId>
     </dependency>
@@ -186,18 +182,6 @@
                   <includes>
                     <include>com/google/appengine/tools/development/proto/**</include>
                   </includes>
-                </filter>
-                <filter>
-                  <artifact>com.google.appengine:proto1:*</artifact>
-                  <includes>
-                    <include>com/google/common/flags/*</include>
-                    <include>com/google/common/flags/ext/*</include>
-                    <include>com/google/io/protocol/**</include>
-                    <include>com/google/protobuf/**</include>
-                  </includes>
-                  <excludes>
-                    <exclude>com/google/io/protocol/proto2/*</exclude>
-                  </excludes>
                 </filter>
                 <filter>
                   <artifact>com.google.appengine:shared-sdk-jetty9:*</artifact>

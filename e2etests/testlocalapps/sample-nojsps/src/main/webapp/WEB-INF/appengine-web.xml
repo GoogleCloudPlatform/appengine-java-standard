@@ -24,6 +24,7 @@
   <static-files/>
 
   <threadsafe>true</threadsafe>
+  <use-google-connector-j>true</use-google-connector-j>
 
   <!-- files in the war, other than WEB-INF, which are java resources: none -->
   <resource-files/>
