@@ -60,13 +60,14 @@ import org.junit.runners.Parameterized;
 public class SizeLimitHandlerTest extends JavaRuntimeViaHttpBase {
 
   @Parameterized.Parameters
-  public static Collection<Object[]> data() {
+  public static Collection<Object[]> parameters() {
     return Arrays.asList(
         new Object[][] {
           {"jetty94", false},
+          {"jetty94", true},
           {"ee8", false},
-          {"ee10", false},
           {"ee8", true},
+          {"ee10", false},
           {"ee10", true},
         });
   }
@@ -86,7 +87,7 @@ public class SizeLimitHandlerTest extends JavaRuntimeViaHttpBase {
   }
 
   @Before
-  public void before() throws Exception {
+  public void start() throws Exception {
     String app = "sizelimit" + environment;
     copyAppToDir(app, temp.getRoot().toPath());
     httpClient.start();
@@ -96,10 +97,11 @@ public class SizeLimitHandlerTest extends JavaRuntimeViaHttpBase {
   }
 
   @After
-  public void after() throws Exception
-  {
+  public void after() throws Exception {
     httpClient.stop();
-    runtime.close();
+    if (runtime != null) {
+      runtime.close();
+    }
   }
 
   @Test
@@ -108,10 +110,15 @@ public class SizeLimitHandlerTest extends JavaRuntimeViaHttpBase {
     String url = runtime.jettyUrl("/?size=" + contentLength);
     CompletableFuture<Result> completionListener = new CompletableFuture<>();
     AtomicLong contentReceived = new AtomicLong();
-    httpClient.newRequest(url).onResponseContentAsync((response, content, callback) -> {
-      contentReceived.addAndGet(content.remaining());
-      callback.succeeded();
-    }).header("setCustomHeader", "true").send(completionListener::complete);
+    httpClient
+        .newRequest(url)
+        .onResponseContentAsync(
+            (response, content, callback) -> {
+              contentReceived.addAndGet(content.remaining());
+              callback.succeeded();
+            })
+        .header("setCustomHeader", "true")
+        .send(completionListener::complete);
 
     Result result = completionListener.get(5, TimeUnit.SECONDS);
     assertThat(result.getResponse().getStatus(), equalTo(HttpStatus.OK_200));
@@ -148,8 +155,9 @@ public class SizeLimitHandlerTest extends JavaRuntimeViaHttpBase {
     assertThat(received.length(), lessThanOrEqualTo(MAX_SIZE));
 
     // No content is sent on the Jetty 9.4 runtime.
-    if (!"jetty94".equals(environment) && !httpMode)
+    if (!"jetty94".equals(environment) && !httpMode) {
       assertThat(received.toString(), containsString("Response body is too large"));
+    }
   }
 
   @Test
@@ -159,14 +167,15 @@ public class SizeLimitHandlerTest extends JavaRuntimeViaHttpBase {
     CompletableFuture<Result> completionListener = new CompletableFuture<>();
     AtomicLong contentReceived = new AtomicLong();
     httpClient.getContentDecoderFactories().clear();
-    httpClient.newRequest(url)
-      .onResponseContentAsync((response, content, callback) ->
-      {
-        contentReceived.addAndGet(content.remaining());
-        callback.succeeded();
-      })
-      .header(HttpHeader.ACCEPT_ENCODING, "gzip")
-      .send(completionListener::complete);
+    httpClient
+        .newRequest(url)
+        .onResponseContentAsync(
+            (response, content, callback) -> {
+              contentReceived.addAndGet(content.remaining());
+              callback.succeeded();
+            })
+        .header(HttpHeader.ACCEPT_ENCODING, "gzip")
+        .send(completionListener::complete);
 
     Result result = completionListener.get(5, TimeUnit.SECONDS);
     assertThat(result.getResponse().getHeaders().get(HttpHeader.CONTENT_ENCODING), equalTo("gzip"));
@@ -209,8 +218,9 @@ public class SizeLimitHandlerTest extends JavaRuntimeViaHttpBase {
     assertThat(received.length(), lessThanOrEqualTo(MAX_SIZE));
 
     // No content is sent on the Jetty 9.4 runtime.
-    if (!"jetty94".equals(environment) && !httpMode)
+    if (!"jetty94".equals(environment) && !httpMode) {
       assertThat(received.toString(), containsString("Response body is too large"));
+    }
   }
 
   @Test
@@ -218,7 +228,7 @@ public class SizeLimitHandlerTest extends JavaRuntimeViaHttpBase {
     int contentLength = MAX_SIZE;
 
     byte[] data = new byte[contentLength];
-    Arrays.fill(data, (byte)'X');
+    Arrays.fill(data, (byte) 'X');
     ContentProvider content = new ByteBufferContentProvider(BufferUtil.toBuffer(data));
     String url = runtime.jettyUrl("/");
     ContentResponse response = httpClient.newRequest(url).content(content).send();
@@ -234,17 +244,19 @@ public class SizeLimitHandlerTest extends JavaRuntimeViaHttpBase {
 
     CompletableFuture<Result> completionListener = new CompletableFuture<>();
     byte[] data = new byte[contentLength];
-    Arrays.fill(data, (byte)'X');
+    Arrays.fill(data, (byte) 'X');
     Utf8StringBuilder received = new Utf8StringBuilder();
     ContentProvider content = new ByteBufferContentProvider(BufferUtil.toBuffer(data));
     String url = runtime.jettyUrl("/");
-    httpClient.newRequest(url).content(content)
-      .onResponseContentAsync((response, content1, callback) ->
-      {
-        received.append(content1);
-        callback.succeeded();
-      })
-      .send(completionListener::complete);
+    httpClient
+        .newRequest(url)
+        .content(content)
+        .onResponseContentAsync(
+            (response, content1, callback) -> {
+              received.append(content1);
+              callback.succeeded();
+            })
+        .send(completionListener::complete);
 
     Result result = completionListener.get(5, TimeUnit.SECONDS);
     assertThat(result.getResponse().getStatus(), equalTo(HttpStatus.PAYLOAD_TOO_LARGE_413));
@@ -261,19 +273,21 @@ public class SizeLimitHandlerTest extends JavaRuntimeViaHttpBase {
 
     CompletableFuture<Result> completionListener = new CompletableFuture<>();
     byte[] data = new byte[contentLength];
-    Arrays.fill(data, (byte)'X');
+    Arrays.fill(data, (byte) 'X');
     Utf8StringBuilder received = new Utf8StringBuilder();
     ContentProvider content = new InputStreamContentProvider(gzip(data));
 
     String url = runtime.jettyUrl("/");
-    httpClient.newRequest(url).content(content)
-      .onResponseContentAsync((response, content1, callback) ->
-      {
-        received.append(content1);
-        callback.succeeded();
-      })
-      .header(HttpHeader.CONTENT_ENCODING, "gzip")
-      .send(completionListener::complete);
+    httpClient
+        .newRequest(url)
+        .content(content)
+        .onResponseContentAsync(
+            (response, content1, callback) -> {
+              received.append(content1);
+              callback.succeeded();
+            })
+        .header(HttpHeader.CONTENT_ENCODING, "gzip")
+        .send(completionListener::complete);
 
     Result result = completionListener.get(5, TimeUnit.SECONDS);
     assertThat(result.getResponse().getStatus(), equalTo(HttpStatus.OK_200));
@@ -286,19 +300,21 @@ public class SizeLimitHandlerTest extends JavaRuntimeViaHttpBase {
 
     CompletableFuture<Result> completionListener = new CompletableFuture<>();
     byte[] data = new byte[contentLength];
-    Arrays.fill(data, (byte)'X');
+    Arrays.fill(data, (byte) 'X');
     Utf8StringBuilder received = new Utf8StringBuilder();
     ContentProvider content = new InputStreamContentProvider(gzip(data));
 
     String url = runtime.jettyUrl("/");
-    httpClient.newRequest(url).content(content)
-            .onResponseContentAsync((response, content1, callback) ->
-            {
+    httpClient
+        .newRequest(url)
+        .content(content)
+        .onResponseContentAsync(
+            (response, content1, callback) -> {
               received.append(content1);
               callback.succeeded();
             })
-            .header(HttpHeader.CONTENT_ENCODING, "gzip")
-            .send(completionListener::complete);
+        .header(HttpHeader.CONTENT_ENCODING, "gzip")
+        .send(completionListener::complete);
 
     Result result = completionListener.get(5, TimeUnit.SECONDS);
     assertThat(result.getResponse().getStatus(), equalTo(HttpStatus.PAYLOAD_TOO_LARGE_413));
@@ -319,8 +335,9 @@ public class SizeLimitHandlerTest extends JavaRuntimeViaHttpBase {
     assertThat(response.getStatus(), equalTo(HttpStatus.INTERNAL_SERVER_ERROR_500));
 
     // No content is sent on the Jetty 9.4 runtime.
-    if (!"jetty94".equals(environment))
+    if (!"jetty94".equals(environment)) {
       assertThat(response.getContentAsString(), containsString("Response body is too large"));
+    }
   }
 
   @Test
@@ -330,17 +347,18 @@ public class SizeLimitHandlerTest extends JavaRuntimeViaHttpBase {
     int contentLength = MAX_SIZE + 1;
     String url = runtime.jettyUrl("/");
     Utf8StringBuilder received = new Utf8StringBuilder();
-    httpClient.newRequest(url)
-            .header(HttpHeader.CONTENT_LENGTH, Long.toString(contentLength))
-            .header("foo", "bar")
-            .content(provider)
-            .onResponseContentAsync((response, content, callback) ->
-            {
+    httpClient
+        .newRequest(url)
+        .header(HttpHeader.CONTENT_LENGTH, Long.toString(contentLength))
+        .header("foo", "bar")
+        .content(provider)
+        .onResponseContentAsync(
+            (response, content, callback) -> {
               received.append(content);
               callback.succeeded();
               provider.close();
             })
-            .send(completionListener::complete);
+        .send(completionListener::complete);
 
     Result result = completionListener.get(5, TimeUnit.SECONDS);
     Response response = result.getResponse();
@@ -358,13 +376,14 @@ public class SizeLimitHandlerTest extends JavaRuntimeViaHttpBase {
     return RuntimeContext.create(config);
   }
 
-  private void assertEnvironment() throws Exception
-  {
+  private void assertEnvironment() throws Exception {
     String match;
-    switch (environment)
-    {
+    switch (environment) {
       case "jetty94":
-        match = "org.eclipse.jetty.server.Request";
+        match =
+            httpMode
+                ? "com.google.apphosting.runtime.jetty9.JettyRequestAPIData"
+                : "org.eclipse.jetty.server.Request";
         break;
       case "ee8":
         match = "org.eclipse.jetty.ee8";

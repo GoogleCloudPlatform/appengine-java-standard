@@ -41,9 +41,13 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.time.Duration;
 import java.util.concurrent.TimeoutException;
+import javax.annotation.Nullable;
 import javax.servlet.ServletException;
+import javax.servlet.UnavailableException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.eclipse.jetty.http.BadMessageException;
+import org.eclipse.jetty.http.HttpStatus;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.HttpChannel;
 import org.eclipse.jetty.server.Request;
@@ -93,6 +97,7 @@ public class JettyHttpHandler extends HandlerWrapper {
   }
 
   @Override
+  @SuppressWarnings("PatternMatchingInstanceof")
   public void handle(
       String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response)
       throws IOException, ServletException {
@@ -132,13 +137,32 @@ public class JettyHttpHandler extends HandlerWrapper {
       }
     } catch (
         @SuppressWarnings("InterruptedExceptionSwallowed")
-        Throwable ex) {
+        Throwable th) {
       // Note we do intentionally swallow InterruptException.
       // We will report the exception via the rpc. We don't mark this thread as interrupted because
       // ThreadGroupPool would use that as a signal to remove the thread from the pool; we don't
       // need that.
-      handleException(ex, requestToken, genericResponse);
-      response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, ex.getMessage());
+      final int code;
+      final String message;
+      Throwable cause = unwrap(th, BadMessageException.class, UnavailableException.class);
+      if (cause instanceof BadMessageException) {
+        BadMessageException bme = (BadMessageException) cause;
+        code = bme.getCode();
+        message = bme.getReason();
+      } else if (cause instanceof UnavailableException) {
+        message = cause.toString();
+        if (((UnavailableException) cause).isPermanent()) {
+          code = HttpStatus.NOT_FOUND_404;
+        } else {
+          code = HttpStatus.SERVICE_UNAVAILABLE_503;
+        }
+      } else {
+        code = HttpStatus.INTERNAL_SERVER_ERROR_500;
+        message = th.toString();
+      }
+
+      handleException(th, requestToken, genericResponse);
+      response.sendError(code, message);
     } finally {
       // We don't want threads used for background requests to go back
       // in the thread pool, because users may have stashed references
@@ -263,6 +287,26 @@ public class JettyHttpHandler extends HandlerWrapper {
     }
     RuntimePb.UPResponse.ERROR error = RuntimePb.UPResponse.ERROR.APP_FAILURE;
     setFailure(response, error, "Unexpected exception from servlet: " + ex);
+  }
+
+  /**
+   * Unwrap failure causes to find target class
+   *
+   * @param failure The throwable to have its causes unwrapped
+   * @param targets Exception classes that we should not unwrap
+   * @return A target throwable or null
+   */
+   @Nullable
+   protected Throwable unwrap(Throwable failure, Class<?>... targets) {
+    while (failure != null) {
+      for (Class<?> x : targets) {
+        if (x.isInstance(failure)) {
+          return failure;
+        }
+      }
+      failure = failure.getCause();
+    }
+    return null;
   }
 
   /** Create a failure response from the given code and message. */

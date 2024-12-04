@@ -275,6 +275,7 @@ public class EE10AppVersionHandlerFactory implements AppVersionHandlerFactory {
               // or let the Runtime generate the default error page
               // TODO: an invalid html dispatch (404) will mask the exception
               request.setAttribute(ERROR_PAGE_HANDLED, errorPage);
+              callback.succeeded();
               return;
             } else {
               logger.atWarning().log("No error page %s", errorPage);
