@@ -275,6 +275,7 @@ public class EE10AppVersionHandlerFactory implements AppVersionHandlerFactory {
               // or let the Runtime generate the default error page
               // TODO: an invalid html dispatch (404) will mask the exception
               request.setAttribute(ERROR_PAGE_HANDLED, errorPage);
+              callback.succeeded();
               return;
             } else {
               logger.atWarning().log("No error page %s", errorPage);
@@ -308,7 +309,7 @@ public class EE10AppVersionHandlerFactory implements AppVersionHandlerFactory {
       }
       // If we got this far and *did* have an exception, it will be
       // retrieved and thrown at the end of JettyServletEngineAdapter#serviceRequest.
-      throw new IllegalStateException(error);
+      callback.failed(new IllegalStateException(error));
     }
   }
 }
