@@ -92,11 +92,11 @@ Source code for all public APIs for com.google.appengine.api.* packages.
             <version>2.0.31</version><!-- or later-->
         </dependency>
         <dependency>
-          <groupId>javax.servlet</groupId>
-           <artifactId>jakarta.servlet-api</artifactId>
+          <groupId>jakarta.servlet</groupId>
+          <artifactId>jakarta.servlet-api</artifactId>
           <version>6.0.0</version>
           <scope>provided</scope>
-    </dependency>
+        </dependency>
     ...
     ```
 
