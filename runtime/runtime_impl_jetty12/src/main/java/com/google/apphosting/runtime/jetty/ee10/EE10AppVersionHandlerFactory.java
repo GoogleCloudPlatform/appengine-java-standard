@@ -309,7 +309,7 @@ public class EE10AppVersionHandlerFactory implements AppVersionHandlerFactory {
       }
       // If we got this far and *did* have an exception, it will be
       // retrieved and thrown at the end of JettyServletEngineAdapter#serviceRequest.
-      callback.failed(new IllegalStateException(error));
+      throw new IllegalStateException(error);
     }
   }
 }
