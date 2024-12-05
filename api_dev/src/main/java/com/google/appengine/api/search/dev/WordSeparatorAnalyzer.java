@@ -75,7 +75,7 @@ public class WordSeparatorAnalyzer extends Analyzer {
     /** Collect characters that are not in our word separator set. */
     @Override
     protected boolean isTokenChar(char c) {
-      return !LuceneUtils.WORD_SEPARATORS.contains(new Character(c));
+      return !LuceneUtils.WORD_SEPARATORS.contains(c);
     }
   }
 
