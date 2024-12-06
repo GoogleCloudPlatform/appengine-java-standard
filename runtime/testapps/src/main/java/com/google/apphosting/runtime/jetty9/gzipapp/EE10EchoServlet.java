@@ -24,7 +24,6 @@ import java.io.PrintWriter;
 import java.util.Enumeration;
 import org.eclipse.jetty.util.IO;
 
-/** Servlet that prints all the system properties. */
 public class EE10EchoServlet extends HttpServlet {
   @Override
   protected void service(HttpServletRequest req, HttpServletResponse resp) throws IOException {
