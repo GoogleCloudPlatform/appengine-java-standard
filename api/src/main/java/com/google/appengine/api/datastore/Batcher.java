@@ -20,7 +20,7 @@ import com.google.appengine.api.datastore.FutureHelper.MultiFuture;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.io.protocol.Protocol;
+// import com.google.io.protocol.Protocol;
 import com.google.protobuf.MessageLite;
 import com.google.protobuf.MessageLiteOrBuilder;
 import java.util.Collection;
@@ -232,7 +232,21 @@ abstract class Batcher<R extends MessageLiteOrBuilder, F, T extends MessageLite>
 
   /** @return the embedded size of the given message */
   private static int getEmbeddedSize(MessageLite pb) {
-    return Protocol.stringSize(pb.getSerializedSize()) + 1;
+    return stringSize(pb.getSerializedSize()) + 1;
+  }
+  private static int stringSize(int len) {
+    return varIntSize(len) + len;
+  }
+
+  private static int varIntSize(int v) {
+    int result = 0;
+
+    do {
+      ++result;
+      v >>>= 7;
+    } while(v != 0);
+
+    return result;
   }
 
   /**

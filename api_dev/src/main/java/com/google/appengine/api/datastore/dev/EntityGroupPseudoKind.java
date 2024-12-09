@@ -23,11 +23,11 @@ import static com.google.appengine.api.datastore.dev.Utils.checkRequest;
 
 import com.google.appengine.api.datastore.dev.LocalDatastoreService.LiveTxn;
 import com.google.appengine.api.datastore.dev.LocalDatastoreService.Profile.EntityGroup;
-import com.google.apphosting.datastore.DatastoreV3Pb.Query;
-import com.google.storage.onestore.v3.OnestoreEntity.EntityProto;
-import com.google.storage.onestore.v3.OnestoreEntity.Path;
-import com.google.storage.onestore.v3.OnestoreEntity.PropertyValue;
-import com.google.storage.onestore.v3.OnestoreEntity.Reference;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.Query;
+import com.google.storage.onestore.v3.proto2api.OnestoreEntity.EntityProto;
+import com.google.storage.onestore.v3.proto2api.OnestoreEntity.Path;
+import com.google.storage.onestore.v3.proto2api.OnestoreEntity.PropertyValue;
+import com.google.storage.onestore.v3.proto2api.OnestoreEntity.Reference;
 import java.util.List;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -63,7 +63,7 @@ class EntityGroupPseudoKind implements PseudoKind {
     // numeric key ID. Thus to make sure we can get() and queries are consistent, we require that
     // key match that format.
     Path path = key.getPath();
-    if (path.elementSize() != 2 || path.getElement(1).getId() != ENTITY_GROUP_METADATA_ID) {
+    if (path.getElementCount() != 2 || path.getElement(1).getId() != ENTITY_GROUP_METADATA_ID) {
       return null;
     }
     long version;
@@ -81,13 +81,13 @@ class EntityGroupPseudoKind implements PseudoKind {
 
   /** Creates an __entity_group__ entity */
   private static EntityProto makeEntityGroupEntity(Reference key, long version) {
-    EntityProto egEntity = new EntityProto().setKey(key);
+    EntityProto.Builder egEntity = EntityProto.newBuilder().setKey(key);
     // EntityProto.entity_group is a required PB field.
-    egEntity.getMutableEntityGroup().addElement(key.getPath().getElement(0));
+    egEntity.getEntityGroup().toBuilder().addElement(key.getPath().getElement(0));
 
-    PropertyValue value = new PropertyValue().setInt64Value(version);
-    egEntity.addProperty().setMultiple(false).setName(VERSION_RESERVED_PROPERTY).setValue(value);
+    PropertyValue.Builder value = PropertyValue.newBuilder().setInt64Value(version);
+    egEntity.addPropertyBuilder().setMultiple(false).setName(VERSION_RESERVED_PROPERTY).setValue(value);
 
-    return egEntity;
+    return egEntity.build();
   }
 }

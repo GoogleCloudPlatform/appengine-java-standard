@@ -124,17 +124,11 @@
                   <shadedPattern>com.google.appengine.repackaged.org.codehaus.jackson</shadedPattern>
                 </relocation>
                 <relocation>
-                  <pattern>com.google.apphosting.datastore.DatastoreV3Pb</pattern>
+                  <pattern>com.google.apphosting.datastore.proto2api.DatastoreV3Pb</pattern>
                   <shadedPattern>com.google.apphosting.api.DatastorePb</shadedPattern>
                 </relocation>
               </relocations>
               <filters>
-                <filter>
-                  <artifact>com.google.appengine:proto1</artifact>
-                  <includes>
-                    <include>com/google/common/util/concurrent/internal/**</include>
-                  </includes>
-                </filter>
                 <filter>
                   <artifact>org.codehaus.jackson:jackson-core-asl</artifact>
                   <excludes>
@@ -145,7 +139,6 @@
               <artifactSet>
                 <includes>
                   <include>com.google.api-client:google-api-client:*</include>
-                  <include>com.google.appengine:proto1:*</include>
                   <include>com.google.appengine:utils:*</include>
                   <include>com.google.http-client:google-http-client-apache-v2:*</include>
                   <include>com.google.http-client:google-http-client-appengine:*</include>

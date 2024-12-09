@@ -16,7 +16,7 @@
 
 package com.google.cloud.datastore.core.exception;
 
-import com.google.apphosting.datastore.DatastoreV3Pb.Error.ErrorCode;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.Error.ErrorCode;
 import com.google.cloud.datastore.logs.ProblemCode;
 import com.google.errorprone.annotations.FormatMethod;
 import com.google.errorprone.annotations.FormatString;
