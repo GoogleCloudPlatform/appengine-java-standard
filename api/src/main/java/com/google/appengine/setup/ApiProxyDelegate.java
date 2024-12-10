@@ -16,13 +16,15 @@
 
 package com.google.appengine.setup;
 
-import com.google.common.collect.Lists;
 import com.google.apphosting.api.ApiProxy;
 import com.google.apphosting.api.ApiProxy.ApiConfig;
 import com.google.apphosting.api.ApiProxy.ApiProxyException;
 import com.google.apphosting.api.ApiProxy.LogRecord;
 import com.google.apphosting.api.ApiProxy.RPCFailedException;
-import com.google.apphosting.utils.remoteapi.RemoteApiPb;
+import com.google.apphosting.base.protos.api.RemoteApiPb;
+import com.google.common.collect.Lists;
+import com.google.protobuf.ByteString;
+import com.google.protobuf.InvalidProtocolBufferException;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.util.List;
@@ -147,20 +149,22 @@ public class ApiProxyDelegate implements ApiProxy.Delegate<LazyApiProxyEnvironme
                 }
             }
             try (BufferedInputStream bis = new BufferedInputStream(response.getEntity().getContent())) {
-                RemoteApiPb.Response remoteResponse = new RemoteApiPb.Response();
-                if (!remoteResponse.parseFrom(bis)) {
-                    logger.info(
-                            "HTTP ApiProxy unable to parse response for " + packageName + "." + methodName);
+        RemoteApiPb.Response remoteResponse = RemoteApiPb.Response.getDefaultInstance();
+        try {
+          remoteResponse.getParserForType().parseFrom(bis);
+        } catch (InvalidProtocolBufferException e) {
+          logger.info(
+              "HTTP ApiProxy unable to parse response for " + packageName + "." + methodName);
                     throw new RPCFailedException(packageName, methodName);
                 }
                 if (remoteResponse.hasRpcError() || remoteResponse.hasApplicationError()) {
                     throw convertRemoteError(remoteResponse, packageName, methodName, logger);
                 }
-                return remoteResponse.getResponseAsBytes();
+        return remoteResponse.getResponse().toByteArray();
             }
         } catch (IOException e) {
-            logger.info(
-                    "HTTP ApiProxy I/O error for " + packageName + "." + methodName + ": " + e.getMessage());
+      logger.info(
+          "HTTP ApiProxy I/O error for " + packageName + "." + methodName + ": " + e.getMessage());
             throw new RPCFailedException(packageName, methodName);
         } finally {
             request.releaseConnection();
@@ -179,12 +183,13 @@ public class ApiProxyDelegate implements ApiProxy.Delegate<LazyApiProxyEnvironme
      */
     static HttpPost createRequest(LazyApiProxyEnvironment environment, String packageName,
                                   String methodName, byte[] requestData, int timeoutMs) {
-        RemoteApiPb.Request remoteRequest = new RemoteApiPb.Request();
+    RemoteApiPb.Request.Builder remoteRequest = RemoteApiPb.Request.newBuilder();
         remoteRequest.setServiceName(packageName);
         remoteRequest.setMethod(methodName);
-        // Commenting below line to validate the use-cases where security ticket may be needed. So far we did not need.
-        //remoteRequest.setRequestId(environment.getTicket());
-        remoteRequest.setRequestAsBytes(requestData);
+    // Commenting below line to validate the use-cases where security ticket may be needed. So far
+    // we did not need.
+    // remoteRequest.setRequestId(environment.getTicket());
+    remoteRequest.setRequest(ByteString.copyFrom(requestData));
 
         HttpPost request = new HttpPost("http://" + environment.getServer() + REQUEST_ENDPOINT);
         request.setHeader(RPC_STUB_ID_HEADER, REQUEST_STUB_ID);
@@ -217,8 +222,9 @@ public class ApiProxyDelegate implements ApiProxy.Delegate<LazyApiProxyEnvironme
                     ApiProxyEnvironment.AttributeMapping.DAPPER_ID.headerKey, (String) dapperHeader);
         }
 
-        ByteArrayEntity postPayload = new ByteArrayEntity(remoteRequest.toByteArray(),
-                ContentType.APPLICATION_OCTET_STREAM);
+    ByteArrayEntity postPayload =
+        new ByteArrayEntity(
+            remoteRequest.getRequest().toByteArray(), ContentType.APPLICATION_OCTET_STREAM);
         postPayload.setChunked(false);
         request.setEntity(postPayload);
 
@@ -374,7 +380,7 @@ public class ApiProxyDelegate implements ApiProxy.Delegate<LazyApiProxyEnvironme
         if (threadFactory != null && threadFactory instanceof RequestThreadFactory) {
             return ((RequestThreadFactory) threadFactory).getRequestThreads();
         }
-        logger.warning("Got a call to getRequestThreads() but no VmRequestThreadFactory is available");
+    logger.warning("Got a call to getRequestThreads() but no VmRequestThreadFactory is available");
         return Lists.newLinkedList();
     }
 

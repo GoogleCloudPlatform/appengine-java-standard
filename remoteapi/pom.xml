@@ -96,14 +96,6 @@
                   <shadedPattern>com.google.appengine.repackaged.com.google.errorprone.annotations</shadedPattern>
                 </relocation>
                 <relocation>
-                  <pattern>com.google.io.base</pattern>
-                  <shadedPattern>com.google.appengine.repackaged.com.google.io.protocol</shadedPattern>
-                </relocation>
-                <relocation>
-                  <pattern>com.google.io.protocol</pattern>
-                  <shadedPattern>com.google.appengine.repackaged.com.google.io.protocol</shadedPattern>
-                </relocation>
-                <relocation>
                   <pattern>com.google.protobuf</pattern>
                   <shadedPattern>com.google.appengine.repackaged.com.google.protobuf</shadedPattern>
                 </relocation>
@@ -127,14 +119,12 @@
                   <pattern>com.google.apphosting.datastore.DatastoreV3Pb</pattern>
                   <shadedPattern>com.google.apphosting.api.DatastorePb</shadedPattern>
                 </relocation>
-              </relocations>
+                 <relocation>
+                  <pattern>com.google.apphosting.datastore.proto2api.DatastoreV3Pb</pattern>
+                  <shadedPattern>com.google.apphosting.api.proto2api.DatastorePb</shadedPattern>
+                </relocation>
+             </relocations>
               <filters>
-                <filter>
-                  <artifact>com.google.appengine:proto1</artifact>
-                  <includes>
-                    <include>com/google/common/util/concurrent/internal/**</include>
-                  </includes>
-                </filter>
                 <filter>
                   <artifact>org.codehaus.jackson:jackson-core-asl</artifact>
                   <excludes>
@@ -145,7 +135,6 @@
               <artifactSet>
                 <includes>
                   <include>com.google.api-client:google-api-client:*</include>
-                  <include>com.google.appengine:proto1:*</include>
                   <include>com.google.appengine:utils:*</include>
                   <include>com.google.http-client:google-http-client-apache-v2:*</include>
                   <include>com.google.http-client:google-http-client-appengine:*</include>

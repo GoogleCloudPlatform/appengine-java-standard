@@ -36,6 +36,9 @@ syntax = "proto2";
 
 package java.apphosting.ext.remote_api;
 
+import "datastore_v3.proto";
+import "entity.proto";
+
 option java_package = "com.google.apphosting.base.protos.api";
 option java_outer_classname = "RemoteApiPb";
 option go_package = "remote_api";
@@ -99,4 +102,27 @@ message Response {
   optional ApplicationError application_error = 3;
   optional bytes java_exception = 4;
   optional RpcError rpc_error = 5;
+}
+
+message TransactionRequest {
+  // A list of entity keys that must exist and match the given hashes for the
+  // transaction to succeed.
+  repeated group Precondition = 1 {
+    required storage_onestore_v3.Reference key = 2;
+    // No hash means the entity should not exist.
+    optional string hash = 3;  // Arbitrary bytes
+  }
+
+  optional apphosting_datastore_v3.PutRequest puts = 4;
+  optional apphosting_datastore_v3.DeleteRequest deletes = 5;
+  optional bool allow_multiple_eg = 6;
+}
+
+message TransactionQueryResult {
+  required apphosting_datastore_v3.QueryResult result = 1;
+  // Return the __entity_group__ pseudo-kind for the transactional query's
+  // entity group. If this has changed by commit time, the transaction
+  // must be failed.
+  required storage_onestore_v3.Reference entity_group_key = 2;
+  optional storage_onestore_v3.EntityProto entity_group = 3;
 }

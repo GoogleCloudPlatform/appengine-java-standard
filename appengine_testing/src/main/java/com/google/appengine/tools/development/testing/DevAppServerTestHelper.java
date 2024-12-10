@@ -67,8 +67,7 @@ class DevAppServerTestHelper {
     String address = "localhost";
     // Tells SdkInfo to treat the testing jar as shared.  See SdkInfo for an
     // explanation of why this is necessary.
-    AppengineSdk sdk = AppengineSdk.getSdk();
-    sdk.includeTestingJarOnSharedPath(true);
+    AppengineSdk.includeTestingJarOnSharedPath(true);
 
     Map<String, Object> containerConfigProps =
         newContainerConfigPropertiesForTest(testConfig.getClasspath());
@@ -98,7 +97,7 @@ class DevAppServerTestHelper {
       if (!running) {
         // nothing to clean up
         server = null;
-        sdk.includeTestingJarOnSharedPath(false);
+        AppengineSdk.includeTestingJarOnSharedPath(false);
       }
     }
   }
@@ -107,7 +106,7 @@ class DevAppServerTestHelper {
    * Shut down the dev appserver.
    */
   public static void stopServer() {
-    AppengineSdk.getSdk().includeTestingJarOnSharedPath(false);
+    AppengineSdk.includeTestingJarOnSharedPath(false);
     running = false;
     if (server != null) {
       try {

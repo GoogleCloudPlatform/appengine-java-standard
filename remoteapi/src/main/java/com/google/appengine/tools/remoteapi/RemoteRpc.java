@@ -1,3 +1,4 @@
+
 /*
  * Copyright 2021 Google LLC
  *
@@ -16,9 +17,11 @@
 
 package com.google.appengine.tools.remoteapi;
 
-import com.google.apphosting.utils.remoteapi.RemoteApiPb;
+import com.google.apphosting.base.protos.api.RemoteApiPb;
+import com.google.protobuf.ByteString;
+import com.google.protobuf.ExtensionRegistry;
+import com.google.protobuf.InvalidProtocolBufferException;
 // <internal22>
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -89,16 +92,13 @@ class RemoteRpc {
               requestProto.getServiceName(), requestProto.getMethod(), null);
         }
       } else if (responseProto.hasException()) {
-        String pickle = responseProto.getException();
-
+        String pickle = responseProto.getException().toString();
         logger.log(Level.FINE,
             "remote API call: failed due to a server-side Python exception:\n{0}", pickle);
         throw new RemoteApiException("response was a python exception:\n" + pickle,
             requestProto.getServiceName(), requestProto.getMethod(), null);
       }
-
-      return responseProto.getResponseAsBytes();
-
+      return responseProto.getResponse().toByteArray();
     } finally {
       long elapsedTime = System.currentTimeMillis() - startTime;
       logger.log(Level.FINE, "remote API call: took {0} ms", elapsedTime);
@@ -124,12 +124,17 @@ class RemoteRpc {
     }
 
     // parse the response
-    RemoteApiPb.Response parsedResponse = new RemoteApiPb.Response();
-    boolean parsed = parsedResponse.parseFrom(httpResponse.getBodyAsBytes());
+    RemoteApiPb.Response.Builder parsedResponse = RemoteApiPb.Response.newBuilder();
+    boolean parsed = true;
+    try {
+      parsedResponse.mergeFrom(httpResponse.getBodyAsBytes(), ExtensionRegistry.getEmptyRegistry());
+    } catch (InvalidProtocolBufferException e) {
+      parsed = false;
+    }
     if (!parsed || !parsedResponse.isInitialized()) {
       throw makeException("Could not parse response bytes", null, requestProto);
     }
-    return parsedResponse;
+    return parsedResponse.build();
   }
 
   void resetRpcCount() {
@@ -144,27 +149,22 @@ class RemoteRpc {
 
   private static RemoteApiPb.Request makeRequest(String packageName, String methodName,
       byte[] payload) {
-    RemoteApiPb.Request result = new RemoteApiPb.Request();
-    result.setServiceName(packageName);
-    result.setMethod(methodName);
-    result.setRequestAsBytes(payload);
-    result.setRequestId(Long.toString(requestId.incrementAndGet()));
-
-    return result;
+    return RemoteApiPb.Request.newBuilder()
+        .setServiceName(packageName)
+        .setMethod(methodName)
+        .setRequest(ByteString.copyFrom(payload))
+        .setRequestId(Long.toString(requestId.incrementAndGet()))
+        .build();
   }
 
   // <internal23>
   private static Object parseJavaException(
       RemoteApiPb.Response parsedResponse, String packageName, String methodName) {
     try {
-      InputStream ins = new ByteArrayInputStream(parsedResponse.getJavaExceptionAsBytes());
+      InputStream ins = parsedResponse.getJavaException().newInput();
       ObjectInputStream in = new ObjectInputStream(ins);
       return in.readObject();
-    } catch (IOException e) {
-      throw new RemoteApiException(
-          "remote API call: " + "can't deserialize server-side exception", packageName, methodName,
-          e);
-    } catch (ClassNotFoundException e) {
+    } catch (IOException | ClassNotFoundException e) {
       throw new RemoteApiException(
           "remote API call: " + "can't deserialize server-side exception", packageName, methodName,
           e);

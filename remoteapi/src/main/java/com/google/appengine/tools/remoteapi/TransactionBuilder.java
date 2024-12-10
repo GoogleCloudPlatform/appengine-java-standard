@@ -1,3 +1,4 @@
+
 /*
  * Copyright 2021 Google LLC
  *
@@ -13,15 +14,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.google.appengine.tools.remoteapi;
 
-import com.google.apphosting.datastore.DatastoreV3Pb;
-import com.google.apphosting.utils.remoteapi.RemoteApiPb;
-import com.google.io.protocol.ProtocolMessage;
+import com.google.apphosting.base.protos.api.RemoteApiPb;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb;
 import com.google.protobuf.ByteString;
+import com.google.protobuf.ExtensionRegistry;
+import com.google.protobuf.InvalidProtocolBufferException;
+import com.google.protobuf.Message;
 // <internal24>
-import com.google.storage.onestore.v3.OnestoreEntity;
+import com.google.storage.onestore.v3.proto2api.OnestoreEntity;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ConcurrentModificationException;
@@ -33,7 +35,6 @@ import javax.annotation.Nullable;
  * An in-progress transaction that will be sent via the remote API on commit.
  */
 class TransactionBuilder {
-
   /**
    * A map containing a copy of each entity that we retrieved from the
    * datastore during this transaction. On commit, we will assert
@@ -43,7 +44,6 @@ class TransactionBuilder {
    */
   private final Map<ByteString, OnestoreEntity.EntityProto> getCache =
       new HashMap<ByteString, OnestoreEntity.EntityProto>();
-
   /**
    * A map from an entity's key to the entity that should be saved when
    * this transaction commits. If the value is null, the entity should
@@ -51,24 +51,19 @@ class TransactionBuilder {
    */
   private final Map<ByteString, OnestoreEntity.EntityProto> updates =
       new HashMap<ByteString, OnestoreEntity.EntityProto>();
-
   private final boolean isXG;
-
   TransactionBuilder(boolean isXG) {
     this.isXG = isXG;
   }
-
   public boolean isXG() {
     return isXG;
   }
-
   /**
    * Returns true if we've cached the presence or absence of this entity.
    */
   public boolean isCachedEntity(OnestoreEntity.Reference key) {
     return getCache.containsKey(key.toByteString());
   }
-
   /**
    * Saves the original value of an entity (as returned by the datastore)
    * to the local cache.
@@ -80,7 +75,6 @@ class TransactionBuilder {
     }
     getCache.put(key, entityPb);
   }
-
   /**
    * Caches the absence of an entity (according to the datastore).
    */
@@ -91,7 +85,6 @@ class TransactionBuilder {
     }
     getCache.put(keyBytes, (OnestoreEntity.EntityProto) null);
   }
-
   /**
    * Returns a cached entity, or null if the entity's absence was cached.
    */
@@ -103,17 +96,21 @@ class TransactionBuilder {
     }
     return getCache.get(keyBytes);
   }
-
   /**
    * Update transaction with result from a TransactionQuery call.
    */
   public DatastoreV3Pb.QueryResult handleQueryResult(byte[] resultBytes) {
-    RemoteApiPb.TransactionQueryResult result = new RemoteApiPb.TransactionQueryResult();
-    boolean parsed = result.mergeFrom(resultBytes);
+    RemoteApiPb.TransactionQueryResult.Builder result =
+        RemoteApiPb.TransactionQueryResult.newBuilder();
+    boolean parsed = true;
+    try {
+      result.mergeFrom(resultBytes, ExtensionRegistry.getEmptyRegistry());
+    } catch (InvalidProtocolBufferException e) {
+      parsed = false;
+    }
     if (!parsed || !result.isInitialized()) {
       throw new IllegalArgumentException("Could not parse TransactionQueryResult");
     }
-
     // Record the entity_group version in the transaction's preconditions if it's new
     // (don't overwrite an old version, as that could mask a concurrency error)
     if (isCachedEntity(result.getEntityGroupKey())) {
@@ -129,21 +126,18 @@ class TransactionBuilder {
     }
     return result.getResult();
   }
-
   public void putEntityOnCommit(OnestoreEntity.EntityProto entity) {
     updates.put(entity.getKey().toByteString(), entity);
   }
-
   public void deleteEntityOnCommit(OnestoreEntity.Reference key) {
     updates.put(key.toByteString(), null);
   }
-
   /**
    * Creates a request to perform this transaction on the server.
    */
   public RemoteApiPb.TransactionRequest makeCommitRequest() {
-    RemoteApiPb.TransactionRequest result = new RemoteApiPb.TransactionRequest();
-    result.setAllowMultipleEg(isXG);
+    RemoteApiPb.TransactionRequest.Builder result =
+        RemoteApiPb.TransactionRequest.newBuilder().setAllowMultipleEg(isXG);
     for (Map.Entry<ByteString, OnestoreEntity.EntityProto> entry : getCache.entrySet()) {
       if (entry.getValue() == null) {
         result.addPrecondition(makeEntityNotFoundPrecondition(entry.getKey()));
@@ -154,43 +148,44 @@ class TransactionBuilder {
     for (Map.Entry<ByteString, OnestoreEntity.EntityProto> entry : updates.entrySet()) {
       OnestoreEntity.EntityProto entityPb = entry.getValue();
       if (entityPb == null) {
-        ProtocolMessage<?> newKey = result.getMutableDeletes().addKey();
-        boolean parsed = newKey.mergeFrom(entry.getKey().toByteArray());
+        Message.Builder newKey = result.getDeletesBuilder().addKeyBuilder();
+        boolean parsed = true;
+        try {
+          newKey.mergeFrom(entry.getKey(), ExtensionRegistry.getGeneratedRegistry());
+        } catch (InvalidProtocolBufferException e) {
+          parsed = false;
+        }
         if (!parsed || !newKey.isInitialized()) {
           throw new IllegalStateException("Could not parse serialized key");
         }
       } else {
-        result.getMutablePuts().addEntity(entityPb);
+        result.getPutsBuilder().addEntity(entityPb);
       }
     }
-    return result;
+    return result.build();
   }
-
   // === end of public methods ===
-
   private static RemoteApiPb.TransactionRequest.Precondition makeEntityNotFoundPrecondition(
       ByteString key) {
-    OnestoreEntity.Reference ref = new OnestoreEntity.Reference();
-    boolean parsed = ref.mergeFrom(key.toByteArray());
+    OnestoreEntity.Reference.Builder ref = OnestoreEntity.Reference.newBuilder();
+    boolean parsed = true;
+    try {
+      ref.mergeFrom(key, ExtensionRegistry.getGeneratedRegistry());
+    } catch (InvalidProtocolBufferException e) {
+      parsed = false;
+    }
     if (!parsed || !ref.isInitialized()) {
       throw new IllegalArgumentException("Could not parse Reference");
     }
-
-    RemoteApiPb.TransactionRequest.Precondition result =
-        new RemoteApiPb.TransactionRequest.Precondition();
-    result.setKey(ref);
-    return result;
+    return RemoteApiPb.TransactionRequest.Precondition.newBuilder().setKey(ref).build();
   }
-
   private static RemoteApiPb.TransactionRequest.Precondition makeEqualEntityPrecondition(
       OnestoreEntity.EntityProto entityPb) {
-    RemoteApiPb.TransactionRequest.Precondition result =
-        new RemoteApiPb.TransactionRequest.Precondition();
-    result.setKey(entityPb.getKey());
-    result.setHashAsBytes(computeSha1(entityPb));
-    return result;
+    return RemoteApiPb.TransactionRequest.Precondition.newBuilder()
+        .setKey(entityPb.getKey())
+        .setHashBytes(ByteString.copyFrom(computeSha1(entityPb)))
+        .build();
   }
-
   // <internal25>
   private static byte[] computeSha1(OnestoreEntity.EntityProto entity) {
     MessageDigest md;
