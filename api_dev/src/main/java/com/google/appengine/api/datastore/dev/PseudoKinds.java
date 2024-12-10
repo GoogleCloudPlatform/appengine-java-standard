@@ -21,9 +21,9 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.appengine.api.datastore.dev.LocalDatastoreService.LiveTxn;
 import com.google.appengine.api.datastore.dev.LocalDatastoreService.Profile.EntityGroup;
-import com.google.apphosting.datastore.DatastoreV3Pb.Query;
-import com.google.storage.onestore.v3.OnestoreEntity.EntityProto;
-import com.google.storage.onestore.v3.OnestoreEntity.Reference;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.Query;
+import com.google.storage.onestore.v3.proto2api.OnestoreEntity.EntityProto;
+import com.google.storage.onestore.v3.proto2api.OnestoreEntity.Reference;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -38,7 +38,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  */
 class PseudoKinds {
   // Marker to indicate get() was not called on a pseudo-kind
-  static final EntityProto NOT_A_PSEUDO_KIND = new EntityProto();
+  static final EntityProto NOT_A_PSEUDO_KIND = EntityProto.newBuilder().buildPartial();
 
   // Key is kind name
   private final Map<String, PseudoKind> pseudoKinds;
@@ -68,7 +68,7 @@ class PseudoKinds {
     }
 
     // We've handled kind.
-    query.clearKind();
+    query.toBuilder().clearKind();
 
     List<EntityProto> results = pseudoKind.runQuery(query);
     checkNotNull(results, "pseudo-kind " + pseudoKind.getKindName() + " returned invalid result");

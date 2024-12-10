@@ -23,10 +23,10 @@ import com.google.appengine.api.datastore.CompositeIndexManager.IndexComponentsO
 import com.google.appengine.api.datastore.Index.IndexState;
 import com.google.appengine.api.datastore.Query.FilterPredicate;
 import com.google.apphosting.api.AppEngineInternal;
-import com.google.apphosting.datastore.DatastoreV3Pb;
+import com.google.apphosting.datastore.proto2api.DatastoreV3Pb;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.google.storage.onestore.v3.OnestoreEntity;
+import com.google.storage.onestore.v3.proto2api.OnestoreEntity;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -260,16 +260,16 @@ public final class AdminDatastoreService implements AsyncDatastoreService {
   }
 
   public Set<Index> compositeIndexesForQuery(Query query) {
-    List<DatastoreV3Pb.Query> pbQueries =
+    List<DatastoreV3Pb.Query.Builder> pbQueries =
         convertQueryToPbs(query, FetchOptions.Builder.withDefaults());
     Set<Index> resultSet = new HashSet<Index>();
-    for (DatastoreV3Pb.Query queryProto : pbQueries) {
+    for (DatastoreV3Pb.Query.Builder queryProto : pbQueries) {
       IndexComponentsOnlyQuery indexQuery = new IndexComponentsOnlyQuery(queryProto);
 
-      OnestoreEntity.Index index =
+      OnestoreEntity.Index.Builder index =
           factory.getCompositeIndexManager().compositeIndexForQuery(indexQuery);
       if (index != null) {
-        resultSet.add(IndexTranslator.convertFromPb(index));
+        resultSet.add(IndexTranslator.convertFromPb(index.build()));
       }
     }
     return resultSet;
@@ -281,7 +281,7 @@ public final class AdminDatastoreService implements AsyncDatastoreService {
   }
 
   public Set<Index> minimumCompositeIndexesForQuery(Query query, Collection<Index> indexes) {
-    List<DatastoreV3Pb.Query> pbQueries =
+    List<DatastoreV3Pb.Query.Builder> pbQueries =
         convertQueryToPbs(query, FetchOptions.Builder.withDefaults());
 
     List<OnestoreEntity.Index> indexPbs = Lists.newArrayListWithCapacity(indexes.size());
@@ -290,13 +290,13 @@ public final class AdminDatastoreService implements AsyncDatastoreService {
     }
 
     Set<Index> resultSet = new HashSet<Index>();
-    for (DatastoreV3Pb.Query queryProto : pbQueries) {
+    for (DatastoreV3Pb.Query.Builder queryProto : pbQueries) {
       IndexComponentsOnlyQuery indexQuery = new IndexComponentsOnlyQuery(queryProto);
 
-      OnestoreEntity.Index index =
+      OnestoreEntity.Index.Builder index =
           factory.getCompositeIndexManager().minimumCompositeIndexForQuery(indexQuery, indexPbs);
       if (index != null) {
-        resultSet.add(IndexTranslator.convertFromPb(index));
+        resultSet.add(IndexTranslator.convertFromPb(index.build()));
       }
     }
     return resultSet;
@@ -304,19 +304,20 @@ public final class AdminDatastoreService implements AsyncDatastoreService {
 
   /** Convert a query to a list of ProtocolBuffer Queries. */
   @SuppressWarnings("deprecation")
-  private static List<DatastoreV3Pb.Query> convertQueryToPbs(
+  private static List<DatastoreV3Pb.Query.Builder> convertQueryToPbs(
       Query query, FetchOptions fetchOptions) {
     List<MultiQueryBuilder> queriesToRun = QuerySplitHelper.splitQuery(query);
     // All Filters should be in queriesToRun
     query.setFilter(null);
-    query.getFilterPredicates().clear();
-    List<DatastoreV3Pb.Query> resultQueries = new ArrayList<DatastoreV3Pb.Query>();
+    // query.getFilterPredicates().clear();
+    List<DatastoreV3Pb.Query.Builder> resultQueries = new ArrayList<DatastoreV3Pb.Query.Builder>();
     for (MultiQueryBuilder multiQuery : queriesToRun) {
       for (List<List<FilterPredicate>> parallelQueries : multiQuery) {
         for (List<FilterPredicate> singleQuery : parallelQueries) {
-          Query newQuery = new Query(query);
-          newQuery.getFilterPredicates().addAll(singleQuery);
-          DatastoreV3Pb.Query queryProto = QueryTranslator.convertToPb(newQuery, fetchOptions);
+          // Query newQuery = new Query(query);
+          query.getFilterPredicates().clear();
+          query.getFilterPredicates().addAll(singleQuery);
+          DatastoreV3Pb.Query.Builder queryProto = QueryTranslator.convertToPb(query, fetchOptions);
           resultQueries.add(queryProto);
         }
       }

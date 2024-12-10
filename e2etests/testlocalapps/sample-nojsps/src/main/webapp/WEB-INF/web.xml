@@ -20,13 +20,13 @@
   <servlet>
     <servlet-name>userapp</servlet-name>
     <servlet-class>
-       com.google.apphosting.securitycontest.sampleapp.SampleAppServlet
+       newServlet
     </servlet-class>
   </servlet>
 
   <servlet-mapping>
     <servlet-name>userapp</servlet-name>
-    <url-pattern>/</url-pattern>
+    <url-pattern>/foo</url-pattern>
   </servlet-mapping>
 
   <session-config>

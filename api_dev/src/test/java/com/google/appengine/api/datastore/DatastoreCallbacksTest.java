@@ -17,7 +17,7 @@
 package com.google.appengine.api.datastore;
 
 import static com.google.appengine.api.datastore.FetchOptions.Builder.withDefaults;
-import static com.google.apphosting.datastore.DatastoreV3Pb.Error.ErrorCode.INTERNAL_ERROR;
+import static com.google.apphosting.datastore.proto2api.DatastoreV3Pb.Error.ErrorCode.INTERNAL_ERROR;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.util.concurrent.Futures.immediateFailedFuture;
 import static com.google.common.util.concurrent.Futures.immediateFuture;
@@ -497,7 +497,7 @@ public class DatastoreCallbacksTest {
     AsyncDatastoreService datastore = DatastoreServiceFactory.getAsyncDatastoreService();
     ApiProxy.Delegate<?> original = ApiProxy.getDelegate();
     Future<byte[]> explosiveFuture =
-        immediateFailedFuture(new ApiProxy.ApplicationException(INTERNAL_ERROR.getValue()));
+        immediateFailedFuture(new ApiProxy.ApplicationException(INTERNAL_ERROR.getNumber()));
     when(explosiveDelegate.makeAsyncCall(any(), any(), any(), any(), any()))
         .thenReturn(explosiveFuture);
     ApiProxy.setDelegate(explosiveDelegate);
@@ -884,7 +884,7 @@ public class DatastoreCallbacksTest {
     ApiProxy.Delegate<ApiProxy.Environment> explosiveDelegate = mock(ApiProxy.Delegate.class);
     ApiProxy.Delegate<?> original = ApiProxy.getDelegate();
     Future<byte[]> explosiveFuture =
-        immediateFailedFuture(new ApiProxy.ApplicationException(INTERNAL_ERROR.getValue()));
+        immediateFailedFuture(new ApiProxy.ApplicationException(INTERNAL_ERROR.getNumber()));
     when(explosiveDelegate.makeAsyncCall(any(), any(), any(), any(), any()))
         .thenReturn(explosiveFuture);
     ApiProxy.setDelegate(explosiveDelegate);
