@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<appengine-web-app xmlns="http://appengine.google.com/ns/1.0">
+    <module>default</module>
+    <runtime>java21</runtime>
+    <instance-class>B1</instance-class>
+    <basic-scaling>
+        <max-instances>1</max-instances>
+        <idle-timeout>10m</idle-timeout>
+    </basic-scaling>
+    <static-files>
+        <include path="/404.html"/>
+        <include path="/500.html"/>
+        <include path="/unhandled-error.html"/>
+        <include path="/hello.html"/>
+    </static-files>
+</appengine-web-app>
