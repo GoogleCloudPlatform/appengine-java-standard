@@ -2,17 +2,16 @@ package com.google.apphosting.runtime.jetty9.senderrorapp;
 
 import java.io.IOException;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-@WebServlet("/send-error")
 public class SendErrorServletEE10 extends HttpServlet {
   @Override
   protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
     int errorCode;
-    if (req.getParameter("errorCode") == null) {
+    if (req.getParameter(
+        "errorCode") == null) {
       errorCode = 0;
     } else {
       try {

@@ -6,10 +6,8 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 import org.eclipse.jetty.client.api.ContentResponse;
-import org.eclipse.jetty.client.api.Result;
+import org.eclipse.jetty.http.HttpStatus;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -53,27 +51,39 @@ public class SendErrorTest extends JavaRuntimeViaHttpBase {
   public void start() throws Exception {
     String app = "com/google/apphosting/runtime/jetty9/senderrorapp/" + environment;
     copyAppToDir(app, temp.getRoot().toPath());
+    httpClient.start();
     runtime = runtimeContext();
     System.err.println("==== Using Environment: " + environment + " " + httpMode + " ====");
   }
 
   @After
   public void after() throws Exception {
-    if (runtime != null) {
-      runtime.close();
-    }
+    httpClient.stop();
+    runtime.close();
   }
 
   @Test
   public void testSendError() throws Exception {
-    String url = runtime.jettyUrl("/senderror");
-    CompletableFuture<Result> completionListener = new CompletableFuture<>();
-    httpClient.newRequest(url).send(completionListener::complete);
+    String url = runtime.jettyUrl("/send-error");
+    ContentResponse response = httpClient.GET(url);
+    assertEquals(HttpStatus.OK_200, response.getStatus());
+    assertThat(response.getContentAsString(), containsString("<h1>Hello, world!</h1>"));
 
-    Result result = completionListener.get(5, TimeUnit.SECONDS);
-    ContentResponse response = result.getRequest().send();
-    assertEquals(500, response.getStatus());
-    assertThat(response.getContentAsString(), containsString("Something went wrong."));
+    url = runtime.jettyUrl("/send-error?errorCode=404");
+    response = httpClient.GET(url);
+    assertEquals(HttpStatus.NOT_FOUND_404, response.getStatus());
+    assertThat(response.getContentAsString(), containsString("<h1>Error 404 Not Found</h1>"));
+
+    url = runtime.jettyUrl("/send-error?errorCode=500");
+    response = httpClient.GET(url);
+    assertEquals(HttpStatus.INTERNAL_SERVER_ERROR_500, response.getStatus());
+    assertThat(response.getContentAsString(), containsString("<h1>Error 500 Internal Server Error</h1>"));
+
+    url = runtime.jettyUrl("/send-error?errorCode=503");
+    response = httpClient.GET(url);
+    assertEquals(HttpStatus.SERVICE_UNAVAILABLE_503, response.getStatus());
+    assertThat(response.getContentAsString(), containsString("<h1>Unhandled Error</h1>"));
+
   }
 
   private RuntimeContext<?> runtimeContext() throws Exception {

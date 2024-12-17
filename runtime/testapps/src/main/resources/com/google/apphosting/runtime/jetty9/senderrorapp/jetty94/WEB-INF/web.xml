@@ -21,12 +21,12 @@
                              http://xmlns.jcp.org/xml/ns/javaee/web-app_4_0.xsd"
     version="4.0">
   <servlet>
-    <servlet-name>SendErrorServlet</servlet-name>
+    <servlet-name>Main</servlet-name>
     <servlet-class>com.google.apphosting.runtime.jetty9.senderrorapp.SendErrorServletEE8</servlet-class>
   </servlet>
   <servlet-mapping>
-    <servlet-name>SendErrorServlet</servlet-name>
-    <url-pattern>/senderror</url-pattern>
+    <servlet-name>Main</servlet-name>
+    <url-pattern>/send-error</url-pattern>
   </servlet-mapping>
 
   <error-page>
@@ -36,10 +36,6 @@
   <error-page>
     <error-code>500</error-code>
     <location>/500.html</location>
-  </error-page>
-  <error-page>
-    <exception-type>java.lang.Throwable</exception-type>
-    <location>/exception</location>
   </error-page>
   <error-page>
     <!-- No error-code or exception-type, i.e. this will match any other HTTP status than defined above -->
