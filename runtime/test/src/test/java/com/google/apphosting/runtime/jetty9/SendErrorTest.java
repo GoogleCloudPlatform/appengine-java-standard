@@ -51,7 +51,7 @@ public class SendErrorTest extends JavaRuntimeViaHttpBase {
 
   @Before
   public void start() throws Exception {
-    String app = "senderror" + environment;
+    String app = "com/google/apphosting/runtime/jetty9/senderrorapp/" + environment;
     copyAppToDir(app, temp.getRoot().toPath());
     runtime = runtimeContext();
     System.err.println("==== Using Environment: " + environment + " " + httpMode + " ====");
