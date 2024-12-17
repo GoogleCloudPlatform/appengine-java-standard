@@ -19,14 +19,7 @@
     <runtime>java21</runtime>
     <application>senderror</application>
     <version>1</version>
-    <static-files>
-        <include path="/404.html"/>
-        <include path="/500.html"/>
-        <include path="/unhandled-error.html"/>
-        <include path="/hello.html"/>
-    </static-files>
     <system-properties>
         <property name="appengine.use.EE8" value="true"/>
-        <property name="appengine.use.EE10" value="false"/>
     </system-properties>
 </appengine-web-app>
