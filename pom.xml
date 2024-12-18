@@ -67,7 +67,7 @@
     <jetty.version>9.4.56.v20240826</jetty.version>
     <jetty12.version>12.0.16</jetty12.version>
     <io.grpc>1.69.0</io.grpc>
-    <io.netty>4.1.115.Final</io.netty>
+    <io.netty>4.1.116.Final</io.netty>
     <slf4j.version>2.0.16</slf4j.version>
     <distributionManagement.snapshot.url>https://oss.sonatype.org/content/repositories/google-snapshots/</distributionManagement.snapshot.url>
     <distributionManagement.snapshot.id>sonatype-nexus-snapshots</distributionManagement.snapshot.id>
@@ -450,7 +450,7 @@
       <dependency>
         <groupId>com.google.guava</groupId>
         <artifactId>guava</artifactId>
-        <version>33.3.1-jre</version>
+        <version>33.4.0-jre</version>
       </dependency>
       <dependency>
         <groupId>com.google.errorprone</groupId>
@@ -471,7 +471,7 @@
       <dependency>
         <groupId>com.google.oauth-client</groupId>
         <artifactId>google-oauth-client</artifactId>
-        <version>1.36.0</version>
+        <version>1.37.0</version>
       </dependency>
       <dependency>
         <groupId>com.google.protobuf</groupId>
@@ -596,7 +596,7 @@
       <dependency>
         <groupId>com.google.oauth-client</groupId>
         <artifactId>google-oauth-client-java6</artifactId>
-        <version>1.36.0</version>
+        <version>1.37.0</version>
       </dependency>
       <dependency>
         <groupId>io.grpc</groupId>
@@ -688,7 +688,7 @@
       <dependency>
         <groupId>com.google.guava</groupId>
         <artifactId>guava-testlib</artifactId>
-        <version>33.3.1-jre</version>
+        <version>33.4.0-jre</version>
         <scope>test</scope>
       </dependency>
       <dependency>
