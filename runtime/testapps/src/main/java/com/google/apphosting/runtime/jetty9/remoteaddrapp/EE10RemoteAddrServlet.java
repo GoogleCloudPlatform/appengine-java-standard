@@ -28,10 +28,13 @@ public class EE10RemoteAddrServlet extends HttpServlet {
     resp.setContentType("text/plain");
     PrintWriter writer = resp.getWriter();
     writer.println("getRemoteAddr: " + req.getRemoteAddr());
-    writer.println("getLocalAddr: " + req.getLocalAddr());
-    writer.println("getServerPort: " + req.getServerPort());
+    writer.println("getRemoteHost: " + req.getRemoteHost());
     writer.println("getRemotePort: " + req.getRemotePort());
+    writer.println("getLocalAddr: " + req.getLocalAddr());
+    writer.println("getLocalName: " + req.getLocalName());
     writer.println("getLocalPort: " + req.getLocalPort());
     writer.println("getServerName: " + req.getServerName());
+    writer.println("getServerPort: " + req.getServerPort());
+
   }
 }

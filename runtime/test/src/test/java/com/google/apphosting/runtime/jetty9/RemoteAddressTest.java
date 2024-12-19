@@ -25,6 +25,7 @@ import java.util.Collection;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.http.HttpStatus;
+import org.eclipse.jetty.http.HttpVersion;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -54,6 +55,7 @@ public class RemoteAddressTest extends JavaRuntimeViaHttpBase {
   private final boolean httpMode;
   private final String environment;
   private RuntimeContext<?> runtime;
+  private String url;
 
   public RemoteAddressTest(String environment, boolean httpMode) {
     this.environment = environment;
@@ -67,6 +69,7 @@ public class RemoteAddressTest extends JavaRuntimeViaHttpBase {
     copyAppToDir(app, temp.getRoot().toPath());
     httpClient.start();
     runtime = runtimeContext();
+    url = runtime.jettyUrl("/");
     System.err.println("==== Using Environment: " + environment + " " + httpMode + " ====");
   }
 
@@ -77,20 +80,85 @@ public class RemoteAddressTest extends JavaRuntimeViaHttpBase {
   }
 
   @Test
-  public void test() throws Exception {
-    String url = runtime.jettyUrl("/");
+  public void testWithHostHeader() throws Exception {
     ContentResponse response = httpClient.newRequest(url)
+            .header("Host", "foobar:1234")
             .header("X-AppEngine-User-IP", "203.0.113.1")
             .send();
 
     assertThat(response.getStatus(), equalTo(HttpStatus.OK_200));
     String contentReceived = response.getContentAsString();
     assertThat(contentReceived, containsString("getRemoteAddr: 203.0.113.1"));
-    assertThat(contentReceived, containsString("getLocalAddr: 0.0.0.0"));
-    assertThat(contentReceived, containsString("getServerPort: " + runtime.getPort()));
+    assertThat(contentReceived, containsString("getRemoteHost: 203.0.113.1"));
     assertThat(contentReceived, containsString("getRemotePort: 0"));
+    assertThat(contentReceived, containsString("getLocalAddr: 0.0.0.0"));
+    assertThat(contentReceived, containsString("getLocalName: 0.0.0.0"));
     assertThat(contentReceived, containsString("getLocalPort: 0"));
-    assertThat(contentReceived, containsString("getServerName: 0.0.0.0"));
+    assertThat(contentReceived, containsString("getServerName: foobar"));
+    assertThat(contentReceived, containsString("getServerPort: 1234"));
+  }
+
+  @Test
+  public void testWithIPv6() throws Exception {
+    // Test the host header to be IPv6 with a port.
+    ContentResponse response = httpClient.newRequest(url)
+            .header("Host", "[2001:db8:85a3:8d3:1319:8a2e:370:7348]:1234")
+            .header("X-AppEngine-User-IP", "203.0.113.1")
+            .send();
+    assertThat(response.getStatus(), equalTo(HttpStatus.OK_200));
+    String contentReceived = response.getContentAsString();
+    assertThat(contentReceived, containsString("getRemoteAddr: 203.0.113.1"));
+    assertThat(contentReceived, containsString("getRemoteHost: 203.0.113.1"));
+    assertThat(contentReceived, containsString("getRemotePort: 0"));
+    assertThat(contentReceived, containsString("getLocalAddr: 0.0.0.0"));
+    assertThat(contentReceived, containsString("getLocalName: 0.0.0.0"));
+    assertThat(contentReceived, containsString("getLocalPort: 0"));
+    assertThat(contentReceived, containsString("getServerName: [2001:db8:85a3:8d3:1319:8a2e:370:7348]"));
+    assertThat(contentReceived, containsString("getServerPort: 1234"));
+
+    // Test the user IP to be IPv6 with a port.
+    response = httpClient.newRequest(url)
+            .header("Host", "203.0.113.1:1234")
+            .header("X-AppEngine-User-IP", "2001:db8:85a3:8d3:1319:8a2e:370:7348")
+            .send();
+    assertThat(response.getStatus(), equalTo(HttpStatus.OK_200));
+    contentReceived = response.getContentAsString();
+    if ("jetty94".equals(environment)) {
+      assertThat(contentReceived, containsString("getRemoteAddr: [2001:db8:85a3:8d3:1319:8a2e:370:7348]"));
+      assertThat(contentReceived, containsString("getRemoteHost: [2001:db8:85a3:8d3:1319:8a2e:370:7348]"));
+    }
+    else {
+      assertThat(contentReceived, containsString("getRemoteAddr: 2001:db8:85a3:8d3:1319:8a2e:370:7348"));
+      assertThat(contentReceived, containsString("getRemoteHost: 2001:db8:85a3:8d3:1319:8a2e:370:7348"));
+    }
+    assertThat(contentReceived, containsString("getRemotePort: 0"));
+    assertThat(contentReceived, containsString("getLocalAddr: 0.0.0.0"));
+    assertThat(contentReceived, containsString("getLocalName: 0.0.0.0"));
+    assertThat(contentReceived, containsString("getLocalPort: 0"));
+    assertThat(contentReceived, containsString("getServerName: 203.0.113.1"));
+    assertThat(contentReceived, containsString("getServerPort: 1234"));
+  }
+
+  @Test
+  public void testWithoutHostHeader() throws Exception {
+    String url = runtime.jettyUrl("/");
+
+    ContentResponse response = httpClient.newRequest(url)
+            .version(HttpVersion.HTTP_1_0)
+            .header("X-AppEngine-User-IP", "203.0.113.1")
+            .onRequestHeaders(request -> request.getHeaders().remove("Host"))
+            .send();
+
+    assertThat(response.getStatus(), equalTo(HttpStatus.OK_200));
+    String contentReceived = response.getContentAsString();
+    assertThat(contentReceived, containsString("getRemoteAddr: 203.0.113.1"));
+    assertThat(contentReceived, containsString("getRemoteHost: 203.0.113.1"));
+    assertThat(contentReceived, containsString("getRemotePort: 0"));
+    assertThat(contentReceived, containsString("getLocalAddr: 0.0.0.0"));
+    assertThat(contentReceived, containsString("getLocalName: 0.0.0.0"));
+    assertThat(contentReceived, containsString("getLocalPort: 0"));
+    assertThat(contentReceived, containsString("getServerName: 127.0.0.1"));
+    assertThat(contentReceived, containsString("getServerPort: " + runtime.getPort()));
   }
 
   private RuntimeContext<?> runtimeContext() throws Exception {
