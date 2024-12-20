@@ -51,6 +51,7 @@ import static com.google.apphosting.runtime.AppEngineConstants.X_CLOUD_TRACE_CON
 import static com.google.apphosting.runtime.AppEngineConstants.X_FORWARDED_PROTO;
 import static com.google.apphosting.runtime.AppEngineConstants.X_GOOGLE_INTERNAL_PROFILER;
 import static com.google.apphosting.runtime.AppEngineConstants.X_GOOGLE_INTERNAL_SKIPADMINCHECK;
+import static com.google.apphosting.runtime.jetty9.RpcConnection.NORMALIZE_INET_ADDR;
 
 import com.google.apphosting.base.protos.HttpPb;
 import com.google.apphosting.base.protos.RuntimePb;
@@ -286,7 +287,7 @@ public class JettyRequestAPIData implements RequestAPIData {
       traceContext = TraceContextProto.getDefaultInstance();
     }
 
-    String normalizeUserIp = HostPort.normalizeHost(userIp);
+    String finalUserIp = NORMALIZE_INET_ADDR ? HostPort.normalizeHost(userIp) : userIp;
     this.httpServletRequest =
         new HttpServletRequestWrapper(httpServletRequest) {
 
@@ -332,12 +333,12 @@ public class JettyRequestAPIData implements RequestAPIData {
 
           @Override
           public String getRemoteAddr() {
-            return normalizeUserIp;
+            return finalUserIp;
           }
 
           @Override
           public String getRemoteHost() {
-            return normalizeUserIp;
+            return finalUserIp;
           }
 
           @Override
