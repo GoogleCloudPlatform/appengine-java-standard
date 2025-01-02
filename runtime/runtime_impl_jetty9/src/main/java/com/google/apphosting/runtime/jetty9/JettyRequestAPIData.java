@@ -51,6 +51,7 @@ import static com.google.apphosting.runtime.AppEngineConstants.X_CLOUD_TRACE_CON
 import static com.google.apphosting.runtime.AppEngineConstants.X_FORWARDED_PROTO;
 import static com.google.apphosting.runtime.AppEngineConstants.X_GOOGLE_INTERNAL_PROFILER;
 import static com.google.apphosting.runtime.AppEngineConstants.X_GOOGLE_INTERNAL_SKIPADMINCHECK;
+import static com.google.apphosting.runtime.jetty9.RpcConnection.NORMALIZE_INET_ADDR;
 
 import com.google.apphosting.base.protos.HttpPb;
 import com.google.apphosting.base.protos.RuntimePb;
@@ -67,12 +68,12 @@ import java.util.Objects;
 import java.util.stream.Stream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
-
 import org.eclipse.jetty.http.HttpField;
 import org.eclipse.jetty.http.HttpFields;
 import org.eclipse.jetty.http.HttpScheme;
 import org.eclipse.jetty.http.HttpURI;
 import org.eclipse.jetty.server.Request;
+import org.eclipse.jetty.util.HostPort;
 
 /**
  * Implementation for the {@link RequestAPIData} to allow for the Jetty {@link Request} to be used
@@ -128,7 +129,8 @@ public class JettyRequestAPIData implements RequestAPIData {
 
     HttpFields fields = new HttpFields();
     for (HttpField field : request.getHttpFields()) {
-      // If it has a HttpHeader it is one of the standard headers so won't match any appengine specific header.
+      // If it has a HttpHeader it is one of the standard headers so won't match any appengine
+      // specific header.
       if (field.getHeader() != null) {
         fields.add(field);
         continue;
@@ -286,7 +288,7 @@ public class JettyRequestAPIData implements RequestAPIData {
       traceContext = TraceContextProto.getDefaultInstance();
     }
 
-    String finalUserIp = userIp;
+    String finalUserIp = NORMALIZE_INET_ADDR ? HostPort.normalizeHost(userIp) : userIp;
     this.httpServletRequest =
         new HttpServletRequestWrapper(httpServletRequest) {
 
@@ -333,11 +335,6 @@ public class JettyRequestAPIData implements RequestAPIData {
           @Override
           public String getRemoteAddr() {
             return finalUserIp;
-          }
-
-          @Override
-          public String getServerName() {
-            return UNSPECIFIED_IP;
           }
 
           @Override
