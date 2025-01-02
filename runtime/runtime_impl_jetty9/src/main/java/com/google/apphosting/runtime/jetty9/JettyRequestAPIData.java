@@ -129,7 +129,8 @@ public class JettyRequestAPIData implements RequestAPIData {
 
     HttpFields fields = new HttpFields();
     for (HttpField field : request.getHttpFields()) {
-      // If it has a HttpHeader it is one of the standard headers so won't match any appengine specific header.
+      // If it has a HttpHeader it is one of the standard headers so won't match any appengine
+      // specific header.
       if (field.getHeader() != null) {
         fields.add(field);
         continue;

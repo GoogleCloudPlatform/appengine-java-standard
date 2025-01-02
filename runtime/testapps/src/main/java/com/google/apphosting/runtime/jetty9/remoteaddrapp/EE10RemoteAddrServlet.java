@@ -35,6 +35,5 @@ public class EE10RemoteAddrServlet extends HttpServlet {
     writer.println("getLocalPort: " + req.getLocalPort());
     writer.println("getServerName: " + req.getServerName());
     writer.println("getServerPort: " + req.getServerPort());
-
   }
 }

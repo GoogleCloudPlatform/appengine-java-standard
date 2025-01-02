@@ -82,7 +82,9 @@ public class RemoteAddressTest extends JavaRuntimeViaHttpBase {
 
   @Test
   public void testWithHostHeader() throws Exception {
-    ContentResponse response = httpClient.newRequest(url)
+    ContentResponse response =
+        httpClient
+            .newRequest(url)
             .header("Host", "foobar:1234")
             .header("X-AppEngine-User-IP", "203.0.113.1")
             .send();
@@ -101,21 +103,24 @@ public class RemoteAddressTest extends JavaRuntimeViaHttpBase {
 
   @Test
   public void testWithIPv6() throws Exception {
-        // Test the host header to be IPv6 with a port.
-        ContentResponse response = httpClient.newRequest(url)
-                .header("Host", "[2001:db8:85a3:8d3:1319:8a2e:370:7348]:1234")
-                .header("X-AppEngine-User-IP", "203.0.113.1")
-                .send();
-        assertThat(response.getStatus(), equalTo(HttpStatus.OK_200));
-        String contentReceived = response.getContentAsString();
-        assertThat(contentReceived, containsString("getRemoteAddr: 203.0.113.1"));
-        assertThat(contentReceived, containsString("getRemoteHost: 203.0.113.1"));
-        assertThat(contentReceived, containsString("getRemotePort: 0"));
-        assertThat(contentReceived, containsString("getLocalAddr: 0.0.0.0"));
-        assertThat(contentReceived, containsString("getLocalName: 0.0.0.0"));
-        assertThat(contentReceived, containsString("getLocalPort: 0"));
-        assertThat(contentReceived, containsString("getServerName: [2001:db8:85a3:8d3:1319:8a2e:370:7348]"));
-        assertThat(contentReceived, containsString("getServerPort: 1234"));
+    // Test the host header to be IPv6 with a port.
+    ContentResponse response =
+        httpClient
+            .newRequest(url)
+            .header("Host", "[2001:db8:85a3:8d3:1319:8a2e:370:7348]:1234")
+            .header("X-AppEngine-User-IP", "203.0.113.1")
+            .send();
+    assertThat(response.getStatus(), equalTo(HttpStatus.OK_200));
+    String contentReceived = response.getContentAsString();
+    assertThat(contentReceived, containsString("getRemoteAddr: 203.0.113.1"));
+    assertThat(contentReceived, containsString("getRemoteHost: 203.0.113.1"));
+    assertThat(contentReceived, containsString("getRemotePort: 0"));
+    assertThat(contentReceived, containsString("getLocalAddr: 0.0.0.0"));
+    assertThat(contentReceived, containsString("getLocalName: 0.0.0.0"));
+    assertThat(contentReceived, containsString("getLocalPort: 0"));
+    assertThat(
+        contentReceived, containsString("getServerName: [2001:db8:85a3:8d3:1319:8a2e:370:7348]"));
+    assertThat(contentReceived, containsString("getServerPort: 1234"));
 
     // Test the user IP to be IPv6 with a port.
     response =
@@ -127,13 +132,17 @@ public class RemoteAddressTest extends JavaRuntimeViaHttpBase {
     assertThat(response.getStatus(), equalTo(HttpStatus.OK_200));
     contentReceived = response.getContentAsString();
     if ("jetty94".equals(environment)) {
-      assertThat(contentReceived, containsString("getRemoteAddr: [2001:db8:85a3:8d3:1319:8a2e:370:7348]"));
-      assertThat(contentReceived, containsString("getRemoteHost: [2001:db8:85a3:8d3:1319:8a2e:370:7348]"));
+      assertThat(
+          contentReceived, containsString("getRemoteAddr: [2001:db8:85a3:8d3:1319:8a2e:370:7348]"));
+      assertThat(
+          contentReceived, containsString("getRemoteHost: [2001:db8:85a3:8d3:1319:8a2e:370:7348]"));
     } else {
       // The correct behaviour for getRemoteAddr and getRemoteHost is to not include []
       // because they return raw IP/hostname and not URI-formatted addresses.
-      assertThat(contentReceived, containsString("getRemoteAddr: 2001:db8:85a3:8d3:1319:8a2e:370:7348"));
-      assertThat(contentReceived, containsString("getRemoteHost: 2001:db8:85a3:8d3:1319:8a2e:370:7348"));
+      assertThat(
+          contentReceived, containsString("getRemoteAddr: 2001:db8:85a3:8d3:1319:8a2e:370:7348"));
+      assertThat(
+          contentReceived, containsString("getRemoteHost: 2001:db8:85a3:8d3:1319:8a2e:370:7348"));
     }
     assertThat(contentReceived, containsString("getRemotePort: 0"));
     assertThat(contentReceived, containsString("getLocalAddr: 0.0.0.0"));
@@ -145,9 +154,9 @@ public class RemoteAddressTest extends JavaRuntimeViaHttpBase {
 
   @Test
   public void testWithoutHostHeader() throws Exception {
-    String url = runtime.jettyUrl("/");
-
-    ContentResponse response = httpClient.newRequest(url)
+    ContentResponse response =
+        httpClient
+            .newRequest(url)
             .version(HttpVersion.HTTP_1_0)
             .header("X-AppEngine-User-IP", "203.0.113.1")
             .onRequestHeaders(request -> request.getHeaders().remove("Host"))
@@ -190,7 +199,6 @@ public class RemoteAddressTest extends JavaRuntimeViaHttpBase {
     assertThat(contentReceived, containsString("getServerName: foobar"));
     assertThat(contentReceived, containsString("getServerPort: 1234"));
   }
-
 
   private RuntimeContext<?> runtimeContext() throws Exception {
     RuntimeContext.Config<?> config =
