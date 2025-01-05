@@ -21,10 +21,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.apphosting.api.ApiProxy;
 import com.google.apphosting.api.ApiProxy.LogRecord;
-import com.google.apphosting.runtime.jetty9.AppEngineAuthentication;
-import com.google.apphosting.runtime.jetty9.ParseBlobUploadHandler;
-import com.google.apphosting.runtime.jetty9.RequestListener;
-import com.google.apphosting.runtime.jetty9.TransactionCleanupListener;
 import com.google.apphosting.utils.servlet.DeferredTaskServlet;
 import com.google.apphosting.utils.servlet.JdbcMySqlConnectionCleanupFilter;
 import com.google.apphosting.utils.servlet.SessionCleanupServlet;
@@ -42,6 +38,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -82,6 +79,10 @@ public class AppEngineWebAppContext extends WebAppContext {
   private static final int MAX_RESPONSE_SIZE = 32 * 1024 * 1024;
   private static final boolean APP_IS_ASYNC =
       Boolean.getBoolean(RpcConnection.ASYNC_ENABLE_PPROPERTY);
+  private static final boolean IS_JAVA_8_RUNTIME =
+      Objects.equals(System.getenv("GAE_RUNTIME"), "java8");
+  private static final ImmutableSet<HolderMatcher> EMPTY_SET =
+      ImmutableSet.<HolderMatcher>builder().build();
 
   private static final String JETTY_PACKAGE = "org.eclipse.jetty.";
 
@@ -123,7 +124,7 @@ public class AppEngineWebAppContext extends WebAppContext {
   }
 
   public AppEngineWebAppContext(File appDir, String serverInfo) {
-    this(appDir, serverInfo, /*extractWar=*/ true);
+    this(appDir, serverInfo, /* extractWar= */ true);
   }
 
   public AppEngineWebAppContext(File appDir, String serverInfo, boolean extractWar) {
@@ -228,19 +229,17 @@ public class AppEngineWebAppContext extends WebAppContext {
     //  - Ensure known runtime filters/servlets are instantiated from this classloader
     //  - Ensure known runtime mappings exist.
     ServletHandler servletHandler = getServletHandler();
+    ImmutableSet<HolderMatcher> deprecations =
+        IS_JAVA_8_RUNTIME ? DEPRECATED_SERVLETS_FILTERS : EMPTY_SET;
     TrimmedFilters trimmedFilters =
         new TrimmedFilters(
-            servletHandler.getFilters(),
-            servletHandler.getFilterMappings(),
-            DEPRECATED_SERVLETS_FILTERS);
+            servletHandler.getFilters(), servletHandler.getFilterMappings(), deprecations);
     trimmedFilters.ensure(
         "CloudSqlConnectionCleanupFilter", JdbcMySqlConnectionCleanupFilter.class, "/*");
 
     TrimmedServlets trimmedServlets =
         new TrimmedServlets(
-            servletHandler.getServlets(),
-            servletHandler.getServletMappings(),
-            DEPRECATED_SERVLETS_FILTERS);
+            servletHandler.getServlets(), servletHandler.getServletMappings(), deprecations);
     trimmedServlets.ensure("_ah_warmup", WarmupServlet.class, "/_ah/warmup");
     trimmedServlets.ensure(
         "_ah_sessioncleanup", SessionCleanupServlet.class, "/_ah/sessioncleanup");
