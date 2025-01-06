@@ -16,6 +16,9 @@
 
 package com.google.apphosting.runtime.jetty.ee10;
 
+import static com.google.common.base.StandardSystemProperty.JAVA_IO_TMPDIR;
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import com.google.apphosting.api.ApiProxy;
 import com.google.apphosting.api.ApiProxy.LogRecord;
 import com.google.apphosting.runtime.jetty.EE10AppEngineAuthentication;
@@ -24,10 +27,24 @@ import com.google.apphosting.utils.servlet.ee10.JdbcMySqlConnectionCleanupFilter
 import com.google.apphosting.utils.servlet.ee10.SessionCleanupServlet;
 import com.google.apphosting.utils.servlet.ee10.SnapshotServlet;
 import com.google.apphosting.utils.servlet.ee10.WarmupServlet;
-import com.google.common.collect.ImmutableSet;
 import jakarta.servlet.DispatcherType;
 import jakarta.servlet.Filter;
 import jakarta.servlet.Servlet;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.EnumSet;
+import java.util.EventListener;
+import java.util.HashMap;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Scanner;
+import java.util.concurrent.CopyOnWriteArrayList;
 import org.eclipse.jetty.ee10.servlet.FilterHolder;
 import org.eclipse.jetty.ee10.servlet.FilterMapping;
 import org.eclipse.jetty.ee10.servlet.Holder;
@@ -44,25 +61,6 @@ import org.eclipse.jetty.server.Response;
 import org.eclipse.jetty.util.Callback;
 import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.util.resource.ResourceFactory;
-
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.EnumSet;
-import java.util.EventListener;
-import java.util.HashMap;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Scanner;
-import java.util.Set;
-import java.util.concurrent.CopyOnWriteArrayList;
-
-import static com.google.common.base.StandardSystemProperty.JAVA_IO_TMPDIR;
-import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * {@code AppEngineWebAppContext} is a customization of Jetty's {@link WebAppContext} that is aware
@@ -91,37 +89,13 @@ public class AppEngineWebAppContext extends WebAppContext {
   private final List<RequestListener> requestListeners = new CopyOnWriteArrayList<>();
   private final boolean ignoreContentLength;
 
-  // These are deprecated filters and servlets
-  private static final ImmutableSet<HolderMatcher> DEPRECATED_SERVLETS_FILTERS =
-      ImmutableSet.of(
-          // Remove unused filters that may still be instantiated by
-          // deprecated webdefault.xml in old SDKs
-          new HolderMatcher(
-              "AbandonedTransactionDetector",
-              "com.google.apphosting.utils.servlet.TransactionCleanupFilter"),
-          new HolderMatcher(
-              "SaveSessionFilter", "com.google.apphosting.runtime.jetty.SaveSessionFilter"),
-          new HolderMatcher(
-              "_ah_ParseBlobUploadFilter",
-              "com.google.apphosting.utils.servlet.ParseBlobUploadFilter"),
-          new HolderMatcher(
-              "_ah_default", "com.google.apphosting.runtime.jetty.ResourceFileServlet"),
-          new HolderMatcher(
-              "default", "com.google.apphosting.runtime.jetty.ee10.NamedDefaultServlet"),
-          new HolderMatcher("jsp", "com.google.apphosting.runtime.jetty.NoJspSerlvet"),
-
-          // remove application filters and servlets that are known to only be applicable to
-          // the java 7 runtime
-          new HolderMatcher(null, "com.google.appengine.tools.appstats.AppstatsFilter"),
-          new HolderMatcher(null, "com.google.appengine.tools.appstats.AppstatsServlet"));
-
   @Override
   public boolean checkAlias(String path, Resource resource) {
     return true;
   }
 
   public AppEngineWebAppContext(File appDir, String serverInfo) {
-    this(appDir, serverInfo, /*extractWar=*/ true);
+    this(appDir, serverInfo, /* extractWar= */ true);
   }
 
   public AppEngineWebAppContext(File appDir, String serverInfo, boolean extractWar) {
@@ -209,10 +183,10 @@ public class AppEngineWebAppContext extends WebAppContext {
   @Override
   public boolean addEventListener(EventListener listener) {
     if (super.addEventListener(listener)) {
-        if (listener instanceof RequestListener) {
-            requestListeners.add((RequestListener)listener);
-        }
-        return true;
+      if (listener instanceof RequestListener) {
+        requestListeners.add((RequestListener) listener);
+      }
+      return true;
     }
     return false;
   }
@@ -220,10 +194,10 @@ public class AppEngineWebAppContext extends WebAppContext {
   @Override
   public boolean removeEventListener(EventListener listener) {
     if (super.removeEventListener(listener)) {
-        if (listener instanceof RequestListener) {
-            requestListeners.remove((RequestListener)listener);
-        }
-        return true;
+      if (listener instanceof RequestListener) {
+        requestListeners.remove((RequestListener) listener);
+      }
+      return true;
     }
     return false;
   }
@@ -238,28 +212,21 @@ public class AppEngineWebAppContext extends WebAppContext {
   protected void startWebapp() throws Exception {
     // startWebapp is called after the web.xml metadata has been resolved, so we can
     // clean configuration here:
-    //  - Removed deprecated filters and servlets
     //  - Ensure known runtime filters/servlets are instantiated from this classloader
     //  - Ensure known runtime mappings exist.
     ServletHandler servletHandler = getServletHandler();
     TrimmedFilters trimmedFilters =
-            new TrimmedFilters(
-                    servletHandler.getFilters(),
-                    servletHandler.getFilterMappings(),
-                    DEPRECATED_SERVLETS_FILTERS);
+        new TrimmedFilters(servletHandler.getFilters(), servletHandler.getFilterMappings());
     trimmedFilters.ensure(
-            "CloudSqlConnectionCleanupFilter", JdbcMySqlConnectionCleanupFilter.class, "/*");
+        "CloudSqlConnectionCleanupFilter", JdbcMySqlConnectionCleanupFilter.class, "/*");
 
     TrimmedServlets trimmedServlets =
-            new TrimmedServlets(
-                    servletHandler.getServlets(),
-                    servletHandler.getServletMappings(),
-                    DEPRECATED_SERVLETS_FILTERS);
+        new TrimmedServlets(servletHandler.getServlets(), servletHandler.getServletMappings());
     trimmedServlets.ensure("_ah_warmup", WarmupServlet.class, "/_ah/warmup");
     trimmedServlets.ensure(
-            "_ah_sessioncleanup", SessionCleanupServlet.class, "/_ah/sessioncleanup");
+        "_ah_sessioncleanup", SessionCleanupServlet.class, "/_ah/sessioncleanup");
     trimmedServlets.ensure(
-            "_ah_queue_deferred", DeferredTaskServlet.class, "/_ah/queue/__deferred__");
+        "_ah_queue_deferred", DeferredTaskServlet.class, "/_ah/queue/__deferred__");
     trimmedServlets.ensure("_ah_snapshot", SnapshotServlet.class, "/_ah/snapshot");
     trimmedServlets.ensure("_ah_default", ResourceFileServlet.class, "/");
     trimmedServlets.ensure("default", NamedDefaultServlet.class);
@@ -279,7 +246,7 @@ public class AppEngineWebAppContext extends WebAppContext {
     ConstraintSecurityHandler security = (ConstraintSecurityHandler) getSecurityHandler();
     ConstraintMapping cm = new ConstraintMapping();
     cm.setConstraint(
-            Constraint.from("deferred_queue", Constraint.Authorization.SPECIFIC_ROLE, "admin"));
+        Constraint.from("deferred_queue", Constraint.Authorization.SPECIFIC_ROLE, "admin"));
     cm.setPathSpec("/_ah/queue/__deferred__");
     security.addConstraintMapping(cm);
 
@@ -434,36 +401,16 @@ public class AppEngineWebAppContext extends WebAppContext {
     }
   }
 
-  /**
-   * TrimmedServlets is in charge of handling web applications that got deployed previously with the
-   * previous webdefault.xml content(prior to this CL changing it). We still need to be able to load
-   * old apps defined with the previous webdefault.xml file that generated an obsolete
-   * quickstart.xml having the servlets defined in webdefault.xml.
-   *
-   * <p>New deployements would not need this processing (no-op), but we need to handle all apps,
-   * deployed now or in the past.
-   */
   private static class TrimmedServlets {
     private final Map<String, ServletHolder> holders = new HashMap<>();
     private final List<ServletMapping> mappings = new ArrayList<>();
 
-    TrimmedServlets(
-        ServletHolder[] holders, ServletMapping[] mappings, Set<HolderMatcher> deprecations) {
+    TrimmedServlets(ServletHolder[] holders, ServletMapping[] mappings) {
       for (ServletHolder servletHolder : holders) {
-        boolean deprecated = false;
         servletHolder.setAsyncSupported(APP_IS_ASYNC);
-        for (HolderMatcher holderMatcher : deprecations) {
-          deprecated |= holderMatcher.appliesTo(servletHolder);
-        }
-
-        if (!deprecated) {
-          this.holders.put(servletHolder.getName(), servletHolder);
-        }
+        this.holders.put(servletHolder.getName(), servletHolder);
       }
-
-      for (ServletMapping m : mappings) {
-        this.mappings.add(m);
-      }
+      this.mappings.addAll(Arrays.asList(mappings));
     }
 
     /**
@@ -580,23 +527,12 @@ public class AppEngineWebAppContext extends WebAppContext {
     private final Map<String, FilterHolder> holders = new HashMap<>();
     private final List<FilterMapping> mappings = new ArrayList<>();
 
-    TrimmedFilters(
-        FilterHolder[] holders, FilterMapping[] mappings, Set<HolderMatcher> deprecations) {
+    TrimmedFilters(FilterHolder[] holders, FilterMapping[] mappings) {
       for (FilterHolder h : holders) {
-        boolean deprecated = false;
         h.setAsyncSupported(APP_IS_ASYNC);
-        for (HolderMatcher m : deprecations) {
-          deprecated |= m.appliesTo(h);
-        }
-
-        if (!deprecated) {
-          this.holders.put(h.getName(), h);
-        }
+        this.holders.put(h.getName(), h);
       }
-
-      for (FilterMapping m : mappings) {
-        this.mappings.add(m);
-      }
+      this.mappings.addAll(Arrays.asList(mappings));
     }
 
     /**

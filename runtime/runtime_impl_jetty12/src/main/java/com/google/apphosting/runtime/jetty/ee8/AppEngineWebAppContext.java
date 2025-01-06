@@ -16,6 +16,9 @@
 
 package com.google.apphosting.runtime.jetty.ee8;
 
+import static com.google.common.base.StandardSystemProperty.JAVA_IO_TMPDIR;
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import com.google.apphosting.api.ApiProxy;
 import com.google.apphosting.api.ApiProxy.LogRecord;
 import com.google.apphosting.runtime.jetty.AppEngineAuthentication;
@@ -24,32 +27,13 @@ import com.google.apphosting.utils.servlet.JdbcMySqlConnectionCleanupFilter;
 import com.google.apphosting.utils.servlet.SessionCleanupServlet;
 import com.google.apphosting.utils.servlet.SnapshotServlet;
 import com.google.apphosting.utils.servlet.WarmupServlet;
-import com.google.common.collect.ImmutableSet;
-import org.eclipse.jetty.ee8.nested.ServletConstraint;
-import org.eclipse.jetty.ee8.security.ConstraintMapping;
-import org.eclipse.jetty.ee8.security.ConstraintSecurityHandler;
-import org.eclipse.jetty.ee8.servlet.FilterHolder;
-import org.eclipse.jetty.ee8.servlet.FilterMapping;
-import org.eclipse.jetty.ee8.servlet.Holder;
-import org.eclipse.jetty.ee8.servlet.ListenerHolder;
-import org.eclipse.jetty.ee8.servlet.ServletHandler;
-import org.eclipse.jetty.ee8.servlet.ServletHolder;
-import org.eclipse.jetty.ee8.servlet.ServletMapping;
-import org.eclipse.jetty.ee8.webapp.WebAppContext;
-import org.eclipse.jetty.util.resource.Resource;
-import org.eclipse.jetty.util.resource.ResourceFactory;
-
-import javax.servlet.Filter;
-import javax.servlet.Servlet;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.EventListener;
 import java.util.HashMap;
 import java.util.List;
@@ -57,11 +41,24 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Scanner;
-import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
-
-import static com.google.common.base.StandardSystemProperty.JAVA_IO_TMPDIR;
-import static java.nio.charset.StandardCharsets.UTF_8;
+import javax.servlet.Filter;
+import javax.servlet.Servlet;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import org.eclipse.jetty.ee8.nested.ServletConstraint;
+import org.eclipse.jetty.ee8.security.ConstraintMapping;
+import org.eclipse.jetty.ee8.security.ConstraintSecurityHandler;
+import org.eclipse.jetty.ee8.servlet.FilterHolder;
+import org.eclipse.jetty.ee8.servlet.FilterMapping;
+import org.eclipse.jetty.ee8.servlet.ListenerHolder;
+import org.eclipse.jetty.ee8.servlet.ServletHandler;
+import org.eclipse.jetty.ee8.servlet.ServletHolder;
+import org.eclipse.jetty.ee8.servlet.ServletMapping;
+import org.eclipse.jetty.ee8.webapp.WebAppContext;
+import org.eclipse.jetty.util.resource.Resource;
+import org.eclipse.jetty.util.resource.ResourceFactory;
 
 /**
  * {@code AppEngineWebAppContext} is a customization of Jetty's {@link WebAppContext} that is aware
@@ -87,32 +84,8 @@ public class AppEngineWebAppContext extends WebAppContext {
       "/base/java8_runtime/appengine.ignore-content-length";
 
   private final String serverInfo;
-  private final boolean extractWar;
   private final List<RequestListener> requestListeners = new CopyOnWriteArrayList<>();
   private final boolean ignoreContentLength;
-
-  // These are deprecated filters and servlets
-  private static final ImmutableSet<HolderMatcher> DEPRECATED_SERVLETS_FILTERS =
-      ImmutableSet.of(
-          // Remove unused filters that may still be instantiated by
-          // deprecated webdefault.xml in old SDKs
-          new HolderMatcher(
-              "AbandonedTransactionDetector",
-              "com.google.apphosting.utils.servlet.TransactionCleanupFilter"),
-          new HolderMatcher(
-              "SaveSessionFilter", "com.google.apphosting.runtime.jetty.SaveSessionFilter"),
-          new HolderMatcher(
-              "_ah_ParseBlobUploadFilter",
-              "com.google.apphosting.utils.servlet.ParseBlobUploadFilter"),
-          new HolderMatcher(
-              "_ah_default", "com.google.apphosting.runtime.jetty.ResourceFileServlet"),
-          new HolderMatcher("default", "com.google.apphosting.runtime.jetty.ee8.NamedDefaultServlet"),
-          new HolderMatcher("jsp", "com.google.apphosting.runtime.jetty.NoJspSerlvet"),
-
-          // remove application filters and servlets that are known to only be applicable to
-          // the java 7 runtime
-          new HolderMatcher(null, "com.google.appengine.tools.appstats.AppstatsFilter"),
-          new HolderMatcher(null, "com.google.appengine.tools.appstats.AppstatsServlet"));
 
   @Override
   public boolean checkAlias(String path, Resource resource) {
@@ -120,14 +93,12 @@ public class AppEngineWebAppContext extends WebAppContext {
   }
 
   public AppEngineWebAppContext(File appDir, String serverInfo) {
-    this(appDir, serverInfo, /*extractWar=*/ true);
+    this(appDir, serverInfo, /* extractWar= */ true);
   }
 
   public AppEngineWebAppContext(File appDir, String serverInfo, boolean extractWar) {
     // We set the contextPath to / for all applications.
     super(appDir.getPath(), "/");
-
-    this.extractWar = extractWar;
 
     // If the application fails to start, we throw so the JVM can exit.
     setThrowUnavailableOnStartupException(true);
@@ -165,7 +136,8 @@ public class AppEngineWebAppContext extends WebAppContext {
 
     // Configure the Jetty SecurityHandler to understand our method of
     // authentication (via the UserService).
-    AppEngineAuthentication.configureSecurityHandler((ConstraintSecurityHandler) getSecurityHandler());
+    AppEngineAuthentication.configureSecurityHandler(
+        (ConstraintSecurityHandler) getSecurityHandler());
 
     setMaxFormContentSize(MAX_RESPONSE_SIZE);
 
@@ -180,20 +152,19 @@ public class AppEngineWebAppContext extends WebAppContext {
   }
 
   @Override
-    public APIContext getServletContext()
-    {
-        /* TODO only does this for logging?
-        // Override the default HttpServletContext implementation.
-        // TODO: maybe not needed when there is no securrity manager.
-        // see
-        // https://github.com/GoogleCloudPlatform/appengine-java-vm-runtime/commit/43c37fd039fb619608cfffdc5461ecddb4d90ebc
-        _scontext = new AppEngineServletContext();
-        */
+  public APIContext getServletContext() {
+    /* TODO only does this for logging?
+    // Override the default HttpServletContext implementation.
+    // TODO: maybe not needed when there is no securrity manager.
+    // see
+    // https://github.com/GoogleCloudPlatform/appengine-java-vm-runtime/commit/43c37fd039fb619608cfffdc5461ecddb4d90ebc
+    _scontext = new AppEngineServletContext();
+    */
 
-        return super.getServletContext();
-    }
+    return super.getServletContext();
+  }
 
-    private static boolean isAppIdForNonContentLength() {
+  private static boolean isAppIdForNonContentLength() {
     String projectId = System.getenv("GOOGLE_CLOUD_PROJECT");
     if (projectId == null) {
       return false;
@@ -213,10 +184,10 @@ public class AppEngineWebAppContext extends WebAppContext {
   @Override
   public boolean addEventListener(EventListener listener) {
     if (super.addEventListener(listener)) {
-        if (listener instanceof RequestListener) {
-            requestListeners.add((RequestListener)listener);
-        }
-        return true;
+      if (listener instanceof RequestListener) {
+        requestListeners.add((RequestListener) listener);
+      }
+      return true;
     }
     return false;
   }
@@ -224,10 +195,10 @@ public class AppEngineWebAppContext extends WebAppContext {
   @Override
   public boolean removeEventListener(EventListener listener) {
     if (super.removeEventListener(listener)) {
-        if (listener instanceof RequestListener) {
-            requestListeners.remove((RequestListener)listener);
-        }
-        return true;
+      if (listener instanceof RequestListener) {
+        requestListeners.remove((RequestListener) listener);
+      }
+      return true;
     }
     return false;
   }
@@ -238,78 +209,75 @@ public class AppEngineWebAppContext extends WebAppContext {
     addEventListener(new TransactionCleanupListener(getClassLoader()));
   }
 
-    @Override
-    protected void startWebapp() throws Exception {
-      // This Listener doStart is called after the web.xml metadata has been resolved, so we can
-      // clean configuration here:
-      //  - Removed deprecated filters and servlets
-      //  - Ensure known runtime filters/servlets are instantiated from this classloader
-      //  - Ensure known runtime mappings exist.
-      ServletHandler servletHandler = getServletHandler();
-      TrimmedFilters trimmedFilters =
-              new TrimmedFilters(
-                      servletHandler.getFilters(),
-                      servletHandler.getFilterMappings(),
-                      DEPRECATED_SERVLETS_FILTERS);
-      trimmedFilters.ensure(
-              "CloudSqlConnectionCleanupFilter", JdbcMySqlConnectionCleanupFilter.class, "/*");
+  @Override
+  protected void startWebapp() throws Exception {
+    // startWebapp is called after the web.xml metadata has been resolved, so we can
+    // clean configuration here:
+    //  - Ensure known runtime filters/servlets are instantiated from this classloader
+    //  - Ensure known runtime mappings exist.
+    ServletHandler servletHandler = getServletHandler();
+    TrimmedFilters trimmedFilters =
+        new TrimmedFilters(servletHandler.getFilters(), servletHandler.getFilterMappings());
+    trimmedFilters.ensure(
+        "CloudSqlConnectionCleanupFilter", JdbcMySqlConnectionCleanupFilter.class, "/*");
 
-      TrimmedServlets trimmedServlets =
-              new TrimmedServlets(
-                      servletHandler.getServlets(),
-                      servletHandler.getServletMappings(),
-                      DEPRECATED_SERVLETS_FILTERS);
-      trimmedServlets.ensure("_ah_warmup", WarmupServlet.class, "/_ah/warmup");
-      trimmedServlets.ensure(
-              "_ah_sessioncleanup", SessionCleanupServlet.class, "/_ah/sessioncleanup");
-      trimmedServlets.ensure(
-              "_ah_queue_deferred", DeferredTaskServlet.class, "/_ah/queue/__deferred__");
-      trimmedServlets.ensure("_ah_snapshot", SnapshotServlet.class, "/_ah/snapshot");
-      trimmedServlets.ensure("_ah_default", ResourceFileServlet.class, "/");
-      trimmedServlets.ensure("default", NamedDefaultServlet.class);
-      trimmedServlets.ensure("jsp", NamedJspServlet.class);
+    TrimmedServlets trimmedServlets =
+        new TrimmedServlets(servletHandler.getServlets(), servletHandler.getServletMappings());
+    trimmedServlets.ensure("_ah_warmup", WarmupServlet.class, "/_ah/warmup");
+    trimmedServlets.ensure(
+        "_ah_sessioncleanup", SessionCleanupServlet.class, "/_ah/sessioncleanup");
+    trimmedServlets.ensure(
+        "_ah_queue_deferred", DeferredTaskServlet.class, "/_ah/queue/__deferred__");
+    trimmedServlets.ensure("_ah_snapshot", SnapshotServlet.class, "/_ah/snapshot");
+    trimmedServlets.ensure("_ah_default", ResourceFileServlet.class, "/");
+    trimmedServlets.ensure("default", NamedDefaultServlet.class);
+    trimmedServlets.ensure("jsp", NamedJspServlet.class);
 
-      trimmedServlets.instantiateJettyServlets();
-      trimmedFilters.instantiateJettyFilters();
-      instantiateJettyListeners();
+    trimmedServlets.instantiateJettyServlets();
+    trimmedFilters.instantiateJettyFilters();
+    instantiateJettyListeners();
 
-      servletHandler.setFilters(trimmedFilters.getHolders());
-      servletHandler.setFilterMappings(trimmedFilters.getMappings());
-      servletHandler.setServlets(trimmedServlets.getHolders());
-      servletHandler.setServletMappings(trimmedServlets.getMappings());
-      servletHandler.setAllowDuplicateMappings(true);
+    servletHandler.setFilters(trimmedFilters.getHolders());
+    servletHandler.setFilterMappings(trimmedFilters.getMappings());
+    servletHandler.setServlets(trimmedServlets.getHolders());
+    servletHandler.setServletMappings(trimmedServlets.getMappings());
+    servletHandler.setAllowDuplicateMappings(true);
 
-      // Protect deferred task queue with constraint
-      ConstraintSecurityHandler security = getChildHandlerByClass(ConstraintSecurityHandler.class);
-      ConstraintMapping cm = new ConstraintMapping();
-      cm.setConstraint(new ServletConstraint("deferred_queue", "admin"));
-      cm.setPathSpec("/_ah/queue/__deferred__");
-      security.addConstraintMapping(cm);
-
+    // Protect deferred task queue with constraint
+    ConstraintSecurityHandler security = getChildHandlerByClass(ConstraintSecurityHandler.class);
+    ConstraintMapping cm = new ConstraintMapping();
+    cm.setConstraint(new ServletConstraint("deferred_queue", "admin"));
+    cm.setPathSpec("/_ah/queue/__deferred__");
+    security.addConstraintMapping(cm);
 
     // continue starting the webapp
     super.startWebapp();
   }
 
-    @Override
-    public void doHandle(String target, org.eclipse.jetty.ee8.nested.Request baseRequest, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
+  @Override
+  public void doHandle(
+      String target,
+      org.eclipse.jetty.ee8.nested.Request baseRequest,
+      HttpServletRequest request,
+      HttpServletResponse response)
+      throws IOException, ServletException {
 
-      ListIterator<RequestListener> iter = requestListeners.listIterator();
-      while (iter.hasNext()) {
-        iter.next().requestReceived(this, baseRequest);
+    ListIterator<RequestListener> iter = requestListeners.listIterator();
+    while (iter.hasNext()) {
+      iter.next().requestReceived(this, baseRequest);
+    }
+    try {
+      if (ignoreContentLength) {
+        response = new IgnoreContentLengthResponseWrapper(response);
       }
-      try {
-        if (ignoreContentLength) {
-          response = new IgnoreContentLengthResponseWrapper(response);
-        }
 
-        super.doHandle(target, baseRequest, request, response);
-      } finally {
-        // TODO: this finally approach is ok until async request handling is supported
-        while (iter.hasPrevious()) {
-          iter.previous().requestComplete(this, baseRequest);
-        }
+      super.doHandle(target, baseRequest, request, response);
+    } finally {
+      // TODO: this finally approach is ok until async request handling is supported
+      while (iter.hasPrevious()) {
+        iter.previous().requestComplete(this, baseRequest);
       }
+    }
   }
 
   @Override
@@ -411,68 +379,16 @@ public class AppEngineWebAppContext extends WebAppContext {
     }
   }
 
-  /** A class to hold a Holder name and/or className and/or source location for matching. */
-  private static class HolderMatcher {
-    final String name;
-    final String className;
-
-    /**
-     * @param name The name of a filter/servlet to match, or null if not matching on name.
-     * @param className The class name of a filter/servlet to match, or null if not matching on
-     *     className
-     */
-    HolderMatcher(String name, String className) {
-      this.name = name;
-      this.className = className;
-    }
-
-    /**
-     * @param holder The holder to match
-     * @return true IFF this matcher matches the holder.
-     */
-    boolean appliesTo(Holder<?> holder) {
-      if (name != null && !name.equals(holder.getName())) {
-        return false;
-      }
-
-      if (className != null && !className.equals(holder.getClassName())) {
-        return false;
-      }
-
-      return true;
-    }
-  }
-
-  /**
-   * TrimmedServlets is in charge of handling web applications that got deployed previously with the
-   * previous webdefault.xml content(prior to this CL changing it). We still need to be able to load
-   * old apps defined with the previous webdefault.xml file that generated an obsolete
-   * quickstart.xml having the servlets defined in webdefault.xml.
-   *
-   * <p>New deployements would not need this processing (no-op), but we need to handle all apps,
-   * deployed now or in the past.
-   */
   private static class TrimmedServlets {
     private final Map<String, ServletHolder> holders = new HashMap<>();
     private final List<ServletMapping> mappings = new ArrayList<>();
 
-    TrimmedServlets(
-        ServletHolder[] holders, ServletMapping[] mappings, Set<HolderMatcher> deprecations) {
+    TrimmedServlets(ServletHolder[] holders, ServletMapping[] mappings) {
       for (ServletHolder servletHolder : holders) {
-        boolean deprecated = false;
         servletHolder.setAsyncSupported(APP_IS_ASYNC);
-        for (HolderMatcher holderMatcher : deprecations) {
-          deprecated |= holderMatcher.appliesTo(servletHolder);
-        }
-
-        if (!deprecated) {
-          this.holders.put(servletHolder.getName(), servletHolder);
-        }
+        this.holders.put(servletHolder.getName(), servletHolder);
       }
-
-      for (ServletMapping m : mappings) {
-        this.mappings.add(m);
-      }
+      this.mappings.addAll(Arrays.asList(mappings));
     }
 
     /**
@@ -589,23 +505,12 @@ public class AppEngineWebAppContext extends WebAppContext {
     private final Map<String, FilterHolder> holders = new HashMap<>();
     private final List<FilterMapping> mappings = new ArrayList<>();
 
-    TrimmedFilters(
-        FilterHolder[] holders, FilterMapping[] mappings, Set<HolderMatcher> deprecations) {
+    TrimmedFilters(FilterHolder[] holders, FilterMapping[] mappings) {
       for (FilterHolder h : holders) {
-        boolean deprecated = false;
         h.setAsyncSupported(APP_IS_ASYNC);
-        for (HolderMatcher m : deprecations) {
-          deprecated |= m.appliesTo(h);
-        }
-
-        if (!deprecated) {
-          this.holders.put(h.getName(), h);
-        }
+        this.holders.put(h.getName(), h);
       }
-
-      for (FilterMapping m : mappings) {
-        this.mappings.add(m);
-      }
+      this.mappings.addAll(Arrays.asList(mappings));
     }
 
     /**
