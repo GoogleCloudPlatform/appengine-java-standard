@@ -31,8 +31,9 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.eclipse.jetty.ee8.nested.ContextHandler;
+import org.eclipse.jetty.ee8.servlet.ServletContextHandler;
 import org.eclipse.jetty.ee8.servlet.ServletHandler;
-import org.eclipse.jetty.http.pathmap.MappedResource;
+import org.eclipse.jetty.ee8.servlet.ServletMapping;
 import org.eclipse.jetty.util.StringUtil;
 import org.eclipse.jetty.util.URIUtil;
 import org.eclipse.jetty.util.resource.Resource;
@@ -58,8 +59,9 @@ public class ResourceFileServlet extends HttpServlet {
   private Resource resourceBase;
   private String[] welcomeFiles;
   private FileSender fSender;
-  ContextHandler chandler;
+  ServletContextHandler chandler;
   ServletContext context;
+  String defaultServletName;
 
   /**
    * Initialize the servlet by extracting some useful configuration data from the current {@link
@@ -70,7 +72,7 @@ public class ResourceFileServlet extends HttpServlet {
     context = getServletContext();
     AppVersion appVersion =
         (AppVersion) context.getAttribute(AppEngineConstants.APP_VERSION_CONTEXT_ATTR);
-    chandler = ContextHandler.getContextHandler(context);
+    chandler = ServletContextHandler.getServletContextHandler(context);
 
     AppYaml appYaml =
         (AppYaml) chandler.getServer().getAttribute(AppEngineConstants.APP_YAML_ATTRIBUTE_TARGET);
@@ -78,6 +80,12 @@ public class ResourceFileServlet extends HttpServlet {
     // AFAICT, there is no real API to retrieve this information, so
     // we access Jetty's internal state.
     welcomeFiles = chandler.getWelcomeFiles();
+
+    ServletMapping servletMapping = chandler.getServletHandler().getServletMapping("/");
+    if (servletMapping == null) {
+      throw new ServletException("No servlet mapping found");
+    }
+    defaultServletName = servletMapping.getServletName();
 
     try {
       URL resourceBaseUrl = context.getResource("/" + appVersion.getPublicRoot());
@@ -255,13 +263,12 @@ public class ResourceFileServlet extends HttpServlet {
         (AppVersion) getServletContext().getAttribute(AppEngineConstants.APP_VERSION_CONTEXT_ATTR);
     ServletHandler handler = chandler.getChildHandlerByClass(ServletHandler.class);
 
-    MappedResource<ServletHandler.MappedServlet> defaultEntry = handler.getHolderEntry("/");
-
     for (String welcomeName : welcomeFiles) {
       String welcomePath = path + welcomeName;
       String relativePath = welcomePath.substring(1);
 
-      if (!Objects.equals(handler.getHolderEntry(welcomePath), defaultEntry)) {
+      ServletHandler.MappedServlet mappedServlet = handler.getMappedServlet(welcomePath);
+      if (!Objects.equals(mappedServlet.getServletHolder().getName(), defaultServletName)) {
         // It's a path mapped to a servlet.  Forward to it.
         RequestDispatcher dispatcher = request.getRequestDispatcher(path + welcomeName);
         return serveWelcomeFileAsForward(dispatcher, included, request, response);
