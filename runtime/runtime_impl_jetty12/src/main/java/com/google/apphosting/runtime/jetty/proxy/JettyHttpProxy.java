@@ -35,6 +35,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import org.eclipse.jetty.http.CookieCompliance;
 import org.eclipse.jetty.http.HttpCompliance;
+import org.eclipse.jetty.http.MultiPartCompliance;
 import org.eclipse.jetty.http.UriCompliance;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.HttpConfiguration;
@@ -46,8 +47,6 @@ import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.SizeLimitHandler;
 import org.eclipse.jetty.server.handler.gzip.GzipHandler;
 import org.eclipse.jetty.util.Callback;
-
-import static com.google.apphosting.runtime.AppEngineConstants.IGNORE_RESPONSE_SIZE_LIMIT;
 
 /**
  * A Jetty web server handling HTTP requests on a given port and forwarding them via gRPC to the
@@ -95,11 +94,12 @@ public class JettyHttpProxy {
 
     HttpConfiguration config =
         connector.getConnectionFactory(HttpConnectionFactory.class).getHttpConfiguration();
+    config.setUriCompliance(UriCompliance.LEGACY);
     if (JettyServletEngineAdapter.LEGACY_MODE) {
       config.setHttpCompliance(HttpCompliance.RFC7230_LEGACY);
       config.setRequestCookieCompliance(CookieCompliance.RFC2965);
       config.setResponseCookieCompliance(CookieCompliance.RFC2965);
-      config.setUriCompliance(UriCompliance.LEGACY);
+      config.setMultiPartCompliance(MultiPartCompliance.LEGACY);
     }
 
     config.setRequestHeaderSize(runtimeOptions.jettyRequestHeaderSize());

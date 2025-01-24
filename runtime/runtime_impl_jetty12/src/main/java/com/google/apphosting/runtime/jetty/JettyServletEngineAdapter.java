@@ -45,14 +45,13 @@ import java.io.InputStreamReader;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import org.eclipse.jetty.http.CookieCompliance;
+import org.eclipse.jetty.http.HttpCompliance;
+import org.eclipse.jetty.http.MultiPartCompliance;
 import org.eclipse.jetty.http.UriCompliance;
 import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.SizeLimitHandler;
 import org.eclipse.jetty.util.VirtualThreads;
-import org.eclipse.jetty.util.resource.Resource;
-import org.eclipse.jetty.util.resource.ResourceFactory;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
 
 /**
@@ -138,10 +137,12 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
       httpConfiguration.setSendDateHeader(false);
       httpConfiguration.setSendServerVersion(false);
       httpConfiguration.setSendXPoweredBy(false);
+      httpConfiguration.setUriCompliance(UriCompliance.LEGACY);
       if (LEGACY_MODE) {
+        httpConfiguration.setHttpCompliance(HttpCompliance.RFC7230_LEGACY);
         httpConfiguration.setRequestCookieCompliance(CookieCompliance.RFC2965);
         httpConfiguration.setResponseCookieCompliance(CookieCompliance.RFC2965);
-        httpConfiguration.setUriCompliance(UriCompliance.LEGACY);
+        httpConfiguration.setMultiPartCompliance(MultiPartCompliance.LEGACY);
       }
 
       server.addConnector(rpcConnector);
