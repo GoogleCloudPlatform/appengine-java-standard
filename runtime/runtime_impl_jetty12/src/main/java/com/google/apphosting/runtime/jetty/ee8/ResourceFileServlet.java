@@ -16,12 +16,13 @@
 
 package com.google.apphosting.runtime.jetty.ee8;
 
-import com.google.apphosting.runtime.AppVersion;
 import com.google.apphosting.runtime.AppEngineConstants;
+import com.google.apphosting.runtime.AppVersion;
 import com.google.apphosting.utils.config.AppYaml;
 import com.google.common.base.Ascii;
 import com.google.common.flogger.GoogleLogger;
 import java.io.IOException;
+import java.net.URL;
 import java.util.Objects;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletContext;
@@ -79,8 +80,8 @@ public class ResourceFileServlet extends HttpServlet {
     welcomeFiles = chandler.getWelcomeFiles();
 
     try {
-      // TODO: review use of root factory.
-      resourceBase = ResourceFactory.root().newResource(context.getResource("/" + appVersion.getPublicRoot()));
+      URL resourceBaseUrl = context.getResource("/" + appVersion.getPublicRoot());
+      resourceBase = (resourceBaseUrl == null) ? null : ResourceFactory.of(chandler).newResource(resourceBaseUrl);
     } catch (Exception ex) {
       throw new ServletException(ex);
     }
