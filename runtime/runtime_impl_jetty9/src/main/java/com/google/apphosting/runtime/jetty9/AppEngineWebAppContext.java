@@ -16,6 +16,7 @@
 
 package com.google.apphosting.runtime.jetty9;
 
+import static com.google.apphosting.runtime.AppEngineConstants.GAE_RUNTIME;
 import static com.google.common.base.StandardSystemProperty.JAVA_IO_TMPDIR;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -79,8 +80,7 @@ public class AppEngineWebAppContext extends WebAppContext {
   private static final int MAX_RESPONSE_SIZE = 32 * 1024 * 1024;
   private static final boolean APP_IS_ASYNC =
       Boolean.getBoolean(RpcConnection.ASYNC_ENABLE_PPROPERTY);
-  private static final boolean IS_JAVA_8_RUNTIME =
-      Objects.equals(System.getenv("GAE_RUNTIME"), "java8");
+  private static final boolean IS_JAVA_8_RUNTIME = Objects.equals(GAE_RUNTIME, "java8");
   private static final ImmutableSet<HolderMatcher> EMPTY_SET =
       ImmutableSet.<HolderMatcher>builder().build();
 

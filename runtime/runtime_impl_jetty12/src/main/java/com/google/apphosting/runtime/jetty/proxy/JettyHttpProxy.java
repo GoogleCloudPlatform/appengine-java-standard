@@ -20,17 +20,19 @@ import com.google.apphosting.base.protos.AppLogsPb;
 import com.google.apphosting.base.protos.RuntimePb;
 import com.google.apphosting.base.protos.RuntimePb.UPRequest;
 import com.google.apphosting.base.protos.RuntimePb.UPResponse;
+import com.google.apphosting.runtime.AppEngineConstants;
 import com.google.apphosting.runtime.LocalRpcContext;
 import com.google.apphosting.runtime.ServletEngineAdapter;
 import com.google.apphosting.runtime.anyrpc.EvaluationRuntimeServerInterface;
 import com.google.apphosting.runtime.jetty.AppInfoFactory;
-import com.google.apphosting.runtime.jetty.JettyServletEngineAdapter;
+import com.google.apphosting.runtime.jetty.AppVersionHandlerFactory;
 import com.google.common.base.Ascii;
 import com.google.common.base.Throwables;
 import com.google.common.flogger.GoogleLogger;
 import com.google.common.primitives.Ints;
 import java.time.Duration;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import org.eclipse.jetty.http.CookieCompliance;
@@ -94,8 +96,14 @@ public class JettyHttpProxy {
 
     HttpConfiguration config =
         connector.getConnectionFactory(HttpConnectionFactory.class).getHttpConfiguration();
-    config.setUriCompliance(UriCompliance.LEGACY);
-    if (JettyServletEngineAdapter.LEGACY_MODE) {
+
+    // If runtime is using EE8, then set URI compliance to LEGACY to behave like Jetty 9.4.
+    if (Objects.equals(AppVersionHandlerFactory.getEEVersion(), AppVersionHandlerFactory.EEVersion.EE8)) {
+      config.setUriCompliance(UriCompliance.LEGACY);
+    }
+
+    if (AppEngineConstants.LEGACY_MODE) {
+      config.setUriCompliance(UriCompliance.LEGACY);
       config.setHttpCompliance(HttpCompliance.RFC7230_LEGACY);
       config.setRequestCookieCompliance(CookieCompliance.RFC2965);
       config.setResponseCookieCompliance(CookieCompliance.RFC2965);

@@ -21,6 +21,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.apphosting.api.ApiProxy;
 import com.google.apphosting.api.ApiProxy.LogRecord;
+import com.google.apphosting.runtime.AppEngineConstants;
 import com.google.apphosting.runtime.jetty.EE10AppEngineAuthentication;
 import com.google.apphosting.utils.servlet.ee10.DeferredTaskServlet;
 import com.google.apphosting.utils.servlet.ee10.JdbcMySqlConnectionCleanupFilter;
@@ -278,6 +279,9 @@ public class AppEngineWebAppContext extends WebAppContext {
   protected ServletHandler newServletHandler() {
     ServletHandler handler = new ServletHandler();
     handler.setAllowDuplicateMappings(true);
+    if (AppEngineConstants.LEGACY_MODE) {
+      handler.setDecodeAmbiguousURIs(true);
+    }
     return handler;
   }
 

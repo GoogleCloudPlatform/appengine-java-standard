@@ -22,11 +22,28 @@ import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
 
 public interface AppVersionHandlerFactory {
+
+  enum EEVersion
+  {
+    EE8,
+    EE10
+  }
+
+  static EEVersion getEEVersion() {
+    if (Boolean.getBoolean("appengine.use.EE10"))
+      return EEVersion.EE10;
+    else
+      return EEVersion.EE8;
+  }
+
   static AppVersionHandlerFactory newInstance(Server server, String serverInfo) {
-    if (Boolean.getBoolean("appengine.use.EE10")) {
-      return new EE10AppVersionHandlerFactory(server, serverInfo);
-    } else {
-      return new EE8AppVersionHandlerFactory(server, serverInfo);
+    switch (getEEVersion()) {
+      case EE10:
+        return new EE10AppVersionHandlerFactory(server, serverInfo);
+      case EE8:
+        return new EE8AppVersionHandlerFactory(server, serverInfo);
+      default:
+        throw new IllegalStateException("Unknown EE version: " + getEEVersion());
     }
   }
 

@@ -16,6 +16,9 @@
 
 package com.google.apphosting.runtime.jetty9;
 
+import static com.google.apphosting.runtime.AppEngineConstants.GAE_RUNTIME;
+import static com.google.apphosting.runtime.AppEngineConstants.LEGACY_MODE;
+
 import com.google.apphosting.base.AppVersionKey;
 import com.google.apphosting.base.protos.HttpPb.HttpRequest;
 import com.google.apphosting.base.protos.HttpPb.ParsedHttpHeader;
@@ -70,7 +73,7 @@ public class RpcConnection implements Connection, HttpTransport {
       Boolean.parseBoolean(
           System.getProperty(
               "com.google.appengine.nomalize_inet_addr",
-              Boolean.toString(!"java8".equals(System.getenv("GAE_RUNTIME")))));
+              Boolean.toString(!"java8".equals(GAE_RUNTIME))));
 
   private final List<Listener> listeners = new CopyOnWriteArrayList<>();
   private final RpcConnector connector;
@@ -180,7 +183,7 @@ public class RpcConnection implements Connection, HttpTransport {
     // pretend to parse the request line
 
     // LEGACY_MODE is case insensitive for known methods
-    HttpMethod method = RpcConnector.LEGACY_MODE
+    HttpMethod method = LEGACY_MODE
             ? HttpMethod.INSENSITIVE_CACHE.get(rpc.getProtocol())
             : HttpMethod.CACHE.get(rpc.getProtocol());
     String methodS = method != null ? method.asString() : rpc.getProtocol();
@@ -201,7 +204,7 @@ public class RpcConnection implements Connection, HttpTransport {
         HttpField field = getField(header);
 
         // Handle LegacyMode Headers
-        if (RpcConnector.LEGACY_MODE && field.getHeader() != null) {
+        if (LEGACY_MODE && field.getHeader() != null) {
           switch (field.getHeader()) {
             case CONTENT_ENCODING:
               continue;
@@ -281,7 +284,7 @@ public class RpcConnection implements Connection, HttpTransport {
     // enable it only for non java8 runtimes.
     if ((exception == null)
         && (abortedError != null)
-        && !"java8".equals(System.getenv("GAE_RUNTIME"))) {
+        && !"java8".equals(GAE_RUNTIME)) {
         exception = abortedError;
       }
 

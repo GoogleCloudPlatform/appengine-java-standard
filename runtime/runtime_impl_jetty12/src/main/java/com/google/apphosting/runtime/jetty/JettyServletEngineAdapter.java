@@ -15,8 +15,10 @@
  */
 package com.google.apphosting.runtime.jetty;
 
+import static com.google.apphosting.runtime.AppEngineConstants.GAE_RUNTIME;
 import static com.google.apphosting.runtime.AppEngineConstants.HTTP_CONNECTOR_MODE;
 import static com.google.apphosting.runtime.AppEngineConstants.IGNORE_RESPONSE_SIZE_LIMIT;
+import static com.google.apphosting.runtime.AppEngineConstants.LEGACY_MODE;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.apphosting.api.ApiProxy;
@@ -50,7 +52,7 @@ import org.eclipse.jetty.http.MultiPartCompliance;
 import org.eclipse.jetty.http.UriCompliance;
 import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.SizeLimitHandler;
+import org.eclipse.jetty.server.handler.SizeLimitHandler;
 import org.eclipse.jetty.util.VirtualThreads;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
 
@@ -63,13 +65,6 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
   private static final int MIN_THREAD_POOL_THREADS = 0;
   private static final int MAX_THREAD_POOL_THREADS = 100;
   private static final long MAX_RESPONSE_SIZE = 32 * 1024 * 1024;
-
-  /**
-   * If Legacy Mode is turned on, then Jetty is configured to be more forgiving of bad requests and
-   * to act more in the style of Jetty-9.3
-   */
-  public static final boolean LEGACY_MODE =
-      Boolean.getBoolean("com.google.apphosting.runtime.jetty94.LEGACY_MODE");
 
   private AppVersionKey lastAppVersionKey;
 
@@ -107,7 +102,7 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
         new QueuedThreadPool(MAX_THREAD_POOL_THREADS, MIN_THREAD_POOL_THREADS);
     // Try to enable virtual threads if requested and on java21:
     if (Boolean.getBoolean("appengine.use.virtualthreads")
-        && "java21".equals(System.getenv("GAE_RUNTIME"))) {
+        && "java21".equals(GAE_RUNTIME)) {
       threadPool.setVirtualThreadsExecutor(VirtualThreads.getDefaultVirtualThreadsExecutor());
       logger.atInfo().log("Configuring Appengine web server virtual threads.");
     }
@@ -137,8 +132,14 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
       httpConfiguration.setSendDateHeader(false);
       httpConfiguration.setSendServerVersion(false);
       httpConfiguration.setSendXPoweredBy(false);
-      httpConfiguration.setUriCompliance(UriCompliance.LEGACY);
+
+      // If runtime is using EE8, then set URI compliance to LEGACY to behave like Jetty 9.4.
+      if (Objects.equals(AppVersionHandlerFactory.getEEVersion(), AppVersionHandlerFactory.EEVersion.EE8)) {
+        httpConfiguration.setUriCompliance(UriCompliance.LEGACY);
+      }
+
       if (LEGACY_MODE) {
+        httpConfiguration.setUriCompliance(UriCompliance.LEGACY);
         httpConfiguration.setHttpCompliance(HttpCompliance.RFC7230_LEGACY);
         httpConfiguration.setRequestCookieCompliance(CookieCompliance.RFC2965);
         httpConfiguration.setResponseCookieCompliance(CookieCompliance.RFC2965);

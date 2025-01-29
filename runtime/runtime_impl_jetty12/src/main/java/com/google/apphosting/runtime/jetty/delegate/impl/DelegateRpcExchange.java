@@ -16,6 +16,8 @@
 
 package com.google.apphosting.runtime.jetty.delegate.impl;
 
+import static com.google.apphosting.runtime.AppEngineConstants.LEGACY_MODE;
+
 import com.google.apphosting.base.protos.HttpPb;
 import com.google.apphosting.base.protos.HttpPb.ParsedHttpHeader;
 import com.google.apphosting.base.protos.RuntimePb;
@@ -23,6 +25,12 @@ import com.google.apphosting.runtime.MutableUpResponse;
 import com.google.apphosting.runtime.jetty.delegate.api.DelegateExchange;
 import com.google.common.base.Ascii;
 import com.google.protobuf.ByteString;
+import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicReference;
 import org.eclipse.jetty.http.HttpFields;
 import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.io.ByteBufferAccumulator;
@@ -30,19 +38,10 @@ import org.eclipse.jetty.io.Content;
 import org.eclipse.jetty.util.Attributes;
 import org.eclipse.jetty.util.Callback;
 
-import java.net.InetSocketAddress;
-import java.nio.ByteBuffer;
-import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.atomic.AtomicReference;
-
 public class DelegateRpcExchange implements DelegateExchange {
   private static final Content.Chunk EOF = Content.Chunk.EOF;
   private static final String X_GOOGLE_INTERNAL_SKIPADMINCHECK = "x-google-internal-skipadmincheck";
   private static final String SKIP_ADMIN_CHECK_ATTR = "com.google.apphosting.internal.SkipAdminCheck";
-  static final boolean LEGACY_MODE =
-      Boolean.getBoolean("com.google.apphosting.runtime.jetty94.LEGACY_MODE");
 
   private final HttpPb.HttpRequest _request;
   private final AtomicReference<Content.Chunk> _content = new AtomicReference<>();
