@@ -16,10 +16,11 @@
 
 package com.google.apphosting.runtime.jetty9;
 
+import static com.google.apphosting.runtime.AppEngineConstants.LEGACY_MODE;
+
 import com.google.apphosting.base.AppVersionKey;
 import com.google.apphosting.base.protos.RuntimePb.UPRequest;
 import com.google.apphosting.runtime.MutableUpResponse;
-import com.google.apphosting.runtime.jetty9.RpcEndPoint;
 import java.io.IOException;
 import javax.servlet.ServletException;
 import org.eclipse.jetty.http.CookieCompliance;
@@ -49,14 +50,6 @@ import org.eclipse.jetty.server.Server;
 public class RpcConnector extends AbstractConnector {
 
   private final HttpConfiguration httpConfiguration = new HttpConfiguration();
-
-  /**
-   * If Legacy Mode is tunred on, then Jetty is configured to be more forgiving of bad requests
-   * and to act more in the style of Jetty-9.3
-   */
-  // Keep this public property name, do not change to jetty9 as it is public contract.
-  static final boolean LEGACY_MODE =
-      Boolean.getBoolean("com.google.apphosting.runtime.jetty94.LEGACY_MODE"); // Keep 94 name.
 
   public RpcConnector(Server server) {
     super(server, null, null, null, 0, new RpcConnectionFactory());

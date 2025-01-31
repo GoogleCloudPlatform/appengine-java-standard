@@ -16,6 +16,7 @@
 
 package com.google.apphosting.runtime;
 
+import static com.google.apphosting.runtime.AppEngineConstants.GAE_RUNTIME;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import com.google.appengine.api.ThreadManager;
@@ -240,7 +241,7 @@ public class RequestRunner implements Runnable {
     String requestId = getBackgroundRequestId(upRequest);
     // For java21 runtime, RPC path, do the new background thread handling for now, and keep it for
     // other runtimes.
-    if (!Objects.equals(System.getenv("GAE_RUNTIME"), "java21")) {
+    if (!Objects.equals(GAE_RUNTIME, "java21")) {
       // Wait here for synchronization with the ThreadFactory.
       CountDownLatch latch = ThreadGroupPool.resetCurrentThread();
       Thread thread = new ThreadProxy();

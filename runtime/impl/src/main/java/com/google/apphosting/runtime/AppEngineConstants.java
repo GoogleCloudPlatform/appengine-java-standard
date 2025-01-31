@@ -20,6 +20,16 @@ import com.google.common.collect.ImmutableSet;
 
 /** {@code AppEngineConstants} centralizes some constants that are specific to our use of Jetty. */
 public final class AppEngineConstants {
+
+  /**
+   * If Legacy Mode is turned on, then Jetty is configured to be more forgiving of bad requests and
+   * to act more in the style of Jetty-9.3
+   */
+  public static final boolean LEGACY_MODE =
+          Boolean.getBoolean("com.google.apphosting.runtime.jetty94.LEGACY_MODE");
+
+  public static final String GAE_RUNTIME = System.getenv("GAE_RUNTIME");
+
   /**
    * This {@code ServletContext} attribute contains the {@link AppVersion} for the current
    * application.

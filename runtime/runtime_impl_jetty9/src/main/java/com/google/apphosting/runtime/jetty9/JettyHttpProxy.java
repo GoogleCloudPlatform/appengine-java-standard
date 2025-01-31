@@ -16,6 +16,8 @@
 
 package com.google.apphosting.runtime.jetty9;
 
+import static com.google.apphosting.runtime.AppEngineConstants.LEGACY_MODE;
+
 import com.google.apphosting.base.protos.AppLogsPb;
 import com.google.apphosting.base.protos.RuntimePb;
 import com.google.apphosting.base.protos.RuntimePb.UPRequest;
@@ -93,7 +95,7 @@ public class JettyHttpProxy {
 
     HttpConnectionFactory factory = connector.getConnectionFactory(HttpConnectionFactory.class);
     factory.setHttpCompliance(
-        RpcConnector.LEGACY_MODE ? HttpCompliance.RFC7230_LEGACY : HttpCompliance.RFC7230);
+        LEGACY_MODE ? HttpCompliance.RFC7230_LEGACY : HttpCompliance.RFC7230);
 
     HttpConfiguration config = factory.getHttpConfiguration();
     config.setRequestHeaderSize(runtimeOptions.jettyRequestHeaderSize());

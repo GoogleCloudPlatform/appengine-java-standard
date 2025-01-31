@@ -16,6 +16,7 @@
 
 package com.google.apphosting.runtime.jetty9;
 
+import static com.google.apphosting.runtime.AppEngineConstants.GAE_RUNTIME;
 import static com.google.apphosting.runtime.AppEngineConstants.HTTP_CONNECTOR_MODE;
 import static com.google.apphosting.runtime.AppEngineConstants.IGNORE_RESPONSE_SIZE_LIMIT;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -63,7 +64,7 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
     // java.util.logging) instead of writing to System.err
     // Documentation: http://www.eclipse.org/jetty/documentation/current/configuring-logging.html
     System.setProperty("org.eclipse.jetty.util.log.class", JettyLogger.class.getName());
-    if (Objects.equals(System.getenv("GAE_RUNTIME"), "java8")) {
+    if (Objects.equals(GAE_RUNTIME, "java8")) {
       // Remove internal URLs.
       System.setProperty("java.vendor.url", "");
       System.setProperty("java.vendor.url.bug", "");
@@ -118,7 +119,7 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
     server.setHandler(appVersionHandlerMap);
 
     boolean ignoreResponseSizeLimit =
-        Objects.equals(System.getenv("GAE_RUNTIME"), "java8")
+        Objects.equals(GAE_RUNTIME, "java8")
             || Boolean.getBoolean(IGNORE_RESPONSE_SIZE_LIMIT);
     if (!ignoreResponseSizeLimit && !isHttpConnectorMode) {
       server.insertHandler(new SizeLimitHandler(-1, MAX_RESPONSE_SIZE));
