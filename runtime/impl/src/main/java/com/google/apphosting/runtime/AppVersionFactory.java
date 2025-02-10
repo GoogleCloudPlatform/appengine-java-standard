@@ -35,7 +35,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.Thread.UncaughtExceptionHandler;
-import java.lang.reflect.Field;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.FileSystems;
@@ -257,7 +256,6 @@ public class AppVersionFactory {
             .setUncaughtExceptionHandler(uncaughtExceptionHandler)
             .setIgnoreDaemonThreads(ignoreDaemonThreads)
             .build();
-    suppressJaxbWarningReflectionIsNotAllowed(classLoader);
     setApplicationDirectory(rootDirectory.getAbsolutePath());
     return AppVersion.builder()
         .setAppVersionKey(appVersionKey)
@@ -533,35 +531,6 @@ public class AppVersionFactory {
               ApiProxy.LogRecord.Level.warn, System.currentTimeMillis() * 1000, message));
     }
     return urls;
-  }
-
-  /**
-   * Suppresses the warning that JAXB logs when reflection is not allowed on
-   * a field.
-   * Most annoyingly, the warning is logged the first time that a JAX-WS service
-   * class is instantiated, due to the private fields in the
-   * {@code javax.xml.ws.wsaddressing.W3CEndpointReference} class.
-   * Since this warning is only logged once, irrespective of the number of class/field
-   * combinations for which reflection fails, there is little that is lost in
-   * suppressing it. See b/5609065 for more information.
-   *
-   * @param classLoader the application ClassLoader
-   */
-  private void suppressJaxbWarningReflectionIsNotAllowed(ClassLoader classLoader) {
-    // Suppressing the warning is only meaningful in runtimes that install a security manager.
-    if (System.getSecurityManager() != null) {
-      try {
-        // Must use reflection here because the JAXB implementation classes are
-        // on the application classpath.
-        Class<?> accessorClass =
-            classLoader.loadClass("com.sun.xml.bind.v2.runtime.reflect.Accessor");
-        Field accessWarned = accessorClass.getDeclaredField("accessWarned");
-        accessWarned.setAccessible(true);
-        accessWarned.setBoolean(null, true);
-      } catch (Exception e) {
-        logger.atWarning().withCause(e).log("failed to suppress JAXB warning reflectively");
-      }
-    }
   }
 
   private static void setApplicationDirectory(String path) throws IOException {

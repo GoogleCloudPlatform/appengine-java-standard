@@ -49,9 +49,6 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.ExtensionRegistry;
 import com.google.protobuf.InvalidProtocolBufferException;
-import java.security.AccessControlContext;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.HashMap;
@@ -289,8 +286,7 @@ public class ApiProxyImpl implements ApiProxy.Delegate<ApiProxyImpl.EnvironmentI
       final String packageName,
       final String methodName,
       final byte[] request) {
-    return AccessController.doPrivileged(
-        (PrivilegedAction<byte[]>) () -> doSyncCall(environment, packageName, methodName, request));
+    return doSyncCall(environment, packageName, methodName, request);
   }
 
   @Override
@@ -300,9 +296,8 @@ public class ApiProxyImpl implements ApiProxy.Delegate<ApiProxyImpl.EnvironmentI
       final String methodName,
       final byte[] request,
       final ApiProxy.ApiConfig apiConfig) {
-    return AccessController.doPrivileged(
-        (PrivilegedAction<Future<byte[]>>) () -> doAsyncCall(
-            environment, packageName, methodName, request, apiConfig.getDeadlineInSeconds()));
+    return doAsyncCall(
+        environment, packageName, methodName, request, apiConfig.getDeadlineInSeconds());
   }
 
   private byte[] doSyncCall(
@@ -1350,7 +1345,7 @@ public class ApiProxyImpl implements ApiProxy.Delegate<ApiProxyImpl.EnvironmentI
     }
   }
 
-  private static PrivilegedAction<Void> runWithThreadContext(
+  private static Runnable runWithThreadContext(
       Runnable runnable, Environment environment, CloudTraceContext parentThreadContext) {
     return () -> {
       CloudTrace.setCurrentContext(environment, parentThreadContext);
@@ -1359,7 +1354,6 @@ public class ApiProxyImpl implements ApiProxy.Delegate<ApiProxyImpl.EnvironmentI
       } finally {
         CloudTrace.setCurrentContext(environment, null);
       }
-      return null;
     };
   }
 
@@ -1376,16 +1370,10 @@ public class ApiProxyImpl implements ApiProxy.Delegate<ApiProxyImpl.EnvironmentI
       ThreadGroup requestThreadGroup = environment.getRequestThreadGroup();
       RequestState requestState = environment.getRequestState();
 
-      CloudTraceContext parentThreadContext =
-          CloudTrace.getCurrentContext(environment);
-      AccessControlContext context = AccessController.getContext();
-      Runnable contextRunnable =
-          () ->
-              AccessController.doPrivileged(
-                  runWithThreadContext(runnable, environment, parentThreadContext), context);
-      return AccessController.doPrivileged(
-          (PrivilegedAction<Thread>) () -> new CurrentRequestThread(
-              requestThreadGroup, contextRunnable, runnable, requestState, environment));
+      CloudTraceContext parentThreadContext = CloudTrace.getCurrentContext(environment);
+      Runnable contextRunnable = runWithThreadContext(runnable, environment, parentThreadContext);
+      return new CurrentRequestThread(
+          requestThreadGroup, contextRunnable, runnable, requestState, environment);
     }
   }
 
@@ -1408,11 +1396,7 @@ public class ApiProxyImpl implements ApiProxy.Delegate<ApiProxyImpl.EnvironmentI
 
       CloudTraceContext parentThreadContext =
           CloudTrace.getCurrentContext(environment);
-      AccessControlContext context = AccessController.getContext();
-      Runnable contextRunnable =
-          () ->
-              AccessController.doPrivileged(
-                  runWithThreadContext(runnable, environment, parentThreadContext), context);
+      Runnable contextRunnable = runWithThreadContext(runnable, environment, parentThreadContext);
 
       String requestId = systemService.startBackgroundRequest();
       Number deadline = MoreObjects.firstNonNull(

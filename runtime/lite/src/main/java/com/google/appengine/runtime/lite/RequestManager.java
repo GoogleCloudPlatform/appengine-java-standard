@@ -54,8 +54,6 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
@@ -774,27 +772,22 @@ public class RequestManager implements RequestThreadManager {
    * the stack trace of the offending threads.
    */
   private void checkForDeadlocks(final RequestToken token) {
-    AccessController.doPrivileged(
-        (PrivilegedAction<Object>)
-            () -> {
-              long[] deadlockedThreadsIds = THREAD_MX.findDeadlockedThreads();
-              if (deadlockedThreadsIds != null) {
-                StringBuilder builder = new StringBuilder();
-                builder.append(
-                    "Detected a deadlock across ")
-                    .append(deadlockedThreadsIds.length)
-                    .append(" threads:");
-                for (ThreadInfo info :
-                    THREAD_MX.getThreadInfo(deadlockedThreadsIds, MAXIMUM_DEADLOCK_STACK_LENGTH)) {
-                  builder.append(info);
-                  builder.append("\n");
-                }
-                String message = builder.toString();
-                token.addAppLogMessage(Level.fatal, message);
-                token.logAndKillRuntime(message);
-              }
-              return null;
-            });
+    long[] deadlockedThreadsIds = THREAD_MX.findDeadlockedThreads();
+    if (deadlockedThreadsIds != null) {
+      StringBuilder builder = new StringBuilder();
+      builder
+          .append("Detected a deadlock across ")
+          .append(deadlockedThreadsIds.length)
+          .append(" threads:");
+      for (ThreadInfo info :
+          THREAD_MX.getThreadInfo(deadlockedThreadsIds, MAXIMUM_DEADLOCK_STACK_LENGTH)) {
+        builder.append(info);
+        builder.append("\n");
+      }
+      String message = builder.toString();
+      token.addAppLogMessage(Level.fatal, message);
+      token.logAndKillRuntime(message);
+    }
   }
 
   private void logMemoryStats() {
@@ -805,24 +798,18 @@ public class RequestManager implements RequestThreadManager {
   }
 
   private void logAllStackTraces() {
-    AccessController.doPrivileged(
-        (PrivilegedAction<Object>)
-            () -> {
-              long[] allthreadIds = THREAD_MX.getAllThreadIds();
-              StringBuilder builder = new StringBuilder();
-              builder
-                  .append("Dumping thread info for all ")
-                  .append(allthreadIds.length)
-                  .append(" runtime threads:");
-              for (ThreadInfo info :
-                  THREAD_MX.getThreadInfo(allthreadIds, MAXIMUM_DEADLOCK_STACK_LENGTH)) {
-                builder.append(info);
-                builder.append("\n");
-              }
-              String message = builder.toString();
-              logger.atInfo().log("%s", message);
-              return null;
-            });
+    long[] allthreadIds = THREAD_MX.getAllThreadIds();
+    StringBuilder builder = new StringBuilder();
+    builder
+        .append("Dumping thread info for all ")
+        .append(allthreadIds.length)
+        .append(" runtime threads:");
+    for (ThreadInfo info : THREAD_MX.getThreadInfo(allthreadIds, MAXIMUM_DEADLOCK_STACK_LENGTH)) {
+      builder.append(info);
+      builder.append("\n");
+    }
+    String message = builder.toString();
+    logger.atInfo().log("%s", message);
   }
 
   private Throwable createDeadlineThrowable(String message, boolean isUncatchable) {
