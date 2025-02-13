@@ -47,11 +47,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.security.AccessController;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.security.PrivilegedActionException;
-import java.security.PrivilegedExceptionAction;
 import java.security.SecureRandom;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -132,24 +129,7 @@ public final class UploadBlobServlet extends HttpServlet {
   @Override
   public void doPost(final HttpServletRequest req, final HttpServletResponse resp)
       throws ServletException, IOException {
-    try {
-      AccessController.doPrivileged(new PrivilegedExceptionAction<Object>() {
-          @Override
-          public Object run() throws ServletException, IOException {
-            handleUpload(req, resp);
-            return null;
-          }
-        });
-    } catch (PrivilegedActionException ex) {
-      Throwable cause = ex.getCause();
-      if (cause instanceof ServletException) {
-        throw (ServletException) cause;
-      } else if (cause instanceof IOException) {
-        throw (IOException) cause;
-      } else {
-        throw new ServletException(cause);
-      }
-    }
+    handleUpload(req, resp);
   }
 
   private String getSessionId(HttpServletRequest req) {

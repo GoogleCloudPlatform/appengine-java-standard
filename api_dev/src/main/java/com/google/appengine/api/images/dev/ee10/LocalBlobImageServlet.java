@@ -33,8 +33,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -249,82 +247,74 @@ public class LocalBlobImageServlet extends HttpServlet {
   /**
    * Transforms the given image specified in the {@code ParseUrl} argument.
    *
-   * Applies all the requested resize and crop operations to a valid image.
+   * <p>Applies all the requested resize and crop operations to a valid image.
    *
    * @param request a valid {@code ParseUrl} instance
-   *
    * @return the transformed image in an Image class
-   * @throws ApiProxy.ApplicationException If the image cannot be opened,
-   *    encoded, or if the transform is malformed
+   * @throws ApiProxy.ApplicationException If the image cannot be opened, encoded, or if the
+   *     transform is malformed
    */
   protected Image transformImage(final ParsedUrl request) {
-    return AccessController.doPrivileged(
-        new PrivilegedAction<Image>() {
-          @Override
-          public Image run() {
-            // Obtain the image bytes as a BufferedImage
-            Status unusedStatus = new Status();
-            ImageData imageData =
-                ImageData.newBuilder()
-                    .setBlobKey(request.getBlobKey())
-                    .setContent(ByteString.EMPTY)
-                    .build();
+    // Obtain the image bytes as a BufferedImage
+    Status unusedStatus = new Status();
+    ImageData imageData =
+        ImageData.newBuilder()
+            .setBlobKey(request.getBlobKey())
+            .setContent(ByteString.EMPTY)
+            .build();
 
-            String originalMimeType = imagesService.getMimeType(imageData);
-            BufferedImage img = imagesService.openImage(imageData, unusedStatus);
+    String originalMimeType = imagesService.getMimeType(imageData);
+    BufferedImage img = imagesService.openImage(imageData, unusedStatus);
 
-            // Apply the transform
-            if (request.hasOptions()) {
-              // Crop
-              if (request.getCrop()) {
-                Transform.Builder cropXform = null;
-                float width = img.getWidth();
-                float height = img.getHeight();
-                if (width > height) {
-                  cropXform = Transform.newBuilder();
-                  float delta = (width - height) / (width * 2.0f);
-                  cropXform.setCropLeftX(delta);
-                  cropXform.setCropRightX(1.0f - delta);
-                } else if (width < height) {
-                  cropXform = Transform.newBuilder();
-                  float delta = (height - width) / (height * 2.0f);
-                  float topDelta = Math.max(0.0f, delta - 0.25f);
-                  float bottomDelta = 1.0f - (2.0f * delta) + topDelta;
-                  cropXform.setCropTopY(topDelta);
-                  cropXform.setCropBottomY(bottomDelta);
-                }
-                if (cropXform != null) {
-                  img = imagesService.processTransform(img, cropXform.build(), unusedStatus);
-                }
-              }
+    // Apply the transform
+    if (request.hasOptions()) {
+      // Crop
+      if (request.getCrop()) {
+        Transform.Builder cropXform = null;
+        float width = img.getWidth();
+        float height = img.getHeight();
+        if (width > height) {
+          cropXform = Transform.newBuilder();
+          float delta = (width - height) / (width * 2.0f);
+          cropXform.setCropLeftX(delta);
+          cropXform.setCropRightX(1.0f - delta);
+        } else if (width < height) {
+          cropXform = Transform.newBuilder();
+          float delta = (height - width) / (height * 2.0f);
+          float topDelta = Math.max(0.0f, delta - 0.25f);
+          float bottomDelta = 1.0f - (2.0f * delta) + topDelta;
+          cropXform.setCropTopY(topDelta);
+          cropXform.setCropBottomY(bottomDelta);
+        }
+        if (cropXform != null) {
+          img = imagesService.processTransform(img, cropXform.build(), unusedStatus);
+        }
+      }
 
-              // Resize
-              Transform resizeXform =
-                  Transform.newBuilder()
-                      .setWidth(request.getResize())
-                      .setHeight(request.getResize())
-                      .build();
-              img = imagesService.processTransform(img, resizeXform, unusedStatus);
-            } else if (img.getWidth() > DEFAULT_SERVING_SIZE
-                || img.getHeight() > DEFAULT_SERVING_SIZE) {
-              // Resize down to default serving size.
-              Transform resizeXform =
-                  Transform.newBuilder()
-                      .setWidth(DEFAULT_SERVING_SIZE)
-                      .setHeight(DEFAULT_SERVING_SIZE)
-                      .build();
-              img = imagesService.processTransform(img, resizeXform, unusedStatus);
-            }
+      // Resize
+      Transform resizeXform =
+          Transform.newBuilder()
+              .setWidth(request.getResize())
+              .setHeight(request.getResize())
+              .build();
+      img = imagesService.processTransform(img, resizeXform, unusedStatus);
+    } else if (img.getWidth() > DEFAULT_SERVING_SIZE || img.getHeight() > DEFAULT_SERVING_SIZE) {
+      // Resize down to default serving size.
+      Transform resizeXform =
+          Transform.newBuilder()
+              .setWidth(DEFAULT_SERVING_SIZE)
+              .setHeight(DEFAULT_SERVING_SIZE)
+              .build();
+      img = imagesService.processTransform(img, resizeXform, unusedStatus);
+    }
 
-            MIME_TYPE outputMimeType = MIME_TYPE.JPEG;
-            String outputMimeTypeString = "image/jpeg";
-            if (transcodeToPng.contains(originalMimeType)) {
-              outputMimeType = MIME_TYPE.PNG;
-              outputMimeTypeString = "image/png";
-            }
-            return new Image(
-                imagesService.saveImage(img, outputMimeType, unusedStatus), outputMimeTypeString);
-          }
-        });
+    MIME_TYPE outputMimeType = MIME_TYPE.JPEG;
+    String outputMimeTypeString = "image/jpeg";
+    if (transcodeToPng.contains(originalMimeType)) {
+      outputMimeType = MIME_TYPE.PNG;
+      outputMimeTypeString = "image/png";
+    }
+    return new Image(
+        imagesService.saveImage(img, outputMimeType, unusedStatus), outputMimeTypeString);
   }
 }

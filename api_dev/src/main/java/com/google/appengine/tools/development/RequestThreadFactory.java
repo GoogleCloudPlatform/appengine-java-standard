@@ -17,9 +17,6 @@
 package com.google.appengine.tools.development;
 
 import com.google.apphosting.api.ApiProxy;
-import java.security.AccessControlContext;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ThreadFactory;
@@ -44,105 +41,93 @@ public class RequestThreadFactory implements ThreadFactory {
 
   @Override
   public Thread newThread(final Runnable runnable) {
-    final AccessControlContext context = AccessController.getContext();
-    return AccessController.doPrivileged(
-        new PrivilegedAction<Thread>() {
+
+    final ApiProxy.Environment environment = ApiProxy.getCurrentEnvironment();
+
+    Thread thread =
+        new Thread() {
+          /**
+           * If the thread is started, install a {@link RequestEndListener} to interrupt the
+           * thread at the end of the request. We don't yet enforce request deadlines in the
+           * DevAppServer so we don't need to handle other interrupt cases yet.
+           */
           @Override
-          public Thread run() {
-            final ApiProxy.Environment environment = ApiProxy.getCurrentEnvironment();
-
-            Thread thread =
-                new Thread() {
-                  /**
-                   * If the thread is started, install a {@link RequestEndListener} to interrupt the
-                   * thread at the end of the request. We don't yet enforce request deadlines in the
-                   * DevAppServer so we don't need to handle other interrupt cases yet.
-                   */
+          public synchronized void start() {
+            try {
+              Thread.sleep(THREAD_STARTUP_LATENCY_MS);
+            } catch (InterruptedException ex) {
+              // We can't propagate the exception from here so
+              // just log, reset the bit, and continue.
+              logger.log(
+                  Level.INFO, "Interrupted while simulating thread startup latency", ex);
+              Thread.currentThread().interrupt();
+            }
+            super.start();
+            final Thread thread = this; // Thread.this doesn't work from an anon subclass
+            RequestEndListenerHelper.register(
+                new RequestEndListener() {
                   @Override
-                  public synchronized void start() {
-                    try {
-                      Thread.sleep(THREAD_STARTUP_LATENCY_MS);
-                    } catch (InterruptedException ex) {
-                      // We can't propagate the exception from here so
-                      // just log, reset the bit, and continue.
-                      logger.log(
-                          Level.INFO, "Interrupted while simulating thread startup latency", ex);
-                      Thread.currentThread().interrupt();
+                  public void onRequestEnd(ApiProxy.Environment environment) {
+                    if (thread.isAlive()) {
+                      logger.info("Interrupting request thread: " + thread);
+                      thread.interrupt();
+                      logger.info("Waiting up to 100ms for thread to complete: " + thread);
+                      try {
+                        thread.join(100);
+                      } catch (InterruptedException ex) {
+                        logger.info("Interrupted while waiting.");
+                      }
+                      if (thread.isAlive()) {
+                        logger.info("Interrupting request thread again: " + thread);
+                        thread.interrupt();
+                        long remaining = getRemainingDeadlineMillis(environment);
+                        logger.info(
+                            "Waiting up to "
+                                + remaining
+                                + " ms for thread to complete: "
+                                + thread);
+                        try {
+                          thread.join(remaining);
+                        } catch (InterruptedException ex) {
+                          logger.info("Interrupted while waiting.");
+                        }
+                        if (thread.isAlive()) {
+                          Throwable stack = new Throwable();
+                          stack.setStackTrace(thread.getStackTrace());
+                          logger.log(
+                              Level.SEVERE,
+                              "Thread left running: "
+                                  + thread
+                                  + ".  "
+                                  + "In production this will cause the request to fail.",
+                              stack);
+                        }
+                      }
                     }
-                    super.start();
-                    final Thread thread = this; // Thread.this doesn't work from an anon subclass
-                    RequestEndListenerHelper.register(
-                        new RequestEndListener() {
-                          @Override
-                          public void onRequestEnd(ApiProxy.Environment environment) {
-                            if (thread.isAlive()) {
-                              logger.info("Interrupting request thread: " + thread);
-                              thread.interrupt();
-                              logger.info("Waiting up to 100ms for thread to complete: " + thread);
-                              try {
-                                thread.join(100);
-                              } catch (InterruptedException ex) {
-                                logger.info("Interrupted while waiting.");
-                              }
-                              if (thread.isAlive()) {
-                                logger.info("Interrupting request thread again: " + thread);
-                                thread.interrupt();
-                                long remaining = getRemainingDeadlineMillis(environment);
-                                logger.info(
-                                    "Waiting up to "
-                                        + remaining
-                                        + " ms for thread to complete: "
-                                        + thread);
-                                try {
-                                  thread.join(remaining);
-                                } catch (InterruptedException ex) {
-                                  logger.info("Interrupted while waiting.");
-                                }
-                                if (thread.isAlive()) {
-                                  Throwable stack = new Throwable();
-                                  stack.setStackTrace(thread.getStackTrace());
-                                  logger.log(
-                                      Level.SEVERE,
-                                      "Thread left running: "
-                                          + thread
-                                          + ".  "
-                                          + "In production this will cause the request to fail.",
-                                      stack);
-                                }
-                              }
-                            }
-                          }
-                        });
                   }
-
-                  @Override
-                  public void run() {
-                    // Copy the current environment to the new thread.
-                    ApiProxy.setEnvironmentForCurrentThread(environment);
-                    // Switch back to the calling context before running the user's code.
-                    AccessController.doPrivileged(
-                        new PrivilegedAction<Object>() {
-                          @Override
-                          public Object run() {
-                            runnable.run();
-                            return null;
-                          }
-                        },
-                        context);
-                    // Don't bother unsetting the environment.  We're
-                    // not going to reuse this thread and we want the
-                    // environment still to be set during any
-                    // UncaughtExceptionHandler (which happens after
-                    // run() completes/throws).
-                  }
-                };
-            // This system property is used to check if the thread is
-            // running user code (ugly, I know).  This thread is now
-            // running user code so we set it as well.
-            System.setProperty("devappserver-thread-" + thread.getName(), "true");
-            return thread;
+                });
           }
-        });
+
+          @Override
+          public void run() {
+            // Copy the current environment to the new thread.
+            ApiProxy.setEnvironmentForCurrentThread(environment);
+            // Switch back to the calling context before running the user's code.
+            runnable.run();
+            // Don't bother unsetting the environment.  We're
+            // not going to reuse this thread and we want the
+            // environment still to be set during any
+            // UncaughtExceptionHandler (which happens after
+            // run() completes/throws).
+          }
+        };
+    // This system property is used to check if the thread is
+    // running user code (ugly, I know).  This thread is now
+    // running user code so we set it as well.
+    System.setProperty("devappserver-thread-" + thread.getName(), "true");
+    return thread;
+          
+       
   }
 
   private long getRemainingDeadlineMillis(ApiProxy.Environment environment) {

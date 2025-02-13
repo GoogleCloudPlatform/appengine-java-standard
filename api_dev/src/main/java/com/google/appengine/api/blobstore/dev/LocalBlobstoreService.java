@@ -43,8 +43,6 @@ import com.google.protobuf.ByteString;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -157,23 +155,18 @@ public final class LocalBlobstoreService extends AbstractLocalRpcService {
   }
 
   public VoidProto deleteBlob(Status status, final DeleteBlobRequest request) {
-    AccessController.doPrivileged(
-        (PrivilegedAction<Object>)
-            () -> {
-              for (String blobKeyString : request.getBlobKeyList()) {
-                BlobKey blobKey = new BlobKey(blobKeyString);
-                if (blobStorage.hasBlob(blobKey)) {
-                  try {
-                    blobStorage.deleteBlob(blobKey);
-                  } catch (IOException ex) {
-                    logger.log(Level.WARNING, "Could not delete blob: " + blobKey, ex);
-                    throw new ApiProxy.ApplicationException(
-                        BlobstoreServiceError.ErrorCode.INTERNAL_ERROR_VALUE, ex.toString());
-                  }
-                }
-              }
-              return null;
-            });
+    for (String blobKeyString : request.getBlobKeyList()) {
+      BlobKey blobKey = new BlobKey(blobKeyString);
+      if (blobStorage.hasBlob(blobKey)) {
+        try {
+          blobStorage.deleteBlob(blobKey);
+        } catch (IOException ex) {
+          logger.log(Level.WARNING, "Could not delete blob: " + blobKey, ex);
+          throw new ApiProxy.ApplicationException(
+              BlobstoreServiceError.ErrorCode.INTERNAL_ERROR_VALUE, ex.toString());
+        }
+      }
+    }
 
     return VoidProto.getDefaultInstance();
   }
@@ -222,27 +215,21 @@ public final class LocalBlobstoreService extends AbstractLocalRpcService {
     } else {
       // Safe to cast because index will never be above MAX_BLOB_FETCH_SIZE.
       final byte[] data = new byte[(int) (endIndex - request.getStartIndex() + 1)];
-      AccessController.doPrivileged(
-          (PrivilegedAction<Object>)
-              () -> {
-                try {
-                  boolean swallowDueToThrow = true;
-                  InputStream stream = blobStorage.fetchBlob(blobKey);
-                  try {
-                    ByteStreams.skipFully(stream, request.getStartIndex());
-                    ByteStreams.readFully(stream, data);
-                    swallowDueToThrow = false;
-                  } finally {
-                    Closeables.close(stream, swallowDueToThrow);
-                  }
-                } catch (IOException ex) {
-                  logger.log(Level.WARNING, "Could not fetch data: " + blobKey, ex);
-                  throw new ApiProxy.ApplicationException(
-                      BlobstoreServiceError.ErrorCode.INTERNAL_ERROR_VALUE, ex.toString());
-                }
-
-                return null;
-              });
+      try {
+        boolean swallowDueToThrow = true;
+        InputStream stream = blobStorage.fetchBlob(blobKey);
+        try {
+          ByteStreams.skipFully(stream, request.getStartIndex());
+          ByteStreams.readFully(stream, data);
+          swallowDueToThrow = false;
+        } finally {
+          Closeables.close(stream, swallowDueToThrow);
+        }
+      } catch (IOException ex) {
+        logger.log(Level.WARNING, "Could not fetch data: " + blobKey, ex);
+        throw new ApiProxy.ApplicationException(
+            BlobstoreServiceError.ErrorCode.INTERNAL_ERROR_VALUE, ex.toString());
+      }
 
       response.setData(ByteString.copyFrom(data));
     }

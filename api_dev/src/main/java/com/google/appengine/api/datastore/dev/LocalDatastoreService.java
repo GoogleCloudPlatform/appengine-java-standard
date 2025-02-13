@@ -114,12 +114,8 @@ import java.io.Serializable;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.StandardCharsets;
-import java.security.AccessController;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.security.PrivilegedAction;
-import java.security.PrivilegedActionException;
-import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -410,21 +406,14 @@ public abstract class LocalDatastoreService {
                 .setNameFormat("LocalDatastoreService-%d")
                 .build());
     scheduler.setRemoveOnCancelPolicy(true);
-    AccessController.doPrivileged(
-        new PrivilegedAction<Object>() {
-          @Override
-          public Object run() {
-            Runtime.getRuntime()
-                .addShutdownHook(
-                    new Thread() {
-                      @Override
-                      public void run() {
-                        cleanupActiveServices();
-                      }
-                    });
-            return null;
-          }
-        });
+    Runtime.getRuntime()
+        .addShutdownHook(
+            new Thread() {
+              @Override
+              public void run() {
+                cleanupActiveServices();
+              }
+            });
     return scheduler;
   }
 
@@ -633,14 +622,7 @@ public abstract class LocalDatastoreService {
   }
 
   public void start() {
-    AccessController.doPrivileged(
-        new PrivilegedAction<Object>() {
-          @Override
-          public Object run() {
-            startInternal();
-            return null;
-          }
-        });
+    startInternal();
   }
 
   private synchronized void startInternal() {
@@ -1402,16 +1384,8 @@ public abstract class LocalDatastoreService {
       // store the query and return the results
       LiveQuery liveQuery = new LiveQuery(queryEntities, versions, query, entityComparator, clock);
 
-      // CompositeIndexManager does some filesystem reads/writes, so needs to
-      // be privileged.
-      AccessController.doPrivileged(
-          new PrivilegedAction<Object>() {
-            @Override
-            public Object run() {
-              LocalCompositeIndexManager.getInstance().processQuery(validatedQuery.getV3Query());
-              return null;
-            }
-          });
+      // CompositeIndexManager does some filesystem reads/writes
+      LocalCompositeIndexManager.getInstance().processQuery(validatedQuery.getV3Query());
 
       // Using next function to prefetch results and return them from runQuery
       QueryResult result =
@@ -3224,32 +3198,25 @@ public abstract class LocalDatastoreService {
   private void persist() {
     globalLock.writeLock().lock();
     try {
-      AccessController.doPrivileged(
-          new PrivilegedExceptionAction<Object>() {
-            @Override
-            public Object run() throws IOException {
-              if (noStorage || !dirty) {
-                return null;
-              }
+      if (noStorage || !dirty) {
+        return;
+      }
 
-              long start = clock.getCurrentTime();
-              try (ObjectOutputStream objectOut =
-                  new ObjectOutputStream(
-                      new BufferedOutputStream(new FileOutputStream(backingStore)))) {
-                objectOut.writeLong(-CURRENT_STORAGE_VERSION);
-                objectOut.writeLong(entityIdSequential.get());
-                objectOut.writeLong(entityIdScattered.get());
-                objectOut.writeObject(profiles);
-              }
+      long start = clock.getCurrentTime();
+      try (ObjectOutputStream objectOut =
+          new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(backingStore)))) {
+        objectOut.writeLong(-CURRENT_STORAGE_VERSION);
+        objectOut.writeLong(entityIdSequential.get());
+        objectOut.writeLong(entityIdScattered.get());
+        objectOut.writeObject(profiles);
+      }
 
-              dirty = false;
-              long end = clock.getCurrentTime();
+      dirty = false;
+      long end = clock.getCurrentTime();
 
-              logger.log(Level.INFO, "Time to persist datastore: " + (end - start) + " ms");
-              return null;
-            }
-          });
-    } catch (PrivilegedActionException e) {
+      logger.log(Level.INFO, "Time to persist datastore: " + (end - start) + " ms");
+
+    } catch (Exception e) {
       Throwable t = e.getCause();
       if (t instanceof IOException) {
         logger.log(Level.SEVERE, "Unable to save the datastore", e);

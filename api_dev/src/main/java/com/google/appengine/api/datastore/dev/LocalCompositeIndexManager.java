@@ -52,8 +52,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Writer;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -339,20 +337,13 @@ class LocalCompositeIndexManager extends CompositeIndexManager {
     /**
      * Returns an input stream for the generated indexes file or {@code null} if it doesn't exist.
      */
-    // @Nullable
     // @VisibleForTesting
-    InputStream getGeneratedIndexFileInputStream() {
-      return AccessController.doPrivileged(
-          new PrivilegedAction<InputStream>() {
-            @Override
-            public InputStream run() {
-              try {
-                return new FileInputStream(getGeneratedIndexFile());
-              } catch (FileNotFoundException e) {
-                return null;
-              }
-            }
-          });
+    @Nullable InputStream getGeneratedIndexFileInputStream() {
+      try {
+        return new FileInputStream(getGeneratedIndexFile());
+      } catch (FileNotFoundException e) {
+        return null;
+      }
     }
 
     /** Returns a writer for the generated indexes file. */

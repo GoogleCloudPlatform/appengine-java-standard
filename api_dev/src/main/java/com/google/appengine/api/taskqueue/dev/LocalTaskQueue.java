@@ -57,8 +57,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.nio.file.Paths;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
@@ -272,14 +270,7 @@ public final class LocalTaskQueue extends AbstractLocalRpcService {
 
   @Override
   public void start() {
-    AccessController.doPrivileged(
-        new PrivilegedAction<Object>() {
-          @Override
-          public Object run() {
-            start_();
-            return null;
-          }
-        });
+    start_();
   }
 
   private void start_() {
@@ -347,14 +338,7 @@ public final class LocalTaskQueue extends AbstractLocalRpcService {
   public void stop() {
     // Avoid removing the shutdownHook while a JVM shutdown is in progress.
     if (shutdownHook != null) {
-      AccessController.doPrivileged(
-          new PrivilegedAction<Void>() {
-            @Override
-            public Void run() {
-              Runtime.getRuntime().removeShutdownHook(shutdownHook);
-              return null;
-            }
-          });
+      Runtime.getRuntime().removeShutdownHook(shutdownHook);
       shutdownHook = null;
     }
     stop_();

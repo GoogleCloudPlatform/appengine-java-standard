@@ -26,9 +26,7 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.security.AccessController;
 import java.security.CodeSource;
-import java.security.PrivilegedAction;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Level;
@@ -172,13 +170,7 @@ public class IsolatedAppClassLoader extends URLClassLoader {
       final Class<?> c = devAppServerClassLoader.loadClass(name);
 
       // See where it came from.
-      CodeSource source = AccessController.doPrivileged(
-          new PrivilegedAction<CodeSource>() {
-            @Override
-            public CodeSource run() {
-              return c.getProtectionDomain().getCodeSource();
-            }
-          });
+      CodeSource source = c.getProtectionDomain().getCodeSource();
 
       // Load classes from the JRE.
       // We can't just block non-allowlisted classes from being loaded. The JVM

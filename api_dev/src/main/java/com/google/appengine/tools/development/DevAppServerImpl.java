@@ -29,10 +29,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.net.BindException;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
-import java.security.PrivilegedActionException;
-import java.security.PrivilegedExceptionAction;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TimeZone;
@@ -222,23 +218,14 @@ public class DevAppServerImpl implements DevAppServer {
   /**
    * Starts the server.
    *
-   * @throws IllegalStateException If the server has already been started or
-   * shutdown.
+   * @throws IllegalStateException If the server has already been started or shutdown.
    * @throws AppEngineConfigException If no WEB-INF directory can be found or
-   * WEB-INF/appengine-web.xml does not exist.
+   *     WEB-INF/appengine-web.xml does not exist.
    * @return a latch that will be decremented to zero when the server is shutdown.
    */
   @Override
   public CountDownLatch start() throws Exception {
-    try {
-      return AccessController.doPrivileged(new PrivilegedExceptionAction<CountDownLatch>() {
-        @Override public CountDownLatch run() throws Exception {
-          return doStart();
-        }
-      });
-    } catch (PrivilegedActionException e) {
-      throw e.getException();
-    }
+    return doStart();
   }
 
   private CountDownLatch doStart() throws Exception {
@@ -374,24 +361,16 @@ public class DevAppServerImpl implements DevAppServer {
     if (serverState != ServerState.RUNNING) {
       throw new IllegalStateException("Cannot restart a server that is not currently running.");
     }
-    try {
-      return AccessController.doPrivileged(new PrivilegedExceptionAction<CountDownLatch>() {
-        @Override public CountDownLatch run() throws Exception {
-          modules.shutdown();
-          backendContainer.shutdownAll();
-          shutdownLatch.countDown();
-          modules.createConnections();
-          backendContainer.configureAll(apiProxyLocal);
-          modules.setApiProxyDelegate(apiProxyLocal);
-          modules.startup();
-          backendContainer.startupAll();
-          shutdownLatch = new CountDownLatch(1);
-          return shutdownLatch;
-        }
-      });
-    } catch (PrivilegedActionException e) {
-      throw e.getException();
-    }
+    modules.shutdown();
+    backendContainer.shutdownAll();
+    shutdownLatch.countDown();
+    modules.createConnections();
+    backendContainer.configureAll(apiProxyLocal);
+    modules.setApiProxyDelegate(apiProxyLocal);
+    modules.startup();
+    backendContainer.startupAll();
+    shutdownLatch = new CountDownLatch(1);
+    return shutdownLatch;
   }
 
   @Override
@@ -399,46 +378,29 @@ public class DevAppServerImpl implements DevAppServer {
     if (serverState != ServerState.RUNNING) {
       throw new IllegalStateException("Cannot shutdown a server that is not currently running.");
     }
-    try {
-      AccessController.doPrivileged(new PrivilegedExceptionAction<Void>() {
-        @Override public Void run() throws Exception {
-          modules.shutdown();
-          backendContainer.shutdownAll();
-          ApiProxy.setDelegate(null);
-          apiProxyLocal = null;
-          serverState = ServerState.SHUTDOWN;
-          shutdownLatch.countDown();
-          return null;
-        }
-      });
-    } catch (PrivilegedActionException e) {
-      throw e.getException();
-    }
+    modules.shutdown();
+    backendContainer.shutdownAll();
+    ApiProxy.setDelegate(null);
+    apiProxyLocal = null;
+    serverState = ServerState.SHUTDOWN;
+    shutdownLatch.countDown();
   }
 
   @Override
   public void gracefulShutdown() throws IllegalStateException {
     // TODO: Do an actual graceful shutdown rather than just delaying.
 
-    // Requires a privileged block since this may be invoked from a servlet
-    // that lives in the user's classloader and may result in the creation of
-    // a thread.
-    AccessController.doPrivileged(
-        new PrivilegedAction<Future<Void>>() {
-          @Override
-          public Future<Void> run() {
-            return shutdownScheduler.schedule(
-                new Callable<Void>() {
-                  @Override
-                  public Void call() throws Exception {
-                    shutdown();
-                    return null;
-                  }
-                },
-                1000,
-                TimeUnit.MILLISECONDS);
-          }
-        });
+    Future<Void> unused =
+        shutdownScheduler.schedule(
+            new Callable<Void>() {
+              @Override
+              public Void call() throws Exception {
+                shutdown();
+                return null;
+              }
+            },
+            1000,
+            TimeUnit.MILLISECONDS);
   }
 
   @Override

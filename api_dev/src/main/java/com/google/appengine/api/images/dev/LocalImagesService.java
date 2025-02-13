@@ -61,8 +61,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -173,94 +171,88 @@ public final class LocalImagesService extends AbstractLocalRpcService {
    */
   public ImagesTransformResponse transform(
       final Status status, final ImagesTransformRequest request) {
-    return AccessController.doPrivileged(
-        new PrivilegedAction<ImagesTransformResponse>() {
-          @Override
-          public ImagesTransformResponse run() {
-            BufferedImage img = openImage(request.getImage(), status);
-            if (request.getTransformCount() > ImagesService.MAX_TRANSFORMS_PER_REQUEST) {
-              // TODO: Do we need to set both fields *and* throw an
-              // exception?
-              status.setSuccessful(false);
-              status.setErrorCode(ErrorCode.BAD_TRANSFORM_DATA.getNumber());
-              throw new ApiProxy.ApplicationException(
-                  ErrorCode.BAD_TRANSFORM_DATA.getNumber(),
-                  String.format(
-                      "%d transforms were supplied; the maximum allowed is %d.",
-                      request.getTransformCount(), ImagesService.MAX_TRANSFORMS_PER_REQUEST));
-            }
-            int orientation = 1;
-            if (request.getInput().getCorrectExifOrientation()
-                == ORIENTATION_CORRECTION_TYPE.CORRECT_ORIENTATION) {
-              Exif exif = getExifMetadata(request.getImage());
-              if (exif != null) {
-                Entry entry = exif.getTagValue(Exif.ORIENTATION, true);
-                if (entry != null) {
-                  orientation = ((Integer) entry.getValue(0)).intValue();
-                  if (img.getHeight() > img.getWidth()) {
-                    orientation = 1;
-                  }
-                }
-              }
-            }
-            for (Transform transform : request.getTransformList()) {
-              // In production, orientation correction is done during the first
-              // transform. If the first transform is a crop or flip it is done
-              // after, otherwise it is done before. To be precise, the order
-              // of transformation within a single entry is: Crop, Flip,
-              // Rotate, Resize, (Crop-to-fit), Effects (e.g., autolevels).
-              // Orientation fix is done within the chain modifying flipping
-              // and rotation steps.
-              if (orientation != 1
-                  && !(transform.hasCropRightX()
-                      || transform.hasCropTopY()
-                      || transform.hasCropBottomY()
-                      || transform.hasCropLeftX())
-                  && !transform.hasHorizontalFlip()
-                  && !transform.hasVerticalFlip()) {
-                img = correctOrientation(img, status, orientation);
-                orientation = 1;
-              }
-              if (transform.getAllowStretch() && transform.getCropToFit()) {
-                // Process allow stretch first and then process the crop.
-                // This is similar to how it works in production and allows us
-                // to keep the dev processing pipeline straightforward for this
-                // combination of transforms.
-                Transform.Builder stretch = Transform.newBuilder();
-                stretch
-                    .setWidth(transform.getWidth())
-                    .setHeight(transform.getHeight())
-                    .setAllowStretch(true);
-                img = processTransform(img, stretch.build(), status);
-                // Create and process the new crop portion of the transform.
-                Transform.Builder crop = Transform.newBuilder();
-                crop.setWidth(transform.getWidth())
-                    .setHeight(transform.getHeight())
-                    .setCropToFit(transform.getCropToFit())
-                    .setCropOffsetX(transform.getCropOffsetX())
-                    .setCropOffsetY(transform.getCropOffsetY())
-                    .setAllowStretch(false);
-                img = processTransform(img, crop.build(), status);
-              } else {
-                img = processTransform(img, transform, status);
-              }
-              if (orientation != 1) {
-                img = correctOrientation(img, status, orientation);
-                orientation = 1;
-              }
-            }
-            status.setSuccessful(true);
-            ImageData imageData =
-                ImageData.newBuilder()
-                    .setContent(
-                        ByteString.copyFrom(
-                            saveImage(img, request.getOutput().getMimeType(), status)))
-                    .setWidth(img.getWidth())
-                    .setHeight(img.getHeight())
-                    .build();
-            return ImagesTransformResponse.newBuilder().setImage(imageData).build();
+    BufferedImage img = openImage(request.getImage(), status);
+    if (request.getTransformCount() > ImagesService.MAX_TRANSFORMS_PER_REQUEST) {
+      // TODO: Do we need to set both fields *and* throw an
+      // exception?
+      status.setSuccessful(false);
+      status.setErrorCode(ErrorCode.BAD_TRANSFORM_DATA.getNumber());
+      throw new ApiProxy.ApplicationException(
+          ErrorCode.BAD_TRANSFORM_DATA.getNumber(),
+          String.format(
+              "%d transforms were supplied; the maximum allowed is %d.",
+              request.getTransformCount(), ImagesService.MAX_TRANSFORMS_PER_REQUEST));
+    }
+    int orientation = 1;
+    if (request.getInput().getCorrectExifOrientation()
+        == ORIENTATION_CORRECTION_TYPE.CORRECT_ORIENTATION) {
+      Exif exif = getExifMetadata(request.getImage());
+      if (exif != null) {
+        Entry entry = exif.getTagValue(Exif.ORIENTATION, true);
+        if (entry != null) {
+          orientation = ((Integer) entry.getValue(0)).intValue();
+          if (img.getHeight() > img.getWidth()) {
+            orientation = 1;
           }
-        });
+        }
+      }
+    }
+    for (Transform transform : request.getTransformList()) {
+      // In production, orientation correction is done during the first
+      // transform. If the first transform is a crop or flip it is done
+      // after, otherwise it is done before. To be precise, the order
+      // of transformation within a single entry is: Crop, Flip,
+      // Rotate, Resize, (Crop-to-fit), Effects (e.g., autolevels).
+      // Orientation fix is done within the chain modifying flipping
+      // and rotation steps.
+      if (orientation != 1
+          && !(transform.hasCropRightX()
+              || transform.hasCropTopY()
+              || transform.hasCropBottomY()
+              || transform.hasCropLeftX())
+          && !transform.hasHorizontalFlip()
+          && !transform.hasVerticalFlip()) {
+        img = correctOrientation(img, status, orientation);
+        orientation = 1;
+      }
+      if (transform.getAllowStretch() && transform.getCropToFit()) {
+        // Process allow stretch first and then process the crop.
+        // This is similar to how it works in production and allows us
+        // to keep the dev processing pipeline straightforward for this
+        // combination of transforms.
+        Transform.Builder stretch = Transform.newBuilder();
+        stretch
+            .setWidth(transform.getWidth())
+            .setHeight(transform.getHeight())
+            .setAllowStretch(true);
+        img = processTransform(img, stretch.build(), status);
+        // Create and process the new crop portion of the transform.
+        Transform.Builder crop = Transform.newBuilder();
+        crop.setWidth(transform.getWidth())
+            .setHeight(transform.getHeight())
+            .setCropToFit(transform.getCropToFit())
+            .setCropOffsetX(transform.getCropOffsetX())
+            .setCropOffsetY(transform.getCropOffsetY())
+            .setAllowStretch(false);
+        img = processTransform(img, crop.build(), status);
+      } else {
+        img = processTransform(img, transform, status);
+      }
+      if (orientation != 1) {
+        img = correctOrientation(img, status, orientation);
+        orientation = 1;
+      }
+    }
+    status.setSuccessful(true);
+    ImageData imageData =
+        ImageData.newBuilder()
+            .setContent(
+                ByteString.copyFrom(
+                    saveImage(img, request.getOutput().getMimeType(), status)))
+            .setWidth(img.getWidth())
+            .setHeight(img.getHeight())
+            .build();
+    return ImagesTransformResponse.newBuilder().setImage(imageData).build();
   }
 
   /**
@@ -270,50 +262,44 @@ public final class LocalImagesService extends AbstractLocalRpcService {
    */
   public ImagesCompositeResponse composite(
       final Status status, final ImagesCompositeRequest request) {
-    return AccessController.doPrivileged(
-        new PrivilegedAction<ImagesCompositeResponse>() {
-          @Override
-          public ImagesCompositeResponse run() {
-            List<BufferedImage> images = new ArrayList<BufferedImage>(request.getImageCount());
-            for (int i = 0; i < request.getImageCount(); i++) {
-              images.add(openImage(request.getImage(i), status));
-            }
-            if (request.getOptionsCount() > ImagesService.MAX_COMPOSITES_PER_REQUEST) {
-              status.setSuccessful(false);
-              status.setErrorCode(ErrorCode.BAD_TRANSFORM_DATA.getNumber());
-              throw new ApiProxy.ApplicationException(ErrorCode.BAD_TRANSFORM_DATA.getNumber(),
-                  String.format("%d composites were supplied; the maximum allowed is %d.",
-                      request.getOptionsCount(), ImagesService.MAX_COMPOSITES_PER_REQUEST));
-            }
-            int width = request.getCanvas().getWidth();
-            int height = request.getCanvas().getHeight();
-            int color = request.getCanvas().getColor();
-            BufferedImage canvas = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-            for (int i = 0; i < height; i++) {
-              for (int j = 0; j < width; j++) {
-                canvas.setRGB(j, i, color);
-              }
-            }
-            for (int i = 0; i < request.getOptionsCount(); i++) {
-              CompositeImageOptions options = request.getOptions(i);
-              if (options.getSourceIndex() < 0
-                  || options.getSourceIndex() >= request.getImageCount()) {
-                throw new ApiProxy.ApplicationException(ErrorCode.BAD_TRANSFORM_DATA.getNumber(),
-                    String.format("Invalid source image index %d", options.getSourceIndex()));
-              }
-              processComposite(canvas, options, images.get(options.getSourceIndex()), status);
-            }
-            status.setSuccessful(true);
-            return ImagesCompositeResponse
-                .newBuilder()
-                .setImage(
-                    ImageData.newBuilder().setContent(ByteString.copyFrom(saveImage(canvas, request
-                        .getCanvas()
-                        .getOutput()
-                        .getMimeType(), status))))
-                .build();
-          }
-        });
+    List<BufferedImage> images = new ArrayList<BufferedImage>(request.getImageCount());
+    for (int i = 0; i < request.getImageCount(); i++) {
+      images.add(openImage(request.getImage(i), status));
+    }
+    if (request.getOptionsCount() > ImagesService.MAX_COMPOSITES_PER_REQUEST) {
+      status.setSuccessful(false);
+      status.setErrorCode(ErrorCode.BAD_TRANSFORM_DATA.getNumber());
+      throw new ApiProxy.ApplicationException(ErrorCode.BAD_TRANSFORM_DATA.getNumber(),
+          String.format("%d composites were supplied; the maximum allowed is %d.",
+              request.getOptionsCount(), ImagesService.MAX_COMPOSITES_PER_REQUEST));
+    }
+    int width = request.getCanvas().getWidth();
+    int height = request.getCanvas().getHeight();
+    int color = request.getCanvas().getColor();
+    BufferedImage canvas = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+    for (int i = 0; i < height; i++) {
+      for (int j = 0; j < width; j++) {
+        canvas.setRGB(j, i, color);
+      }
+    }
+    for (int i = 0; i < request.getOptionsCount(); i++) {
+      CompositeImageOptions options = request.getOptions(i);
+      if (options.getSourceIndex() < 0
+          || options.getSourceIndex() >= request.getImageCount()) {
+        throw new ApiProxy.ApplicationException(ErrorCode.BAD_TRANSFORM_DATA.getNumber(),
+            String.format("Invalid source image index %d", options.getSourceIndex()));
+      }
+      processComposite(canvas, options, images.get(options.getSourceIndex()), status);
+    }
+    status.setSuccessful(true);
+    return ImagesCompositeResponse
+        .newBuilder()
+        .setImage(
+            ImageData.newBuilder().setContent(ByteString.copyFrom(saveImage(canvas, request
+                .getCanvas()
+                .getOutput()
+                .getMimeType(), status))))
+        .build();
   }
 
   /**
@@ -463,36 +449,30 @@ public final class LocalImagesService extends AbstractLocalRpcService {
    */
   public ImagesHistogramResponse histogram(
       final Status status, final ImagesHistogramRequest request) {
-    return AccessController.doPrivileged(
-        new PrivilegedAction<ImagesHistogramResponse>() {
-          @Override
-          public ImagesHistogramResponse run() {
-            BufferedImage img = openImage(request.getImage(), status);
-            int[] red = new int[256];
-            int[] green = new int[256];
-            int[] blue = new int[256];
-            int pixel;
-            for (int i = 0; i < img.getHeight(); i++) {
-              for (int j = 0; j < img.getWidth(); j++) {
-                pixel = img.getRGB(j, i);
-                // Premultiply by alpha to match thumbnailer.
-                red[(((pixel >> 16) & 0xff) * ((pixel >> 24) & 0xff)) / 255]++;
-                green[(((pixel >> 8) & 0xff) * ((pixel >> 24) & 0xff)) / 255]++;
-                blue[((pixel & 0xff) * ((pixel >> 24) & 0xff)) / 255]++;
-              }
-            }
-            ImagesHistogram.Builder imageHistogram = ImagesHistogram.newBuilder();
-            for (int i = 0; i < 256; i++) {
-              imageHistogram.addRed(red[i]);
-              imageHistogram.addGreen(green[i]);
-              imageHistogram.addBlue(blue[i]);
-            }
-            return ImagesHistogramResponse
-                .newBuilder()
-                .setHistogram(imageHistogram)
-                .build();
-          }
-        });
+    BufferedImage img = openImage(request.getImage(), status);
+    int[] red = new int[256];
+    int[] green = new int[256];
+    int[] blue = new int[256];
+    int pixel;
+    for (int i = 0; i < img.getHeight(); i++) {
+      for (int j = 0; j < img.getWidth(); j++) {
+        pixel = img.getRGB(j, i);
+        // Premultiply by alpha to match thumbnailer.
+        red[(((pixel >> 16) & 0xff) * ((pixel >> 24) & 0xff)) / 255]++;
+        green[(((pixel >> 8) & 0xff) * ((pixel >> 24) & 0xff)) / 255]++;
+        blue[((pixel & 0xff) * ((pixel >> 24) & 0xff)) / 255]++;
+      }
+    }
+    ImagesHistogram.Builder imageHistogram = ImagesHistogram.newBuilder();
+    for (int i = 0; i < 256; i++) {
+      imageHistogram.addRed(red[i]);
+      imageHistogram.addGreen(green[i]);
+      imageHistogram.addBlue(blue[i]);
+    }
+    return ImagesHistogramResponse
+        .newBuilder()
+        .setHistogram(imageHistogram)
+        .build();
   }
 
   /**
@@ -505,46 +485,34 @@ public final class LocalImagesService extends AbstractLocalRpcService {
    */
   public ImagesGetUrlBaseResponse getUrlBase(
       final Status status, final ImagesGetUrlBaseRequest request) {
-    return AccessController.doPrivileged(
-        new PrivilegedAction<ImagesGetUrlBaseResponse>() {
-          @Override
-          public ImagesGetUrlBaseResponse run() {
-            if (request.getCreateSecureUrl()) {
-              log.info(
-                  "Secure URLs will not be created using the development " + "application server.");
-            }
-            // Detect the image mimetype to see if is a valid image.
-            ImageData imageData =
-                ImageData.newBuilder()
-                    .setBlobKey(request.getBlobKey())
-                    .setContent(ByteString.EMPTY)
-                    .build();
-            // getMimeType is validating the blob is an image.
-            getMimeType(imageData);
-            // Note I am commenting out the following line
-            // because experimentats indicates that doing so resolves
-            // b/7031367 Tests time out with OOMs since 1.7.1
-            // TODO Figure out why the following line causes this
-            // test to take over one minute to finish:
-            // jt/c/g/dotorg/onetoday/server/offer/selection:FriendsMatchingScorerTest
-            // addServingUrlEntry(request.getBlobKey());
-            return ImagesGetUrlBaseResponse.newBuilder()
-                .setUrl(hostPrefix + "/_ah/img/" + request.getBlobKey())
-                .build();
-          }
-        });
+    if (request.getCreateSecureUrl()) {
+      log.info(
+          "Secure URLs will not be created using the development " + "application server.");
+    }
+    // Detect the image mimetype to see if is a valid image.
+    ImageData imageData =
+        ImageData.newBuilder()
+            .setBlobKey(request.getBlobKey())
+            .setContent(ByteString.EMPTY)
+            .build();
+    // getMimeType is validating the blob is an image.
+    getMimeType(imageData);
+    // Note I am commenting out the following line
+    // because experimentats indicates that doing so resolves
+    // b/7031367 Tests time out with OOMs since 1.7.1
+    // TODO Figure out why the following line causes this
+    // test to take over one minute to finish:
+    // jt/c/g/dotorg/onetoday/server/offer/selection:FriendsMatchingScorerTest
+    // addServingUrlEntry(request.getBlobKey());
+    return ImagesGetUrlBaseResponse.newBuilder()
+        .setUrl(hostPrefix + "/_ah/img/" + request.getBlobKey())
+        .build();
   }
 
   public ImagesDeleteUrlBaseResponse deleteUrlBase(
       final Status status, final ImagesDeleteUrlBaseRequest request) {
-    return AccessController.doPrivileged(
-        new PrivilegedAction<ImagesDeleteUrlBaseResponse>() {
-          @Override
-          public ImagesDeleteUrlBaseResponse run() {
-            deleteServingUrlEntry(request.getBlobKey());
-            return ImagesDeleteUrlBaseResponse.newBuilder().build();
-          }
-        });
+    deleteServingUrlEntry(request.getBlobKey());
+    return ImagesDeleteUrlBaseResponse.newBuilder().build();
   }
 
   @Override

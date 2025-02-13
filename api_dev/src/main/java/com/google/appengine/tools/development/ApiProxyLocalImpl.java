@@ -26,8 +26,6 @@ import com.google.apphosting.api.ApiProxy.RequestTooLargeException;
 import com.google.apphosting.api.ApiProxy.UnknownException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -42,8 +40,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -216,15 +212,9 @@ public class ApiProxyLocalImpl implements ApiProxyLocal, DevServices {
     boolean offline = environment.getAttributes().get(IS_OFFLINE_REQUEST_KEY) != null;
     boolean success = false;
     try {
-      // Despite the name, privilegedCallable() just arranges for this
-      // callable to be run with the current privileges.
-      Callable<byte[]> callable = Executors.privilegedCallable(asyncApiCall);
+      Callable<byte[]> callable = asyncApiCall;
+      Future<byte[]> resultFuture = apiExecutor.submit(callable);
 
-      // Now we need to escalate privileges so we have permission to
-      // spin up new threads, if necessary.  The callable itself will
-      // run with the previous privileges.
-      Future<byte[]> resultFuture = AccessController.doPrivileged(
-          new PrivilegedApiAction(callable, asyncApiCall));
       success = true;
       if (context.getLocalServerEnvironment().enforceApiDeadlines()) {
         long deadlineMillis = (long) (1000.0 * resolveDeadline(packageName, apiConfig, offline));
@@ -272,67 +262,6 @@ public class ApiProxyLocalImpl implements ApiProxyLocal, DevServices {
       maxDeadline = 10.0;
     }
     return Math.min(deadline, maxDeadline);
-  }
-
-  private class PrivilegedApiAction implements PrivilegedAction<Future<byte[]>> {
-
-    private final Callable<byte[]> callable;
-    private final AsyncApiCall asyncApiCall;
-
-    PrivilegedApiAction(Callable<byte[]> callable, AsyncApiCall asyncApiCall) {
-      this.callable = callable;
-      this.asyncApiCall = asyncApiCall;
-    }
-
-    @Override
-    public Future<byte[]> run() {
-      // TODO: Return something that implements
-      // ApiProxy.ApiResultFuture so we can attach real wallclock
-      // time information here (although CPU time is irrelevant).
-      final Future<byte[]> result = apiExecutor.submit(callable);
-      return new Future<byte[]>() {
-        @Override
-        public boolean cancel(final boolean mayInterruptIfRunning) {
-          // Cancel may interrupt another thread so we need to escalate privileges to avoid
-          // sandbox restrictions.
-          return AccessController.doPrivileged(
-              new PrivilegedAction<Boolean>() {
-                @Override
-                public Boolean run() {
-                  // If we cancel the task before it runs it's up to us to
-                  // release the semaphore.  If we cancel the task after it
-                  // runs we know the task released the semaphore.  However,
-                  // we can't reliably know the state of the task and it's
-                  // bad news if the semaphore gets released twice.  This
-                  // method ensures that the semaphore only gets released once.
-                  asyncApiCall.tryReleaseSemaphore();
-                  return result.cancel(mayInterruptIfRunning);
-                }
-              });
-        }
-
-        @Override
-        public boolean isCancelled() {
-          return result.isCancelled();
-        }
-
-        @Override
-        public boolean isDone() {
-          return result.isDone();
-        }
-
-        @Override
-        public byte[] get() throws InterruptedException, ExecutionException {
-          return result.get();
-        }
-
-        @Override
-        public byte[] get(long timeout, TimeUnit unit)
-            throws InterruptedException, ExecutionException, TimeoutException {
-          return result.get(timeout, unit);
-        }
-      };
-    }
   }
 
   @Override
@@ -568,13 +497,7 @@ public class ApiProxyLocalImpl implements ApiProxyLocal, DevServices {
       return cachedService;
     }
 
-    return AccessController.doPrivileged(
-        new PrivilegedAction<LocalRpcService>() {
-          @Override
-          public LocalRpcService run() {
-            return startServices(pkg);
-          }
-        });
+    return startServices(pkg);
   }
 
   @Override

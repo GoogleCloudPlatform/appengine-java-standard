@@ -24,10 +24,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
-import java.security.PrivilegedActionException;
-import java.security.PrivilegedExceptionAction;
 
 /**
  * {@code FileBlobStorage} provides durable persistence of blobs by storing blob content directly to
@@ -46,45 +42,17 @@ class FileBlobStorage implements BlobStorage {
   @Override
   public boolean hasBlob(final BlobKey blobKey) {
 
-    return AccessController.doPrivileged(
-        new PrivilegedAction<Boolean>() {
-          @Override
-          public Boolean run() {
-            return getFileForBlob(blobKey).exists();
-          }
-        });
+    return getFileForBlob(blobKey).exists();
   }
 
   @Override
   public OutputStream storeBlob(final BlobKey blobKey) throws IOException {
-    try {
-      return AccessController.doPrivileged(
-          new PrivilegedExceptionAction<FileOutputStream>() {
-            @Override
-            public FileOutputStream run() throws IOException {
-              return new FileOutputStream(getFileForBlob(blobKey));
-            }
-          });
-    } catch (PrivilegedActionException ex) {
-      Throwable cause = ex.getCause();
-      throw (cause instanceof IOException) ? (IOException) cause : new IOException(cause);
-    }
+    return new FileOutputStream(getFileForBlob(blobKey));
   }
 
   @Override
   public InputStream fetchBlob(final BlobKey blobKey) throws IOException {
-    try {
-      return AccessController.doPrivileged(
-          new PrivilegedExceptionAction<FileInputStream>() {
-            @Override
-            public FileInputStream run() throws IOException {
-              return new FileInputStream(getFileForBlob(blobKey));
-            }
-          });
-    } catch (PrivilegedActionException ex) {
-      Throwable cause = ex.getCause();
-      throw (cause instanceof IOException) ? (IOException) cause : new IOException(cause);
-    }
+    return new FileInputStream(getFileForBlob(blobKey));
   }
 
   @Override
@@ -98,21 +66,9 @@ class FileBlobStorage implements BlobStorage {
         && blobInfoStorage.loadGsFileInfo(blobKey) == null) {
       throw new RuntimeException("Unknown blobkey: " + blobKey);
     }
-    try {
-      AccessController.doPrivileged(
-          new PrivilegedExceptionAction<Void>() {
-            @Override
-            public Void run() throws IOException {
-              File file = getFileForBlob(blobKey);
-              if (!file.delete()) {
-                throw new IOException("Could not delete: " + file);
-              }
-              return null;
-            }
-          });
-    } catch (PrivilegedActionException ex) {
-      Throwable cause = ex.getCause();
-      throw (cause instanceof IOException) ? (IOException) cause : new IOException(cause);
+    File file = getFileForBlob(blobKey);
+    if (!file.delete()) {
+      throw new IOException("Could not delete: " + file);
     }
     blobInfoStorage.deleteBlobInfo(blobKey);
   }

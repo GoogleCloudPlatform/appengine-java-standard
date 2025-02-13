@@ -19,8 +19,6 @@ package com.google.appengine.tools.development;
 import com.google.appengine.tools.development.ApplicationConfigurationManager.ModuleConfigurationHandle;
 import com.google.appengine.tools.development.InstanceStateHolder.InstanceState;
 import java.io.File;
-import java.security.AccessController;
-import java.security.PrivilegedExceptionAction;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -157,18 +155,7 @@ class ManualInstanceHolder extends AbstractInstanceHolder  {
       startRequestLatch = new CountDownLatch(1);
       doConfigure();
       createConnection();
-      // We call ContainerService.startup inside a PrivilegedExceptionAction
-      // so threads created by the contained Jetty instance
-      // will not inherit our callers protection domains. See
-      // http://docs.oracle.com/javase/7/docs/technotes/guides/security/spec/security-spec.doc4.html
-      // section 4.3 for details.
-      AccessController.doPrivileged(new PrivilegedExceptionAction<Object>() {
-        @Override
-        public Object run() throws Exception {
-          getContainerService().startup();
-          return null;
-        }
-      });
+      getContainerService().startup();
       stateHolder.testAndSet(InstanceState.STOPPED, InstanceState.INITIALIZING);
     }
    }

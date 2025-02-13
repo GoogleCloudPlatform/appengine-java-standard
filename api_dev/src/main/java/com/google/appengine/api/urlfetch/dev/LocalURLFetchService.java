@@ -35,13 +35,10 @@ import java.net.MalformedURLException;
 import java.net.ProxySelector;
 import java.net.SocketTimeoutException;
 import java.net.URL;
-import java.security.AccessController;
 import java.security.KeyManagementException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
-import java.security.PrivilegedActionException;
-import java.security.PrivilegedExceptionAction;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.Arrays;
@@ -465,43 +462,26 @@ public class LocalURLFetchService extends AbstractLocalRpcService {
       final HttpRequestBase method,
       final URLFetchResponse.Builder response)
       throws IOException {
-    try {
-      return AccessController.doPrivileged(
-          new PrivilegedExceptionAction<HttpResponse>() {
-            @Override
-            public HttpResponse run() throws IOException {
-              HttpContext context = new BasicHttpContext();
-              // Does some thread ops we need to do in a privileged block.
-              HttpResponse httpResponse;
-              // TODO: Default behavior reverted to not validating cert for
-              // 1.4.2 CP due to wildcard cert validation problems. Revert for
-              // 1.4.4 after we're confident that the new HttpClient has fixed the
-              // behavior.
-              if (request.hasMustValidateServerCertificate()
-                  && request.getMustValidateServerCertificate()) {
-                httpResponse = getValidatingClient().execute(method, context);
-              } else {
-                httpResponse = getNonValidatingClient().execute(method, context);
-              }
-              response.setStatusCode(httpResponse.getStatusLine().getStatusCode());
-              HttpHost lastHost =
-                  (HttpHost) context.getAttribute(ExecutionContext.HTTP_TARGET_HOST);
-              HttpUriRequest lastReq =
-                  (HttpUriRequest) context.getAttribute(ExecutionContext.HTTP_REQUEST);
-              String lastUrl = lastHost.toURI() + lastReq.getURI();
-              if (!lastUrl.equals(method.getURI().toString())) {
-                response.setFinalUrl(lastUrl);
-              }
-              return httpResponse;
-            }
-          });
-    } catch (PrivilegedActionException e) {
-      Throwable t = e.getCause();
-      if (t instanceof IOException) {
-        throw (IOException) t;
-      }
-      throw new RuntimeException(e);
+    HttpContext context = new BasicHttpContext();
+    // Does some thread ops we need to do in a privileged block.
+    HttpResponse httpResponse;
+    // TODO: Default behavior reverted to not validating cert for
+    // 1.4.2 CP due to wildcard cert validation problems. Revert for
+    // 1.4.4 after we're confident that the new HttpClient has fixed the
+    // behavior.
+    if (request.hasMustValidateServerCertificate() && request.getMustValidateServerCertificate()) {
+      httpResponse = getValidatingClient().execute(method, context);
+    } else {
+      httpResponse = getNonValidatingClient().execute(method, context);
     }
+    response.setStatusCode(httpResponse.getStatusLine().getStatusCode());
+    HttpHost lastHost = (HttpHost) context.getAttribute(ExecutionContext.HTTP_TARGET_HOST);
+    HttpUriRequest lastReq = (HttpUriRequest) context.getAttribute(ExecutionContext.HTTP_REQUEST);
+    String lastUrl = lastHost.toURI() + lastReq.getURI();
+    if (!lastUrl.equals(method.getURI().toString())) {
+      response.setFinalUrl(lastUrl);
+    }
+    return httpResponse;
   }
 
   boolean isAllowedPort(int port) {

@@ -48,9 +48,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.nio.charset.StandardCharsets;
-import java.security.AccessController;
-import java.security.PrivilegedActionException;
-import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -843,17 +840,11 @@ public class LocalSearchService extends AbstractLocalRpcService {
     } else {
       closeIndexWriters();
       try {
-        AccessController.doPrivileged(new PrivilegedExceptionAction<Object>() {
-          @Override
-          public Object run() throws IOException {
-            if (indexDirectory.exists()) {
-              recursiveDelete(indexDirectory);
-            }
-            indexDirectory.mkdirs();
-            return null;
-          }
-        });
-      } catch (PrivilegedActionException e) {
+        if (indexDirectory.exists()) {
+          recursiveDelete(indexDirectory);
+        }
+        indexDirectory.mkdirs();
+      } catch (IOException e) {
         throw new RuntimeException(e);
       }
       dirMap = new LuceneDirectoryMap.FileBased(indexDirectory);
