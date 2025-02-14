@@ -23,8 +23,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import java.io.IOException;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.util.Map;
 import java.util.logging.Logger;
 import javax.servlet.ServletException;
@@ -125,23 +123,16 @@ public class ModulesServlet extends HttpServlet {
     final String action = req.getParameter(ACTION_MODULE);
 
     if (action != null && moduleName != null && moduleVersion != null) {
-      AccessController.doPrivileged(
-          new PrivilegedAction<Object>() {
-            @Override
-            public Object run() {
-              try {
-                if (action.equals("Stop")) {
-                  getModulesController().stopModule(moduleName, moduleVersion);
-                } else if (action.equals("Start")) {
-                  getModulesController().startModule(moduleName, moduleVersion);
-                }
-              } catch (Exception e) {
-                logger.severe(
-                    "Got error when performing a " + action + " of module : " + moduleName);
-              }
-              return null;
-            }
-          });
+      try {
+        if (action.equals("Stop")) {
+          getModulesController().stopModule(moduleName, moduleVersion);
+        } else if (action.equals("Start")) {
+          getModulesController().startModule(moduleName, moduleVersion);
+        }
+      } catch (Exception e) {
+        logger.severe(
+            "Got error when performing a " + action + " of module : " + moduleName);
+      }
     } else {
       logger.severe("The post method against the modules servlet was called without all of the " +
           "expected post parameters, we got [moduleName = " + moduleName + ", moduleVersion = " +

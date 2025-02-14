@@ -17,8 +17,6 @@
 package com.google.appengine.api;
 
 import com.google.apphosting.api.ApiProxy;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -55,23 +53,14 @@ public final class LifecycleManager {
     hooks.put(currentAppVersionId(), hook);
   }
 
-  /**
-   * Calls Thread.interrupt() on all threads running requests for this
-   * application.
-   */
+  /** Calls Thread.interrupt() on all threads running requests for this application. */
   public void interruptAllRequests() {
-    AccessController.doPrivileged(
-        new PrivilegedAction<Void>() {
-          @Override public Void run() {
-            List<Thread> threads = ApiProxy.getRequestThreads();
-            if (threads != null) {
-              for (Thread thread : threads) {
-                thread.interrupt();
-              }
-            }
-            return null;
-          }
-        });
+    List<Thread> threads = ApiProxy.getRequestThreads();
+    if (threads != null) {
+      for (Thread thread : threads) {
+        thread.interrupt();
+      }
+    }
   }
 
   /**

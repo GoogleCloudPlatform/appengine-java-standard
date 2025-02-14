@@ -17,8 +17,6 @@
 package com.google.appengine.spi;
 
 import com.google.common.base.Preconditions;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -137,44 +135,36 @@ public final class ServiceFactoryFactory {
     }
   }
 
-  /**
-   * Retrieves the list of factory providers from the classpath
-   */
+  /** Retrieves the list of factory providers from the classpath */
   private static List<FactoryProvider<?>> getProvidersUsingServiceLoader() {
-    return AccessController.doPrivileged(
-        new PrivilegedAction<List<FactoryProvider<?>>>() {
-          @Override
-          public List<FactoryProvider<?>> run() {
-            List<FactoryProvider<?>> result = new ArrayList<FactoryProvider<?>>();
+    List<FactoryProvider<?>> result = new ArrayList<FactoryProvider<?>>();
 
-            // Sandboxed applications use the classloader of this class (ServiceFactoryFactory).
-            // VM runtime applications use the thread context classloader (if not null) and fall
-            // back to
-            // the ServiceFactoryFactory classloader otherwise.
-            //
-            ClassLoader classLoader = null;
-            if (Boolean.getBoolean(USE_THREAD_CONTEXT_CLASSLOADER_PROPERTY)) {
-              classLoader = Thread.currentThread().getContextClassLoader();
-            }
-            if (classLoader == null) {
-              // If the classloader isn't set (or set to null). Use the classloader of this class.
-              classLoader = ServiceFactoryFactory.class.getClassLoader();
-            }
+    // Sandboxed applications use the classloader of this class (ServiceFactoryFactory).
+    // VM runtime applications use the thread context classloader (if not null) and fall
+    // back to
+    // the ServiceFactoryFactory classloader otherwise.
+    //
+    ClassLoader classLoader = null;
+    if (Boolean.getBoolean(USE_THREAD_CONTEXT_CLASSLOADER_PROPERTY)) {
+      classLoader = Thread.currentThread().getContextClassLoader();
+    }
+    if (classLoader == null) {
+      // If the classloader isn't set (or set to null). Use the classloader of this class.
+      classLoader = ServiceFactoryFactory.class.getClassLoader();
+    }
 
-            // Can't use parameterized types in ServiceLoader.load
-            //
-            @SuppressWarnings("rawtypes")
-            ServiceLoader<FactoryProvider> providers =
-                ServiceLoader.load(FactoryProvider.class, classLoader);
+    // Can't use parameterized types in ServiceLoader.load
+    //
+    @SuppressWarnings("rawtypes")
+    ServiceLoader<FactoryProvider> providers =
+        ServiceLoader.load(FactoryProvider.class, classLoader);
 
-            if (providers != null) {
-              for (FactoryProvider<?> provider : providers) {
-                result.add(provider);
-              }
-            }
+    if (providers != null) {
+      for (FactoryProvider<?> provider : providers) {
+        result.add(provider);
+      }
+    }
 
-            return result;
-          }
-        });
+    return result;
   }
 }

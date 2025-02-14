@@ -26,8 +26,6 @@ import java.io.ObjectOutputStream;
 import java.io.ObjectStreamClass;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Proxy;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -52,12 +50,8 @@ public final class SessionManagerUtil {
     // N.B.: There is most likely user code on the stack
     // here, but because the value we're returning is not related to
     // our ClassLoader we'll fail the
-    // RuntimePermission("getClassLoader") check.  We do have this
-    // permission though, so use a doPrivileged block to get user code
-    // off the stack.
-    ClassLoader classLoader =
-        AccessController.doPrivileged(
-            (PrivilegedAction<ClassLoader>) () -> Thread.currentThread().getContextClassLoader());
+    // RuntimePermission("getClassLoader") check.
+    ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
     // TODO: It seems strange that we need to do this.  It
     // would be safer and cleaner if we could find a way to have user
     // code initiate this serialization, rather than having
