@@ -36,6 +36,7 @@ jobs:
         include:
           - java: [21, 23]
             jdk: [zulu, liberica]
+            os: [ubuntu-latest]
       fail-fast: false
 
     runs-on: ${{ matrix.os }}
