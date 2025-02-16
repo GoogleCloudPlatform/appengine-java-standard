@@ -31,12 +31,13 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        java: [17, 21, 22, 23]
-        jdk: [temurin]
-        include:
-          - java: [21, 23]
-            jdk: [zulu, liberica]
-            os: [ubuntu-latest]
+        java: [17, 21, 23]
+        jdk: [temurin, liberica, zulu]
+        exclude:
+          - java: 17
+            jdk: liberica
+          - java: 17
+            jdk: zulu
       fail-fast: false
 
     runs-on: ${{ matrix.os }}
