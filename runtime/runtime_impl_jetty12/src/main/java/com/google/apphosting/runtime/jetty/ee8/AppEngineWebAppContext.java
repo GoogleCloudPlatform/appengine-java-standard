@@ -27,6 +27,7 @@ import com.google.apphosting.utils.servlet.JdbcMySqlConnectionCleanupFilter;
 import com.google.apphosting.utils.servlet.SessionCleanupServlet;
 import com.google.apphosting.utils.servlet.SnapshotServlet;
 import com.google.apphosting.utils.servlet.WarmupServlet;
+import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -86,6 +87,10 @@ public class AppEngineWebAppContext extends WebAppContext {
   private final String serverInfo;
   private final List<RequestListener> requestListeners = new CopyOnWriteArrayList<>();
   private final boolean ignoreContentLength;
+
+  private static final ImmutableSet<HolderTransformer> HOLDER_TRANSFORMERS = ImmutableSet.of(
+      new HolderTransformer("org.eclipse.jetty.servlets", "org.eclipse.jetty.ee8.servlets")
+  );
 
   @Override
   public boolean checkAlias(String path, Resource resource) {
@@ -384,9 +389,17 @@ public class AppEngineWebAppContext extends WebAppContext {
     private final List<ServletMapping> mappings = new ArrayList<>();
 
     TrimmedServlets(ServletHolder[] holders, ServletMapping[] mappings) {
-      for (ServletHolder servletHolder : holders) {
-        servletHolder.setAsyncSupported(APP_IS_ASYNC);
-        this.holders.put(servletHolder.getName(), servletHolder);
+      for (ServletHolder h : holders) {
+        for (HolderTransformer transformer : HOLDER_TRANSFORMERS) {
+          h = transformer.transform(h);
+        }
+
+        if (h == null) {
+          continue;
+        }
+
+        h.setAsyncSupported(APP_IS_ASYNC);
+        this.holders.put(h.getName(), h);
       }
       this.mappings.addAll(Arrays.asList(mappings));
     }
@@ -507,6 +520,14 @@ public class AppEngineWebAppContext extends WebAppContext {
 
     TrimmedFilters(FilterHolder[] holders, FilterMapping[] mappings) {
       for (FilterHolder h : holders) {
+        for (HolderTransformer transformer : HOLDER_TRANSFORMERS) {
+          h = transformer.transform(h);
+        }
+
+        if (h == null) {
+          continue;
+        }
+
         h.setAsyncSupported(APP_IS_ASYNC);
         this.holders.put(h.getName(), h);
       }
@@ -599,6 +620,41 @@ public class AppEngineWebAppContext extends WebAppContext {
         }
       }
       return trimmed.toArray(new FilterMapping[0]);
+    }
+  }
+
+  private static class HolderTransformer
+  {
+    private final String deprecated;
+    private final String replacement;
+
+    public HolderTransformer(String deprecated, String replacement) {
+      this.deprecated = deprecated;
+      this.replacement = replacement;
+    }
+
+    public ServletHolder transform(ServletHolder holder) {
+      if (replacement == null || holder == null) {
+        return null;
+      }
+
+      if (holder.getClassName().startsWith(deprecated)) {
+        holder.setClassName(holder.getClassName().replace(deprecated, replacement));
+      }
+
+      return holder;
+    }
+
+    public FilterHolder transform(FilterHolder holder) {
+      if (replacement == null || holder == null) {
+        return null;
+      }
+
+      if (holder.getClassName().startsWith(deprecated)) {
+        holder.setClassName(holder.getClassName().replace(deprecated, replacement));
+      }
+
+      return holder;
     }
   }
 }
