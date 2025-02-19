@@ -664,8 +664,9 @@ public class AppEngineWebAppContext extends WebAppContext {
         return null;
       }
 
-      if (holder.getClassName().startsWith(deprecated)) {
-        holder.setClassName(holder.getClassName().replace(deprecated, replacement));
+      String className = holder.getClassName();
+      if (className != null && className.startsWith(deprecated)) {
+        holder.setClassName(className.replace(deprecated, replacement));
       }
 
       return holder;
@@ -676,8 +677,9 @@ public class AppEngineWebAppContext extends WebAppContext {
         return null;
       }
 
-      if (holder.getClassName().startsWith(deprecated)) {
-        holder.setClassName(holder.getClassName().replace(deprecated, replacement));
+      String className = holder.getClassName();
+      if (className != null && className.startsWith(deprecated)) {
+        holder.setClassName(className.replace(deprecated, replacement));
       }
 
       return holder;
