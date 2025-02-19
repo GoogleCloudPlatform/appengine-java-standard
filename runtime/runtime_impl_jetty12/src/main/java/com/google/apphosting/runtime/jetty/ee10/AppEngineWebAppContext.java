@@ -659,26 +659,17 @@ public class AppEngineWebAppContext extends WebAppContext {
       this.replacement = replacement;
     }
 
-    public ServletHolder transform(ServletHolder holder) {
-      if (replacement == null || holder == null) {
+    public <T extends Holder<?>> T transform(T holder) {
+      if (holder == null) {
         return null;
       }
 
       String className = holder.getClassName();
       if (className != null && className.startsWith(deprecated)) {
-        holder.setClassName(className.replace(deprecated, replacement));
-      }
+        if (replacement == null) {
+          return null;
+        }
 
-      return holder;
-    }
-
-    public FilterHolder transform(FilterHolder holder) {
-      if (replacement == null || holder == null) {
-        return null;
-      }
-
-      String className = holder.getClassName();
-      if (className != null && className.startsWith(deprecated)) {
         holder.setClassName(className.replace(deprecated, replacement));
       }
 
