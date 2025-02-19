@@ -69,7 +69,7 @@ Source code for all public APIs for com.google.appengine.api.* packages.
         <dependency>
             <groupId>com.google.appengine</groupId>
             <artifactId>appengine-api-1.0-sdk</artifactId>
-            <version>2.0.32</version><!-- or later-->
+            <version>2.0.33</version><!-- or later-->
         </dependency>
         <dependency>
           <groupId>javax.servlet</groupId>
@@ -89,7 +89,7 @@ Source code for all public APIs for com.google.appengine.api.* packages.
         <dependency>
             <groupId>com.google.appengine</groupId>
             <artifactId>appengine-api-1.0-sdk</artifactId>
-            <version>2.0.32</version><!-- or later-->
+            <version>2.0.33</version><!-- or later-->
         </dependency>
         <dependency>
           <groupId>jakarta.servlet</groupId>
@@ -188,7 +188,7 @@ Source code for remote APIs for App Engine.
     <dependency>
        <groupId>com.google.appengine</groupId>
        <artifactId>appengine-remote-api</artifactId>
-       <version>2.0.32</version><!-- Or later-->
+       <version>2.0.33</version><!-- Or later-->
     </dependency>
 ```
 
@@ -211,7 +211,7 @@ We moved `com.google.appengine.api.memcache.stdimpl` and its old dependency
     <dependency>
        <groupId>com.google.appengine</groupId>
        <artifactId>appengine-api-legacy.jar/artifactId>
-       <version>2.0.32</version><!-- Or later-->
+       <version>2.0.33</version><!-- Or later-->
     </dependency>
 ```
 
@@ -226,19 +226,19 @@ We moved `com.google.appengine.api.memcache.stdimpl` and its old dependency
     <dependency>
       <groupId>com.google.appengine</groupId>
       <artifactId>appengine-testing</artifactId>
-       <version>2.0.32</version><!-- Or later-->
+       <version>2.0.33</version><!-- Or later-->
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>com.google.appengine</groupId>
       <artifactId>appengine-api-stubs</artifactId>
-       <version>2.0.32</version><!-- Or later-->
+       <version>2.0.33</version><!-- Or later-->
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>com.google.appengine</groupId>
       <artifactId>appengine-tools-sdk</artifactId>
-       <version>2.0.32</version><!-- Or later-->
+       <version>2.0.33</version><!-- Or later-->
       <scope>test</scope>
     </dependency>
 ```

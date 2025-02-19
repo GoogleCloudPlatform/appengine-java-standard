@@ -23,7 +23,7 @@
   <parent>
     <groupId>com.google.appengine</groupId>
     <artifactId>parent</artifactId>
-    <version>2.0.33-SNAPSHOT</version>
+    <version>2.0.34-SNAPSHOT</version>
   </parent>
   <name>AppEngine :: e2e tests</name>
   <packaging>pom</packaging>
