@@ -396,8 +396,11 @@ public class AppEngineWebAppContext extends WebAppContext {
         String className = h.getClassName();
         if (className != null)
         {
-          DEPRECATED_PACKAGE_NAMES.forEach((deprecated, replacement) ->
-                  h.setClassName(className.replace(deprecated, replacement)));
+          for (Map.Entry<String, String> entry : DEPRECATED_PACKAGE_NAMES.entrySet()) {
+            if (className.startsWith(entry.getKey())) {
+              h.setClassName(className.replace(entry.getKey(), entry.getValue()));
+            }
+          }
         }
 
         h.setAsyncSupported(APP_IS_ASYNC);
@@ -527,8 +530,11 @@ public class AppEngineWebAppContext extends WebAppContext {
         String className = h.getClassName();
         if (className != null)
         {
-          DEPRECATED_PACKAGE_NAMES.forEach((deprecated, replacement) ->
-                  h.setClassName(className.replace(deprecated, replacement)));
+          for (Map.Entry<String, String> entry : DEPRECATED_PACKAGE_NAMES.entrySet()) {
+            if (className.startsWith(entry.getKey())) {
+              h.setClassName(className.replace(entry.getKey(), entry.getValue()));
+            }
+          }
         }
 
         h.setAsyncSupported(APP_IS_ASYNC);
