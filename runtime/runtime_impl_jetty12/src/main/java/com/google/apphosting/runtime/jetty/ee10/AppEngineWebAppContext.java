@@ -28,7 +28,7 @@ import com.google.apphosting.utils.servlet.ee10.JdbcMySqlConnectionCleanupFilter
 import com.google.apphosting.utils.servlet.ee10.SessionCleanupServlet;
 import com.google.apphosting.utils.servlet.ee10.SnapshotServlet;
 import com.google.apphosting.utils.servlet.ee10.WarmupServlet;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableMap;
 import jakarta.servlet.DispatcherType;
 import jakarta.servlet.Filter;
 import jakarta.servlet.Servlet;
@@ -91,8 +91,9 @@ public class AppEngineWebAppContext extends WebAppContext {
   private final List<RequestListener> requestListeners = new CopyOnWriteArrayList<>();
   private final boolean ignoreContentLength;
 
-  private static final ImmutableSet<HolderTransformer> HOLDER_TRANSFORMERS = ImmutableSet.of(
-          new AppEngineWebAppContext.HolderTransformer("org.eclipse.jetty.servlets", "org.eclipse.jetty.ee10.servlets")
+  // Map of deprecated package names to their replacements.
+  private static final Map<String, String> DEPRECATED_PACKAGE_NAMES = ImmutableMap.of(
+          "org.eclipse.jetty.servlets", "org.eclipse.jetty.ee10.servlets"
   );
 
   @Override
@@ -416,12 +417,13 @@ public class AppEngineWebAppContext extends WebAppContext {
 
     TrimmedServlets(ServletHolder[] holders, ServletMapping[] mappings) {
       for (ServletHolder h : holders) {
-        for (HolderTransformer transformer : HOLDER_TRANSFORMERS) {
-          h = transformer.transform(h);
-        }
 
-        if (h == null) {
-          continue;
+        // Replace deprecated package names.
+        String className = h.getClassName();
+        if (className != null)
+        {
+          DEPRECATED_PACKAGE_NAMES.forEach((deprecated, replacement) ->
+                  h.setClassName(className.replace(deprecated, replacement)));
         }
 
         h.setAsyncSupported(APP_IS_ASYNC);
@@ -546,12 +548,13 @@ public class AppEngineWebAppContext extends WebAppContext {
 
     TrimmedFilters(FilterHolder[] holders, FilterMapping[] mappings) {
       for (FilterHolder h : holders) {
-        for (HolderTransformer transformer : HOLDER_TRANSFORMERS) {
-          h = transformer.transform(h);
-        }
 
-        if (h == null) {
-          continue;
+        // Replace deprecated package names.
+        String className = h.getClassName();
+        if (className != null)
+        {
+          DEPRECATED_PACKAGE_NAMES.forEach((deprecated, replacement) ->
+                  h.setClassName(className.replace(deprecated, replacement)));
         }
 
         h.setAsyncSupported(APP_IS_ASYNC);
@@ -646,34 +649,6 @@ public class AppEngineWebAppContext extends WebAppContext {
         }
       }
       return trimmed.toArray(new FilterMapping[0]);
-    }
-  }
-
-  private static class HolderTransformer
-  {
-    private final String deprecated;
-    private final String replacement;
-
-    public HolderTransformer(String deprecated, String replacement) {
-      this.deprecated = deprecated;
-      this.replacement = replacement;
-    }
-
-    public <T extends Holder<?>> T transform(T holder) {
-      if (holder == null) {
-        return null;
-      }
-
-      String className = holder.getClassName();
-      if (className != null && className.startsWith(deprecated)) {
-        if (replacement == null) {
-          return null;
-        }
-
-        holder.setClassName(className.replace(deprecated, replacement));
-      }
-
-      return holder;
     }
   }
 }
