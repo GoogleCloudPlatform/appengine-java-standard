@@ -28,6 +28,7 @@ import com.google.apphosting.utils.servlet.ee10.JdbcMySqlConnectionCleanupFilter
 import com.google.apphosting.utils.servlet.ee10.SessionCleanupServlet;
 import com.google.apphosting.utils.servlet.ee10.SnapshotServlet;
 import com.google.apphosting.utils.servlet.ee10.WarmupServlet;
+import com.google.common.collect.ImmutableMap;
 import jakarta.servlet.DispatcherType;
 import jakarta.servlet.Filter;
 import jakarta.servlet.Servlet;
@@ -89,6 +90,11 @@ public class AppEngineWebAppContext extends WebAppContext {
   private final String serverInfo;
   private final List<RequestListener> requestListeners = new CopyOnWriteArrayList<>();
   private final boolean ignoreContentLength;
+
+  // Map of deprecated package names to their replacements.
+  private static final Map<String, String> DEPRECATED_PACKAGE_NAMES = ImmutableMap.of(
+          "org.eclipse.jetty.servlets", "org.eclipse.jetty.ee10.servlets"
+  );
 
   @Override
   public boolean checkAlias(String path, Resource resource) {
@@ -410,9 +416,21 @@ public class AppEngineWebAppContext extends WebAppContext {
     private final List<ServletMapping> mappings = new ArrayList<>();
 
     TrimmedServlets(ServletHolder[] holders, ServletMapping[] mappings) {
-      for (ServletHolder servletHolder : holders) {
-        servletHolder.setAsyncSupported(APP_IS_ASYNC);
-        this.holders.put(servletHolder.getName(), servletHolder);
+      for (ServletHolder h : holders) {
+
+        // Replace deprecated package names.
+        String className = h.getClassName();
+        if (className != null)
+        {
+          for (Map.Entry<String, String> entry : DEPRECATED_PACKAGE_NAMES.entrySet()) {
+            if (className.startsWith(entry.getKey())) {
+              h.setClassName(className.replace(entry.getKey(), entry.getValue()));
+            }
+          }
+        }
+
+        h.setAsyncSupported(APP_IS_ASYNC);
+        this.holders.put(h.getName(), h);
       }
       this.mappings.addAll(Arrays.asList(mappings));
     }
@@ -533,6 +551,18 @@ public class AppEngineWebAppContext extends WebAppContext {
 
     TrimmedFilters(FilterHolder[] holders, FilterMapping[] mappings) {
       for (FilterHolder h : holders) {
+
+        // Replace deprecated package names.
+        String className = h.getClassName();
+        if (className != null)
+        {
+          for (Map.Entry<String, String> entry : DEPRECATED_PACKAGE_NAMES.entrySet()) {
+            if (className.startsWith(entry.getKey())) {
+              h.setClassName(className.replace(entry.getKey(), entry.getValue()));
+            }
+          }
+        }
+
         h.setAsyncSupported(APP_IS_ASYNC);
         this.holders.put(h.getName(), h);
       }
