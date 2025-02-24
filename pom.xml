@@ -460,7 +460,7 @@
       <dependency>
         <groupId>com.google.http-client</groupId>
         <artifactId>google-http-client</artifactId>
-        <version>1.46.1</version>
+        <version>1.46.2</version>
       </dependency>
       <dependency>
         <groupId>com.google.http-client</groupId>
@@ -471,7 +471,7 @@
       <dependency>
         <groupId>com.google.oauth-client</groupId>
         <artifactId>google-oauth-client</artifactId>
-        <version>1.37.0</version>
+        <version>1.38.0</version>
       </dependency>
       <dependency>
         <groupId>com.google.protobuf</groupId>
@@ -591,12 +591,12 @@
       <dependency>
         <groupId>com.google.http-client</groupId>
         <artifactId>google-http-client-appengine</artifactId>
-        <version>1.46.1</version>
+        <version>1.46.2</version>
       </dependency>
       <dependency>
         <groupId>com.google.oauth-client</groupId>
         <artifactId>google-oauth-client-java6</artifactId>
-        <version>1.37.0</version>
+        <version>1.38.0</version>
       </dependency>
       <dependency>
         <groupId>io.grpc</groupId>
@@ -726,7 +726,7 @@
       <dependency>
         <groupId>com.google.cloud</groupId>
         <artifactId>google-cloud-logging</artifactId>
-        <version>3.21.2</version>
+        <version>3.21.3</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
@@ -803,7 +803,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-compiler-plugin</artifactId>
-          <version>3.13.0</version>
+          <version>3.14.0</version>
         </plugin>
         <plugin>
          <groupId>org.apache.maven.plugins</groupId>
