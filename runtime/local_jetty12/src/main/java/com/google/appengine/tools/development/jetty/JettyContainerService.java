@@ -647,7 +647,6 @@ public class JettyContainerService extends AbstractContainerService implements C
                 Semaphore semaphore =
                     (Semaphore) env.getAttributes().get(LocalEnvironment.API_CALL_SEMAPHORE);
                 try {
-                  System.err.println("=========== acquire semaphore ===========");
                   semaphore.acquire(MAX_SIMULTANEOUS_API_CALLS);
                 } catch (InterruptedException ex) {
                   Thread.currentThread().interrupt();
