@@ -28,6 +28,7 @@ import com.google.apphosting.utils.servlet.SessionCleanupServlet;
 import com.google.apphosting.utils.servlet.SnapshotServlet;
 import com.google.apphosting.utils.servlet.WarmupServlet;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.flogger.GoogleLogger;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -51,6 +52,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.eclipse.jetty.ee8.nested.ServletConstraint;
 import org.eclipse.jetty.ee8.security.ConstraintMapping;
 import org.eclipse.jetty.ee8.security.ConstraintSecurityHandler;
+import org.eclipse.jetty.ee8.security.SecurityHandler;
 import org.eclipse.jetty.ee8.servlet.FilterHolder;
 import org.eclipse.jetty.ee8.servlet.FilterMapping;
 import org.eclipse.jetty.ee8.servlet.ListenerHolder;
@@ -58,6 +60,7 @@ import org.eclipse.jetty.ee8.servlet.ServletHandler;
 import org.eclipse.jetty.ee8.servlet.ServletHolder;
 import org.eclipse.jetty.ee8.servlet.ServletMapping;
 import org.eclipse.jetty.ee8.webapp.WebAppContext;
+import org.eclipse.jetty.http.pathmap.PathSpec;
 import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.util.resource.ResourceFactory;
 
@@ -70,6 +73,7 @@ import org.eclipse.jetty.util.resource.ResourceFactory;
 // will allow to enable Servlet Async capabilities later, controlled programmatically instead of
 // declaratively in webdefault.xml.
 public class AppEngineWebAppContext extends WebAppContext {
+  private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
 
   // TODO: This should be some sort of Prometheus-wide
   // constant.  If it's much larger than this we may need to
@@ -149,6 +153,24 @@ public class AppEngineWebAppContext extends WebAppContext {
 
     insertHandler(new ParseBlobUploadHandler());
     ignoreContentLength = isAppIdForNonContentLength();
+  }
+
+  @Override
+  protected SecurityHandler newSecurityHandler() {
+    return new ConstraintSecurityHandler() {
+      @Override
+      protected PathSpec asPathSpec(ConstraintMapping mapping) {
+        try {
+          // As currently written, this allows regex patterns to be used.
+          // This may not be supported by default in future releases.
+          return PathSpec.from(mapping.getPathSpec());
+        } catch (Throwable t) {
+          logger.atWarning().log(
+              "Invalid pathSpec '%s', using literal mapping instead", mapping.getPathSpec());
+          return new LiteralPathSpec(mapping.getPathSpec());
+        }
+      }
+    };
   }
 
   @Override
