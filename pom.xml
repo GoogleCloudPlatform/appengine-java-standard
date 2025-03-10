@@ -66,7 +66,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <jetty.version>9.4.57.v20241219</jetty.version>
     <jetty12.version>12.0.17</jetty12.version>
-    <io.grpc>1.70.0</io.grpc>
+    <io.grpc>1.71.0</io.grpc>
     <io.netty>4.1.119.Final</io.netty>
     <slf4j.version>2.0.17</slf4j.version>
     <distributionManagement.snapshot.url>https://oss.sonatype.org/content/repositories/google-snapshots/</distributionManagement.snapshot.url>
@@ -471,7 +471,7 @@
       <dependency>
         <groupId>com.google.oauth-client</groupId>
         <artifactId>google-oauth-client</artifactId>
-        <version>1.38.0</version>
+        <version>1.39.0</version>
       </dependency>
       <dependency>
         <groupId>com.google.protobuf</groupId>
@@ -537,7 +537,7 @@
       <dependency>
         <groupId>org.checkerframework</groupId>
         <artifactId>checker-qual</artifactId>
-        <version>3.49.0</version>
+        <version>3.49.1</version>
         <scope>provided</scope>
       </dependency>
       <dependency>
@@ -571,7 +571,7 @@
       <dependency>
         <groupId>org.jsoup</groupId>
         <artifactId>jsoup</artifactId>
-        <version>1.18.3</version>
+        <version>1.19.1</version>
       </dependency>
       <dependency>
         <groupId>org.apache.lucene</groupId>
@@ -596,7 +596,7 @@
       <dependency>
         <groupId>com.google.oauth-client</groupId>
         <artifactId>google-oauth-client-java6</artifactId>
-        <version>1.38.0</version>
+        <version>1.39.0</version>
       </dependency>
       <dependency>
         <groupId>io.grpc</groupId>
@@ -713,7 +713,7 @@
        <dependency>
         <groupId>org.mockito</groupId>
         <artifactId>mockito-bom</artifactId>
-        <version>5.15.2</version>
+        <version>5.16.0</version>
         <scope>import</scope>
         <type>pom</type>
       </dependency>
