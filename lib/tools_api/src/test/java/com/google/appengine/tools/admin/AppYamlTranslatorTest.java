@@ -2775,8 +2775,9 @@ public class AppYamlTranslatorTest extends TestCase {
             + "  login: optional\n"
             + "  secure: optional\n"
             + "  http_headers:\n"
-            + "    foo: 1\n"
-            + "    bar: barf\n"
+            // Yaml library emitting headers is OS dependent so eol is different on Windows.
+            + "    foo: 1" +  System.getProperty("line.separator")
+            + "    bar: barf" +  System.getProperty("line.separator")
             + "- url: /\n"
             + "  script: unused\n"
             + "  login: optional\n"
@@ -2790,7 +2791,7 @@ public class AppYamlTranslatorTest extends TestCase {
             + "  login: optional\n"
             + "  secure: optional\n";
     assertEquals(yaml, translator.getYaml());
-    
+
   }
 
   public void testBackends() {

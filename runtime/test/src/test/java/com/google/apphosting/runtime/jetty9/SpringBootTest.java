@@ -39,7 +39,10 @@ public final class SpringBootTest extends JavaRuntimeViaHttpBase {
     File currentDirectory = new File("").getAbsoluteFile();
     Process process =
         new ProcessBuilder(
-                "../../mvnw",
+                "../../mvnw"
+                    + ((System.getProperty("os.name").toLowerCase().contains("windows"))
+                        ? ".cmd" // Windows OS
+                        : ""), // Linux OS, no extension for command name.
                 "install",
                 "appengine:stage",
                 "-f",

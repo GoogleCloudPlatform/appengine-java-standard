@@ -117,9 +117,16 @@ public class GzipHandlerTest extends JavaRuntimeViaHttpBase {
     Result response = completionListener.get(5, TimeUnit.SECONDS);
     assertThat(response.getResponse().getStatus(), equalTo(HttpStatus.OK_200));
     String contentReceived = received.toString();
-    assertThat(contentReceived, containsString("\nX-Content-Encoding: gzip\n"));
-    assertThat(contentReceived, not(containsString("\nContent-Encoding: gzip\n")));
-    assertThat(contentReceived, containsString("\nAccept-Encoding: gzip\n"));
+    if (!System.getProperty("os.name").toLowerCase().contains("windows")) {
+      // Linux
+      assertThat(contentReceived, containsString("\nX-Content-Encoding: gzip\n"));
+      assertThat(contentReceived, not(containsString("\nContent-Encoding: gzip\n")));
+      assertThat(contentReceived, containsString("\nAccept-Encoding: gzip\n"));
+    } else { // Windows
+      assertThat(contentReceived, containsString("\r\nX-Content-Encoding: gzip\r\n"));
+      assertThat(contentReceived, not(containsString("\r\nContent-Encoding: gzip\r\n")));
+      assertThat(contentReceived, containsString("\r\nAccept-Encoding: gzip\r\n"));
+    }
 
     // Server correctly echoed content of request.
     String expectedData = new String(data);
