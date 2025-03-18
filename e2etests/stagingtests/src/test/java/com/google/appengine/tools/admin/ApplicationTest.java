@@ -141,7 +141,9 @@ public class ApplicationTest {
       getWarPath("stage-with-appid-and-version");
   private static final String STAGE_WITH_STAGING_OPTIONS = getWarPath("stage-with-staging-options");
 
-  private static final int RANDOM_HTML_SIZE = 704;
+  // Size is different on Windows because of the extra \r\n characters in the HTML.
+  private static final int RANDOM_HTML_SIZE =
+      ((System.getProperty("os.name").toLowerCase().contains("windows")) ? 727 : 704);
   private static final String APPID = "sampleapp";
   private static final String MODULE_ID = "stan";
   private static final String APPVER = "1";

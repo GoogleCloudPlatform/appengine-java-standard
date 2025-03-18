@@ -64,8 +64,8 @@ public final class ClassPathUtilsTest {
     }
     assertThat(System.getProperty("classpath.connector-j")).isNull();
 
-    assertThat(cpu.getFrozenApiJar().getAbsolutePath())
-        .isEqualTo(runtimeLocation + "/appengine-api-1.0-sdk.jar");
+    assertThat(cpu.getFrozenApiJar().getCanonicalPath())
+        .isEqualTo(new File(runtimeLocation + "/appengine-api-1.0-sdk.jar").getCanonicalPath());
   }
 
   @Test
