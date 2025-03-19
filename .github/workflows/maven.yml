@@ -39,8 +39,6 @@ jobs:
           - java: 17
             jdk: zulu
           - java: 24
-            jdk: liberica
-          - java: 24
             jdk: temurin
       fail-fast: false
 
