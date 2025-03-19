@@ -41,7 +41,7 @@ jobs:
           - java: 24
             jdk: liberica
           - java: 24
-            jdk: zulu
+            jdk: temurin
       fail-fast: false
 
     runs-on: ${{ matrix.os }}
