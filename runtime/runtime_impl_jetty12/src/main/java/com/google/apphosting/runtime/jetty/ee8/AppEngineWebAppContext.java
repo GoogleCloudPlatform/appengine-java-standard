@@ -95,7 +95,8 @@ public class AppEngineWebAppContext extends WebAppContext {
   // Map of deprecated package names to their replacements.
   private static final Map<String, String> DEPRECATED_PACKAGE_NAMES = ImmutableMap.of(
           "org.eclipse.jetty.servlets", "org.eclipse.jetty.ee8.servlets",
-          "org.eclipse.jetty.servlet", "org.eclipse.jetty.ee8.servlet"
+          "org.eclipse.jetty.servlet", "org.eclipse.jetty.ee8.servlet",
+          "com.google.apphosting.runtime.jetty9", "com.google.apphosting.runtime.jetty.ee8"
   );
 
   @Override
