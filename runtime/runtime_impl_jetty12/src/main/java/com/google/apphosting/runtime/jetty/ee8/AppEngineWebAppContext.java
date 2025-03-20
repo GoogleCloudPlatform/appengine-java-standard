@@ -96,7 +96,9 @@ public class AppEngineWebAppContext extends WebAppContext {
   private static final Map<String, String> DEPRECATED_PACKAGE_NAMES = ImmutableMap.of(
           "org.eclipse.jetty.servlets", "org.eclipse.jetty.ee8.servlets",
           "org.eclipse.jetty.servlet", "org.eclipse.jetty.ee8.servlet",
-          "com.google.apphosting.runtime.jetty9", "com.google.apphosting.runtime.jetty.ee8"
+          "com.google.apphosting.runtime.jetty9.NamedDefaultServlet", "com.google.apphosting.runtime.jetty.ee8.NamedDefaultServlet",
+          "com.google.apphosting.runtime.jetty9.NamedJspServlet", "com.google.apphosting.runtime.jetty.ee8.NamedJspServlet",
+          "com.google.apphosting.runtime.jetty9.ResourceFileServlet", "com.google.apphosting.runtime.jetty.ee8.ResourceFileServlet"
   );
 
   @Override
