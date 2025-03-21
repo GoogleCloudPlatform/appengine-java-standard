@@ -16,7 +16,7 @@
 
 package com.google.appengine.api.appidentity;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * {@link AppIdentityServiceFailureException} is thrown when any unknown error occurs while

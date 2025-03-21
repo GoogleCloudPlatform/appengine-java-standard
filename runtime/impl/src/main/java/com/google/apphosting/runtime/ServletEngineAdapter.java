@@ -20,7 +20,7 @@ import com.google.apphosting.runtime.anyrpc.EvaluationRuntimeServerInterface;
 import com.google.auto.value.AutoValue;
 import com.google.common.net.HostAndPort;
 import java.io.FileNotFoundException;
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * This interface abstracts away the details of starting up and

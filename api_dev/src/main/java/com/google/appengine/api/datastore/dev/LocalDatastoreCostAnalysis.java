@@ -35,7 +35,7 @@ import com.google.storage.onestore.v3.OnestoreEntity.Property;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Set;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Utility class that can calculate the cost of writing (put or delete) a given {@link Entity}.

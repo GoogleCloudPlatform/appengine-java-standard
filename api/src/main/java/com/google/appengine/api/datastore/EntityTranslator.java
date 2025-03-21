@@ -22,7 +22,7 @@ import com.google.storage.onestore.v3.OnestoreEntity.Path;
 import com.google.storage.onestore.v3.OnestoreEntity.Reference;
 import java.util.Collection;
 import java.util.Map;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * {@code EntityTranslator} contains the logic to translate an {@code Entity} into the protocol

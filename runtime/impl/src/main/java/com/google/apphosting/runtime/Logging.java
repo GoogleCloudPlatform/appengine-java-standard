@@ -16,7 +16,7 @@
 
 package com.google.apphosting.runtime;
 
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;

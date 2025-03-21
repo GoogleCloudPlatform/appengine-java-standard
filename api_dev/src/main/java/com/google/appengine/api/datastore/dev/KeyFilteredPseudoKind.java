@@ -30,7 +30,7 @@ import com.google.apphosting.datastore.DatastoreV3Pb.Query.Order;
 import com.google.storage.onestore.v3.OnestoreEntity.EntityProto;
 import com.google.storage.onestore.v3.OnestoreEntity.Reference;
 import java.util.List;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Generic pseudo-kind for pseudo-kinds that only understand filtering on __key__ and ordering by

@@ -21,7 +21,7 @@ import com.google.apphosting.base.protos.RuntimePb;
 import com.google.apphosting.base.protos.TracePb;
 import com.google.common.base.Ascii;
 import java.util.stream.Stream;
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 
 public class UpRequestAPIData implements RequestAPIData {
 

@@ -18,7 +18,7 @@ package com.google.appengine.api.datastore;
 
 import com.google.appengine.api.datastore.CloudDatastoreRemoteServiceConfig.AppId.Location;
 import com.google.common.collect.ImmutableBiMap;
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 
 class LocationMapper {
 

@@ -35,7 +35,7 @@ import java.util.List;
 import java.util.concurrent.Future;
 import java.util.logging.Logger;
 import javax.net.ssl.SSLHandshakeException;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 class URLFetchServiceImpl implements URLFetchService {
   static final String PACKAGE = "urlfetch";

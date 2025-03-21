@@ -28,7 +28,7 @@ import java.io.PrintStream;
 import java.util.logging.Formatter;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /** A log handler that publishes log messages in a json format. */
 public final class JsonLogHandler extends LogHandler {

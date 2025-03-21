@@ -25,7 +25,7 @@ import com.google.apphosting.datastore.DatastoreV3Pb.DatastoreService_3;
 import com.google.io.protocol.ProtocolMessage;
 import com.google.protobuf.MessageLite;
 import java.util.concurrent.Future;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Implementation of the V3-specific logic to handle a {@link Transaction}.

@@ -18,7 +18,7 @@ package com.google.appengine.api.images;
 
 import com.google.appengine.api.blobstore.BlobKey;
 import java.io.Serializable;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * {@code Image} represents an image that can be manipulated by the

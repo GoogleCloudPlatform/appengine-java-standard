@@ -18,7 +18,7 @@ package com.google.appengine.api.datastore;
 
 import static java.util.Objects.requireNonNull;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Utility functions and constants for entities.

@@ -22,7 +22,7 @@ import com.google.common.base.Preconditions;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.Collection;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * User-configurable properties of the datastore.

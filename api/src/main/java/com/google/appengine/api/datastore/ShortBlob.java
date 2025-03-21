@@ -18,7 +18,7 @@ package com.google.appengine.api.datastore;
 
 import java.io.Serializable;
 import java.util.Arrays;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * {@code ShortBlob} contains an array of bytes no longer than {@link

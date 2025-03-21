@@ -20,7 +20,7 @@ import com.google.appengine.api.datastore.Key;
 import com.google.apphosting.datastore.DatastoreV3Pb.Cost;
 import com.google.storage.onestore.v3.OnestoreEntity.EntityProto;
 import com.google.storage.onestore.v3.OnestoreEntity.Reference;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Represents a job in the local datastore, which is a unit of transactional work to be performed

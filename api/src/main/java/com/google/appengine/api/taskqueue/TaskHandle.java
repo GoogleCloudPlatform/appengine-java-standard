@@ -24,7 +24,7 @@ import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Created from {@link Queue#add(TaskOptions)}. Contains the task name (generated if otherwise

@@ -18,7 +18,7 @@ package com.google.appengine.api.datastore;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Describes options for transactions, passed at transaction creation time.

@@ -39,7 +39,7 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.logging.Handler;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Implementation of local log service.

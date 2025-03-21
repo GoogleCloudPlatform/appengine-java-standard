@@ -19,7 +19,7 @@ package com.google.apphosting.base;
 import com.google.auto.value.AutoValue;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * A parsed Version Id.

@@ -28,7 +28,7 @@ import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.util.Map;
 import java.util.Objects;
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /** Builds AppinfoPb.AppInfo from the given ServletEngineAdapter.Config and environment. */
 public class AppInfoFactory {

@@ -22,7 +22,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Iterables;
 import java.util.Arrays;
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;

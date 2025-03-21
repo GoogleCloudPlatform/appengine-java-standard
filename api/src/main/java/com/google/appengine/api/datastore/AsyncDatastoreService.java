@@ -19,7 +19,7 @@ package com.google.appengine.api.datastore;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Future;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * An asynchronous version of {@link DatastoreService}. All methods return immediately and provide

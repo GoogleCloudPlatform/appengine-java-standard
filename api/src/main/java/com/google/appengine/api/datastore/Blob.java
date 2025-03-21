@@ -18,7 +18,7 @@ package com.google.appengine.api.datastore;
 
 import java.io.Serializable;
 import java.util.Arrays;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * {@code Blob} contains an array of bytes. This byte array can be no bigger than 1MB. To store

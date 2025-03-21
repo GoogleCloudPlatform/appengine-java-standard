@@ -16,7 +16,7 @@
 
 package com.google.appengine.api.search.checkers;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Simple static methods to be called at the start of your own methods to verify correct arguments

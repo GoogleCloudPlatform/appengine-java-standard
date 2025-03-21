@@ -18,7 +18,7 @@ package com.google.appengine.api.blobstore;
 
 import com.google.common.base.Objects;
 import java.util.Date;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * {@code FileInfo} contains metadata about an uploaded file. This metadata is

@@ -20,7 +20,7 @@ import com.google.appengine.api.datastore.Transaction;
 import java.util.List;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * {@link Queue} is used to manage a task queue.

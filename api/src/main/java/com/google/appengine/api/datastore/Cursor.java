@@ -26,7 +26,7 @@ import com.google.common.io.ByteStreams;
 import com.google.protobuf.ByteString;
 import java.io.IOException;
 import java.io.Serializable;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * A cursor that represents a position in a query.

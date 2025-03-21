@@ -25,7 +25,7 @@ import java.io.File;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Checker for reporting differences between environment variables specified

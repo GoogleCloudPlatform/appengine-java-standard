@@ -31,7 +31,7 @@ import com.google.storage.onestore.v3.OnestoreEntity.PropertyValue.ReferenceValu
 import com.google.storage.onestore.v3.OnestoreEntity.Reference;
 import java.util.HashSet;
 import java.util.Set;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /** Wrapper around {@link Query} that performs validation. */
 class ValidatedQuery extends NormalizedQuery {

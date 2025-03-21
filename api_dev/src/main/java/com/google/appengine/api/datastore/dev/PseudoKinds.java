@@ -27,7 +27,7 @@ import com.google.storage.onestore.v3.OnestoreEntity.Reference;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Container for all known pseudo-kinds.

@@ -28,7 +28,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /** Base class for Entity comparators. */
 abstract class BaseEntityComparator<EntityT> implements Comparator<EntityT> {

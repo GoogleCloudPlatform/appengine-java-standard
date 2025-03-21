@@ -18,7 +18,7 @@ package com.google.appengine.tools.remoteapi;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Base implementation for Remote API clients.

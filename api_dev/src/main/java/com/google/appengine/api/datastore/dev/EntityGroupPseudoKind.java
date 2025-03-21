@@ -29,7 +29,7 @@ import com.google.storage.onestore.v3.OnestoreEntity.Path;
 import com.google.storage.onestore.v3.OnestoreEntity.PropertyValue;
 import com.google.storage.onestore.v3.OnestoreEntity.Reference;
 import java.util.List;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Pseudo-kind that returns metadata about an entity group.

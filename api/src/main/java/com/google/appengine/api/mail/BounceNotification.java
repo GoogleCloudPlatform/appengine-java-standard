@@ -17,7 +17,7 @@
 package com.google.appengine.api.mail;
 
 import javax.mail.internet.MimeMessage;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * The {@code BounceNotification} object represents an incoming bounce

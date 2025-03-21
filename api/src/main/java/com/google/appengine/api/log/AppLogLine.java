@@ -19,7 +19,7 @@ package com.google.appengine.api.log;
 import com.google.appengine.api.log.LogService.LogLevel;
 import java.io.Serializable;
 import java.util.Objects;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * An AppLogLine contains all the information for a single application

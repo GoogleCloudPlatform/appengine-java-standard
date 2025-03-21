@@ -17,7 +17,7 @@
 package com.google.appengine.api.datastore;
 
 import java.util.Arrays;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Concrete {@link CallbackContext} implementation that is specific to intercepted queries. Methods

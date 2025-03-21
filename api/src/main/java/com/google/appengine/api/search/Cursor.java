@@ -20,7 +20,7 @@ import com.google.appengine.api.search.checkers.CursorChecker;
 import com.google.appengine.api.search.proto.SearchServicePb.SearchParams;
 import com.google.common.base.Preconditions;
 import java.io.Serializable;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Represents a cursor on the set of results found for executing a {@link Query}

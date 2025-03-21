@@ -17,7 +17,7 @@
 package com.google.appengine.api.blobstore;
 
 import java.util.Objects;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Allows users to customize the behavior of a single upload to the

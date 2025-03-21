@@ -20,7 +20,7 @@ import static com.google.appengine.api.images.ImagesService.SERVING_SIZES_LIMIT;
 
 import com.google.appengine.api.blobstore.BlobKey;
 import java.util.Objects;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Allow users to customize the behavior of creating a image serving URL using

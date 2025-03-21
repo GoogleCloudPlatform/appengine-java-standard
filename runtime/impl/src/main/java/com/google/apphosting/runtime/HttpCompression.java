@@ -26,7 +26,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
 import java.util.zip.GZIPOutputStream;
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * A class in charge of compressing request responses at the HTTP protocol buffer level.

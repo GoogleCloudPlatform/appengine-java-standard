@@ -447,7 +447,7 @@
                                     <include>io.perfmark:perfmark-api</include>
                                     <include>javax.annotation:javax.annotation-api</include>
                                     <include>joda-time:joda-time</include>
-                                    <include>org.checkerframework:checker-compat-qual</include>
+                                    <include>org.jspecify:jspecify</include>
                                     <include>org.codehaus.mojo:animal-sniffer-annotations</include>
                                     <include>org.eclipse.jetty:jetty-annotations</include>
                                     <include>org.eclipse.jetty:jetty-client</include>

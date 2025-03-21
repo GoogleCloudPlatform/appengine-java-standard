@@ -18,7 +18,7 @@ package com.google.appengine.tools.remoteapi;
 
 import com.google.apphosting.api.ApiProxy.Delegate;
 import com.google.apphosting.api.ApiProxy.Environment;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Handles App Engine API calls by making HTTP requests to a remote server.

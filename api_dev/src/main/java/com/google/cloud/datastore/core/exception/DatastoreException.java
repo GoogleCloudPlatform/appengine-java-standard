@@ -21,7 +21,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.apphosting.datastore.DatastoreV3Pb.Error.ErrorCode;
 import com.google.cloud.datastore.logs.ProblemCode;
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 
 // TODO: This class is used outside Datastore.
 // Those uses should probably instead use some sort of client variant.

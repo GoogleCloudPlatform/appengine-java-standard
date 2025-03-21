@@ -32,7 +32,7 @@ import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Stream;
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * {@code AppVersion} encapsulates the configuration information

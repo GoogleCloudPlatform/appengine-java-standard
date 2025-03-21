@@ -139,7 +139,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * A local implementation of the Datastore.
@@ -639,8 +639,8 @@ public abstract class LocalDatastoreService {
                 removeStaleQueries(clock.getCurrentTime());
               }
             },
-            maxQueryLifetimeMs * 5,
-            maxQueryLifetimeMs * 5,
+            maxQueryLifetimeMs * 5L,
+            maxQueryLifetimeMs * 5L,
             TimeUnit.MILLISECONDS));
 
     scheduledTasks.add(
@@ -651,8 +651,8 @@ public abstract class LocalDatastoreService {
                 removeStaleTransactions(clock.getCurrentTime());
               }
             },
-            maxTransactionLifetimeMs * 5,
-            maxTransactionLifetimeMs * 5,
+            maxTransactionLifetimeMs * 5L,
+            maxTransactionLifetimeMs * 5L,
             TimeUnit.MILLISECONDS));
 
     if (!noStorage) {
@@ -3236,7 +3236,7 @@ public abstract class LocalDatastoreService {
    * @return The number of queries removed.
    */
   int expireOutstandingQueries() {
-    return removeStaleQueries(maxQueryLifetimeMs * 2 + clock.getCurrentTime());
+    return removeStaleQueries(maxQueryLifetimeMs * 2L + clock.getCurrentTime());
   }
 
   /**
@@ -3265,7 +3265,7 @@ public abstract class LocalDatastoreService {
    * @return The number of transactions removed.
    */
   int expireOutstandingTransactions() {
-    return removeStaleTransactions(maxTransactionLifetimeMs * 2 + clock.getCurrentTime());
+    return removeStaleTransactions(maxTransactionLifetimeMs * 2L + clock.getCurrentTime());
   }
 
   /**

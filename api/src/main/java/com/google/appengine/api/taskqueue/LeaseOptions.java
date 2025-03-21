@@ -18,7 +18,7 @@ package com.google.appengine.api.taskqueue;
 
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Contains various options for lease requests following the builder pattern. Calls to {@link

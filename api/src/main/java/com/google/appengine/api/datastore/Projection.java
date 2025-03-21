@@ -18,7 +18,7 @@ package com.google.appengine.api.datastore;
 
 import java.io.Serializable;
 import java.util.Map;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * A query projection.

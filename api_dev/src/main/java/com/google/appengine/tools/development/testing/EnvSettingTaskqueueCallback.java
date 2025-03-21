@@ -22,7 +22,7 @@ import com.google.appengine.tools.development.ApiProxyLocal;
 import com.google.apphosting.api.ApiProxy;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * An implementation of {@code LocalTaskQueueCallback} that wraps a delegate and invokes {@link
