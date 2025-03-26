@@ -17,7 +17,7 @@
 package com.google.appengine.api.datastore;
 
 import java.io.Serializable;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /** A user-provided integer rating for a piece of content. Normalized to a 0-100 scale. */
 // TODO: Make the file GWT-compatible (the method

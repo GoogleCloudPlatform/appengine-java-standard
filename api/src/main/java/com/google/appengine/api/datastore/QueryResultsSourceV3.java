@@ -31,7 +31,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Future;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * V3 service specific code for iterating query results and requesting more results. Instances can

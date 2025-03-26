@@ -23,7 +23,7 @@ import java.util.Set;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Logger;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Concrete implementation of QueryResultsSource which knows how to make callbacks back into the

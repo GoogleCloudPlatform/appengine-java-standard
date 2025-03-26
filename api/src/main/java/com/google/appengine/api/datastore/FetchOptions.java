@@ -19,7 +19,7 @@ package com.google.appengine.api.datastore;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Describes the limit, offset, and chunk size to be applied when executing a {@link PreparedQuery}.

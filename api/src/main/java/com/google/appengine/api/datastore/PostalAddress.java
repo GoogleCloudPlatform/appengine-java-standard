@@ -17,7 +17,7 @@
 package com.google.appengine.api.datastore;
 
 import java.io.Serializable;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * A human-readable mailing address. Mailing address formats vary widely so no validation is

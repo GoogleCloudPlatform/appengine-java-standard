@@ -16,7 +16,7 @@
 
 package com.google.appengine.api.datastore;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Helper class used to encapsulate the result of a call to {@link

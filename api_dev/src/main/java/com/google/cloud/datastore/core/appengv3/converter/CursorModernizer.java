@@ -27,7 +27,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.storage.onestore.v3.OnestoreEntity.IndexPosition;
 import com.google.storage.onestore.v3.OnestoreEntity.IndexPostfix;
 import com.google.storage.onestore.v3.OnestoreEntity.IndexPostfix_IndexValue;
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /** Utility methods for compiled cursors. */
 public class CursorModernizer {
@@ -60,8 +60,7 @@ public class CursorModernizer {
    * Returns the first sort direction from a query or {@code null} if the query does not specify any
    * orders.
    */
-  @Nullable
-  public static DatastoreV3Pb.Query.Order.Direction firstSortDirection(
+  public static DatastoreV3Pb.Query.Order.@Nullable Direction firstSortDirection(
       DatastoreV3Pb.Query originalQuery) {
     return originalQuery.orderSize() == 0 ? null : originalQuery.getOrder(0).getDirectionEnum();
   }
@@ -97,7 +96,7 @@ public class CursorModernizer {
   }
 
   public static void modernizeCursor(
-      CompiledCursor cursor, @Nullable DatastoreV3Pb.Query.Order.Direction firstSortDirection)
+      CompiledCursor cursor, DatastoreV3Pb.Query.Order.@Nullable Direction firstSortDirection)
       throws InvalidConversionException {
     // First, convert any contents of the position field.
     if (cursor.hasPosition()) {
@@ -165,7 +164,7 @@ public class CursorModernizer {
    */
   @VisibleForTesting
   static void setBefore(
-      IndexPosition position, @Nullable DatastoreV3Pb.Query.Order.Direction firstSortDirection) {
+      IndexPosition position, DatastoreV3Pb.Query.Order.@Nullable Direction firstSortDirection) {
     position.setBefore(computeBefore(position.isBeforeAscending(), firstSortDirection));
   }
 
@@ -177,7 +176,7 @@ public class CursorModernizer {
    */
   @VisibleForTesting
   static void setBefore(
-      IndexPostfix position, @Nullable DatastoreV3Pb.Query.Order.Direction firstSortDirection) {
+      IndexPostfix position, DatastoreV3Pb.Query.Order.@Nullable Direction firstSortDirection) {
     position.setBefore(computeBefore(position.isBeforeAscending(), firstSortDirection));
   }
 
@@ -189,7 +188,7 @@ public class CursorModernizer {
    */
   @VisibleForTesting
   static void setBeforeAscending(
-      IndexPosition position, @Nullable DatastoreV3Pb.Query.Order.Direction firstSortDirection) {
+      IndexPosition position, DatastoreV3Pb.Query.Order.@Nullable Direction firstSortDirection) {
     position.setBeforeAscending(computeBeforeAscending(position.isBefore(), firstSortDirection));
   }
 
@@ -203,19 +202,19 @@ public class CursorModernizer {
   // Please check that removing it is correct, and remove this comment along with it.
   // @VisibleForTesting
   public static void setBeforeAscending(
-      IndexPostfix position, @Nullable DatastoreV3Pb.Query.Order.Direction firstSortDirection) {
+      IndexPostfix position, DatastoreV3Pb.Query.Order.@Nullable Direction firstSortDirection) {
     position.setBeforeAscending(computeBeforeAscending(position.isBefore(), firstSortDirection));
   }
 
   private static boolean computeBefore(
-      boolean isBeforeAscending, @Nullable DatastoreV3Pb.Query.Order.Direction firstSortDirection) {
+      boolean isBeforeAscending, DatastoreV3Pb.Query.Order.@Nullable Direction firstSortDirection) {
     // If no sort order was specified, the default is ASCENDING (by key).
     return isBeforeAscending
         ^ (firstSortDirection == DatastoreV3Pb.Query.Order.Direction.DESCENDING);
   }
 
   private static boolean computeBeforeAscending(
-      boolean isBefore, @Nullable DatastoreV3Pb.Query.Order.Direction firstSortDirection) {
+      boolean isBefore, DatastoreV3Pb.Query.Order.@Nullable Direction firstSortDirection) {
     // If no sort order was specified, the default is ASCENDING (by key).
     return isBefore ^ (firstSortDirection == DatastoreV3Pb.Query.Order.Direction.DESCENDING);
   }

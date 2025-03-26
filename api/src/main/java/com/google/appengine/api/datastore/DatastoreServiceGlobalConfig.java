@@ -40,7 +40,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /** See {@link CloudDatastoreRemoteServiceConfig}. */
 // TODO(b/64163395): consider merging with CloudDatastoreRemoteServiceConfig

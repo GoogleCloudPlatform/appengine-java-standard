@@ -16,7 +16,7 @@
 
 package com.google.apphosting.runtime;
 
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Http Sessions config options.

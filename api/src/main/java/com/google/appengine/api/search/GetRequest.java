@@ -19,7 +19,7 @@ package com.google.appengine.api.search;
 import com.google.appengine.api.search.checkers.GetRequestChecker;
 import com.google.appengine.api.search.checkers.SearchApiLimits;
 import com.google.appengine.api.search.proto.SearchServicePb.ListDocumentsParams;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * A request to list objects in an index. You can specify a number of

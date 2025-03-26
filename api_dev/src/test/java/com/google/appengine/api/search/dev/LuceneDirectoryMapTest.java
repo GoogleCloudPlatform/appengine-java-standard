@@ -26,7 +26,7 @@ import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.apache.lucene.store.Directory;
 import org.junit.Before;
 import org.junit.Rule;

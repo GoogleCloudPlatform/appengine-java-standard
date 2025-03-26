@@ -19,7 +19,7 @@ package com.google.appengine.api.mail;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * The {@code MailService} provides a way for user code to send emails

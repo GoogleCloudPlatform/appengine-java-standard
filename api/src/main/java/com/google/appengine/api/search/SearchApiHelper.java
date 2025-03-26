@@ -26,7 +26,7 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.ExtensionRegistry;
 import com.google.protobuf.InvalidProtocolBufferException;
 import java.util.concurrent.Future;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /** Provides support for translation of calls between userland and appserver land. */
 class SearchApiHelper {

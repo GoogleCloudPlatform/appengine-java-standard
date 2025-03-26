@@ -18,7 +18,7 @@ package com.google.cloud.datastore.core.exception;
 
 import com.google.cloud.datastore.logs.ProblemCode;
 import com.google.errorprone.annotations.FormatMethod;
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * An exception that indicates a conversion error.

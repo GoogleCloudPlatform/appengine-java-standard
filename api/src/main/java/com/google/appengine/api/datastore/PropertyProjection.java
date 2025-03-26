@@ -21,7 +21,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Map;
 import java.util.Objects;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * A property projection.

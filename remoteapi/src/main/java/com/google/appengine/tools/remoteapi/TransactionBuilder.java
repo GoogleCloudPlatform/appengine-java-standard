@@ -29,7 +29,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ConcurrentModificationException;
 import java.util.HashMap;
 import java.util.Map;
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * An in-progress transaction that will be sent via the remote API on commit.
@@ -88,8 +88,8 @@ class TransactionBuilder {
   /**
    * Returns a cached entity, or null if the entity's absence was cached.
    */
-  @Nullable
-  public OnestoreEntity.EntityProto getCachedEntity(OnestoreEntity.Reference key) {
+
+  public OnestoreEntity.@Nullable EntityProto getCachedEntity(OnestoreEntity.Reference key) {
     ByteString keyBytes = key.toByteString();
     if (!getCache.containsKey(keyBytes)) {
       throw new IllegalStateException("entity's status unexpectedly not in cache");

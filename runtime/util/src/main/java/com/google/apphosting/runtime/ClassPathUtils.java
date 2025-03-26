@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.StringTokenizer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * {@code ClassPathUtils} provides utility functions that are useful in dealing with class paths.

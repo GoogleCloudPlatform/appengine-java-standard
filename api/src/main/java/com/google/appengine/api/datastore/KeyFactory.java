@@ -20,7 +20,7 @@ import static com.google.common.io.BaseEncoding.base64Url;
 
 import com.google.common.base.CharMatcher;
 import com.google.storage.onestore.v3.OnestoreEntity.Reference;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * This class enables direct creation of {@code Key} objects, both in the root entity group (no

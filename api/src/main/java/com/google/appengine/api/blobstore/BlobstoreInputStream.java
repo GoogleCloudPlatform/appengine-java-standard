@@ -22,7 +22,7 @@ import static java.util.Objects.requireNonNull;
 import com.google.common.base.Preconditions;
 import java.io.IOException;
 import java.io.InputStream;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * BlobstoreInputStream provides an InputStream view of a blob in

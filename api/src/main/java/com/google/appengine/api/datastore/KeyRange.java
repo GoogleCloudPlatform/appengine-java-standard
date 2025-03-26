@@ -19,7 +19,7 @@ package com.google.appengine.api.datastore;
 import java.io.Serializable;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Represents a range of unique datastore identifiers from {@code getStart().getId()} to {@code

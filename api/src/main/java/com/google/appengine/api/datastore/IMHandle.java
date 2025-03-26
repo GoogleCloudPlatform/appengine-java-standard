@@ -19,7 +19,7 @@ package com.google.appengine.api.datastore;
 import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.net.URL;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * An instant messaging handle. Includes both an address and its protocol. The protocol value is

@@ -64,7 +64,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * ApiProxyImpl is a concrete implementation of the ApiProxy.Delegate

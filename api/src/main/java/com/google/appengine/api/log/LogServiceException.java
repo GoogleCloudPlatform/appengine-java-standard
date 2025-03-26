@@ -16,7 +16,7 @@
 
 package com.google.appengine.api.log;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Log errors apart from InvalidRequestException. These errors will generally benefit from retrying

@@ -60,7 +60,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /** A thread-safe {@link CloudDatastoreV1Client} that makes remote proto-over-HTTP calls. */
 final class CloudDatastoreV1ClientImpl implements CloudDatastoreV1Client {

@@ -20,7 +20,7 @@ import com.google.appengine.api.search.checkers.FieldChecker;
 import com.google.appengine.api.search.proto.SearchServicePb;
 import com.google.common.base.Preconditions;
 import java.util.Date;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Sorting specification for a single dimension. Multi-dimensional sorting

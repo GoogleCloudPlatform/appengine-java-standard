@@ -18,7 +18,7 @@ package com.google.appengine.api.blobstore;
 
 import java.io.Serializable;
 import java.util.Objects;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * {@code BlobKey} contains the string identifier of a large (possibly

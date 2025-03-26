@@ -92,10 +92,7 @@ public class AppEngineWebAppContext extends WebAppContext {
   private final boolean ignoreContentLength;
 
   // Map of deprecated package names to their replacements.
-  private static final Map<String, String> DEPRECATED_PACKAGE_NAMES = ImmutableMap.of(
-          "org.eclipse.jetty.servlets", "org.eclipse.jetty.ee10.servlets",
-          "org.eclipse.jetty.servlet", "org.eclipse.jetty.ee10.servlet"
-  );
+  private static final Map<String, String> DEPRECATED_PACKAGE_NAMES = ImmutableMap.of();
 
   @Override
   public boolean checkAlias(String path, Resource resource) {

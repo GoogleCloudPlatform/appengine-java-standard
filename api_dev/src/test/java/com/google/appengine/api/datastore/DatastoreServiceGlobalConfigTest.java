@@ -25,7 +25,7 @@ import com.google.apphosting.api.ApiProxy.Environment;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.util.Map;
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
@@ -174,7 +174,7 @@ public class DatastoreServiceGlobalConfigTest {
   }
 
   private static void testSetConfig(
-      @Nullable SystemProperty.Environment.Value environmentValue,
+     SystemProperty.Environment.@Nullable Value environmentValue,
       DatastoreServiceGlobalConfig config) {
     SystemProperty.Environment.Value oldEnvValue = SystemProperty.environment.value();
     setEnvironmentNullSafe(environmentValue);
@@ -185,7 +185,7 @@ public class DatastoreServiceGlobalConfigTest {
     }
   }
 
-  private static void setEnvironmentNullSafe(@Nullable SystemProperty.Environment.Value value) {
+  private static void setEnvironmentNullSafe(SystemProperty.Environment.@Nullable Value value) {
     if (value == null) {
       System.clearProperty(SystemProperty.environment.key());
     } else {

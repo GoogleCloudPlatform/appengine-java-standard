@@ -20,7 +20,7 @@ import com.google.datastore.v1.QueryResultBatch;
 import com.google.datastore.v1.RunQueryRequest;
 import com.google.datastore.v1.RunQueryResponse;
 import java.util.concurrent.Future;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 class QueryResultsSourceCloudDatastoreV1
     extends BaseQueryResultsSource<RunQueryResponse, RunQueryRequest, RunQueryResponse> {

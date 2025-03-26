@@ -22,7 +22,7 @@ import com.google.apphosting.datastore.DatastoreV3Pb.Query;
 import com.google.storage.onestore.v3.OnestoreEntity.EntityProto;
 import com.google.storage.onestore.v3.OnestoreEntity.Reference;
 import java.util.List;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * A virtual datastore kind implemented programmatically. Each kind is identified by a name;

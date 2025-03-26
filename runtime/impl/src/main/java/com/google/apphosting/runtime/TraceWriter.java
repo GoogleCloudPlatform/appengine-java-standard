@@ -41,7 +41,7 @@ import com.google.common.flogger.GoogleLogger;
 import com.google.common.primitives.Ints;
 import java.util.Map;
 import java.util.Set;
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Stores trace spans for a single request, and flushes them into {@link UPResponse}.

@@ -17,7 +17,7 @@
 package com.google.appengine.api.users;
 
 import java.util.Set;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * The UserService provides information useful for forcing a user to

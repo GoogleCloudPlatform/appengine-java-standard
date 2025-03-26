@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * State and behavior that is common to all {@link Transaction} implementations.

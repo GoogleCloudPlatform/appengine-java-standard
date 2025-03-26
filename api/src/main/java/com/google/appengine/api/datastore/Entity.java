@@ -22,7 +22,7 @@ import com.google.common.base.Objects;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * {@code Entity} is the fundamental unit of data storage. It has an immutable identifier (contained

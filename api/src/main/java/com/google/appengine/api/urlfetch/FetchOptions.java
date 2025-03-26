@@ -17,7 +17,7 @@
 package com.google.appengine.api.urlfetch;
 
 import java.io.Serializable;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Allows users to customize the behavior of {@link URLFetchService}

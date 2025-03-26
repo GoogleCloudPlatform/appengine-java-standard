@@ -21,7 +21,7 @@ import static java.util.Objects.requireNonNull;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * A byte range as parsed from a request Range header.  Format produced by this class is

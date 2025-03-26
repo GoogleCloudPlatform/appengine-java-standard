@@ -25,7 +25,7 @@ import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableSet;
 import java.security.PrivateKey;
 import java.util.Set;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * User-configurable global properties of Cloud Datastore.

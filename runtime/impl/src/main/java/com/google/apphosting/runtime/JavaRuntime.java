@@ -45,7 +45,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.SynchronousQueue;
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * JavaRuntime implements the Prometheus EvaluationRuntime service. It handles any requests for the

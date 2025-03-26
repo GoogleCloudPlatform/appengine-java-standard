@@ -28,7 +28,7 @@ import com.google.appengine.api.datastore.KeyFactory;
 import com.google.appengine.api.datastore.Query;
 import java.util.Date;
 import java.util.Iterator;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * {@code BlobInfoFactory} provides a trivial interface for retrieving

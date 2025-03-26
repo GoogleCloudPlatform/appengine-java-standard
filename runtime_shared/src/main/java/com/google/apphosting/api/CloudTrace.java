@@ -17,7 +17,7 @@
 package com.google.apphosting.api;
 
 import java.util.Map;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Holds the current trace context visible to user code. If present, this object will be stored

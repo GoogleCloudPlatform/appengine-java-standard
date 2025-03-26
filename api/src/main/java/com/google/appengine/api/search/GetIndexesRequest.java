@@ -20,7 +20,7 @@ import com.google.appengine.api.search.checkers.GetIndexesRequestChecker;
 import com.google.appengine.api.search.checkers.SearchApiLimits;
 import com.google.appengine.api.search.proto.SearchServicePb.ListIndexesParams;
 import com.google.common.base.Preconditions;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * A request to get a range of indexes. You can specify a number of

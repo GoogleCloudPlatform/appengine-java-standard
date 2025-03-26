@@ -16,7 +16,7 @@
 
 package com.google.appengine.api.utils;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Global system properties which are set by App Engine.

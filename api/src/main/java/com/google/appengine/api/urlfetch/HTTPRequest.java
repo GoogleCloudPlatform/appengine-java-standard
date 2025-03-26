@@ -21,7 +21,7 @@ import java.io.Serializable;
 import java.net.URL;
 import java.util.LinkedHashMap;
 import java.util.List;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * {@code HTTPRequest} encapsulates a single HTTP request that is made

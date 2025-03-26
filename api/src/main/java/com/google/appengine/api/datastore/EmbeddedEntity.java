@@ -19,7 +19,7 @@ package com.google.appengine.api.datastore;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * A property value containing embedded entity properties (and optionally a {@link Key}).

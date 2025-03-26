@@ -72,7 +72,7 @@ class JettyHttpApiHostClient extends HttpApiHostClient {
   static JettyHttpApiHostClient create(String url, Config config) {
     Preconditions.checkNotNull(url);
     HttpClient httpClient = new HttpClient();
-    long idleTimeout = 25000; // 25 seconds, should be less than 30 or 60 used server-side.
+    long idleTimeout = 58000; // 58 seconds, should be less than 60 used server-side.
     String envValue = System.getenv("APPENGINE_API_CALLS_IDLE_TIMEOUT_MS");
     if (envValue != null) {
       try {

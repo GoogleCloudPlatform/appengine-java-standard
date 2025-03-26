@@ -61,7 +61,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicLong;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.junit.After;
 import org.junit.Before;
 import org.mockito.Mockito;

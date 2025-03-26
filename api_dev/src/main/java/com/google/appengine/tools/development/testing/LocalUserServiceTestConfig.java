@@ -18,7 +18,7 @@ package com.google.appengine.tools.development.testing;
 
 import com.google.appengine.api.users.dev.LocalUserService;
 import com.google.appengine.tools.development.ApiProxyLocal;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Config for accessing the local user service in tests.

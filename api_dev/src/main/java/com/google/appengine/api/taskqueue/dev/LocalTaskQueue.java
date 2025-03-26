@@ -67,7 +67,7 @@ import java.util.Random;
 import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.impl.StdSchedulerFactory;
@@ -495,7 +495,8 @@ public final class LocalTaskQueue extends AbstractLocalRpcService {
     DevQueue queue =
         getQueueByName(bulkAddRequestBuilder.getAddRequest(0).getQueueName().toStringUtf8());
 
-    Map<TaskQueueBulkAddResponse.TaskResult.Builder, String> chosenNames = new IdentityHashMap<>();
+    IdentityHashMap<TaskQueueBulkAddResponse.TaskResult.Builder, String> chosenNames =
+        new IdentityHashMap<>();
     boolean errorFound = false;
 
     for (TaskQueueAddRequest.Builder addRequest :

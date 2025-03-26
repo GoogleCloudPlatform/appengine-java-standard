@@ -23,7 +23,7 @@ import com.google.appengine.api.datastore.dev.LocalDatastoreService;
 import com.google.appengine.api.datastore.dev.LocalDatastoreService.AutoIdAllocationPolicy;
 import com.google.appengine.api.datastore.dev.LocalDatastoreV3Service;
 import com.google.appengine.tools.development.ApiProxyLocal;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Config for accessing the local datastore service in tests.

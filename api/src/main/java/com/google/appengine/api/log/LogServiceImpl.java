@@ -33,7 +33,7 @@ import com.google.protobuf.UninitializedMessageException;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * {@code LogServiceImpl} is an implementation of {@link LogService} that makes API calls to {@link

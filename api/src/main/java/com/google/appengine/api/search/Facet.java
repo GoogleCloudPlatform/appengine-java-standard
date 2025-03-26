@@ -23,7 +23,7 @@ import com.google.apphosting.api.search.DocumentPb.FacetValue.ContentType;
 import com.google.common.base.Preconditions;
 import java.io.Serializable;
 import java.util.Objects;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * A {@code Facet} can be used to categorize a {@link Document}. It is not a {@link Field}.

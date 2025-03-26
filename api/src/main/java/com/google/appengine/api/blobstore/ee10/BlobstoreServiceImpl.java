@@ -47,7 +47,7 @@ import java.util.Date;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * {@code BlobstoreServiceImpl} is an implementation of {@link BlobstoreService} that makes API
