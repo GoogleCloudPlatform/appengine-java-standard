@@ -450,7 +450,7 @@
       <dependency>
         <groupId>com.google.guava</groupId>
         <artifactId>guava</artifactId>
-        <version>33.4.5-jre</version>
+        <version>33.4.6-jre</version>
       </dependency>
       <dependency>
         <groupId>com.google.errorprone</groupId>
@@ -687,7 +687,7 @@
       <dependency>
         <groupId>com.google.guava</groupId>
         <artifactId>guava-testlib</artifactId>
-        <version>33.4.5-jre</version>
+        <version>33.4.6-jre</version>
         <scope>test</scope>
       </dependency>
       <dependency>
