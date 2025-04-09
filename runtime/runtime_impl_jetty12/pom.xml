@@ -122,6 +122,20 @@
             <type>jar</type>
         </dependency>
         <dependency>
+          <groupId>org.eclipse.jetty.compression</groupId>
+          <artifactId>jetty-compression-common</artifactId>
+          <optional>true</optional>
+          <version>${jetty12.version}</version>
+          <type>jar</type>
+        </dependency>
+        <dependency>
+          <groupId>org.eclipse.jetty.compression</groupId>
+          <artifactId>jetty-compression-gzip</artifactId>
+          <optional>true</optional>
+          <version>${jetty12.version}</version>
+          <type>jar</type>
+        </dependency>
+        <dependency>
             <groupId>org.eclipse.jetty.ee8</groupId>
             <artifactId>jetty-ee8-quickstart</artifactId>
             <version>${jetty12.version}</version>
@@ -572,6 +586,8 @@
                                     <include>org.eclipse.jetty:jetty-server</include>
                                     <include>org.eclipse.jetty:jetty-session</include>
                                     <include>org.eclipse.jetty:jetty-security</include>
+                                    <include>org.eclipse.jetty.compression:jetty-compression-common</include>
+                                    <include>org.eclipse.jetty.compression:jetty-compression-gzip</include>
                                     <include>org.slf4j:slf4j-jdk14</include>
                                     <include>org.slf4j:slf4j-api</include>
                                     <include>org.eclipse.jetty:jetty-util-ajax</include>

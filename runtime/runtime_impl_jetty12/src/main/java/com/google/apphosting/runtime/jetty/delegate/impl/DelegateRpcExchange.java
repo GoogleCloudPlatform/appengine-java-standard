@@ -33,8 +33,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicReference;
 import org.eclipse.jetty.http.HttpFields;
 import org.eclipse.jetty.http.HttpMethod;
-import org.eclipse.jetty.io.ByteBufferAccumulator;
 import org.eclipse.jetty.io.Content;
+import org.eclipse.jetty.io.RetainableByteBuffer;
 import org.eclipse.jetty.util.Attributes;
 import org.eclipse.jetty.util.Callback;
 
@@ -46,7 +46,7 @@ public class DelegateRpcExchange implements DelegateExchange {
   private final HttpPb.HttpRequest _request;
   private final AtomicReference<Content.Chunk> _content = new AtomicReference<>();
   private final MutableUpResponse _response;
-  private final ByteBufferAccumulator accumulator = new ByteBufferAccumulator();
+  private final RetainableByteBuffer.DynamicCapacity accumulator = new RetainableByteBuffer.DynamicCapacity();
   private final CompletableFuture<Void> _completion = new CompletableFuture<>();
   private final Attributes _attributes = new Attributes.Lazy();
   private final String _httpMethod;
@@ -158,13 +158,15 @@ public class DelegateRpcExchange implements DelegateExchange {
 
   @Override
   public void write(boolean last, ByteBuffer content, Callback callback) {
-    if (content != null) accumulator.copyBuffer(content);
+    if (content != null) {
+      accumulator.append(content);
+    }
     callback.succeeded();
   }
 
   @Override
   public void succeeded() {
-    _response.setHttpResponseResponse(ByteString.copyFrom(accumulator.takeByteBuffer()));
+    _response.setHttpResponseResponse(ByteString.copyFrom(accumulator.takeByteArray()));
     _response.setError(RuntimePb.UPResponse.ERROR.OK_VALUE);
     _completion.complete(null);
   }
