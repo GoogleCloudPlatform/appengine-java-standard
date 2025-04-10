@@ -67,7 +67,7 @@
     <jetty.version>9.4.57.v20241219</jetty.version>
     <jetty12.version>12.0.19</jetty12.version>
     <io.grpc>1.71.0</io.grpc>
-    <io.netty>4.1.119.Final</io.netty>
+    <io.netty>4.2.0.Final</io.netty>
     <slf4j.version>2.0.17</slf4j.version>
     <distributionManagement.snapshot.url>https://oss.sonatype.org/content/repositories/google-snapshots/</distributionManagement.snapshot.url>
     <distributionManagement.snapshot.id>sonatype-nexus-snapshots</distributionManagement.snapshot.id>
@@ -450,7 +450,7 @@
       <dependency>
         <groupId>com.google.guava</groupId>
         <artifactId>guava</artifactId>
-        <version>33.4.6-jre</version>
+        <version>33.4.7-jre</version>
       </dependency>
       <dependency>
         <groupId>com.google.errorprone</groupId>
@@ -687,7 +687,7 @@
       <dependency>
         <groupId>com.google.guava</groupId>
         <artifactId>guava-testlib</artifactId>
-        <version>33.4.6-jre</version>
+        <version>33.4.7-jre</version>
         <scope>test</scope>
       </dependency>
       <dependency>
@@ -712,7 +712,7 @@
        <dependency>
         <groupId>org.mockito</groupId>
         <artifactId>mockito-bom</artifactId>
-        <version>5.16.1</version>
+        <version>5.17.0</version>
         <scope>import</scope>
         <type>pom</type>
       </dependency>
