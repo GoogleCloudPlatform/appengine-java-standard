@@ -66,8 +66,6 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <jetty.version>9.4.57.v20241219</jetty.version>
     <jetty12.version>12.0.19</jetty12.version>
-    <io.grpc>1.71.0</io.grpc>
-    <io.netty>4.1.119.Final</io.netty>
     <slf4j.version>2.0.17</slf4j.version>
     <distributionManagement.snapshot.url>https://oss.sonatype.org/content/repositories/google-snapshots/</distributionManagement.snapshot.url>
     <distributionManagement.snapshot.id>sonatype-nexus-snapshots</distributionManagement.snapshot.id>
@@ -450,7 +448,7 @@
       <dependency>
         <groupId>com.google.guava</groupId>
         <artifactId>guava</artifactId>
-        <version>33.4.6-jre</version>
+        <version>33.4.7-jre</version>
       </dependency>
       <dependency>
         <groupId>com.google.errorprone</groupId>
@@ -598,67 +596,6 @@
         <version>1.39.0</version>
       </dependency>
       <dependency>
-        <groupId>io.grpc</groupId>
-        <artifactId>grpc-api</artifactId>
-        <version>${io.grpc}</version>
-      </dependency>
-      <dependency>
-        <groupId>io.grpc</groupId>
-        <artifactId>grpc-stub</artifactId>
-        <version>${io.grpc}</version>
-      </dependency>
-      <dependency>
-        <groupId>io.grpc</groupId>
-        <artifactId>grpc-protobuf</artifactId>
-        <version>${io.grpc}</version>
-      </dependency>
-      <dependency>
-         <groupId>io.grpc</groupId>
-         <artifactId>grpc-netty</artifactId>
-        <version>${io.grpc}</version>
-      </dependency>
-      <!-- io.netty are transitive deps needed by io.grpc-->
-      <dependency>
-          <groupId>io.netty</groupId>
-          <artifactId>netty-buffer</artifactId>
-          <version>${io.netty}</version>
-      </dependency>
-      <dependency>
-          <groupId>io.netty</groupId>
-          <artifactId>netty-codec</artifactId>
-          <version>${io.netty}</version>
-      </dependency>
-      <dependency>
-          <groupId>io.netty</groupId>
-          <artifactId>netty-codec-http</artifactId>
-          <version>${io.netty}</version>
-      </dependency>
-      <dependency>
-          <groupId>io.netty</groupId>
-          <artifactId>netty-codec-http2</artifactId>
-          <version>${io.netty}</version>
-      </dependency>
-      <dependency>
-          <groupId>io.netty</groupId>
-          <artifactId>netty-common</artifactId>
-          <version>${io.netty}</version>
-      </dependency>
-      <dependency>
-          <groupId>io.netty</groupId>
-          <artifactId>netty-handler</artifactId>
-          <version>${io.netty}</version>
-      </dependency>
-      <dependency>
-          <groupId>io.netty</groupId>
-          <artifactId>netty-transport</artifactId>
-          <version>${io.netty}</version>
-      </dependency>
-      <dependency>
-          <groupId>io.netty</groupId>
-          <artifactId>netty-transport-native-unix-common</artifactId>
-          <version>${io.netty}</version>
-      </dependency>
-      <dependency>
         <groupId>org.apache.tomcat</groupId>
         <artifactId>juli</artifactId>
         <version>6.0.53</version>
@@ -687,7 +624,7 @@
       <dependency>
         <groupId>com.google.guava</groupId>
         <artifactId>guava-testlib</artifactId>
-        <version>33.4.6-jre</version>
+        <version>33.4.7-jre</version>
         <scope>test</scope>
       </dependency>
       <dependency>
@@ -712,7 +649,7 @@
        <dependency>
         <groupId>org.mockito</groupId>
         <artifactId>mockito-bom</artifactId>
-        <version>5.16.1</version>
+        <version>5.17.0</version>
         <scope>import</scope>
         <type>pom</type>
       </dependency>

@@ -99,9 +99,7 @@ public abstract class LogHandler extends Handler {
         return false;
       }
       if (name.startsWith("com.google.net.")
-          || name.startsWith("com.google.common.stats.")
-          || name.startsWith("io.netty.")
-          || name.startsWith("io.grpc.netty.")) {
+          || name.startsWith("com.google.common.stats.")) {
         return false;
       }
       return true;

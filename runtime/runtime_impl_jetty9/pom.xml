@@ -145,26 +145,6 @@
             <artifactId>shared-sdk</artifactId>
             <optional>true</optional>
        </dependency>
-        <dependency>
-            <groupId>io.grpc</groupId>
-            <artifactId>grpc-api</artifactId>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>io.grpc</groupId>
-            <artifactId>grpc-stub</artifactId>
-            <optional>true</optional>
-       </dependency>
-        <dependency>
-            <groupId>io.grpc</groupId>
-            <artifactId>grpc-protobuf</artifactId>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>io.grpc</groupId>
-            <artifactId>grpc-netty</artifactId>
-            <optional>true</optional>
-        </dependency>
        <dependency>
             <groupId>org.apache.tomcat</groupId>
             <artifactId>juli</artifactId>
@@ -209,47 +189,6 @@
               <artifactId>guava-jdk5</artifactId>
             </exclusion>
           </exclusions>
-            <optional>true</optional>
-        </dependency>
-        <!-- io.netty are transitive deps needed by io.grpc-->
-        <dependency>
-            <groupId>io.netty</groupId>
-            <artifactId>netty-buffer</artifactId>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>io.netty</groupId>
-            <artifactId>netty-codec</artifactId>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>io.netty</groupId>
-            <artifactId>netty-codec-http</artifactId>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>io.netty</groupId>
-            <artifactId>netty-codec-http2</artifactId>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>io.netty</groupId>
-            <artifactId>netty-common</artifactId>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>io.netty</groupId>
-            <artifactId>netty-handler</artifactId>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>io.netty</groupId>
-            <artifactId>netty-transport</artifactId>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>io.netty</groupId>
-            <artifactId>netty-transport-native-unix-common</artifactId>
             <optional>true</optional>
         </dependency>
         <!-- Test dependencies. -->
@@ -427,23 +366,6 @@
                                     <include>com.google.protobuf:protobuf-java</include>
                                     <include>com.google.protobuf:protobuf-java-util</include>
                                     <include>commons-codec:commons-codec</include>
-                                    <include>io.grpc:grpc-api</include>
-                                    <include>io.grpc:grpc-context</include>
-                                    <include>io.grpc:grpc-core</include>
-                                    <include>io.grpc:grpc-netty</include>
-                                    <include>io.grpc:grpc-protobuf</include>
-                                    <include>io.grpc:grpc-protobuf-lite</include>
-                                    <include>io.grpc:grpc-stub</include>
-                                    <include>io.netty:netty-buffer</include>
-                                    <include>io.netty:netty-codec-http2</include>
-                                    <include>io.netty:netty-codec-http</include>
-                                    <include>io.netty:netty-codec</include>
-                                    <include>io.netty:netty-codec-socks</include>
-                                    <include>io.netty:netty-common</include>
-                                    <include>io.netty:netty-handler</include>
-                                    <include>io.netty:netty-handler-proxy</include>
-                                    <include>io.netty:netty-resolver</include>
-                                    <include>io.netty:netty-transport</include>
                                     <include>io.perfmark:perfmark-api</include>
                                     <include>javax.annotation:javax.annotation-api</include>
                                     <include>joda-time:joda-time</include>
