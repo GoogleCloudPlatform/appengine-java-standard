@@ -33,6 +33,8 @@ import java.util.Objects;
 import org.eclipse.jetty.ee10.servlet.ServletContextHandler;
 import org.eclipse.jetty.ee10.servlet.ServletHandler;
 import org.eclipse.jetty.ee10.servlet.ServletMapping;
+import org.eclipse.jetty.server.AliasCheck;
+import org.eclipse.jetty.server.AllowedResourceAliasChecker;
 import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.util.StringUtil;
 import org.eclipse.jetty.util.URIUtil;
@@ -59,6 +61,7 @@ public class ResourceFileServlet extends HttpServlet {
   private Resource resourceBase;
   private String[] welcomeFiles;
   private FileSender fSender;
+  private AliasCheck aliasCheck;
   ServletContextHandler chandler;
   ServletContext context;
   String defaultServletName;
@@ -90,6 +93,11 @@ public class ResourceFileServlet extends HttpServlet {
     try {
       URL resourceBaseUrl = context.getResource("/" + appVersion.getPublicRoot());
       resourceBase = (resourceBaseUrl == null) ? null : ResourceFactory.of(chandler).newResource(resourceBaseUrl);
+      if (resourceBase != null) {
+        ContextHandler contextHandler = ServletContextHandler.getServletContextHandler(context);
+        contextHandler.addAliasCheck(new AllowedResourceAliasChecker(contextHandler, resourceBase));
+        aliasCheck = contextHandler;
+      }
     } catch (Exception ex) {
       throw new ServletException(ex);
     }
@@ -162,40 +170,31 @@ public class ResourceFileServlet extends HttpServlet {
     }
 
     // Find the resource
-    Resource resource = null;
-    try {
-      resource = getResource(pathInContext);
+    Resource resource = getResource(pathInContext);
+    if (resource == null) {
+      response.sendError(HttpServletResponse.SC_NOT_FOUND);
+      return;
+    }
 
-      if (resource == null) {
-        response.sendError(HttpServletResponse.SC_NOT_FOUND);
-        return;
+    if (StringUtil.endsWithIgnoreCase(resource.getName(), ".jsp")) {
+      // General paranoia: don't ever serve raw .jsp files.
+      response.sendError(HttpServletResponse.SC_NOT_FOUND);
+      return;
+    }
+
+    // Handle resource
+    if (resource.isDirectory()) {
+      if (included || !fSender.checkIfUnmodified(request, response, resource)) {
+        response.sendError(HttpServletResponse.SC_FORBIDDEN);
       }
-
-      if (StringUtil.endsWithIgnoreCase(resource.getName(), ".jsp")) {
-        // General paranoia: don't ever serve raw .jsp files.
+    } else {
+      if (!resource.exists() || !aliasCheck.checkAlias(pathInContext, resource)) {
+        logger.atWarning().log("Non existent resource: %s = %s", pathInContext, resource);
         response.sendError(HttpServletResponse.SC_NOT_FOUND);
-        return;
-      }
-
-      // Handle resource
-      if (resource.isDirectory()) {
-        if (included || !fSender.checkIfUnmodified(request, response, resource)) {
-          response.sendError(HttpServletResponse.SC_FORBIDDEN);
-        }
       } else {
-        if (resource == null || !resource.exists()) {
-          logger.atWarning().log("Non existent resource: %s = %s", pathInContext, resource);
-          response.sendError(HttpServletResponse.SC_NOT_FOUND);
-        } else {
-          if (included || !fSender.checkIfUnmodified(request, response, resource)) {
-            fSender.sendData(context, response, included, resource, request.getRequestURI());
-          }
+        if (included || !fSender.checkIfUnmodified(request, response, resource)) {
+          fSender.sendData(context, response, included, resource, request.getRequestURI());
         }
-      }
-    } finally {
-      if (resource != null) {
-        // TODO: do we need to release.
-        // resource.release();
       }
     }
   }
@@ -226,6 +225,7 @@ public class ResourceFileServlet extends HttpServlet {
   private Resource getResource(String pathInContext) {
     try {
       if (resourceBase != null) {
+        pathInContext = URIUtil.encodePath(pathInContext);
         return resourceBase.resolve(pathInContext);
       }
     } catch (Exception ex) {
