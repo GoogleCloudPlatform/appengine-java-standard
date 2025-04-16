@@ -36,11 +36,6 @@ class PreparedQueryImpl extends BasePreparedQuery {
     this.txn = txn;
     this.queryRunner = queryRunner;
 
-    // TODO Move this check and the one that follows into the
-    // LocalDatastoreService (it may already be there).
-    checkArgument(
-        txn == null || query.getAncestor() != null,
-        "Only ancestor queries are allowed inside transactions.");
     TransactionImpl.ensureTxnActive(txn);
   }
 
