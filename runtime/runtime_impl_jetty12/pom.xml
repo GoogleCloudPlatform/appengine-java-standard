@@ -337,7 +337,13 @@
                             </relocation>
                           </relocations>
                           <filters>
-                                <filter>
+                             <filter>
+                                  <artifact>*:*</artifact>
+                                  <excludes>
+                                      <exclude>META-INF/maven/**</exclude>
+                                  </excludes>
+                              </filter>
+                              <filter>
                                     <artifact>com.google.appengine:protos</artifact>
                                     <includes>
                                         <include>com/google/apphosting/api/**</include>
