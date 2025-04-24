@@ -151,7 +151,7 @@ class TransactionBuilder {
         Message.Builder newKey = result.getDeletesBuilder().addKeyBuilder();
         boolean parsed = true;
         try {
-          newKey.mergeFrom(entry.getKey(), ExtensionRegistry.getGeneratedRegistry());
+          newKey.mergeFrom(entry.getKey(), ExtensionRegistry.getEmptyRegistry());
         } catch (InvalidProtocolBufferException e) {
           parsed = false;
         }
@@ -170,7 +170,7 @@ class TransactionBuilder {
     OnestoreEntity.Reference.Builder ref = OnestoreEntity.Reference.newBuilder();
     boolean parsed = true;
     try {
-      ref.mergeFrom(key, ExtensionRegistry.getGeneratedRegistry());
+      ref.mergeFrom(key, ExtensionRegistry.getEmptyRegistry());
     } catch (InvalidProtocolBufferException e) {
       parsed = false;
     }

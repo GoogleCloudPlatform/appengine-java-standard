@@ -22,7 +22,6 @@ syntax = "proto2";
 
 package cloud_trace;
 
-import "label_options.proto";
 import "span_kind.proto";
 
 option java_package = "com.google.apphosting.base.protos";
