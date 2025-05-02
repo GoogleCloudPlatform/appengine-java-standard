@@ -58,7 +58,7 @@
         <dependency>
             <groupId>com.google.cloud</groupId>
             <artifactId>google-cloud-spanner</artifactId>
-            <version>6.91.1</version>
+            <version>6.92.0</version>
         </dependency>
         <dependency>
             <groupId>com.google.appengine</groupId>
@@ -126,7 +126,7 @@
         <dependency>
             <groupId>com.google.cloud</groupId>
             <artifactId>google-cloud-datastore</artifactId>
-            <version>2.27.2</version>
+            <version>2.28.0</version>
         </dependency>
         <dependency>
             <groupId>com.google.cloud</groupId>
@@ -136,7 +136,7 @@
         <dependency>
             <groupId>com.google.cloud</groupId>
             <artifactId>google-cloud-storage</artifactId>
-            <version>2.51.0</version>
+            <version>2.52.1</version>
         </dependency>
         <dependency>
             <groupId>com.google.cloud.sql</groupId>
@@ -170,7 +170,7 @@
         <dependency>
             <groupId>com.mysql</groupId>
             <artifactId>mysql-connector-j</artifactId>
-            <version>9.2.0</version>
+            <version>9.3.0</version>
         </dependency>
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
