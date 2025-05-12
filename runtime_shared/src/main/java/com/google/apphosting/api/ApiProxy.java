@@ -42,6 +42,9 @@ public class ApiProxy {
   private static final String API_DEADLINE_KEY =
       "com.google.apphosting.api.ApiProxy.api_deadline_key";
 
+  private static final String HTTP_CONNECTOR_ENABLED =
+      System.getenv("EXPERIMENT_ENABLE_HTTP_CONNECTOR_FOR_JAVA") != null ? " httpc=on " : "";
+
   /** Store an environment object for each thread. */
   private static final ThreadLocal<Environment> environmentThreadLocal = new ThreadLocal<>();
 
@@ -729,6 +732,11 @@ public class ApiProxy {
     long getWallclockTimeInMillis();
   }
 
+  /** Returns a debug string indicating if the http connector experiment is enabled. */
+  private static String debugInfo() {
+    return HTTP_CONNECTOR_ENABLED;
+  }
+
   // There isn't much that the client can do about most of these.
   // Making these checked exceptions would just annoy people.
   /** An exception produced when trying to perform an API call. */
@@ -747,15 +755,15 @@ public class ApiProxy {
 
     private ApiProxyException(
         String message, String packageName, String methodName, Throwable nestedException) {
-      super(String.format(message, packageName, methodName), nestedException);
+      super(String.format(message + debugInfo(), packageName, methodName), nestedException);
     }
 
     public ApiProxyException(String message) {
-      super(message);
+      super(message + debugInfo());
     }
 
     public ApiProxyException(String message, Throwable cause) {
-      super(message, cause);
+      super(message + debugInfo(), cause);
     }
 
     /**
