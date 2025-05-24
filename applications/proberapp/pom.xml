@@ -58,7 +58,7 @@
         <dependency>
             <groupId>com.google.cloud</groupId>
             <artifactId>google-cloud-spanner</artifactId>
-            <version>6.93.0</version>
+            <version>6.94.0</version>
         </dependency>
         <dependency>
             <groupId>com.google.appengine</groupId>
@@ -131,7 +131,7 @@
         <dependency>
             <groupId>com.google.cloud</groupId>
             <artifactId>google-cloud-logging</artifactId>
-            <version>3.22.3</version>
+            <version>3.22.4</version>
         </dependency>
         <dependency>
             <groupId>com.google.cloud</groupId>
