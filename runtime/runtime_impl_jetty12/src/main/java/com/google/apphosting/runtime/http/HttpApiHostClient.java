@@ -16,6 +16,8 @@
 
 package com.google.apphosting.runtime.http;
 
+import static com.google.apphosting.runtime.AppEngineConstants.HTTP_CONNECTOR_MODE;
+
 import com.google.apphosting.base.protos.RuntimePb.APIRequest;
 import com.google.apphosting.base.protos.RuntimePb.APIResponse;
 import com.google.apphosting.base.protos.RuntimePb.APIResponse.ERROR;
@@ -252,13 +254,22 @@ abstract class HttpApiHostClient implements APIHostClientInterface {
       requestTooBig(cb);
       return;
     }
-    RemoteApiPb.Request requestPb = RemoteApiPb.Request.newBuilder()
-        .setServiceName(req.getApiPackage())
-        .setMethod(req.getCall())
-        .setRequest(payload)
-        .setRequestId(req.getSecurityTicket())
-        .setTraceContext(req.getTraceContext().toByteString())
-        .build();
+    RemoteApiPb.Request requestPb =
+        req.getApiPackage().startsWith("datastore") && Boolean.getBoolean(HTTP_CONNECTOR_MODE)
+            ? RemoteApiPb.Request.newBuilder()
+                .setServiceName(req.getApiPackage())
+                .setMethod(req.getCall())
+                .setRequest(payload)
+                // No request ID security ticket for HTTP connector mode.
+                .setTraceContext(req.getTraceContext().toByteString())
+                .build()
+            : RemoteApiPb.Request.newBuilder()
+                .setServiceName(req.getApiPackage())
+                .setMethod(req.getCall())
+                .setRequest(payload)
+                .setRequestId(req.getSecurityTicket())
+                .setTraceContext(req.getTraceContext().toByteString())
+                .build();
     send(requestPb.toByteArray(), context, cb);
   }
 
