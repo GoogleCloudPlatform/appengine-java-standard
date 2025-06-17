@@ -123,6 +123,14 @@
                   <pattern>com.google.apphosting.datastore.proto2api.DatastoreV3Pb</pattern>
                   <shadedPattern>com.google.apphosting.api.proto2api.DatastorePb</shadedPattern>
                 </relocation>
+                <relocation>
+                  <pattern>com.google.storage.onestore.v3.proto2api</pattern>
+                  <shadedPattern>com.google.appengine.repackaged.com.google.storage.onestore.v3.proto2api</shadedPattern>
+                  </relocation>
+                <relocation>
+                  <pattern>com.google.protobuf</pattern>
+                  <shadedPattern>com.google.appengine.repackaged.com.google.protobuf</shadedPattern>
+                </relocation>
              </relocations>
               <filters>
                 <filter>
