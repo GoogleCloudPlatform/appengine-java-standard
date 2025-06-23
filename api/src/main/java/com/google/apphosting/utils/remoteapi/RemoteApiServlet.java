@@ -261,10 +261,6 @@ public class RemoteApiServlet extends HttpServlet {
     TransactionQueryResult.Builder result = TransactionQueryResult.newBuilder();
     Query.Builder query = Query.newBuilder();
     parseFromBytes(query, request.getRequest().toByteArray());
-    if (!query.hasAncestor()) {
-      throw new ApiProxy.ApplicationException(
-          BAD_REQUEST.getNumber(), "No ancestor in transactional query.");
-    }
     // Make __entity_group__ key
     OnestoreEntity.Reference.Builder egKey =
         result.getEntityGroupKeyBuilder().mergeFrom(query.getAncestor());
