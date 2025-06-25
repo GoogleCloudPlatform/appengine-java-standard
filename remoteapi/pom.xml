@@ -68,18 +68,6 @@
             <configuration>
               <relocations>
                 <relocation>
-                  <pattern>ccom.google.api.client.googleapis.extensions.appengine.auth.oauth2</pattern>
-                  <shadedPattern>com.google.appengine.repackaged.com.google.api.client.googleapis.extensions.appengine.auth.oauth2</shadedPattern>
-                </relocation>
-                <relocation>
-                  <pattern>ccom.google.api.client.googleapis.extensions.appengine.testing.auth.oauth2</pattern>
-                  <shadedPattern>com.google.appengine.repackaged.com.google.api.client.googleapis.extensions.appengine.testing.auth.oauth2</shadedPattern>
-                </relocation>
-                <relocation>
-                  <pattern>ccom.google.api.client.googleapis.extensions.appengine.notifications</pattern>
-                  <shadedPattern>com.google.appengine.repackaged.com.google.api.client.googleapis.extensions.appengine.notifications</shadedPattern>
-                </relocation>
-                <relocation>
                   <pattern>com.fasterxml.jackson</pattern>
                   <shadedPattern>com.google.appengine.repackaged.com.fasterxml.jackson</shadedPattern>
                 </relocation>
@@ -114,10 +102,6 @@
                 <relocation>
                   <pattern>org.codehaus.jackson</pattern>
                   <shadedPattern>com.google.appengine.repackaged.org.codehaus.jackson</shadedPattern>
-                </relocation>
-                <relocation>
-                  <pattern>com.google.apphosting.datastore.DatastoreV3Pb</pattern>
-                  <shadedPattern>com.google.apphosting.api.DatastorePb</shadedPattern>
                 </relocation>
                  <relocation>
                   <pattern>com.google.apphosting.datastore.proto2api.DatastoreV3Pb</pattern>
