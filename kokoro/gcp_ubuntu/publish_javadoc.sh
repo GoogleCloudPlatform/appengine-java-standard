@@ -25,9 +25,9 @@ setup_docuploader() {
  sudo apt-get install -y python3 python3-pip maven
  # install docuploader package with upgrade to get latest correct versions.
  echo "Trying to install gcp-docuploader."
- python3 -m pip install --upgrade pip --user
- python3 -m pip install gcp-docuploader --user
- python3 -m pip install --upgrade protobuf --user
+ python3 -m pip install --require-hashes --upgrade pip --user
+ python3 -m pip install --require-hashes gcp-docuploader --user
+ python3 -m pip install --require-hashes --upgrade protobuf --user
 }
 
 if [[ -z "${CREDENTIALS}" ]]; then

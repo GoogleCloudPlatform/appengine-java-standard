@@ -93,13 +93,6 @@ class ValidatedQuery extends NormalizedQuery {
       }
     }
 
-    // Transaction requires ancestor
-    if (query.hasTransaction() && !query.hasAncestor()) {
-      throw new IllegalQueryException(
-          "Only ancestor queries are allowed inside transactions.",
-          IllegalQueryType.TRANSACTION_REQUIRES_ANCESTOR);
-    }
-
     // Filters and sort orders require kind.
     if (!query.hasKind()) {
       for (Filter filter : query.filters()) {

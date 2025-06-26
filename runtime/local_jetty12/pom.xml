@@ -23,7 +23,7 @@
   <parent>
     <groupId>com.google.appengine</groupId>
     <artifactId>runtime-parent</artifactId>
-    <version>2.0.34-SNAPSHOT</version>
+    <version>2.0.38-SNAPSHOT</version>
   </parent>
 
   <packaging>jar</packaging>
@@ -243,12 +243,6 @@
                     <include>com/google/apphosting/utils/io/**</include>
                     <include>com/google/apphosting/utils/security/urlfetch/**</include>
                     <include>com/google/borg/borgcron/**</include>
-                  </includes>
-                </filter>
-                <filter>
-                  <artifact>com.google.appengine:appengine-tools-sdk:*</artifact>
-                  <includes>
-                    <include>com/google/appengine/tools/development/proto/**</include>
                   </includes>
                 </filter>
                 <filter>

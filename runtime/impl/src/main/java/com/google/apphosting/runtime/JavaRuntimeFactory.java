@@ -19,10 +19,10 @@ package com.google.apphosting.runtime;
 import com.google.apphosting.api.ApiProxy;
 import com.google.apphosting.runtime.anyrpc.AnyRpcPlugin;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.VerifyException;
 import com.google.common.flogger.GoogleLogger;
 import com.google.common.net.HostAndPort;
 import java.io.File;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.time.Duration;
 import java.util.List;
@@ -212,15 +212,8 @@ public class JavaRuntimeFactory {
   private static AnyRpcPlugin loadRpcPlugin(JavaRuntimeParams params) {
     if (params.getUseJettyHttpProxy()) {
       return new NullRpcPlugin();
-    }
-    try {
-      Class<? extends AnyRpcPlugin> pluginClass =
-          Class.forName("com.google.apphosting.runtime.grpc.GrpcPlugin")
-              .asSubclass(AnyRpcPlugin.class);
-      Constructor<? extends AnyRpcPlugin> pluginConstructor = pluginClass.getConstructor();
-      return pluginConstructor.newInstance();
-    } catch (ReflectiveOperationException e) {
-      throw new RuntimeException("Failed to load RPC plugin", e);
+    }else {
+      throw new VerifyException("Sorry, the gen1 GrpcPlugin is not supported anymore.");
     }
   }
 

@@ -1207,29 +1207,23 @@ public abstract class LocalDatastoreService {
     String app = query.getApp();
     Profile profile = getOrCreateProfile(app);
 
-    // The real datastore supports executing ancestor queries in transactions.
-    // For now we're just going to make sure the entity group of the ancestor
-    // is the same entity group with which the transaction is associated and
-    // skip providing a transactionally consistent result set.
-
     synchronized (profile) {
-      // Having a transaction implies we have an ancestor, but having an
-      // ancestor does not imply we have a transaction.
-      if (query.hasTransaction() || query.hasAncestor()) {
-        // Query can only have a txn if it is an ancestor query.  Either way we
-        // know we've got an ancestor.
+
+      if (query.hasTransaction()) {
+        if (!app.equals(query.getTransaction().getApp())) {
+          throw newError(
+              ErrorCode.INTERNAL_ERROR,
+              "Can't query app "
+                  + app
+                  + "in a transaction on app "
+                  + query.getTransaction().getApp());
+        }
+      }
+
+      if (query.hasAncestor()) {
         Path groupPath = getGroup(query.getAncestor());
         Profile.EntityGroup eg = profile.getGroup(groupPath);
         if (query.hasTransaction()) {
-          if (!app.equals(query.getTransaction().getApp())) {
-            throw newError(
-                ErrorCode.INTERNAL_ERROR,
-                "Can't query app "
-                    + app
-                    + "in a transaction on app "
-                    + query.getTransaction().getApp());
-          }
-
           LiveTxn liveTxn = profile.getTxn(query.getTransaction().getHandle());
           // this will throw an exception if we attempt to read from
           // the wrong entity group
@@ -1238,12 +1232,10 @@ public abstract class LocalDatastoreService {
           profile = eg.getSnapshot(liveTxn);
         }
 
-        if (query.hasAncestor()) {
-          if (query.hasTransaction() || !query.hasFailoverMs()) {
-            // Either we have a transaction or the user has requested strongly
-            // consistent results.  Either way, we need to apply jobs.
-            eg.rollForwardUnappliedJobs();
-          }
+        if (query.hasTransaction() || !query.hasFailoverMs()) {
+          // Either we have a transaction or the user has requested strongly
+          // consistent results.  Either way, we need to apply jobs.
+          eg.rollForwardUnappliedJobs();
         }
       }
 
