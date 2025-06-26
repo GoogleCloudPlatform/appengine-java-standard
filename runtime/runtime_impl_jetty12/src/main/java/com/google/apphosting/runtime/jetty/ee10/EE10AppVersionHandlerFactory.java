@@ -25,21 +25,14 @@ import com.google.apphosting.runtime.jetty.AppVersionHandlerFactory;
 import com.google.apphosting.runtime.jetty.EE10SessionManagerHandler;
 import com.google.common.flogger.GoogleLogger;
 import com.google.common.html.HtmlEscapers;
-import jakarta.servlet.RequestDispatcher;
-import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import java.io.File;
-import java.io.IOException;
 import java.io.PrintWriter;
 import javax.servlet.jsp.JspFactory;
 import org.eclipse.jetty.ee10.annotations.AnnotationConfiguration;
 import org.eclipse.jetty.ee10.quickstart.QuickStartConfiguration;
-import org.eclipse.jetty.ee10.servlet.Dispatcher;
 import org.eclipse.jetty.ee10.servlet.ErrorHandler;
 import org.eclipse.jetty.ee10.servlet.ErrorPageErrorHandler;
-import org.eclipse.jetty.ee10.servlet.ServletContextRequest;
 import org.eclipse.jetty.ee10.webapp.FragmentConfiguration;
 import org.eclipse.jetty.ee10.webapp.MetaInfConfiguration;
 import org.eclipse.jetty.ee10.webapp.WebInfConfiguration;
@@ -76,12 +69,6 @@ public class EE10AppVersionHandlerFactory implements AppVersionHandlerFactory {
    * present.
    */
   private static final String USE_ANNOTATION_SCANNING = "use.annotationscanning";
-
-  /**
-   * A "private" request attribute to indicate if the dispatch to a most recent error page has run
-   * to completion. Note an error page itself may generate errors.
-   */
-  static final String ERROR_PAGE_HANDLED = ErrorHandler.ERROR_PAGE + ".handled";
 
   private final Server server;
   private final String serverInfo;
@@ -223,93 +210,38 @@ public class EE10AppVersionHandlerFactory implements AppVersionHandlerFactory {
     }
   }
 
-  /**
-   * {@code NullErrorHandler} does nothing when an error occurs. The exception is already stored in
-   * an attribute of {@code request}, but we don't do any rendering of it into the response, UNLESS
-   * the webapp has a designated error page (servlet, jsp, or static html) for the current error
-   * condition (exception type or error code).
-   */
   private static class NullErrorHandler extends ErrorPageErrorHandler {
-    @Override
-    public boolean handle(Request request, Response response, Callback callback) throws Exception {
-      logger.atFine().log("Custom Jetty ErrorHandler received an error notification.");
-      mayHandleByErrorPage(request, response, callback);
-      // We don't want Jetty to do anything further.
-      return true;
-    }
 
     /**
-     * Try to invoke a custom error page if a handler is available. If not, render a simple HTML
-     * response for {@link HttpServletResponse#sendError} calls, but do nothing for unhandled
-     * exceptions.
-     *
-     * <p>This is loosely based on {@link ErrorPageErrorHandler#handle} but has been modified to add
-     * a fallback simple HTML response (because Jetty's default response is not satisfactory) and to
-     * set a special {@code ERROR_PAGE_HANDLED} attribute that disables our default behavior of
-     * returning the exception to the appserver for rendering.
+     * Override the response generation when not mapped to a servlet error page.
      */
-    private void mayHandleByErrorPage(Request request, Response response, Callback callback)
-        throws IOException {
-      ServletContextRequest contextRequest = Request.as(request, ServletContextRequest.class);
-      HttpServletRequest httpServletRequest = contextRequest.getServletApiRequest();
-      HttpServletResponse httpServletResponse = contextRequest.getHttpServletResponse();
-      // Extract some error handling info from Jetty's proprietary attributes.
-      Throwable error = (Throwable) contextRequest.getAttribute(RequestDispatcher.ERROR_EXCEPTION);
-      Integer code = (Integer) contextRequest.getAttribute(RequestDispatcher.ERROR_STATUS_CODE);
-      String message = (String) contextRequest.getAttribute(RequestDispatcher.ERROR_MESSAGE);
-      // Now try to find an error handler...
-      String errorPage = getErrorPage(httpServletRequest);
-      // If we found an error handler, dispatch to it.
-      if (errorPage != null) {
-        // Check for reentry into the same error page.
-        String oldErrorPage = (String) request.getAttribute(ErrorHandler.ERROR_PAGE);
-        if (oldErrorPage == null || !oldErrorPage.equals(errorPage)) {
-          request.setAttribute(ErrorHandler.ERROR_PAGE, errorPage);
-          ServletContext servletContext = httpServletRequest.getServletContext();
-          Dispatcher dispatcher = (Dispatcher) servletContext.getRequestDispatcher(errorPage);
-          try {
-            if (dispatcher != null) {
-              dispatcher.error(httpServletRequest, httpServletResponse);
-              // Set this special attribute iff the dispatch actually works!
-              // We use this attribute to decide if we want to keep the response content
-              // or let the Runtime generate the default error page
-              // TODO: an invalid html dispatch (404) will mask the exception
-              request.setAttribute(ERROR_PAGE_HANDLED, errorPage);
-              callback.succeeded();
-              return;
-            } else {
-              logger.atWarning().log("No error page %s", errorPage);
-            }
-          } catch (ServletException e) {
-            logger.atWarning().withCause(e).log("Failed to handle error page.");
-          }
-        }
-      }
+    @Override
+    protected void generateResponse(
+        Request request,
+        Response response,
+        int code,
+        String message,
+        Throwable cause,
+        Callback callback) {
       // If we got an error code (e.g. this is a call to HttpServletResponse#sendError),
       // then render our own HTML.  XFE has logic to do this, but the PFE only invokes it
       // for error conditions that it or the AppServer detect.
-      if (code != null && message != null) {
-        // This template is based on the default XFE error response.
-        response.getHeaders().put(HttpHeader.CONTENT_TYPE, "text/html; charset=UTF-8");
-        String messageEscaped = HtmlEscapers.htmlEscaper().escape(message);
-        try (PrintWriter writer = new PrintWriter(Content.Sink.asOutputStream(response))) {
-          writer.println("<html><head>");
-          writer.println("<meta http-equiv=\"content-type\" content=\"text/html;charset=utf-8\">");
-          writer.println("<title>" + code + " " + messageEscaped + "</title>");
-          writer.println("</head>");
-          writer.println("<body text=#000000 bgcolor=#ffffff>");
-          writer.println("<h1>Error: " + messageEscaped + "</h1>");
-          writer.println("</body></html>");
-          writer.close();
-          callback.succeeded();
-        } catch (Throwable t) {
-          callback.failed(t);
-        }
-        return;
+      // This template is based on the default XFE error response.
+      response.getHeaders().put(HttpHeader.CONTENT_TYPE, "text/html; charset=UTF-8");
+      String messageEscaped = HtmlEscapers.htmlEscaper().escape(message);
+      try (PrintWriter writer = new PrintWriter(Content.Sink.asOutputStream(response))) {
+        writer.println("<html><head>");
+        writer.println("<meta http-equiv=\"content-type\" content=\"text/html;charset=utf-8\">");
+        writer.println("<title>" + code + " " + messageEscaped + "</title>");
+        writer.println("</head>");
+        writer.println("<body text=#000000 bgcolor=#ffffff>");
+        writer.println("<h1>Error: " + messageEscaped + "</h1>");
+        writer.println("</body></html>");
+        writer.close();
+        callback.succeeded();
+      } catch (Throwable t) {
+        callback.failed(t);
       }
-      // If we got this far and *did* have an exception, it will be
-      // retrieved and thrown at the end of JettyServletEngineAdapter#serviceRequest.
-      throw new IllegalStateException(error);
     }
   }
 }
