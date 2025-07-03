@@ -58,7 +58,7 @@
         <dependency>
             <groupId>com.google.cloud</groupId>
             <artifactId>google-cloud-spanner</artifactId>
-            <version>6.95.1</version>
+            <version>6.96.1</version>
         </dependency>
         <dependency>
             <groupId>com.google.appengine</groupId>
@@ -126,7 +126,7 @@
         <dependency>
             <groupId>com.google.cloud</groupId>
             <artifactId>google-cloud-datastore</artifactId>
-            <version>2.29.2</version>
+            <version>2.30.0</version>
         </dependency>
         <dependency>
             <groupId>com.google.cloud</groupId>
@@ -136,7 +136,7 @@
         <dependency>
             <groupId>com.google.cloud</groupId>
             <artifactId>google-cloud-storage</artifactId>
-            <version>2.53.1</version>
+            <version>2.53.2</version>
         </dependency>
         <dependency>
             <groupId>com.google.cloud.sql</groupId>
@@ -276,7 +276,7 @@
             <plugin>
               <groupId>org.apache.maven.plugins</groupId>
               <artifactId>maven-enforcer-plugin</artifactId>
-              <version>3.5.0</version>
+              <version>3.6.0</version>
               <executions>
                 <execution>
                   <id>enforce-maven</id>
