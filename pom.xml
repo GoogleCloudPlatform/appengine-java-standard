@@ -453,7 +453,7 @@
       <dependency>
         <groupId>com.google.errorprone</groupId>
         <artifactId>error_prone_annotations</artifactId>
-        <version>2.39.0</version>
+        <version>2.40.0</version>
       </dependency>
       <dependency>
         <groupId>com.google.http-client</groupId>
@@ -662,7 +662,7 @@
       <dependency>
         <groupId>com.google.cloud</groupId>
         <artifactId>google-cloud-logging</artifactId>
-        <version>3.22.6</version>
+        <version>3.23.0</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
