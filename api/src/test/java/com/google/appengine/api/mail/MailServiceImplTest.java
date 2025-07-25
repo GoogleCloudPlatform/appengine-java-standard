@@ -36,7 +36,7 @@ public class MailServiceImplTest {
 
   @Mock private Transport transport;
   @Mock private Session session;
-  @Mock private SystemEnvironmentProvider envProvider;
+  @Mock private EnvironmentProvider envProvider;
 
   private MailServiceImpl mailService;
 
@@ -44,12 +44,12 @@ public class MailServiceImplTest {
   public void setUp() {
     mailService = new MailServiceImpl(envProvider);
     // Mock environment variables
-    when(envProvider.getenv("USE_SMTP_MAIL_SERVICE")).thenReturn("true");
-    when(envProvider.getenv("SMTP_HOST")).thenReturn("smtp.example.com");
-    when(envProvider.getenv("SMTP_PORT")).thenReturn("587");
-    when(envProvider.getenv("SMTP_USER")).thenReturn("user");
-    when(envProvider.getenv("SMTP_PASSWORD")).thenReturn("password");
-    when(envProvider.getenv("SMTP_USE_TLS")).thenReturn("true");
+    when(envProvider.getenv("APPENGINE_USE_SMTP_MAIL_SERVICE")).thenReturn("true");
+    when(envProvider.getenv("APPENGINE_SMTP_HOST")).thenReturn("smtp.example.com");
+    when(envProvider.getenv("APPENGINE_SMTP_PORT")).thenReturn("587");
+    when(envProvider.getenv("APPENGINE_SMTP_USER")).thenReturn("user");
+    when(envProvider.getenv("APPENGINE_SMTP_PASSWORD")).thenReturn("password");
+    when(envProvider.getenv("APPENGINE_SMTP_USE_TLS")).thenReturn("true");
   }
 
   @Test
@@ -507,7 +507,7 @@ public class MailServiceImplTest {
   @Test
   public void testSendSmtp_disabledTls() throws IOException, MessagingException {
     // Setup
-    when(envProvider.getenv("SMTP_USE_TLS")).thenReturn("false");
+    when(envProvider.getenv("APPENGINE_SMTP_USE_TLS")).thenReturn("false");
     try (MockedStatic<Session> mockedSession = mockStatic(Session.class)) {
       ArgumentCaptor<Properties> propsCaptor = ArgumentCaptor.forClass(Properties.class);
       mockedSession
@@ -534,7 +534,7 @@ public class MailServiceImplTest {
   @Test
   public void testSendSmtp_adminEmail() throws IOException, MessagingException {
     // Setup
-    when(envProvider.getenv("ADMIN_EMAIL_RECIPIENTS"))
+    when(envProvider.getenv("APPENGINE_ADMIN_EMAIL_RECIPIENTS"))
         .thenReturn("admin1@example.com,admin2@example.com");
     try (MockedStatic<Session> mockedSession = mockStatic(Session.class)) {
       mockedSession.when(() -> Session.getInstance(any(Properties.class), any())).thenReturn(session);
@@ -570,7 +570,7 @@ public class MailServiceImplTest {
   @Test(expected = IllegalArgumentException.class)
   public void testSendSmtp_adminEmailNoRecipients() throws IOException, MessagingException {
     // Setup
-    when(envProvider.getenv("ADMIN_EMAIL_RECIPIENTS")).thenReturn(null);
+    when(envProvider.getenv("APPENGINE_ADMIN_EMAIL_RECIPIENTS")).thenReturn(null);
 
     // Create a simple message
     MailService.Message message = new MailService.Message();
@@ -627,7 +627,7 @@ public class MailServiceImplTest {
   @Test(expected = IllegalArgumentException.class)
   public void testSendSmtp_missingSmtpHost() throws IOException, MessagingException {
     // Setup
-    when(envProvider.getenv("SMTP_HOST")).thenReturn(null);
+    when(envProvider.getenv("APPENGINE_SMTP_HOST")).thenReturn(null);
 
     // Create a simple message
     MailService.Message message = new MailService.Message();

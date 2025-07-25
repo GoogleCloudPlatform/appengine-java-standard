@@ -81,22 +81,22 @@ class MailServiceImpl implements MailService {
 
   private void sendSmtp(Message message, boolean toAdmin)
       throws IllegalArgumentException, IOException {
-    String smtpHost = envProvider.getenv("SMTP_HOST");
+    String smtpHost = envProvider.getenv("APPENGINE_SMTP_HOST");
     if (smtpHost == null || smtpHost.isEmpty()) {
       throw new IllegalArgumentException("SMTP_HOST environment variable is not set.");
     }
     Properties props = new Properties();
     props.put("mail.smtp.host", smtpHost);
-    props.put("mail.smtp.port", envProvider.getenv("SMTP_PORT"));
+    props.put("mail.smtp.port", envProvider.getenv("APPENGINE_SMTP_PORT"));
     props.put("mail.smtp.auth", "true");
-    if (Boolean.parseBoolean(envProvider.getenv("SMTP_USE_TLS"))) {
+    if (Boolean.parseBoolean(envProvider.getenv("APPENGINE_SMTP_USE_TLS"))) {
       props.put("mail.smtp.starttls.enable", "true");
     }
 
     Session session = Session.getInstance(props, new javax.mail.Authenticator() {
       protected javax.mail.PasswordAuthentication getPasswordAuthentication() {
         return new javax.mail.PasswordAuthentication(
-            envProvider.getenv("SMTP_USER"), envProvider.getenv("SMTP_PASSWORD"));
+            envProvider.getenv("APPENGINE_SMTP_USER"), envProvider.getenv("APPENGINE_SMTP_PASSWORD"));
       }
     });
 
@@ -109,7 +109,7 @@ class MailServiceImpl implements MailService {
       List<InternetAddress> bccRecipients = new ArrayList<>();
 
       if (toAdmin) {
-        String adminRecipients = envProvider.getenv("ADMIN_EMAIL_RECIPIENTS");
+        String adminRecipients = envProvider.getenv("APPENGINE_ADMIN_EMAIL_RECIPIENTS");
         if (adminRecipients == null || adminRecipients.isEmpty()) {
           throw new IllegalArgumentException("Admin recipients not configured.");
         }
@@ -251,7 +251,7 @@ class MailServiceImpl implements MailService {
    */
   private void doSend(Message message, boolean toAdmin)
       throws IllegalArgumentException, IOException {
-    if ("true".equals(envProvider.getenv("USE_SMTP_MAIL_SERVICE"))) {
+    if ("true".equals(envProvider.getenv("APPENGINE_USE_SMTP_MAIL_SERVICE"))) {
       sendSmtp(message, toAdmin);
       return;
     }
