@@ -1,18 +1,15 @@
 package com.google.appengine.api.mail;
 
 /**
- * A simple wrapper around {@link System} to allow for easier testing.
+ * An interface for providing environment variables.
  */
-class SystemEnvironmentProvider implements EnvironmentProvider {
+interface EnvironmentProvider {
   /**
    * Gets the value of the specified environment variable.
    * @param name the name of the environment variable
    * @return the string value of the variable, or {@code null} if the variable is not defined
    */
-  @Override
-  public String getenv(String name) {
-    return System.getenv(name);
-  }
+  String getenv(String name);
 
   /**
    * Gets the value of the specified environment variable, returning a default value if the
@@ -21,9 +18,5 @@ class SystemEnvironmentProvider implements EnvironmentProvider {
    * @param defaultValue the default value to return
    * @return the string value of the variable, or the default value if the variable is not defined
    */
-  @Override
-  public String getenv(String name, String defaultValue) {
-    String value = System.getenv(name);
-    return value != null ? value : defaultValue;
-  }
+  String getenv(String name, String defaultValue);
 }

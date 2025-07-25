@@ -53,7 +53,7 @@ import javax.mail.util.ByteArrayDataSource;
  */
 class MailServiceImpl implements MailService {
   static final String PACKAGE = "mail";
-  private final SystemEnvironmentProvider envProvider;
+  private final EnvironmentProvider envProvider;
 
   /** Default constructor, used in production. */
   MailServiceImpl() {
@@ -61,7 +61,7 @@ class MailServiceImpl implements MailService {
   }
 
   /** Constructor for testing, allowing a mock environment provider. */
-  MailServiceImpl(SystemEnvironmentProvider envProvider) {
+  MailServiceImpl(EnvironmentProvider envProvider) {
     this.envProvider = envProvider;
   }
 
