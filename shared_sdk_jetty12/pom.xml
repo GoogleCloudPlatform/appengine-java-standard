@@ -73,8 +73,8 @@
             <version>${jetty12.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-ee</artifactId>
+            <groupId>org.eclipse.jetty.ee</groupId>
+            <artifactId>jetty-ee-webapp</artifactId>
             <version>${jetty12.version}</version>
         </dependency>
         <dependency>
