@@ -96,9 +96,9 @@ public final class AppEngineWebXmlInitialParse {
     // and only if the setting has not been defined in appengine-web.xml.
     if (!settingDoneInAppEngineWebXml && (runtimeId != null)) {
       switch (runtimeId) {
-        case "java21": // Force default to EE10.
+        case "java21": // Force default to EE11.
           System.clearProperty("appengine.use.EE8");
-          System.setProperty("appengine.use.EE10", "true");
+          System.setProperty("appengine.use.EE11", "true");
           break;
         case "java17":
           // See if the Mendel experiment to enable Jetty12 for java17 is set
@@ -107,10 +107,10 @@ public final class AppEngineWebXmlInitialParse {
             System.setProperty("appengine.use.EE8", "true");
           }
           break;
-        case "java11": // EE8 and EE10 not supported
-        case "java8":  // EE8 and EE10 not supported
+        case "java11": // EE8 and EE11 not supported
+        case "java8":  // EE8 and EE11 not supported
           System.clearProperty("appengine.use.EE8");
-          System.clearProperty("appengine.use.EE10");
+          System.clearProperty("appengine.use.EE11");
           break;
         default:
           break;
@@ -131,8 +131,8 @@ public final class AppEngineWebXmlInitialParse {
         if (elementName.equals(PROPERTY)) {
           String prop = element.getAttributeByName(new QName("name")).getValue();
           String value = element.getAttributeByName(new QName("value")).getValue();
-          if (prop.equals("appengine.use.EE8") || prop.equals("appengine.use.EE10")) {
-            // appengine.use.EE10 or appengine.use.EE8
+          if (prop.equals("appengine.use.EE8") || prop.equals("appengine.use.EE11")) {
+            // appengine.use.EE11 or appengine.use.EE8
             settingDoneInAppEngineWebXml = true;
             System.setProperty(prop, value);
           } else if (prop.equalsIgnoreCase("appengine.use.HttpConnector")

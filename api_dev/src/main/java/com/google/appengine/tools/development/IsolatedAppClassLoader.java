@@ -155,7 +155,7 @@ public class IsolatedAppClassLoader extends URLClassLoader {
     // does not have the API jar in the classpath so that the Jetty container can boot, even if the
     // servlet is not used by the application.
     // This change is required now with the new Jetty 9.4 classloader which is more strict.
-    //    "com.google.apphosting.utils.servlet.DeferredTaskServlet" or EE10 related.
+    //    "com.google.apphosting.utils.servlet.DeferredTaskServlet" or EE11 related.
     if (name.contains("DeferredTaskServlet")) {
       try {
         return super.loadClass(name, resolve);

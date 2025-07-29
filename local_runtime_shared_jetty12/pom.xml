@@ -56,8 +56,8 @@
   <build>
     <plugins>
       <plugin>
-        <groupId>org.eclipse.jetty.ee10</groupId>
-        <artifactId>jetty-ee10-jspc-maven-plugin</artifactId>
+        <groupId>org.eclipse.jetty.ee11</groupId>
+        <artifactId>jetty-ee11-jspc-maven-plugin</artifactId>
        <version>${jetty12.version}</version>
         <executions>
           <execution>
@@ -67,7 +67,7 @@
             </goals>
             <configuration>
               <jspc>
-                <package>org.apache.jsp.ah.jetty.ee10</package>
+                <package>org.apache.jsp.ah.jetty.ee11</package>
               </jspc>
               <webAppSourceDirectory>${basedir}/src/main/resources/com/google/apphosting/utils/servlet/ah</webAppSourceDirectory>
               <mergeFragment>false</mergeFragment>

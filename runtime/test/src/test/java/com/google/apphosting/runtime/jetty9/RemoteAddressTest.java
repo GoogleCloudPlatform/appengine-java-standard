@@ -46,8 +46,8 @@ public class RemoteAddressTest extends JavaRuntimeViaHttpBase {
           {"jetty94", true},
           {"ee8", false},
           {"ee8", true},
-          {"ee10", false},
-          {"ee10", true},
+          {"ee11", false},
+          {"ee11", true},
         });
   }
 

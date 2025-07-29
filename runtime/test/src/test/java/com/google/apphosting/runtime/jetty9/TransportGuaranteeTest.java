@@ -47,8 +47,8 @@ public class TransportGuaranteeTest extends JavaRuntimeViaHttpBase {
           {"jetty94", true},
           {"ee8", false},
           {"ee8", true},
-          {"ee10", false},
-          {"ee10", true},
+          {"ee11", false},
+          {"ee11", true},
         });
   }
 
@@ -113,7 +113,7 @@ public class TransportGuaranteeTest extends JavaRuntimeViaHttpBase {
 
     ContentResponse response = httpClient.newRequest(url).send();
     assertThat(response.getStatus(), equalTo(HttpStatus.FORBIDDEN_403));
-    if (!"ee10".equals(environment)) {
+    if (!"ee11".equals(environment)) {
       assertThat(response.getContentAsString(), containsString("!Secure"));
     }
   }

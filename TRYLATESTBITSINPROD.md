@@ -33,7 +33,7 @@ are bundled as a Maven assembly under `<artifactId>runtime-deployment</artifactI
   * runtime-impl-jetty12.jar
   * runtime-shared-jetty9.jar
   * runtime-shared-jetty12.jar
-  * runtime-shared-jetty12-ee10.jar
+  * runtime-shared-jetty12-ee11.jar
   * runtime-main.jar
 
 Let's say you want the latest from head in this github repository. You could built the 6 jars, add them at the
@@ -54,7 +54,7 @@ See the output of the runtime deployment module which contains all the jars need
 ```
 ls  runtime/deployment/target/runtime-deployment-*/
 runtime-impl-jetty12.jar	runtime-main.jar		runtime-shared-jetty12.jar
-runtime-impl-jetty9.jar		runtime-shared-jetty12-ee10.jar	runtime-shared-jetty9.jar
+runtime-impl-jetty9.jar		runtime-shared-jetty12-ee11.jar	runtime-shared-jetty9.jar
 ```
 
 These jars are pushed in Maven Central as well under artifact com.google.appengine:runtime-deployment.
@@ -112,8 +112,8 @@ deployed web application.
                         <destinationFile>${appengine.runtime.location}/runtime-shared-jetty12.jar</destinationFile>
                     </fileSet>
                      <fileSet>
-                        <sourceFile>${appengine.runtime.location}/WEB-INF/lib/runtime-shared-jetty12-ee10-${appengine.runtime.version}.jar</sourceFile>
-                        <destinationFile>${appengine.runtime.location}/runtime-shared-jetty12-ee10.jar</destinationFile>
+                        <sourceFile>${appengine.runtime.location}/WEB-INF/lib/runtime-shared-jetty12-ee11-${appengine.runtime.version}.jar</sourceFile>
+                        <destinationFile>${appengine.runtime.location}/runtime-shared-jetty12-ee11.jar</destinationFile>
                     </fileSet>
                     <fileSet>
                         <sourceFile>${appengine.runtime.location}/WEB-INF/lib/runtime-main-${appengine.runtime.version}.jar</sourceFile>

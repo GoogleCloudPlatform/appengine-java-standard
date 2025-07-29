@@ -157,22 +157,22 @@ public class ApplicationTest {
 
   @Parameterized.Parameters
   public static List<Object[]> version() {
-    return Arrays.asList(new Object[][] {{"EE6"}, {"EE8"}, {"EE10"}});
+    return Arrays.asList(new Object[][] {{"EE6"}, {"EE8"}, {"EE11"}});
   }
 
   public ApplicationTest(String version) {
     switch (version) {
       case "EE6":
         System.setProperty("appengine.use.EE8", "false");
-        System.setProperty("appengine.use.EE10", "false");
+        System.setProperty("appengine.use.EE11", "false");
         break;
       case "EE8":
         System.setProperty("appengine.use.EE8", "true");
-        System.setProperty("appengine.use.EE10", "false");
+        System.setProperty("appengine.use.EE11", "false");
         break;
-      case "EE10":
+      case "EE11":
         System.setProperty("appengine.use.EE8", "false");
-        System.setProperty("appengine.use.EE10", "true");
+        System.setProperty("appengine.use.EE11", "true");
         break;
       default:
         // fall through
@@ -1531,7 +1531,7 @@ return sdkRoot;
     // TODO: review. This expectation used to be 3, this is because the Jetty
     //  QuickStartGeneratorConfiguration.generateQuickStartWebXml will now
     //  add an empty set if it doesn't have any SCIs instead of not setting the context param.
-    if (Boolean.getBoolean("appengine.use.EE8")||Boolean.getBoolean("appengine.use.EE10")) {
+    if (Boolean.getBoolean("appengine.use.EE8")||Boolean.getBoolean("appengine.use.EE11")) {
       assertThat(nodeList.getLength()).isEqualTo(4);
     } else {
       assertThat(nodeList.getLength()).isEqualTo(3);      
@@ -1671,10 +1671,10 @@ return sdkRoot;
                 = "\"ContainerInitializer"
                 + "{org.eclipse.jetty.ee8.apache.jsp.JettyJasperInitializer"
                 + ",interested=[],applicable=[],annotated=[]}\"";
-    } else if (Boolean.getBoolean("appengine.use.EE10")) {
+    } else if (Boolean.getBoolean("appengine.use.EE11")) {
         expectedJasperInitializer
                 = "\"ContainerInitializer"
-                + "{org.eclipse.jetty.ee10.apache.jsp.JettyJasperInitializer"
+                + "{org.eclipse.jetty.ee11.apache.jsp.JettyJasperInitializer"
                 + ",interested=[],applicable=[],annotated=[]}\"";
     } else {
         expectedJasperInitializer

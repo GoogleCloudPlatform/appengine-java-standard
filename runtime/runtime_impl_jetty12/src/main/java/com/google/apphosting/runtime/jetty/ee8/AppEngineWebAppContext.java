@@ -120,7 +120,7 @@ public class AppEngineWebAppContext extends WebAppContext {
     // This is a workaround to allow old quickstart-web.xml from Jetty 9.4 to be deployed.
     setAttribute("org.eclipse.jetty.ee8.annotations.AnnotationIntrospector.ForceMetadataNotComplete", "true");
 
-    // We do this here because unlike EE10 there is no easy way
+    // We do this here because unlike EE11 there is no easy way
     // to override createTempDirectory on the CoreContextHandler.
     createTempDirectory();
 

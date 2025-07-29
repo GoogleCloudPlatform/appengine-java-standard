@@ -22,6 +22,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.Arrays;
 import java.util.Collection;
+import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.After;
@@ -31,8 +32,6 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import org.eclipse.jetty.client.HttpClient;
-
 
 @RunWith(Parameterized.class)
 public class SendErrorTest extends JavaRuntimeViaHttpBase {
@@ -45,8 +44,8 @@ public class SendErrorTest extends JavaRuntimeViaHttpBase {
             {"jetty94", true},
             {"ee8", false},
             {"ee8", true},
-            {"ee10", false},
-            {"ee10", true},
+            {"ee11", false},
+            {"ee11", true},
         });
   }
 

@@ -38,22 +38,22 @@ public class DevAppServerMainTest extends DevAppServerTestBase {
 
   @Parameterized.Parameters
   public static List<Object[]> version() {
-    return Arrays.asList(new Object[][] {{"EE6"}, {"EE8"}, {"EE10"}});
+    return Arrays.asList(new Object[][] {{"EE6"}, {"EE8"}, {"EE11"}});
   }
 
   public DevAppServerMainTest(String version) {
     switch (version) {
       case "EE6":
         System.setProperty("appengine.use.EE8", "false");
-        System.setProperty("appengine.use.EE10", "false");
+        System.setProperty("appengine.use.EE11", "false");
         break;
       case "EE8":
         System.setProperty("appengine.use.EE8", "true");
-        System.setProperty("appengine.use.EE10", "false");
+        System.setProperty("appengine.use.EE11", "false");
         break;
-      case "EE10":
+      case "EE11":
         System.setProperty("appengine.use.EE8", "false");
-        System.setProperty("appengine.use.EE10", "true");
+        System.setProperty("appengine.use.EE11", "true");
         break;
       default:
         // fall through
@@ -65,7 +65,7 @@ public class DevAppServerMainTest extends DevAppServerTestBase {
     PortPicker portPicker = PortPicker.create();
     int jettyPort = portPicker.pickUnusedPort();
     File appDir =
-        Boolean.getBoolean("appengine.use.EE10")
+        Boolean.getBoolean("appengine.use.EE11")
             ? createApp("allinone_jakarta")
             : createApp("allinone");
 
@@ -83,10 +83,10 @@ public class DevAppServerMainTest extends DevAppServerTestBase {
     } else {
       // Jetty12 does not support java8.
       System.setProperty("appengine.use.EE8", "false");
-      System.setProperty("appengine.use.EE10", "false");
+      System.setProperty("appengine.use.EE11", "false");
     }
     runtimeArgs.add("-Dappengine.use.EE8=" + System.getProperty("appengine.use.EE8"));
-    runtimeArgs.add("-Dappengine.use.EE10=" + System.getProperty("appengine.use.EE10"));
+    runtimeArgs.add("-Dappengine.use.EE11=" + System.getProperty("appengine.use.EE11"));
     runtimeArgs.add("-cp");
     runtimeArgs.add(TOOLS_JAR);
     runtimeArgs.add("com.google.appengine.tools.development.DevAppServerMain");

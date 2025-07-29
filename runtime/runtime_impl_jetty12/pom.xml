@@ -154,8 +154,8 @@
             <optional>true</optional>
         </dependency>
         <dependency>
-            <groupId>org.eclipse.jetty.ee10</groupId>
-            <artifactId>jetty-ee10-quickstart</artifactId>
+            <groupId>org.eclipse.jetty.ee11</groupId>
+            <artifactId>jetty-ee11-quickstart</artifactId>
             <version>${jetty12.version}</version>
             <exclusions>
                 <exclusion>
@@ -166,8 +166,8 @@
           <optional>true</optional>
         </dependency>
         <dependency>
-            <groupId>org.eclipse.jetty.ee10</groupId>
-            <artifactId>jetty-ee10-servlets</artifactId>
+            <groupId>org.eclipse.jetty.ee11</groupId>
+            <artifactId>jetty-ee11-servlets</artifactId>
             <version>${jetty12.version}</version>
             <optional>true</optional>
         </dependency>
@@ -325,8 +325,8 @@
             <version>${jetty12.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.eclipse.jetty.ee10</groupId>
-            <artifactId>jetty-ee10-annotations</artifactId>
+            <groupId>org.eclipse.jetty.ee11</groupId>
+            <artifactId>jetty-ee11-annotations</artifactId>
             <version>${jetty12.version}</version>
         </dependency>
     </dependencies>
@@ -396,11 +396,11 @@
                                         <include>com/google/appengine/api/internal/*</include>
                                         <include>com/google/appengine/api/oauth/*</include>
                                         <include>com/google/appengine/api/taskqueue/*</include>
-                                        <include>com/google/appengine/api/taskqueue/ee10/*</include>
+                                        <include>com/google/appengine/api/taskqueue/ee11/*</include>
                                         <include>com/google/appengine/api/urlfetch/*</include>
                                         <include>com/google/appengine/api/users/*</include>
                                         <include>com/google/appengine/api/utils/*</include>
-                                        <include>com/google/appengine/api/utils/ee10/*</include>
+                                        <include>com/google/appengine/api/utils/ee11/*</include>
                                         <include>com/google/appengine/spi/*</include>
                                         <include>com/google/apphosting/api/*</include>
                                         <include>com/google/apphosting/utils/servlet/*</include>
@@ -417,7 +417,7 @@
                                         <include>com/google/apphosting/api/logservice/LogServicePb*</include>
                                         <include>com/google/apphosting/api/proto2api/*</include>
                                         <include>com/google/apphosting/utils/remoteapi/RemoteApiServlet*</include>
-                                        <include>com/google/apphosting/utils/remoteapi/EE10RemoteApiServlet*</include>
+                                        <include>com/google/apphosting/utils/remoteapi/EE11RemoteApiServlet*</include>
                                         <include>com/google/apphosting/utils/security/urlfetch/*</include>
                                         <include>com/google/apphosting/utils/servlet/DeferredTaskServlet*</include>
                                         <include>com/google/apphosting/utils/servlet/JdbcMySqlConnectionCleanupFilter*</include>
@@ -427,14 +427,14 @@
                                         <include>com/google/apphosting/utils/servlet/SnapshotServlet*</include>
                                         <include>com/google/apphosting/utils/servlet/TransactionCleanupFilter*</include>
                                         <include>com/google/apphosting/utils/servlet/WarmupServlet*</include>
-                                        <include>com/google/apphosting/utils/servlet/ee10/DeferredTaskServlet*</include>
-                                        <include>com/google/apphosting/utils/servlet/ee10/JdbcMySqlConnectionCleanupFilter*</include>
-                                        <include>com/google/apphosting/utils/servlet/ee10/MultipartMimeUtils*</include>
-                                        <include>com/google/apphosting/utils/servlet/ee10/ParseBlobUploadFilter*</include>
-                                        <include>com/google/apphosting/utils/servlet/ee10/SessionCleanupServlet*</include>
-                                        <include>com/google/apphosting/utils/servlet/ee10/SnapshotServlet*</include>
-                                        <include>com/google/apphosting/utils/servlet/ee10/TransactionCleanupFilter*</include>
-                                        <include>com/google/apphosting/utils/servlet/ee10/WarmupServlet*</include>
+                                        <include>com/google/apphosting/utils/servlet/ee11/DeferredTaskServlet*</include>
+                                        <include>com/google/apphosting/utils/servlet/ee11/JdbcMySqlConnectionCleanupFilter*</include>
+                                        <include>com/google/apphosting/utils/servlet/ee11/MultipartMimeUtils*</include>
+                                        <include>com/google/apphosting/utils/servlet/ee11/ParseBlobUploadFilter*</include>
+                                        <include>com/google/apphosting/utils/servlet/ee11/SessionCleanupServlet*</include>
+                                        <include>com/google/apphosting/utils/servlet/ee11/SnapshotServlet*</include>
+                                        <include>com/google/apphosting/utils/servlet/ee11/TransactionCleanupFilter*</include>
+                                        <include>com/google/apphosting/utils/servlet/ee11/WarmupServlet*</include>
                                         <include>com/google/storage/onestore/PropertyType*</include>
                                         <include>javax/cache/LICENSE</include>
                                         <include>javax/mail/LICENSE</include>
@@ -496,14 +496,14 @@
                                     <include>org.eclipse.jetty.ee8:jetty-ee8-servlets</include>
                                     <include>org.eclipse.jetty.ee8:jetty-ee8-webapp</include>
                                     <include>org.eclipse.jetty.ee8:jetty-ee8-nested</include>
-                                    <include>org.eclipse.jetty.ee10:jetty-ee10-annotations</include>
-                                    <include>org.eclipse.jetty.ee10:jetty-ee10-jndi</include>
-                                    <include>org.eclipse.jetty.ee10:jetty-ee10-plus</include>
-                                    <include>org.eclipse.jetty.ee10:jetty-ee10-quickstart</include>
-                                    <!--include>org.eclipse.jetty.ee10:jetty-ee10-security</include-->
-                                    <include>org.eclipse.jetty.ee10:jetty-ee10-servlet</include>
-                                    <include>org.eclipse.jetty.ee10:jetty-ee10-servlets</include>
-                                    <include>org.eclipse.jetty.ee10:jetty-ee10-webapp</include>
+                                    <include>org.eclipse.jetty.ee11:jetty-ee11-annotations</include>
+                                    <include>org.eclipse.jetty.ee11:jetty-ee11-jndi</include>
+                                    <include>org.eclipse.jetty.ee11:jetty-ee11-plus</include>
+                                    <include>org.eclipse.jetty.ee11:jetty-ee11-quickstart</include>
+                                    <!--include>org.eclipse.jetty.ee11:jetty-ee11-security</include-->
+                                    <include>org.eclipse.jetty.ee11:jetty-ee11-servlet</include>
+                                    <include>org.eclipse.jetty.ee11:jetty-ee11-servlets</include>
+                                    <include>org.eclipse.jetty.ee11:jetty-ee11-webapp</include>
                                     <include>org.eclipse.jetty.ee:jetty-ee-webapp</include>
                                     <include>org.eclipse.jetty:jetty-client</include>
                                     <include>org.eclipse.jetty:jetty-continuation</include>

@@ -229,15 +229,15 @@ public abstract class SharedMain {
     if (runtime.equals("java7")) {
       throw new IllegalArgumentException("the Java7 runtime is not supported anymore.");
     }
-    // Locally set the correct values for all runtimes, for EE8 and EE10 system properties to the
+    // Locally set the correct values for all runtimes, for EE8 and EE11 system properties to the
     // process of the devappserver.
     Map<String, String> props = appEngineWebXml.getSystemProperties();
     if (props.containsKey("appengine.use.EE8")) {
       System.setProperty("appengine.use.EE8", props.get("appengine.use.EE8"));
       AppengineSdk.resetSdk();
     }
-    if (props.containsKey("appengine.use.EE10")) {
-      System.setProperty("appengine.use.EE10", props.get("appengine.use.EE10"));
+    if (props.containsKey("appengine.use.EE11")) {
+      System.setProperty("appengine.use.EE11", props.get("appengine.use.EE11"));
       AppengineSdk.resetSdk();
     }
 

@@ -67,8 +67,8 @@ public class SizeLimitHandlerTest extends JavaRuntimeViaHttpBase {
           {"jetty94", true},
           {"ee8", false},
           {"ee8", true},
-          {"ee10", false},
-          {"ee10", true},
+          {"ee11", false},
+          {"ee11", true},
         });
   }
 
@@ -388,8 +388,8 @@ public class SizeLimitHandlerTest extends JavaRuntimeViaHttpBase {
       case "ee8":
         match = "org.eclipse.jetty.ee8";
         break;
-      case "ee10":
-        match = "org.eclipse.jetty.ee10";
+      case "ee11":
+        match = "org.eclipse.jetty.ee11";
         break;
       default:
         throw new IllegalArgumentException(environment);

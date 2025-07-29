@@ -167,14 +167,14 @@
                                      <type>jar</type>
                                      <excludes>META-INF/**
                                      </excludes>
-                                     <includes>com/google/apphosting/runtime/jetty/ee10/webdefault.xml</includes>
+                                     <includes>com/google/apphosting/runtime/jetty/ee11/webdefault.xml</includes>
                                     <fileMappers>
                                         <org.codehaus.plexus.components.io.filemappers.RegExpFileMapper>
-                                            <pattern>^\Qcom/google/apphosting/runtime/jetty/ee10/\E</pattern>
+                                            <pattern>^\Qcom/google/apphosting/runtime/jetty/ee11/\E</pattern>
                                             <replacement>./</replacement>
                                         </org.codehaus.plexus.components.io.filemappers.RegExpFileMapper>
                                     </fileMappers>
-                                    <outputDirectory>${assembly-directory}/docs/jetty12EE10</outputDirectory>
+                                    <outputDirectory>${assembly-directory}/docs/jetty12EE11</outputDirectory>
                                 </artifactItem>
                             </artifactItems>
                         </configuration>
@@ -273,13 +273,13 @@
                                 </artifactItem>
                                 <artifactItem>
                                     <groupId>com.google.appengine</groupId>
-                                    <artifactId>quickstartgenerator-jetty12-ee10</artifactId>
+                                    <artifactId>quickstartgenerator-jetty12-ee11</artifactId>
                                     <version>${project.version}</version>
                                     <type>jar</type>
                                     <overWrite>true</overWrite>
                                     <includes>**</includes>
                                     <outputDirectory>${assembly-directory}/lib/tools/quickstart</outputDirectory>
-                                    <destFileName>quickstartgenerator-jetty12-ee10.jar</destFileName>
+                                    <destFileName>quickstartgenerator-jetty12-ee11.jar</destFileName>
                                  </artifactItem>
                                  <artifactItem>
                                     <groupId>com.google.appengine</groupId>
@@ -441,7 +441,7 @@
         </dependency>
         <dependency>
             <groupId>com.google.appengine</groupId>
-            <artifactId>quickstartgenerator-jetty12-ee10</artifactId>
+            <artifactId>quickstartgenerator-jetty12-ee11</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

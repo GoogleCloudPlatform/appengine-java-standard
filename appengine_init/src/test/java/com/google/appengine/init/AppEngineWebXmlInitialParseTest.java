@@ -16,7 +16,6 @@
 
 package com.google.appengine.init;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
@@ -29,7 +28,7 @@ public class AppEngineWebXmlInitialParseTest {
   public void testParse() {
     String file = "appengine-web.xml";
     new AppEngineWebXmlInitialParse(file).handleRuntimeProperties();
-    assertTrue(Boolean.getBoolean("appengine.use.EE10"));
+    assertTrue(Boolean.getBoolean("appengine.use.EE11"));
     assertTrue(Boolean.getBoolean("appengine.use.HttpConnector"));
     assertTrue(Boolean.getBoolean("appengine.use.allheaders"));
   }

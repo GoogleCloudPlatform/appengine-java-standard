@@ -42,36 +42,36 @@ public final class JavaRuntimeAllInOneTest extends JavaRuntimeViaHttpBase {
   private RuntimeContext<?> runtime;
   @Parameterized.Parameters
   public static Collection<Object[]> version() {
-    return Arrays.asList(new Object[][] {{"EE6"}, {"EE8"}, {"EE10"}});
+    return Arrays.asList(new Object[][] {{"EE6"}, {"EE8"}, {"EE11"}});
   }
 
   public JavaRuntimeAllInOneTest(String version) {
     switch (version) {
       case "EE6":
         System.setProperty("appengine.use.EE8", "false");
-        System.setProperty("appengine.use.EE10", "false");
+        System.setProperty("appengine.use.EE11", "false");
         break;
       case "EE8":
         System.setProperty("appengine.use.EE8", "true");
-        System.setProperty("appengine.use.EE10", "false");
+        System.setProperty("appengine.use.EE11", "false");
         break;
-      case "EE10":
+      case "EE11":
         System.setProperty("appengine.use.EE8", "false");
-        System.setProperty("appengine.use.EE10", "true");
+        System.setProperty("appengine.use.EE11", "true");
         break;
       default:
         // fall through
     }
     if (Boolean.getBoolean("test.running.internally")) { // Internal can only do EE6
       System.setProperty("appengine.use.EE8", "false");
-      System.setProperty("appengine.use.EE10", "false");
+      System.setProperty("appengine.use.EE11", "false");
     }
   }
 
   @Before
   public void startRuntime() throws Exception {
-    if (Boolean.getBoolean("appengine.use.EE10")) {
-      copyAppToDir("com/google/apphosting/loadtesting/allinone/ee10", temp.getRoot().toPath());
+    if (Boolean.getBoolean("appengine.use.EE11")) {
+      copyAppToDir("com/google/apphosting/loadtesting/allinone/ee11", temp.getRoot().toPath());
     } else {
       copyAppToDir("com/google/apphosting/loadtesting/allinone", temp.getRoot().toPath());
     }
@@ -176,7 +176,7 @@ public final class JavaRuntimeAllInOneTest extends JavaRuntimeViaHttpBase {
     // into hassles with Servlet API 2.5 vs 3.1.)
     // The "forwarded" attribute is set by our servlet and the APP_VERSION_KEY_REQUEST_ATTR one is
     // set by our infrastructure.
-    if (Boolean.getBoolean("appengine.use.EE10")) {
+    if (Boolean.getBoolean("appengine.use.EE11")) {
       assertThat(attributes)
           .containsAtLeast(
               "foo", "bar",

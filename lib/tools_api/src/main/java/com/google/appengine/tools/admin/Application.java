@@ -231,7 +231,7 @@ public class Application implements GenericApplication {
       // code is case-sensitive so we disallow this.
       throw new AppEngineConfigException("WEB-INF directory must be capitalized.");
     }
-    // Should initialize correctly the appengine.use.EE10 or 8 system properties.
+    // Should initialize correctly the appengine.use.EE11 or 8 system properties.
     new AppEngineWebXmlInitialParse(explodedPath + "/WEB-INF/appengine-web.xml")
         .handleRuntimeProperties();
     AppengineSdk.resetSdk();
@@ -1029,7 +1029,7 @@ public class Application implements GenericApplication {
       String containerInitializer = matcher.group(1);
       if ("org.eclipse.jetty.apache.jsp.JettyJasperInitializer".equals(containerInitializer)
           || "org.eclipse.jetty.ee8.apache.jsp.JettyJasperInitializer".equals(containerInitializer)
-          || "org.eclipse.jetty.ee10.apache.jsp.JettyJasperInitializer"
+          || "org.eclipse.jetty.ee11.apache.jsp.JettyJasperInitializer"
               .equals(containerInitializer)) {
         foundJasperInitializer = true;
       }

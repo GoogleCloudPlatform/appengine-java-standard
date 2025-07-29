@@ -30,6 +30,10 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
 
+import com.google.appengine.repackaged.com.google.protobuf.ByteString;
+import com.google.appengine.repackaged.com.google.protobuf.ExtensionRegistry;
+import com.google.appengine.repackaged.com.google.protobuf.InvalidProtocolBufferException;
+import com.google.appengine.repackaged.com.google.protobuf.UninitializedMessageException;
 import com.google.apphosting.base.protos.api.RemoteApiPb;
 import com.google.apphosting.testing.PortPicker;
 import com.google.auto.value.AutoValue;
@@ -44,10 +48,6 @@ import com.google.common.reflect.ClassPath.ResourceInfo;
 import com.google.common.reflect.Reflection;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.errorprone.annotations.ForOverride;
-import com.google.appengine.repackaged.com.google.protobuf.ByteString;
-import com.google.appengine.repackaged.com.google.protobuf.ExtensionRegistry;
-import com.google.appengine.repackaged.com.google.protobuf.InvalidProtocolBufferException;
-import com.google.appengine.repackaged.com.google.protobuf.UninitializedMessageException;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import java.io.BufferedReader;
@@ -245,7 +245,7 @@ public abstract class JavaRuntimeViaHttpBase {
               .add(
                   "-Dcom.google.apphosting.runtime.jetty94.LEGACY_MODE=" + useJetty94LegacyMode(),
                   "-Dappengine.use.EE8=" + Boolean.getBoolean("appengine.use.EE8"),
-                  "-Dappengine.use.EE10=" + Boolean.getBoolean("appengine.use.EE10"),
+                  "-Dappengine.use.EE11=" + Boolean.getBoolean("appengine.use.EE11"),
                   "-Dappengine.use.HttpConnector="
                       + Boolean.getBoolean("appengine.use.HttpConnector"),
                   "-Dappengine.ignore.responseSizeLimit="

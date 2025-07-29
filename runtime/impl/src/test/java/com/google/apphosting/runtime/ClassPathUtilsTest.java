@@ -51,7 +51,7 @@ public final class ClassPathUtilsTest {
     // we do not call createJava8Environment() so expect java11+
     ClassPathUtils cpu = new ClassPathUtils();
     assertThat(cpu.getConnectorJUrls()).hasLength(0);
-    if (Boolean.getBoolean("appengine.use.EE8")|| Boolean.getBoolean("appengine.use.EE10")) {
+    if (Boolean.getBoolean("appengine.use.EE8")|| Boolean.getBoolean("appengine.use.EE11")) {
         assertThat(System.getProperty("classpath.runtime-impl"))
                 .isEqualTo(runtimeLocation + "/runtime-impl-jetty12.jar");
         assertThat(System.getProperty("classpath.runtime-shared"))

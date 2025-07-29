@@ -56,7 +56,7 @@
    </dependency>
     <dependency>
       <groupId>com.google.appengine</groupId>
-      <artifactId>runtime-shared-jetty12-ee10</artifactId>
+      <artifactId>runtime-shared-jetty12-ee11</artifactId>
        <version>${project.version}</version>
    </dependency>
      </dependencies>

@@ -46,11 +46,11 @@
     <module>runtime_shared</module>
     <module>runtime_shared_jetty9</module>
     <module>runtime_shared_jetty12</module>
-    <module>runtime_shared_jetty12_ee10</module>
+    <module>runtime_shared_jetty12_ee11</module>
     <module>utils</module>
     <module>quickstartgenerator</module>
     <module>quickstartgenerator_jetty12</module>
-    <module>quickstartgenerator_jetty12_ee10</module>
+    <module>quickstartgenerator_jetty12_ee11</module>
     <module>jetty12_assembly</module>
     <module>sdk_assembly</module>
     <module>applications</module>
@@ -499,7 +499,7 @@
       <dependency>
         <groupId>jakarta.servlet</groupId>
          <artifactId>jakarta.servlet-api</artifactId>
-         <version>6.0.0</version> <!-- keep -->
+         <version>6.1.0</version> <!-- keep -->
       </dependency>
       <dependency>
         <groupId>javax.servlet.jsp.jstl</groupId>

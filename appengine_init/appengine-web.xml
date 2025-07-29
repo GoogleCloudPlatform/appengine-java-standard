@@ -21,7 +21,7 @@
     <system-properties>
         <property name="java.util.logging.config.file" value="WEB-INF/logging.properties"/>
         <property name="foo" value="bar"/>
-        <property name="appengine.use.EE10" value="true"/>
+        <property name="appengine.use.EE11" value="true"/>
         <property name="appengine.use.httpconnector" value="true"/>
         <property name="appengine.use.allheaders" value="true"/>
     </system-properties>

@@ -94,7 +94,7 @@ Source code for all public APIs for com.google.appengine.api.* packages.
         <dependency>
           <groupId>jakarta.servlet</groupId>
           <artifactId>jakarta.servlet-api</artifactId>
-          <version>6.0.0</version>
+          <version>6.1.0</version>
           <scope>provided</scope>
         </dependency>
     ...
@@ -167,13 +167,13 @@ Source code for remote APIs for App Engine.
 ```
 
 
-* Servlet Jarkata EE10 web.xml
+* Servlet Jarkata EE11 web.xml
 
 ```
    <servlet>
      <display-name>Remote API Servlet</display-name>
      <servlet-name>RemoteApiServlet</servlet-name>
-     <servlet-class>com.google.apphosting.utils.remoteapi.EE10RemoteApiServlet</servlet-class>
+     <servlet-class>com.google.apphosting.utils.remoteapi.EE11RemoteApiServlet</servlet-class>
      <load-on-startup>1</load-on-startup>
    </servlet>
    <servlet-mapping>

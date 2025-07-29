@@ -33,22 +33,22 @@ public final class AnnotationScanningTest extends JavaRuntimeViaHttpBase {
 
   @Parameterized.Parameters
   public static List<Object[]> version() {
-    return Arrays.asList(new Object[][] {{"EE6"}, {"EE8"}, {"EE10"}});
+    return Arrays.asList(new Object[][] {{"EE6"}, {"EE8"}, {"EE11"}});
   }
 
   public AnnotationScanningTest(String version) {
     switch (version) {
       case "EE6":
         System.setProperty("appengine.use.EE8", "false");
-        System.setProperty("appengine.use.EE10", "false");
+        System.setProperty("appengine.use.EE11", "false");
         break;
       case "EE8":
         System.setProperty("appengine.use.EE8", "true");
-        System.setProperty("appengine.use.EE10", "false");
+        System.setProperty("appengine.use.EE11", "false");
         break;
-      case "EE10":
+      case "EE11":
         System.setProperty("appengine.use.EE8", "false");
-        System.setProperty("appengine.use.EE10", "true");
+        System.setProperty("appengine.use.EE11", "true");
         break;
       default:
         // fall through

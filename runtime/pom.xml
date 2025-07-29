@@ -36,7 +36,7 @@
     <module>runtime_impl_jetty12</module>
     <module>deployment</module>
     <module>local_jetty9</module>
-    <module>local_jetty12_ee10</module>
+    <module>local_jetty12_ee11</module>
     <module>local_jetty12</module>
     <module>nogaeapiswebapp</module>
     <module>annotationscanningwebapp</module>

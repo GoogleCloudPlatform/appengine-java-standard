@@ -28,7 +28,7 @@
         <include>com.google.appengine:runtime-main</include>
         <include>com.google.appengine:runtime-shared-jetty9</include>
         <include>com.google.appengine:runtime-shared-jetty12</include>
-        <include>com.google.appengine:runtime-shared-jetty12-ee10</include>
+        <include>com.google.appengine:runtime-shared-jetty12-ee11</include>
       </includes>
     </dependencySet>
   </dependencySets>
