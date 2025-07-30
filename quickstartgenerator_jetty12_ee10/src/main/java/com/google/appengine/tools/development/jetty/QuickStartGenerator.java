@@ -17,8 +17,8 @@
 package com.google.appengine.tools.development.jetty;
 
 import java.io.File;
-import org.eclipse.jetty.ee10.quickstart.QuickStartConfiguration;
-import org.eclipse.jetty.ee10.webapp.WebAppContext;
+import org.eclipse.jetty.ee11.quickstart.QuickStartConfiguration;
+import org.eclipse.jetty.ee11.webapp.WebAppContext;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.util.IO;
 import org.eclipse.jetty.util.resource.ResourceFactory;

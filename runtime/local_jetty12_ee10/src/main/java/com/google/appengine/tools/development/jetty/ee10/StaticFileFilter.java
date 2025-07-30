@@ -33,7 +33,7 @@ import java.net.MalformedURLException;
 import java.nio.file.InvalidPathException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.eclipse.jetty.ee10.servlet.ServletContextHandler;
+import org.eclipse.jetty.ee11.servlet.ServletContextHandler;
 import org.eclipse.jetty.util.URIUtil;
 import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.util.resource.ResourceFactory;

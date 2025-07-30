@@ -154,8 +154,8 @@
             <optional>true</optional>
         </dependency>
         <dependency>
-            <groupId>org.eclipse.jetty.ee10</groupId>
-            <artifactId>jetty-ee10-quickstart</artifactId>
+            <groupId>org.eclipse.jetty.ee11</groupId>
+            <artifactId>jetty-ee11-quickstart</artifactId>
             <version>${jetty12.version}</version>
             <exclusions>
                 <exclusion>
@@ -166,8 +166,8 @@
           <optional>true</optional>
         </dependency>
         <dependency>
-            <groupId>org.eclipse.jetty.ee10</groupId>
-            <artifactId>jetty-ee10-servlets</artifactId>
+            <groupId>org.eclipse.jetty.ee11</groupId>
+            <artifactId>jetty-ee11-servlets</artifactId>
             <version>${jetty12.version}</version>
             <optional>true</optional>
         </dependency>
@@ -325,8 +325,8 @@
             <version>${jetty12.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.eclipse.jetty.ee10</groupId>
-            <artifactId>jetty-ee10-annotations</artifactId>
+            <groupId>org.eclipse.jetty.ee11</groupId>
+            <artifactId>jetty-ee11-annotations</artifactId>
             <version>${jetty12.version}</version>
         </dependency>
     </dependencies>
@@ -496,14 +496,14 @@
                                     <include>org.eclipse.jetty.ee8:jetty-ee8-servlets</include>
                                     <include>org.eclipse.jetty.ee8:jetty-ee8-webapp</include>
                                     <include>org.eclipse.jetty.ee8:jetty-ee8-nested</include>
-                                    <include>org.eclipse.jetty.ee10:jetty-ee10-annotations</include>
-                                    <include>org.eclipse.jetty.ee10:jetty-ee10-jndi</include>
-                                    <include>org.eclipse.jetty.ee10:jetty-ee10-plus</include>
-                                    <include>org.eclipse.jetty.ee10:jetty-ee10-quickstart</include>
-                                    <!--include>org.eclipse.jetty.ee10:jetty-ee10-security</include-->
-                                    <include>org.eclipse.jetty.ee10:jetty-ee10-servlet</include>
-                                    <include>org.eclipse.jetty.ee10:jetty-ee10-servlets</include>
-                                    <include>org.eclipse.jetty.ee10:jetty-ee10-webapp</include>
+                                    <include>org.eclipse.jetty.ee11:jetty-ee11-annotations</include>
+                                    <include>org.eclipse.jetty.ee11:jetty-ee11-jndi</include>
+                                    <include>org.eclipse.jetty.ee11:jetty-ee11-plus</include>
+                                    <include>org.eclipse.jetty.ee11:jetty-ee11-quickstart</include>
+                                    <!--include>org.eclipse.jetty.ee11:jetty-ee11-security</include-->
+                                    <include>org.eclipse.jetty.ee11:jetty-ee11-servlet</include>
+                                    <include>org.eclipse.jetty.ee11:jetty-ee11-servlets</include>
+                                    <include>org.eclipse.jetty.ee11:jetty-ee11-webapp</include>
                                     <include>org.eclipse.jetty.ee:jetty-ee-webapp</include>
                                     <include>org.eclipse.jetty:jetty-client</include>
                                     <include>org.eclipse.jetty:jetty-continuation</include>

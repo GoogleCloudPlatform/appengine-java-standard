@@ -20,7 +20,7 @@ import jakarta.servlet.ServletConfig;
 import jakarta.servlet.ServletException;
 import java.lang.reflect.InvocationTargetException;
 import org.apache.tomcat.InstanceManager;
-import org.eclipse.jetty.ee10.jsp.JettyJspServlet;
+import org.eclipse.jetty.ee11.jsp.JettyJspServlet;
 
 /** {@code FixupJspServlet} adds some logic to work around bugs in the Jasper {@link JspServlet}. */
 public class FixupJspServlet extends JettyJspServlet {

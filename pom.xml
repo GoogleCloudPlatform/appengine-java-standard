@@ -499,7 +499,7 @@
       <dependency>
         <groupId>jakarta.servlet</groupId>
          <artifactId>jakarta.servlet-api</artifactId>
-         <version>6.0.0</version> <!-- keep -->
+         <version>6.1.0</version> <!-- keep -->
       </dependency>
       <dependency>
         <groupId>javax.servlet.jsp.jstl</groupId>

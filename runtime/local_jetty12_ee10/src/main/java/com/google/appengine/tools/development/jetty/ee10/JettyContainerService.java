@@ -61,12 +61,12 @@ import java.util.concurrent.Semaphore;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
-import org.eclipse.jetty.ee10.servlet.ServletApiRequest;
-import org.eclipse.jetty.ee10.servlet.ServletContextRequest;
-import org.eclipse.jetty.ee10.servlet.ServletHolder;
-import org.eclipse.jetty.ee10.webapp.Configuration;
-import org.eclipse.jetty.ee10.webapp.JettyWebXmlConfiguration;
-import org.eclipse.jetty.ee10.webapp.WebAppContext;
+import org.eclipse.jetty.ee11.servlet.ServletApiRequest;
+import org.eclipse.jetty.ee11.servlet.ServletContextRequest;
+import org.eclipse.jetty.ee11.servlet.ServletHolder;
+import org.eclipse.jetty.ee11.webapp.Configuration;
+import org.eclipse.jetty.ee11.webapp.JettyWebXmlConfiguration;
+import org.eclipse.jetty.ee11.webapp.WebAppContext;
 import org.eclipse.jetty.server.Context;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.HttpConfiguration;
@@ -116,10 +116,10 @@ public class JettyContainerService extends AbstractContainerService
    */
   private static final String[] CONFIG_CLASSES =
       new String[] {
-        org.eclipse.jetty.ee10.webapp.WebInfConfiguration.class.getCanonicalName(),
-        org.eclipse.jetty.ee10.webapp.WebXmlConfiguration.class.getCanonicalName(),
-        org.eclipse.jetty.ee10.webapp.MetaInfConfiguration.class.getCanonicalName(),
-        org.eclipse.jetty.ee10.webapp.FragmentConfiguration.class.getCanonicalName(),
+        org.eclipse.jetty.ee11.webapp.WebInfConfiguration.class.getCanonicalName(),
+        org.eclipse.jetty.ee11.webapp.WebXmlConfiguration.class.getCanonicalName(),
+        org.eclipse.jetty.ee11.webapp.MetaInfConfiguration.class.getCanonicalName(),
+        org.eclipse.jetty.ee11.webapp.FragmentConfiguration.class.getCanonicalName(),
         // Special annotationConfiguration to deal with Jasper ServletContainerInitializer.
         AppEngineAnnotationConfiguration.class.getCanonicalName()
       };

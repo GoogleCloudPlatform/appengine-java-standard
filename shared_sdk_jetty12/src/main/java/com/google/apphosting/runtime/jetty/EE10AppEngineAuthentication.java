@@ -29,7 +29,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.function.Function;
 import javax.security.auth.Subject;
-import org.eclipse.jetty.ee10.servlet.security.ConstraintSecurityHandler;
+import org.eclipse.jetty.ee11.servlet.security.ConstraintSecurityHandler;
 import org.eclipse.jetty.http.HttpURI;
 import org.eclipse.jetty.security.AuthenticationState;
 import org.eclipse.jetty.security.Authenticator;
