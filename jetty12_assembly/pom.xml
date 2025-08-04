@@ -78,12 +78,12 @@
                                     <destFileName>org.eclipse.jetty.ee8.apache-jsp-${jetty12.version}-nolog.jar</destFileName>
                                 </artifactItem>
                                 <artifactItem>
-                                    <groupId>org.eclipse.jetty.ee10</groupId>
-                                    <artifactId>jetty-ee10-apache-jsp</artifactId>
+                                    <groupId>org.eclipse.jetty.ee11</groupId>
+                                    <artifactId>jetty-ee11-apache-jsp</artifactId>
                                     <overWrite>true</overWrite>
                                     <classifier>nolog</classifier>
-                                    <outputDirectory>${assembly-directory}/jetty12/jetty-home/lib/ee10-apache-jsp</outputDirectory>
-                                    <destFileName>org.eclipse.jetty.ee10.apache-jsp-${jetty12.version}-nolog.jar</destFileName>
+                                    <outputDirectory>${assembly-directory}/jetty12/jetty-home/lib/ee11-apache-jsp</outputDirectory>
+                                    <destFileName>org.eclipse.jetty.ee11.apache-jsp-${jetty12.version}-nolog.jar</destFileName>
                                 </artifactItem>
                             </artifactItems>
                         </configuration>
@@ -130,8 +130,8 @@
             <version>${jetty12.version}</version>
         </dependency>
         <dependency>                                    
-            <groupId>org.eclipse.jetty.ee10</groupId>
-            <artifactId>jetty-ee10-apache-jsp</artifactId>
+            <groupId>org.eclipse.jetty.ee11</groupId>
+            <artifactId>jetty-ee11-apache-jsp</artifactId>
             <version>${jetty12.version}</version>
         </dependency>
     </dependencies>

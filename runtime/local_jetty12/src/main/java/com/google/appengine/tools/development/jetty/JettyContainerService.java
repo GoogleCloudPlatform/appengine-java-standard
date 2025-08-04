@@ -49,6 +49,7 @@ import java.security.Permissions;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Semaphore;
@@ -509,9 +510,12 @@ public class JettyContainerService extends AbstractContainerService implements C
     scanner.setReportExistingFilesOnStartup(false);
     scanner.setScanDepth(3);
 
-    scanner.addListener((Scanner.BulkListener) filenames -> {
-      log.info("A file has changed, reloading the web application.");
-      reloadWebApp();
+    scanner.addListener(new Scanner.BulkListener() {
+      @Override
+      public void pathsChanged(Map<Path, Scanner.Notification> changeSet) throws Exception {
+        log.info("A file has changed, reloading the web application.");
+        reloadWebApp();
+      }
     });
 
     LifeCycle.start(scanner);

@@ -18,7 +18,7 @@ package com.google.apphosting.runtime.jetty.delegate.internal;
 
 import com.google.apphosting.runtime.jetty.delegate.api.DelegateExchange;
 import java.io.IOException;
-import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.ReadPendingException;
 import java.nio.channels.WritePendingException;
@@ -40,12 +40,12 @@ public class DelegateEndpoint implements EndPoint {
   }
 
   @Override
-  public InetSocketAddress getLocalAddress() {
+  public SocketAddress getLocalSocketAddress() {
     return _exchange.getLocalAddr();
   }
 
   @Override
-  public InetSocketAddress getRemoteAddress() {
+  public SocketAddress getRemoteSocketAddress() {
     return _exchange.getRemoteAddr();
   }
 
@@ -120,6 +120,11 @@ public class DelegateEndpoint implements EndPoint {
 
   @Override
   public void write(Callback callback, ByteBuffer... buffers) throws WritePendingException {}
+
+  @Override
+  public Callback cancelWrite(Throwable throwable) {
+    return null;
+  }
 
   @Override
   public Connection getConnection() {

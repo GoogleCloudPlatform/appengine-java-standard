@@ -1674,7 +1674,7 @@ return sdkRoot;
     } else if (Boolean.getBoolean("appengine.use.EE10")) {
         expectedJasperInitializer
                 = "\"ContainerInitializer"
-                + "{org.eclipse.jetty.ee10.apache.jsp.JettyJasperInitializer"
+                + "{org.eclipse.jetty.ee11.apache.jsp.JettyJasperInitializer"
                 + ",interested=[],applicable=[],annotated=[]}\"";
     } else {
         expectedJasperInitializer

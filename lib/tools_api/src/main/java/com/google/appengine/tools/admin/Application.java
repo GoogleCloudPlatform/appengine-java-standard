@@ -1029,7 +1029,7 @@ public class Application implements GenericApplication {
       String containerInitializer = matcher.group(1);
       if ("org.eclipse.jetty.apache.jsp.JettyJasperInitializer".equals(containerInitializer)
           || "org.eclipse.jetty.ee8.apache.jsp.JettyJasperInitializer".equals(containerInitializer)
-          || "org.eclipse.jetty.ee10.apache.jsp.JettyJasperInitializer"
+          || "org.eclipse.jetty.ee11.apache.jsp.JettyJasperInitializer"
               .equals(containerInitializer)) {
         foundJasperInitializer = true;
       }

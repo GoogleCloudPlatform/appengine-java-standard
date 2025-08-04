@@ -89,6 +89,11 @@ public class DelegateHttpStream implements HttpStream {
   }
 
   @Override
+  public Runnable cancelSend(Throwable throwable, Callback callback) {
+    return null;
+  }
+
+  @Override
   public void push(MetaData.Request request) {
     throw new UnsupportedOperationException("push not supported");
   }

@@ -364,6 +364,11 @@ public class FakeHttpServletResponse implements HttpServletResponse {
     }
   }
 
+    @Override
+    public void sendRedirect(String string, int i, boolean bln) throws IOException {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
   private static class FakeServletOutputStream extends ServletOutputStream {
 
     private final ByteArrayOutputStream byteStream;

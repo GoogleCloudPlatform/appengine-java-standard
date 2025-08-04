@@ -23,7 +23,7 @@ import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.eclipse.jetty.ee10.webapp.WebAppContext;
+import org.eclipse.jetty.ee11.webapp.WebAppContext;
 import org.eclipse.jetty.server.Request;
 
 /**

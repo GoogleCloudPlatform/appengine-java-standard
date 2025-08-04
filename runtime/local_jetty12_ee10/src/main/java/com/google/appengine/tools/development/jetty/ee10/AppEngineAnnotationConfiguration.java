@@ -19,8 +19,8 @@ package com.google.appengine.tools.development.jetty.ee10;
 import jakarta.servlet.ServletContainerInitializer;
 import java.util.ArrayList;
 import java.util.List;
-import org.eclipse.jetty.ee10.annotations.AnnotationConfiguration;
-import org.eclipse.jetty.ee10.apache.jsp.JettyJasperInitializer;
+import org.eclipse.jetty.ee11.annotations.AnnotationConfiguration;
+import org.eclipse.jetty.ee11.apache.jsp.JettyJasperInitializer;
 
 /**
  * Customization of AnnotationConfiguration which correctly configures the JSP Jasper initializer.
