@@ -32,19 +32,18 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 // TODO: Remove Silent runner and use default runner once all tests are implemented and unnecessary stubs are removed.
 @RunWith(MockitoJUnitRunner.Silent.class)
-public class MailServiceImplTest {
+public class SmtpMailServiceImplTest {
 
   @Mock private Transport transport;
   @Mock private Session session;
   @Mock private EnvironmentProvider envProvider;
 
-  private MailServiceImpl mailService;
+  private SmtpMailServiceImpl mailService;
 
   @Before
   public void setUp() {
-    mailService = new MailServiceImpl(envProvider);
+    mailService = new SmtpMailServiceImpl(envProvider);
     // Mock environment variables
-    when(envProvider.getenv("APPENGINE_USE_SMTP_MAIL_SERVICE")).thenReturn("true");
     when(envProvider.getenv("APPENGINE_SMTP_HOST")).thenReturn("smtp.example.com");
     when(envProvider.getenv("APPENGINE_SMTP_PORT")).thenReturn("587");
     when(envProvider.getenv("APPENGINE_SMTP_USER")).thenReturn("user");
