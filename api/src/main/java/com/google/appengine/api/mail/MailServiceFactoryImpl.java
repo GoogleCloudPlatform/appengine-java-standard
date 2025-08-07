@@ -21,8 +21,22 @@ package com.google.appengine.api.mail;
  */
 final class MailServiceFactoryImpl implements IMailServiceFactory {
 
+  private final EnvironmentProvider envProvider;
+
+  MailServiceFactoryImpl() {
+    this.envProvider = new SystemEnvironmentProvider();
+  }
+
+  // For testing
+  MailServiceFactoryImpl(EnvironmentProvider envProvider) {
+    this.envProvider = envProvider;
+  }
+
   @Override
   public MailService getMailService() {
-    return new MailServiceImpl();
+    if ("true".equals(envProvider.getenv("APPENGINE_USE_SMTP_MAIL_SERVICE"))) {
+      return new SmtpMailServiceImpl(envProvider);
+    }
+    return new LegacyMailServiceImpl();
   }
 }
