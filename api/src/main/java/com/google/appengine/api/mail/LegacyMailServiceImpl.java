@@ -23,6 +23,26 @@ import com.google.appengine.api.mail.MailServicePb.MailServiceError.ErrorCode;
 import com.google.apphosting.api.ApiProxy;
 import com.google.protobuf.ByteString;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.Properties;
+import javax.activation.DataHandler;
+import javax.activation.DataSource;
+import javax.mail.Address;
+import javax.mail.BodyPart;
+import javax.mail.Message.RecipientType;
+import javax.mail.MessagingException;
+import javax.mail.Multipart;
+import javax.mail.Session;
+import javax.mail.Transport;
+import javax.mail.internet.AddressException;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeBodyPart;
+import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeMultipart;
+import javax.mail.util.ByteArrayDataSource;
 
 /**
  * This class implements raw access to the mail service.
@@ -31,8 +51,11 @@ import java.io.IOException;
  * convenience methods that JavaMail provides.
  *
  */
-class MailServiceImpl implements MailService {
+class LegacyMailServiceImpl implements MailService {
   static final String PACKAGE = "mail";
+
+  /** Default constructor. */
+  LegacyMailServiceImpl() {}
 
   /** {@inheritDoc} */
   @Override
@@ -47,7 +70,7 @@ class MailServiceImpl implements MailService {
       throws IllegalArgumentException, IOException {
     doSend(message, false);
   }
-
+  
   /**
    * Does the actual sending of the message.
    * @param message The message to be sent.
