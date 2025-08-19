@@ -134,8 +134,7 @@ public class QueryResultsSourceImplTest {
           lastChunkSizeWarning.set(lastChunkSizeWarning.get() - (1000 * 60 * 10));
           // Run again, we'll get one more log warning
           doQueries(provider);
-          verify(mockLogger, times(2)).warning(anyString());
-          */
+     
           assertThat(lastChunkSizeWarning.get()).isGreaterThan(0);
         };
     addData(1001);
