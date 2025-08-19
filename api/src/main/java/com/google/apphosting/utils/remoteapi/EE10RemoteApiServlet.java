@@ -42,7 +42,7 @@ import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.QueryResult;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.ExtensionRegistry;
 import com.google.protobuf.Message;
-// <internal24>
+
 import com.google.storage.onestore.v3.proto2api.OnestoreEntity;
 import com.google.storage.onestore.v3.proto2api.OnestoreEntity.EntityProto;
 import com.google.storage.onestore.v3.proto2api.OnestoreEntity.Path.Element;
@@ -452,7 +452,7 @@ public class EE10RemoteApiServlet extends HttpServlet {
     return computeSha1(entityBytes, entityBytes.length - 1);
   }
 
-  // <internal25>
+  
   private static byte[] computeSha1(byte[] bytes, int length) {
     MessageDigest md;
     try {

@@ -132,6 +132,7 @@ public class Application implements GenericApplication {
   private static final String JAVA_11_RUNTIME_ID = "java11";
   private static final String JAVA_17_RUNTIME_ID = "java17";
   private static final String JAVA_21_RUNTIME_ID = "java21";
+  private static final String JAVA_25_RUNTIME_ID = "java25";
 
   private static final ImmutableSet<String> ALLOWED_RUNTIME_IDS =
       ImmutableSet.of(
@@ -139,6 +140,7 @@ public class Application implements GenericApplication {
           JAVA_11_RUNTIME_ID,
           JAVA_17_RUNTIME_ID,
           JAVA_21_RUNTIME_ID,
+          JAVA_25_RUNTIME_ID,
           GOOGLE_RUNTIME_ID,
           GOOGLE_LEGACY_RUNTIME_ID);
 
@@ -892,6 +894,7 @@ public class Application implements GenericApplication {
         || appEngineWebXml.getRuntime().equals(JAVA_11_RUNTIME_ID)
         || appEngineWebXml.getRuntime().equals(JAVA_17_RUNTIME_ID)
         || appEngineWebXml.getRuntime().equals(JAVA_21_RUNTIME_ID)
+        || appEngineWebXml.getRuntime().equals(JAVA_25_RUNTIME_ID)
         || appEngineWebXml.getRuntime().startsWith(GOOGLE_LEGACY_RUNTIME_ID));
   }
 
@@ -1029,7 +1032,7 @@ public class Application implements GenericApplication {
       String containerInitializer = matcher.group(1);
       if ("org.eclipse.jetty.apache.jsp.JettyJasperInitializer".equals(containerInitializer)
           || "org.eclipse.jetty.ee8.apache.jsp.JettyJasperInitializer".equals(containerInitializer)
-          || "org.eclipse.jetty.ee10.apache.jsp.JettyJasperInitializer"
+          || "org.eclipse.jetty.ee11.apache.jsp.JettyJasperInitializer"
               .equals(containerInitializer)) {
         foundJasperInitializer = true;
       }
@@ -1251,7 +1254,8 @@ public class Application implements GenericApplication {
     } else if (runtime.startsWith(GOOGLE_LEGACY_RUNTIME_ID)
         || runtime.equals(JAVA_11_RUNTIME_ID)
         || runtime.equals(JAVA_17_RUNTIME_ID)
-        || runtime.equals(JAVA_21_RUNTIME_ID)) {
+        || runtime.equals(JAVA_21_RUNTIME_ID)
+        || runtime.equals(JAVA_25_RUNTIME_ID)) {
       // TODO(b/115569833): for now, it's still possible to use a JDK8 to compile and deploy Java11
       // apps.
       optionList.addAll(Arrays.asList("-source", "8"));

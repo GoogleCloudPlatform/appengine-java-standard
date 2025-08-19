@@ -27,6 +27,7 @@
   <artifactId>jetty12_testapp</artifactId>
   <properties>
     <jetty.version>12.0.25</jetty.version>
+    <jetty121.version>12.1.0.beta2</jetty121.version>
     <aspectj.version>1.9.24</aspectj.version>
   </properties>
   <dependencies>

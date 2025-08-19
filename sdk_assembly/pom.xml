@@ -111,6 +111,12 @@
                                 </artifactItem>
                                 <artifactItem>
                                     <groupId>com.google.appengine</groupId>
+                                    <artifactId>jetty121-assembly</artifactId>
+                                    <type>zip</type>
+                                    <outputDirectory>${assembly-directory}/</outputDirectory>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>com.google.appengine</groupId>
                                     <artifactId>runtime-deployment</artifactId>
                                     <version>${project.version}</version>
                                     <type>zip</type>
@@ -175,6 +181,51 @@
                                         </org.codehaus.plexus.components.io.filemappers.RegExpFileMapper>
                                     </fileMappers>
                                     <outputDirectory>${assembly-directory}/docs/jetty12EE10</outputDirectory>
+                                </artifactItem>
+                                                               <artifactItem>
+                                    <groupId>com.google.appengine</groupId>
+                                    <artifactId>runtime-impl-jetty121</artifactId>
+                                     <type>jar</type>
+                                     <excludes>META-INF/**
+                                     </excludes>
+                                     <includes>com/google/apphosting/runtime/jetty/webdefault.xml</includes>
+                                    <fileMappers>
+                                        <org.codehaus.plexus.components.io.filemappers.RegExpFileMapper>
+                                            <pattern>^\Qcom/google/apphosting/runtime/jetty/\E</pattern>
+                                            <replacement>./</replacement>
+                                        </org.codehaus.plexus.components.io.filemappers.RegExpFileMapper>
+                                    </fileMappers>
+                                    <outputDirectory>${assembly-directory}/docs/jetty121</outputDirectory>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>com.google.appengine</groupId>
+                                    <artifactId>runtime-impl-jetty121</artifactId>
+                                     <type>jar</type>
+                                     <excludes>META-INF/**
+                                     </excludes>
+                                     <includes>com/google/apphosting/runtime/jetty/ee10/webdefault.xml</includes>
+                                    <fileMappers>
+                                        <org.codehaus.plexus.components.io.filemappers.RegExpFileMapper>
+                                            <pattern>^\Qcom/google/apphosting/runtime/jetty/ee10/\E</pattern>
+                                            <replacement>./</replacement>
+                                        </org.codehaus.plexus.components.io.filemappers.RegExpFileMapper>
+                                    </fileMappers>
+                                    <outputDirectory>${assembly-directory}/docs/jetty121EE10</outputDirectory>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>com.google.appengine</groupId>
+                                    <artifactId>runtime-impl-jetty121</artifactId>
+                                     <type>jar</type>
+                                     <excludes>META-INF/**
+                                     </excludes>
+                                     <includes>com/google/apphosting/runtime/jetty/ee11/webdefault.xml</includes>
+                                    <fileMappers>
+                                        <org.codehaus.plexus.components.io.filemappers.RegExpFileMapper>
+                                            <pattern>^\Qcom/google/apphosting/runtime/jetty/ee11/\E</pattern>
+                                            <replacement>./</replacement>
+                                        </org.codehaus.plexus.components.io.filemappers.RegExpFileMapper>
+                                    </fileMappers>
+                                    <outputDirectory>${assembly-directory}/docs/jetty121EE11</outputDirectory>
                                 </artifactItem>
                             </artifactItems>
                         </configuration>
@@ -251,6 +302,16 @@
                                     <outputDirectory>${assembly-directory}/lib/impl/jetty12</outputDirectory>
                                     <destFileName>appengine-local-runtime-jetty12.jar</destFileName>
                                 </artifactItem>
+                                 <artifactItem>
+                                    <groupId>com.google.appengine</groupId>
+                                    <artifactId>appengine-local-runtime-jetty121</artifactId>
+                                    <version>${project.version}</version>
+                                    <type>jar</type>
+                                    <overWrite>true</overWrite>
+                                    <includes>**</includes>
+                                    <outputDirectory>${assembly-directory}/lib/impl/jetty121</outputDirectory>
+                                    <destFileName>appengine-local-runtime-jetty121.jar</destFileName>
+                                </artifactItem>
                                 <artifactItem>
                                     <groupId>com.google.appengine</groupId>
                                     <artifactId>quickstartgenerator</artifactId>
@@ -280,6 +341,36 @@
                                     <includes>**</includes>
                                     <outputDirectory>${assembly-directory}/lib/tools/quickstart</outputDirectory>
                                     <destFileName>quickstartgenerator-jetty12-ee10.jar</destFileName>
+                                 </artifactItem>
+                                 <artifactItem>
+                                    <groupId>com.google.appengine</groupId>
+                                    <artifactId>quickstartgenerator-jetty121-ee8</artifactId>
+                                    <version>${project.version}</version>
+                                    <type>jar</type>
+                                    <overWrite>true</overWrite>
+                                    <includes>**</includes>
+                                    <outputDirectory>${assembly-directory}/lib/tools/quickstart</outputDirectory>
+                                    <destFileName>quickstartgenerator-jetty121-ee8.jar</destFileName>
+                                 </artifactItem>
+                                 <artifactItem>
+                                    <groupId>com.google.appengine</groupId>
+                                    <artifactId>quickstartgenerator-jetty121-ee10</artifactId>
+                                    <version>${project.version}</version>
+                                    <type>jar</type>
+                                    <overWrite>true</overWrite>
+                                    <includes>**</includes>
+                                    <outputDirectory>${assembly-directory}/lib/tools/quickstart</outputDirectory>
+                                    <destFileName>quickstartgenerator-jetty121-ee10.jar</destFileName>
+                                 </artifactItem>
+                                 <artifactItem>
+                                    <groupId>com.google.appengine</groupId>
+                                    <artifactId>quickstartgenerator-jetty121-ee11</artifactId>
+                                    <version>${project.version}</version>
+                                    <type>jar</type>
+                                    <overWrite>true</overWrite>
+                                    <includes>**</includes>
+                                    <outputDirectory>${assembly-directory}/lib/tools/quickstart</outputDirectory>
+                                    <destFileName>quickstartgenerator-jetty121-ee11.jar</destFileName>
                                  </artifactItem>
                                  <artifactItem>
                                     <groupId>com.google.appengine</groupId>
@@ -321,7 +412,17 @@
                                     <outputDirectory>${assembly-directory}/lib/impl/jetty12</outputDirectory>
                                     <destFileName>appengine-local-runtime-jetty12.jar</destFileName>
                                 </artifactItem>
-                                 <artifactItem>
+                                <artifactItem>
+                                    <groupId>com.google.appengine</groupId>
+                                    <artifactId>appengine-local-runtime-jetty121</artifactId>
+                                    <version>${project.version}</version>
+                                    <type>jar</type>
+                                    <overWrite>true</overWrite>
+                                    <includes>**</includes>
+                                    <outputDirectory>${assembly-directory}/lib/impl/jetty121</outputDirectory>
+                                    <destFileName>appengine-local-runtime-jetty121.jar</destFileName>
+                                </artifactItem>
+                              <artifactItem>
                                     <groupId>javax.activation</groupId>
                                     <artifactId>activation</artifactId>
                                     <type>jar</type>
@@ -421,11 +522,11 @@
             <groupId>com.google.appengine</groupId>
             <artifactId>appengine-local-runtime-shared-jetty9</artifactId>
         </dependency>
-         <dependency>
+        <dependency>
             <groupId>com.google.appengine</groupId>
             <artifactId>appengine-local-runtime-shared-jetty12</artifactId>
             <version>${project.version}</version>
-       </dependency>
+        </dependency>
         <dependency>
             <groupId>com.google.appengine</groupId>
             <artifactId>appengine-testing</artifactId>
@@ -446,12 +547,27 @@
         </dependency>
         <dependency>
             <groupId>com.google.appengine</groupId>
+            <artifactId>quickstartgenerator-jetty121-ee10</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.appengine</groupId>
+            <artifactId>quickstartgenerator-jetty121-ee11</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.appengine</groupId>
             <artifactId>appengine-local-runtime-jetty9</artifactId>
             <version>${project.version}</version>
         </dependency>
          <dependency>
             <groupId>com.google.appengine</groupId>
             <artifactId>appengine-local-runtime-jetty12</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+          <dependency>
+            <groupId>com.google.appengine</groupId>
+            <artifactId>appengine-local-runtime-jetty121</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
@@ -471,7 +587,12 @@
             <groupId>com.google.appengine</groupId>
             <artifactId>runtime-impl-jetty12</artifactId>
             <version>${project.version}</version>
-        </dependency>        
+        </dependency>
+         <dependency>
+            <groupId>com.google.appengine</groupId>
+            <artifactId>runtime-impl-jetty121</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         <dependency>
             <groupId>com.google.appengine</groupId>
             <artifactId>runtime-deployment</artifactId>
@@ -491,7 +612,13 @@
             <artifactId>jetty12-assembly</artifactId>
             <version>${project.version}</version>
              <type>zip</type>
-      </dependency>
+         </dependency>
+         <dependency>
+            <groupId>com.google.appengine</groupId>
+            <artifactId>jetty121-assembly</artifactId>
+            <version>${project.version}</version>
+             <type>zip</type>
+         </dependency>
 
     </dependencies>
 

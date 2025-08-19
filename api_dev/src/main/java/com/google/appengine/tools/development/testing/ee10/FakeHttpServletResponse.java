@@ -358,6 +358,11 @@ public class FakeHttpServletResponse implements HttpServletResponse {
     return headers.keys();
   }
 
+  @Override
+  public void sendRedirect(String string, int i, boolean bln) throws IOException {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
   private void checkCommit() {
     if (isCommitted()) {
       throw new IllegalStateException("Response is already committed");

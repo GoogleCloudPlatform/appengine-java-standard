@@ -52,25 +52,7 @@
             </resource>
         </resources>
         <plugins>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>buildnumber-maven-plugin</artifactId>
-                <version>3.2.1</version>
-                <executions>
-                    <execution>
-                        <id>create-buildnumber</id>
-                        <goals>
-                            <goal>create</goal>
-                        </goals>
-                        <configuration>
-                            <doCheck>false</doCheck>
-                            <doUpdate>false</doUpdate>
-                            <revisionOnScmFailure>${nonCanonicalRevision}</revisionOnScmFailure>
-                            <timestampFormat>{0,date,yyyy-MM-dd'T'HH:mm:ssXXX}</timestampFormat>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
+          <!-- DO NOT SUBMIT !!!!!!!!!!!-->
         </plugins>
     </build>
 </project>

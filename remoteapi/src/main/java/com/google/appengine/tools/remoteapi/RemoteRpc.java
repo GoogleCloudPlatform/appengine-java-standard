@@ -157,7 +157,7 @@ class RemoteRpc {
         .build();
   }
 
-  // <internal23>
+  
   private static Object parseJavaException(
       RemoteApiPb.Response parsedResponse, String packageName, String methodName) {
     try {

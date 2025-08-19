@@ -275,17 +275,40 @@ public abstract class AppengineSdk {
     return files;
   }
 
-  /** Returns an SDK implementation to use for access jar files and resources. */
-  public static AppengineSdk getSdk() {
+    /**
+     * Returns an SDK implementation to use for access jar files and resources.
+     */
+    public static AppengineSdk getSdk() {
     if (currentSdk != null) {
       return currentSdk;
     }
-    if (Boolean.getBoolean("appengine.use.EE8")|| Boolean.getBoolean("appengine.use.EE10")) {
-      return currentSdk = new Jetty12Sdk();
-    } else {
-      return currentSdk = new ClassicSdk();
+
+    boolean useJetty121 = Boolean.getBoolean("appengine.use.jetty121");
+    boolean useEE8 = Boolean.getBoolean("appengine.use.EE8");
+    boolean useEE10 = Boolean.getBoolean("appengine.use.EE10");
+    boolean useEE11 = Boolean.getBoolean("appengine.use.EE11");
+
+    if (useJetty121) { // Jetty121 case, supports EE8, EE10, EE11
+      if (useEE8) {
+        currentSdk = new Jetty121EE8Sdk();
+      } else if (useEE10) {
+        currentSdk = new Jetty121EE10Sdk();
+      } else if (useEE11) {
+        currentSdk = new Jetty121EE11Sdk();
+      } else {
+        currentSdk = new Jetty121EE11Sdk(); //EE11 is the default for Jetty121
+      }
+    } else { // Jetty12 case, supports EE8, EE10 or classic which is Jetty 9.4
+      if (useEE8 || useEE10) {
+        currentSdk = new Jetty12Sdk();
+      } else if (useEE11) {
+        throw new IllegalArgumentException("appengine.use.EE11 is not supported in Jetty12");
+      } else {
+        currentSdk = new ClassicSdk();
+      }
     }
-    }
+    return currentSdk;
+  }
 
   /**
    * Modifies the SDK implementation (Classic or Maven-based). This method is invoked via reflection

@@ -24,7 +24,7 @@ import com.google.appengine.setup.testapps.jetty12.servlets.StatusServlet;
 import com.google.appengine.setup.testapps.jetty12.servlets.TaskQueueTestServlet;
 import jakarta.servlet.DispatcherType;
 import java.util.EnumSet;
-import org.eclipse.jetty.ee10.servlet.ServletHandler;
+import org.eclipse.jetty.ee11.servlet.ServletHandler;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;

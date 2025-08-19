@@ -31,6 +31,7 @@
     <module>shared_sdk</module>
     <module>shared_sdk_jetty9</module>
     <module>shared_sdk_jetty12</module>
+    <module>shared_sdk_jetty121</module>
     <module>appengine_resources</module>
     <module>api_dev</module>
     <module>appengine-api-1.0-sdk</module>
@@ -47,11 +48,18 @@
     <module>runtime_shared_jetty9</module>
     <module>runtime_shared_jetty12</module>
     <module>runtime_shared_jetty12_ee10</module>
+    <module>runtime_shared_jetty121</module>
+    <module>runtime_shared_jetty121_ee10</module>
+    <module>runtime_shared_jetty121_ee11</module>
     <module>utils</module>
     <module>quickstartgenerator</module>
     <module>quickstartgenerator_jetty12</module>
     <module>quickstartgenerator_jetty12_ee10</module>
+    <module>quickstartgenerator_jetty121_ee8</module>
+    <module>quickstartgenerator_jetty121_ee10</module>
+    <module>quickstartgenerator_jetty121_ee11</module>
     <module>jetty12_assembly</module>
+    <module>jetty121_assembly</module>
     <module>sdk_assembly</module>
     <module>applications</module>
     <module>appengine_testing_tests</module>
@@ -66,6 +74,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <jetty.version>9.4.58.v20250814</jetty.version>
     <jetty12.version>12.0.25</jetty12.version>
+    <jetty121.version>12.1.0</jetty121.version>
     <slf4j.version>2.0.17</slf4j.version>
     <distributionManagement.snapshot.url>https://oss.sonatype.org/content/repositories/google-snapshots/</distributionManagement.snapshot.url>
     <distributionManagement.snapshot.id>sonatype-nexus-snapshots</distributionManagement.snapshot.id>
@@ -499,7 +508,7 @@
       <dependency>
         <groupId>jakarta.servlet</groupId>
          <artifactId>jakarta.servlet-api</artifactId>
-         <version>6.0.0</version> <!-- keep -->
+         <version>6.1.0</version> <!-- keep -->
       </dependency>
       <dependency>
         <groupId>javax.servlet.jsp.jstl</groupId>

@@ -154,6 +154,9 @@ public class SizeLimitIgnoreTest extends JavaRuntimeViaHttpBase {
       case "ee10":
         match = "org.eclipse.jetty.ee10";
         break;
+      case "ee11":
+        match = "org.eclipse.jetty.ee11";
+        break;
       default:
         throw new IllegalArgumentException(environment);
     }

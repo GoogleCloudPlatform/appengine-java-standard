@@ -246,6 +246,8 @@ public abstract class JavaRuntimeViaHttpBase {
                   "-Dcom.google.apphosting.runtime.jetty94.LEGACY_MODE=" + useJetty94LegacyMode(),
                   "-Dappengine.use.EE8=" + Boolean.getBoolean("appengine.use.EE8"),
                   "-Dappengine.use.EE10=" + Boolean.getBoolean("appengine.use.EE10"),
+                  "-Dappengine.use.EE11=" + Boolean.getBoolean("appengine.use.EE11"),
+                  "-Dappengine.use.jetty121=" + Boolean.getBoolean("appengine.use.jetty121"),
                   "-Dappengine.use.HttpConnector="
                       + Boolean.getBoolean("appengine.use.HttpConnector"),
                   "-Dappengine.ignore.responseSizeLimit="

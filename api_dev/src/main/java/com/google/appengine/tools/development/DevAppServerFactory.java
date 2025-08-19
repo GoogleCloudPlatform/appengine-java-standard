@@ -352,7 +352,9 @@ public class DevAppServerFactory {
     }
     new AppEngineWebXmlInitialParse(appEngineWebXmlLocation.getAbsolutePath())
         .handleRuntimeProperties();
-    if (Boolean.getBoolean("appengine.use.EE8") || Boolean.getBoolean("appengine.use.EE10")) {
+    if (Boolean.getBoolean("appengine.use.EE8")
+        || Boolean.getBoolean("appengine.use.EE10")
+        || Boolean.getBoolean("appengine.use.EE11")) {
       AppengineSdk.resetSdk();
     }
     if (webXmlLocation.exists()) {

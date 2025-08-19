@@ -1676,6 +1676,11 @@ return sdkRoot;
                 = "\"ContainerInitializer"
                 + "{org.eclipse.jetty.ee10.apache.jsp.JettyJasperInitializer"
                 + ",interested=[],applicable=[],annotated=[]}\"";
+    }  else if (Boolean.getBoolean("appengine.use.EE11")) {
+        expectedJasperInitializer
+                = "\"ContainerInitializer"
+                + "{org.eclipse.jetty.ee11.apache.jsp.JettyJasperInitializer"
+                + ",interested=[],applicable=[],annotated=[]}\"";
     } else {
         expectedJasperInitializer
                 = "\"ContainerInitializer"

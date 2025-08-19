@@ -40,37 +40,60 @@ public final class JavaRuntimeAllInOneTest extends JavaRuntimeViaHttpBase {
   private static final int NUMBER_OF_RETRIES = 5;
 
   private RuntimeContext<?> runtime;
+
   @Parameterized.Parameters
   public static Collection<Object[]> version() {
-    return Arrays.asList(new Object[][] {{"EE6"}, {"EE8"}, {"EE10"}});
+    return Arrays.asList(
+        new Object[][] {
+          {"9.4", "EE6"},
+          {"12.0", "EE8"},
+          {"12.0", "EE10"},
+          {"12.1", "EE8"},
+          {"12.1", "EE10"},
+          {"12.1", "EE11"},
+        });
   }
 
-  public JavaRuntimeAllInOneTest(String version) {
-    switch (version) {
+  public JavaRuntimeAllInOneTest(String jettyVersion, String jakartaVersion) {
+    if (jettyVersion.equals("12.1")) {
+      System.setProperty("appengine.use.jetty121", "true");
+    } else {
+      System.setProperty("appengine.use.jetty121", "false");
+    }
+    switch (jakartaVersion) {
       case "EE6":
         System.setProperty("appengine.use.EE8", "false");
         System.setProperty("appengine.use.EE10", "false");
+        System.setProperty("appengine.use.EE11", "false");
         break;
       case "EE8":
         System.setProperty("appengine.use.EE8", "true");
         System.setProperty("appengine.use.EE10", "false");
-        break;
+        System.setProperty("appengine.use.EE11", "false");
+       break;
       case "EE10":
         System.setProperty("appengine.use.EE8", "false");
         System.setProperty("appengine.use.EE10", "true");
+         System.setProperty("appengine.use.EE11", "false");
+       break;
+       case "EE11":
+        System.setProperty("appengine.use.EE8", "false");
+        System.setProperty("appengine.use.EE10", "false");
+        System.setProperty("appengine.use.EE11", "true");
         break;
-      default:
+   default:
         // fall through
     }
     if (Boolean.getBoolean("test.running.internally")) { // Internal can only do EE6
       System.setProperty("appengine.use.EE8", "false");
       System.setProperty("appengine.use.EE10", "false");
+      System.setProperty("appengine.use.EE11", "false");
     }
   }
 
   @Before
   public void startRuntime() throws Exception {
-    if (Boolean.getBoolean("appengine.use.EE10")) {
+    if (Boolean.getBoolean("appengine.use.EE10")|| Boolean.getBoolean("appengine.use.EE11")) {
       copyAppToDir("com/google/apphosting/loadtesting/allinone/ee10", temp.getRoot().toPath());
     } else {
       copyAppToDir("com/google/apphosting/loadtesting/allinone", temp.getRoot().toPath());
@@ -176,7 +199,7 @@ public final class JavaRuntimeAllInOneTest extends JavaRuntimeViaHttpBase {
     // into hassles with Servlet API 2.5 vs 3.1.)
     // The "forwarded" attribute is set by our servlet and the APP_VERSION_KEY_REQUEST_ATTR one is
     // set by our infrastructure.
-    if (Boolean.getBoolean("appengine.use.EE10")) {
+    if (Boolean.getBoolean("appengine.use.EE10")|| Boolean.getBoolean("appengine.use.EE11")) {
       assertThat(attributes)
           .containsAtLeast(
               "foo", "bar",

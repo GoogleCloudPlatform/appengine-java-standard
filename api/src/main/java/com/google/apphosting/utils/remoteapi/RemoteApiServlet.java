@@ -452,7 +452,7 @@ public class RemoteApiServlet extends HttpServlet {
     return computeSha1(entityBytes, entityBytes.length - 1);
   }
 
-  // <internal25>
+  
   private static byte[] computeSha1(byte[] bytes, int length) {
     MessageDigest md;
     try {

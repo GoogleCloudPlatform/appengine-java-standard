@@ -96,6 +96,12 @@ public final class AppEngineWebXmlInitialParse {
     // and only if the setting has not been defined in appengine-web.xml.
     if (!settingDoneInAppEngineWebXml && (runtimeId != null)) {
       switch (runtimeId) {
+       case "java25": // Force default to EE11.
+          System.clearProperty("appengine.use.EE8");
+          System.clearProperty("appengine.use.EE10");
+          System.setProperty("appengine.use.EE11", "true");
+          System.setProperty("appengine.use.jetty121", "true");
+          break;
         case "java21": // Force default to EE10.
           System.clearProperty("appengine.use.EE8");
           System.setProperty("appengine.use.EE10", "true");
@@ -131,8 +137,10 @@ public final class AppEngineWebXmlInitialParse {
         if (elementName.equals(PROPERTY)) {
           String prop = element.getAttributeByName(new QName("name")).getValue();
           String value = element.getAttributeByName(new QName("value")).getValue();
-          if (prop.equals("appengine.use.EE8") || prop.equals("appengine.use.EE10")) {
-            // appengine.use.EE10 or appengine.use.EE8
+          if (prop.equals("appengine.use.EE8")
+              || prop.equals("appengine.use.EE10")
+              || prop.equals("appengine.use.EE11")) {
+            // appengine.use.EE10 or appengine.use.EE8 or EE11
             settingDoneInAppEngineWebXml = true;
             System.setProperty(prop, value);
           } else if (prop.equalsIgnoreCase("appengine.use.HttpConnector")
@@ -142,6 +150,8 @@ public final class AppEngineWebXmlInitialParse {
             System.setProperty("appengine.use.allheaders", value);
           } else if (prop.equalsIgnoreCase("appengine.ignore.responseSizeLimit")) {
             System.setProperty("appengine.ignore.responseSizeLimit", value);
+          } else if (prop.equalsIgnoreCase("appengine.use.jetty121")) {
+            System.setProperty("appengine.use.jetty121", value);
           }
         }
       }
