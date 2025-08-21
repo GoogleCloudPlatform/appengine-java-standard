@@ -205,6 +205,44 @@
         </repository>
       </repositories>
       </profile>
+      <profile>
+          <id>jdk21</id>
+          <properties>
+              <maven.compiler.release>21</maven.compiler.release>
+              <maven.compiler.source>21</maven.compiler.source>
+              <maven.compiler.target>21</maven.compiler.target>
+          </properties>
+          <build>
+              <plugins>
+                  <plugin>
+                      <groupId>org.apache.maven.plugins</groupId>
+                      <artifactId>maven-compiler-plugin</artifactId>
+                      <configuration>
+                          <executable>${env.JAVA_HOME_21}/bin/javac</executable>
+                      </configuration>
+                  </plugin>
+              </plugins>
+          </build>
+      </profile>
+      <profile>
+          <id>jdk25</id>
+          <properties>
+              <maven.compiler.release>25</maven.compiler.release>
+              <maven.compiler.source>25</maven.compiler.source>
+              <maven.compiler.target>25</maven.compiler.target>
+          </properties>
+          <build>
+              <plugins>
+                  <plugin>
+                      <groupId>org.apache.maven.plugins</groupId>
+                      <artifactId>maven-compiler-plugin</artifactId>
+                      <configuration>
+                          <executable>${env.JAVA_HOME_25}/bin/javac</executable>
+                      </configuration>
+                  </plugin>
+              </plugins>
+          </build>
+      </profile>
   </profiles>
 
   <dependencyManagement>

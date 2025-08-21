@@ -33,6 +33,13 @@ jobs:
         os: [ubuntu-latest]
         java: [17, 21, 25-ea]
         jdk: [temurin]
+        include:
+          - java: 17
+            maven_profile: ""
+          - java: 21
+            maven_profile: "-Pjdk21"
+          - java: 25-ea
+            maven_profile: "-Pjdk25"
       fail-fast: false
 
     runs-on: ${{ matrix.os }}
@@ -48,7 +55,15 @@ jobs:
           java-version: ${{ matrix.java }}
           cache: 'maven'
 
+      - name: Set JAVA_HOME for specific versions
+        run: |
+          if [[ "${{ matrix.java }}" == "21" ]]; then
+            echo "JAVA_HOME_21=$JAVA_HOME" >> $GITHUB_ENV
+          elif [[ "${{ matrix.java }}" == "25-ea" ]]; then
+            echo "JAVA_HOME_25=$JAVA_HOME" >> $GITHUB_ENV
+          fi
+
       - name: Build with Maven
         run: |
-          ./mvnw clean install -B -q
+          ./mvnw clean install -B -q ${{ matrix.maven_profile }}
           echo "done"
