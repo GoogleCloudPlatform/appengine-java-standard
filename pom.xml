@@ -228,9 +228,9 @@
           <id>jdk25</id>
           <properties>
               <!-- TODO: Update the JDK version to 25 once shader plugin is fixed for 25. -->
-              <maven.compiler.release>24</maven.compiler.release>
-              <maven.compiler.source>24</maven.compiler.source>
-              <maven.compiler.target>24</maven.compiler.target>
+              <maven.compiler.release>23</maven.compiler.release>
+              <maven.compiler.source>23</maven.compiler.source>
+              <maven.compiler.target>23</maven.compiler.target>
           </properties>
           <build>
               <plugins>
