@@ -25,14 +25,15 @@ import com.google.protobuf.ByteString;
 import java.io.IOException;
 
 /**
- * This class implements raw access to the mail service.
- * Applications that don't want to make use of Sun's JavaMail
- * can use it directly -- but they will forego the typing and
- * convenience methods that JavaMail provides.
- *
+ * This class implements raw access to the mail service. Applications that don't want to make use of
+ * Sun's JavaMail can use it directly -- but they will forego the typing and convenience methods
+ * that JavaMail provides.
  */
 class MailServiceImpl implements MailService {
   static final String PACKAGE = "mail";
+
+  /** Default constructor. */
+  MailServiceImpl() {}
 
   /** {@inheritDoc} */
   @Override
@@ -47,7 +48,7 @@ class MailServiceImpl implements MailService {
       throws IllegalArgumentException, IOException {
     doSend(message, false);
   }
-
+  
   /**
    * Does the actual sending of the message.
    * @param message The message to be sent.
