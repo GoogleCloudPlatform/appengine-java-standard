@@ -53,6 +53,7 @@
     <module>quickstartgenerator_jetty12_ee10</module>
     <module>jetty12_assembly</module>
     <module>sdk_assembly</module>
+    <module>runtime/test</module>
     <module>applications</module>
     <module>appengine_testing_tests</module>
     <module>e2etests</module>

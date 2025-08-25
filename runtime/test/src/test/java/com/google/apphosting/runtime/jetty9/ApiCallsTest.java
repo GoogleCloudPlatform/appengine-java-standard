@@ -257,7 +257,7 @@ public class ApiCallsTest extends JavaRuntimeViaHttpBase {
     }
 
     @Override
-    void handle(HttpExchange exchange) throws IOException {
+    public void handle(HttpExchange exchange) throws IOException {
       totalRequestCount.incrementAndGet();
       lock();
       try {

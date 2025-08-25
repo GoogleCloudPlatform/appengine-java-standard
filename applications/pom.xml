@@ -31,5 +31,7 @@
   <modules>
     <module>proberapp</module>
     <module>springboot</module>
+    <module>guestbook</module>
+    <module>guestbook_jakarta</module>
   </modules>
 </project>

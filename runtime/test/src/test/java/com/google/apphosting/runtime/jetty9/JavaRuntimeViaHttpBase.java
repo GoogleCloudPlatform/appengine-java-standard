@@ -87,11 +87,11 @@ public abstract class JavaRuntimeViaHttpBase {
   static final int RESPONSE_200 = 200;
 
   @FunctionalInterface
-  interface ApiServerFactory<ApiServerT extends Closeable> {
+  public interface ApiServerFactory<ApiServerT extends Closeable> {
     ApiServerT newApiServer(int apiPort, int runtimePort) throws IOException;
   }
 
-  static class RuntimeContext<ApiServerT extends Closeable> implements AutoCloseable {
+  public static class RuntimeContext<ApiServerT extends Closeable> implements AutoCloseable {
     private final Process runtimeProcess;
     private final ApiServerT httpApiServer;
     private final HttpClient httpClient;
@@ -119,7 +119,7 @@ public abstract class JavaRuntimeViaHttpBase {
     }
 
     @AutoValue
-    abstract static class Config<ApiServerT extends Closeable> {
+    public abstract static class Config<ApiServerT extends Closeable> {
       abstract ImmutableMap<String, String> environmentEntries();
 
       abstract ImmutableList<String> launcherFlags();
@@ -129,13 +129,13 @@ public abstract class JavaRuntimeViaHttpBase {
       // The default configuration uses an API server that rejects all API calls as unknown.
       // Individual tests can configure a different server, including the HttpApiServer from the SDK
       // which provides APIs using their dev app server implementations.
-      static Builder<DummyApiServer> builder() {
+      public static Builder<DummyApiServer> builder() {
         ApiServerFactory<DummyApiServer> apiServerFactory =
             (apiPort, runtimePort) -> DummyApiServer.create(apiPort, ImmutableMap.of());
         return builder(apiServerFactory);
       }
 
-      static <ApiServerT extends Closeable> Builder<ApiServerT> builder(
+      public static <ApiServerT extends Closeable> Builder<ApiServerT> builder(
           ApiServerFactory<ApiServerT> apiServerFactory) {
         return new AutoValue_JavaRuntimeViaHttpBase_RuntimeContext_Config.Builder<ApiServerT>()
             .setEnvironmentEntries(ImmutableMap.of())
@@ -143,7 +143,7 @@ public abstract class JavaRuntimeViaHttpBase {
       }
 
       @AutoValue.Builder
-      abstract static class Builder<ApiServerT extends Closeable> {
+      public abstract static class Builder<ApiServerT extends Closeable> {
         private boolean applicationPath;
         private boolean applicationRoot;
 
@@ -152,20 +152,22 @@ public abstract class JavaRuntimeViaHttpBase {
          * location.
          */
         @CanIgnoreReturnValue
-        Builder<ApiServerT> setApplicationPath(String path) {
+        public Builder<ApiServerT> setApplicationPath(String path) {
           applicationPath = true;
           launcherFlagsBuilder().add("--fixed_application_path=" + path);
           return this;
         }
 
         /** Sets Jetty's max request header size. */
-        Builder<ApiServerT> setJettyRequestHeaderSize(int size) {
+        @CanIgnoreReturnValue
+        public Builder<ApiServerT> setJettyRequestHeaderSize(int size) {
           launcherFlagsBuilder().add("--jetty_request_header_size=" + size);
           return this;
         }
 
         /** Sets Jetty's max response header size. */
-        Builder<ApiServerT> setJettyResponseHeaderSize(int size) {
+        @CanIgnoreReturnValue
+        public Builder<ApiServerT> setJettyResponseHeaderSize(int size) {
           launcherFlagsBuilder().add("--jetty_response_header_size=" + size);
           return this;
         }
@@ -179,21 +181,22 @@ public abstract class JavaRuntimeViaHttpBase {
          * application_root/$GAE_APPLICATION/$GAE_VERSION.$GAE_DEPLOYMENT_ID given to the runtime
          * via the AppServer file system.
          */
-        Builder<ApiServerT> setApplicationRoot(String root) {
+        @CanIgnoreReturnValue
+        public Builder<ApiServerT> setApplicationRoot(String root) {
           applicationRoot = true;
           launcherFlagsBuilder().add("--application_root=" + root);
           return this;
         }
 
-        abstract Builder<ApiServerT> setEnvironmentEntries(ImmutableMap<String, String> entries);
+        public abstract Builder<ApiServerT> setEnvironmentEntries(ImmutableMap<String, String> entries);
 
-        abstract ImmutableList.Builder<String> launcherFlagsBuilder();
+        public abstract ImmutableList.Builder<String> launcherFlagsBuilder();
 
-        abstract Builder<ApiServerT> setApiServerFactory(ApiServerFactory<ApiServerT> factory);
+        public abstract Builder<ApiServerT> setApiServerFactory(ApiServerFactory<ApiServerT> factory);
 
-        abstract Config<ApiServerT> autoBuild();
+        public abstract Config<ApiServerT> autoBuild();
 
-        Config<ApiServerT> build() {
+        public Config<ApiServerT> build() {
           if (applicationPath == applicationRoot) {
             throw new IllegalStateException(
                 "Exactly one of applicationPath or applicationRoot must be set");
@@ -220,7 +223,7 @@ public abstract class JavaRuntimeViaHttpBase {
       return ImmutableList.of("-showversion"); // Just so that the list is not empty.
     }
 
-    static <ApiServerT extends Closeable> RuntimeContext<ApiServerT> create(
+    public static <ApiServerT extends Closeable> RuntimeContext<ApiServerT> create(
         Config<ApiServerT> config) throws IOException, InterruptedException {
       PortPicker portPicker = PortPicker.create();
       int jettyPort = portPicker.pickUnusedPort();
@@ -301,28 +304,28 @@ public abstract class JavaRuntimeViaHttpBase {
       return Splitter.on(' ').omitEmptyStrings().splitToList(env.getOrDefault("GAE_JAVA_OPTS", ""));
     }
 
-    ApiServerT getApiServer() {
+    public ApiServerT getApiServer() {
       return httpApiServer;
     }
 
-    HttpClient getHttpClient() {
+    public HttpClient getHttpClient() {
       return httpClient;
     }
 
-    String jettyUrl(String urlPath) {
+    public String jettyUrl(String urlPath) {
       return String.format(
           "http://%s%s",
           HostAndPort.fromParts(new InetSocketAddress(jettyPort).getHostString(), jettyPort),
           urlPath);
     }
 
-    void executeHttpGet(String url, String expectedResponseBody, int expectedReturnCode)
+    public void executeHttpGet(String url, String expectedResponseBody, int expectedReturnCode)
         throws Exception {
       executeHttpGetWithRetries(
           url, expectedResponseBody, expectedReturnCode, /* numberOfRetries= */ 1);
     }
 
-    String executeHttpGet(String urlPath, int expectedReturnCode) throws Exception {
+    public String executeHttpGet(String urlPath, int expectedReturnCode) throws Exception {
       HttpGet get = new HttpGet(jettyUrl(urlPath));
       HttpResponse response = httpClient.execute(get);
       HttpEntity entity = response.getEntity();
@@ -338,7 +341,7 @@ public abstract class JavaRuntimeViaHttpBase {
       }
     }
 
-    void executeHttpGetWithRetries(
+    public void executeHttpGetWithRetries(
         String urlPath, String expectedResponse, int expectedReturnCode, int numberOfRetries)
         throws Exception {
       HttpGet get = new HttpGet(jettyUrl(urlPath));
@@ -357,11 +360,11 @@ public abstract class JavaRuntimeViaHttpBase {
       assertThat(retCode).isEqualTo(expectedReturnCode);
     }
 
-    void awaitStdoutLineMatching(String pattern, long timeoutSeconds) throws InterruptedException {
+    public void awaitStdoutLineMatching(String pattern, long timeoutSeconds) throws InterruptedException {
       outPump.awaitOutputLineMatching(pattern, timeoutSeconds);
     }
 
-    void awaitStderrLineMatching(String pattern, long timeoutSeconds) throws InterruptedException {
+    public void awaitStderrLineMatching(String pattern, long timeoutSeconds) throws InterruptedException {
       errPump.awaitOutputLineMatching(pattern, timeoutSeconds);
     }
 
@@ -373,7 +376,7 @@ public abstract class JavaRuntimeViaHttpBase {
       return pb.start();
     }
 
-    Process runtimeProcess() {
+    public Process runtimeProcess() {
       return runtimeProcess;
     }
 
@@ -446,7 +449,7 @@ public abstract class JavaRuntimeViaHttpBase {
    * contains "/", we use it as the absolute resource path, otherwise it is relative to this class
    * path.
    */
-  static void copyAppToDir(String appName, Path dir) throws IOException {
+  public static void copyAppToDir(String appName, Path dir) throws IOException {
     Class<?> myClass = JavaRuntimeViaHttpBase.class;
     ClassLoader myClassLoader = myClass.getClassLoader();
     String appPrefix;
@@ -525,7 +528,7 @@ public abstract class JavaRuntimeViaHttpBase {
    * the service and method. It is expected to return another serialized protobuf that will be used
    * as the payload of the returned {@link RemoteApiPb.Response}.
    */
-  static class DummyApiServer implements Closeable {
+  public static class DummyApiServer implements Closeable {
     private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
 
     static DummyApiServer create(
@@ -552,7 +555,7 @@ public abstract class JavaRuntimeViaHttpBase {
     private final Function<String, Function<ByteString, ByteString>> handlerLookup;
     private final Consumer<RemoteApiPb.Request> requestObserver;
 
-    DummyApiServer(
+    public DummyApiServer(
         HttpServer httpServer, Function<String, Function<ByteString, ByteString>> handlerLookup) {
       this(httpServer, handlerLookup, request -> {});
     }
@@ -576,7 +579,7 @@ public abstract class JavaRuntimeViaHttpBase {
       return RemoteApiPb.Response.newBuilder();
     }
 
-    void handle(HttpExchange exchange) throws IOException {
+    public void handle(HttpExchange exchange) throws IOException {
       try (InputStream in = exchange.getRequestBody();
           OutputStream out = exchange.getResponseBody()) {
         RemoteApiPb.Request requestPb;
