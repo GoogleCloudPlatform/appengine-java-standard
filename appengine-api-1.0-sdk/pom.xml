@@ -29,7 +29,7 @@
     <dependency> <!-- needed for remote_api for opencensus. -->
       <groupId>io.grpc</groupId>
       <artifactId>grpc-api</artifactId>
-      <version>1.74.0</version>
+      <version>1.75.0</version>
        <optional>true</optional>
    </dependency>
     <dependency>
