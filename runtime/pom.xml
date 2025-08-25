@@ -41,6 +41,9 @@
     <module>nogaeapiswebapp</module>
     <module>annotationscanningwebapp</module>
     <module>failinitfilterwebapp</module>
+    <module>nogaeapiswebappjakarta</module>
+    <module>annotationscanningwebappjakarta</module>
+    <module>failinitfilterwebappjakarta</module>
     <module>test</module>
     <module>testapps</module>
   </modules>
