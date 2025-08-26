@@ -75,6 +75,8 @@ create_settings_xml_file "settings.xml"
 
 git clone https://github.com/GoogleCloudPlatform/appengine-java-standard.git
 cd appengine-java-standard
+git checkout "${BRANCH_NAME}"
+
 ## src_dir="${KOKORO_ARTIFACTS_DIR}/git/appengine-java-standard"
 ## cd $src_dir
 
@@ -122,15 +124,21 @@ export JAVA_HOME="$(update-java-alternatives -l | grep "1.21" | head -n 1 | tr -
 echo "JAVA_HOME = $JAVA_HOME"
 
 # compile all packages
-echo "Calling release:prepare and release:perform."
-# Force usage of the aoss profile to point to google artifacts repository to be MOSS compliant.
-./mvnw release:prepare release:perform -B -q --settings=../settings.xml -Paoss -DskipTests -Darguments=-DskipTests -Dgpg.homedir=${GNUPGHOME} -Dgpg.passphrase=${GPG_PASSPHRASE}
+MVN_COMMON_OPTIONS="-B -q --settings=../settings.xml -Paoss -DskipTests -Darguments=-DskipTests -Dgpg.homedir=${GNUPGHOME} -Dgpg.passphrase=${GPG_PASSPHRASE}"
+if [[ "${DRY_RUN}" == "true" ]]; then
+  echo "DRY_RUN is true, only calling release:prepare."
+  ./mvnw release:prepare ${MVN_COMMON_OPTIONS}
+else
+  echo "Calling release:prepare and release:perform."
+  # Force usage of the aoss profile to point to google artifacts repository to be MOSS compliant.
+  ./mvnw release:prepare release:perform -B -q --settings=../settings.xml -Paoss -DskipTests -Darguments=-DskipTests -Dgpg.homedir=${GNUPGHOME} -Dgpg.passphrase=${GPG_PASSPHRASE}
 
-git remote set-url origin https://gae-java-bot:${GAE_JAVA_BOT_GITHUB_TOKEN}@github.com/GoogleCloudPlatform/appengine-java-standard
-echo "Doing git tag and push."
-git tag -a v$RELEASE_NUMBER -m v$RELEASE_NUMBER
-git push --set-upstream origin $RELEASE_NUMBER
-# Push the tag.
-git push origin v$RELEASE_NUMBER
+  git remote set-url origin https://gae-java-bot:${GAE_JAVA_BOT_GITHUB_TOKEN}@github.com/GoogleCloudPlatform/appengine-java-standard
+  echo "Doing git tag and push."
+  git tag -a v$RELEASE_NUMBER -m v$RELEASE_NUMBER
+  git push --set-upstream origin $RELEASE_NUMBER
+  # Push the tag.
+  git push origin v$RELEASE_NUMBER
+fi
 
 echo "Done doing a release."
