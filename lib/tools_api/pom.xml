@@ -23,7 +23,7 @@
   <parent>
     <groupId>com.google.appengine</groupId>
     <artifactId>lib-parent</artifactId>
-    <version>2.0.39-beta</version>
+    <version>2.0.39-beta-SNAPSHOT</version>
   </parent>
 
   <packaging>jar</packaging>
