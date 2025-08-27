@@ -78,6 +78,7 @@
       <plugin>
         <groupId>org.eclipse.jetty.ee8</groupId>
         <artifactId>jetty-ee8-jspc-maven-plugin</artifactId>
+       <version>${jetty12.version}</version>
         <executions>
           <execution>
             <id>jspc</id>
