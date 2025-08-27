@@ -184,7 +184,7 @@
                       <version>0.8.0</version>
                       <extensions>true</extensions>
                       <configuration>
-                          <publishingServerId>central</publishingServerId>
+                          <publishingServerId>${distributionManagement.snapshot.id}</publishingServerId>
                       </configuration>
                   </plugin>
               </plugins>
