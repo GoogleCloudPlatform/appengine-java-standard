@@ -33,7 +33,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
-import javax.servlet.jsp.JspFactory;
 import org.eclipse.jetty.ee10.annotations.AnnotationConfiguration;
 import org.eclipse.jetty.ee10.quickstart.QuickStartConfiguration;
 import org.eclipse.jetty.ee10.servlet.Dispatcher;
@@ -168,23 +167,7 @@ public class EE10AppVersionHandlerFactory implements AppVersionHandlerFactory {
       context.setExtractWAR(false);
       // ensure exception is thrown if context startup fails
       context.setThrowUnavailableOnStartupException(true);
-      // for JSP 2.2
-      try {
-        // Use the App Class loader to try to initialize the JSP machinery.
-        // Not an issue if it fails: it means the app does not contain the JSP jars in WEB-INF/lib.
-        Class<?> klass = classLoader.loadClass(TOMCAT_SIMPLE_INSTANCE_MANAGER);
-        Object sim = klass.getConstructor().newInstance();
-        context.getServletContext().setAttribute(TOMCAT_INSTANCE_MANAGER, sim);
-        // Set JSP factory equivalent for:
-        // JspFactory jspf = new JspFactoryImpl();
-        klass = classLoader.loadClass(TOMCAT_JSP_FACTORY);
-        JspFactory jspf = (JspFactory) klass.getConstructor().newInstance();
-        JspFactory.setDefaultFactory(jspf);
-        Class.forName("org.apache.jasper.compiler.JspRuntimeContext", true, classLoader);
-      } catch (Throwable t) {
-        // No big deal, there are no JSPs in the App since the jsp libraries are not inside the
-        // web app classloader.
-      }
+
       SessionsConfig sessionsConfig = appVersion.getSessionsConfig();
       EE10SessionManagerHandler.Config.Builder builder = EE10SessionManagerHandler.Config.builder();
       if (sessionsConfig.getAsyncPersistenceQueueName() != null) {
