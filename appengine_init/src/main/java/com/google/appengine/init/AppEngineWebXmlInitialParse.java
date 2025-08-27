@@ -96,9 +96,15 @@ public final class AppEngineWebXmlInitialParse {
     // and only if the setting has not been defined in appengine-web.xml.
     if (!settingDoneInAppEngineWebXml && (runtimeId != null)) {
       switch (runtimeId) {
-        case "java21": // Force default to EE10.
+        case "java21":
           System.clearProperty("appengine.use.EE8");
           System.setProperty("appengine.use.EE10", "true");
+          break;
+        case"java25": 
+          System.clearProperty("appengine.use.EE8");
+          System.setProperty(
+              "appengine.use.EE10",
+              "true"); // Force default to EE10. Replace when jetty12.1 is EE11.
           break;
         case "java17":
           // See if the Mendel experiment to enable Jetty12 for java17 is set

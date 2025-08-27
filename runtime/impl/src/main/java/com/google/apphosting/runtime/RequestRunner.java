@@ -239,9 +239,9 @@ public class RequestRunner implements Runnable {
 
   private void dispatchBackgroundRequest() throws InterruptedException, TimeoutException {
     String requestId = getBackgroundRequestId(upRequest);
-    // For java21 runtime, RPC path, do the new background thread handling for now, and keep it for
-    // other runtimes.
-    if (!Objects.equals(GAE_RUNTIME, "java21")) {
+    // For java21/25 runtime, RPC path, do the new background thread handling for now, and keep it
+    // for other runtimes.
+    if (!(Objects.equals(GAE_RUNTIME, "java21") || Objects.equals(GAE_RUNTIME, "java25"))) {
       // Wait here for synchronization with the ThreadFactory.
       CountDownLatch latch = ThreadGroupPool.resetCurrentThread();
       Thread thread = new ThreadProxy();

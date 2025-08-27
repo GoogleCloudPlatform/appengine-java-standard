@@ -339,11 +339,7 @@ public class AppEngineWebXml implements Cloneable {
    * Test if the runtime is at least Java11.
    */
   public boolean isJava11OrAbove() {
-    return getRuntime().equals("google")
-        || getRuntime().equals("googlelegacy")
-        || getRuntime().equals("java11")
-        || getRuntime().equals("java17")
-        || getRuntime().equals("java21");
+    return !getRuntime().equals("java8");
   }
 
   public void setRuntime(String runtime) {
