@@ -41,7 +41,10 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
-/** Unit tests for the MailServiceImpl class. Cloned from URLFetchService. */
+/**
+ * Unit tests for the MailServiceImpl class. Cloned from URLFetchService.
+ *
+ */
 @RunWith(JUnit4.class)
 public class MailServiceImplTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
@@ -119,10 +122,7 @@ public class MailServiceImplTest {
     new MailServiceImpl().send(msg);
     verify(delegate)
         .makeSyncCall(
-            same(environment),
-            eq(MailServiceImpl.PACKAGE),
-            eq("Send"),
-            eq(msgProto.toByteArray()));
+            same(environment), eq(MailServiceImpl.PACKAGE), eq("Send"), eq(msgProto.toByteArray()));
   }
 
   /** Tests that a message with an attachment works correctly. */
@@ -175,10 +175,7 @@ public class MailServiceImplTest {
 
     verify(delegate)
         .makeSyncCall(
-            same(environment),
-            eq(MailServiceImpl.PACKAGE),
-            eq("Send"),
-            eq(msgProto.toByteArray()));
+            same(environment), eq(MailServiceImpl.PACKAGE), eq("Send"), eq(msgProto.toByteArray()));
   }
 
   /** Tests that sending a AMP Email message works correctly. */
@@ -202,10 +199,7 @@ public class MailServiceImplTest {
     service.send(msg);
     verify(delegate)
         .makeSyncCall(
-            same(environment),
-            eq(MailServiceImpl.PACKAGE),
-            eq("Send"),
-            eq(msgProto.toByteArray()));
+            same(environment), eq(MailServiceImpl.PACKAGE), eq("Send"), eq(msgProto.toByteArray()));
   }
 
   /** Tests that a message with a header works correctly. */
@@ -243,10 +237,7 @@ public class MailServiceImplTest {
 
     verify(delegate)
         .makeSyncCall(
-            same(environment),
-            eq(MailServiceImpl.PACKAGE),
-            eq("Send"),
-            eq(msgProto.toByteArray()));
+            same(environment), eq(MailServiceImpl.PACKAGE), eq("Send"), eq(msgProto.toByteArray()));
   }
 
   @Test
@@ -333,10 +324,7 @@ public class MailServiceImplTest {
     MailMessage msgProto = newMailMessage(msg);
 
     when(delegate.makeSyncCall(
-            same(environment),
-            eq(MailServiceImpl.PACKAGE),
-            eq("Send"),
-            eq(msgProto.toByteArray())))
+            same(environment), eq(MailServiceImpl.PACKAGE), eq("Send"), eq(msgProto.toByteArray())))
         .thenThrow(new ApiProxy.ApplicationException(code.getNumber(), "detail"));
 
     return msg;
