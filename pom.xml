@@ -22,6 +22,7 @@
   <version>2.0.39-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>AppEngine :: Parent project</name>
+  <url>https://github.com/GoogleCloudPlatform/appengine-java-standard/</url>
   <description>Parent POM for the App Engine Java standard environment.</description>
   <modules>
     <module>external/geronimo_javamail</module>
