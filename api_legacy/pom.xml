@@ -27,6 +27,7 @@
 
   <packaging>jar</packaging>
   <name>AppEngine :: appengine-api-legacy</name>
+  <url>https://github.com/GoogleCloudPlatform/appengine-java-standard/</url>
   <description>
     Legacy appengine API's that have been removed from appengine-api-sdk-1.0
   </description>

@@ -25,6 +25,7 @@
   </parent>
   <packaging>jar</packaging>
   <name>AppEngine :: appengine-local-runtime-shared Jetty9</name>
+  <url>https://github.com/GoogleCloudPlatform/appengine-java-standard/</url>
   <dependencies>
     <dependency>
       <groupId>com.google.appengine</groupId>

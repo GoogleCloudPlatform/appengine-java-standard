@@ -29,6 +29,7 @@
     <groupId>com.google.appengine.demos</groupId>
     <artifactId>guestbook_jakarta</artifactId>
     <name>AppEngine :: guestbook_jakarta</name>
+    <url>https://github.com/GoogleCloudPlatform/appengine-java-standard/</url>
 
     <prerequisites>
         <maven>3.6.0</maven>

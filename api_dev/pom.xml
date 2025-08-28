@@ -28,6 +28,7 @@
 
   <packaging>jar</packaging>
   <name>AppEngine :: appengine-apis-dev</name>
+  <url>https://github.com/GoogleCloudPlatform/appengine-java-standard/</url>
   <description>SDK for dev_appserver (local development)</description>
   <properties>
     <maven.deploy.skip>true</maven.deploy.skip>

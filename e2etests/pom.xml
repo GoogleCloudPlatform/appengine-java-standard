@@ -26,6 +26,7 @@
     <version>2.0.39-SNAPSHOT</version>
   </parent>
   <name>AppEngine :: e2e tests</name>
+  <url>https://github.com/GoogleCloudPlatform/appengine-java-standard/</url>
   <packaging>pom</packaging>
 
   <modules>
