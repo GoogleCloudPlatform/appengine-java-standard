@@ -131,7 +131,8 @@ if [[ "${DRY_RUN}" == "true" ]]; then
 else
   echo "Calling release:prepare and release:perform."
   # Force usage of the aoss profile to point to google artifacts repository to be MOSS compliant.
-  ./mvnw release:prepare release:perform -B -q --settings=../settings.xml -Paoss -DskipTests -Darguments=-DskipTests -Dgpg.homedir=${GNUPGHOME} -Dgpg.passphrase=${GPG_PASSPHRASE}
+  ./mvnw release:prepare release:perform -B -q --settings=../settings.xml -Paoss -DskipTests -Darguments=-DskipTests -Dgpg.homedir=${GNUPGHOME} -Dgpg.passphrase=${GPG_PASSPHRASE} -l /tmp/mvn_log.txt
+  grep -v "Using Usertoken auth" /tmp/mvn_log.txt
 
   git remote set-url origin https://gae-java-bot:${GAE_JAVA_BOT_GITHUB_TOKEN}@github.com/GoogleCloudPlatform/appengine-java-standard
   echo "Doing git tag and push."
