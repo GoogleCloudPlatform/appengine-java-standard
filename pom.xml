@@ -22,6 +22,7 @@
   <version>2.0.39-beta-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>AppEngine :: Parent project</name>
+  <description>Parent POM for the App Engine Java standard environment.</description>
   <modules>
     <module>external/geronimo_javamail</module>
     <module>protobuf</module>

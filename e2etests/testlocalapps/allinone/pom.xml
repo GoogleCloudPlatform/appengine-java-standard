@@ -30,6 +30,7 @@
 
     <name>AppEngine :: allinone test application</name>
     <url>https://github.com/GoogleCloudPlatform/appengine-java-standard/</url>
+    <description>An all-in-one sample application.</description>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

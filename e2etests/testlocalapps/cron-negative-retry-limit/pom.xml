@@ -30,6 +30,7 @@
 
     <name>AppEngine :: cron-negative-retry-limit</name>
     <url>https://github.com/GoogleCloudPlatform/appengine-java-standard/</url>
+    <description>A sample application with a cron job with a negative retry limit.</description>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

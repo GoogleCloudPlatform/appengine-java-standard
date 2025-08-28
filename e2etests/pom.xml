@@ -27,6 +27,7 @@
   </parent>
   <name>AppEngine :: e2e tests</name>
   <url>https://github.com/GoogleCloudPlatform/appengine-java-standard/</url>
+  <description>End-to-end tests.</description>
   <packaging>pom</packaging>
 
   <modules>

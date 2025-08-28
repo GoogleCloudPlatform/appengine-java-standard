@@ -30,6 +30,7 @@
     <artifactId>guestbook</artifactId>
     <name>AppEngine :: guestbook</name>
     <url>https://github.com/GoogleCloudPlatform/appengine-java-standard/</url>
+    <description>A guestbook sample application.</description>
 
     <prerequisites>
         <maven>3.6.0</maven>

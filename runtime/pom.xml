@@ -27,6 +27,7 @@
   </parent>
   <name>AppEngine :: runtime projects</name>
   <url>https://github.com/GoogleCloudPlatform/appengine-java-standard/</url>
+  <description>Parent POM for App Engine runtime.</description>
   <packaging>pom</packaging>
 
   <modules>

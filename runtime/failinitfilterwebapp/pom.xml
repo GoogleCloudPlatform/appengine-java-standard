@@ -29,6 +29,7 @@
     <artifactId>failinitfilterwebapp</artifactId>
     <name>AppEngine :: failinitfilterwebapp</name>
     <url>https://github.com/GoogleCloudPlatform/appengine-java-standard/</url>
+    <description>A web application with a failing init filter.</description>
 
     <properties>
         <maven.deploy.skip>true</maven.deploy.skip>
