@@ -19,6 +19,7 @@
   <modelVersion>4.0.0</modelVersion>
   <artifactId>lib-parent</artifactId>
   <name>AppEngine :: library projects</name>
+  <url>https://github.com/GoogleCloudPlatform/appengine-java-standard/</url>
   <parent>
     <groupId>com.google.appengine</groupId>
     <artifactId>parent</artifactId>

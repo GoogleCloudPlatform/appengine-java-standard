@@ -28,6 +28,7 @@
       <version>2.0.39-beta-SNAPSHOT</version>
     </parent>
     <name>AppEngine :: sampleapp</name>
+    <url>https://github.com/GoogleCloudPlatform/appengine-java-standard/</url>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

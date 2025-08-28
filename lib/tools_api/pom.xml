@@ -28,6 +28,7 @@
 
   <packaging>jar</packaging>
   <name>AppEngine :: appengine-tools-sdk (aka appengine-tools-api)</name>
+  <url>https://github.com/GoogleCloudPlatform/appengine-java-standard/</url>
 
   <dependencies>
     <dependency>

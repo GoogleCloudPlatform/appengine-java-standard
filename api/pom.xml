@@ -28,6 +28,7 @@
   </properties>
   <packaging>jar</packaging>
   <name>AppEngine :: appengine-apis</name>
+  <url>https://github.com/GoogleCloudPlatform/appengine-java-standard/</url>
   <description>API for Google App Engine standard environment</description>
   <dependencies>
     <dependency>

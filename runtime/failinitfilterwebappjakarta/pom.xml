@@ -28,6 +28,7 @@
     <groupId>com.google.appengine.demos</groupId>
     <artifactId>failinitfilterwebappjakarta</artifactId>
     <name>AppEngine :: failinitfilterwebapp jakarta</name>
+    <url>https://github.com/GoogleCloudPlatform/appengine-java-standard/</url>
 
     <properties>
         <maven.deploy.skip>true</maven.deploy.skip>

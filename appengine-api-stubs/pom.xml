@@ -28,6 +28,7 @@
 
   <packaging>jar</packaging>
   <name>AppEngine :: appengine-api-stubs</name>
+  <url>https://github.com/GoogleCloudPlatform/appengine-java-standard/</url>
   <description>
     SDK for dev_appserver (local development) with some of the dependencies shaded (repackaged)
   </description>

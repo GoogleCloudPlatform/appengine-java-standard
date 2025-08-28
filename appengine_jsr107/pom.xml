@@ -20,6 +20,7 @@
     <artifactId>appengine-jsr107</artifactId>
     <packaging>jar</packaging>
     <name>AppEngine :: appengine-jsr107</name>
+    <url>https://github.com/GoogleCloudPlatform/appengine-java-standard/</url>
 
     <parent>
         <groupId>com.google.appengine</groupId>

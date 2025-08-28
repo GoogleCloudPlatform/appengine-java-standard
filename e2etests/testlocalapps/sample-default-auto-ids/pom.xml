@@ -29,6 +29,7 @@
     <packaging>war</packaging>
 
     <name>AppEngine :: sample-default-auto-ids</name>
+    <url>https://github.com/GoogleCloudPlatform/appengine-java-standard/</url>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

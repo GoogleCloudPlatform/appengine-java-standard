@@ -28,6 +28,7 @@
 
   <packaging>jar</packaging>
   <name>AppEngine :: quickstartgenerator Jetty9</name>
+  <url>https://github.com/GoogleCloudPlatform/appengine-java-standard/</url>
   <dependencies>
     <dependency>
       <groupId>org.eclipse.jetty</groupId>

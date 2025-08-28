@@ -27,6 +27,7 @@
 
   <packaging>pom</packaging>
   <name>AppEngine :: runtime-deployment</name>
+  <url>https://github.com/GoogleCloudPlatform/appengine-java-standard/</url>
   <description>Produces an output directory in the format expected by the Java runtime.</description>
 
   <dependencies>

@@ -28,6 +28,7 @@
 
   <packaging>jar</packaging>
   <name>AppEngine :: appengine-local-runtime Jetty9</name>
+  <url>https://github.com/GoogleCloudPlatform/appengine-java-standard/</url>
   <description>App Engine Local devappserver.</description>
 
   <dependencies>

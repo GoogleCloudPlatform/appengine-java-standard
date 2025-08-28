@@ -28,6 +28,7 @@
   </properties>
   <packaging>jar</packaging>
   <name>AppEngine :: appengine-utils</name>
+  <url>https://github.com/GoogleCloudPlatform/appengine-java-standard/</url>
   <dependencies>
     <dependency>
       <groupId>com.google.auto.service</groupId>

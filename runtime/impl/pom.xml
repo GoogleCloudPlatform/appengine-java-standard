@@ -28,6 +28,7 @@
 
     <packaging>jar</packaging>
     <name>AppEngine :: runtime-impl</name>
+    <url>https://github.com/GoogleCloudPlatform/appengine-java-standard/</url>
 
     <dependencies>
         <dependency>
