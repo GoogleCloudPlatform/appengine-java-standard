@@ -31,6 +31,7 @@
 
   <name>AppEngine :: bundle_standard_with_container_initializer</name>
   <url>https://github.com/GoogleCloudPlatform/appengine-java-standard/</url>
+  <description>A sample application that bundles the standard App Engine API with a container initializer.</description>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

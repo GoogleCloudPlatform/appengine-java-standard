@@ -30,6 +30,7 @@
 
   <name>AppEngine :: bundle_standard_with_weblistener_memcache</name>
   <url>https://github.com/GoogleCloudPlatform/appengine-java-standard/</url>
+  <description>A sample application that bundles the standard App Engine API with a web listener for memcache.</description>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

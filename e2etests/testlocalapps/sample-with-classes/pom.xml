@@ -30,6 +30,7 @@
 
     <name>AppEngine :: sample-with-classes</name>
     <url>https://github.com/GoogleCloudPlatform/appengine-java-standard/</url>
+    <description>A sample application with classes.</description>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

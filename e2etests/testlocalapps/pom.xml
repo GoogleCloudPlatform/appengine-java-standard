@@ -20,6 +20,7 @@
   <artifactId>testlocalapps</artifactId>
   <name>AppEngine :: Test local applications</name>
   <url>https://github.com/GoogleCloudPlatform/appengine-java-standard/</url>
+  <description>Test applications for local development.</description>
   <parent>
     <groupId>com.google.appengine</groupId>
     <artifactId>e2etests</artifactId>

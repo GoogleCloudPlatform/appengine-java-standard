@@ -26,6 +26,7 @@
     <artifactId>jetty12-assembly</artifactId>
     <name>AppEngine :: Jetty12 Assembly for the SDK</name>
     <url>https://github.com/GoogleCloudPlatform/appengine-java-standard/</url>
+    <description>Assembly for Jetty 12.</description>
     <packaging>pom</packaging>
 
     <properties>

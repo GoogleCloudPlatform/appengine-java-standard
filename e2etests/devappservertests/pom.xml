@@ -28,6 +28,7 @@
   <packaging>jar</packaging>
   <name>AppEngine :: e2e devappserver tests</name>
   <url>https://github.com/GoogleCloudPlatform/appengine-java-standard/</url>
+  <description>Tests for the development app server.</description>
 
   <properties>
     <maven.deploy.skip>true</maven.deploy.skip>

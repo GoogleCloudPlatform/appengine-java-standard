@@ -28,6 +28,7 @@
     <packaging>jar</packaging>
     <name>AppEngine :: runtime-shared</name>
     <url>https://github.com/GoogleCloudPlatform/appengine-java-standard/</url>
+    <description>App Engine runtime shared components.</description>
 
     <dependencies>
         <dependency>

@@ -27,6 +27,7 @@
   <packaging>jar</packaging>
   <name>AppEngine :: libxmlvalidator_test</name>
   <url>https://github.com/GoogleCloudPlatform/appengine-java-standard/</url>
+  <description>Tests for the XML validator library.</description>
   <properties>
     <maven.deploy.skip>true</maven.deploy.skip>
   </properties>
