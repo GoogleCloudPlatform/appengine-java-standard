@@ -185,6 +185,7 @@
                       <extensions>true</extensions>
                       <configuration>
                           <publishingServerId>${distributionManagement.snapshot.id}</publishingServerId>
+                          <autoPublish>true</autoPublish>
                       </configuration>
                   </plugin>
               </plugins>
