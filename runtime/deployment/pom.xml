@@ -22,11 +22,12 @@
   <parent>
     <groupId>com.google.appengine</groupId>
     <artifactId>runtime-parent</artifactId>
-    <version>2.0.39-SNAPSHOT</version>
+    <version>2.0.39-beta-SNAPSHOT</version>
   </parent>
 
   <packaging>pom</packaging>
   <name>AppEngine :: runtime-deployment</name>
+  <url>https://github.com/GoogleCloudPlatform/appengine-java-standard/</url>
   <description>Produces an output directory in the format expected by the Java runtime.</description>
 
   <dependencies>

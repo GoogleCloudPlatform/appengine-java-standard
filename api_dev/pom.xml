@@ -23,11 +23,12 @@
   <parent>
     <groupId>com.google.appengine</groupId>
     <artifactId>parent</artifactId>
-    <version>2.0.39-SNAPSHOT</version>
+    <version>2.0.39-beta-SNAPSHOT</version>
   </parent>
 
   <packaging>jar</packaging>
   <name>AppEngine :: appengine-apis-dev</name>
+  <url>https://github.com/GoogleCloudPlatform/appengine-java-standard/</url>
   <description>SDK for dev_appserver (local development)</description>
   <properties>
     <maven.deploy.skip>true</maven.deploy.skip>

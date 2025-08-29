@@ -80,7 +80,7 @@ public final class GuestBookTest extends JavaRuntimeViaHttpBase {
                         ? ".cmd" // Windows OS
                         : ".sh"), // Linux OS.
                 "stage",
-                appRootTarget.getAbsolutePath() + "/target/" + appName + "-2.0.39-SNAPSHOT",
+                appRootTarget.getAbsolutePath() + "/target/" + appName + "-2.0.39-beta-SNAPSHOT",
                 appRootTarget.getAbsolutePath() + "/target/appengine-staging")
             .start();
     results = readOutput(process.getInputStream());
