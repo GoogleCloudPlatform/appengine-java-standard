@@ -28,6 +28,7 @@
 
   <packaging>jar</packaging>
   <name>AppEngine :: appengine-api-stubs</name>
+  <url>https://github.com/GoogleCloudPlatform/appengine-java-standard/</url>
   <description>
     SDK for dev_appserver (local development) with some of the dependencies shaded (repackaged)
   </description>
@@ -376,6 +377,32 @@
             </configuration>
           </execution>
         </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <executions>
+          <execution>
+            <phase>compile</phase>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <notimestamp>true</notimestamp>
+          <show>public</show>
+          <failOnWarnings>false</failOnWarnings>
+          <doclint>none</doclint>
+          <sourcepath>${project.basedir}/../api_dev/src/main/java</sourcepath>
+          <additionalDependencies>
+            <additionalDependency>
+              <groupId>com.google.auto.service</groupId>
+              <artifactId>auto-service</artifactId>
+              <version>1.0-rc2</version>
+            </additionalDependency>
+          </additionalDependencies>
+        </configuration>
       </plugin>
     </plugins>
   </build>

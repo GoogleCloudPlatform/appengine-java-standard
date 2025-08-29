@@ -29,6 +29,8 @@
   <packaging>war</packaging>
 
   <name>AppEngine :: bundle_standard</name>
+  <url>https://github.com/GoogleCloudPlatform/appengine-java-standard/</url>
+  <description>A sample application that bundles the standard App Engine API.</description>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

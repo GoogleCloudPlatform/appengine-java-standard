@@ -26,6 +26,8 @@
   </parent>
   <packaging>jar</packaging>
   <name>AppEngine :: libxmlvalidator</name>
+  <url>https://github.com/GoogleCloudPlatform/appengine-java-standard/</url>
+  <description>XML validator library.</description>
   <dependencies>
     <dependency>
       <groupId>com.google.guava</groupId>

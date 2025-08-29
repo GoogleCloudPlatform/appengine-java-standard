@@ -28,6 +28,8 @@
 
   <packaging>jar</packaging>
   <name>AppEngine :: quickstartgenerator Jetty12 EE10</name>
+  <url>https://github.com/GoogleCloudPlatform/appengine-java-standard/</url>
+  <description>Quickstart generator for Jetty 12 and EE10.</description>
   <dependencies>
     <dependency>
       <groupId>org.eclipse.jetty.ee10</groupId>

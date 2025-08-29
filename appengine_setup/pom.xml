@@ -33,6 +33,7 @@
   </modules>
   <packaging>pom</packaging>
   <name>AppEngine :: appengine_setup</name>
+  <url>https://github.com/GoogleCloudPlatform/appengine-java-standard/</url>
   <description>DO NOT USE - Presently in Beta Mode. Library to help setup AppEngine features (bundled services, session management, etc).</description>
 
   <properties>

@@ -29,6 +29,7 @@
     <artifactId>geronimo-javamail_1.4_spec</artifactId>
     <packaging>jar</packaging>
     <name>AppEngine :: JavaMail 1.4</name>
+    <url>https://github.com/GoogleCloudPlatform/appengine-java-standard/</url>
     <version>1.4.4-${project.parent.version}</version>
 
     <description>Javamail 1.4 Specification with AppEngine updates.</description>

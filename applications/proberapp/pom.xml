@@ -24,6 +24,8 @@
     <groupId>com.google.appengine.demos</groupId>
     <artifactId>proberapp</artifactId>
     <name>AppEngine :: proberapp</name>
+    <url>https://github.com/GoogleCloudPlatform/appengine-java-standard/</url>
+    <description>A prober application.</description>
   <parent>
     <groupId>com.google.appengine</groupId>
     <artifactId>applications</artifactId>

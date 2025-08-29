@@ -27,6 +27,8 @@
 
     <packaging>jar</packaging>
     <name>AppEngine :: runtime-shared Jetty12</name>
+    <url>https://github.com/GoogleCloudPlatform/appengine-java-standard/</url>
+    <description>App Engine runtime shared components for Jetty 12.</description>
 
   <dependencies>
         <dependency>
@@ -157,6 +159,25 @@
                     </execution>
                 </executions>
 
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <notimestamp>true</notimestamp>
+                    <show>public</show>
+                    <failOnWarnings>false</failOnWarnings>
+                    <doclint>none</doclint>
+                    <sourcepath>${project.basedir}/../runtime_shared</sourcepath>
+                </configuration>
             </plugin>
         </plugins>
     </build>

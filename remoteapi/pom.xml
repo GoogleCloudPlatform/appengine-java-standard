@@ -24,6 +24,8 @@
   </parent>
   <packaging>jar</packaging>
   <name>AppEngine :: appengine-remote-api</name>
+  <url>https://github.com/GoogleCloudPlatform/appengine-java-standard/</url>
+  <description>App Engine remote API.</description>
   <dependencies>
      <dependency>
        <groupId>com.google.api-client</groupId>

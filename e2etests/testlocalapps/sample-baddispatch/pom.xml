@@ -29,6 +29,8 @@
     <packaging>war</packaging>
 
     <name>AppEngine :: sample-baddispatch</name>
+    <url>https://github.com/GoogleCloudPlatform/appengine-java-standard/</url>
+    <description>A sample application with a bad dispatch file.</description>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

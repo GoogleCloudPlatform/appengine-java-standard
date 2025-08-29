@@ -19,6 +19,8 @@
   <modelVersion>4.0.0</modelVersion>
   <artifactId>applications</artifactId>
   <name>AppEngine :: application projects</name>
+  <url>https://github.com/GoogleCloudPlatform/appengine-java-standard/</url>
+  <description>Parent POM for sample applications.</description>
   <parent>
     <groupId>com.google.appengine</groupId>
     <artifactId>parent</artifactId>

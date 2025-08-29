@@ -28,6 +28,8 @@
     <groupId>com.google.appengine.demos</groupId>
     <artifactId>annotationscanningwebapp</artifactId>
     <name>AppEngine :: annotationscanningwebapp</name>
+    <url>https://github.com/GoogleCloudPlatform/appengine-java-standard/</url>
+    <description>A web application for annotation scanning.</description>
 
     <properties>
         <maven.deploy.skip>true</maven.deploy.skip>

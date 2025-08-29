@@ -25,6 +25,8 @@
   </parent>
   <packaging>jar</packaging>
   <name>AppEngine :: appengine-local-runtime-shared Jetty12</name>
+  <url>https://github.com/GoogleCloudPlatform/appengine-java-standard/</url>
+  <description>App Engine local runtime shared components for Jetty 12.</description>
   <dependencies>
     <dependency>
       <groupId>com.google.appengine</groupId>

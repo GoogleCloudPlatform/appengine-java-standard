@@ -22,6 +22,8 @@
   <version>2.0.39-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>AppEngine :: Parent project</name>
+  <url>https://github.com/GoogleCloudPlatform/appengine-java-standard/</url>
+  <description>Parent POM for the App Engine Java standard environment.</description>
   <modules>
     <module>external/geronimo_javamail</module>
     <module>protobuf</module>
@@ -179,15 +181,14 @@
                       </executions>
                   </plugin>
                   <plugin>
-                    <groupId>org.sonatype.plugins</groupId>
-                    <artifactId>nexus-staging-maven-plugin</artifactId>
-                    <version>1.7.0</version>
-                    <extensions>true</extensions>
-                    <configuration>
-                      <serverId>${distributionManagement.snapshot.id}</serverId>
-                      <nexusUrl>https://oss.sonatype.org/</nexusUrl>
-                      <autoReleaseAfterClose>true</autoReleaseAfterClose>
-                    </configuration>
+                      <groupId>org.sonatype.central</groupId>
+                      <artifactId>central-publishing-maven-plugin</artifactId>
+                      <version>0.8.0</version>
+                      <extensions>true</extensions>
+                      <configuration>
+                          <publishingServerId>${distributionManagement.snapshot.id}</publishingServerId>
+                          <autoPublish>true</autoPublish>
+                      </configuration>
                   </plugin>
               </plugins>
           </build>

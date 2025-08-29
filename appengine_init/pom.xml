@@ -28,6 +28,8 @@
 
   <packaging>jar</packaging>
   <name>AppEngine :: appengine-init</name>
+  <url>https://github.com/GoogleCloudPlatform/appengine-java-standard/</url>
+  <description>App Engine initialization.</description>
 
     <dependencies>
  

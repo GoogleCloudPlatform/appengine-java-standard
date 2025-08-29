@@ -24,6 +24,7 @@
   </parent>
   <packaging>jar</packaging>
   <name>AppEngine :: appengine-api-1.0-sdk</name>
+  <url>https://github.com/GoogleCloudPlatform/appengine-java-standard/</url>
   <description>API for Google App Engine standard environment with some of the dependencies shaded (repackaged)</description>
   <dependencies>
     <dependency> <!-- needed for remote_api for opencensus. -->
@@ -526,6 +527,39 @@
             </configuration>
           </execution>
         </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <executions>
+          <execution>
+            <phase>compile</phase>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <notimestamp>true</notimestamp>
+          <show>public</show>
+          <failOnWarnings>false</failOnWarnings>
+          <doclint>none</doclint>
+          <sourcepath>${project.basedir}/../api/src/main/java</sourcepath>
+          <includeDependencySources>true</includeDependencySources>
+          <additionalDependencies>
+            <additionalDependency>
+              <groupId>com.google.auto.service</groupId>
+              <artifactId>auto-service</artifactId>
+              <version>1.0-rc2</version>
+            </additionalDependency>
+            <additionalDependency>
+              <groupId>com.google.auto</groupId>
+              <artifactId>auto-common</artifactId>
+              <version>1.2.1</version>
+            </additionalDependency>
+          </additionalDependencies>
+        </configuration>
       </plugin>
     </plugins>
   </build>

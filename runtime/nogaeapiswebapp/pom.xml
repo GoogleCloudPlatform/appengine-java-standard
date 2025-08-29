@@ -28,6 +28,8 @@
     <groupId>com.google.appengine.demos</groupId>
     <artifactId>nogaeapiswebapp</artifactId>
     <name>AppEngine :: nogaeapiswebapp</name>
+    <url>https://github.com/GoogleCloudPlatform/appengine-java-standard/</url>
+    <description>A web application without App Engine APIs.</description>
 
     <properties>
         <maven.deploy.skip>true</maven.deploy.skip>

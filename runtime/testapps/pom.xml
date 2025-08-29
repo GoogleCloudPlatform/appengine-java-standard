@@ -27,6 +27,8 @@
 
   <packaging>jar</packaging>
   <name>AppEngine :: runtime-testapps</name>
+  <url>https://github.com/GoogleCloudPlatform/appengine-java-standard/</url>
+  <description>Test applications for the App Engine runtime.</description>
 
   <properties>
     <maven.deploy.skip>true</maven.deploy.skip>

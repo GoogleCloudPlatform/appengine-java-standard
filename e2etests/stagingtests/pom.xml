@@ -27,6 +27,8 @@
 
   <packaging>jar</packaging>
   <name>AppEngine :: e2e staging tests</name>
+  <url>https://github.com/GoogleCloudPlatform/appengine-java-standard/</url>
+  <description>Tests for staging.</description>
 
   <properties>
     <maven.deploy.skip>true</maven.deploy.skip>

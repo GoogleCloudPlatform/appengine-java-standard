@@ -26,7 +26,8 @@
 
     <packaging>jar</packaging>
     <name>AppEngine :: shared-sdk</name>
-    <url>http://maven.apache.org</url>
+    <url>https://github.com/GoogleCloudPlatform/appengine-java-standard/</url>
+    <description>Shared SDK.</description>
     <properties>
       <maven.deploy.skip>true</maven.deploy.skip>
     </properties>
