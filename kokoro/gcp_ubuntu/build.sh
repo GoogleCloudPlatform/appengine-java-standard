@@ -45,6 +45,7 @@ mkdir ${PUBLISHED_LOCATION}
 ls **/*.jar
 rm **/target/*sources.jar || true
 rm **/target/*tests.jar || true
+rm **/target/*javadoc.jar || true
 
 # LINT.IfChange
 cp api_legacy/target/appengine-api-legacy*.jar ${TMP_STAGING_LOCATION}/appengine-api-legacy.jar
