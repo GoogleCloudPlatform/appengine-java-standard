@@ -116,7 +116,7 @@
         <dependency>
             <groupId>com.google.cloud</groupId>
             <artifactId>google-cloud-bigquery</artifactId>
-            <version>2.54.1</version>
+            <version>2.54.2</version>
         </dependency>
         <dependency>
             <groupId>com.google.cloud</groupId>
@@ -136,7 +136,7 @@
         <dependency>
             <groupId>com.google.cloud</groupId>
             <artifactId>google-cloud-storage</artifactId>
-            <version>2.55.0</version>
+            <version>2.56.0</version>
         </dependency>
         <dependency>
             <groupId>com.google.cloud.sql</groupId>
