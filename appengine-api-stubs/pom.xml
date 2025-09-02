@@ -399,7 +399,17 @@
             <additionalDependency>
               <groupId>com.google.auto.service</groupId>
               <artifactId>auto-service</artifactId>
-              <version>1.0-rc2</version>
+              <version>1.1.1</version>
+            </additionalDependency>
+            <dependency>
+              <groupId>com.google.auto.service</groupId>
+              <artifactId>auto-service-annotations</artifactId>
+              <version>1.1.1</version>
+            </dependency>
+            <additionalDependency>
+              <groupId>com.google.auto</groupId>
+              <artifactId>auto-common</artifactId>
+              <version>1.2.2</version>
             </additionalDependency>
           </additionalDependencies>
         </configuration>
