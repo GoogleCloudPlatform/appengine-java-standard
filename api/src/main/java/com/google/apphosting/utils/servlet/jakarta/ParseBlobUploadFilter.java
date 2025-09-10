@@ -14,21 +14,18 @@
  * limitations under the License.
  */
 
-package com.google.apphosting.runtime.jetty.ee10;
+package com.google.apphosting.utils.servlet.jakarta;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import com.google.apphosting.utils.servlet.jakarta.MultipartMimeUtils;
-import com.google.common.collect.Maps;
-import com.google.common.flogger.GoogleLogger;
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
+import jakarta.servlet.FilterConfig;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletRequestWrapper;
-import jakarta.servlet.http.HttpServletResponse;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -37,6 +34,8 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.mail.BodyPart;
 import javax.mail.MessagingException;
 import javax.mail.internet.ContentType;
@@ -44,16 +43,21 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMultipart;
 
 /**
- * {@code ParseBlobUploadHandler} is responsible for the parsing multipart/form-data or
- * multipart/mixed requests used to make Blob upload callbacks, and storing a set of string-encoded
- * blob keys as a servlet request attribute. This allows the {@code
- * BlobstoreService.getUploadedBlobs()} method to return the appropriate {@code BlobKey} objects.
+ * {@code ParseBlobUploadFilter} is responsible for the parsing
+ * multipart/form-data or multipart/mixed requests used to make Blob
+ * upload callbacks, and storing a set of string-encoded blob keys as
+ * a servlet request attribute.  This allows the {@code
+ * BlobstoreService.getUploadedBlobs()} method to return the
+ * appropriate {@code BlobKey} objects.
  *
- * <p>This listener automatically runs on all dynamic requests in the production environment. In the
- * DevAppServer, the equivalent work is subsumed by {@code UploadBlobServlet}.
+ * <p>This filter automatically runs on all dynamic requests in the
+ * production environment.  In the DevAppServer, the equivalent work
+ * is subsumed by {@code UploadBlobServlet}.
+ *
  */
 public class ParseBlobUploadFilter implements Filter {
-  private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
+  private static final Logger logger = Logger.getLogger(
+      ParseBlobUploadFilter.class.getName());
 
   /**
    * An arbitrary HTTP header that is set on all blob upload
@@ -77,18 +81,22 @@ public class ParseBlobUploadFilter implements Filter {
   static final String CONTENT_LENGTH_HEADER = "Content-Length";
 
   @Override
-  public void doFilter(ServletRequest req, ServletResponse resp, FilterChain chain)
-      throws IOException, ServletException {
-    HttpServletRequest request = (HttpServletRequest) req;
-    HttpServletResponse response = (HttpServletResponse) resp;
+  public void init(FilterConfig config) {}
 
-    if (request.getHeader(UPLOAD_HEADER) != null) {
+  @Override
+  public void destroy() {}
+
+  @Override
+  public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
+      throws IOException, ServletException {
+    HttpServletRequest req = (HttpServletRequest) request;
+    if (req.getHeader(UPLOAD_HEADER) != null) {
       Map<String, List<String>> blobKeys = new HashMap<>();
       Map<String, List<Map<String, String>>> blobInfos = new HashMap<>();
       Map<String, List<String>> otherParams = new HashMap<>();
 
       try {
-        MimeMultipart multipart = MultipartMimeUtils.parseMultipartRequest(request);
+        MimeMultipart multipart = MultipartMimeUtils.parseMultipartRequest(req);
 
         int parts = multipart.getCount();
         for (int i = 0; i < parts; i++) {
@@ -109,10 +117,10 @@ public class ParseBlobUploadFilter implements Filter {
             values.add(MultipartMimeUtils.getTextContent(part));
           }
         }
-        request.setAttribute(UPLOADED_BLOBKEY_ATTR, blobKeys);
-        request.setAttribute(UPLOADED_BLOBINFO_ATTR, blobInfos);
+        req.setAttribute(UPLOADED_BLOBKEY_ATTR, blobKeys);
+        req.setAttribute(UPLOADED_BLOBINFO_ATTR, blobInfos);
       } catch (MessagingException ex) {
-        logger.atWarning().withCause(ex).log("Could not parse multipart message:");
+        logger.log(Level.WARNING, "Could not parse multipart message:", ex);
       }
 
       chain.doFilter(new ParameterServletWrapper(request, otherParams), response);
@@ -124,7 +132,7 @@ public class ParseBlobUploadFilter implements Filter {
   private Map<String, String> getInfoFromBody(String bodyContent, String key)
       throws MessagingException {
     MimeBodyPart part = new MimeBodyPart(new ByteArrayInputStream(bodyContent.getBytes(UTF_8)));
-    Map<String, String> info = Maps.newHashMapWithExpectedSize(6);
+    Map<String, String> info = new HashMap<>();
     info.put("key", key);
     info.put("content-type", part.getContentType());
     info.put("creation-date", part.getHeader(UPLOAD_CREATION_HEADER)[0]);
@@ -140,7 +148,6 @@ public class ParseBlobUploadFilter implements Filter {
     return info;
   }
 
-  @SuppressWarnings({"rawtypes", "unchecked"})
   private static class ParameterServletWrapper extends HttpServletRequestWrapper {
     private final Map<String, List<String>> otherParams;
 
@@ -149,31 +156,25 @@ public class ParseBlobUploadFilter implements Filter {
       this.otherParams = otherParams;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    public Map getParameterMap() {
+    public Map<String, String[]> getParameterMap() {
       Map<String, String[]> parameters = super.getParameterMap();
       if (otherParams.isEmpty()) {
         return parameters;
       } else {
         // HttpServlet.getParameterMap() result is immutable so we need to take a copy.
         Map<String, String[]> map = new HashMap<>(parameters);
-        for (Map.Entry<String, List<String>> entry : otherParams.entrySet()) {
-          map.put(entry.getKey(), entry.getValue().toArray(new String[0]));
-        }
-        // Maintain the semantic of ServletRequestWrapper by returning
-        // an immutable map.
+        otherParams.forEach((k, v) -> map.put(k, v.toArray(new String[0])));
+        // Maintain the semantic of ServletRequestWrapper by returning an immutable map.
         return Collections.unmodifiableMap(map);
       }
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    public Enumeration getParameterNames() {
-      List<String> allNames = new ArrayList<String>();
-
-      Enumeration<String> names = super.getParameterNames();
-      while (names.hasMoreElements()) {
-        allNames.add(names.nextElement());
-      }
+    public Enumeration<String> getParameterNames() {
+      List<String> allNames = new ArrayList<>(Collections.list(super.getParameterNames()));
       allNames.addAll(otherParams.keySet());
       return Collections.enumeration(allNames);
     }

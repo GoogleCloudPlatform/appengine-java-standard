@@ -16,21 +16,9 @@
 
 package com.google.apphosting.utils.servlet.ee10;
 
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import java.io.IOException;
-
 /**
- * Servlet invoked for {@code /_ah/snapshot} requests. Users can override this by providing their
- * own mapping for the {@code _ah_snapshot} servlet name.
- *
+ * @deprecated as of version 3.0, use generic com.google.apphosting.utils.servlet.jakarta package.
  */
-public class SnapshotServlet extends HttpServlet {
-  @Override
-  protected void doGet(HttpServletRequest req, HttpServletResponse resp)
-      throws ServletException, IOException {
-    // Currently this does nothing. The logic of interest is in the surrounding framework.
-  }
-}
+@Deprecated
+public class SnapshotServlet
+    extends com.google.apphosting.utils.servlet.jakarta.SnapshotServlet {}

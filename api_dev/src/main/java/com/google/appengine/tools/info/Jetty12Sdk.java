@@ -67,7 +67,7 @@ class Jetty12Sdk extends AppengineSdk {
   @Override
   public String getBackendServersClassName() {
     if (Boolean.getBoolean("appengine.use.EE10")) {
-      return "com.google.appengine.tools.development.ee10.BackendServersEE10";
+      return "com.google.appengine.tools.development.jakarta.BackendServers";
     } else {
       return "com.google.appengine.tools.development.BackendServersEE8";
     }
@@ -76,7 +76,7 @@ class Jetty12Sdk extends AppengineSdk {
   @Override
   public String getModulesClassName() {
     if (Boolean.getBoolean("appengine.use.EE10")) {
-      return "com.google.appengine.tools.development.ee10.ModulesEE10";
+      return "com.google.appengine.tools.development.jakarta.Modules";
     } else {
       return "com.google.appengine.tools.development.ModulesEE8";
     }
@@ -85,7 +85,7 @@ class Jetty12Sdk extends AppengineSdk {
   @Override
   public String getDelegatingModulesFilterHelperClassName() {
     if (Boolean.getBoolean("appengine.use.EE10")) {
-      return "com.google.appengine.tools.development.ee10.DelegatingModulesFilterHelperEE10";
+      return "com.google.appengine.tools.development.jakarta.DelegatingModulesFilterHelper";
     } else {
       return "com.google.appengine.tools.development.DelegatingModulesFilterHelperEE8";
     }

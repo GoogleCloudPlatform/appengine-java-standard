@@ -23,13 +23,12 @@ import com.google.appengine.api.log.dev.LocalLogService;
 import com.google.appengine.tools.development.AbstractContainerService;
 import com.google.appengine.tools.development.ApiProxyLocal;
 import com.google.appengine.tools.development.AppContext;
-import com.google.appengine.tools.development.ContainerService;
 import com.google.appengine.tools.development.DevAppServer;
 import com.google.appengine.tools.development.DevAppServerModulesFilter;
 import com.google.appengine.tools.development.IsolatedAppClassLoader;
 import com.google.appengine.tools.development.LocalEnvironment;
-import com.google.appengine.tools.development.ee10.ContainerServiceEE10;
-import com.google.appengine.tools.development.ee10.LocalHttpRequestEnvironment;
+import com.google.appengine.tools.development.jakarta.ContainerService;
+import com.google.appengine.tools.development.jakarta.LocalHttpRequestEnvironment;
 import com.google.appengine.tools.info.AppengineSdk;
 import com.google.apphosting.api.ApiProxy;
 import com.google.apphosting.runtime.jetty.EE10SessionManagerHandler;
@@ -87,7 +86,7 @@ import org.eclipse.jetty.util.thread.QueuedThreadPool;
 
 /** Implements a Jetty backed {@link ContainerService}. */
 public class JettyContainerService extends AbstractContainerService
-    implements ContainerServiceEE10 {
+    implements ContainerService {
 
   private static final Logger log = Logger.getLogger(JettyContainerService.class.getName());
 

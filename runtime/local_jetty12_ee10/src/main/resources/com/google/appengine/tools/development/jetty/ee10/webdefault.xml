@@ -55,7 +55,7 @@
   <filter>
     <filter-name>_ah_DevAppServerRequestLogFilter</filter-name>
     <filter-class>
-      com.google.appengine.tools.development.ee10.DevAppServerRequestLogFilter
+      com.google.appengine.tools.development.jakarta.DevAppServerRequestLogFilter
     </filter-class>
   </filter>
 
@@ -64,7 +64,7 @@
   <filter>
     <filter-name>_ah_DevAppServerModulesFilter</filter-name>
     <filter-class>
-      com.google.appengine.tools.development.ee10.DevAppServerModulesFilter
+      com.google.appengine.tools.development.jakarta.DevAppServerModulesFilter
     </filter-class>
   </filter>
 
@@ -83,7 +83,7 @@
   <filter>
     <filter-name>_ah_AbandonedTransactionDetector</filter-name>
     <filter-class>
-      com.google.apphosting.utils.servlet.ee10.TransactionCleanupFilter
+      com.google.apphosting.utils.servlet.jakarta.TransactionCleanupFilter
     </filter-class>
   </filter>
 
@@ -92,14 +92,14 @@
   <filter>
     <filter-name>_ah_ServeBlobFilter</filter-name>
     <filter-class>
-      com.google.appengine.api.blobstore.dev.ee10.ServeBlobFilter
+      com.google.appengine.api.blobstore.dev.jakarta.ServeBlobFilter
     </filter-class>
   </filter>
 
   <filter>
     <filter-name>_ah_HeaderVerificationFilter</filter-name>
     <filter-class>
-      com.google.appengine.tools.development.ee10.HeaderVerificationFilter
+      com.google.appengine.tools.development.jakarta.HeaderVerificationFilter
     </filter-class>
   </filter>
 
@@ -172,12 +172,12 @@
 
   <servlet>
     <servlet-name>_ah_blobUpload</servlet-name>
-    <servlet-class>com.google.appengine.api.blobstore.dev.ee10.UploadBlobServlet</servlet-class>
+    <servlet-class>com.google.appengine.api.blobstore.dev.jakarta.UploadBlobServlet</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_blobImage</servlet-name>
-    <servlet-class>com.google.appengine.api.images.dev.ee10.LocalBlobImageServlet</servlet-class>
+    <servlet-class>com.google.appengine.api.images.dev.jakarta.LocalBlobImageServlet</servlet-class>
   </servlet>
 
   <!-- ==================================================================== -->
@@ -298,70 +298,70 @@
   <!-- Register the helper servlets for our stub authentication support. -->
   <servlet>
     <servlet-name>_ah_login</servlet-name>
-    <servlet-class>com.google.appengine.api.users.dev.ee10.LocalLoginServlet</servlet-class>
+    <servlet-class>com.google.appengine.api.users.dev.jakarta.LocalLoginServlet</servlet-class>
   </servlet>
   <servlet>
     <servlet-name>_ah_logout</servlet-name>
-    <servlet-class>com.google.appengine.api.users.dev.ee10.LocalLogoutServlet</servlet-class>
+    <servlet-class>com.google.appengine.api.users.dev.jakarta.LocalLogoutServlet</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_oauthGetRequestToken</servlet-name>
-    <servlet-class>com.google.appengine.api.users.dev.ee10.LocalOAuthRequestTokenServlet</servlet-class>
+    <servlet-class>com.google.appengine.api.users.dev.jakarta.LocalOAuthRequestTokenServlet</servlet-class>
   </servlet>
   <servlet>
     <servlet-name>_ah_oauthAuthorizeToken</servlet-name>
-    <servlet-class>com.google.appengine.api.users.dev.ee10.LocalOAuthAuthorizeTokenServlet</servlet-class>
+    <servlet-class>com.google.appengine.api.users.dev.jakarta.LocalOAuthAuthorizeTokenServlet</servlet-class>
   </servlet>
   <servlet>
     <servlet-name>_ah_oauthGetAccessToken</servlet-name>
-    <servlet-class>com.google.appengine.api.users.dev.ee10.LocalOAuthAccessTokenServlet</servlet-class>
+    <servlet-class>com.google.appengine.api.users.dev.jakarta.LocalOAuthAccessTokenServlet</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_queue_deferred</servlet-name>
-    <servlet-class>com.google.apphosting.utils.servlet.ee10.DeferredTaskServlet</servlet-class>
+    <servlet-class>com.google.apphosting.utils.servlet.jakarta.DeferredTaskServlet</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_sessioncleanup</servlet-name>
-    <servlet-class>com.google.apphosting.utils.servlet.ee10.SessionCleanupServlet</servlet-class>
+    <servlet-class>com.google.apphosting.utils.servlet.jakarta.SessionCleanupServlet</servlet-class>
   </servlet>
 
   <!-- Admin console servlets -->
   <servlet>
     <servlet-name>_ah_capabilitiesViewer</servlet-name>
-    <servlet-class>com.google.apphosting.utils.servlet.ee10.CapabilitiesStatusServlet</servlet-class>
+    <servlet-class>com.google.apphosting.utils.servlet.jakarta.CapabilitiesStatusServlet</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_datastoreViewer</servlet-name>
-    <servlet-class>com.google.apphosting.utils.servlet.ee10.DatastoreViewerServlet</servlet-class>
+    <servlet-class>com.google.apphosting.utils.servlet.jakarta.DatastoreViewerServlet</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_modules</servlet-name>
-    <servlet-class>com.google.apphosting.utils.servlet.ee10.ModulesServlet</servlet-class>
+    <servlet-class>com.google.apphosting.utils.servlet.jakarta.ModulesServlet</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_taskqueueViewer</servlet-name>
-    <servlet-class>com.google.apphosting.utils.servlet.ee10.TaskQueueViewerServlet</servlet-class>
+    <servlet-class>com.google.apphosting.utils.servlet.jakarta.TaskQueueViewerServlet</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_inboundMail</servlet-name>
-    <servlet-class>com.google.apphosting.utils.servlet.ee10.InboundMailServlet</servlet-class>
+    <servlet-class>com.google.apphosting.utils.servlet.jakarta.InboundMailServlet</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_search</servlet-name>
-    <servlet-class>com.google.apphosting.utils.servlet.ee10.SearchServlet</servlet-class>
+    <servlet-class>com.google.apphosting.utils.servlet.jakarta.SearchServlet</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_resources</servlet-name>
-    <servlet-class>com.google.apphosting.utils.servlet.ee10.AdminConsoleResourceServlet</servlet-class>
+    <servlet-class>com.google.apphosting.utils.servlet.jakarta.AdminConsoleResourceServlet</servlet-class>
   </servlet>
 
   <servlet>

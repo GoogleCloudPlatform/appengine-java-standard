@@ -415,14 +415,14 @@
                                         <include>com/google/apphosting/utils/servlet/SnapshotServlet*</include>
                                         <include>com/google/apphosting/utils/servlet/TransactionCleanupFilter*</include>
                                         <include>com/google/apphosting/utils/servlet/WarmupServlet*</include>
-                                        <include>com/google/apphosting/utils/servlet/ee10/DeferredTaskServlet*</include>
-                                        <include>com/google/apphosting/utils/servlet/ee10/JdbcMySqlConnectionCleanupFilter*</include>
-                                        <include>com/google/apphosting/utils/servlet/ee10/MultipartMimeUtils*</include>
-                                        <include>com/google/apphosting/utils/servlet/ee10/ParseBlobUploadFilter*</include>
-                                        <include>com/google/apphosting/utils/servlet/ee10/SessionCleanupServlet*</include>
-                                        <include>com/google/apphosting/utils/servlet/ee10/SnapshotServlet*</include>
-                                        <include>com/google/apphosting/utils/servlet/ee10/TransactionCleanupFilter*</include>
-                                        <include>com/google/apphosting/utils/servlet/ee10/WarmupServlet*</include>
+                                        <include>com/google/apphosting/utils/servlet/jakarta/DeferredTaskServlet*</include>
+                                        <include>com/google/apphosting/utils/servlet/jakarta/JdbcMySqlConnectionCleanupFilter*</include>
+                                        <include>com/google/apphosting/utils/servlet/jakarta/MultipartMimeUtils*</include>
+                                        <include>com/google/apphosting/utils/servlet/jakarta/ParseBlobUploadFilter*</include>
+                                        <include>com/google/apphosting/utils/servlet/jakarta/SessionCleanupServlet*</include>
+                                        <include>com/google/apphosting/utils/servlet/jakarta/SnapshotServlet*</include>
+                                        <include>com/google/apphosting/utils/servlet/jakarta/TransactionCleanupFilter*</include>
+                                        <include>com/google/apphosting/utils/servlet/jakarta/WarmupServlet*</include>
                                         <include>com/google/storage/onestore/PropertyType*</include>
                                         <include>javax/cache/LICENSE</include>
                                         <include>javax/mail/LICENSE</include>
