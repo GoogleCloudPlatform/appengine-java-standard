@@ -46,7 +46,7 @@ public class DevAppServerMainTest extends DevAppServerTestBase {
   }
 
   @Test
-  public void useMemcache() throws Exception {
+  public void globaltest() throws Exception {
     // App Engine Memcache access.
     executeHttpGet(
         "/?memcache_loops=10&memcache_size=10",
@@ -68,16 +68,10 @@ public class DevAppServerMainTest extends DevAppServerTestBase {
             + "Cache hits: 25\n"
             + "Cache misses: 0\n",
         RESPONSE_200);
-  }
 
-  @Test
-  public void useUserApi() throws Exception {
     // App Engine User API access.
     executeHttpGet("/?user", "Sign in with /_ah/login?continue=%2F\n", RESPONSE_200);
-  }
 
-  @Test
-  public void useDatastoreAndTaskQueue() throws Exception {
     // First, populate Datastore entities
     executeHttpGet("/?datastore_entities=3", "Added 3 entities\n", RESPONSE_200);
 
@@ -90,10 +84,7 @@ public class DevAppServerMainTest extends DevAppServerTestBase {
     // After a while, we should have 10 or more entities.
     executeHttpGetWithRetriesContains(
         "/?datastore_count", "Found ", RESPONSE_200, NUMBER_OF_RETRIES);
-  }
 
-  @Test
-  public void localAdminConsoleWorks() throws Exception {
     HttpGet get =
         new HttpGet(
             String.format(

@@ -17,6 +17,8 @@ package com.google.apphosting.runtime.jetty9;
 
 import static com.google.common.base.StandardSystemProperty.FILE_SEPARATOR;
 import static com.google.common.base.StandardSystemProperty.JAVA_HOME;
+import static com.google.common.base.StandardSystemProperty.JAVA_VERSION;
+import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
@@ -108,9 +110,10 @@ public abstract class JavaRuntimeViaHttpBase {
    * 4. useHttpConnector: true or false
    */
   public static List<Object[]> allVersions() {
-    return Arrays.asList(
-        new Object[][] {
-          {"java17", "9.4", "EE6", true},
+    List<Object[]> allVersions =
+        Arrays.asList(
+            new Object[][] {
+              {"java17", "9.4", "EE6", true},
           {"java17", "12.0", "EE8", true},
           {"java17", "12.0", "EE10", true},
           {"java17", "12.1", "EE11", true},
@@ -133,7 +136,43 @@ public abstract class JavaRuntimeViaHttpBase {
           // A warning should be logged, but the runtime should behave identically to EE11.
           {"java17", "12.1", "EE10", true},
           {"java21", "12.1", "EE10", true},
-        });
+            });
+    String version = JAVA_VERSION.value();
+    String majorVersion;
+    // Major version parsing in java.version property can be "1.8.0_201" for java8, "11.0.17" for
+    // java11+, or "25-ea+35" for early access versions.
+    if (version.startsWith("1.")) {
+      majorVersion = version.substring(2, 3);
+    } else {
+      int dash = version.indexOf("-");
+      if (dash != -1) {
+        majorVersion = version.substring(0, dash);
+      } else {
+        int dot = version.indexOf(".");
+        if (dot != -1) {
+          majorVersion = version.substring(0, dot);
+        } else {
+          majorVersion = version;
+        }
+      }
+    }
+    // We only run the tests for the current JDK version.
+    // So we filter the list of versions based on the current `java.version` property.
+    // We bucket versions into 17, 21, or 25.
+    int numVersion = Integer.parseInt(majorVersion);
+    if ((numVersion > 21) && (numVersion < 25)) {
+      numVersion = 21;
+    } else if ((numVersion > 25)) {
+      numVersion = 25;
+    } else if ((numVersion < 21)) {
+      numVersion = 17;
+    }
+    String javaVersionForTest = "java" + numVersion;
+    System.out.println("javaVersionForTest " + javaVersionForTest);
+
+    return allVersions.stream()
+        .filter(v -> v[0].toString().equals(javaVersionForTest))
+        .collect(toImmutableList());
   }
 
   @Before
@@ -519,8 +558,8 @@ public abstract class JavaRuntimeViaHttpBase {
           System.out.println(echoPrefix + line);
           outputQueue.add(line);
         }
-      } catch (IOException e) {
-        throw new RuntimeException(e);
+      } catch (IOException ignored) {
+        // ignored, spurious log when we kill the process
       }
     }
 
