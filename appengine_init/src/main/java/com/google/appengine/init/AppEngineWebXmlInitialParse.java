@@ -35,8 +35,7 @@ public final class AppEngineWebXmlInitialParse {
   private static final Logger logger =
       Logger.getLogger(AppEngineWebXmlInitialParse.class.getName());
   private String runtimeId = "";
-  private boolean settingDoneInAppEngineWebXml = false;
-  private final String file;
+  private final String appEngineWebXmlFile;
 
   private static final String PROPERTIES = "system-properties";
   private static final String PROPERTY = "property";
@@ -66,65 +65,183 @@ public final class AppEngineWebXmlInitialParse {
     BUILD_VERSION = BUILD_PROPERTIES.getProperty("version", "unknown");
   }
 
+  /**
+   * Handles the logic for setting Jetty and Jakarta EE versions based on runtime, {@code
+   * appengine-web.xml} properties, and System properties. System properties override {@code
+   * appengine-web.xml} properties. It ensures that only one EE version is active and sets defaults
+   * based on the Java runtime if no explicit version is chosen.
+   *
+   * <p>Only one of {@code appengine.use.EE8}, {@code appengine.use.EE10}, or {@code
+   * appengine.use.EE11} can be set to {@code true}, otherwise an {@link IllegalArgumentException}
+   * is thrown. If {@code appengine.use.EE11} is true, {@code appengine.use.jetty121} is also forced
+   * to true. If {@code runtime} is {@code java25}, {@code appengine.use.jetty121} is forced to
+   * true. For {@code java17} and {@code java21} runtimes, if {@code appengine.use.EE10=true} and
+   * {@code appengine.use.jetty121=true}, then {@code appengine.use.EE11} is forced to true and a
+   * warning is logged, as EE10 is not supported on Jetty 12.1.
+   *
+   * <p>If none of {@code appengine.use.EE8}, {@code appengine.use.EE10}, or {@code
+   * appengine.use.EE11} are set to true, defaults are applied as follows:
+   *
+   * <ul>
+   *   <li>{@code runtime="java17"}: Defaults to Jetty 9.4 based environment (EE6 / Servlet 3.1).
+   *   <li>{@code runtime="java21"}: Defaults to Jetty 12.0 / EE10, unless {@code
+   *       appengine.use.jetty121=true}, in which case it defaults to Jetty 12.1 / EE11.
+   *   <li>{@code runtime="java25"}: Defaults to Jetty 12.1 / EE11.
+   * </ul>
+   *
+   * <p>Resulting configurations:
+   *
+   * <ul>
+   *   <li>{@code <runtime>java17</runtime>}:
+   *       <ul>
+   *         <li>No flags set: Jetty 9.4 (EE6)
+   *         <li>{@code appengine.use.EE8=true}: Jetty 12.0 (EE8)
+   *         <li>{@code appengine.use.EE10=true}: Jetty 12.0 (EE10)
+   *         <li>{@code appengine.use.EE10=true} and {@code appengine.use.jetty121=true}: Jetty 12.1
+   *             (EE11)
+   *         <li>{@code appengine.use.EE11=true}: Jetty 12.1 (EE11)
+   *       </ul>
+   *   <li>{@code <runtime>java21</runtime>}:
+   *       <ul>
+   *         <li>No flags set: Jetty 12.0 (EE10)
+   *         <li>{@code appengine.use.jetty121=true}: Jetty 12.1 (EE11)
+   *         <li>{@code appengine.use.EE8=true}: Jetty 12.0 (EE8)
+   *         <li>{@code appengine.use.EE10=true}: Jetty 12.0 (EE10)
+   *         <li>{@code appengine.use.EE10=true} and {@code appengine.use.jetty121=true}: Jetty 12.1
+   *             (EE11)
+   *         <li>{@code appengine.use.EE11=true}: Jetty 12.1 (EE11)
+   *       </ul>
+   *   <li>{@code <runtime>java25</runtime>}:
+   *       <ul>
+   *         <li>No flags set: Jetty 12.1 (EE11)
+   *         <li>{@code appengine.use.EE8=true}: Jetty 12.1 (EE8)
+   *         <li>{@code appengine.use.EE11=true}: Jetty 12.1 (EE11)
+   *         <li>{@code appengine.use.EE10=true}: Throws {@link IllegalArgumentException}.
+   *       </ul>
+   * </ul>
+   *
+   * @throws IllegalArgumentException if more than one EE version flag is set to true, or if
+   *     {@code appengine.use.EE10=true} with {@code runtime="java25"}.
+   */
   public void handleRuntimeProperties() {
+
     // See if the Mendel experiment to enable HttpConnector is set automatically via env var:
-    if (Objects.equals(System.getenv("EXPERIMENT_ENABLE_HTTP_CONNECTOR_FOR_JAVA"), "true")
-        && !Objects.equals(System.getenv("GAE_RUNTIME"), "java8")) {
+    if (Objects.equals(System.getenv("EXPERIMENT_ENABLE_HTTP_CONNECTOR_FOR_JAVA"), "true")) {
       System.setProperty("appengine.ignore.cancelerror", "true");
       System.setProperty("appengine.use.HttpConnector", "true");
     }
-    try (final InputStream stream = new FileInputStream(file)) {
+    Properties appEngineWebXmlProperties = new Properties();
+    try (final InputStream stream = new FileInputStream(appEngineWebXmlFile)) {
       final XMLEventReader reader = XMLInputFactory.newInstance().createXMLEventReader(stream);
       while (reader.hasNext()) {
         final XMLEvent event = reader.nextEvent();
         if (event.isStartElement()
             && event.asStartElement().getName().getLocalPart().equals(PROPERTIES)) {
-          setAppEngineUseProperties(reader);
+          setAppEngineUseProperties(appEngineWebXmlProperties, reader);
         } else if (event.isStartElement()
             && event.asStartElement().getName().getLocalPart().equals(RUNTIME)) {
           XMLEvent runtime = reader.nextEvent();
           if (runtime.isCharacters()) {
             runtimeId = runtime.asCharacters().getData();
+            appEngineWebXmlProperties.setProperty("GAE_RUNTIME", runtimeId);
           }
         }
       }
     } catch (IOException | XMLStreamException e) {
       // Not critical, we can ignore and continue.
-      logger.log(Level.WARNING, "Cannot parse correctly {0}", file);
+      e.printStackTrace();
+      logger.log(Level.WARNING, "Cannot parse correctly {0}", appEngineWebXmlFile);
+    }
+
+    //  Override appEngineWebXmlProperties with system properties
+    Properties systemProps = System.getProperties();
+    for (String propName : systemProps.stringPropertyNames()) {
+      if (propName.startsWith("appengine.") || propName.startsWith("GAE_RUNTIME")) {
+        appEngineWebXmlProperties.setProperty(propName, systemProps.getProperty(propName));
+      }
     }
     // Once runtimeId is known and we parsed all the file, correct default properties if needed,
     // and only if the setting has not been defined in appengine-web.xml.
-    if (!settingDoneInAppEngineWebXml && (runtimeId != null)) {
-      switch (runtimeId) {
-        case "java21":
-          System.clearProperty("appengine.use.EE8");
-          System.setProperty("appengine.use.EE10", "true");
-          break;
-        case"java25": 
-          System.clearProperty("appengine.use.EE8");
-          System.setProperty(
-              "appengine.use.EE10",
-              "true"); // Force default to EE10. Replace when jetty12.1 is EE11.
-          break;
-        case "java17":
-          // See if the Mendel experiment to enable Jetty12 for java17 is set
-          // automatically via env var:
-          if (Objects.equals(System.getenv("EXPERIMENT_ENABLE_JETTY12_FOR_JAVA"), "true")) {
-            System.setProperty("appengine.use.EE8", "true");
-          }
-          break;
-        case "java11": // EE8 and EE10 not supported
-        case "java8":  // EE8 and EE10 not supported
-          System.clearProperty("appengine.use.EE8");
-          System.clearProperty("appengine.use.EE10");
-          break;
-        default:
-          break;
+    for (String propName : appEngineWebXmlProperties.stringPropertyNames()) {
+      if (propName.startsWith("appengine.") || propName.startsWith("GAE_RUNTIME")) {
+        System.setProperty(propName, appEngineWebXmlProperties.getProperty(propName));
       }
+    }
+    // reset runtimeId to the value possibly overridden by system properties
+    runtimeId = systemProps.getProperty("GAE_RUNTIME");
+
+    if ((Objects.equals(runtimeId, "java17") || Objects.equals(runtimeId, "java21"))
+        && Boolean.parseBoolean(System.getProperty("appengine.use.EE10", "false"))
+        && Boolean.parseBoolean(System.getProperty("appengine.use.jetty121", "false"))) {
+      System.setProperty("appengine.use.EE11", "true");
+      System.setProperty("appengine.use.EE10", "false");
+      logger.warning(
+          "appengine.use.EE10 is not supported with Jetty 12.1 for runtime "
+              + runtimeId
+              + ", upgrading to appengine.use.EE11.");
+    }
+
+    // 4. Parse and validate
+    boolean useEE8 = Boolean.parseBoolean(System.getProperty("appengine.use.EE8", "false"));
+    boolean useEE10 = Boolean.parseBoolean(System.getProperty("appengine.use.EE10", "false"));
+    boolean useEE11 = Boolean.parseBoolean(System.getProperty("appengine.use.EE11", "false"));
+
+    int trueCount = 0;
+    if (useEE8) {
+      trueCount++;
+    }
+    if (useEE10) {
+      trueCount++;
+    }
+    if (useEE11) {
+      trueCount++;
+    }
+    if (trueCount > 1) {
+      throw new IllegalArgumentException(
+          "Only one of appengine.use.EE8, appengine.use.EE10, or appengine.use.EE11 can be true.");
+    }
+    if (trueCount == 0) {
+      // Apply defaults based on javaVersion
+      if (Objects.equals(runtimeId, "java17")) {
+        System.setProperty("appengine.use.EE8", "false");
+      } else if (Objects.equals(runtimeId, "java21")) {
+        if (Boolean.parseBoolean(System.getProperty("appengine.use.jetty121", "false"))) {
+          System.setProperty("appengine.use.EE11", "true");
+          System.setProperty("appengine.use.EE10", "false");
+        } else {
+          System.setProperty("appengine.use.EE10", "true");
+        }
+      } else if (Objects.equals(runtimeId, "java25")) {
+        System.setProperty("appengine.use.EE11", "true");
+        System.setProperty("appengine.use.jetty121", "true");
+      }
+    } else {
+      if (Objects.equals(runtimeId, "java25")) {
+        System.setProperty("appengine.use.jetty121", "true");
+      }
+    }
+    if ((appEngineWebXmlProperties.getProperty("appengine.use.jetty121") == null)
+        && Boolean.getBoolean("appengine.use.EE11")) {
+      System.setProperty("appengine.use.jetty121", "true");
+    }
+
+    if (Objects.equals(runtimeId, "java25") && Boolean.getBoolean("appengine.use.EE10")) {
+      throw new IllegalArgumentException("appengine.use.EE10 is not supported in Jetty121");
     }
   }
 
-  private void setAppEngineUseProperties(final XMLEventReader reader) throws XMLStreamException {
+  /**
+   * Reads {@code <property>} elements from inside a {@code <system-properties>} block in {@code
+   * appengine-web.xml} and populates the provided {@link Properties} config object. Also sets
+   * specific system properties required for runtime configuration during this initial parse phase.
+   *
+   * @param config The {@link Properties} object to populate with properties from the XML.
+   * @param reader The {@link XMLEventReader} positioned at the start of the system-properties
+   *     block.
+   * @throws XMLStreamException if there is an error reading the XML stream.
+   */
+  private void setAppEngineUseProperties(Properties config, final XMLEventReader reader)
+      throws XMLStreamException {
     while (reader.hasNext()) {
       final XMLEvent event = reader.nextEvent();
       if (event.isEndElement()
@@ -137,12 +254,10 @@ public final class AppEngineWebXmlInitialParse {
         if (elementName.equals(PROPERTY)) {
           String prop = element.getAttributeByName(new QName("name")).getValue();
           String value = element.getAttributeByName(new QName("value")).getValue();
-          if (prop.equals("appengine.use.EE8") || prop.equals("appengine.use.EE10")) {
-            // appengine.use.EE10 or appengine.use.EE8
-            settingDoneInAppEngineWebXml = true;
-            System.setProperty(prop, value);
-          } else if (prop.equalsIgnoreCase("appengine.use.HttpConnector")
-              && !Objects.equals(System.getenv("GAE_RUNTIME"), "java8")) {
+          config.put(prop, value);
+          if (prop.equalsIgnoreCase("com.google.apphosting.runtime.jetty94.LEGACY_MODE")) {
+            System.setProperty("com.google.apphosting.runtime.jetty94.LEGACY_MODE", value);
+          } else if (prop.equalsIgnoreCase("appengine.use.HttpConnector")) {
             System.setProperty("appengine.use.HttpConnector", value);
           } else if (prop.equalsIgnoreCase("appengine.use.allheaders")) {
             System.setProperty("appengine.use.allheaders", value);
@@ -155,7 +270,7 @@ public final class AppEngineWebXmlInitialParse {
   }
 
   public AppEngineWebXmlInitialParse(String file) {
-    this.file = file;
+    this.appEngineWebXmlFile = file;
     if (!GIT_HASH.equals("unknown")) {
       logger.log(
           Level.INFO,

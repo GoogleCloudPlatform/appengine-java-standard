@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-
 package com.google.apphosting.runtime.jetty9;
 
 import static com.google.common.collect.ImmutableSortedMap.toImmutableSortedMap;
@@ -23,60 +22,45 @@ import static java.util.Comparator.naturalOrder;
 
 import com.google.common.collect.ImmutableSortedMap;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.List;
-import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 @RunWith(Parameterized.class)
-
 public class SystemPropertiesTest extends JavaRuntimeViaHttpBase {
-  @Rule public TemporaryFolder temp = new TemporaryFolder();
+
+  File temp = Files.createTempDirectory("syspropsapp").toFile();
 
   @Parameterized.Parameters
   public static List<Object[]> version() {
-    return Arrays.asList(new Object[][] {{"EE6"}, {"EE8"}, {"EE10"}});
+    return allVersions();
   }
 
-  public SystemPropertiesTest(String version) {
-    switch (version) {
-      case "EE6":
-        System.setProperty("appengine.use.EE8", "false");
-        System.setProperty("appengine.use.EE10", "false");
-        break;
-      case "EE8":
-        System.setProperty("appengine.use.EE8", "true");
-        System.setProperty("appengine.use.EE10", "false");
-        break;
-      case "EE10":
-        System.setProperty("appengine.use.EE8", "false");
-        System.setProperty("appengine.use.EE10", "true");
-        break;
-      default:
-        // fall through
-    }
+  public SystemPropertiesTest(
+      String runtimeVersion, String jettyVersion, String version, boolean useHttpConnector)
+      throws Exception {
+    super(runtimeVersion, jettyVersion, version, useHttpConnector);
     if (Boolean.getBoolean("test.running.internally")) { // Internal can only do EE6
       System.setProperty("appengine.use.EE8", "false");
       System.setProperty("appengine.use.EE10", "false");
+      System.setProperty("appengine.use.EE11", "false");
     }
-  }
-
-  @Before
-  public void copyAppToTemp() throws IOException {
-    copyAppToDir("syspropsapp", temp.getRoot().toPath());
+    String appName = "syspropsapp";
+    if (isJakarta()) {
+      appName = "syspropsappjakarta";
+    }
+    copyAppToDir(appName, temp.toPath());
   }
 
   @Test
   public void expectedSystemProperties() throws Exception {
-    Path appRoot = temp.getRoot().toPath();
+    Path appRoot = temp.toPath();
     try (RuntimeContext<?> context = startApp(appRoot)) {
       String properties = context.executeHttpGet("/", 200);
       ImmutableSortedMap<String, String> propertyMap;
@@ -92,31 +76,32 @@ public class SystemPropertiesTest extends JavaRuntimeViaHttpBase {
                         line -> line.substring(line.indexOf(" = ") + 3)));
       }
       String expectedRelease = "mainwithdefaults";
-      assertThat(propertyMap).containsAtLeast(
-          // Set by flags, see JavaRuntimeFactory.startRuntime.
-          "appengine.jetty.also_log_to_apiproxy", "true",
-          "appengine.urlfetch.deriveResponseMessage", "true",
-          // Set automatically, see AppVersionFactory.createSystemProperties.
-          "com.google.appengine.application.id", "testapp",
-          "com.google.appengine.application.version", "1.0",
-          "com.google.appengine.runtime.environment", "Production",
-          "com.google.appengine.runtime.version", "Google App Engine/" + expectedRelease,
-          // Set from appengine-web.xml.
-          "sysprops.test.foo", "bar",
-          // 94 is "javax.xml.parsers.DocumentBuilderFactory", "foobar",
-          // 12 is "javax.xml.parsers.DocumentBuilderFactoryTest", "foobar",
-          // Should be set by default.
-          "user.dir", appRoot.toString(),
-          // Also check that SystemProperty.environment.value() returns the right thing.
-          "SystemProperty.environment.value()", "Production");
+      assertThat(propertyMap)
+          .containsAtLeast(
+              // Set by flags, see JavaRuntimeFactory.startRuntime.
+              "appengine.jetty.also_log_to_apiproxy", "true",
+              "appengine.urlfetch.deriveResponseMessage", "true",
+              // Set automatically, see AppVersionFactory.createSystemProperties.
+              "com.google.appengine.application.id", "testapp",
+              "com.google.appengine.application.version", "1.0",
+              "com.google.appengine.runtime.environment", "Production",
+              "com.google.appengine.runtime.version", "Google App Engine/" + expectedRelease,
+              // Set from appengine-web.xml.
+              "sysprops.test.foo", "bar",
+              // 94 is "javax.xml.parsers.DocumentBuilderFactory", "foobar",
+              // 12 is "javax.xml.parsers.DocumentBuilderFactoryTest", "foobar",
+              // Should be set by default.
+              "user.dir", appRoot.toString(),
+              // Also check that SystemProperty.environment.value() returns the right thing.
+              "SystemProperty.environment.value()", "Production");
     }
   }
 
   private RuntimeContext<?> startApp(Path appRoot) throws IOException, InterruptedException {
     assertThat(Files.isDirectory(appRoot)).isTrue();
     assertThat(Files.isDirectory(appRoot.resolve("WEB-INF"))).isTrue();
-    RuntimeContext.Config<?> config =
+    RuntimeContext.Config<DummyApiServer> config =
         RuntimeContext.Config.builder().setApplicationPath(appRoot.toString()).build();
-    return RuntimeContext.create(config);
+    return createRuntimeContext(config);
   }
 }

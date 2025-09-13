@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+ Copyright 2021 Google LLC
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     https://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+-->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>runtime-shared-jetty121-ee8</artifactId>
+    <url>https://github.com/GoogleCloudPlatform/appengine-java-standard/</url>
+    <description>App Engine runtime shared components for Jetty 12.1 EE8.</description>
+    <parent>
+        <groupId>com.google.appengine</groupId>
+        <artifactId>parent</artifactId>
+        <version>3.0.0-SNAPSHOT</version>
+    </parent>
+
+    <packaging>jar</packaging>
+    <name>AppEngine :: runtime-shared Jetty121 EE8</name>
+
+  <dependencies>
+        <dependency>
+            <groupId>com.google.appengine</groupId>
+            <artifactId>sessiondata</artifactId>
+            <optional>true</optional>
+        </dependency>
+         <dependency>
+            <groupId>com.google.appengine</groupId>
+            <artifactId>runtime-shared</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
+            <version>4.0.4</version> <!-- Keep, doe not use 6.0.0 as we want javax support there.-->
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>javax.servlet.jsp.jstl</groupId>
+            <artifactId>javax.servlet.jsp.jstl-api</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+           <groupId>org.jspecify</groupId>
+            <artifactId>jspecify</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty.toolchain</groupId>
+            <artifactId>jetty-schemas</artifactId>
+            <version>5.2</version>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.mortbay.jasper</groupId>
+            <artifactId>apache-jsp</artifactId>
+            <version>9.0.52</version>
+            <optional>true</optional>
+       </dependency>
+        <dependency>
+            <groupId>org.mortbay.jasper</groupId>
+            <artifactId>apache-el</artifactId>
+            <version>9.0.52</version>
+          <optional>true</optional>
+        </dependency>
+        <dependency>
+          <groupId>com.google.errorprone</groupId>
+          <artifactId>error_prone_annotations</artifactId>
+           <optional>true</optional>
+       </dependency>
+       <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-xml</artifactId>
+            <version>${jetty121.version}</version>
+       </dependency>
+  </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <createSourcesJar>true</createSourcesJar>
+                            <artifactSet>
+                                <excludes>
+                                    <exclude>org.eclipse.jdt:ecj</exclude>
+                                 </excludes>
+                                <includes>
+                                    <include>org.eclipse.jetty.toolchain:jetty-schemas</include>
+                                    <include>org.eclipse.jetty:jetty-xml</include>
+                                    <include>org.mortbay.jasper:apache-jsp</include>
+                                    <include>org.mortbay.jasper:apache-el</include>
+                                    <include>com.google.appengine:sessiondata</include>
+                                    <include>jakarta.servlet:jakarta.servlet-api</include>
+                                    <include>javax.servlet.jsp.jstl:javax.servlet.jsp.jstl-api</include>
+                                    <include>com.google.appengine:runtime-shared</include>
+                                </includes>
+                            </artifactSet>
+                            <filters>
+                                <filter>
+                                    <artifact>org.mortbay.jasper:apache-el</artifact>
+                                    <includes>
+                                        <include>javax/el/**</include>
+                                    </includes>
+                                    <excludes>
+                                        <exclude>org/**</exclude>
+                                    </excludes>
+                                </filter>
+                                <filter>
+                                    <artifact>org.mortbay.jasper:apache-jsp</artifact>
+                                    <includes>
+                                        <include>javax/servlet/jsp/**</include>
+                                    </includes>
+                                    <excludes>
+                                        <exclude>org/**</exclude>
+                                    </excludes>
+                                </filter>
+                                <filter>
+                                    <artifact>org.eclipse.jetty:jetty-xml</artifact>
+                                    <includes>
+                                        <include>**/*.xsd</include>
+                                        <include>**/*.dtd</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>*:*</artifact>
+                                    <excludes>
+                                        <exclude>META-INF/services/**</exclude>
+                                        <exclude>META-INF/maven/**</exclude>
+                                        <exclude>META-INF/web-fragment.xml</exclude>
+                                        <exclude>META-INF/*.DSA</exclude>
+                                        <exclude>META-INF/*.RSA</exclude>
+                                        <exclude>META-INF/MANIFEST.MF</exclude>
+                                        <exclude>LICENSE</exclude>
+                                        <exclude>META-INF/LICENSE.txt</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
+                        </configuration>
+                    </execution>
+                </executions>
+
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <notimestamp>true</notimestamp>
+                    <show>public</show>
+                    <failOnWarnings>false</failOnWarnings>
+                    <doclint>none</doclint>
+                    <sourcepath>${project.basedir}/../runtime_shared</sourcepath>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>

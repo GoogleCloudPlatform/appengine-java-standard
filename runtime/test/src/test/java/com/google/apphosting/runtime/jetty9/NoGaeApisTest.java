@@ -19,9 +19,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -29,40 +27,36 @@ import org.junit.runners.Parameterized;
 @RunWith(Parameterized.class)
 public final class NoGaeApisTest extends JavaRuntimeViaHttpBase {
 
-  private static File appRoot;
+  private File appRoot;
+
   @Parameterized.Parameters
   public static List<Object[]> version() {
-    return Arrays.asList(new Object[][] {{"EE6"}, {"EE8"}, {"EE10"}});
+    return allVersions();
   }
-
-  public NoGaeApisTest(String version) {
-    switch (version) {
-      case "EE6":
-        System.setProperty("appengine.use.EE8", "false");
-        System.setProperty("appengine.use.EE10", "false");
-        break;
-      case "EE8":
-        System.setProperty("appengine.use.EE8", "true");
-        System.setProperty("appengine.use.EE10", "false");
-        break;
-      case "EE10":
-        System.setProperty("appengine.use.EE8", "false");
-        System.setProperty("appengine.use.EE10", "true");
-        break;
-      default:
-        // fall through
-    }
+  public NoGaeApisTest(
+      String runtimeVersion, String jettyVersion, String version, boolean useHttpConnector)
+      throws IOException, InterruptedException {
+    super(runtimeVersion, jettyVersion, version, useHttpConnector);
     if (Boolean.getBoolean("test.running.internally")) { // Internal can only do EE6
       System.setProperty("appengine.use.EE8", "false");
       System.setProperty("appengine.use.EE10", "false");
+      System.setProperty("appengine.use.EE11", "false");
+      System.setProperty("GAE_RUNTIME", "java17");
+      System.setProperty("appengine.use.jetty121", "false");
     }
-  }
-
-  @BeforeClass
-  public static void beforeClass() throws IOException, InterruptedException {
+    String appName = "nogaeapiswebapp";
+    if (version.equals("EE10") || version.equals("EE11")) {
+      appName = "nogaeapiswebappjakarta";
+    }
     File currentDirectory = new File("").getAbsoluteFile();
     appRoot =
-        new File(currentDirectory, "../nogaeapiswebapp/target/nogaeapiswebapp-"
+        new File(
+            currentDirectory,
+            "../"
+                + appName
+                + "/target/"
+                + appName
+                + "-"
                 + System.getProperty("appengine.projectversion"));
     assertThat(appRoot.isDirectory()).isTrue();
   }
@@ -70,7 +64,7 @@ public final class NoGaeApisTest extends JavaRuntimeViaHttpBase {
   private RuntimeContext<DummyApiServer> runtimeContext() throws IOException, InterruptedException {
     RuntimeContext.Config<DummyApiServer> config =
         RuntimeContext.Config.builder().setApplicationPath(appRoot.toString()).build();
-    return RuntimeContext.create(config);
+    return createRuntimeContext(config);
   }
 
   @Test
@@ -85,7 +79,7 @@ public final class NoGaeApisTest extends JavaRuntimeViaHttpBase {
     try (RuntimeContext<DummyApiServer> runtime = runtimeContext()) {
       // Initialization exceptions propagate up so they are logged properly.
       assertThat(runtime.executeHttpGet("/failInit", 500))
-          .contains("javax.servlet.ServletException: Intentionally failing to initialize.");
+          .contains("servlet.ServletException: Intentionally failing to initialize.");
 
       // A second request will attempt initialization again.
       assertThat(runtime.executeHttpGet("/failInit", 404)).contains("404 Not Found");

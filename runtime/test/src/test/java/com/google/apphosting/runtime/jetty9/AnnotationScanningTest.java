@@ -19,9 +19,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -29,39 +27,30 @@ import org.junit.runners.Parameterized;
 @RunWith(Parameterized.class)
 public final class AnnotationScanningTest extends JavaRuntimeViaHttpBase {
 
-  private static File appRoot;
+  private File appRoot;
 
   @Parameterized.Parameters
   public static List<Object[]> version() {
-    return Arrays.asList(new Object[][] {{"EE6"}, {"EE8"}, {"EE10"}});
+    return allVersions();
   }
 
-  public AnnotationScanningTest(String version) {
-    switch (version) {
-      case "EE6":
-        System.setProperty("appengine.use.EE8", "false");
-        System.setProperty("appengine.use.EE10", "false");
-        break;
-      case "EE8":
-        System.setProperty("appengine.use.EE8", "true");
-        System.setProperty("appengine.use.EE10", "false");
-        break;
-      case "EE10":
-        System.setProperty("appengine.use.EE8", "false");
-        System.setProperty("appengine.use.EE10", "true");
-        break;
-      default:
-        // fall through
-    }
-  }
-
-  @BeforeClass
-  public static void beforeClass() throws IOException, InterruptedException {
+  public AnnotationScanningTest(
+      String runtimeVersion, String jettyVersion, String jakartaVersion, boolean useHttpConnector)
+      throws IOException, InterruptedException {
+    super(runtimeVersion, jettyVersion, jakartaVersion, useHttpConnector);
     File currentDirectory = new File("").getAbsoluteFile();
+    String appName = "annotationscanningwebapp";
+    if (isJakarta()) {
+      appName = "annotationscanningwebappjakarta";
+    }
     appRoot =
         new File(
             currentDirectory,
-            "../annotationscanningwebapp/target/annotationscanningwebapp-"
+            "../"
+                + appName
+                + "/target/"
+                + appName
+                + "-"
                 + System.getProperty("appengine.projectversion"));
     assertThat(appRoot.isDirectory()).isTrue();
   }
@@ -69,7 +58,7 @@ public final class AnnotationScanningTest extends JavaRuntimeViaHttpBase {
   private RuntimeContext<DummyApiServer> runtimeContext() throws IOException, InterruptedException {
     RuntimeContext.Config<DummyApiServer> config =
         RuntimeContext.Config.builder().setApplicationPath(appRoot.toString()).build();
-    return RuntimeContext.create(config);
+    return createRuntimeContext(config);
   }
 
   @Test

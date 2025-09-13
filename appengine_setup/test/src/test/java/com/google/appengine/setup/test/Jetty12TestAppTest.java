@@ -26,6 +26,6 @@ public class Jetty12TestAppTest extends TestAppBase {
     @Override
     protected String relativePathForUserApplicationJar() {
     return "../testapps/jetty12_testapp/target/"
-        + "jetty12_testapp-2.0.40-SNAPSHOT-jar-with-dependencies.jar";
+        + "jetty12_testapp-3.0.0-SNAPSHOT-jar-with-dependencies.jar";
     }
 }

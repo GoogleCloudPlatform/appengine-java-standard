@@ -24,7 +24,7 @@ import com.google.appengine.setup.testapps.jetty12.servlets.StatusServlet;
 import com.google.appengine.setup.testapps.jetty12.servlets.TaskQueueTestServlet;
 import jakarta.servlet.DispatcherType;
 import java.util.EnumSet;
-import org.eclipse.jetty.ee10.servlet.ServletHandler;
+import org.eclipse.jetty.ee11.servlet.ServletHandler;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
@@ -32,39 +32,39 @@ import org.eclipse.jetty.util.thread.QueuedThreadPool;
 
 class JettyServer {
 
-    private Server server;
+  private Server server;
 
-    public static void main(String[] args) throws Exception {
-        JettyServer jettyServer = new JettyServer();
-        jettyServer.start();
-    }
+  public static void main(String[] args) throws Exception {
+    JettyServer jettyServer = new JettyServer();
+    jettyServer.start();
+  }
 
-    void start() throws Exception {
-        int maxThreads = 100;
-        int minThreads = 10;
-        int idleTimeout = 120;
+  void start() throws Exception {
+    int maxThreads = 100;
+    int minThreads = 10;
+    int idleTimeout = 120;
 
-        QueuedThreadPool threadPool = new QueuedThreadPool(maxThreads, minThreads, idleTimeout);
+    QueuedThreadPool threadPool = new QueuedThreadPool(maxThreads, minThreads, idleTimeout);
 
-        server = new Server(threadPool);
-        ServerConnector connector = new ServerConnector(server);
-        connector.setPort(8080);
-        server.setConnectors(new Connector[] { connector });
+    server = new Server(threadPool);
+    ServerConnector connector = new ServerConnector(server);
+    connector.setPort(8080);
+    server.setConnectors(new Connector[] {connector});
 
-        ServletHandler servletHandler = new ServletHandler();
-        server.setHandler(servletHandler);
+    ServletHandler servletHandler = new ServletHandler();
+    server.setHandler(servletHandler);
 
-        servletHandler.addFilterWithMapping(ApiProxyFilter.class, "/*",
-                EnumSet.of(DispatcherType.REQUEST));
+    servletHandler.addFilterWithMapping(
+        ApiProxyFilter.class, "/*", EnumSet.of(DispatcherType.REQUEST));
 
-        servletHandler.addServletWithMapping(HomeServlet.class, "/");
-        servletHandler.addServletWithMapping(StatusServlet.class, "/status");
-        servletHandler.addServletWithMapping(ImageProcessingServlet.class, "/image");
-        servletHandler.addServletWithMapping(GAEInfoServlet.class, "/system");
-        servletHandler.addServletWithMapping(DatastoreTestServlet.class, "/datastore");
-        servletHandler.addServletWithMapping(TaskQueueTestServlet.class, "/taskqueue");
-        servletHandler.addServletWithMapping(MemcacheTestServlet.class, "/memcache");
+    servletHandler.addServletWithMapping(HomeServlet.class, "/");
+    servletHandler.addServletWithMapping(StatusServlet.class, "/status");
+    servletHandler.addServletWithMapping(ImageProcessingServlet.class, "/image");
+    servletHandler.addServletWithMapping(GAEInfoServlet.class, "/system");
+    servletHandler.addServletWithMapping(DatastoreTestServlet.class, "/datastore");
+    servletHandler.addServletWithMapping(TaskQueueTestServlet.class, "/taskqueue");
+    servletHandler.addServletWithMapping(MemcacheTestServlet.class, "/memcache");
 
-        server.start();
-    }
+    server.start();
+  }
 }

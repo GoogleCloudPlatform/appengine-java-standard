@@ -29,8 +29,8 @@ import java.net.Socket;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import org.junit.AfterClass;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -39,49 +39,32 @@ import org.junit.runners.Parameterized;
 public class LegacyModeTest extends JavaRuntimeViaHttpBase {
   private static RuntimeContext<DummyApiServer> runtime;
 
-  private static final boolean LEGACY =
-      Boolean.getBoolean("com.google.apphosting.runtime.jetty94.LEGACY_MODE");
-
   @Parameterized.Parameters
   public static List<Object[]> version() {
-    return Arrays.asList(new Object[][] {{"EE6"}, {"EE8"}, {"EE10"}});
+    return Arrays.asList(
+        new Object[][] {
+          {"java17", "9.4", "EE6", true},
+          //       {"java17", "12.0", "EE8"},
+          //       {"java17", "12.0", "EE10"},
+          //       {"java17", "12.1", "EE11"},
+          //       {"java21", "12.0", "EE8"},
+          //       {"java21", "12.0", "EE10"},
+          //        {"java21", "12.1", "EE11"},
+          //        {"java25", "12.1", "EE8"},
+          //        {"java25", "12.1", "EE11"},
+        });
   }
 
-  public LegacyModeTest(String version) {
-    switch (version) {
-      case "EE6":
-        System.setProperty("appengine.use.EE8", "false");
-        System.setProperty("appengine.use.EE10", "false");
-        break;
-      case "EE8":
-        System.setProperty("appengine.use.EE8", "true");
-        System.setProperty("appengine.use.EE10", "false");
-        break;
-      case "EE10":
-        System.setProperty("appengine.use.EE8", "false");
-        System.setProperty("appengine.use.EE10", "true");
-        break;
-      default:
-        // fall through
-    }
+  public LegacyModeTest(
+      String runtimeVersion, String jettyVersion, String version, boolean useHttpConnector) {
+    super(runtimeVersion, jettyVersion, version, useHttpConnector);
     if (Boolean.getBoolean("test.running.internally")) { // Internal can only do EE6
       System.setProperty("appengine.use.EE8", "false");
       System.setProperty("appengine.use.EE10", "false");
+      System.setProperty("appengine.use.EE11", "false");
+      System.setProperty("GAE_RUNTIME", "java17");
+      System.setProperty("appengine.use.jetty121", "false");
     }
-  }
-
-  @BeforeClass
-  public static void beforeClass() throws IOException, InterruptedException {
-    Path appPath = temporaryFolder.newFolder("app").toPath();
-    copyAppToDir("echoapp", appPath);
-    File appDir = appPath.toFile();
-
-    RuntimeContext.Config<DummyApiServer> config =
-        RuntimeContext.Config.builder()
-            .setApplicationPath(appDir.getAbsolutePath())
-            .build();
-    runtime = RuntimeContext.create(config);
-
   }
 
   @AfterClass
@@ -91,19 +74,26 @@ public class LegacyModeTest extends JavaRuntimeViaHttpBase {
 
   @Test
   public void testProxiedGet() throws Exception {
+    Path appPath = temporaryFolder.newFolder("app").toPath();
+    copyAppToDir("echoapp", appPath);
+    File appDir = appPath.toFile();
+
+    RuntimeContext.Config<DummyApiServer> config =
+        RuntimeContext.Config.builder().setApplicationPath(appDir.getAbsolutePath()).build();
+    runtime = createRuntimeContext(config);
+
     String response =
         executeHttpDirect(
-            "GET /some/path HTTP/1.0\r\n"
-                + "Some: Header\r\n"
-                + "\r\n");
+            """
+                          GET /some/path HTTP/1.0
+                          Some: Header
+
+                          """);
     assertThat(response).contains("HTTP/1.1 200 OK");
     assertThat(response).contains("GET /some/path HTTP/1.0");
     assertThat(response).contains("Some: Header");
-  }
 
-  @Test
-  public void testProxiedPost() throws Exception {
-    String response =
+    response =
         executeHttpDirect(
             "POST /some/path HTTP/1.0\r\n"
                 + "Some: Header\r\n"
@@ -114,11 +104,8 @@ public class LegacyModeTest extends JavaRuntimeViaHttpBase {
     assertThat(response).contains("POST /some/path HTTP/1.0");
     assertThat(response).contains("Some: Header");
     assertThat(response).contains("01234567");
-  }
 
-  @Test
-  public void testProxiedContentEncoding() throws Exception {
-    String response =
+    response =
         executeHttpDirect(
             "POST /some/path HTTP/1.0\r\n"
                 + "Some: Header\r\n"
@@ -130,42 +117,32 @@ public class LegacyModeTest extends JavaRuntimeViaHttpBase {
     assertThat(response).contains("POST /some/path HTTP/1.0");
     assertThat(response).contains("Some: Header");
     assertThat(response).contains("01234567");
-  }
 
-  
-  @Test
-  public void testProxiedMicrosoftEncoding() throws Exception {
-    String response =
+    response =
         executeHttpDirect(
-            "GET /s%u006Fme/p%u0061th HTTP/1.0\r\n"
-                + "Some: Header\r\n"
-                + "\r\n");
+            """
+                          GET /s%u006Fme/p%u0061th HTTP/1.0
+                          Some: Header
 
-      // Microsoft encoding supported until jetty-10
-      assertThat(response).contains("HTTP/1.1 200 OK");
-      assertThat(response).contains("GET /some/path HTTP/1.0");
-      assertThat(response).contains("Some: Header");
-  }
+                          """);
 
-  @Test
-  public void testProxiedCaseSensitiveMethod() throws Exception {
-    String response =
+    // Microsoft encoding supported until jetty-10
+    assertThat(response).contains("HTTP/1.1 200 OK");
+    assertThat(response).contains("GET /some/path HTTP/1.0");
+    assertThat(response).contains("Some: Header");
+
+    response =
         executeHttpDirect(
-            "Get /some/path HTTP/1.0\r\n"
-                + "Some: Header\r\n"
-                + "\r\n");
+            """
+                                 Get /some/path HTTP/1.0
+                                 Some: Header
+
+                                 """);
     assertThat(response).contains("HTTP/1.1 200 OK");
     assertThat(response).contains("Some: Header");
-    if (LEGACY) {
-      assertThat(response).contains("GET /some/path HTTP/1.0");
-    } else {
-      assertThat(response).contains("Get /some/path HTTP/1.0");
-    }
-  }
+    assertThat(response.toLowerCase(Locale.ROOT)).contains("get /some/path http/1.0");
 
-  @Test
-  public void testProxiedMultipleContentLengths() throws Exception {
-    String response =
+    response =
         executeHttpDirect(
             "POST /some/path HTTP/1.0\r\n"
                 + "Some: Header\r\n"

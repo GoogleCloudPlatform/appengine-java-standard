@@ -28,6 +28,9 @@ public final class AppEngineConstants {
   public static final boolean LEGACY_MODE =
           Boolean.getBoolean("com.google.apphosting.runtime.jetty94.LEGACY_MODE");
 
+  /** Set the Jetty request with Async mode. */
+  public static final boolean ASYNC_MODE = Boolean.getBoolean("com.google.appengine.enable_async");
+
   public static final String GAE_RUNTIME = System.getenv("GAE_RUNTIME");
 
   /**

@@ -101,11 +101,10 @@ public class LocalResourceFileServlet extends HttpServlet {
     }
   }
 
-  public static final java.lang.String __INCLUDE_JETTY = "javax.servlet.include.request_uri";
-  public static final java.lang.String __INCLUDE_SERVLET_PATH =
-      "javax.servlet.include.servlet_path";
-  public static final java.lang.String __INCLUDE_PATH_INFO = "javax.servlet.include.path_info";
-  public static final java.lang.String __FORWARD_JETTY = "javax.servlet.forward.request_uri";
+  public static final java.lang.String __INCLUDE_JETTY = RequestDispatcher.FORWARD_REQUEST_URI;
+  public static final java.lang.String __INCLUDE_SERVLET_PATH = RequestDispatcher.INCLUDE_SERVLET_PATH;
+  public static final java.lang.String __INCLUDE_PATH_INFO = RequestDispatcher.INCLUDE_PATH_INFO;
+  public static final java.lang.String __FORWARD_JETTY = RequestDispatcher.FORWARD_REQUEST_URI;
 
   /**
    * Retrieve the static resource file indicated.

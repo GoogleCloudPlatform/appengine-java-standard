@@ -16,6 +16,7 @@
 
 package com.google.apphosting.runtime.jetty9;
 
+import static com.google.apphosting.runtime.jetty9.JavaRuntimeViaHttpBase.allVersions;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -30,7 +31,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
-import java.util.Collection;
+import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -60,40 +62,32 @@ import org.junit.runners.Parameterized;
 public class SizeLimitHandlerTest extends JavaRuntimeViaHttpBase {
 
   @Parameterized.Parameters
-  public static Collection<Object[]> parameters() {
-    return Arrays.asList(
-        new Object[][] {
-          {"jetty94", false},
-          {"jetty94", true},
-          {"ee8", false},
-          {"ee8", true},
-          {"ee10", false},
-          {"ee10", true},
-        });
+  public static List<Object[]> version() {
+    return allVersions();
   }
 
   private static final int MAX_SIZE = 32 * 1024 * 1024;
 
   @Rule public TemporaryFolder temp = new TemporaryFolder();
   private final HttpClient httpClient = new HttpClient();
-  private final boolean httpMode;
-  private final String environment;
   private RuntimeContext<?> runtime;
 
-  public SizeLimitHandlerTest(String environment, boolean httpMode) {
-    this.environment = environment;
-    this.httpMode = httpMode;
-    System.setProperty("appengine.use.HttpConnector", Boolean.toString(httpMode));
+  public SizeLimitHandlerTest(
+      String runtimeVersion, String jettyVersion, String version, boolean useHttpConnector)
+      throws Exception {
+    super(runtimeVersion, jettyVersion, version, useHttpConnector);
   }
 
   @Before
   public void start() throws Exception {
-    String app = "sizelimit" + environment;
+    String app = "sizelimit";
+    if (isJakarta()) {
+      app = app + "ee10";
+    }
     copyAppToDir(app, temp.getRoot().toPath());
     httpClient.start();
     runtime = runtimeContext();
     assertEnvironment();
-    System.err.println("==== Using Environment: " + environment + " " + httpMode + " ====");
   }
 
   @After
@@ -144,7 +138,7 @@ public class SizeLimitHandlerTest extends JavaRuntimeViaHttpBase {
 
     Result result = completionListener.get(5, TimeUnit.MINUTES);
 
-    if (httpMode) {
+    if (useHttpConnector) {
       // In this mode the response will already be committed with a 200 status code then aborted
       // when it exceeds limit.
       assertNull(result.getRequestFailure());
@@ -155,7 +149,7 @@ public class SizeLimitHandlerTest extends JavaRuntimeViaHttpBase {
     assertThat(received.length(), lessThanOrEqualTo(MAX_SIZE));
 
     // No content is sent on the Jetty 9.4 runtime.
-    if (!"jetty94".equals(environment) && !httpMode) {
+    if (!Objects.equals(jettyVersion, "9.4") && !useHttpConnector) {
       assertThat(received.toString(), containsString("Response body is too large"));
     }
   }
@@ -198,7 +192,7 @@ public class SizeLimitHandlerTest extends JavaRuntimeViaHttpBase {
         .onResponseContentAsync(
             (r, c, cb) -> {
               receivedCount.addAndGet(c.remaining());
-              if (!httpMode) {
+              if (!useHttpConnector) {
                 received.append(c);
               }
               cb.succeeded();
@@ -207,7 +201,7 @@ public class SizeLimitHandlerTest extends JavaRuntimeViaHttpBase {
 
     Result result = completionListener.get(5, TimeUnit.SECONDS);
 
-    if (httpMode) {
+    if (useHttpConnector) {
       // In this mode the response will already be committed with a 200 status code then aborted
       // when it exceeds limit.
       assertNull(result.getRequestFailure());
@@ -218,7 +212,7 @@ public class SizeLimitHandlerTest extends JavaRuntimeViaHttpBase {
     assertThat(received.length(), lessThanOrEqualTo(MAX_SIZE));
 
     // No content is sent on the Jetty 9.4 runtime.
-    if (!"jetty94".equals(environment) && !httpMode) {
+    if (!Objects.equals(jettyVersion, "9.4") && !useHttpConnector) {
       assertThat(received.toString(), containsString("Response body is too large"));
     }
   }
@@ -334,8 +328,8 @@ public class SizeLimitHandlerTest extends JavaRuntimeViaHttpBase {
 
     assertThat(response.getStatus(), equalTo(HttpStatus.INTERNAL_SERVER_ERROR_500));
 
-    // No content is sent on the Jetty 9.4 runtime.
-    if (!"jetty94".equals(environment)) {
+    // No content is sent on the Jetty 9.4 runtime when using HttpConnector.
+    if (jettyVersion.equals("9.4") && useHttpConnector) {
       assertThat(response.getContentAsString(), containsString("Response body is too large"));
     }
   }
@@ -373,27 +367,21 @@ public class SizeLimitHandlerTest extends JavaRuntimeViaHttpBase {
   private RuntimeContext<?> runtimeContext() throws Exception {
     RuntimeContext.Config<?> config =
         RuntimeContext.Config.builder().setApplicationPath(temp.getRoot().toString()).build();
-    return RuntimeContext.create(config);
+    return createRuntimeContext(config);
   }
 
   private void assertEnvironment() throws Exception {
-    String match;
-    switch (environment) {
-      case "jetty94":
-        match =
-            httpMode
-                ? "com.google.apphosting.runtime.jetty9.JettyRequestAPIData"
-                : "org.eclipse.jetty.server.Request";
-        break;
-      case "ee8":
-        match = "org.eclipse.jetty.ee8";
-        break;
-      case "ee10":
-        match = "org.eclipse.jetty.ee10";
-        break;
-      default:
-        throw new IllegalArgumentException(environment);
-    }
+    String match =
+        switch (jakartaVersion) {
+          case "EE6" ->
+              useHttpConnector
+                  ? "com.google.apphosting.runtime.jetty9.JettyRequestAPIData"
+                  : "org.eclipse.jetty.server.Request";
+          case "EE8" -> "org.eclipse.jetty.ee8";
+          case "EE10" -> "org.eclipse.jetty.ee1"; // EE10 could be upgraded to EE11!
+          case "EE11" -> "org.eclipse.jetty.ee11";
+          default -> throw new IllegalArgumentException(jakartaVersion);
+        };
 
     String runtimeUrl = runtime.jettyUrl("/?getRequestClass=true");
     ContentResponse response = httpClient.GET(runtimeUrl);

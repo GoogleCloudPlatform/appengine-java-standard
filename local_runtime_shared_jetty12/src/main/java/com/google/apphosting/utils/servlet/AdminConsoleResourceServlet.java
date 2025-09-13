@@ -19,6 +19,7 @@ package com.google.apphosting.utils.servlet;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Locale;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -33,17 +34,17 @@ import javax.servlet.http.HttpServletResponse;
 public class AdminConsoleResourceServlet extends HttpServlet {
 
   // Hard-coding the resources we serve so that user code
-  // can't serve arbitrary resources from our jars.
+  // can't serve arbitrary resources from our jars. Shared with javax and jakarta
   private enum Resources {
-    google("ah/images/google.gif"),
-    webhook("js/webhook.js"),
-    multipart_form_data("js/multipart_form_data.js"),
-    rfc822_date("js/rfc822_date.js");
+    GOOGLE("/com/google/apphosting/utils/servlet/ah/images/google.gif"),
+    WEBHOOK("/com/google/apphosting/utils/servlet/js/webhook.js"),
+    MULTIPART_FORM_DATA("/com/google/apphosting/utils/servlet/js/multipart_form_data.js"),
+    RFC822_DATE("/com/google/apphosting/utils/servlet/js/rfc822_date.js");
 
     private final String filename;
 
     Resources(String filename) {
-      this.filename = filename;
+      this.filename = filename.toLowerCase(Locale.ROOT);
     }
   }
 

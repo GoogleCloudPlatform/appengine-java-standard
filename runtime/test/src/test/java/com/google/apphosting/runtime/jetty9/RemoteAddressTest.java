@@ -16,12 +16,12 @@
 
 package com.google.apphosting.runtime.jetty9;
 
+import static com.google.apphosting.runtime.jetty9.JavaRuntimeViaHttpBase.allVersions;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-import java.util.Arrays;
-import java.util.Collection;
+import java.util.List;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.http.HttpHeader;
@@ -39,39 +39,33 @@ import org.junit.runners.Parameterized;
 public class RemoteAddressTest extends JavaRuntimeViaHttpBase {
 
   @Parameterized.Parameters
-  public static Collection<Object[]> data() {
-    return Arrays.asList(
-        new Object[][] {
-          {"jetty94", false},
-          {"jetty94", true},
-          {"ee8", false},
-          {"ee8", true},
-          {"ee10", false},
-          {"ee10", true},
-        });
+  public static List<Object[]> version() {
+    return allVersions();
   }
 
   @Rule public TemporaryFolder temp = new TemporaryFolder();
   private final HttpClient httpClient = new HttpClient();
-  private final boolean httpMode;
-  private final String environment;
   private RuntimeContext<?> runtime;
   private String url;
 
-  public RemoteAddressTest(String environment, boolean httpMode) {
-    this.environment = environment;
-    this.httpMode = httpMode;
-    System.setProperty("appengine.use.HttpConnector", Boolean.toString(httpMode));
+  public RemoteAddressTest(
+      String runtimeVersion, String jettyVersion, String jakartaVersion, boolean useHttpConnector) {
+    super(runtimeVersion, jettyVersion, jakartaVersion, useHttpConnector);
   }
 
   @Before
   public void before() throws Exception {
-    String app = "com/google/apphosting/runtime/jetty9/remoteaddrapp/" + environment;
+    String app = "com/google/apphosting/runtime/jetty9/remoteaddrapp/";
+    if (isJakarta()) {
+      app = app + "ee10";
+    } else {
+      app = app + "ee8";
+    }
     copyAppToDir(app, temp.getRoot().toPath());
     httpClient.start();
     runtime = runtimeContext();
     url = runtime.jettyUrl("/");
-    System.err.println("==== Using Environment: " + environment + " " + httpMode + " ====");
+    System.err.println("==== Using Environment: " + jakartaVersion + " ====");
   }
 
   @After
@@ -131,7 +125,7 @@ public class RemoteAddressTest extends JavaRuntimeViaHttpBase {
             .send();
     assertThat(response.getStatus(), equalTo(HttpStatus.OK_200));
     contentReceived = response.getContentAsString();
-    if ("jetty94".equals(environment)) {
+    if (jettyVersion.equals("9.4")) {
       assertThat(
           contentReceived, containsString("getRemoteAddr: [2001:db8:85a3:8d3:1319:8a2e:370:7348]"));
       assertThat(
@@ -203,6 +197,6 @@ public class RemoteAddressTest extends JavaRuntimeViaHttpBase {
   private RuntimeContext<?> runtimeContext() throws Exception {
     RuntimeContext.Config<?> config =
         RuntimeContext.Config.builder().setApplicationPath(temp.getRoot().toString()).build();
-    return RuntimeContext.create(config);
+    return createRuntimeContext(config);
   }
 }

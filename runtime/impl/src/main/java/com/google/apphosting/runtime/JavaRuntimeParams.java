@@ -26,133 +26,111 @@ import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Random;
 
-/**
- * Command line parameters for Java runtime, and its dependencies.
- */
+/** Command line parameters for Java runtime, and its dependencies. */
 @Parameters(separators = "=")
 final class JavaRuntimeParams {
-
 
   private Class<? extends ServletEngineAdapter> servletEngineClass;
 
   @Parameter(
-    description = "Root path for application data on the local filesystem.",
-    names = {"--application_root"}
-  )
+      description = "Root path for application data on the local filesystem.",
+      names = {"--application_root"})
   private String applicationRoot = "appdata";
 
   @Parameter(
-    description = "Port number to expose our EvaluationRuntime service on.",
-    names = {"--port"}
-  )
+      description = "Port number to expose our EvaluationRuntime service on.",
+      names = {"--port"})
   private int port = 0;
 
   @Parameter(
-    description = "Specification used for connecting back to the appserver.",
-    names = {"--trusted_host"}
-  )
+      description = "Specification used for connecting back to the appserver.",
+      names = {"--trusted_host"})
   private String trustedHost = "";
 
   @Parameter(
-    description =
-        "Number of milliseconds before the deadline for a request "
-            + "to throw an uncatchable exception.",
-    names = {"--java_hard_deadline_ms"}
-  )
+      description =
+          "Number of milliseconds before the deadline for a request "
+              + "to throw an uncatchable exception.",
+      names = {"--java_hard_deadline_ms"})
   private int javaHardDeadlineMs = 200;
 
   @Parameter(
-    description =
-        "Number of milliseconds before the deadline for a request "
-            + "to throw a catchable exception.",
-    names = {"--java_soft_deadline_ms"}
-  )
+      description =
+          "Number of milliseconds before the deadline for a request "
+              + "to throw a catchable exception.",
+      names = {"--java_soft_deadline_ms"})
   private int javaSoftDeadlineMs = 600;
 
   @Parameter(
-    description = "Default deadline for all API RPCs, in seconds.",
-    names = {"--api_call_deadline"}
-  )
+      description = "Default deadline for all API RPCs, in seconds.",
+      names = {"--api_call_deadline"})
   private double apiCallDeadline = 5.0;
 
   @Parameter(
-    description = "Maximum deadline for all API RPCs, in seconds.",
-    names = {"--max_api_call_deadline"}
-  )
+      description = "Maximum deadline for all API RPCs, in seconds.",
+      names = {"--max_api_call_deadline"})
   private double maxApiCallDeadline = 10.0;
 
   @Parameter(
-    description = "Default deadline for all API RPCs by package in seconds.",
-    names = {"--api_call_deadline_map"}
-  )
+      description = "Default deadline for all API RPCs by package in seconds.",
+      names = {"--api_call_deadline_map"})
   private String apiCallDeadlineMap = "";
 
   @Parameter(
-    description = "Maximum deadline for all API RPCs by package in seconds.",
-    names = {"--max_api_call_deadline_map"}
-  )
+      description = "Maximum deadline for all API RPCs by package in seconds.",
+      names = {"--max_api_call_deadline_map"})
   private String maxApiCallDeadlineMap = "";
 
   @Parameter(
-    description = "Default deadline for all offline API RPCs, in seconds.",
-    names = {"--offline_api_call_deadline"}
-  )
+      description = "Default deadline for all offline API RPCs, in seconds.",
+      names = {"--offline_api_call_deadline"})
   private double offlineApiCallDeadline = 5.0;
 
   @Parameter(
-    description = "Maximum deadline for all offline API RPCs, in seconds.",
-    names = {"--max_offline_api_call_deadline"}
-  )
+      description = "Maximum deadline for all offline API RPCs, in seconds.",
+      names = {"--max_offline_api_call_deadline"})
   private double maxOfflineApiCallDeadline = 10.0;
 
   @Parameter(
-    description = "Default deadline for all offline API RPCs by package in seconds.",
-    names = {"--offline_api_call_deadline_map"}
-  )
+      description = "Default deadline for all offline API RPCs by package in seconds.",
+      names = {"--offline_api_call_deadline_map"})
   private String offlineApiCallDeadlineMap = "";
 
   @Parameter(
-    description = "Maximum deadline for all offline API RPCs by package in seconds.",
-    names = {"--max_offline_api_call_deadline_map"}
-  )
+      description = "Maximum deadline for all offline API RPCs by package in seconds.",
+      names = {"--max_offline_api_call_deadline_map"})
   private String maxOfflineApiCallDeadlineMap = "";
 
   @Parameter(
-    description = "A base-64 encoded string of entropy for the CSPRNG.",
-    names = {"--entropy_string"}
-  )
+      description = "A base-64 encoded string of entropy for the CSPRNG.",
+      names = {"--entropy_string"})
   private String entropyString = pseudoRandomBytes();
 
   @Parameter(
-    description = "The name for the current release of Google App Engine.",
-    names = {"--appengine_release_name"}
-  )
+      description = "The name for the current release of Google App Engine.",
+      names = {"--appengine_release_name"})
   private String appengineReleaseName = "unknown";
 
   @Parameter(
-    description = "If true, exceptions logged by Jetty also go to app logs.",
-    names = {"--log_jetty_exceptions_to_app_logs"},
-    arity = 1
-  )
+      description = "If true, exceptions logged by Jetty also go to app logs.",
+      names = {"--log_jetty_exceptions_to_app_logs"},
+      arity = 1)
   private boolean logJettyExceptionsToAppLogs = true;
 
   @Parameter(
-    description = "Identifier for this datacenter.",
-    names = {"--external_datacenter_name"}
-  )
+      description = "Identifier for this datacenter.",
+      names = {"--external_datacenter_name"})
   private String externalDatacenterName = null;
 
   @Parameter(
-    description = "The maximum number of simultaneous APIHost RPCs.",
-    names = {"--clone_max_outstanding_api_rpcs"}
-  )
+      description = "The maximum number of simultaneous APIHost RPCs.",
+      names = {"--clone_max_outstanding_api_rpcs"})
   private int cloneMaxOutstandingApiRpcs = 100;
 
   @Parameter(
-    description = "Always terminate the clone when Thread.stop() is used.",
-    names = {"--thread_stop_terminates_clone"},
-    arity = 1
-  )
+      description = "Always terminate the clone when Thread.stop() is used.",
+      names = {"--thread_stop_terminates_clone"},
+      arity = 1)
   private boolean threadStopTerminatesClone = true;
 
   // TODO: this flag is no longer used and should be deleted
@@ -172,45 +150,40 @@ final class JavaRuntimeParams {
   private int maxLogLineSize = 16 * 1024;
 
   @Parameter(
-    description =
-        "Maximum number of seconds a log record should be allowed to "
-            + "to be cached in the runtime before being flushed to the "
-            + "appserver (only applies to non-frontend requests).",
-    names = {"--max_log_flush_seconds"}
-  )
+      description =
+          "Maximum number of seconds a log record should be allowed to "
+              + "to be cached in the runtime before being flushed to the "
+              + "appserver (only applies to non-frontend requests).",
+      names = {"--max_log_flush_seconds"})
   private int maxLogFlushSeconds = 60;
 
   @Parameter(
-    description =
-        "Should we use CloneController.sendDeadline for request "
-            + "deadlines instead of using timers.",
-    names = {"--use_clone_controller_for_deadlines"},
-    arity = 1
-  )
+      description =
+          "Should we use CloneController.sendDeadline for request "
+              + "deadlines instead of using timers.",
+      names = {"--use_clone_controller_for_deadlines"},
+      arity = 1)
   private boolean useCloneControllerForDeadlines = false;
 
   @Parameter(
-    description = "Compress HTTP responses in the runtime.",
-    names = {"--runtime_http_compression"},
-    arity = 1
-  )
+      description = "Compress HTTP responses in the runtime.",
+      names = {"--runtime_http_compression"},
+      arity = 1)
   private boolean runtimeHttpCompression = false;
 
   @Parameter(
-    description =
-        "The maximum allowed size in bytes of the Runtime Log "
-            + "per request, returned in the UPResponse.",
-    names = {"--max_runtime_log_per_request"}
-  )
+      description =
+          "The maximum allowed size in bytes of the Runtime Log "
+              + "per request, returned in the UPResponse.",
+      names = {"--max_runtime_log_per_request"})
   private long maxRuntimeLogPerRequest = 3000L * 1024L;
 
   @Parameter(
-    description =
-        "Whether to use the JDBC connectivity for accessing Cloud SQL "
-            + "through the AppEngine Java applications.",
-    names = {"--enable_gae_cloud_sql_jdbc_connectivity"},
-    arity = 1
-  )
+      description =
+          "Whether to use the JDBC connectivity for accessing Cloud SQL "
+              + "through the AppEngine Java applications.",
+      names = {"--enable_gae_cloud_sql_jdbc_connectivity"},
+      arity = 1)
   private boolean enableGaeCloudSqlJdbcConnectivity = false;
 
   @Parameter(
@@ -218,126 +191,111 @@ final class JavaRuntimeParams {
           "Whether to use google connector-j by default even if it's not explicitly set in"
               + " appengine-web.xml.",
       names = {"--default_use_google_connectorj"},
-      arity = 1
-  )
+      arity = 1)
   private boolean defaultUseGoogleConnectorj = false;
 
   @Parameter(
-    description =
-        "On a soft deadline, attempt to interrupt application threads first, then "
-            + "stop them only if necessary",
-    names = {"--interrupt_threads_first_on_soft_deadline"},
-    arity = 1
-  )
+      description =
+          "On a soft deadline, attempt to interrupt application threads first, then "
+              + "stop them only if necessary",
+      names = {"--interrupt_threads_first_on_soft_deadline"},
+      arity = 1)
   private boolean interruptThreadsFirstOnSoftDeadline = false;
 
   @Parameter(
-    description = "Whether to enable exporting of hotspot performance metrics.",
-    names = {"--enable_hotspot_performance_metrics"},
-    arity = 1
-  )
+      description = "Whether to enable exporting of hotspot performance metrics.",
+      names = {"--enable_hotspot_performance_metrics"},
+      arity = 1)
   private boolean enableHotspotPerformanceMetrics = false;
 
   @Parameter(
-    description = "Enables Java Cloud Profiler CPU usage agent in the process.",
-    names = {"--enable_cloud_cpu_profiler"},
-    arity = 1
-  )
+      description = "Enables Java Cloud Profiler CPU usage agent in the process.",
+      names = {"--enable_cloud_cpu_profiler"},
+      arity = 1)
   private boolean enableCloudCpuProfiler = false;
 
   @Parameter(
-    description = "Enables Java Cloud Profiler heap usage agent in the process.",
-    names = {"--enable_cloud_heap_profiler"},
-    arity = 1
-  )
+      description = "Enables Java Cloud Profiler heap usage agent in the process.",
+      names = {"--enable_cloud_heap_profiler"},
+      arity = 1)
   private boolean enableCloudHeapProfiler = false;
 
   @Parameter(
-    description = "Allows URLFetch to generate response messages based on HTTP return codes.",
-    names = {"--urlfetch_derive_response_message"},
-    arity = 1
-  )
+      description = "Allows URLFetch to generate response messages based on HTTP return codes.",
+      names = {"--urlfetch_derive_response_message"},
+      arity = 1)
   private boolean urlfetchDeriveResponseMessage = true;
 
   @Parameter(
-    description = "Prevent the Mail API from inlining attachments with filenames.",
-    names = {"--mail_filename_prevents_inlining"},
-    arity = 1
-  )
+      description = "Prevent the Mail API from inlining attachments with filenames.",
+      names = {"--mail_filename_prevents_inlining"},
+      arity = 1)
   private boolean mailFilenamePreventsInlining = false;
 
   @Parameter(
-    description = "Support byte[] and nested Multipart-encoded Mail attachments",
-    names = {"--mail_support_extended_attachment_encodings"},
-    arity = 1
-  )
+      description = "Support byte[] and nested Multipart-encoded Mail attachments",
+      names = {"--mail_support_extended_attachment_encodings"},
+      arity = 1)
   private boolean mailSupportExtendedAttachmentEncodings = false;
 
   @Parameter(
-    description = "Always enable readahead on a CloudSQL socket",
-    names = {"--force_readahead_on_cloudsql_socket"},
-    arity = 1
-  )
+      description = "Always enable readahead on a CloudSQL socket",
+      names = {"--force_readahead_on_cloudsql_socket"},
+      arity = 1)
   private boolean forceReadaheadOnCloudsqlSocket = false;
 
   @Parameter(
-    description = "Speed of the processor in clock cycles per second.",
-    names = {"--cycles_per_second"},
-    arity = 1
-  )
+      description = "Speed of the processor in clock cycles per second.",
+      names = {"--cycles_per_second"},
+      arity = 1)
   private long cyclesPerSecond = 0L;
 
   @Parameter(
-    description =
-        "Wait for request threads with the daemon bit set before considering a request complete.",
-    names = {"--wait_for_daemon_request_threads"},
-    arity = 1
-  )
+      description =
+          "Wait for request threads with the daemon bit set before considering a request complete.",
+      names = {"--wait_for_daemon_request_threads"},
+      arity = 1)
   private boolean waitForDaemonRequestThreads = true;
 
   @Parameter(
-    description =
-         "Poll for network connectivity before running application code.",
-    names = {"--poll_for_network"},
-    arity = 1
-  )
+      description = "Poll for network connectivity before running application code.",
+      names = {"--poll_for_network"},
+      arity = 1)
   private boolean pollForNetwork = false;
 
   @Parameter(
-    description = "Default url-stream-handler to 'native' instead of 'urlfetch'.",
-    names = {"--default_to_native_url_stream_handler", "--default_to_builtin_url_stream_handler"},
-    arity = 1
-  )
+      description = "Default url-stream-handler to 'native' instead of 'urlfetch'.",
+      names = {"--default_to_native_url_stream_handler", "--default_to_builtin_url_stream_handler"},
+      arity = 1)
   private boolean defaultToNativeUrlStreamHandler = false;
 
   @Parameter(
-    description = "Force url-stream-handler to 'urlfetch' irrespective of the contents "
-        + "of the appengine-web.xml descriptor.",
-    names = {"--force_urlfetch_url_stream_handler"},
-    arity = 1
-  )
+      description =
+          "Force url-stream-handler to 'urlfetch' irrespective of the contents "
+              + "of the appengine-web.xml descriptor.",
+      names = {"--force_urlfetch_url_stream_handler"},
+      arity = 1)
   private boolean forceUrlfetchUrlStreamHandler = false;
 
   @Parameter(
-    description = "Enable synchronization inside of AppLogsWriter.",
-    names = {"--enable_synchronized_app_logs_writer"},
-    arity = 1
-  )
+      description = "Enable synchronization inside of AppLogsWriter.",
+      names = {"--enable_synchronized_app_logs_writer"},
+      arity = 1)
   private boolean enableSynchronizedAppLogsWriter = true;
 
   @Parameter(
-    description = "Use environment variables from the AppInfo instead of those "
-        + "in the appengine-web.xml descriptor.",
-    names = {"--use_env_vars_from_app_info"},
-    arity = 1
-  )
+      description =
+          "Use environment variables from the AppInfo instead of those "
+              + "in the appengine-web.xml descriptor.",
+      names = {"--use_env_vars_from_app_info"},
+      arity = 1)
   private boolean useEnvVarsFromAppInfo = false;
 
   @Parameter(
-    description = "Fixed path to use for the application root directory, irrespective of "
-        + "the application id and version. Ignored if empty.",
-    names = {"--fixed_application_path"}
-  )
+      description =
+          "Fixed path to use for the application root directory, irrespective of "
+              + "the application id and version. Ignored if empty.",
+      names = {"--fixed_application_path"})
   private String fixedApplicationPath = null;
 
   @Parameter(
@@ -349,27 +307,24 @@ final class JavaRuntimeParams {
   private boolean useJettyHttpProxy = false;
 
   @Parameter(
-    description = "Jetty HTTP Port number to use for http access to the runtime.",
-    names = {"--jetty_http_port"}
-  )
+      description = "Jetty HTTP Port number to use for http access to the runtime.",
+      names = {"--jetty_http_port"})
   private int jettyHttpPort = 8080;
 
   @Parameter(
-    description = "Jetty server's max size for HTTP request headers.",
-    names = {"--jetty_request_header_size"}
-  )
+      description = "Jetty server's max size for HTTP request headers.",
+      names = {"--jetty_request_header_size"})
   private int jettyRequestHeaderSize = 16384;
 
   @Parameter(
       description = "Jetty server's max size for HTTP response headers.",
-      names = {"--jetty_response_header_size"}
-  )
+      names = {"--jetty_response_header_size"})
   private int jettyResponseHeaderSize = 16384;
 
   @Parameter(
-    description = "Disable API call logging in the runtime.",
-    names = {"--disable_api_call_logging"},
-    arity = 1)
+      description = "Disable API call logging in the runtime.",
+      names = {"--disable_api_call_logging"},
+      arity = 1)
   private boolean disableApiCallLogging = false;
 
   @Parameter(
@@ -379,9 +334,9 @@ final class JavaRuntimeParams {
   private boolean logJsonToVarLog = false;
 
   @Parameter(
-    description = "Enable using riptide for user code.",
-    names = {"--java8_riptide"},
-    arity = 1)
+      description = "Enable using riptide for user code.",
+      names = {"--java8_riptide"},
+      arity = 1)
   private boolean java8Riptide = false;
 
   private List<String> unknownParams;
@@ -441,13 +396,15 @@ final class JavaRuntimeParams {
   }
 
   private void initServletEngineClass() {
-      String servletEngine;
+    String servletEngine;
 
-      if (Boolean.getBoolean("appengine.use.EE8")||Boolean.getBoolean("appengine.use.EE10")) {
-          servletEngine = "com.google.apphosting.runtime.jetty.JettyServletEngineAdapter";
-      } else {
-          servletEngine = "com.google.apphosting.runtime.jetty9.JettyServletEngineAdapter";
-      }
+    if (Boolean.getBoolean("appengine.use.EE8")
+        || Boolean.getBoolean("appengine.use.EE10")
+        || Boolean.getBoolean("appengine.use.EE11")) {
+      servletEngine = "com.google.apphosting.runtime.jetty.JettyServletEngineAdapter";
+    } else {
+      servletEngine = "com.google.apphosting.runtime.jetty9.JettyServletEngineAdapter";
+    }
     try {
       servletEngineClass = Class.forName(servletEngine).asSubclass(ServletEngineAdapter.class);
     } catch (ClassNotFoundException nfe) {
@@ -607,7 +564,7 @@ final class JavaRuntimeParams {
   }
 
   boolean getForceUrlfetchUrlStreamHandler() {
-      return forceUrlfetchUrlStreamHandler;
+    return forceUrlfetchUrlStreamHandler;
   }
 
   boolean getEnableSynchronizedAppLogsWriter() {

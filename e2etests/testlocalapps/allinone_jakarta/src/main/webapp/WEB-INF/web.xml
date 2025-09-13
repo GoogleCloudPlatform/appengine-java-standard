@@ -30,7 +30,7 @@
   </servlet>
   <servlet>
     <servlet-name>remoteApi</servlet-name>
-    <servlet-class>com.google.apphosting.utils.remoteapi.EE10RemoteApiServlet</servlet-class>
+    <servlet-class>com.google.apphosting.utils.remoteapi.JakartaRemoteApiServlet</servlet-class>
     <load-on-startup>1</load-on-startup>
   </servlet>
   <servlet-mapping>

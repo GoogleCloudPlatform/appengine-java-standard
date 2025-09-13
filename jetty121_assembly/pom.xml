@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+ Copyright 2021 Google LLC
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     https://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+-->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <parent>
+        <groupId>com.google.appengine</groupId>
+        <artifactId>parent</artifactId>
+        <version>3.0.0-SNAPSHOT</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+    <artifactId>jetty121-assembly</artifactId>
+    <name>AppEngine :: Jetty121 Assembly for the SDK</name>
+    <url>https://github.com/GoogleCloudPlatform/appengine-java-standard/</url>
+    <description>Assembly for Jetty 12.1.</description>
+    <packaging>pom</packaging>
+
+    <properties>
+        <assembly-directory>${basedir}/target/appengine-java-sdk</assembly-directory>
+        <maven.deploy.skip>true</maven.deploy.skip>
+    </properties>
+
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.8.1</version>
+                <executions>
+                    <execution>
+                        <id>unpack</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>unpack</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>org.eclipse.jetty</groupId>
+                                    <artifactId>jetty-home</artifactId>
+                                    <type>zip</type>
+                                    <fileMappers>
+                                        <org.codehaus.plexus.components.io.filemappers.RegExpFileMapper>
+                                            <pattern>^\Qjetty-home-${jetty121.version}\E</pattern>
+                                            <replacement>./</replacement>
+                                        </org.codehaus.plexus.components.io.filemappers.RegExpFileMapper>
+                                    </fileMappers>
+                                    <outputDirectory>${assembly-directory}/jetty121/jetty-home</outputDirectory>
+                                </artifactItem>
+                            </artifactItems>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>copy</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>copy</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>org.eclipse.jetty.ee8</groupId>
+                                    <artifactId>jetty-ee8-apache-jsp</artifactId>
+                                    <overWrite>true</overWrite>
+                                    <classifier>nolog</classifier>
+                                    <outputDirectory>${assembly-directory}/jetty121/jetty-home/lib/ee8-apache-jsp</outputDirectory>
+                                    <destFileName>org.eclipse.jetty.ee8.apache-jsp-${jetty121.version}-nolog.jar</destFileName>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.eclipse.jetty.ee11</groupId>
+                                    <artifactId>jetty-ee11-apache-jsp</artifactId>
+                                    <overWrite>true</overWrite>
+                                    <classifier>nolog</classifier>
+                                    <outputDirectory>${assembly-directory}/jetty121/jetty-home/lib/ee11-apache-jsp</outputDirectory>
+                                    <destFileName>org.eclipse.jetty.ee11.apache-jsp-${jetty121.version}-nolog.jar</destFileName>
+                                </artifactItem>
+                            </artifactItems>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <configuration>
+                    <tarLongFileMode>posix</tarLongFileMode>
+                    <appendAssemblyId>false</appendAssemblyId>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>binary</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <configuration>
+                            <overrideUid>0</overrideUid>
+                            <overrideGid>0</overrideGid>
+                            <descriptors>
+                                <descriptor>src/main/assembly/assembly.xml</descriptor>
+                            </descriptors>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-home</artifactId>
+            <version>${jetty121.version}</version>
+            <type>zip</type>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty.ee8</groupId>
+            <artifactId>jetty-ee8-apache-jsp</artifactId>
+            <version>${jetty121.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty.ee11</groupId>
+            <artifactId>jetty-ee11-apache-jsp</artifactId>
+            <version>${jetty121.version}</version>
+        </dependency>
+    </dependencies>
+
+</project>

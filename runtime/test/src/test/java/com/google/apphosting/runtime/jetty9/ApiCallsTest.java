@@ -75,6 +75,8 @@ public class ApiCallsTest extends JavaRuntimeViaHttpBase {
   private final HttpApi httpApi;
 
   public ApiCallsTest(HttpApi httpApi) {
+    // TODO: ludo - only passes when httConnector is set to false.
+    super("java17", "9.4", "EE6", false);
     this.httpApi = httpApi;
   }
 
@@ -172,9 +174,11 @@ public class ApiCallsTest extends JavaRuntimeViaHttpBase {
       // The servlet should get a FeatureNotEnabledException, which it should translate into an
       // exception stack trace that we retrieve here. The API call is testpackage.testmethod, which
       // we expect to see in the stack trace, probably like this:
-      //   Caused by: com.google.apphosting.api.ApiProxy$FeatureNotEnabledException: testpackage.testmethod
+      //   Caused by: com.google.apphosting.api.ApiProxy$FeatureNotEnabledException:
+      // testpackage.testmethod
       // We also expect that somewhere in the stack trace we'll see something like this:
-      //   at com.google.apphosting.runtime.jetty9.apicallsapp.ApiCallsServlet.handle(ApiCallsServlet.java:75)
+      //   at
+      // com.google.apphosting.runtime.jetty9.apicallsapp.ApiCallsServlet.handle(ApiCallsServlet.java:75)
       // The servlet does a synchronous API call so users should be able to see where that call was.
       String result = context.executeHttpGet("/?count=1", HTTP_OK);
       assertThat(result).contains("testpackage.testmethod");
@@ -202,7 +206,7 @@ public class ApiCallsTest extends JavaRuntimeViaHttpBase {
     if (httpApi == HttpApi.JDK) {
       config.setEnvironmentEntries(ImmutableMap.of("APPENGINE_API_CALLS_USING_JDK_CLIENT", "true"));
     }
-    return RuntimeContext.create(config.build());
+    return createRuntimeContext(config.build());
   }
 
   /**

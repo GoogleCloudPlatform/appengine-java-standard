@@ -16,7 +16,6 @@
 
 package com.google.appengine.tools.admin;
 
-
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -125,9 +124,9 @@ public class ApplicationTest {
   private static final String JAVA8_JAR_TEST_FILES = getWarPath("java8-jar");
   private static final String CLASSES_TEST_FILES = getWarPath("sample-with-classes");
 
-  private static final String SDK_ROOT =getSDKRoot();
+  private static final String SDK_ROOT = getSDKRoot();
 
-  private static final String SERVLET3_STANDARD_APP_ROOT =getWarPath("bundle_standard");
+  private static final String SERVLET3_STANDARD_APP_ROOT = getWarPath("bundle_standard");
   private static final String SERVLET3_STANDARD_APP_NO_JSP_ROOT =
       getWarPath("bundle_standard_with_no_jsp");
   private static final String SERVLET3_STANDARD_WEBLISTENER_MEMCACHE =
@@ -178,11 +177,11 @@ public class ApplicationTest {
         // fall through
     }
     System.setProperty("appengine.sdk.root", "../../sdk_assembly/target/appengine-java-standard");
-    AppengineSdk.resetSdk();    
+    AppengineSdk.resetSdk();
   }
 
   private static String getWarPath(String directoryName) {
-          File currentDirectory = new File("").getAbsoluteFile();
+    File currentDirectory = new File("").getAbsoluteFile();
 
     String appRoot =
         new File(
@@ -195,25 +194,23 @@ public class ApplicationTest {
                     + System.getProperty("appengine.projectversion"))
             .getAbsolutePath();
 
-//    assertThat(appRoot.isDirectory()).isTrue();
-return appRoot;
-
-
+    //    assertThat(appRoot.isDirectory()).isTrue();
+    return appRoot;
   }
-   private static String getSDKRoot()  {
-          File currentDirectory = new File("").getAbsoluteFile();
-    String sdkRoot= null;
-      try {
+
+  private static String getSDKRoot() {
+    File currentDirectory = new File("").getAbsoluteFile();
+    String sdkRoot = null;
+    try {
       sdkRoot =
           new File(currentDirectory, "../../sdk_assembly/target/appengine-java-sdk")
               .getCanonicalPath();
-      } catch (IOException ex) {
-          Logger.getLogger(ApplicationTest.class.getName()).log(Level.SEVERE, null, ex);
-      }
-return sdkRoot;
-
-
+    } catch (IOException ex) {
+      Logger.getLogger(ApplicationTest.class.getName()).log(Level.SEVERE, null, ex);
+    }
+    return sdkRoot;
   }
+
   /** Set the appengine.sdk.root system property to make SdkInfo happy. */
   @Before
   public void setUp() {
@@ -358,7 +355,7 @@ return sdkRoot;
     testApp.validateForStaging();
   }
 
-  //TODO(ludo)  @Test
+  // TODO(ludo)  @Test
   public void testReadApplicationForStagingWithAppIdAndVersionFromFile() throws IOException {
     Application testApp =
         Application.readApplication(STAGE_WITH_APPID_AND_VERSION_TEST_APP, null, null, null);
@@ -451,7 +448,7 @@ return sdkRoot;
 
     ApplicationProcessingOptions opts = new ApplicationProcessingOptions();
     opts.setDefaultStagingOptions(StagingOptions.SANE_DEFAULTS);
- 
+
     testApp.createStagingDirectory(opts);
     testStagedFiles(testApp);
     File stage = testApp.getStagingDir();
@@ -512,14 +509,14 @@ return sdkRoot;
     int count = 0;
     for (File file : AppengineSdk.getSdk().getUserJspLibFiles()) {
       if (file.getName().contains("apache-jsp")) {
-         count++;
+        count++;
       }
     }
     // Cannot have both the -nolog.jar and the regular jar.
     assertThat(count).isEqualTo(2); // org.eclipse and org.mortbay
   }
 
-  //TODO(ludo) @Test
+  // TODO(ludo) @Test
   public void testStageForGcloudOnlyCopyAppYamlToRoot() throws IOException {
     Application testApp =
         Application.readApplication(getWarPath("stage-with-all-xmls"), null, null, null);
@@ -549,7 +546,7 @@ return sdkRoot;
     assertThat(new File(stagingDir, "queue.yaml").exists()).isFalse();
   }
 
-  //TODO(ludo) @Test
+  // TODO(ludo) @Test
   public void testDoNotStageDispatchForUpdate() throws IOException {
     Application testApp =
         Application.readApplication(getWarPath("sample-dispatch"), null, null, null);
@@ -578,15 +575,15 @@ return sdkRoot;
     File sdkRoot = new File(SDK_ROOT);
     File apiJar = new File(sdkRoot, apiJarPath);
     assertWithMessage(apiJar.toString()).that(apiJar.exists()).isTrue();
-    //TODO(ludo)  File remoteApiJar = new File(sdkRoot, "lib/appengine-remote-api.jar");
-    //TODO(ludo) assertWithMessage(remoteApiJar.toString()).that(remoteApiJar.exists()).isTrue();
+    // TODO(ludo)  File remoteApiJar = new File(sdkRoot, "lib/appengine-remote-api.jar");
+    // TODO(ludo) assertWithMessage(remoteApiJar.toString()).that(remoteApiJar.exists()).isTrue();
     File testDir = new File(tmpDir, testName);
     File webInf = new File(testDir, "WEB-INF");
     File webInfLib = new File(webInf, "lib");
     boolean madeWebInfLib = webInfLib.mkdirs();
     assertThat(madeWebInfLib).isTrue();
     Files.copy(apiJar, new File(webInfLib, "appengine-api.jar"));
-    //TODO(ludo) Files.copy(remoteApiJar, new File(webInfLib, "appengine-remote-api.jar"));
+    // TODO(ludo) Files.copy(remoteApiJar, new File(webInfLib, "appengine-remote-api.jar"));
     File testAppRoot = new File(TEST_FILES);
     Files.copy(new File(testAppRoot, "WEB-INF/web.xml"), new File(webInf, "web.xml"));
     Files.copy(
@@ -671,10 +668,8 @@ return sdkRoot;
   @Test
   public void testJspCompilerJava8() throws Exception {
     Application testApp = Application.readApplication(SERVLET3_STANDARD_APP_ROOT);
-    assertThat(testApp.getJSPCClassName())
-        .contains("com.google.appengine.tools.development.jetty");
-     assertThat(testApp.getJSPCClassName())
-        .contains("LocalJspC");
+    assertThat(testApp.getJSPCClassName()).contains("com.google.appengine.tools.development.jetty");
+    assertThat(testApp.getJSPCClassName()).contains("LocalJspC");
   }
 
   @Test
@@ -762,7 +757,7 @@ return sdkRoot;
     assertThat(new File(stage, "WEB-INF/lib").isDirectory()).isTrue();
   }
 
- /* @Test
+  /* @Test
   public void testWithBigJarWithTlds() throws Exception {
     Application testApp =
         Application.readApplication(
@@ -898,8 +893,7 @@ return sdkRoot;
     File genCodeDir = testApp.getJspJavaFilesGeneratedTempDirectory();
     File servlet2 = new File(genCodeDir, "org/apache/jsp/tag/web/ui/page_tag.java");
     assertThat(servlet2.exists()).isTrue();
-    assertThat(Files.asCharSource(servlet2, UTF_8).read())
-        .contains("* Version: JspC/ApacheTomcat");
+    assertThat(Files.asCharSource(servlet2, UTF_8).read()).contains("* Version: JspC/ApacheTomcat");
   }
 
   @Test
@@ -1303,21 +1297,21 @@ return sdkRoot;
     assertThat(httpHeaders.get("Access-Control-Allow-Origin")).isEqualTo("http://example.org");
   }
 
-  //TODO(ludo ) @Test
+  // TODO(ludo ) @Test
   public void testDispatch() throws IOException {
     Application testApp = Application.readApplication(getWarPath("sample-dispatch"));
     String expectYaml = "dispatch:\n" + "- url: '*/userapp/*'\n" + "  module: web\n";
     assertThat(testApp.getDispatchXml().toYaml()).isEqualTo(expectYaml);
   }
 
-  //TODO(ludo ) @Test
+  // TODO(ludo ) @Test
   public void testDispatch_yaml() throws IOException {
     Application testApp = Application.readApplication(getWarPath("sample-dispatch-yaml"));
     String expectYaml = "dispatch:\n" + "- url: '*/*'\n" + "  module: web\n";
     assertThat(testApp.getDispatchXml().toYaml()).isEqualTo(expectYaml);
   }
 
-  //TODO(ludo)  @Test
+  // TODO(ludo)  @Test
   public void testDispatch_xmlAndYaml() throws IOException {
     Application testApp = Application.readApplication(getWarPath("sample-dispatch-xml-and-yaml"));
     String expectYaml = "dispatch:\n" + "- url: '*/userapp/*'\n" + "  module: web\n";
@@ -1351,7 +1345,6 @@ return sdkRoot;
     assertThat(testApp.getDispatchXml()).isNull();
   }
 
-
   @Test
   public void testUseJava8Standard() throws Exception {
     Application testApp = Application.readApplication(SERVLET3_STANDARD_APP_ROOT);
@@ -1362,7 +1355,6 @@ return sdkRoot;
 
     ApplicationProcessingOptions opts = new ApplicationProcessingOptions();
 
-    
     File stageDir = testApp.createStagingDirectory(opts, temporaryFolder.newFolder());
     File appYaml = new File(stageDir, "WEB-INF/appengine-generated/app.yaml");
     assertFileContains(appYaml, "runtime: java8");
@@ -1531,10 +1523,10 @@ return sdkRoot;
     // TODO: review. This expectation used to be 3, this is because the Jetty
     //  QuickStartGeneratorConfiguration.generateQuickStartWebXml will now
     //  add an empty set if it doesn't have any SCIs instead of not setting the context param.
-    if (Boolean.getBoolean("appengine.use.EE8")||Boolean.getBoolean("appengine.use.EE10")) {
+    if (Boolean.getBoolean("appengine.use.EE8") || Boolean.getBoolean("appengine.use.EE10")) {
       assertThat(nodeList.getLength()).isEqualTo(4);
     } else {
-      assertThat(nodeList.getLength()).isEqualTo(3);      
+      assertThat(nodeList.getLength()).isEqualTo(3);
     }
     for (int i = 0; i < nodeList.getLength(); i++) {
       Node contextParam = nodeList.item(i).getFirstChild();
@@ -1667,20 +1659,25 @@ return sdkRoot;
     assertThat(testApp.getWebXml().getFallThroughToRuntime()).isFalse();
     String expectedJasperInitializer;
     if (Boolean.getBoolean("appengine.use.EE8")) {
-        expectedJasperInitializer
-                = "\"ContainerInitializer"
-                + "{org.eclipse.jetty.ee8.apache.jsp.JettyJasperInitializer"
-                + ",interested=[],applicable=[],annotated=[]}\"";
+      expectedJasperInitializer =
+          "\"ContainerInitializer"
+              + "{org.eclipse.jetty.ee8.apache.jsp.JettyJasperInitializer"
+              + ",interested=[],applicable=[],annotated=[]}\"";
     } else if (Boolean.getBoolean("appengine.use.EE10")) {
-        expectedJasperInitializer
-                = "\"ContainerInitializer"
-                + "{org.eclipse.jetty.ee10.apache.jsp.JettyJasperInitializer"
-                + ",interested=[],applicable=[],annotated=[]}\"";
+      expectedJasperInitializer =
+          "\"ContainerInitializer"
+              + "{org.eclipse.jetty.ee10.apache.jsp.JettyJasperInitializer"
+              + ",interested=[],applicable=[],annotated=[]}\"";
+    } else if (Boolean.getBoolean("appengine.use.EE11")) {
+      expectedJasperInitializer =
+          "\"ContainerInitializer"
+              + "{org.eclipse.jetty.ee11.apache.jsp.JettyJasperInitializer"
+              + ",interested=[],applicable=[],annotated=[]}\"";
     } else {
-        expectedJasperInitializer
-                = "\"ContainerInitializer"
-                + "{org.eclipse.jetty.apache.jsp.JettyJasperInitializer"
-                + ",interested=[],applicable=[],annotated=[]}\"";
+      expectedJasperInitializer =
+          "\"ContainerInitializer"
+              + "{org.eclipse.jetty.apache.jsp.JettyJasperInitializer"
+              + ",interested=[],applicable=[],annotated=[]}\"";
     }
     Map<String, String> trimmedContextParams =
         Maps.transformValues(testApp.getWebXml().getContextParams(), String::trim);
@@ -1688,7 +1685,7 @@ return sdkRoot;
         .containsEntry("org.eclipse.jetty.containerInitializers", expectedJasperInitializer);
   }
 
-  //TODO(ludo) @Test
+  // TODO(ludo) @Test
   public void testStageGaeStandardJava8WithContextInitializers()
       throws IOException, ParserConfigurationException, SAXException {
     Application testApp = Application.readApplication(SERVLET3_STANDARD_APP_WITH_CONTAINER_INIT);
@@ -1708,7 +1705,6 @@ return sdkRoot;
     assertThat(trimmedContextParams)
         .containsEntry("org.eclipse.jetty.containerInitializers", expectedJasperInitializer);
   }
-
 
   @Test
   public void testCountClasses() throws IOException {
@@ -1792,6 +1788,7 @@ return sdkRoot;
       this.fromPath = fromPath;
       this.toPath = toPath;
     }
+
     // Return a temp directory that contains the from directory
     static Path createTempDirectoryFrom(Path from) throws IOException {
       Path to = java.nio.file.Files.createTempDirectory("staging");

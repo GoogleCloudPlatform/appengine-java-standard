@@ -112,7 +112,6 @@ import org.xml.sax.SAXException;
  * path, and {@link com.google.appengine.tools.admin.AppAdminFactory#createAppAdmin create} an
  * {@link com.google.appengine.tools.admin.AppAdmin} to upload, create indexes, or otherwise manage
  * it.
- *
  */
 public class Application implements GenericApplication {
 
@@ -427,12 +426,10 @@ public class Application implements GenericApplication {
     }
     if (!appEngineWebXml.isJava11OrAbove()) {
       if (appEngineWebXml.getRuntimeChannel() != null) {
-        throw new AppEngineConfigException(
-            "'runtime-channel' is not valid with this runtime.");
+        throw new AppEngineConfigException("'runtime-channel' is not valid with this runtime.");
       }
       if (appEngineWebXml.getEntrypoint() != null) {
-        throw new AppEngineConfigException(
-            "'entrypoint' is not valid with this runtime.");
+        throw new AppEngineConfigException("'entrypoint' is not valid with this runtime.");
       }
     }
   }
@@ -618,6 +615,7 @@ public class Application implements GenericApplication {
       return defaultValue;
     }
   }
+
   /**
    * Returns the AppEngineWebXml describing the application.
    *
@@ -915,10 +913,7 @@ public class Application implements GenericApplication {
   }
 
   private File populateStagingDirectory(
-      ApplicationProcessingOptions opts,
-      boolean isStaging,
-      String runtime)
-      throws IOException {
+      ApplicationProcessingOptions opts, boolean isStaging, String runtime) throws IOException {
     if (runtime.equals("java7")) {
       throw new AppEngineConfigException("GAE Java7 is not supported anymore.");
     }
@@ -1032,7 +1027,8 @@ public class Application implements GenericApplication {
       String containerInitializer = matcher.group(1);
       if ("org.eclipse.jetty.apache.jsp.JettyJasperInitializer".equals(containerInitializer)
           || "org.eclipse.jetty.ee8.apache.jsp.JettyJasperInitializer".equals(containerInitializer)
-          || "org.eclipse.jetty.ee10.apache.jsp.JettyJasperInitializer"
+          || "org.eclipse.jetty.ee10.apache.jsp.JettyJasperInitializer".equals(containerInitializer)
+          || "org.eclipse.jetty.ee11.apache.jsp.JettyJasperInitializer"
               .equals(containerInitializer)) {
         foundJasperInitializer = true;
       }
@@ -1709,8 +1705,7 @@ public class Application implements GenericApplication {
     File quickstartXml = new File(stageDir, "/WEB-INF/quickstart-web.xml");
     File minimizedQuickstartXml = new File(stageDir, "/WEB-INF/min-quickstart-web.xml");
 
-    Document quickstartDoc =
-        getFilteredQuickstartDoc(quickstartXml, webDefaultXml);
+    Document quickstartDoc = getFilteredQuickstartDoc(quickstartXml, webDefaultXml);
 
     Transformer transformer = TransformerFactory.newInstance().newTransformer();
     transformer.setOutputProperty(OutputKeys.INDENT, "yes");
@@ -1735,8 +1730,7 @@ public class Application implements GenericApplication {
    *
    * @return a filtered quickstart Document object appropriate for translation to app.yaml
    */
-  static Document getFilteredQuickstartDoc(
-      File quickstartXml, File webDefaultXml)
+  static Document getFilteredQuickstartDoc(File quickstartXml, File webDefaultXml)
       throws ParserConfigurationException, IOException, SAXException {
 
     DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory.newInstance();
@@ -1745,26 +1739,26 @@ public class Application implements GenericApplication {
     DocumentBuilder quickstartDocBuilder = docBuilderFactory.newDocumentBuilder();
     Document quickstartDoc = quickstartDocBuilder.parse(quickstartXml);
 
-      // Remove from quickstartDoc all "welcome-file" defined in webDefaultDoc.
-      removeNodes(webDefaultDoc, quickstartDoc, "welcome-file", 0);
-      // Remove from quickstartDoc all parents of "servlet-name" defined in webDefaultDoc:
-      removeNodes(webDefaultDoc, quickstartDoc, "servlet-name", 1);
-      // Remove from quickstartDoc all parents of "filter-name" defined in webDefaultDoc:
-      removeNodes(webDefaultDoc, quickstartDoc, "filter-name", 1);
-      // Remove from quickstartDoc all grand-parents of "web-resource-name" defined in
-      // webDefaultDoc, for example we remove this entire section for deferred_queue:
-      // <security-constraint>
-      //     <web-resource-collection>
-      //      <web-resource-name>deferred_queue</web-resource-name>
-      //      <url-pattern>/_ah/queue/__deferred__</url-pattern>
-      //   </web-resource-collection>
-      //   <auth-constraint>
-      //     <role-name>admin</role-name>
-      //   </auth-constraint>
-      // </security-constraint>
-      removeNodes(webDefaultDoc, quickstartDoc, "web-resource-name", 2);
+    // Remove from quickstartDoc all "welcome-file" defined in webDefaultDoc.
+    removeNodes(webDefaultDoc, quickstartDoc, "welcome-file", 0);
+    // Remove from quickstartDoc all parents of "servlet-name" defined in webDefaultDoc:
+    removeNodes(webDefaultDoc, quickstartDoc, "servlet-name", 1);
+    // Remove from quickstartDoc all parents of "filter-name" defined in webDefaultDoc:
+    removeNodes(webDefaultDoc, quickstartDoc, "filter-name", 1);
+    // Remove from quickstartDoc all grand-parents of "web-resource-name" defined in
+    // webDefaultDoc, for example we remove this entire section for deferred_queue:
+    // <security-constraint>
+    //     <web-resource-collection>
+    //      <web-resource-name>deferred_queue</web-resource-name>
+    //      <url-pattern>/_ah/queue/__deferred__</url-pattern>
+    //   </web-resource-collection>
+    //   <auth-constraint>
+    //     <role-name>admin</role-name>
+    //   </auth-constraint>
+    // </security-constraint>
+    removeNodes(webDefaultDoc, quickstartDoc, "web-resource-name", 2);
 
-      return quickstartDoc;
+    return quickstartDoc;
   }
 
   /**

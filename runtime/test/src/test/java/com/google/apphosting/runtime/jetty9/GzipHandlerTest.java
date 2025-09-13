@@ -16,6 +16,7 @@
 
 package com.google.apphosting.runtime.jetty9;
 
+import static com.google.apphosting.runtime.jetty9.JavaRuntimeViaHttpBase.allVersions;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.not;
@@ -26,7 +27,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
-import java.util.Collection;
+import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPOutputStream;
@@ -49,40 +51,33 @@ import org.junit.runners.Parameterized;
 @RunWith(Parameterized.class)
 public class GzipHandlerTest extends JavaRuntimeViaHttpBase {
 
-  @Parameterized.Parameters
-  public static Collection<Object[]> data() {
-    return Arrays.asList(
-        new Object[][] {
-          {"jetty94", false},
-          {"jetty94", true},
-          {"ee8", false},
-          {"ee8", true},
-          {"ee10", false},
-          {"ee10", true},
-        });
-  }
-
-  private static final int MAX_SIZE = 32 * 1024 * 1024;
-
   @Rule public TemporaryFolder temp = new TemporaryFolder();
   private final HttpClient httpClient = new HttpClient();
-  private final boolean httpMode;
-  private final String environment;
   private RuntimeContext<?> runtime;
 
-  public GzipHandlerTest(String environment, boolean httpMode) {
-    this.environment = environment;
-    this.httpMode = httpMode;
-    System.setProperty("appengine.use.HttpConnector", Boolean.toString(httpMode));
+  @Parameterized.Parameters
+  public static List<Object[]> version() {
+    return allVersions();
+  }
+
+  public GzipHandlerTest(
+      String runtimeVersion, String jettyVersion, String jakartaVersion, boolean useHttpConnector) {
+    super(runtimeVersion, jettyVersion, jakartaVersion, useHttpConnector);
+    // this.httpMode = httpMode;
+    // System.setProperty("appengine.use.HttpConnector", Boolean.toString(httpMode));
   }
 
   @Before
   public void before() throws Exception {
-    String app = "com/google/apphosting/runtime/jetty9/gzipapp/" + environment;
+    String app;
+    if (isJakarta()) {
+      app = "com/google/apphosting/runtime/jetty9/gzipapp/ee10";
+    } else {
+      app = "com/google/apphosting/runtime/jetty9/gzipapp/ee8";
+    }
     copyAppToDir(app, temp.getRoot().toPath());
     httpClient.start();
     runtime = runtimeContext();
-    System.err.println("==== Using Environment: " + environment + " " + httpMode + " ====");
   }
 
   @After
@@ -117,7 +112,7 @@ public class GzipHandlerTest extends JavaRuntimeViaHttpBase {
     Result response = completionListener.get(5, TimeUnit.SECONDS);
     assertThat(response.getResponse().getStatus(), equalTo(HttpStatus.OK_200));
     String contentReceived = received.toString();
-    if (!System.getProperty("os.name").toLowerCase().contains("windows")) {
+    if (!System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("windows")) {
       // Linux
       assertThat(contentReceived, containsString("\nX-Content-Encoding: gzip\n"));
       assertThat(contentReceived, not(containsString("\nContent-Encoding: gzip\n")));
@@ -141,7 +136,7 @@ public class GzipHandlerTest extends JavaRuntimeViaHttpBase {
   private RuntimeContext<?> runtimeContext() throws Exception {
     RuntimeContext.Config<?> config =
         RuntimeContext.Config.builder().setApplicationPath(temp.getRoot().toString()).build();
-    return RuntimeContext.create(config);
+    return createRuntimeContext(config);
   }
 
   private static InputStream gzip(byte[] data) throws IOException {

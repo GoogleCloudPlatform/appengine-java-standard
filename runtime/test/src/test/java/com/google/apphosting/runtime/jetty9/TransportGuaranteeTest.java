@@ -22,8 +22,8 @@ import static org.hamcrest.CoreMatchers.startsWith;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 import com.google.common.flogger.GoogleLogger;
-import java.util.Arrays;
-import java.util.Collection;
+import java.util.List;
+import java.util.Objects;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.http.HttpStatus;
@@ -40,40 +40,35 @@ import org.junit.runners.Parameterized;
 public class TransportGuaranteeTest extends JavaRuntimeViaHttpBase {
 
   @Parameterized.Parameters
-  public static Collection<Object[]> data() {
-    return Arrays.asList(
-        new Object[][] {
-          {"jetty94", false},
-          {"jetty94", true},
-          {"ee8", false},
-          {"ee8", true},
-          {"ee10", false},
-          {"ee10", true},
-        });
+  public static List<Object[]> version() {
+    return allVersions();
   }
 
   private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
   @Rule public TemporaryFolder temp = new TemporaryFolder();
   private HttpClient httpClient;
   private RuntimeContext<?> runtime;
-  private final boolean httpMode;
-  private final String environment;
 
-  public TransportGuaranteeTest(String environment, boolean httpMode) {
-    this.environment = environment;
-    this.httpMode = httpMode;
-    System.setProperty("appengine.use.HttpConnector", Boolean.toString(httpMode));
+  public TransportGuaranteeTest(
+      String runtimeVersion, String jettyVersion, String version, boolean useHttpConnector)
+      throws Exception {
+    super(runtimeVersion, jettyVersion, version, useHttpConnector);
   }
 
   private RuntimeContext<?> runtimeContext() throws Exception {
     RuntimeContext.Config<?> config =
         RuntimeContext.Config.builder().setApplicationPath(temp.getRoot().toString()).build();
-    return RuntimeContext.create(config);
+    return createRuntimeContext(config);
   }
 
   @Before
   public void before() throws Exception {
-    String app = "transportguaranteeapp-" + environment;
+    String app = "transportguaranteeapp-";
+    if (isJakarta()) {
+      app = app + "ee10";
+    } else {
+      app = app + "ee8";
+    }
     copyAppToDir(app, temp.getRoot().toPath());
 
     SslContextFactory ssl = new SslContextFactory.Client(true);
@@ -81,7 +76,8 @@ public class TransportGuaranteeTest extends JavaRuntimeViaHttpBase {
     httpClient.start();
     runtime = runtimeContext();
     logger.atInfo().log(
-        "%s: env=%s, httpMode=%s", this.getClass().getSimpleName(), environment, httpMode);
+        "%s: env=%s, httpMode=%s",
+        this.getClass().getSimpleName(), jakartaVersion, useHttpConnector);
   }
 
   @After
@@ -113,7 +109,7 @@ public class TransportGuaranteeTest extends JavaRuntimeViaHttpBase {
 
     ContentResponse response = httpClient.newRequest(url).send();
     assertThat(response.getStatus(), equalTo(HttpStatus.FORBIDDEN_403));
-    if (!"ee10".equals(environment)) {
+    if (!Objects.equals(jakartaVersion, "EE10")) {
       assertThat(response.getContentAsString(), containsString("!Secure"));
     }
   }

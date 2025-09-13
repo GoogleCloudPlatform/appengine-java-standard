@@ -61,19 +61,22 @@ import org.junit.runners.JUnit4;
  * auto-shutdown logic is enabled, those later requests will get {@code RejectedExecutionException}
  * when they try to submit tasks.
  *
- * <p>In this test, we have a simple servlet that submits an empty task to a shared thread pool.
- * The first request to this servlet will create the thread pool and every later request will
- * reuse it. By default, we expect that the first request will block until it times out, because
- * it will be waiting for the idle thread to complete which will never happen. The second
- * request should successfully submit a new task to the queue and return, since there are no threads
- * in the pool that belong to it (they all belong to the first thread).
+ * <p>In this test, we have a simple servlet that submits an empty task to a shared thread pool. The
+ * first request to this servlet will create the thread pool and every later request will reuse it.
+ * By default, we expect that the first request will block until it times out, because it will be
+ * waiting for the idle thread to complete which will never happen. The second request should
+ * successfully submit a new task to the queue and return, since there are no threads in the pool
+ * that belong to it (they all belong to the first thread).
  *
- * <p>We also check that if the system property is set, the first thread will return without
- * timing out.
- *
+ * <p>We also check that if the system property is set, the first thread will return without timing
+ * out.
  */
 @RunWith(JUnit4.class)
 public class SharedThreadPoolTest extends JavaRuntimeViaHttpBase {
+  public SharedThreadPoolTest() {
+    super("java17", "9.4", "EE6", true);
+  }
+
   private static File appRoot;
 
   private boolean isBeforeJava20() {
@@ -120,15 +123,15 @@ public class SharedThreadPoolTest extends JavaRuntimeViaHttpBase {
       HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
       String body = new String(ByteStreams.toByteArray(connection.getInputStream()), UTF_8);
       assertWithMessage(body)
-          .that(connection.getResponseCode()).isEqualTo(HttpURLConnection.HTTP_OK);
+          .that(connection.getResponseCode())
+          .isEqualTo(HttpURLConnection.HTTP_OK);
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }
   }
 
   private RuntimeContext<?> startApp() throws IOException, InterruptedException {
-    return RuntimeContext.create(RuntimeContext.Config.builder()
-        .setApplicationPath(appRoot.getAbsolutePath())
-        .build());
+    return createRuntimeContext(
+        RuntimeContext.Config.builder().setApplicationPath(appRoot.getAbsolutePath()).build());
   }
 }

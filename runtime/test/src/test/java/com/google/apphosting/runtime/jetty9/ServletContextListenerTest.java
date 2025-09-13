@@ -16,17 +16,16 @@
 
 package com.google.apphosting.runtime.jetty9;
 
+import static com.google.apphosting.runtime.jetty9.JavaRuntimeViaHttpBase.allVersions;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.MatcherAssert.assertThat;
+
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import org.eclipse.jetty.client.HttpClient;
-import org.eclipse.jetty.client.api.ContentProvider;
-import org.eclipse.jetty.client.api.ContentResponse;
-import org.eclipse.jetty.client.api.Response;
 import org.eclipse.jetty.client.api.Result;
-import org.eclipse.jetty.client.util.ByteBufferContentProvider;
-import org.eclipse.jetty.client.util.DeferredContentProvider;
-import org.eclipse.jetty.client.util.InputStreamContentProvider;
-import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpStatus;
-import org.eclipse.jetty.util.BufferUtil;
 import org.eclipse.jetty.util.Utf8StringBuilder;
 import org.junit.After;
 import org.junit.Before;
@@ -36,72 +35,45 @@ import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.ByteBuffer;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.zip.GZIPOutputStream;
-
-import static org.hamcrest.CoreMatchers.containsString;
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.lessThan;
-import static org.hamcrest.Matchers.lessThanOrEqualTo;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-
 @RunWith(Parameterized.class)
 public class ServletContextListenerTest extends JavaRuntimeViaHttpBase {
 
   @Parameterized.Parameters
-  public static Collection<Object[]> data() {
-    return Arrays.asList(
-        new Object[][] {
-          {"jetty94", false},
-          {"ee8", false},
-          {"ee10", false},
-          {"ee8", true},
-          {"ee10", true},
-        });
+  public static List<Object[]> version() {
+    return allVersions();
   }
 
   @Rule public TemporaryFolder temp = new TemporaryFolder();
   private final HttpClient httpClient = new HttpClient();
-  private final boolean httpMode;
-  private final String environment;
   private RuntimeContext<?> runtime;
 
-  public ServletContextListenerTest(String environment, boolean httpMode) {
-    this.environment = environment;
-    this.httpMode = httpMode;
-    System.setProperty("appengine.use.HttpConnector", Boolean.toString(httpMode));
+  public ServletContextListenerTest(
+      String runtimeVersion, String jettyVersion, String version, boolean useHttpConnector)
+      throws Exception {
+    super(runtimeVersion, jettyVersion, version, useHttpConnector);
   }
 
   private RuntimeContext<?> runtimeContext() throws Exception {
     RuntimeContext.Config<?> config =
-            RuntimeContext.Config.builder().setApplicationPath(temp.getRoot().toString()).build();
-    return RuntimeContext.create(config);
+        RuntimeContext.Config.builder().setApplicationPath(temp.getRoot().toString()).build();
+    return createRuntimeContext(config);
   }
 
   @Before
   public void before() throws Exception {
-    String app = "com/google/apphosting/runtime/jetty9/servletcontextlistenerapp/" + environment;
+    String app = "com/google/apphosting/runtime/jetty9/servletcontextlistenerapp/";
+    if (isJakarta()) {
+      app = app + "ee10";
+    } else {
+      app = app + "ee8";
+    }
     copyAppToDir(app, temp.getRoot().toPath());
     httpClient.start();
     runtime = runtimeContext();
-    System.err.println("==== Using Environment: " + environment + " " + httpMode + " ====");
   }
 
   @After
-  public void after() throws Exception
-  {
+  public void after() throws Exception {
     httpClient.stop();
     runtime.close();
   }
@@ -111,10 +83,14 @@ public class ServletContextListenerTest extends JavaRuntimeViaHttpBase {
     String url = runtime.jettyUrl("/");
     CompletableFuture<Result> completionListener = new CompletableFuture<>();
     Utf8StringBuilder contentReceived = new Utf8StringBuilder();
-    httpClient.newRequest(url).onResponseContentAsync((response, content, callback) -> {
-      contentReceived.append(content);
-      callback.succeeded();
-    }).send(completionListener::complete);
+    httpClient
+        .newRequest(url)
+        .onResponseContentAsync(
+            (response, content, callback) -> {
+              contentReceived.append(content);
+              callback.succeeded();
+            })
+        .send(completionListener::complete);
 
     Result result = completionListener.get(5, TimeUnit.SECONDS);
     assertThat(result.getResponse().getStatus(), equalTo(HttpStatus.OK_200));

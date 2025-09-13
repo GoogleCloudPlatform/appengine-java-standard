@@ -19,23 +19,43 @@ import static com.google.common.truth.Truth.assertThat;
 
 import java.io.File;
 import java.io.IOException;
-import org.junit.BeforeClass;
+import java.util.List;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import org.junit.runners.Parameterized;
 
-@RunWith(JUnit4.class)
+@RunWith(Parameterized.class)
 public final class FailureFilterTest extends JavaRuntimeViaHttpBase {
 
-  private static File appRoot;
+  private File appRoot;
 
-  @BeforeClass
-  public static void beforeClass() throws IOException, InterruptedException {
+  @Parameterized.Parameters
+  public static List<Object[]> version() {
+    return allVersions();
+  }
+
+  public FailureFilterTest(
+      String runtimeVersion, String jettyVersion, String version, boolean useHttpConnector)
+      throws IOException, InterruptedException {
+    super(runtimeVersion, jettyVersion, version, useHttpConnector);
+    if (Boolean.getBoolean("test.running.internally")) { // Internal can only do EE6
+      System.setProperty("appengine.use.EE8", "false");
+      System.setProperty("appengine.use.EE10", "false");
+      System.setProperty("appengine.use.EE11", "false");
+    }
+    String appName = "failinitfilterwebapp";
+    if (version.equals("EE10") || version.equals("EE11")) {
+      appName = "failinitfilterwebappjakarta";
+    }
     File currentDirectory = new File("").getAbsoluteFile();
     appRoot =
         new File(
             currentDirectory,
-            "../failinitfilterwebapp/target/failinitfilterwebapp-"
+            "../"
+                + appName
+                + "/target/"
+                + appName
+                + "-"
                 + System.getProperty("appengine.projectversion"));
     assertThat(appRoot.isDirectory()).isTrue();
   }
@@ -43,14 +63,14 @@ public final class FailureFilterTest extends JavaRuntimeViaHttpBase {
   private RuntimeContext<DummyApiServer> runtimeContext() throws IOException, InterruptedException {
     RuntimeContext.Config<DummyApiServer> config =
         RuntimeContext.Config.builder().setApplicationPath(appRoot.toString()).build();
-    return RuntimeContext.create(config);
+    return createRuntimeContext(config);
   }
 
   @Test
   public void testFilterInitFailed() throws Exception {
     try (RuntimeContext<DummyApiServer> runtime = runtimeContext()) {
       assertThat(runtime.executeHttpGet("/", 500))
-          .contains("javax.servlet.ServletException: Intentionally failing to initialize.");
+          .contains("servlet.ServletException: Intentionally failing to initialize.");
     }
   }
 }

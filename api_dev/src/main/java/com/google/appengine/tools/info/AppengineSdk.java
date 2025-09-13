@@ -30,16 +30,13 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 /**
- * GAE SDK files and resources provider.
- * It defines a set of abstract methods that are implemented by the GAE classic SDK, but also
- * an optional Maven repository based SDK, which can be used in the Cloud SDK to mimimize jar
- * artifact downloads thanks to a Maven local cache.
+ * GAE SDK files and resources provider. It defines a set of abstract methods that are implemented
+ * by the GAE classic SDK, but also an optional Maven repository based SDK, which can be used in the
+ * Cloud SDK to mimimize jar artifact downloads thanks to a Maven local cache.
  */
 public abstract class AppengineSdk {
 
-  /**
-   * Default deployment admin server name.
-   */
+  /** Default deployment admin server name. */
   public static final String DEFAULT_SERVER = "appengine.google.com";
 
   private static AppengineSdk currentSdk;
@@ -154,9 +151,10 @@ public abstract class AppengineSdk {
   public static File getSdkRoot() {
     return sdkRoot;
   }
+
   /** Reset current SDK to null, to trigger re init */
   public static void resetSdk() {
-     currentSdk = null;
+    currentSdk = null;
   }
 
   /**
@@ -280,12 +278,33 @@ public abstract class AppengineSdk {
     if (currentSdk != null) {
       return currentSdk;
     }
-    if (Boolean.getBoolean("appengine.use.EE8")|| Boolean.getBoolean("appengine.use.EE10")) {
-      return currentSdk = new Jetty12Sdk();
-    } else {
-      return currentSdk = new ClassicSdk();
+
+    boolean useJetty121 = Boolean.getBoolean("appengine.use.jetty121");
+    boolean useEE8 = Boolean.getBoolean("appengine.use.EE8");
+    boolean useEE10 = Boolean.getBoolean("appengine.use.EE10");
+    boolean useEE11 = Boolean.getBoolean("appengine.use.EE11");
+
+    if (useJetty121) { // Jetty121 case, supports EE8, EE10, EE11
+      if (useEE8) {
+        currentSdk = new Jetty121EE8Sdk();
+      } else if (useEE10) {
+        throw new IllegalArgumentException("appengine.use.EE10 is not supported in Jetty121");
+      } else if (useEE11) {
+        currentSdk = new Jetty121EE11Sdk();
+      } else {
+        currentSdk = new Jetty121EE11Sdk(); // EE11 is the default for Jetty121
+      }
+    } else { // Jetty12 case, supports EE8, EE10 or classic which is Jetty 9.4
+      if (useEE8 || useEE10) {
+        currentSdk = new Jetty12Sdk();
+      } else if (useEE11) {
+        throw new IllegalArgumentException("appengine.use.EE11 is not supported in Jetty12");
+      } else {
+        currentSdk = new ClassicSdk();
+      }
     }
-    }
+    return currentSdk;
+  }
 
   /**
    * Modifies the SDK implementation (Classic or Maven-based). This method is invoked via reflection
@@ -302,12 +321,10 @@ public abstract class AppengineSdk {
    * @param version Datanucleus version. Maybe be v1 or v2 but not all implementations need to
    *     support v1 and it is old and not available in Maven central.
    */
-  
   public List<URL> getDatanucleusLibs(String version) {
     validateDatanucleusVersions(version);
-    return  determineOptionalToolsLibs().get("datanucleus").getURLsForVersion(version);
+    return determineOptionalToolsLibs().get("datanucleus").getURLsForVersion(version);
   }
-
 
   /**
    * Returns the list of URLs of all JSP jar libraries that do not need any special privileges in
@@ -336,9 +353,7 @@ public abstract class AppengineSdk {
   /** Returns the DelegatingModulesFilterHelper FQN class for the corresponding Jetty version. */
   public abstract String getDelegatingModulesFilterHelperClassName();
 
-  /**
-   * Returns the path to SDK resource files like xml or schemas files.
-   */
+  /** Returns the path to SDK resource files like xml or schemas files. */
   public abstract File getResourcesDirectory();
 
   /** Returns the path in a jar file of the jetty server webdefault.xml file. */
@@ -347,17 +362,12 @@ public abstract class AppengineSdk {
   /** Returns the JSP compiler class name. */
   public abstract String getJSPCompilerClassName();
 
-  /**
-   * Returns the default admin server to talk to for deployments.
-   *
-   */
+  /** Returns the default admin server to talk to for deployments. */
   public String getDefaultServer() {
     return DEFAULT_SERVER;
   }
 
-  /**
-   * Throws IllegalArgumentException if the incorrect Datanucleus version is specified.
-   */
+  /** Throws IllegalArgumentException if the incorrect Datanucleus version is specified. */
   public void validateDatanucleusVersions(String version) {
     if (!version.equals("v1") && !version.equals("v2")) {
       throw new IllegalArgumentException("Invalid Datanucleus version: " + version);

@@ -358,10 +358,12 @@ public class FakeHttpServletResponse implements HttpServletResponse {
     status = sc;
   }
 
+  @Override
   public synchronized int getStatus() {
     return status;
   }
 
+  @Override
   public String getHeader(String name) {
     return Iterables.getFirst(headers.get(checkNotNull(name)), null);
   }
@@ -385,7 +387,6 @@ public class FakeHttpServletResponse implements HttpServletResponse {
   private static class FakeServletOutputStream extends ServletOutputStream {
 
     private final ByteArrayOutputStream byteStream;
-    private long count;
 
     FakeServletOutputStream(ByteArrayOutputStream byteStream) {
       this.byteStream = byteStream;
@@ -394,19 +395,16 @@ public class FakeHttpServletResponse implements HttpServletResponse {
     @Override
     public void write(byte[] b, int off, int len) throws IOException {
       byteStream.write(b, off, len);
-      count += len;
     }
 
     @Override
     public void write(byte[] b) throws IOException {
       byteStream.write(b);
-      count += b.length;
     }
 
     @Override
     public void write(int b) throws IOException {
       byteStream.write(b);
-      count++;
     }
 
     @Override
@@ -417,8 +415,5 @@ public class FakeHttpServletResponse implements HttpServletResponse {
       return true;
     }
 
-    long getCount() {
-      return count;
-    }
   }
 }

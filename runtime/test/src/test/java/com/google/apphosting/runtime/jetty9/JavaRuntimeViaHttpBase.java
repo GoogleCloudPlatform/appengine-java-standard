@@ -17,7 +17,6 @@ package com.google.apphosting.runtime.jetty9;
 
 import static com.google.common.base.StandardSystemProperty.FILE_SEPARATOR;
 import static com.google.common.base.StandardSystemProperty.JAVA_HOME;
-import static com.google.common.base.StandardSystemProperty.JAVA_VERSION;
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
@@ -63,6 +62,7 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Executors;
@@ -78,6 +78,8 @@ import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.rules.TemporaryFolder;
 
@@ -89,6 +91,181 @@ public abstract class JavaRuntimeViaHttpBase {
   @FunctionalInterface
   public interface ApiServerFactory<ApiServerT extends Closeable> {
     ApiServerT newApiServer(int apiPort, int runtimePort) throws IOException;
+  }
+
+  protected String runtimeVersion;
+  protected String jettyVersion;
+  protected String jakartaVersion;
+  protected boolean useHttpConnector;
+  protected boolean legacyMode;
+
+  /**
+   * Returns a list of parameters for parameterized tests.
+   * Parameters are:
+   * 1. runtimeVersion: "java17", "java21", or "java25"
+   * 2. jettyVersion: "9.4", "12.0", or "12.1"
+   * 3. jakartaVersion: "EE6", "EE8", "EE10", or "EE11"
+   * 4. useHttpConnector: true or false
+   */
+  public static List<Object[]> allVersions() {
+    return Arrays.asList(
+        new Object[][] {
+          {"java17", "9.4", "EE6", true},
+          {"java17", "12.0", "EE8", true},
+          {"java17", "12.0", "EE10", true},
+          {"java17", "12.1", "EE11", true},
+          {"java21", "12.0", "EE8", true},
+          {"java21", "12.0", "EE10", true},
+          {"java21", "12.1", "EE11", true},
+          {"java25", "12.1", "EE8", true},
+          {"java25", "12.1", "EE11", true},
+          // with RPC connector ancient mode, obsolete soon...
+          {"java17", "9.4", "EE6", false},
+          {"java17", "12.0", "EE8", false},
+          {"java17", "12.0", "EE10", false},
+          {"java17", "12.1", "EE11", false},
+          {"java21", "12.0", "EE8", false},
+          {"java21", "12.0", "EE10", false},
+          {"java21", "12.1", "EE11", false},
+          {"java25", "12.1", "EE8", false},
+          {"java25", "12.1", "EE11", false},
+          // Now test transparent upgrades for java17 and java21 of EE10 to EE11
+          // A warning should be logged, but the runtime should behave identically to EE11.
+          {"java17", "12.1", "EE10", true},
+          {"java21", "12.1", "EE10", true},
+        });
+  }
+
+  @Before
+  public void cleanupSystemPropertiesBefore() {
+    cleanupSystemProperties();
+  }
+
+  @After
+  public void cleanupSystemProperties() {
+    System.setProperty("appengine.use.EE8", "false");
+    System.setProperty("appengine.use.EE10", "false");
+    System.setProperty("appengine.use.EE11", "false");
+    System.clearProperty("GAE_RUNTIME");
+    System.clearProperty("appengine.use.jetty121");
+    System.clearProperty("appengine.use.HttpConnector");
+    System.clearProperty("com.google.apphosting.runtime.jetty94.LEGACY_MODE");
+  }
+
+  public JavaRuntimeViaHttpBase(
+      String runtimeVersion, String jettyVersion, String jakartaVersion, boolean useHttpConnector) {
+    this.jakartaVersion = jakartaVersion;
+    this.runtimeVersion = runtimeVersion;
+    this.jettyVersion = jettyVersion;
+    this.useHttpConnector = useHttpConnector;
+    System.setProperty("appengine.use.HttpConnector", Boolean.toString(useHttpConnector));
+    legacyMode = Boolean.getBoolean("com.google.apphosting.runtime.jetty94.LEGACY_MODE");
+
+    if (jettyVersion.equals("12.1")) {
+      System.setProperty("appengine.use.jetty121", "true");
+    } else {
+      System.setProperty("appengine.use.jetty121", "false");
+    }
+    System.setProperty("GAE_RUNTIME", runtimeVersion);
+    switch (jakartaVersion) {
+      case "EE6":
+        System.setProperty("appengine.use.EE8", "false");
+        System.setProperty("appengine.use.EE10", "false");
+        System.setProperty("appengine.use.EE11", "false");
+        break;
+      case "EE8":
+        System.setProperty("appengine.use.EE8", "true");
+        System.setProperty("appengine.use.EE10", "false");
+        System.setProperty("appengine.use.EE11", "false");
+        break;
+      case "EE10":
+        System.setProperty("appengine.use.EE8", "false");
+        System.setProperty("appengine.use.EE10", "true");
+        System.setProperty("appengine.use.EE11", "false");
+        break;
+      case "EE11":
+        System.setProperty("appengine.use.EE8", "false");
+        System.setProperty("appengine.use.EE10", "false");
+        System.setProperty("appengine.use.EE11", "true");
+        break;
+      default:
+        // fall through
+    }
+  }
+
+  public boolean isJakarta() {
+    return jakartaVersion.startsWith("EE1");
+  }
+
+  public <ApiServerT extends Closeable> RuntimeContext<ApiServerT> createRuntimeContext(
+      RuntimeContext.Config<ApiServerT> config) throws IOException, InterruptedException {
+    PortPicker portPicker = PortPicker.create();
+    int jettyPort = portPicker.pickUnusedPort();
+    int apiPort = portPicker.pickUnusedPort();
+    String runtimeDirProperty = System.getProperty("appengine.runtime.dir");
+    File runtimeDir =
+        (runtimeDirProperty == null)
+            ? new File(RUNTIME_LOCATION_ROOT, "runtime_java8/deployment_java8")
+            : new File(runtimeDirProperty);
+    assertWithMessage("Runtime directory %s should exist and be a directory", runtimeDir)
+        .that(runtimeDir.isDirectory())
+        .isTrue();
+    InetSocketAddress apiSocketAddress = new InetSocketAddress(apiPort);
+    ImmutableList.Builder<String> builder = ImmutableList.<String>builder();
+    builder.add(JAVA_HOME.value() + "/bin/java");
+    Integer debugPort = Integer.getInteger("appengine.debug.port");
+    if (debugPort != null) {
+      builder.add("-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:" + debugPort);
+    }
+    ImmutableList<String> runtimeArgs =
+        builder
+            .add(
+                "-Dcom.google.apphosting.runtime.jetty94.LEGACY_MODE=" + legacyMode,
+                "-Dappengine.use.EE8=" + jakartaVersion.equals("EE8"),
+                "-Dappengine.use.EE10=" + jakartaVersion.equals("EE10"),
+                "-Dappengine.use.EE11=" + jakartaVersion.equals("EE11"),
+                "-Dappengine.use.jetty121=" + jettyVersion.equals("12.1"),
+                "-DGAE_RUNTIME=" + runtimeVersion,
+                "-Dappengine.use.HttpConnector=" + useHttpConnector,
+                "-Dappengine.ignore.responseSizeLimit="
+                    + Boolean.getBoolean("appengine.ignore.responseSizeLimit"),
+                "-Djetty.server.dumpAfterStart="
+                    + Boolean.getBoolean("jetty.server.dumpAfterStart"),
+                "-Duse.mavenjars=" + useMavenJars(),
+                "-cp",
+                useMavenJars()
+                    ? new File(runtimeDir, "jars/runtime-main.jar").getAbsolutePath()
+                    : new File(runtimeDir, "runtime-main.jar").getAbsolutePath())
+            .addAll(RuntimeContext.optionalFlags())
+            .addAll(RuntimeContext.jvmFlagsFromEnvironment(config.environmentEntries()))
+            .add(
+                "com.google.apphosting.runtime.JavaRuntimeMainWithDefaults",
+                "--jetty_http_port=" + jettyPort,
+                "--port=" + apiPort,
+                "--trusted_host="
+                    + HostAndPort.fromParts(apiSocketAddress.getHostString(), apiPort),
+                runtimeDir.getAbsolutePath())
+            .addAll(config.launcherFlags())
+            .build();
+    System.out.println("ARGS=" + runtimeArgs);
+    Process runtimeProcess = RuntimeContext.launchRuntime(runtimeArgs, config.environmentEntries());
+    OutputPump outPump = new OutputPump(runtimeProcess.getInputStream(), "[stdout] ");
+    OutputPump errPump = new OutputPump(runtimeProcess.getErrorStream(), "[stderr] ");
+    new Thread(outPump).start();
+    new Thread(errPump).start();
+    await().atMost(30, SECONDS).until(() -> RuntimeContext.isPortAvailable("localhost", jettyPort));
+    int timeoutMillis = 30_000;
+    RequestConfig requestConfig =
+        RequestConfig.custom()
+            .setConnectTimeout(timeoutMillis)
+            .setConnectionRequestTimeout(timeoutMillis)
+            .setSocketTimeout(timeoutMillis)
+            .build();
+    HttpClient httpClient =
+        HttpClientBuilder.create().setDefaultRequestConfig(requestConfig).build();
+    ApiServerT httpApiServer = config.apiServerFactory().newApiServer(apiPort, jettyPort);
+    return new RuntimeContext<>(
+        runtimeProcess, httpApiServer, httpClient, jettyPort, outPump, errPump);
   }
 
   public static class RuntimeContext<ApiServerT extends Closeable> implements AutoCloseable {
@@ -188,11 +365,13 @@ public abstract class JavaRuntimeViaHttpBase {
           return this;
         }
 
-        public abstract Builder<ApiServerT> setEnvironmentEntries(ImmutableMap<String, String> entries);
+        public abstract Builder<ApiServerT> setEnvironmentEntries(
+            ImmutableMap<String, String> entries);
 
         public abstract ImmutableList.Builder<String> launcherFlagsBuilder();
 
-        public abstract Builder<ApiServerT> setApiServerFactory(ApiServerFactory<ApiServerT> factory);
+        public abstract Builder<ApiServerT> setApiServerFactory(
+            ApiServerFactory<ApiServerT> factory);
 
         public abstract Config<ApiServerT> autoBuild();
 
@@ -207,88 +386,17 @@ public abstract class JavaRuntimeViaHttpBase {
     }
 
     /** JVM flags needed for JDK above JDK8 */
-    private static ImmutableList<String> optionalFlags() {
-      if (!JAVA_VERSION.value().startsWith("1.8")) {
-        return ImmutableList.of(
-            "-showversion",
-            "--add-opens",
-            "java.base/java.lang=ALL-UNNAMED",
-            "--add-opens",
-            "java.base/java.nio.charset=ALL-UNNAMED",
-            "--add-opens",
-            "java.base/java.util.concurrent=ALL-UNNAMED",
-            "--add-opens",
-            "java.logging/java.util.logging=ALL-UNNAMED");
-      }
-      return ImmutableList.of("-showversion"); // Just so that the list is not empty.
-    }
-
-    public static <ApiServerT extends Closeable> RuntimeContext<ApiServerT> create(
-        Config<ApiServerT> config) throws IOException, InterruptedException {
-      PortPicker portPicker = PortPicker.create();
-      int jettyPort = portPicker.pickUnusedPort();
-      int apiPort = portPicker.pickUnusedPort();
-      String runtimeDirProperty = System.getProperty("appengine.runtime.dir");
-      File runtimeDir =
-          (runtimeDirProperty == null)
-              ? new File(RUNTIME_LOCATION_ROOT, "runtime_java8/deployment_java8")
-              : new File(runtimeDirProperty);
-      assertWithMessage("Runtime directory %s should exist and be a directory", runtimeDir)
-          .that(runtimeDir.isDirectory())
-          .isTrue();
-      InetSocketAddress apiSocketAddress = new InetSocketAddress(apiPort);
-      ImmutableList.Builder<String> builder = ImmutableList.<String>builder();
-      builder.add(JAVA_HOME.value() + "/bin/java");
-      Integer debugPort = Integer.getInteger("appengine.debug.port");
-      if (debugPort != null) {
-        builder.add("-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:" + debugPort);
-      }
-      ImmutableList<String> runtimeArgs =
-          builder
-              .add(
-                  "-Dcom.google.apphosting.runtime.jetty94.LEGACY_MODE=" + useJetty94LegacyMode(),
-                  "-Dappengine.use.EE8=" + Boolean.getBoolean("appengine.use.EE8"),
-                  "-Dappengine.use.EE10=" + Boolean.getBoolean("appengine.use.EE10"),
-                  "-Dappengine.use.HttpConnector="
-                      + Boolean.getBoolean("appengine.use.HttpConnector"),
-                  "-Dappengine.ignore.responseSizeLimit="
-                      + Boolean.getBoolean("appengine.ignore.responseSizeLimit"),
-                  "-Djetty.server.dumpAfterStart="
-                      + Boolean.getBoolean("jetty.server.dumpAfterStart"),
-                  "-Duse.mavenjars=" + useMavenJars(),
-                  "-cp",
-                  useMavenJars()
-                      ? new File(runtimeDir, "jars/runtime-main.jar").getAbsolutePath()
-                      : new File(runtimeDir, "runtime-main.jar").getAbsolutePath())
-              .addAll(optionalFlags())
-              .addAll(jvmFlagsFromEnvironment(config.environmentEntries()))
-              .add(
-                  "com.google.apphosting.runtime.JavaRuntimeMainWithDefaults",
-                  "--jetty_http_port=" + jettyPort,
-                  "--port=" + apiPort,
-                  "--trusted_host="
-                      + HostAndPort.fromParts(apiSocketAddress.getHostString(), apiPort),
-                  runtimeDir.getAbsolutePath())
-              .addAll(config.launcherFlags())
-              .build();
-      Process runtimeProcess = launchRuntime(runtimeArgs, config.environmentEntries());
-      OutputPump outPump = new OutputPump(runtimeProcess.getInputStream(), "[stdout] ");
-      OutputPump errPump = new OutputPump(runtimeProcess.getErrorStream(), "[stderr] ");
-      new Thread(outPump).start();
-      new Thread(errPump).start();
-      await().atMost(30, SECONDS).until(() -> isPortAvailable("localhost", jettyPort));
-      int timeoutMillis = 30_000;
-      RequestConfig requestConfig =
-          RequestConfig.custom()
-              .setConnectTimeout(timeoutMillis)
-              .setConnectionRequestTimeout(timeoutMillis)
-              .setSocketTimeout(timeoutMillis)
-              .build();
-      HttpClient httpClient =
-          HttpClientBuilder.create().setDefaultRequestConfig(requestConfig).build();
-      ApiServerT httpApiServer = config.apiServerFactory().newApiServer(apiPort, jettyPort);
-      return new RuntimeContext<>(
-          runtimeProcess, httpApiServer, httpClient, jettyPort, outPump, errPump);
+    static ImmutableList<String> optionalFlags() {
+      return ImmutableList.of(
+          "-showversion",
+          "--add-opens",
+          "java.base/java.lang=ALL-UNNAMED",
+          "--add-opens",
+          "java.base/java.nio.charset=ALL-UNNAMED",
+          "--add-opens",
+          "java.base/java.util.concurrent=ALL-UNNAMED",
+          "--add-opens",
+          "java.logging/java.util.logging=ALL-UNNAMED");
     }
 
     public static boolean isPortAvailable(String host, int port) {
@@ -300,7 +408,7 @@ public abstract class JavaRuntimeViaHttpBase {
       }
     }
 
-    private static List<String> jvmFlagsFromEnvironment(ImmutableMap<String, String> env) {
+    static List<String> jvmFlagsFromEnvironment(ImmutableMap<String, String> env) {
       return Splitter.on(' ').omitEmptyStrings().splitToList(env.getOrDefault("GAE_JAVA_OPTS", ""));
     }
 
@@ -360,15 +468,17 @@ public abstract class JavaRuntimeViaHttpBase {
       assertThat(retCode).isEqualTo(expectedReturnCode);
     }
 
-    public void awaitStdoutLineMatching(String pattern, long timeoutSeconds) throws InterruptedException {
+    public void awaitStdoutLineMatching(String pattern, long timeoutSeconds)
+        throws InterruptedException {
       outPump.awaitOutputLineMatching(pattern, timeoutSeconds);
     }
 
-    public void awaitStderrLineMatching(String pattern, long timeoutSeconds) throws InterruptedException {
+    public void awaitStderrLineMatching(String pattern, long timeoutSeconds)
+        throws InterruptedException {
       errPump.awaitOutputLineMatching(pattern, timeoutSeconds);
     }
 
-    private static Process launchRuntime(
+    static Process launchRuntime(
         ImmutableList<String> args, ImmutableMap<String, String> environmentEntries)
         throws IOException {
       ProcessBuilder pb = new ProcessBuilder(args);
@@ -389,10 +499,6 @@ public abstract class JavaRuntimeViaHttpBase {
 
   static boolean useMavenJars() {
     return Boolean.getBoolean("use.mavenjars");
-  }
-
-  static boolean useJetty94LegacyMode() {
-    return Boolean.getBoolean("com.google.apphosting.runtime.jetty94.LEGACY_MODE");
   }
 
   static class OutputPump implements Runnable {

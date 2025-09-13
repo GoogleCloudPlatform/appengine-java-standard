@@ -17,7 +17,11 @@
 package com.google.appengine.api.blobstore.ee10;
 
 
-/** Creates {@link BlobstoreService} implementations for java EE 10. */
+/**
+ * @deprecated as of version 3.0, use {@link
+ *     com.google.appengine.api.blobstore.jakarta.BlobstoreServiceFactory} instead.
+ */
+@Deprecated(since = "3.0.0")
 public final class BlobstoreServiceFactory {
 
   /** Creates a {@code BlobstoreService} for java EE 10. */

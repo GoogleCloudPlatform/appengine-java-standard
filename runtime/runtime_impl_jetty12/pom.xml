@@ -23,7 +23,7 @@
     <parent>
         <groupId>com.google.appengine</groupId>
         <artifactId>runtime-parent</artifactId>
-        <version>2.0.40-SNAPSHOT</version>
+        <version>3.0.0-SNAPSHOT</version>
     </parent>
 
     <packaging>jar</packaging>
@@ -384,11 +384,11 @@
                                         <include>com/google/appengine/api/internal/*</include>
                                         <include>com/google/appengine/api/oauth/*</include>
                                         <include>com/google/appengine/api/taskqueue/*</include>
-                                        <include>com/google/appengine/api/taskqueue/ee10/*</include>
+                                        <include>com/google/appengine/api/taskqueue/jakarta/*</include>
                                         <include>com/google/appengine/api/urlfetch/*</include>
                                         <include>com/google/appengine/api/users/*</include>
                                         <include>com/google/appengine/api/utils/*</include>
-                                        <include>com/google/appengine/api/utils/ee10/*</include>
+                                        <include>com/google/appengine/api/utils/jakarta/*</include>
                                         <include>com/google/appengine/spi/*</include>
                                         <include>com/google/apphosting/api/*</include>
                                         <include>com/google/apphosting/utils/servlet/*</include>
@@ -405,7 +405,7 @@
                                         <include>com/google/apphosting/api/logservice/LogServicePb*</include>
                                         <include>com/google/apphosting/api/proto2api/*</include>
                                         <include>com/google/apphosting/utils/remoteapi/RemoteApiServlet*</include>
-                                        <include>com/google/apphosting/utils/remoteapi/EE10RemoteApiServlet*</include>
+                                        <include>com/google/apphosting/utils/remoteapi/JakartaRemoteApiServlet*</include>
                                         <include>com/google/apphosting/utils/security/urlfetch/*</include>
                                         <include>com/google/apphosting/utils/servlet/DeferredTaskServlet*</include>
                                         <include>com/google/apphosting/utils/servlet/JdbcMySqlConnectionCleanupFilter*</include>

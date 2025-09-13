@@ -23,7 +23,7 @@ import com.google.appengine.tools.development.HttpApiServer;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import org.junit.After;
 import org.junit.Before;
@@ -40,37 +40,26 @@ public final class JavaRuntimeAllInOneTest extends JavaRuntimeViaHttpBase {
   private static final int NUMBER_OF_RETRIES = 5;
 
   private RuntimeContext<?> runtime;
+
   @Parameterized.Parameters
-  public static Collection<Object[]> version() {
-    return Arrays.asList(new Object[][] {{"EE6"}, {"EE8"}, {"EE10"}});
+  public static List<Object[]> version() {
+    return allVersions();
   }
 
-  public JavaRuntimeAllInOneTest(String version) {
-    switch (version) {
-      case "EE6":
-        System.setProperty("appengine.use.EE8", "false");
-        System.setProperty("appengine.use.EE10", "false");
-        break;
-      case "EE8":
-        System.setProperty("appengine.use.EE8", "true");
-        System.setProperty("appengine.use.EE10", "false");
-        break;
-      case "EE10":
-        System.setProperty("appengine.use.EE8", "false");
-        System.setProperty("appengine.use.EE10", "true");
-        break;
-      default:
-        // fall through
-    }
+  public JavaRuntimeAllInOneTest(
+      String runtimeVersion, String jettyVersion, String jakartaVersion, boolean useHttpConnector) {
+    super(runtimeVersion, jettyVersion, jakartaVersion, useHttpConnector);
     if (Boolean.getBoolean("test.running.internally")) { // Internal can only do EE6
       System.setProperty("appengine.use.EE8", "false");
       System.setProperty("appengine.use.EE10", "false");
+      System.setProperty("appengine.use.EE11", "false");
     }
   }
 
   @Before
   public void startRuntime() throws Exception {
-    if (Boolean.getBoolean("appengine.use.EE10")) {
+    if (isJakarta()) {
+      // We reuse the same app for EE10, and EE11 as it is jakarta centric only.
       copyAppToDir("com/google/apphosting/loadtesting/allinone/ee10", temp.getRoot().toPath());
     } else {
       copyAppToDir("com/google/apphosting/loadtesting/allinone", temp.getRoot().toPath());
@@ -87,7 +76,7 @@ public final class JavaRuntimeAllInOneTest extends JavaRuntimeViaHttpBase {
             .setEnvironmentEntries(
                 ImmutableMap.of("GAE_VERSION", "allinone", "GOOGLE_CLOUD_PROJECT", "1"))
             .build();
-    runtime = RuntimeContext.create(config);
+    runtime = createRuntimeContext(config);
   }
 
   @After
@@ -95,7 +84,7 @@ public final class JavaRuntimeAllInOneTest extends JavaRuntimeViaHttpBase {
     runtime.close();
   }
 
- 
+  @Test
   public void invokeServletCallingDatastoresUsingJettyHttpProxy() throws Exception {
     // App Engine Datastore access.
     runtime.executeHttpGet("/?datastore_entities=3", "Added 3 entities\n", RESPONSE_200);
@@ -165,18 +154,20 @@ public final class JavaRuntimeAllInOneTest extends JavaRuntimeViaHttpBase {
     // attributes, then list each servlet attribute on a line of its own like {@code foo = bar}.
     // So we decode those lines and ensure that the attributes we set are listed.
     // The forwarding is needed to tickle b/169727154.
-    String response = runtime
+    String response =
+        runtime
             .executeHttpGet("/?forward=set_servlet_attributes=foo=bar:baz=buh", RESPONSE_200)
             .trim();
-    Map<String, String> attributes = Arrays.stream(response.split("\n"))
-        .map(s -> Arrays.asList(s.split("=", 2)))
+    Map<String, String> attributes =
+        Arrays.stream(response.split("\n"))
+            .map(s -> Arrays.asList(s.split("=", 2)))
             .collect(toMap(list -> list.get(0).trim(), list -> list.get(1).trim()));
     // Because the request is forwarded, it acquires these javax.servlet.forward attributes.
     // (They are specified by constants in javax.servlet.RequestDispatcher, but using those runs
     // into hassles with Servlet API 2.5 vs 3.1.)
     // The "forwarded" attribute is set by our servlet and the APP_VERSION_KEY_REQUEST_ATTR one is
     // set by our infrastructure.
-    if (Boolean.getBoolean("appengine.use.EE10")) {
+    if (isJakarta()) {
       assertThat(attributes)
           .containsAtLeast(
               "foo", "bar",

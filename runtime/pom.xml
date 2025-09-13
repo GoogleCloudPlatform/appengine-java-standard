@@ -23,7 +23,7 @@
   <parent>
     <groupId>com.google.appengine</groupId>
     <artifactId>parent</artifactId>
-    <version>2.0.40-SNAPSHOT</version>
+    <version>3.0.0-SNAPSHOT</version>
   </parent>
   <name>AppEngine :: runtime projects</name>
   <url>https://github.com/GoogleCloudPlatform/appengine-java-standard/</url>
@@ -36,10 +36,13 @@
     <module>impl</module>
     <module>runtime_impl_jetty9</module>
     <module>runtime_impl_jetty12</module>
+    <module>runtime_impl_jetty121</module>
     <module>deployment</module>
     <module>local_jetty9</module>
     <module>local_jetty12_ee10</module>
     <module>local_jetty12</module>
+    <module>local_jetty121</module>
+    <module>local_jetty121_ee11</module>
     <module>nogaeapiswebapp</module>
     <module>annotationscanningwebapp</module>
     <module>failinitfilterwebapp</module>

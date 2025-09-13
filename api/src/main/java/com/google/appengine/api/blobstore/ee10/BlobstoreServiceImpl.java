@@ -50,10 +50,10 @@ import java.util.Map;
 import org.jspecify.annotations.Nullable;
 
 /**
- * {@code BlobstoreServiceImpl} is an implementation of {@link BlobstoreService} that makes API
- * calls to {@link ApiProxy}.
- *
+ * @deprecated as of version 3.0, use {@link
+ *     com.google.appengine.api.blobstore.jakarta.BlobstoreServiceImpl} instead.
  */
+@Deprecated(since = "3.0.0")
 class BlobstoreServiceImpl implements BlobstoreService {
   static final String PACKAGE = "blobstore";
   static final String SERVE_HEADER = "X-AppEngine-BlobKey";

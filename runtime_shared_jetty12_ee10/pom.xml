@@ -22,7 +22,7 @@
     <parent>
         <groupId>com.google.appengine</groupId>
         <artifactId>parent</artifactId>
-        <version>2.0.40-SNAPSHOT</version>
+        <version>3.0.0-SNAPSHOT</version>
     </parent>
 
     <packaging>jar</packaging>
@@ -44,11 +44,13 @@
         <dependency>
             <groupId>jakarta.servlet</groupId>
             <artifactId>jakarta.servlet-api</artifactId>
+            <version>6.0.0</version>
             <optional>true</optional>
         </dependency>
         <dependency>
-            <groupId>javax.servlet.jsp.jstl</groupId>
-            <artifactId>javax.servlet.jsp.jstl-api</artifactId>
+            <groupId>jakarta.servlet.jsp.jstl</groupId>
+            <artifactId>jakarta.servlet.jsp.jstl-api</artifactId>
+            <version>3.0.0</version>
             <optional>true</optional>
         </dependency>
         <dependency>
@@ -104,7 +106,7 @@
                                     <include>org.mortbay.jasper:apache-el</include>
                                     <include>com.google.appengine:sessiondata</include>
                                     <include>jakarta.servlet:jakarta.servlet-api</include>
-                                    <include>javax.servlet.jsp.jstl:javax.servlet.jsp.jstl-api</include>
+                                    <include>jakarta.servlet.jsp.jstl:jakarta.servlet.jsp.jstl-api</include>
                                     <include>com.google.appengine:runtime-shared</include>
                                 </includes>
                             </artifactSet>

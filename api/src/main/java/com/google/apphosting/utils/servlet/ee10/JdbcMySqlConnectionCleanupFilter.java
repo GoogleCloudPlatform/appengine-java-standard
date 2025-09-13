@@ -17,8 +17,9 @@
 package com.google.apphosting.utils.servlet.ee10;
 
 /**
- * @deprecated as of version 3.0, use generic com.google.apphosting.utils.servlet.jakarta package.
+ * @deprecated as of version 3.0, use {@link
+ *     com.google.apphosting.utils.servlet.jakarta.JdbcMySqlConnectionCleanupFilter} instead.
  */
-@Deprecated
+@Deprecated(since = "3.0.0")
 public class JdbcMySqlConnectionCleanupFilter
     extends com.google.apphosting.utils.servlet.jakarta.JdbcMySqlConnectionCleanupFilter {}

@@ -97,7 +97,7 @@
 
     <div id="ft">
       <p>
-        &copy;2008-2023 Google
+        &copy;2008-2025 Google
       </p>
     </div>
     <jsp:include page="<%= getSubsectionPage(request, \"Final\") %>"/>

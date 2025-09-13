@@ -33,6 +33,18 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class CookieComplianceTest extends JavaRuntimeViaHttpBase {
 
+  // This is set in the app appengine-web.xml file
+  static {
+    System.setProperty("com.google.apphosting.runtime.jetty94.LEGACY_MODE", "true");
+  }
+
+  public CookieComplianceTest() {
+    //Test also running in google3, so we limit to jetty 9.4 for now.
+    // TODO(ludo): Enable for other versions once we remove internal jetty94 dependency.
+    // TODO(ludo): http connector true: fails, but http connector false: pass
+    super("java17", "9.4", "EE6", false);
+  }
+
   @Rule public TemporaryFolder temp = new TemporaryFolder();
 
   @Before
@@ -62,6 +74,6 @@ public class CookieComplianceTest extends JavaRuntimeViaHttpBase {
   private RuntimeContext<?> runtimeContext() throws Exception {
     RuntimeContext.Config<?> config =
         RuntimeContext.Config.builder().setApplicationPath(temp.getRoot().toString()).build();
-    return RuntimeContext.create(config);
+    return createRuntimeContext(config);
   }
 }

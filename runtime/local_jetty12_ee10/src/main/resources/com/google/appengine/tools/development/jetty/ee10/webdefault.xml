@@ -366,157 +366,157 @@
 
   <servlet>
     <servlet-name>_ah_adminConsole</servlet-name>
-    <servlet-class>org.apache.jsp.ah.jetty.ee10.adminConsole_jsp</servlet-class>
+    <servlet-class>org.apache.jsp.ah.jetty.jakarta.adminConsole_jsp</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_datastoreViewerHead</servlet-name>
-    <servlet-class>org.apache.jsp.ah.jetty.ee10.datastoreViewerHead_jsp</servlet-class>
+    <servlet-class>org.apache.jsp.ah.jetty.jakarta.datastoreViewerHead_jsp</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_datastoreViewerBody</servlet-name>
-    <servlet-class>org.apache.jsp.ah.jetty.ee10.datastoreViewerBody_jsp</servlet-class>
+    <servlet-class>org.apache.jsp.ah.jetty.jakarta.datastoreViewerBody_jsp</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_datastoreViewerFinal</servlet-name>
-    <servlet-class>org.apache.jsp.ah.jetty.ee10.datastoreViewerFinal_jsp</servlet-class>
+    <servlet-class>org.apache.jsp.ah.jetty.jakarta.datastoreViewerFinal_jsp</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_searchIndexesListHead</servlet-name>
-    <servlet-class>org.apache.jsp.ah.jetty.ee10.searchIndexesListHead_jsp</servlet-class>
+    <servlet-class>org.apache.jsp.ah.jetty.jakarta.searchIndexesListHead_jsp</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_searchIndexesListBody</servlet-name>
-    <servlet-class>org.apache.jsp.ah.jetty.ee10.searchIndexesListBody_jsp</servlet-class>
+    <servlet-class>org.apache.jsp.ah.jetty.jakarta.searchIndexesListBody_jsp</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_searchIndexesListFinal</servlet-name>
-    <servlet-class>org.apache.jsp.ah.jetty.ee10.searchIndexesListFinal_jsp</servlet-class>
+    <servlet-class>org.apache.jsp.ah.jetty.jakarta.searchIndexesListFinal_jsp</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_searchIndexHead</servlet-name>
-    <servlet-class>org.apache.jsp.ah.jetty.ee10.searchIndexHead_jsp</servlet-class>
+    <servlet-class>org.apache.jsp.ah.jetty.jakarta.searchIndexHead_jsp</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_searchIndexBody</servlet-name>
-    <servlet-class>org.apache.jsp.ah.jetty.ee10.searchIndexBody_jsp</servlet-class>
+    <servlet-class>org.apache.jsp.ah.jetty.jakarta.searchIndexBody_jsp</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_searchIndexFinal</servlet-name>
-    <servlet-class>org.apache.jsp.ah.jetty.ee10.searchIndexFinal_jsp</servlet-class>
+    <servlet-class>org.apache.jsp.ah.jetty.jakarta.searchIndexFinal_jsp</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_searchDocumentHead</servlet-name>
-    <servlet-class>org.apache.jsp.ah.jetty.ee10.searchDocumentHead_jsp</servlet-class>
+    <servlet-class>org.apache.jsp.ah.jetty.jakarta.searchDocumentHead_jsp</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_searchDocumentBody</servlet-name>
-    <servlet-class>org.apache.jsp.ah.jetty.ee10.searchDocumentBody_jsp</servlet-class>
+    <servlet-class>org.apache.jsp.ah.jetty.jakarta.searchDocumentBody_jsp</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_searchDocumentFinal</servlet-name>
-    <servlet-class>org.apache.jsp.ah.jetty.ee10.searchDocumentFinal_jsp</servlet-class>
+    <servlet-class>org.apache.jsp.ah.jetty.jakarta.searchDocumentFinal_jsp</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_capabilitiesStatusHead</servlet-name>
-    <servlet-class>org.apache.jsp.ah.jetty.ee10.capabilitiesStatusHead_jsp</servlet-class>
+    <servlet-class>org.apache.jsp.ah.jetty.jakarta.capabilitiesStatusHead_jsp</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_capabilitiesStatusBody</servlet-name>
-    <servlet-class>org.apache.jsp.ah.jetty.ee10.capabilitiesStatusBody_jsp</servlet-class>
+    <servlet-class>org.apache.jsp.ah.jetty.jakarta.capabilitiesStatusBody_jsp</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_capabilitiesStatusFinal</servlet-name>
-    <servlet-class>org.apache.jsp.ah.jetty.ee10.capabilitiesStatusFinal_jsp</servlet-class>
+    <servlet-class>org.apache.jsp.ah.jetty.jakarta.capabilitiesStatusFinal_jsp</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_entityDetailsHead</servlet-name>
-    <servlet-class>org.apache.jsp.ah.jetty.ee10.entityDetailsHead_jsp</servlet-class>
+    <servlet-class>org.apache.jsp.ah.jetty.jakarta.entityDetailsHead_jsp</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_entityDetailsBody</servlet-name>
-    <servlet-class>org.apache.jsp.ah.jetty.ee10.entityDetailsBody_jsp</servlet-class>
+    <servlet-class>org.apache.jsp.ah.jetty.jakarta.entityDetailsBody_jsp</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_entityDetailsFinal</servlet-name>
-    <servlet-class>org.apache.jsp.ah.jetty.ee10.entityDetailsFinal_jsp</servlet-class>
+    <servlet-class>org.apache.jsp.ah.jetty.jakarta.entityDetailsFinal_jsp</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_indexDetailsHead</servlet-name>
-    <servlet-class>org.apache.jsp.ah.jetty.ee10.indexDetailsHead_jsp</servlet-class>
+    <servlet-class>org.apache.jsp.ah.jetty.jakarta.indexDetailsHead_jsp</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_indexDetailsBody</servlet-name>
-    <servlet-class>org.apache.jsp.ah.jetty.ee10.indexDetailsBody_jsp</servlet-class>
+    <servlet-class>org.apache.jsp.ah.jetty.jakarta.indexDetailsBody_jsp</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_indexDetailsFinal</servlet-name>
-    <servlet-class>org.apache.jsp.ah.jetty.ee10.indexDetailsFinal_jsp</servlet-class>
+    <servlet-class>org.apache.jsp.ah.jetty.jakarta.indexDetailsFinal_jsp</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_modulesHead</servlet-name>
-    <servlet-class>org.apache.jsp.ah.jetty.ee10.modulesHead_jsp</servlet-class>
+    <servlet-class>org.apache.jsp.ah.jetty.jakarta.modulesHead_jsp</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_modulesBody</servlet-name>
-    <servlet-class>org.apache.jsp.ah.jetty.ee10.modulesBody_jsp</servlet-class>
+    <servlet-class>org.apache.jsp.ah.jetty.jakarta.modulesBody_jsp</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_modulesFinal</servlet-name>
-    <servlet-class>org.apache.jsp.ah.jetty.ee10.modulesFinal_jsp</servlet-class>
+    <servlet-class>org.apache.jsp.ah.jetty.jakarta.modulesFinal_jsp</servlet-class>
   </servlet>
      
   <servlet>
     <servlet-name>_ah_taskqueueViewerHead</servlet-name>
-    <servlet-class>org.apache.jsp.ah.jetty.ee10.taskqueueViewerHead_jsp</servlet-class>
+    <servlet-class>org.apache.jsp.ah.jetty.jakarta.taskqueueViewerHead_jsp</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_taskqueueViewerBody</servlet-name>
-    <servlet-class>org.apache.jsp.ah.jetty.ee10.taskqueueViewerBody_jsp</servlet-class>
+    <servlet-class>org.apache.jsp.ah.jetty.jakarta.taskqueueViewerBody_jsp</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_taskqueueViewerFinal</servlet-name>
-    <servlet-class>org.apache.jsp.ah.jetty.ee10.taskqueueViewerFinal_jsp</servlet-class>
+    <servlet-class>org.apache.jsp.ah.jetty.jakarta.taskqueueViewerFinal_jsp</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_inboundMailHead</servlet-name>
-    <servlet-class>org.apache.jsp.ah.jetty.ee10.inboundMailHead_jsp</servlet-class>
+    <servlet-class>org.apache.jsp.ah.jetty.jakarta.inboundMailHead_jsp</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_inboundMailBody</servlet-name>
-    <servlet-class>org.apache.jsp.ah.jetty.ee10.inboundMailBody_jsp</servlet-class>
+    <servlet-class>org.apache.jsp.ah.jetty.jakarta.inboundMailBody_jsp</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>_ah_inboundMailFinal</servlet-name>
-    <servlet-class>org.apache.jsp.ah.jetty.ee10.inboundMailFinal_jsp</servlet-class>
+    <servlet-class>org.apache.jsp.ah.jetty.jakarta.inboundMailFinal_jsp</servlet-class>
   </servlet>
 
   <!-- Servlet mappings -->

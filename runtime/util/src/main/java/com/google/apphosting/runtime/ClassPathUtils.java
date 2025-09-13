@@ -31,7 +31,6 @@ import org.jspecify.annotations.Nullable;
 
 /**
  * {@code ClassPathUtils} provides utility functions that are useful in dealing with class paths.
- *
  */
 public class ClassPathUtils {
   // Note: we should not depend on Guava or Flogger in the small bootstap Main.
@@ -104,23 +103,110 @@ public class ClassPathUtils {
     System.setProperty(LEGACY_PROPERTY, runtimeBase + "/legacy.jar");
   }
 
+  /**
+   * Initializes runtime classpath properties for Java 11 and newer runtimes based on system
+   * properties that indicate which Jakarta EE version and Jetty version to use.
+   *
+   * <p>The method determines the EE profile (EE6, EE8, EE10, EE11) based on {@code
+   * appengine.use.EE8}, {@code appengine.use.EE10}, and {@code appengine.use.EE11} system
+   * properties.
+   *
+   * <p>If {@code appengine.use.jetty121} is true, Jetty 12.1 is used:
+   *
+   * <ul>
+   *   <li>If EE8 is active, {@code runtime-shared-jetty121-ee8.jar} is selected.
+   *   <li>If EE11 is active, {@code runtime-shared-jetty121-ee11.jar} is selected.
+   *   <li>If EE10 is active, it is upgraded to EE11, and {@code
+   *       runtime-shared-jetty121-ee11.jar} is selected.
+   * </ul>
+   *
+   * <p>If {@code appengine.use.jetty121} is false, Jetty 12.0 or 9.4 is used:
+   *
+   * <ul>
+   *   <li>If EE10 is active, Jetty 12.0 is used with {@code runtime-shared-jetty12-ee10.jar}.
+   *   <li>If EE8 is active, Jetty 12.0 is used with {@code runtime-shared-jetty12.jar}.
+   *   <li>If EE6 is active (default), Jetty 9.4 is used with {@code runtime-shared-jetty9.jar}.
+   * </ul>
+   *
+   * @param runtimeBase The base directory for runtime jars.
+   */
   private void initForJava11OrAbove(String runtimeBase) {
-    // No native launcher means gen2 java11 or java17 or java21, not java8.
     /*
         New content is very simple now (from maven jars):
         ls blaze-bin/java/com/google/apphosting/runtime_java11/deployment_java11
         runtime-impl-jetty9.jar for Jetty9
         runtime-impl-jetty12.jar for EE8 and EE10
+        runtime-impl-jetty121.jar for EE8 and EE11
         runtime-main.jar shared bootstrap main
-        runtime-shared.jar (for Jetty9)
+        runtime-shared-jetty9.jar (for Jetty9)
         runtime-shared-jetty12.jar for EE8
         runtime-shared-jetty12-ee10.jar for EE10
+        runtime-shared-jetty121-ee8.jar for Jetty 12.1 EE8
+        runtime-shared-jetty121-ee11.jar for jetty 12.1 EE11
     */
-      List<String> runtimeClasspathEntries
-              = Boolean.getBoolean("appengine.use.EE8") || Boolean.getBoolean("appengine.use.EE10")
-              ? Arrays.asList("runtime-impl-jetty12.jar")
-              : Arrays.asList("runtime-impl-jetty9.jar");
-
+    final String runtimeImplJar;
+    final String runtimeSharedJar;
+    final @Nullable String profileMessage;
+    String eeVersion = "EE6";
+    if (Boolean.getBoolean("appengine.use.EE10")) {
+      eeVersion = "EE10";
+    } else if (Boolean.getBoolean("appengine.use.EE8")) {
+      eeVersion = "EE8";
+    } else if (Boolean.getBoolean("appengine.use.EE11")) {
+      eeVersion = "EE11";
+    }
+    if (Boolean.getBoolean("appengine.use.jetty121")) { // Jetty121 case (EE8 and EE11)
+      runtimeImplJar = "runtime-impl-jetty121.jar";
+      switch (eeVersion) {
+        case "EE8":
+          profileMessage = "AppEngine is using Jetty 12.1 EE8 profile.";
+          runtimeSharedJar = "runtime-shared-jetty121-ee8.jar";
+          break;
+        case "EE11":
+          profileMessage = "AppEngine is using Jetty 12.1 EE11 profile.";
+          runtimeSharedJar = "runtime-shared-jetty121-ee11.jar";
+          break;
+        case "EE10":
+          logger.log(
+              Level.WARNING,
+              "appengine.use.EE10 is not supported with Jetty 12.1, upgrading to EE11.");
+          profileMessage =
+              "AppEngine is using Jetty 12.1 and requested EE10 profile has been upgraded to"
+                  + " EE11.";
+          runtimeSharedJar = "runtime-shared-jetty121-ee11.jar";
+          break;
+        default:
+          throw new IllegalArgumentException(
+              "Invalid Jetty121 configuration for eeVersion=" + eeVersion);
+      }
+    } else {
+      switch (eeVersion) {
+        case "EE10": // Jetty12 case
+          runtimeImplJar = "runtime-impl-jetty12.jar";
+          profileMessage = "AppEngine is using jetty 12. EE10 profile.";
+          runtimeSharedJar = "runtime-shared-jetty12-ee10.jar";
+          break;
+        case "EE8": // Jetty12 case
+          runtimeImplJar = "runtime-impl-jetty12.jar";
+          profileMessage = "AppEngine is using jetty 12. EE8 profile.";
+          runtimeSharedJar = "runtime-shared-jetty12.jar";
+          break;
+        case "EE6": // Default to jetty9
+          runtimeImplJar = "runtime-impl-jetty9.jar";
+          runtimeSharedJar = "runtime-shared-jetty9.jar";
+          profileMessage = null;
+          break;
+        default:
+          throw new IllegalArgumentException(
+              "Invalid Jetty12 configuration for eeVersion=" + eeVersion);
+      }
+    }
+    if (profileMessage != null) {
+      logger.log(Level.INFO, profileMessage);
+    }
+    System.setProperty(RUNTIME_SHARED_PROPERTY, runtimeBase + "/" + runtimeSharedJar);
+    List<String> runtimeClasspathEntries = new ArrayList<>();
+    runtimeClasspathEntries.add(runtimeImplJar);
     String runtimeClasspath =
         runtimeClasspathEntries.stream()
             .filter(t -> t != null)
@@ -136,16 +222,6 @@ public class ClassPathUtils {
     // Keep old properties for absolute compatibility if ever some public apps depend on them:
     System.setProperty(RUNTIME_IMPL_PROPERTY, runtimeClasspath);
     logger.log(Level.INFO, "Using runtime classpath: " + runtimeClasspath);
-
-    if (Boolean.getBoolean("appengine.use.EE10")) {
-      logger.log(Level.INFO, "AppEngine is using EE10 profile.");
-      System.setProperty(RUNTIME_SHARED_PROPERTY, runtimeBase + "/runtime-shared-jetty12-ee10.jar");
-    } else if (Boolean.getBoolean("appengine.use.EE8")) {
-      logger.log(Level.INFO, "AppEngine is using EE8 profile.");
-      System.setProperty(RUNTIME_SHARED_PROPERTY, runtimeBase + "/runtime-shared-jetty12.jar");
-    } else {
-      System.setProperty(RUNTIME_SHARED_PROPERTY, runtimeBase + "/runtime-shared-jetty9.jar");
-    }
 
     frozenApiJarFile = new File(runtimeBase, "/appengine-api-1.0-sdk.jar");
   }
@@ -193,9 +269,7 @@ public class ClassPathUtils {
     }
   }
 
-  /**
-   * Returns a {@link File} for the frozen old API jar,
-   */
+  /** Returns a {@link File} for the frozen old API jar, */
   public File getFrozenApiJar() {
     return frozenApiJarFile;
   }

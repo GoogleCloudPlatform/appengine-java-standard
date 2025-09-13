@@ -28,10 +28,10 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
 /**
- * The {@code BounceNotificationParser} parses an incoming HTTP request into
- * a description of a bounce notification.
- *
+ * @deprecated as of version 3.0, use {@link
+ *     com.google.appengine.api.mail.jakarta.BounceNotificationParser} instead.
  */
+@Deprecated(since = "3.0.0")
 public final class BounceNotificationParser extends HttpRequestParser {
   /**
    * Parse the POST data of the given request to get details about the bounce notification.

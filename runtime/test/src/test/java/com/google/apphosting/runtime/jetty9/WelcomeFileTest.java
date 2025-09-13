@@ -21,13 +21,29 @@ import static com.google.common.base.StandardSystemProperty.FILE_SEPARATOR;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.List;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import org.junit.runners.Parameterized;
 
-@RunWith(JUnit4.class)
+@RunWith(Parameterized.class)
 public final class WelcomeFileTest extends JavaRuntimeViaHttpBase {
+
+  @Parameterized.Parameters
+  public static List<Object[]> version() {
+    return Arrays.asList(
+        new Object[][] {
+          {"java17", "9.4", "EE6", false},
+        });
+  }
+
+  public WelcomeFileTest(
+      String runtimeVersion, String jettyVersion, String jakartaVersion, boolean useHttpConnector) {
+    super(runtimeVersion, jettyVersion, jakartaVersion, useHttpConnector);
+  }
+
   private static File appRoot;
 
   @BeforeClass
@@ -38,15 +54,14 @@ public final class WelcomeFileTest extends JavaRuntimeViaHttpBase {
   }
 
   private RuntimeContext<DummyApiServer> runtimeContext() throws IOException, InterruptedException {
-    RuntimeContext.Config<DummyApiServer> config = RuntimeContext.Config.builder()
-        .setApplicationPath(appRoot.toString())
-        .build();
-    return RuntimeContext.create(config);
+    RuntimeContext.Config<DummyApiServer> config =
+        RuntimeContext.Config.builder().setApplicationPath(appRoot.toString()).build();
+    return createRuntimeContext(config);
   }
 
   @Test
   public void testIndex() throws Exception {
-    try (RuntimeContext<DummyApiServer> runtime = runtimeContext()) {
+    try (RuntimeContext<?> runtime = runtimeContext()) {
       if (FILE_SEPARATOR.value().equals("/")) {
         runtime.executeHttpGet("/dirWithIndex/", "<h1>Index</h1>\n", RESPONSE_200);
       } else {
@@ -59,9 +74,7 @@ public final class WelcomeFileTest extends JavaRuntimeViaHttpBase {
   @Test
   public void testNoIndex() throws Exception {
     try (RuntimeContext<DummyApiServer> runtime = runtimeContext()) {
-     runtime.executeHttpGet(
-        "/dirWithoutIndex/",
-        404);
+      runtime.executeHttpGet("/dirWithoutIndex/", 404);
     }
   }
 

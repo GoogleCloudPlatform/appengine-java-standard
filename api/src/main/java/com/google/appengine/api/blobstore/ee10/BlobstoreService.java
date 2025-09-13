@@ -29,10 +29,10 @@ import java.util.Map;
 import org.jspecify.annotations.Nullable;
 
 /**
- * {@code BlobstoreService} allows you to manage the creation and
- * serving of large, immutable blobs to users.
- *
+ * @deprecated as of version 3.0, use {@link
+ *     com.google.appengine.api.blobstore.jakarta.BlobstoreService} instead.
  */
+@Deprecated(since = "3.0.0")
 public interface BlobstoreService {
   public static final int MAX_BLOB_FETCH_SIZE = (1 << 20) - (1 << 15);  // 1MB - 16K;
 

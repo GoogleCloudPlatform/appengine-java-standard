@@ -21,13 +21,11 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.junit.Assert.fail;
 
 import com.google.common.collect.ImmutableMap;
+import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
+import java.nio.file.Files;
 import java.util.List;
-import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
@@ -37,39 +35,27 @@ import org.junit.runners.Parameterized;
  */
 @RunWith(Parameterized.class)
 public class OutOfMemoryTest extends JavaRuntimeViaHttpBase {
+  File temp = Files.createTempDirectory("outofmemoryapp").toFile();
+
   @Parameterized.Parameters
   public static List<Object[]> version() {
-    return Arrays.asList(new Object[][] {{"EE6"}, {"EE8"}, {"EE10"}});
+    return allVersions();
   }
 
-  public OutOfMemoryTest(String version) {
-    switch (version) {
-      case "EE6":
-        System.setProperty("appengine.use.EE8", "false");
-        System.setProperty("appengine.use.EE10", "false");
-        break;
-      case "EE8":
-        System.setProperty("appengine.use.EE8", "true");
-        System.setProperty("appengine.use.EE10", "false");
-        break;
-      case "EE10":
-        System.setProperty("appengine.use.EE8", "false");
-        System.setProperty("appengine.use.EE10", "true");
-        break;
-      default:
-        // fall through
-    }
+  public OutOfMemoryTest(
+      String runtimeVersion, String jettyVersion, String version, boolean useHttpConnector)
+      throws Exception {
+    super(runtimeVersion, jettyVersion, version, useHttpConnector);
     if (Boolean.getBoolean("test.running.internally")) { // Internal can only do EE6
       System.setProperty("appengine.use.EE8", "false");
       System.setProperty("appengine.use.EE10", "false");
+      System.setProperty("appengine.use.EE11", "false");
     }
-  }
-
-  @Rule public TemporaryFolder temp = new TemporaryFolder();
-
-  @Before
-  public void copyAppToTemp() throws IOException {
-    copyAppToDir("outofmemoryapp", temp.getRoot().toPath());
+    String appName = "outofmemoryapp";
+    if (version.equals("EE10") || version.equals("EE11")) {
+      appName = "outofmemoryappjakarta";
+    }
+    copyAppToDir(appName, temp.toPath());
   }
 
   @Test
@@ -95,9 +81,9 @@ public class OutOfMemoryTest extends JavaRuntimeViaHttpBase {
   private RuntimeContext<?> startApp() throws IOException, InterruptedException {
     RuntimeContext.Config<DummyApiServer> config =
         RuntimeContext.Config.builder()
-            .setApplicationPath(temp.getRoot().getAbsolutePath())
+            .setApplicationPath(temp.toPath().toString())
             .setEnvironmentEntries(ImmutableMap.of("GAE_JAVA_OPTS", "-XX:+ExitOnOutOfMemoryError"))
             .build();
-    return RuntimeContext.create(config);
+    return createRuntimeContext(config);
   }
 }

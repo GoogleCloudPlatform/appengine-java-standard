@@ -48,6 +48,16 @@ public abstract class SharedMain {
   private List<String> propertyOptions = null;
 
   /**
+   * An exception class that is thrown to indicate that command-line processing should be aborted.
+   */
+  private static class TerminationException extends RuntimeException {
+
+    TerminationException() {
+      super();
+    }
+  }
+
+  /**
    * Returns the list of built-in {@link Option Options} that apply to both the monolithic dev app
    * server (in the Java SDK) and instances running under the Python devappserver2.
    */
@@ -57,7 +67,7 @@ public abstract class SharedMain {
           @Override
           public void apply() {
             printHelp(System.err);
-            System.exit(0);
+            throw new TerminationException();
           }
 
           @Override
@@ -202,13 +212,13 @@ public abstract class SharedMain {
 
   public void validateWarPath(File war) {
     if (!war.exists()) {
-      System.out.println("Unable to find the webapp directory " + war);
+      System.err.println("Unable to find the webapp directory " + war);
       printHelp(System.err);
-      System.exit(1);
+      throw new TerminationException();
     } else if (!war.isDirectory()) {
-      System.out.println("dev_appserver only accepts webapp directories, not war files.");
+      System.err.println("dev_appserver only accepts webapp directories, not war files.");
       printHelp(System.err);
-      System.exit(1);
+      throw new TerminationException();
     }
   }
 
@@ -229,17 +239,34 @@ public abstract class SharedMain {
     if (runtime.equals("java7")) {
       throw new IllegalArgumentException("the Java7 runtime is not supported anymore.");
     }
-    // Locally set the correct values for all runtimes, for EE8 and EE10 system properties to the
+    // Locally set the correct values for all runtimes, for EE8 and EE10/11 system properties to the
     // process of the devappserver.
     Map<String, String> props = appEngineWebXml.getSystemProperties();
+    if (runtime.equals("java25")) {
+      System.setProperty("appengine.use.jetty121", "true");
+      // Validate that Jetty121 is not used with EE10.
+      if (props.containsKey("appengine.use.EE10")) {
+        // We really want the local dev_appserver to fail fast if Jetty121 is used with EE10.
+        // Not like in production for already deployed apps.
+        throw new IllegalArgumentException("appengine.use.EE10 is not supported in Jetty121");
+      }
+      if (props.containsKey("appengine.use.EE8")) {
+        System.setProperty("appengine.use.EE8", props.get("appengine.use.EE8"));
+      } else {
+        System.setProperty("appengine.use.EE11", "true");
+      }
+    }
     if (props.containsKey("appengine.use.EE8")) {
       System.setProperty("appengine.use.EE8", props.get("appengine.use.EE8"));
-      AppengineSdk.resetSdk();
-    }
-    if (props.containsKey("appengine.use.EE10")) {
+    } else if (props.containsKey("appengine.use.EE11")) {
+      System.setProperty("appengine.use.EE11", props.get("appengine.use.EE11"));
+    } else if (props.containsKey("appengine.use.EE10")) {
       System.setProperty("appengine.use.EE10", props.get("appengine.use.EE10"));
-      AppengineSdk.resetSdk();
     }
+    if (props.containsKey("appengine.use.jetty121")) {
+      System.setProperty("appengine.use.jetty121", props.get("appengine.use.jetty121"));
+    }
+    AppengineSdk.resetSdk();
 
     sharedInit();
   }

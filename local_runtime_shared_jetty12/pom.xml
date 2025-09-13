@@ -17,14 +17,16 @@
 
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
+  <!-- We might want to rename this artifact to  appengine-local-runtime-shared-jakarta, 
+  we only depend on smallest jakarta API, not Jetty API-->
   <artifactId>appengine-local-runtime-shared-jetty12</artifactId>
   <parent>
     <groupId>com.google.appengine</groupId>
     <artifactId>parent</artifactId>
-    <version>2.0.40-SNAPSHOT</version>
+    <version>3.0.0-SNAPSHOT</version>
   </parent>
   <packaging>jar</packaging>
-  <name>AppEngine :: appengine-local-runtime-shared Jetty12</name>
+  <name>AppEngine :: appengine-local-runtime-shared Jakarta</name>
   <url>https://github.com/GoogleCloudPlatform/appengine-java-standard/</url>
   <description>App Engine local runtime shared components for Jetty 12.</description>
   <dependencies>
@@ -60,6 +62,7 @@
       <plugin>
         <groupId>org.eclipse.jetty.ee10</groupId>
         <artifactId>jetty-ee10-jspc-maven-plugin</artifactId>
+        <!-- use ee10 even for ee11 compiled jsp files -->
        <version>${jetty12.version}</version>
         <executions>
           <execution>
@@ -69,7 +72,7 @@
             </goals>
             <configuration>
               <jspc>
-                <package>org.apache.jsp.ah.jetty.ee10</package>
+                <package>org.apache.jsp.ah.jetty.jakarta</package>
               </jspc>
               <webAppSourceDirectory>${basedir}/src/main/resources/com/google/apphosting/utils/servlet/ah</webAppSourceDirectory>
               <mergeFragment>false</mergeFragment>

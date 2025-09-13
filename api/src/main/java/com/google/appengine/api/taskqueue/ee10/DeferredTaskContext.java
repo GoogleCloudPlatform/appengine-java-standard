@@ -23,9 +23,10 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.util.Map;
 
 /**
- * Resources for managing {@link DeferredTask}.
- *
+ * @deprecated as of version 3.0, use {@link
+ *     com.google.appengine.api.taskqueue.jakarta.DeferredTaskContext} instead.
  */
+@Deprecated(since = "3.0.0")
 public class DeferredTaskContext {
   /** The content type of a serialized {@link DeferredTask}. */
   public static final String RUNNABLE_TASK_CONTENT_TYPE =

@@ -18,8 +18,7 @@
 <appengine-web-app xmlns="http://appengine.google.com/ns/1.0">
   <application>SysProps</application>
   <version>1</version>
-  <threadsafe>true</threadsafe>
-  <runtime>java8</runtime>
+  <runtime>java17</runtime>
   <system-properties>
     <property name="sysprops.test.foo" value="bar" />
     <!-- for Jetty12, values are different in 9 or 12>

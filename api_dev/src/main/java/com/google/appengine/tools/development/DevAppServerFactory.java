@@ -35,8 +35,17 @@ public class DevAppServerFactory {
   static final String DEV_APP_SERVER_CLASS =
       "com.google.appengine.tools.development.DevAppServerImpl";
 
-  private static final Class<?>[] DEV_APPSERVER_CTOR_ARG_TYPES = {File.class, File.class,
-    File.class, File.class, String.class, Integer.TYPE, Boolean.TYPE, Map.class, String.class};
+  private static final Class<?>[] devAppserverCtorArgTypes = {
+    File.class,
+    File.class,
+    File.class,
+    File.class,
+    String.class,
+    Integer.TYPE,
+    Boolean.TYPE,
+    Map.class,
+    String.class
+  };
 
   private static final String USER_CODE_CLASSPATH_MANAGER_PROP =
       "devappserver.userCodeClasspathManager";
@@ -352,7 +361,9 @@ public class DevAppServerFactory {
     }
     new AppEngineWebXmlInitialParse(appEngineWebXmlLocation.getAbsolutePath())
         .handleRuntimeProperties();
-    if (Boolean.getBoolean("appengine.use.EE8") || Boolean.getBoolean("appengine.use.EE10")) {
+    if (Boolean.getBoolean("appengine.use.EE8")
+        || Boolean.getBoolean("appengine.use.EE10")
+        || Boolean.getBoolean("appengine.use.EE11")) {
       AppengineSdk.resetSdk();
     }
     if (webXmlLocation.exists()) {
@@ -361,15 +372,14 @@ public class DevAppServerFactory {
       WebXml webXml = webXmlReader.readWebXml();
       webXml.validate();
     }
-    DevAppServerClassLoader loader = DevAppServerClassLoader.newClassLoader(
-        DevAppServerFactory.class.getClassLoader());
+    DevAppServerClassLoader loader =
+        DevAppServerClassLoader.newClassLoader(DevAppServerFactory.class.getClassLoader());
     DevAppServer devAppServer;
 
     try {
       Class<?> devAppServerClass = Class.forName(DEV_APP_SERVER_CLASS, false, loader);
 
-
-      Constructor<?> cons = devAppServerClass.getConstructor(DEV_APPSERVER_CTOR_ARG_TYPES);
+      Constructor<?> cons = devAppServerClass.getConstructor(devAppserverCtorArgTypes);
       cons.setAccessible(true);
       devAppServer =
           (DevAppServer)
@@ -392,5 +402,4 @@ public class DevAppServerFactory {
     }
     return devAppServer;
   }
-
 }

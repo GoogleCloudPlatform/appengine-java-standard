@@ -37,29 +37,29 @@ public final class JspTest extends JavaRuntimeViaHttpBase {
 
   @Parameterized.Parameters
   public static List<Object[]> version() {
-    return Arrays.asList(new Object[][] {{"EE6"}, {"EE8"}, {"EE10"}});
+    return Arrays.asList(
+        new Object[][] {
+          // Test is running also in google3 which does not support EE10 or EE11.
+          // We also have e2e JSP tests with new guestbook app in applications/guestbook*.
+          {"java17", "9.4", "EE6", true},
+          {"java17", "12.0", "EE8", true},
+          //    {"java17", "12.0", "EE10", true},
+          //    {"java17", "12.1", "EE11", true},
+          {"java21", "12.0", "EE8", true},
+          //    {"java21", "12.0", "EE10", true},
+          //    {"java21", "12.1", "EE11", true},
+          //  why it does not work yet???   {"java25", "12.1", "EE8", true},
+          //    {"java25", "12.1", "EE11", true},
+        });
   }
 
-  public JspTest(String version) {
-    switch (version) {
-      case "EE6":
-        System.setProperty("appengine.use.EE8", "false");
-        System.setProperty("appengine.use.EE10", "false");
-        break;
-      case "EE8":
-        System.setProperty("appengine.use.EE8", "true");
-        System.setProperty("appengine.use.EE10", "false");
-        break;
-      case "EE10":
-        System.setProperty("appengine.use.EE8", "false");
-        System.setProperty("appengine.use.EE10", "true");
-        break;
-      default:
-        // fall through
-    }
+  public JspTest(
+      String runtimeVersion, String jettyVersion, String version, boolean useHttpConnector) {
+    super(runtimeVersion, jettyVersion, version, useHttpConnector);
     if (Boolean.getBoolean("test.running.internally")) { // Internal can only do EE6
       System.setProperty("appengine.use.EE8", "false");
       System.setProperty("appengine.use.EE10", "false");
+      System.setProperty("appengine.use.EE11", "false");
     }
   }
 
@@ -100,6 +100,6 @@ public final class JspTest extends JavaRuntimeViaHttpBase {
   private RuntimeContext<?> runtimeContext() throws IOException, InterruptedException {
     RuntimeContext.Config<?> config =
         RuntimeContext.Config.builder().setApplicationPath(temp.getRoot().toString()).build();
-    return RuntimeContext.create(config);
+    return createRuntimeContext(config);
   }
 }
