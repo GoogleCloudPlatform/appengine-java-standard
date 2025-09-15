@@ -18,7 +18,6 @@ package com.google.apphosting.runtime;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import java.io.File;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -40,15 +39,8 @@ public final class ClassPathUtilsTest {
     System.setProperty("classpath.runtimebase", runtimeLocation);
   }
 
-  private void createJava8Environment() throws Exception {
-    // Only Java8 runtime has the native launcher. This file is used to determine which env
-    // must be used.
-    temporaryFolder.newFile("java_runtime_launcher");
-  }
-
   @Test
   public void verifyJava11PropertiesAreConfigured() throws Exception {
-    // we do not call createJava8Environment() so expect java11+
     ClassPathUtils cpu = new ClassPathUtils();
     assertThat(cpu.getConnectorJUrls()).hasLength(0);
     if (Boolean.getBoolean("appengine.use.EE8")|| Boolean.getBoolean("appengine.use.EE10")) {
@@ -63,33 +55,5 @@ public final class ClassPathUtilsTest {
                 .isEqualTo(runtimeLocation + "/runtime-shared-jetty9.jar");
     }
     assertThat(System.getProperty("classpath.connector-j")).isNull();
-
-    assertThat(cpu.getFrozenApiJar().getCanonicalPath())
-        .isEqualTo(new File(runtimeLocation + "/appengine-api-1.0-sdk.jar").getCanonicalPath());
-  }
-
-  @Test
-  public void verifyMavenJarsPropertiesAreConfigured() throws Exception {
-    createJava8Environment();
-
-    ClassPathUtils cpu = new ClassPathUtils(new File("/my_app_root"));
-    assertThat(cpu.getConnectorJUrls()).hasLength(1);
-    assertThat(System.getProperty("classpath.runtime-impl"))
-        .isEqualTo(
-            runtimeLocation
-                + "/jars/runtime-impl-jetty9.jar");
-
-    assertThat(System.getProperty("classpath.runtime-shared"))
-        .isEqualTo(runtimeLocation + "/jars/runtime-shared-jetty9.jar");
-    assertThat(System.getProperty("classpath.connector-j"))
-        .isEqualTo(runtimeLocation + "/jdbc-mysql-connector.jar");
-
-    assertThat(cpu.getFrozenApiJar().getAbsolutePath())
-        .isEqualTo("/my_app_root" + runtimeLocation + "/appengine-api.jar");
-    assertThat(System.getProperty("classpath.appengine-api-legacy"))
-        .isEqualTo(runtimeLocation + "/jars/appengine-api-legacy.jar");
-
-    assertThat(cpu.getAppengineApiLegacyJar().getAbsolutePath())
-        .isEqualTo("/my_app_root" + runtimeLocation + "/jars/appengine-api-legacy.jar");
   }
 }

@@ -60,17 +60,14 @@ class ApplicationClassLoader extends URLClassLoader {
   static final String COMPAT_PROPERTY = "appengine.api.legacy.repackaging";
 
   private final URL[] originalUrls;
-  private final URL[] legacyUrls;
   private final URLClassLoader resourceLoader;
-  boolean addedLegacyUrls;
 
   ApplicationClassLoader(
-      URL[] urls, URL[] legacyUrls, ClassLoader parent, boolean alwaysScanClassDirs) {
+      URL[] urls, ClassLoader parent, boolean alwaysScanClassDirs) {
     super(
         alwaysScanClassDirs ? urls : excludeClasslessDirectories(urls),
         parent);
     this.originalUrls = urls;
-    this.legacyUrls = legacyUrls;
     if (Arrays.equals(urls, super.getURLs())) {
       resourceLoader = null;
     } else {
@@ -149,13 +146,6 @@ class ApplicationClassLoader extends URLClassLoader {
     try {
       return super.findClass(name);
     } catch (ClassNotFoundException e) {
-      if (!addedLegacyUrls && Boolean.getBoolean(COMPAT_PROPERTY)) {
-        for (URL url : legacyUrls) {
-          addURL(url);
-        }
-        addedLegacyUrls = true;
-        return super.findClass(name);
-      }
       throw e;
     }
   }

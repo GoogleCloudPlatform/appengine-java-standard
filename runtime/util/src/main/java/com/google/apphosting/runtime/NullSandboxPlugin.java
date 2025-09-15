@@ -138,11 +138,10 @@ public class NullSandboxPlugin {
         URL[] urls = getClassPathUtils().getConnectorJUrls();
         userUrls = append(urls, userUrls);
     }
-    URL[] legacyUrls = getClassPathUtils().getLegacyJarUrls();
     boolean alwaysScanClassDirs = "true".equalsIgnoreCase(
         environment.getSystemProperties().get(ALWAYS_SCAN_CLASS_DIRS_PROPERTY));
     return new ApplicationClassLoader(
-        userUrls, legacyUrls, sharedClassLoader, alwaysScanClassDirs);
+        userUrls, sharedClassLoader, alwaysScanClassDirs);
   }
 
   /**

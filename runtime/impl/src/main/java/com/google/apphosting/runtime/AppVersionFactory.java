@@ -422,36 +422,13 @@ public class AppVersionFactory {
       if (classPathUtils == null) {
         logger.atInfo().log("Ignoring API version setting %s", apiVersion);
       } else {
-        File apiJar = classPathUtils.getFrozenApiJar();
-        if (apiJar != null) {
-          logger.atInfo().log("Adding API jar %s for version %s", apiJar, apiVersion);
-          try {
-            classPathBuilder.addAppengineJar(new URL("file", "", apiJar.getAbsolutePath()));
-          } catch (MalformedURLException ex) {
-            logger.atWarning().withCause(ex).log("Could not parse URL for %s, ignoring.", apiJar);
-          }
-
-          File appengineApiLegacyJar = classPathUtils.getAppengineApiLegacyJar();
-          if (appengineApiLegacyJar != null) {
-            logger.atInfo().log("Adding appengine-api-legacy jar %s", appengineApiLegacyJar);
-            try {
-              // Add appengine-api-legacy jar with appengine-api-jar priority.
-              classPathBuilder.addAppengineJar(
-                  new URL("file", "", appengineApiLegacyJar.getAbsolutePath()));
-            } catch (MalformedURLException ex) {
-              logger.atWarning().withCause(ex).log(
-                  "Could not parse URL for %s, ignoring.", appengineApiLegacyJar);
-            }
-          }
-        } else {
-          // TODO: We should probably return an
-          // UPResponse::UNKNOWN_API_VERSION here, but I'd like to be
-          // lenient until API versions are well established.
-          logger.atWarning().log(
-              "The Java runtime is not adding an API jar for this application, as the "
-                  + "Java api_version defined in app.yaml or appinfo is unknown: %s",
-              apiVersion);
-        }
+        // TODO: We should probably return an
+        // UPResponse::UNKNOWN_API_VERSION here, but I'd like to be
+        // lenient until API versions are well established.
+        logger.atWarning().log(
+            "The Java runtime is not adding an API jar for this application, as the "
+                + "Java api_version defined in app.yaml or appinfo is unknown: %s",
+            apiVersion);
       }
     }
     if (!appInfo.getFileList().isEmpty()) {
