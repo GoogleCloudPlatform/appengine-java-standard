@@ -31,12 +31,15 @@ are bundled as a Maven assembly under `<artifactId>runtime-deployment</artifactI
 
   * runtime-impl-jetty9.jar
   * runtime-impl-jetty12.jar
+  * runtime-impl-jetty121.jar
   * runtime-shared-jetty9.jar
   * runtime-shared-jetty12.jar
+  * runtime-shared-jetty121-ee8.jar
   * runtime-shared-jetty12-ee10.jar
+  * runtime-shared-jetty121-ee11.jar
   * runtime-main.jar
 
-Let's say you want the latest from head in this github repository. You could built the 6 jars, add them at the
+Let's say you want the latest from head in this github repository. You could built the 9 jars, add them at the
 top of your web application and change the entrypoint to boot with these jars instead of the one maintained in production.
 
 
@@ -46,14 +49,15 @@ top of your web application and change the entrypoint to boot with these jars in
  ./mvnw clean install
 ```
 
-Let's assume the current build version is `2.0.40-SNAPSHOT`.
+Let's assume the current build version is `3.0.0-SNAPSHOT`.
 
 See the output of the runtime deployment module which contains all the jars needed by the runtime:
 
 
 ```
 ls  runtime/deployment/target/runtime-deployment-*/
-runtime-impl-jetty12.jar	runtime-main.jar		runtime-shared-jetty12.jar
+runtime-impl-jetty12.jar	runtime-impl-jetty121.jar	runtime-main.jar		runtime-shared-jetty12.jar
+runtime-shared-jetty121-ee8.jar  runtime-shared-jetty121-ee11.jar
 runtime-impl-jetty9.jar		runtime-shared-jetty12-ee10.jar	runtime-shared-jetty9.jar
 ```
 
@@ -66,7 +70,7 @@ Add the dependency for the GAE runtime jars in your application pom.xml file:
 
 ```
  <properties>
-        <appengine.runtime.version>2.0.40-SNAPSHOT</appengine.runtime.version>
+        <appengine.runtime.version>3.0.0-SNAPSHOT</appengine.runtime.version>
         <appengine.runtime.location>target/${project.artifactId}-${project.version}</appengine.runtime.location>
  <properties>
  ...
@@ -107,6 +111,10 @@ deployed web application.
                         <sourceFile>${appengine.runtime.location}/WEB-INF/lib/runtime-impl-jetty12-${appengine.runtime.version}.jar</sourceFile>
                         <destinationFile>${appengine.runtime.location}/runtime-impl-jetty12.jar</destinationFile>
                     </fileSet>
+                     <fileSet>
+                        <sourceFile>${appengine.runtime.location}/WEB-INF/lib/runtime-impl-jetty121-${appengine.runtime.version}.jar</sourceFile>
+                        <destinationFile>${appengine.runtime.location}/runtime-impl-jetty121.jar</destinationFile>
+                    </fileSet>
                     <fileSet>
                         <sourceFile>${appengine.runtime.location}/WEB-INF/lib/runtime-shared-jetty12-${appengine.runtime.version}.jar</sourceFile>
                         <destinationFile>${appengine.runtime.location}/runtime-shared-jetty12.jar</destinationFile>
@@ -114,6 +122,14 @@ deployed web application.
                      <fileSet>
                         <sourceFile>${appengine.runtime.location}/WEB-INF/lib/runtime-shared-jetty12-ee10-${appengine.runtime.version}.jar</sourceFile>
                         <destinationFile>${appengine.runtime.location}/runtime-shared-jetty12-ee10.jar</destinationFile>
+                    </fileSet>
+                     <fileSet>
+                        <sourceFile>${appengine.runtime.location}/WEB-INF/lib/runtime-shared-jetty121-ee8-${appengine.runtime.version}.jar</sourceFile>
+                        <destinationFile>${appengine.runtime.location}/runtime-shared-jetty121-ee8.jar</destinationFile>
+                    </fileSet>
+                     <fileSet>
+                        <sourceFile>${appengine.runtime.location}/WEB-INF/lib/runtime-shared-jetty121-ee11-${appengine.runtime.version}.jar</sourceFile>
+                        <destinationFile>${appengine.runtime.location}/runtime-shared-jetty121-ee11.jar</destinationFile>
                     </fileSet>
                     <fileSet>
                         <sourceFile>${appengine.runtime.location}/WEB-INF/lib/runtime-main-${appengine.runtime.version}.jar</sourceFile>

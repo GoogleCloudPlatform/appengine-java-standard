@@ -17,7 +17,7 @@
 [![Maven][maven-version-image]][maven-version-link]
 [![Code of conduct](https://img.shields.io/badge/%E2%9D%A4-code%20of%20conduct-blue.svg)](https://github.com/GoogleCloudPlatform/appengine-java-standard/blob/main/CODE_OF_CONDUCT.md)
 
-# Google App Engine Standard Environment Source Code for Java 8, Java 11, Java 17, Java 21.
+# Google App Engine Standard Environment Source Code for Java 17, Java 21, Java25
 
 
 This repository contains the Java Source Code for [Google App Engine
@@ -27,13 +27,13 @@ standard environment][ae-docs], the production runtime, the AppEngine APIs, and 
 
 ## Prerequisites
 
-### Use a JDK8 environment, so it can build the Java8 GAE runtime.
+### Use a JDK17 environment, so it can build the Java17 GAE runtime.
 
-[jdk8](https://adoptium.net/), but using a JDK11 or JDK17 of JDK21 is also possible.
+[jdk8](https://adoptium.net/), but using a JDK21 or JDK25 is also possible.
 
-The shared code base is also used for GAE Java 11, Java 17 and Java 21 build and test targets, using GitHub actions:
+The shared code base is also used for GAE Java 17, Java 17 and Java 25 build and test targets, using GitHub actions:
 
-- [Java 17/21 Continuous Integration](https://github.com/GoogleCloudPlatform/appengine-java-standard/actions/workflows/maven.yml)
+- [Java 17/21/25 Continuous Integration](https://github.com/GoogleCloudPlatform/appengine-java-standard/actions/workflows/maven.yml)
 
 ## Releases
 
@@ -100,12 +100,33 @@ Source code for all public APIs for com.google.appengine.api.* packages.
     ...
     ```
 
-*  Java 21  with Jakarta or javax appengine-web.xml
+*  Maven Java 25 Alpha with Jarkata EE 11 support pom.xml (EE10 is not supported in Java25, EE11 is fully compatible with EE10)
+
+    ```
+    <packaging>war</packaging><!-- Servlet 6.1 WAR packaging-->
+    ...
+    <dependencies>
+        <dependency>
+            <groupId>com.google.appengine</groupId>
+            <artifactId>appengine-api-1.0-sdk</artifactId>
+            <version>2.0.38</version><!-- or later-->
+        </dependency>
+        <dependency>
+          <groupId>jakarta.servlet</groupId>
+          <artifactId>jakarta.servlet-api</artifactId>
+          <version>6.1.0</version>
+          <scope>provided</scope>
+        </dependency>
+    ...
+    ```
+
+
+*  Java 21/25  with javax EE8 profile appengine-web.xml
 
     ```
     <?xml version="1.0" encoding="utf-8"?>
     <appengine-web-app xmlns="http://appengine.google.com/ns/1.0">
-      <runtime>java21</runtime>
+      <runtime>java21</runtime> <-- or java25 alpha-->
       <app-engine-apis>true</app-engine-apis>
 
       <!-- Add optionally:
@@ -118,8 +139,8 @@ Source code for all public APIs for com.google.appengine.api.* packages.
     ```
 
 
-- [Public Java 21 Documentation](https://cloud.google.com/appengine/docs/standard/java-gen2/runtime)
-- [How to upgrade to Java21](https://cloud.google.com/appengine/docs/standard/java-gen2/upgrade-java-runtime)
+- [Public Java 21/25 Documentation](https://cloud.google.com/appengine/docs/standard/java-gen2/runtime)
+- [How to upgrade to Java21/25](https://cloud.google.com/appengine/docs/standard/java-gen2/upgrade-java-runtime)
 
 *  Java 17 appengine-web.xml
 
@@ -131,12 +152,23 @@ Source code for all public APIs for com.google.appengine.api.* packages.
     </appengine-web-app>
     ```
 
-*  Java 11  appengine-web.xml
+*  Java 21  appengine-web.xml (will default to EE10, but EE8 possible)
 
     ```
     <?xml version="1.0" encoding="utf-8"?>
     <appengine-web-app xmlns="http://appengine.google.com/ns/1.0">
-      <runtime>java11</runtime>
+      <runtime>java21</runtime>
+      <app-engine-apis>true</app-engine-apis>
+    </appengine-web-app>
+    ```
+
+
+*  Java 25  appengine-web.xml (will default to EE11, but EE8 possible) Alpha
+
+    ```
+    <?xml version="1.0" encoding="utf-8"?>
+    <appengine-web-app xmlns="http://appengine.google.com/ns/1.0">
+      <runtime>java25</runtime>
       <app-engine-apis>true</app-engine-apis>
     </appengine-web-app>
     ```
@@ -167,13 +199,13 @@ Source code for remote APIs for App Engine.
 ```
 
 
-* Servlet Jarkata EE10 web.xml
+* Servlet Jarkata EE10 and EE11 web.xml
 
 ```
    <servlet>
      <display-name>Remote API Servlet</display-name>
      <servlet-name>RemoteApiServlet</servlet-name>
-     <servlet-class>com.google.apphosting.utils.remoteapi.EE10RemoteApiServlet</servlet-class>
+     <servlet-class>com.google.apphosting.utils.remoteapi.JakartaRemoteApiServlet</servlet-class>
      <load-on-startup>1</load-on-startup>
    </servlet>
    <servlet-mapping>
@@ -276,9 +308,9 @@ Source code for the App Engine production application server and utilities. It i
 - [End-to-End tests](https://github.com/GoogleCloudPlatform/appengine-java-standard/tree/master/runtime/test)
 - [Source Code for runtime utilities](https://github.com/GoogleCloudPlatform/appengine-java-standard/tree/master/runtime/util)
 
-## Default entrypoint used by Java11, Java17 and Java21
+## Default entrypoint used by Java17, Java21 and Java25
 
-The Java 11, Java 17 and 21 runtimes can benefit from extra user configuration when starting the JVM for web apps.
+The Java 17, Java 21 and 25 runtimes can benefit from extra user configuration when starting the JVM for web apps.
 
 The default entrypoint used to boot the JVM is generated by App Engine Buildpacks.
 Essentially, it is equivalent to define this entrypoint in the `appengine-web.xml` file. For example:
@@ -292,7 +324,7 @@ By default, we use `--add-opens java.base/java.lang=ALL-UNNAMED  --add-opens jav
 
 ## Entry Point Features
 
-The entry point for the Java 11, Java 17, 21 runtimes can be customized with user-defined environment variables added in the `appengine-web.xml` configuration file.
+The entry point for the Java 17, Java 21, 25 runtimes can be customized with user-defined environment variables added in the `appengine-web.xml` configuration file.
 
 The following table indicates the environment variables that can be used to enable/disable/configure features, and the default values if they are not set:
 
