@@ -20,7 +20,7 @@
   <parent>
     <groupId>com.google.appengine</groupId>
     <artifactId>appengine_setup</artifactId>
-    <version>3.0.0-SNAPSHOT</version>
+    <version>3.0.0-beta-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.google.appengine</groupId>
