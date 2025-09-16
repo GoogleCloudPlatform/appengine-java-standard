@@ -34,15 +34,15 @@ public class JettySdkTest {
 
   private void assertFilesExist(Iterable<File> files) {
     for (File f : files) {
-      assertThat(f.exists()).isTrue();
       System.out.println(f.getAbsolutePath());
+      assertThat(f.exists()).isTrue();
     }
   }
 
   private void assertUrlsExist(List<URL> urls) throws URISyntaxException {
     for (URL url : urls) {
-      assertThat(new File(url.toURI()).exists()).isTrue();
-      System.out.println(new File(url.toURI()).getAbsolutePath());
+     System.out.println(new File(url.toURI()).getAbsolutePath());
+     assertThat(new File(url.toURI()).exists()).isTrue();
     }
   }
 

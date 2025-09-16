@@ -48,26 +48,8 @@ rm **/target/*tests.jar || true
 rm **/target/*javadoc.jar || true
 
 # LINT.IfChange
-cp api_legacy/target/appengine-api-legacy*.jar ${TMP_STAGING_LOCATION}/appengine-api-legacy.jar
 cp appengine-api-1.0-sdk/target/appengine-api-1.0-sdk*.jar ${TMP_STAGING_LOCATION}/appengine-api-1.0-sdk.jar
-cp appengine-api-stubs/target/appengine-api-stubs*.jar ${TMP_STAGING_LOCATION}/appengine-api-stubs.jar
-cp appengine_testing/target/appengine-testing*.jar ${TMP_STAGING_LOCATION}/appengine-testing.jar
-cp remoteapi/target/appengine-remote-api*.jar ${TMP_STAGING_LOCATION}/appengine-remote-api.jar
 cp appengine_jsr107/target/appengine-jsr107*.jar ${TMP_STAGING_LOCATION}/appengine-jsr107.jar
-cp runtime_shared/target/runtime-shared*.jar ${TMP_STAGING_LOCATION}/runtime-shared.jar
-cp runtime_shared_jetty9/target/runtime-shared*.jar ${TMP_STAGING_LOCATION}/runtime-shared-jetty9.jar
-cp runtime_shared_jetty12/target/runtime-shared*.jar ${TMP_STAGING_LOCATION}/runtime-shared-jetty12.jar
-cp runtime_shared_jetty12_ee10/target/runtime-shared*.jar ${TMP_STAGING_LOCATION}/runtime-shared-jetty12-ee10.jar
-cp lib/tools_api/target/appengine-tools-sdk*.jar ${TMP_STAGING_LOCATION}/appengine-tools-api.jar
-cp lib/xml_validator/target/libxmlvalidator*.jar ${TMP_STAGING_LOCATION}/libxmlvalidator.jar
-cp runtime/runtime_impl_jetty9/target/runtime-impl*.jar ${TMP_STAGING_LOCATION}/runtime-impl-jetty9.jar
-cp runtime/runtime_impl_jetty12/target/runtime-impl*.jar ${TMP_STAGING_LOCATION}/runtime-impl-jetty12.jar
-cp runtime/local_jetty9/target/appengine-local-runtime*.jar ${TMP_STAGING_LOCATION}/appengine-local-runtime-jetty9.jar
-cp runtime/local_jetty12/target/appengine-local-runtime*.jar ${TMP_STAGING_LOCATION}/appengine-local-runtime-jetty12.jar
-cp runtime/main/target/runtime-main*.jar ${TMP_STAGING_LOCATION}/runtime-main.jar
-cp local_runtime_shared_jetty9/target/appengine-local-runtime-shared*.jar ${TMP_STAGING_LOCATION}/appengine-local-runtime-shared-jetty9.jar
-cp local_runtime_shared_jetty12/target/appengine-local-runtime-shared*.jar ${TMP_STAGING_LOCATION}/appengine-local-runtime-shared-jetty12.jar
-cp quickstartgenerator/target/quickstartgenerator*.jar ${TMP_STAGING_LOCATION}/quickstartgenerator.jar
 
 cp -rf sdk_assembly/target/appengine-java-sdk ${TMP_STAGING_LOCATION}/
 # Make binaries executable.

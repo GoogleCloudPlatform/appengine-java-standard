@@ -155,7 +155,7 @@ class Jetty121EE11Sdk extends Jetty121EE8Sdk {
     lf.addAll(getJetty121Jars("ee11-glassfish-jstl"));
 
     lf.addAll(getLibs(sdkRoot, "impl"));
-    lf.addAll(getLibs(sdkRoot, "impl/jetty121"));
+    lf.add(new File(sdkRoot, "lib/impl/jetty121/appengine-local-runtime-jetty121-ee11.jar"));
     // The ee11-glassfish-jstl directory contains Oracle JSTL, but we need Apache JSTL for the
     // local dev console JSPs. Thus, we include the Apache JSTL jar from ee10-glassfish-jstl.
     // See https://github.com/eclipse-ee4j/wasp/issues/77 for more details, but we are facing it.

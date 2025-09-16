@@ -153,7 +153,7 @@ class Jetty121EE8Sdk extends AppengineSdk {
     lf.addAll(getJetty121Jars("ee8-glassfish-jstl"));
 
     lf.addAll(getLibs(sdkRoot, "impl"));
-    lf.addAll(getLibs(sdkRoot, "impl/jetty121"));
+    lf.add(new File(sdkRoot, "lib/impl/jetty121/appengine-local-runtime-jetty121.jar"));
     return Collections.unmodifiableList(lf);
   }
 

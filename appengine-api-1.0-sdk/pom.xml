@@ -150,7 +150,7 @@
                 </relocation>
                 <relocation>
                   <pattern>com.google.io.base</pattern>
-                  <shadedPattern>com.google.appengine.repackaged.com.google.io.protocol</shadedPattern>
+                  <shadedPattern>com.google.appengine.repackaged.com.google.io.base</shadedPattern>
                 </relocation>
                 <relocation>
                   <pattern>com.google.io.protocol</pattern>

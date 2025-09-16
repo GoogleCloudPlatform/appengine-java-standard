@@ -137,7 +137,7 @@
               <relocations>
                  <relocation>
                   <pattern>org.eclipse</pattern>
-                  <shadedPattern>com.google.appengine.repackaged.org.eclispe</shadedPattern>
+                  <shadedPattern>com.google.appengine.repackaged.org.eclipse</shadedPattern>
                 </relocation>
                 <relocation>
                   <pattern>com.google.common</pattern>

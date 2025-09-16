@@ -21,7 +21,9 @@ import static com.google.common.truth.Truth.assertThat;
 import com.google.apphosting.runtime.jetty9.JavaRuntimeViaHttpBase;
 import com.google.common.collect.ImmutableMap;
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -69,6 +71,11 @@ public final class AsyncServletAppTest extends JavaRuntimeViaHttpBase {
                     "GOOGLE_CLOUD_PROJECT", "test-servlets-async"))
             .build();
     runtime = createRuntimeContext(config);
+  }
+
+  @After
+  public void stop() throws IOException {
+    runtime.close();
   }
 
   @Test

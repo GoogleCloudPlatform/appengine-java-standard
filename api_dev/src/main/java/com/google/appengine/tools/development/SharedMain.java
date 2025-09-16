@@ -260,6 +260,7 @@ public abstract class SharedMain {
       System.setProperty("appengine.use.EE8", props.get("appengine.use.EE8"));
     } else if (props.containsKey("appengine.use.EE11")) {
       System.setProperty("appengine.use.EE11", props.get("appengine.use.EE11"));
+      System.setProperty("appengine.use.jetty121", "true");
     } else if (props.containsKey("appengine.use.EE10")) {
       System.setProperty("appengine.use.EE10", props.get("appengine.use.EE10"));
     }

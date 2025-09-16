@@ -180,7 +180,11 @@ class Jetty12Sdk extends AppengineSdk {
       lf.addAll(getJetty12Jars("ee8-glassfish-jstl"));
     }
     lf.addAll(getLibs(sdkRoot, "impl"));
-    lf.addAll(getLibs(sdkRoot, "impl/jetty12"));
+    if (Boolean.getBoolean("appengine.use.EE10")) {
+        lf.add(new File(sdkRoot, "lib/impl/jetty12/appengine-local-runtime-jetty12-ee10.jar"));
+    } else {
+        lf.add(new File(sdkRoot, "lib/impl/jetty12/appengine-local-runtime-jetty12.jar"));
+    }
     return Collections.unmodifiableList(lf);
   }
 

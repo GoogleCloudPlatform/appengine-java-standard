@@ -44,13 +44,13 @@ public class AdminConsoleResourceServlet extends HttpServlet {
     private final String filename;
 
     Resources(String filename) {
-      this.filename = filename.toLowerCase(Locale.ROOT);
+      this.filename = filename;
     }
   }
 
   @Override
   protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-    String resource = req.getParameter("resource");
+    String resource = req.getParameter("resource").toUpperCase(Locale.ROOT);
     InputStream in = getClass().getResourceAsStream(Resources.valueOf(resource).filename);
     try {
       OutputStream out = resp.getOutputStream();

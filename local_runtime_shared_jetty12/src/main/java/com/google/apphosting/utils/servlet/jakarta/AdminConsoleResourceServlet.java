@@ -22,6 +22,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Locale;
 
 /**
  * Servlet that serves resources required by the admin console ui.
@@ -35,10 +36,10 @@ public class AdminConsoleResourceServlet extends HttpServlet {
   // Hard-coding the resources we serve so that user code
   // can't serve arbitrary resources from our jars.
   private enum Resources {
-    google("ah/images/google.gif"),
-    webhook("js/webhook.js"),
-    multipart_form_data("js/multipart_form_data.js"),
-    rfc822_date("js/rfc822_date.js");
+    GOOGLE("/com/google/apphosting/utils/servlet/ah/images/google.gif"),
+    WEBHOOK("/com/google/apphosting/utils/servlet/js/webhook.js"),
+    MULTIPART_FORM_DATA("/com/google/apphosting/utils/servlet/js/multipart_form_data.js"),
+    RFC822_DATE("/com/google/apphosting/utils/servlet/js/rfc822_date.js");
 
     private final String filename;
 
@@ -49,7 +50,7 @@ public class AdminConsoleResourceServlet extends HttpServlet {
 
   @Override
   protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-    String resource = req.getParameter("resource");
+    String resource = req.getParameter("resource").toUpperCase(Locale.ROOT);
     InputStream in = getClass().getResourceAsStream(Resources.valueOf(resource).filename);
     try {
       OutputStream out = resp.getOutputStream();

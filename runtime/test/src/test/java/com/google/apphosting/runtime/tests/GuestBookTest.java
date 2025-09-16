@@ -25,6 +25,10 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
@@ -104,6 +108,27 @@ public final class GuestBookTest extends JavaRuntimeViaHttpBase {
   public void testGuesttBookJSPStaged() throws Exception {
     try (RuntimeContext<?> runtime = runtimeContext()) {
       runtime.executeHttpGet("/guestbook.jsp", "<p>Guestbook 'default' has no messages.</p>", 200);
+
+      // Now, post a message to the guestbook to activate storage in the datastore, as well as usage
+      // of session manager auxiliary service.
+      String postBody = "guestbookName=default&content=Hello%20from%20test";
+      HttpRequest request =
+          HttpRequest.newBuilder()
+              .uri(URI.create(runtime.jettyUrl("/sign")))
+              .header("Content-Type", "application/x-www-form-urlencoded")
+              .POST(HttpRequest.BodyPublishers.ofString(postBody))
+              .build();
+      // We expect a redirect to /guestbook.jsp after posting.
+      // We must configure HttpClient to follow redirects, so we expect status 200
+      // and the body of guestbook.jsp, which should contain the new greeting.
+      HttpClient client =
+          HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NORMAL).build();
+      HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+      assertThat(response.statusCode()).isEqualTo(200);
+      assertThat(response.body()).contains("Hello from test");
+
+      // Verify again that a simple GET also contains the greeting:
+      runtime.executeHttpGet("/guestbook.jsp", "Hello from test", 200);
     }
   }
 }

@@ -308,4 +308,22 @@ public class AppEngineWebXmlInitialParseTest {
     assertFalse(Boolean.getBoolean("appengine.use.EE10"));
     assertTrue(Boolean.getBoolean("appengine.use.jetty121"));
   }
+
+  @Test
+  public void testJava21WithEE11() throws IOException {
+    createTempAppEngineWebXml(
+        """
+        <appengine-web-app xmlns="http://appengine.google.com/ns/1.0">
+            <runtime>java21</runtime>
+            <system-properties>
+                <property name="appengine.use.EE11" value="true"/>
+            </system-properties>
+        </appengine-web-app>
+        """);
+    new AppEngineWebXmlInitialParse(tempFile.toFile().getAbsolutePath()).handleRuntimeProperties();
+    assertTrue(Boolean.getBoolean("appengine.use.EE11"));
+    assertFalse(Boolean.getBoolean("appengine.use.EE8"));
+    assertFalse(Boolean.getBoolean("appengine.use.EE10"));
+    assertTrue(Boolean.getBoolean("appengine.use.jetty121"));
+  }
 }

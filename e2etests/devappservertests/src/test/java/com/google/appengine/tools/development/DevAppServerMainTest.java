@@ -21,6 +21,9 @@ import com.google.common.net.HostAndPort;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.util.EntityUtils;
@@ -31,6 +34,8 @@ import org.junit.runners.Parameterized;
 
 @RunWith(Parameterized.class)
 public class DevAppServerMainTest extends DevAppServerTestBase {
+
+  private static final Pattern COUNT_PATTERN = Pattern.compile("^Count=(\\d+)");
 
   public DevAppServerMainTest(String runtimeVersion, String jettyVersion, String jakartaVersion) {
     super(runtimeVersion, jettyVersion, jakartaVersion);
@@ -102,5 +107,42 @@ public class DevAppServerMainTest extends DevAppServerTestBase {
             " <li><a href=\"/_ah/admin/datastore\" id=\"datastore_viewer_link\">Datastore"
                 + " Viewer</a></li>");
     assertThat(retCode).isEqualTo(RESPONSE_200);
+  }
+
+  /** Test sessions. Hit servlet twice and verify session count changes. */
+  @Test
+  public void testSession() throws Exception {
+    String url =
+        String.format(
+            "http://%s%s",
+            HostAndPort.fromParts(new InetSocketAddress(jettyPort).getHostString(), jettyPort),
+            "/session");
+    HttpGet get1 = new HttpGet(url);
+    HttpResponse response1 = httpClient.execute(get1);
+    assertThat(response1.getStatusLine().getStatusCode()).isEqualTo(RESPONSE_200);
+    String content1 = EntityUtils.toString(response1.getEntity());
+    Matcher matcher1 = COUNT_PATTERN.matcher(content1);
+    assertThat(matcher1.find()).isTrue();
+    String count1 = matcher1.group(1);
+
+    Header[] cookies = response1.getHeaders("Set-Cookie");
+    assertThat(cookies).hasLength(1);
+    String jsessionId = cookies[0].getValue();
+
+    // The cookie might look like: JSESSIONID=...; Path=/; Secure
+    // We only need the JSESSIONID=... part for the Cookie header.
+    if (jsessionId.contains(";")) {
+      jsessionId = jsessionId.substring(0, jsessionId.indexOf(';'));
+    }
+
+    HttpGet get2 = new HttpGet(url);
+    get2.setHeader("Cookie", jsessionId);
+    HttpResponse response2 = httpClient.execute(get2);
+    assertThat(response2.getStatusLine().getStatusCode()).isEqualTo(RESPONSE_200);
+    String content2 = EntityUtils.toString(response2.getEntity());
+    Matcher matcher2 = COUNT_PATTERN.matcher(content2);
+    assertThat(matcher2.find()).isTrue();
+    String count2 = matcher2.group(1);
+    assertThat(count2).isNotEqualTo(count1);
   }
 }

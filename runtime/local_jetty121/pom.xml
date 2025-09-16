@@ -30,11 +30,6 @@
   <name>AppEngine :: appengine-local-runtime Jetty121</name>
   <url>https://github.com/GoogleCloudPlatform/appengine-java-standard/</url>
   <description>App Engine Local devappserver Jetty 12.1.</description>
-    <properties>
-    <maven.compiler.release>11</maven.compiler.release>
-    <maven.compiler.source>1.11</maven.compiler.source>
-    <maven.compiler.target>1.11</maven.compiler.target>
-  </properties>
 
   <dependencies>
     <dependency>
@@ -159,29 +154,6 @@
         </exclusion>
       </exclusions>
     </dependency>
-     <dependency>
-      <groupId>com.google.appengine</groupId>
-      <artifactId>appengine-local-runtime-jetty121-ee11</artifactId>
-      <version>${project.version}</version>
-       <exclusions>
-         <exclusion>
-           <groupId>org.eclipse.jetty.ee11</groupId>
-           <artifactId>jetty-ee11-annotations</artifactId>
-         </exclusion>
-         <exclusion>
-           <groupId>org.eclipse.jetty.ee11</groupId>
-           <artifactId>jetty-ee11-apache-jsp</artifactId>
-         </exclusion>
-         <exclusion>
-           <groupId>org.eclipse.jetty.ee11</groupId>
-           <artifactId>jetty-ee11-webapp</artifactId>
-         </exclusion>
-         <exclusion>
-           <groupId>org.eclipse.jetty.ee11</groupId>
-           <artifactId>jetty-ee11-servlet</artifactId>
-         </exclusion>
-       </exclusions>
-     </dependency>
     </dependencies>
 
   <build>
@@ -308,7 +280,7 @@
                   <include>com.google.appengine:sessiondata</include>
                   <include>com.google.appengine:shared-sdk</include>
                   <include>com.google.appengine:shared-sdk-jetty121</include>
-                  <include>com.google.appengine:appengine-local-runtime-jetty121-ee11</include>
+                  <include>com.google.appengine:appengine-local-runtime-jetty121</include>
                   <include>com.google.flogger:google-extensions</include>
                   <include>com.google.flogger:flogger-system-backend</include>
                   <include>com.google.flogger:flogger</include>

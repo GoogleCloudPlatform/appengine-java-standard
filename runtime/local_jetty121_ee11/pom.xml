@@ -27,14 +27,9 @@
   </parent>
 
   <packaging>jar</packaging>
-  <name>AppEngine :: appengine-local-runtime Jetty121 EE11</name>
+  <name>AppEngine :: appengine-local-runtime Jetty 12.1 EE11</name>
   <url>https://github.com/GoogleCloudPlatform/appengine-java-standard/</url>
   <description>App Engine Local devappserver Jetty 12.1 EE11.</description>
-  <properties>
-    <maven.compiler.release>11</maven.compiler.release>
-    <maven.compiler.source>1.11</maven.compiler.source>
-    <maven.compiler.target>1.11</maven.compiler.target>
-  </properties>
 
   <dependencies>
     <dependency>
@@ -101,13 +96,13 @@
     <dependency>
       <groupId>org.mortbay.jasper</groupId>
       <artifactId>apache-jsp</artifactId>
-      <version>10.1.7</version> <!--jarkata Jetty 12 EE11 version! -->
+      <version>10.1.7</version> <!--jakarta Jetty 12.1 EE11 version! -->
 
     </dependency>
     <dependency>
       <groupId>org.eclipse.jetty.ee11</groupId>
       <artifactId>jetty-ee11-apache-jsp</artifactId>
-       <version>${jetty121.version}</version>
+      <version>${jetty121.version}</version>
     </dependency>
     <dependency>
       <groupId>com.google.appengine</groupId>
@@ -165,4 +160,141 @@
       </exclusions>
     </dependency>
   </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-shade-plugin</artifactId>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+            <configuration>
+              <relocations>
+                <relocation>
+                  <pattern>com.google.common</pattern>
+                  <shadedPattern>com.google.appengine.repackaged.com.google.common</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>com.google.io</pattern>
+                  <shadedPattern>com.google.appengine.repackaged.com.google.io</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>com.google.protobuf</pattern>
+                  <shadedPattern>com.google.appengine.repackaged.com.google.protobuf</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>com.google.gaia.mint.proto2api</pattern>
+                  <shadedPattern>com.google.appengine.repackaged.com.google.gaia.mint.proto2api</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>com.esotericsoftware.yamlbeans</pattern>
+                  <shadedPattern>com.google.appengine.repackaged.com.esotericsoftware.yamlbeans</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>com.google.borg.borgcron</pattern>
+                  <shadedPattern>com.google.appengine.repackaged.com.google.cron</shadedPattern>
+                </relocation>
+              </relocations>
+              <filters>
+                <filter>
+                  <artifact>com.google.appengine:appengine-apis-dev:*</artifact>
+                  <includes>
+                    <include>com/google/appengine/tools/development/**</include>
+                  </includes>
+                  <excludes>
+                    <exclude>com/google/appengine/tools/development/testing/**</exclude>
+                  </excludes>
+                </filter>
+                <filter>
+                  <artifact>com.google.appengine:appengine-apis:*</artifact>
+                  <includes>
+                    <include>com/google/apphosting/utils/security/urlfetch/**</include>
+                  </includes>
+                </filter>
+                <filter>
+                  <artifact>com.google.appengine:appengine-utils</artifact>
+                  <includes>
+                    <include>com/google/apphosting/utils/config/**</include>
+                    <include>com/google/apphosting/utils/io/**</include>
+                    <include>com/google/apphosting/utils/security/urlfetch/**</include>
+                    <include>com/google/borg/borgcron/**</include>
+                  </includes>
+                </filter>
+                <filter>
+                  <artifact>com.google.appengine:proto1:*</artifact>
+                  <includes>
+                    <include>com/google/common/flags/*</include>
+                    <include>com/google/common/flags/ext/*</include>
+                    <include>com/google/io/protocol/**</include>
+                    <include>com/google/protobuf/**</include>
+                  </includes>
+                  <excludes>
+                    <exclude>com/google/io/protocol/proto2/*</exclude>
+                  </excludes>
+                </filter>
+                <filter>
+                  <artifact>com.google.appengine:shared-sdk-jetty12:*</artifact>
+                  <includes>
+                    <include>com/google/apphosting/runtime/**</include>
+                    <include>com/google/appengine/tools/development/**</include>
+                  </includes>
+                </filter>
+                <filter>
+                  <artifact>com.google.guava:guava</artifact>
+                  <includes>
+                    <include>com/google/common/base/**</include>
+                    <include>com/google/common/cache/**</include>
+                    <include>com/google/common/collect/**</include>
+                    <include>com/google/common/escape/**</include>
+                    <include>com/google/common/flags/**</include>
+                    <include>com/google/common/flogger/**</include>
+                    <include>com/google/common/graph/**</include>
+                    <include>com/google/common/hash/**</include>
+                    <include>com/google/common/html/**</include>
+                    <include>com/google/common/io/**</include>
+                    <include>com/google/common/math/**</include>
+                    <include>com/google/common/net/HostAndPort.class</include>
+                    <include>com/google/common/net/InetAddresses.class</include>
+                    <include>com/google/common/primitives/**</include>
+                    <include>com/google/common/time/**</include>
+                    <include>com/google/common/util/concurrent/**</include>
+                    <include>com/google/common/xml/**</include>
+                  </includes>
+                </filter>
+                <filter>
+                  <artifact>com.contrastsecurity:yamlbeans</artifact>
+                  <includes>
+                    <!-- Used by apphosting/utils/config/QueueYamlReader -->
+                    <include>com/esotericsoftware/yamlbeans/**</include>
+                  </includes>
+                </filter>
+                <filter>
+                  <artifact>com.google.appengine:sessiondata</artifact>
+                  <includes>
+                    <include>com/**</include>
+                  </includes>
+                </filter>
+              </filters>
+              <artifactSet>
+                <includes>
+                  <include>com.google.appengine:appengine-tools-sdk</include>
+                  <include>com.google.appengine:appengine-utils</include>
+                  <include>com.google.appengine:sessiondata</include>
+                  <include>com.google.appengine:shared-sdk</include>
+                  <include>com.google.appengine:shared-sdk-jetty121</include>
+                  <include>com.google.appengine:appengine-local-runtime-jetty121-ee11</include>
+                  <include>com.google.flogger:google-extensions</include>
+                  <include>com.google.flogger:flogger-system-backend</include>
+                  <include>com.google.flogger:flogger</include>
+                </includes>
+              </artifactSet>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
 </project>
