@@ -17,7 +17,7 @@
 [![Maven][maven-version-image]][maven-version-link]
 [![Code of conduct](https://img.shields.io/badge/%E2%9D%A4-code%20of%20conduct-blue.svg)](https://github.com/GoogleCloudPlatform/appengine-java-standard/blob/main/CODE_OF_CONDUCT.md)
 
-# Google App Engine Standard Environment Source Code for Java 17, Java 21, Java25
+# Google App Engine Standard Environment Source Code for Java 17, Java 21, Java 25.
 
 
 This repository contains the Java Source Code for [Google App Engine
