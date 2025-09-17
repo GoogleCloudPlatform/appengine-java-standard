@@ -31,7 +31,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        java: [17, 21, 25-ea]
+        java: [17, 21, 25]
         jdk: [temurin]
         include:
           - java: 17
