@@ -66,4 +66,4 @@ jobs:
       - name: Build with Maven
         run: |
           ./mvnw clean install -B -q ${{ matrix.maven_profile }}
-          echo "done"
+          echo "done."
