@@ -25,6 +25,6 @@ public class SpringBootTestAppTest extends TestAppBase{
 
     @Override
     protected String relativePathForUserApplicationJar() {
-    return "../testapps/springboot_testapp/target/" + "springboot_testapp-3.0.0-beta-SNAPSHOT.jar";
+    return "../testapps/springboot_testapp/target/" + "springboot_testapp-3.0.0-SNAPSHOT.jar";
     }
 }
