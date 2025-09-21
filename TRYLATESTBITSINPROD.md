@@ -49,7 +49,7 @@ top of your web application and change the entrypoint to boot with these jars in
  ./mvnw clean install
 ```
 
-Let's assume the current build version is `3.0.0-beta-SNAPSHOT`.
+Let's assume the current build version is `3.0.0-SNAPSHOT`.
 
 See the output of the runtime deployment module which contains all the jars needed by the runtime:
 
@@ -70,7 +70,7 @@ Add the dependency for the GAE runtime jars in your application pom.xml file:
 
 ```
  <properties>
-        <appengine.runtime.version>3.0.0-beta-SNAPSHOT</appengine.runtime.version>
+        <appengine.runtime.version>3.0.0-SNAPSHOT</appengine.runtime.version>
         <appengine.runtime.location>target/${project.artifactId}-${project.version}</appengine.runtime.location>
  <properties>
  ...
@@ -148,7 +148,7 @@ In the appengine-web.xml, modify the entrypoint to use the bundled runtime jars 
 ```
 <?xml version="1.0" encoding="utf-8"?>
 <appengine-web-app xmlns="http://appengine.google.com/ns/1.0">
-   <runtime>java17</runtime>
+   <runtime>java21</runtime>
    <app-engine-apis>true</app-engine-apis>
    <system-properties>
         <property name="java.util.logging.config.file" value="WEB-INF/logging.properties"/>

@@ -17,7 +17,7 @@
 [![Maven][maven-version-image]][maven-version-link]
 [![Code of conduct](https://img.shields.io/badge/%E2%9D%A4-code%20of%20conduct-blue.svg)](https://github.com/GoogleCloudPlatform/appengine-java-standard/blob/main/CODE_OF_CONDUCT.md)
 
-# Google App Engine Standard Environment Source Code for Java 17, Java 21, Java25
+# Google App Engine Standard Environment Source Code for Java 17, Java 21, Java 25.
 
 
 This repository contains the Java Source Code for [Google App Engine
@@ -100,7 +100,7 @@ Source code for all public APIs for com.google.appengine.api.* packages.
     ...
     ```
 
-*  Maven Java 25 Alpha with Jarkata EE 11 support pom.xml (EE10 is not supported in Java25, EE11 is fully compatible with EE10)
+*  Maven Java 25 Alpha with Jakarta EE 11 support pom.xml (EE10 is not supported in Java25, EE11 is fully compatible with EE10)
 
     ```
     <packaging>war</packaging><!-- Servlet 6.1 WAR packaging-->
@@ -109,7 +109,7 @@ Source code for all public APIs for com.google.appengine.api.* packages.
         <dependency>
             <groupId>com.google.appengine</groupId>
             <artifactId>appengine-api-1.0-sdk</artifactId>
-            <version>2.0.38</version><!-- or later-->
+            <version>3.0.0-beta</version><!-- or later-->
         </dependency>
         <dependency>
           <groupId>jakarta.servlet</groupId>
@@ -121,7 +121,7 @@ Source code for all public APIs for com.google.appengine.api.* packages.
     ```
 
 
-*  Java 21/25  with javax EE8 profile appengine-web.xml
+*  Java 21/25 with javax EE8 profile appengine-web.xml
 
     ```
     <?xml version="1.0" encoding="utf-8"?>
