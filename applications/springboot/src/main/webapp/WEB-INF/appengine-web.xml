@@ -18,6 +18,7 @@
   <runtime>java17</runtime>
   <system-properties>
     <property name="java.util.logging.config.file" value="WEB-INF/classes/logging.properties"/>
+    <property name="appengine.use.jetty121" value="true"/>
   </system-properties>
   <instance-class>F4</instance-class>
 </appengine-web-app>
