@@ -45,19 +45,19 @@ public final class SpringBootTest extends JavaRuntimeViaHttpBase {
                 "install",
                 "appengine:stage",
                 "-f",
-                new File(currentDirectory, "../../applications/springboot/pom.xml")
+                new File(currentDirectory.getParentFile().getParentFile(), "applications/springboot/pom.xml")
                     .getAbsolutePath())
             .start();
     List<String> results = readOutput(process.getInputStream());
     System.out.println("mvn process output:" + results);
     int exitCode = process.waitFor();
     assertThat(0).isEqualTo(exitCode);
-    appRoot = new File(currentDirectory, "../../applications/springboot/target/appengine-staging");
+    appRoot = new File(currentDirectory.getParentFile().getParentFile(), "applications/springboot/target/appengine-staging");
     assertThat(appRoot.isDirectory()).isTrue();
   }
 
   public SpringBootTest() {
-    super("java17", "12.0", "EE8", false);
+    super("java17", "12.1", "EE11", false);
   }
 
   private RuntimeContext<DummyApiServer> runtimeContext() throws IOException, InterruptedException {
@@ -75,6 +75,7 @@ public final class SpringBootTest extends JavaRuntimeViaHttpBase {
   @Test
   public void testSpringBootCanBoot() throws Exception {
     initialize();
+    Thread.sleep(1000);
     try (RuntimeContext<DummyApiServer> runtime = runtimeContext()) {
       runtime.executeHttpGet("/", "Hello world - springboot-appengine-standard!", 200);
     }
