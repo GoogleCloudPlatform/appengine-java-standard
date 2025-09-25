@@ -57,7 +57,20 @@ public final class FileEncodingSetter {
       defaultCharset.setAccessible(true);
       defaultCharset.set(null, charset);
     } catch (ReflectiveOperationException e) {
-      throw new LinkageError(e.getMessage(), e);
+      if (Runtime.version().feature() >= 26) {
+        logger.atWarning().withCause(e).log(
+            """
+            Could not overwrite default charset using system property named \
+            'appengine.file.encoding', reflective access is blocked in this Java version.\
+            Instead, use a environment variable named 'JAVA_USER_OPTS' to set the file encoding 'file.encoding'property in the JVM command line.\
+            Example in appengine-web.xml:
+               <env-variables>
+                 <env-var name="JAVA_USER_OPTS" value="-Dfile.encoding=UTF-8" />
+               </env-variables>
+            """);
+      } else {
+        throw new LinkageError(e.getMessage(), e);
+      }
     }
   }
 

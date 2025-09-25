@@ -20,6 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static java.nio.charset.StandardCharsets.US_ASCII;
 import static java.nio.charset.StandardCharsets.UTF_16;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.junit.Assume.assumeTrue;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -35,6 +36,7 @@ import org.junit.runners.JUnit4;
 public class FileEncodingSetterTest {
   @Before
   public void setUp() {
+    assumeTrue(Runtime.version().feature() <= 25);
     // Set to an unexpected value, just to ensure overwriting works:
     FileEncodingSetter.overwriteDefaultCharset(UTF_16);
   }

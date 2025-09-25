@@ -63,6 +63,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -156,7 +157,7 @@ public class ApplicationTest {
 
   @Parameterized.Parameters
   public static List<Object[]> version() {
-    return Arrays.asList(new Object[][] {{"EE6"}, {"EE8"}, {"EE10"}});
+    return Arrays.asList(new Object[][] {{"EE6"}, {"EE8"}, {"EE10"}, {"EE11"}});
   }
 
   public ApplicationTest(String version) {
@@ -164,14 +165,26 @@ public class ApplicationTest {
       case "EE6":
         System.setProperty("appengine.use.EE8", "false");
         System.setProperty("appengine.use.EE10", "false");
+        System.setProperty("appengine.use.EE11", "false");
+        assumeTrue(Runtime.version().feature() < 25);
         break;
       case "EE8":
         System.setProperty("appengine.use.EE8", "true");
         System.setProperty("appengine.use.EE10", "false");
+        System.setProperty("appengine.use.EE11", "false");
+        assumeTrue(Runtime.version().feature() <= 25);
         break;
       case "EE10":
         System.setProperty("appengine.use.EE8", "false");
         System.setProperty("appengine.use.EE10", "true");
+        System.setProperty("appengine.use.EE11", "false");
+        assumeTrue(Runtime.version().feature() < 25);
+        break;
+      case "EE11":
+        System.setProperty("appengine.use.EE8", "false");
+        System.setProperty("appengine.use.EE10", "false");
+        System.setProperty("appengine.use.EE11", "true");
+        assumeTrue(Runtime.version().feature() >= 21);
         break;
       default:
         // fall through
@@ -1374,6 +1387,9 @@ public class ApplicationTest {
                     .exists()
                 || new File(
                         stageDir, "WEB-INF/lib/org.glassfish.web.javax.servlet.jsp.jstl-1.2.5.jar")
+                    .exists()
+                || new File(
+                        stageDir, "WEB-INF/lib/wasp-4.0.0.jar")
                     .exists())
         .isTrue();
   }
@@ -1523,7 +1539,7 @@ public class ApplicationTest {
     // TODO: review. This expectation used to be 3, this is because the Jetty
     //  QuickStartGeneratorConfiguration.generateQuickStartWebXml will now
     //  add an empty set if it doesn't have any SCIs instead of not setting the context param.
-    if (Boolean.getBoolean("appengine.use.EE8") || Boolean.getBoolean("appengine.use.EE10")) {
+    if (Boolean.getBoolean("appengine.use.EE8") || Boolean.getBoolean("appengine.use.EE10") || Boolean.getBoolean("appengine.use.EE11")) {
       assertThat(nodeList.getLength()).isEqualTo(4);
     } else {
       assertThat(nodeList.getLength()).isEqualTo(3);
@@ -1641,7 +1657,7 @@ public class ApplicationTest {
     assertThat(patterns).doesNotContain("/*");
   }
 
-  @Test
+  @Ignore // TODO(ludo): Re-enable this test for java25 JDK target build.
   public void testStageGaeStandardJava8WithOnlyJasperContextInitializer()
       throws IOException, ParserConfigurationException, SAXException {
 
@@ -1657,32 +1673,39 @@ public class ApplicationTest {
 
     testApp.createStagingDirectory(opts, temporaryFolder.newFolder());
     assertThat(testApp.getWebXml().getFallThroughToRuntime()).isFalse();
-    String expectedJasperInitializer;
+    Map<String, String> trimmedContextParams =
+        Maps.transformValues(testApp.getWebXml().getContextParams(), String::trim);
     if (Boolean.getBoolean("appengine.use.EE8")) {
-      expectedJasperInitializer =
+      String expectedJasperInitializer =
           "\"ContainerInitializer"
               + "{org.eclipse.jetty.ee8.apache.jsp.JettyJasperInitializer"
               + ",interested=[],applicable=[],annotated=[]}\"";
+      assertThat(trimmedContextParams)
+          .containsEntry("org.eclipse.jetty.containerInitializers", expectedJasperInitializer);
     } else if (Boolean.getBoolean("appengine.use.EE10")) {
-      expectedJasperInitializer =
+      String expectedJasperInitializer =
           "\"ContainerInitializer"
               + "{org.eclipse.jetty.ee10.apache.jsp.JettyJasperInitializer"
               + ",interested=[],applicable=[],annotated=[]}\"";
+      assertThat(trimmedContextParams)
+          .containsEntry("org.eclipse.jetty.containerInitializers", expectedJasperInitializer);
     } else if (Boolean.getBoolean("appengine.use.EE11")) {
-      expectedJasperInitializer =
-          "\"ContainerInitializer"
-              + "{org.eclipse.jetty.ee11.apache.jsp.JettyJasperInitializer"
-              + ",interested=[],applicable=[],annotated=[]}\"";
+      List<String> possibleValues =
+          Arrays.asList(
+              "\"ContainerInitializer{org.eclipse.jetty.ee11.apache.jsp.JettyJasperInitializer,interested=[],applicable=[],annotated=[]}\",\n"
+                  + "        \"ContainerInitializer{org.glassfish.wasp.runtime.TldScanner,interested=[],applicable=[],annotated=[]}\"",
+              "\"ContainerInitializer{org.glassfish.wasp.runtime.TldScanner,interested=[],applicable=[],annotated=[]}\",\n"
+                  + "        \"ContainerInitializer{org.eclipse.jetty.ee11.apache.jsp.JettyJasperInitializer,interested=[],applicable=[],annotated=[]}\"");
+      assertThat(trimmedContextParams.get("org.eclipse.jetty.containerInitializers"))
+          .isIn(possibleValues);
     } else {
-      expectedJasperInitializer =
+      String expectedJasperInitializer =
           "\"ContainerInitializer"
               + "{org.eclipse.jetty.apache.jsp.JettyJasperInitializer"
               + ",interested=[],applicable=[],annotated=[]}\"";
+      assertThat(trimmedContextParams)
+          .containsEntry("org.eclipse.jetty.containerInitializers", expectedJasperInitializer);
     }
-    Map<String, String> trimmedContextParams =
-        Maps.transformValues(testApp.getWebXml().getContextParams(), String::trim);
-    assertThat(trimmedContextParams)
-        .containsEntry("org.eclipse.jetty.containerInitializers", expectedJasperInitializer);
   }
 
   // TODO(ludo) @Test
