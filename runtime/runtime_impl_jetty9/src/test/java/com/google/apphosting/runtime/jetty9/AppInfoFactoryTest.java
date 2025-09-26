@@ -141,7 +141,6 @@ public final class AppInfoFactoryTest {
     assertThat(appInfo.getAppId()).isEqualTo("s~myapp");
     assertThat(appInfo.getVersionId()).isEqualTo("mytestservice:100.mydeployment");
     assertThat(appInfo.getRuntimeId()).isEqualTo("java8");
-    assertThat(appInfo.getApiVersion()).isEqualTo("200");
   }
 
   @Test
@@ -159,7 +158,6 @@ public final class AppInfoFactoryTest {
     assertThat(appInfo.getAppId()).isEqualTo("s~myapp");
     assertThat(appInfo.getVersionId()).isEqualTo("mytestservice:100.mydeployment");
     assertThat(appInfo.getRuntimeId()).isEqualTo("java8");
-    assertThat(appInfo.getApiVersion()).isEqualTo("200");
   }
 
   @Test
@@ -182,7 +180,6 @@ public final class AppInfoFactoryTest {
     assertThat(appInfo.getAppId()).isEqualTo("s~myapp");
     assertThat(appInfo.getVersionId()).isEqualTo("mytestservice:100.mydeployment");
     assertThat(appInfo.getRuntimeId()).isEqualTo("java8");
-    assertThat(appInfo.getApiVersion()).isEmpty();
   }
 
   @Test
@@ -219,7 +216,6 @@ public final class AppInfoFactoryTest {
     assertThat(appInfo.getAppId()).isEqualTo("s~myapp");
     assertThat(appInfo.getVersionId()).isEqualTo("mytestservice:100.mydeployment");
     assertThat(appInfo.getRuntimeId()).isEqualTo("java8");
-    assertThat(appInfo.getApiVersion()).isEqualTo("200");
   }
 
   @Test
@@ -233,11 +229,10 @@ public final class AppInfoFactoryTest {
                 "GAE_APPLICATION", "s~myapp",
                 "GOOGLE_CLOUD_PROJECT", "mytestproject"));
 
-    AppinfoPb.AppInfo appInfo = factory.getAppInfoWithApiVersion("my_api_version");
+    AppinfoPb.AppInfo appInfo = factory.getAppInfo();
 
     assertThat(appInfo.getAppId()).isEqualTo("s~myapp");
     assertThat(appInfo.getVersionId()).isEqualTo("mytestservice:100.mydeployment");
     assertThat(appInfo.getRuntimeId()).isEqualTo("java8");
-    assertThat(appInfo.getApiVersion()).isEqualTo("my_api_version");
   }
 }

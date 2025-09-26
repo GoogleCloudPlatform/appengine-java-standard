@@ -50,7 +50,6 @@ public class YamlXmlIntegrationTest extends TestCase {
           + "runtime: java7\n"
           + "version: 'ver1'\n"
           + "auto_id_policy: default\n"
-          + "api_version: '1.0'\n"
           + "handlers:\n";
 
   private AppEngineWebXml appEngineWebXml;
@@ -208,7 +207,7 @@ public class YamlXmlIntegrationTest extends TestCase {
 
   private AppYamlTranslator createTranslator(WebXml webXml) {
     return new AppYamlTranslator(
-        appEngineWebXml, webXml, backendsXml, "1.0", staticFiles, apiConfig, "java7");
+        appEngineWebXml, webXml, backendsXml, staticFiles, apiConfig, "java7");
   }
 
   private WebXml getWebXml(AppYaml yaml) {

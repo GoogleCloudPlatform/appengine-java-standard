@@ -82,7 +82,6 @@ public class AppEngineWebXml implements Cloneable {
   private static final String JAVA_8_RUNTIME_ID = "java8";
   // This was used for Java6, but now is used only for Managed VMs, not for standard editiom.
   private static final String JAVA_RUNTIME_ID = "java";
-  private static final String JAVA_11_RUNTIME_ID = "java11";
 
   private String entrypoint;
 
@@ -333,13 +332,6 @@ public class AppEngineWebXml implements Cloneable {
    */
   public boolean isWebXmlRequired() {
     return false;
-  }
-
-  /*
-   * Test if the runtime is at least Java11.
-   */
-  public boolean isJava11OrAbove() {
-    return !getRuntime().equals("java8");
   }
 
   public void setRuntime(String runtime) {

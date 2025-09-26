@@ -24,7 +24,6 @@ import com.google.apphosting.utils.config.AppEngineWebXml.AdminConsolePage;
 import com.google.apphosting.utils.config.AppEngineWebXml.ApiConfig;
 import com.google.apphosting.utils.config.AppEngineWebXml.AutomaticScaling;
 import com.google.apphosting.utils.config.AppEngineWebXml.CpuUtilization;
-import com.google.apphosting.utils.config.AppEngineWebXml.CustomMetricUtilization;
 import com.google.apphosting.utils.config.AppEngineWebXml.ErrorHandler;
 import com.google.apphosting.utils.config.AppEngineWebXml.HealthCheck;
 import com.google.apphosting.utils.config.AppEngineWebXml.VpcAccessConnector;
@@ -32,10 +31,8 @@ import com.google.apphosting.utils.config.BackendsXml;
 import com.google.apphosting.utils.config.StagingOptions;
 import com.google.apphosting.utils.config.WebXml;
 import com.google.apphosting.utils.config.WebXml.SecurityConstraint;
-import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -86,7 +83,6 @@ public class AppYamlTranslatorTest extends TestCase {
             + "runtime: java\n"
             + "version: 'ver1'\n"
             + "auto_id_policy: default\n"
-            + "api_version: '1.0'\n"
             + "handlers:\n"
             + "- url: /\n"
             + "  script: unused\n"
@@ -232,7 +228,6 @@ public class AppYamlTranslatorTest extends TestCase {
             + "runtime: java8\n"
             + "version: 'ver1'\n"
             + "auto_id_policy: default\n"
-            + "api_version: '1.0'\n"
             + "handlers:\n"
             + "- url: /\n"
             + "  script: unused\n"
@@ -256,7 +251,6 @@ public class AppYamlTranslatorTest extends TestCase {
         "application: 'app1'\n"
             + "runtime: java8\n"
             + "auto_id_policy: default\n"
-            + "api_version: '1.0'\n"
             + "handlers:\n"
             + "- url: /\n"
             + "  script: unused\n"
@@ -293,7 +287,6 @@ public class AppYamlTranslatorTest extends TestCase {
             + "  max_num_instances: 2\n"
             + "  target_network_sent_bytes_per_sec: 16777216\n"
             + "auto_id_policy: default\n"
-            + "api_version: '1.0'\n"
             + "handlers:\n"
             + "- url: /\n"
             + "  script: unused\n"
@@ -369,7 +362,6 @@ public class AppYamlTranslatorTest extends TestCase {
             + "  target_request_count_per_sec: 80\n"
             + "  target_concurrent_requests: 12\n"
             + "auto_id_policy: default\n"
-            + "api_version: '1.0'\n"
             + "handlers:\n"
             + "- url: /\n"
             + "  script: unused\n"
@@ -408,7 +400,6 @@ public class AppYamlTranslatorTest extends TestCase {
             + "  target_cpu_utilization: 3.12\n"
             + "  target_throughput_utilization: 43.12\n"
             + "auto_id_policy: default\n"
-            + "api_version: '1.0'\n"
             + "handlers:\n"
             + "- url: /\n"
             + "  script: unused\n"
@@ -439,7 +430,6 @@ public class AppYamlTranslatorTest extends TestCase {
             + "manual_scaling:\n"
             + "  instances: 15\n"
             + "auto_id_policy: default\n"
-            + "api_version: '1.0'\n"
             + "handlers:\n"
             + "- url: /\n"
             + "  script: unused\n"
@@ -472,7 +462,6 @@ public class AppYamlTranslatorTest extends TestCase {
             + "  max_instances: 13\n"
             + "  idle_timeout: 15m\n"
             + "auto_id_policy: default\n"
-            + "api_version: '1.0'\n"
             + "handlers:\n"
             + "- url: /\n"
             + "  script: unused\n"
@@ -498,7 +487,6 @@ public class AppYamlTranslatorTest extends TestCase {
             + "runtime: java8\n"
             + "version: 'ver1'\n"
             + "auto_id_policy: default\n"
-            + "api_version: '1.0'\n"
             + "handlers:\n"
             + "- url: (/.*)\n"
             + "  static_files: __static__\\1\n"
@@ -531,7 +519,6 @@ public class AppYamlTranslatorTest extends TestCase {
             + "runtime: java8\n"
             + "version: 'ver1'\n"
             + "auto_id_policy: default\n"
-            + "api_version: '1.0'\n"
             + "handlers:\n"
             + "- url: (/.*)\n"
             + "  static_files: __static__/public\\1\n"
@@ -564,7 +551,6 @@ public class AppYamlTranslatorTest extends TestCase {
             + "runtime: java8\n"
             + "version: 'ver1'\n"
             + "auto_id_policy: default\n"
-            + "api_version: '1.0'\n"
             + "handlers:\n"
             + "- url: (/.*/)\n"
             + "  static_files: __static__\\1index.html\n"
@@ -621,7 +607,6 @@ public class AppYamlTranslatorTest extends TestCase {
             + "runtime: java8\n"
             + "version: 'ver1'\n"
             + "auto_id_policy: default\n"
-            + "api_version: '1.0'\n"
             + "handlers:\n"
             + "- url: (/.*/)\n"
             + "  static_files: __static__/public\\1index.html\n"
@@ -657,13 +642,12 @@ public class AppYamlTranslatorTest extends TestCase {
   }
 
   public void testNoApiVersion() {
-    AppYamlTranslator translator = createTranslator(null, "java8");
+    AppYamlTranslator translator = createTranslator("java8");
     String yaml =
         "application: 'app1'\n"
             + "runtime: java8\n"
             + "version: 'ver1'\n"
             + "auto_id_policy: default\n"
-            + "api_version: 'none'\n"
             + "handlers:\n"
             + "- url: /\n"
             + "  script: unused\n"
@@ -690,7 +674,6 @@ public class AppYamlTranslatorTest extends TestCase {
             + "runtime: java8\n"
             + "version: 'ver1'\n"
             + "auto_id_policy: default\n"
-            + "api_version: '1.0'\n"
             + "handlers:\n"
             + "- url: /\n"
             + "  script: unused\n"
@@ -730,7 +713,6 @@ public class AppYamlTranslatorTest extends TestCase {
             + "runtime: java8\n"
             + "version: 'ver1'\n"
             + "auto_id_policy: default\n"
-            + "api_version: '1.0'\n"
             + "handlers:\n"
             + "- url: /\n"
             + "  script: unused\n"
@@ -765,7 +747,6 @@ public class AppYamlTranslatorTest extends TestCase {
             + "runtime: java8\n"
             + "version: 'ver1'\n"
             + "auto_id_policy: default\n"
-            + "api_version: '1.0'\n"
             + "handlers:\n"
             + "- url: /.*\n"
             + "  script: unused\n"
@@ -788,7 +769,6 @@ public class AppYamlTranslatorTest extends TestCase {
             + "runtime: java8\n"
             + "version: 'ver1'\n"
             + "auto_id_policy: default\n"
-            + "api_version: '1.0'\n"
             + "handlers:\n"
             + "- url: (/.*)\n"
             + "  static_files: __static__\\1\n"
@@ -852,7 +832,6 @@ public class AppYamlTranslatorTest extends TestCase {
             + "runtime: java8\n"
             + "version: 'ver1'\n"
             + "auto_id_policy: default\n"
-            + "api_version: '1.0'\n"
             + "handlers:\n"
             + "- url: (/admin/.*/)\n"
             + "  static_files: __static__\\1index.html\n"
@@ -972,7 +951,6 @@ public class AppYamlTranslatorTest extends TestCase {
             + "runtime: java8\n"
             + "version: 'ver1'\n"
             + "auto_id_policy: default\n"
-            + "api_version: '1.0'\n"
             + "handlers:\n"
             + "- url: (/noauth/.*/)\n"
             + "  static_files: __static__\\1index.html\n"
@@ -1076,7 +1054,6 @@ public class AppYamlTranslatorTest extends TestCase {
             + "- mail\n"
             + "- xmpp_message\n"
             + "auto_id_policy: default\n"
-            + "api_version: '1.0'\n"
             + "handlers:\n"
             + "- url: /\n"
             + "  script: unused\n"
@@ -1100,8 +1077,8 @@ public class AppYamlTranslatorTest extends TestCase {
     staticFiles.add("__static__/foo/F00002.cache.png");
     staticFiles.add("__static__/foo/F00003.cache.html");
 
-    appEngineWebXml.includeStaticPattern("**.cache.**", "7d");
-    appEngineWebXml.includeStaticPattern("**", null);
+    var unused = appEngineWebXml.includeStaticPattern("**.cache.**", "7d");
+    var unused2 = appEngineWebXml.includeStaticPattern("**", null);
 
     AppYamlTranslator translator = createTranslator();
     String yaml =
@@ -1109,7 +1086,6 @@ public class AppYamlTranslatorTest extends TestCase {
             + "runtime: java8\n"
             + "version: 'ver1'\n"
             + "auto_id_policy: default\n"
-            + "api_version: '1.0'\n"
             + "handlers:\n"
             + "- url: (/.*\\.cache\\..*)\n"
             + "  static_files: __static__\\1\n"
@@ -1159,7 +1135,6 @@ public class AppYamlTranslatorTest extends TestCase {
             + "runtime: java8\n"
             + "version: 'ver1'\n"
             + "auto_id_policy: default\n"
-            + "api_version: '1.0'\n"
             + "handlers:\n"
             + "- url: /admin/.*/\n"
             + "  script: unused\n"
@@ -1208,7 +1183,6 @@ public class AppYamlTranslatorTest extends TestCase {
             + "runtime: java8\n"
             + "version: 'ver1'\n"
             + "auto_id_policy: default\n"
-            + "api_version: '1.0'\n"
             + "handlers:\n"
             + "- url: /admin/.*/\n"
             + "  script: unused\n"
@@ -1257,7 +1231,6 @@ public class AppYamlTranslatorTest extends TestCase {
             + "runtime: java8\n"
             + "version: 'ver1'\n"
             + "auto_id_policy: default\n"
-            + "api_version: '1.0'\n"
             + "handlers:\n"
             + "- url: /secure/.*/\n"
             + "  script: unused\n"
@@ -1301,7 +1274,6 @@ public class AppYamlTranslatorTest extends TestCase {
             + "runtime: java8\n"
             + "version: 'ver1'\n"
             + "auto_id_policy: default\n"
-            + "api_version: '1.0'\n"
             + "handlers:\n"
             + "- url: /\n"
             + "  script: unused\n"
@@ -1338,10 +1310,7 @@ public class AppYamlTranslatorTest extends TestCase {
         "application: 'app1'\n"
             + "runtime: java8\n"
             + "version: 'ver1'\n"
-            + "derived_file_type:\n"
-            + "- java_precompiled\n"
             + "auto_id_policy: default\n"
-            + "api_version: '1.0'\n"
             + "handlers:\n"
             + "- url: /\n"
             + "  script: unused\n"
@@ -1352,38 +1321,6 @@ public class AppYamlTranslatorTest extends TestCase {
             + "  login: optional\n"
             + "  secure: optional\n"
             + "- url: /_ah/.*\n"
-            + "  script: unused\n"
-            + "  login: optional\n"
-            + "  secure: optional\n";
-    assertEquals(yaml, translator.getYaml());
-  }
-
-  public void testPrecompilationEnabledVmEnvironment() {
-    appEngineWebXml.setPrecompilationEnabled(true);
-    appEngineWebXml.setUseVm(true);
-
-    AppYamlTranslator translator = createTranslator();
-    String yaml =
-        "application: 'app1'\n"
-            + "runtime: java8\n"
-            + "vm: True\n"
-            + "version: 'ver1'\n"
-            + "auto_id_policy: default\n"
-            + "api_version: '1.0'\n"
-            + "handlers:\n"
-            + "- url: /\n"
-            + "  script: unused\n"
-            + "  login: optional\n"
-            + "  secure: optional\n"
-            + "- url: /.*/\n"
-            + "  script: unused\n"
-            + "  login: optional\n"
-            + "  secure: optional\n"
-            + "- url: /_ah/.*\n"
-            + "  script: unused\n"
-            + "  login: optional\n"
-            + "  secure: optional\n"
-            + "- url: .*\\.jsp\n"
             + "  script: unused\n"
             + "  login: optional\n"
             + "  secure: optional\n";
@@ -1398,9 +1335,7 @@ public class AppYamlTranslatorTest extends TestCase {
         "application: 'app1'\n"
             + "runtime: java8\n"
             + "version: 'ver1'\n"
-            + "threadsafe: True\n"
             + "auto_id_policy: default\n"
-            + "api_version: '1.0'\n"
             + "handlers:\n"
             + "- url: /\n"
             + "  script: unused\n"
@@ -1428,33 +1363,6 @@ public class AppYamlTranslatorTest extends TestCase {
             + "version: 'ver1'\n"
             + "app_engine_apis: True\n"
             + "auto_id_policy: default\n"
-            + "handlers:\n"
-            + "- url: /\n"
-            + "  script: unused\n"
-            + "  login: optional\n"
-            + "  secure: optional\n"
-            + "- url: /.*/\n"
-            + "  script: unused\n"
-            + "  login: optional\n"
-            + "  secure: optional\n"
-            + "- url: /_ah/.*\n"
-            + "  script: unused\n"
-            + "  login: optional\n"
-            + "  secure: optional\n";
-    assertEquals(yaml, translator.getYaml());
-  }
-
-  public void testLegacyAPisOnJava8() {
-    appEngineWebXml.setAppEngineApis(true);
-    appEngineWebXml.setRuntime("java8");
-
-    AppYamlTranslator translator = createTranslator();
-    String yaml =
-        "application: 'app1'\n"
-            + "runtime: java8\n"
-            + "version: 'ver1'\n"
-            + "auto_id_policy: default\n"
-            + "api_version: '1.0'\n"
             + "handlers:\n"
             + "- url: /\n"
             + "  script: unused\n"
@@ -1506,7 +1414,6 @@ public class AppYamlTranslatorTest extends TestCase {
             + "runtime: java8\n"
             + "version: 'ver1'\n"
             + "auto_id_policy: legacy\n"
-            + "api_version: '1.0'\n"
             + "handlers:\n"
             + "- url: /\n"
             + "  script: unused\n"
@@ -1586,7 +1493,6 @@ public class AppYamlTranslatorTest extends TestCase {
             + "runtime: java8\n"
             + "version: 'ver1'\n"
             + "auto_id_policy: default\n"
-            + "api_version: '1.0'\n"
             + "handlers:\n"
             + "- url: /\n"
             + "  script: unused\n"
@@ -1612,7 +1518,6 @@ public class AppYamlTranslatorTest extends TestCase {
             + "runtime: java8\n"
             + "version: 'ver1'\n"
             + "auto_id_policy: default\n"
-            + "api_version: '1.0'\n"
             + "handlers:\n"
             + "- url: /\n"
             + "  script: unused\n"
@@ -1639,7 +1544,6 @@ public class AppYamlTranslatorTest extends TestCase {
             + "version: 'ver1'\n"
             + "auto_id_policy: default\n"
             + "code_lock: True\n"
-            + "api_version: '1.0'\n"
             + "handlers:\n"
             + "- url: /\n"
             + "  script: unused\n"
@@ -1665,7 +1569,6 @@ public class AppYamlTranslatorTest extends TestCase {
             + "runtime: java8\n"
             + "version: 'ver1'\n"
             + "auto_id_policy: default\n"
-            + "api_version: '1.0'\n"
             + "handlers:\n"
             + "- url: /\n"
             + "  script: unused\n"
@@ -1676,90 +1579,6 @@ public class AppYamlTranslatorTest extends TestCase {
             + "  login: optional\n"
             + "  secure: optional\n"
             + "- url: /_ah/.*\n"
-            + "  script: unused\n"
-            + "  login: optional\n"
-            + "  secure: optional\n";
-    assertEquals(yaml, translator.getYaml());
-  }
-
-  public void testBetaSettings() {
-    appEngineWebXml.setUseVm(true);
-    appEngineWebXml.addBetaSetting("machine_type", "n1-standard-1");
-    appEngineWebXml.addBetaSetting("region", "region-foo");
-    appEngineWebXml.addBetaSetting("zone", "zone-foo");
-    appEngineWebXml.addBetaSetting("image", "canary");
-    appEngineWebXml.addBetaSetting("use_deployment_manager", "true");
-    appEngineWebXml.addBetaSetting("no_appserver_affinity", "true");
-    appEngineWebXml.addBetaSetting("health_check_enabled", "on");
-    appEngineWebXml.addBetaSetting("health_check_restart_timeout", "600");
-    appEngineWebXml.addBetaSetting(
-        "root_setup_command", "/bin/bash {app_name}/setup.sh 'arg 1' arg");
-    AppYamlTranslator translator = createTranslator();
-    String yaml =
-        "application: 'app1'\n"
-            + "runtime: java8\n"
-            + "vm: True\n"
-            + "version: 'ver1'\n"
-            + "auto_id_policy: default\n"
-            + "beta_settings:\n"
-            + "  'machine_type': 'n1-standard-1'\n"
-            + "  'region': 'region-foo'\n"
-            + "  'zone': 'zone-foo'\n"
-            + "  'image': 'canary'\n"
-            + "  'use_deployment_manager': 'true'\n"
-            + "  'no_appserver_affinity': 'true'\n"
-            + "  'health_check_enabled': 'on'\n"
-            + "  'health_check_restart_timeout': '600'\n"
-            + "  'root_setup_command': '/bin/bash {app_name}/setup.sh ''arg 1'' arg'\n"
-            + "api_version: '1.0'\n"
-            + "handlers:\n"
-            + "- url: /\n"
-            + "  script: unused\n"
-            + "  login: optional\n"
-            + "  secure: optional\n"
-            + "- url: /.*/\n"
-            + "  script: unused\n"
-            + "  login: optional\n"
-            + "  secure: optional\n"
-            + "- url: /_ah/.*\n"
-            + "  script: unused\n"
-            + "  login: optional\n"
-            + "  secure: optional\n"
-            + "- url: .*\\.jsp\n"
-            + "  script: unused\n"
-            + "  login: optional\n"
-            + "  secure: optional\n";
-    assertEquals(yaml, translator.getYaml());
-  }
-
-  public void testBetaSettingsExistingImage() {
-    appEngineWebXml.setUseVm(true);
-    appEngineWebXml.addBetaSetting("image", "4.3.2");
-
-    AppYamlTranslator translator = createTranslator();
-    String yaml =
-        "application: 'app1'\n"
-            + "runtime: java8\n"
-            + "vm: True\n"
-            + "version: 'ver1'\n"
-            + "auto_id_policy: default\n"
-            + "beta_settings:\n"
-            + "  'image': '4.3.2'\n"
-            + "api_version: '1.0'\n"
-            + "handlers:\n"
-            + "- url: /\n"
-            + "  script: unused\n"
-            + "  login: optional\n"
-            + "  secure: optional\n"
-            + "- url: /.*/\n"
-            + "  script: unused\n"
-            + "  login: optional\n"
-            + "  secure: optional\n"
-            + "- url: /_ah/.*\n"
-            + "  script: unused\n"
-            + "  login: optional\n"
-            + "  secure: optional\n"
-            + "- url: .*\\.jsp\n"
             + "  script: unused\n"
             + "  login: optional\n"
             + "  secure: optional\n";
@@ -1785,7 +1604,6 @@ public class AppYamlTranslatorTest extends TestCase {
             + "  'snapshot_reusable': 'true'\n"
             + "  'snapshot_trigger': 'true'\n"
             + "  'endpoints_swagger_spec_file': 'swagger.yaml'\n"
-            + "api_version: '1.0'\n"
             + "handlers:\n"
             + "- url: /\n"
             + "  script: unused\n"
@@ -1820,7 +1638,6 @@ public class AppYamlTranslatorTest extends TestCase {
             + "runtime: java8\n"
             + "version: 'ver1'\n"
             + "auto_id_policy: default\n"
-            + "api_version: '1.0'\n"
             + "handlers:\n"
             + "- url: /\n"
             + "  script: unused\n"
@@ -1835,152 +1652,6 @@ public class AppYamlTranslatorTest extends TestCase {
             + "  login: optional\n"
             + "  secure: optional\n";
 
-    assertEquals(yaml, translator.getYaml());
-  }
-
-  public void testHealthCheck_vmEnabled_healthCheckNotSet() {
-    HealthCheck healthCheck = new HealthCheck();
-    healthCheck.setCheckIntervalSec(5);
-    healthCheck.setTimeoutSec(6);
-    healthCheck.setUnhealthyThreshold(7);
-    healthCheck.setHealthyThreshold(8);
-    healthCheck.setRestartThreshold(9);
-    healthCheck.setHost("test.com");
-
-    appEngineWebXml.setHealthCheck(healthCheck);
-    appEngineWebXml.setUseVm(true);
-
-    AppYamlTranslator translator = createTranslator();
-    String yaml =
-        "application: 'app1'\n"
-            + "runtime: java8\n"
-            + "vm: True\n"
-            + "version: 'ver1'\n"
-            + "auto_id_policy: default\n"
-            + "health_check:\n"
-            + "  enable_health_check: True\n"
-            + "  check_interval_sec: 5\n"
-            + "  timeout_sec: 6\n"
-            + "  unhealthy_threshold: 7\n"
-            + "  healthy_threshold: 8\n"
-            + "  restart_threshold: 9\n"
-            + "  host: test.com\n"
-            + "api_version: '1.0'\n"
-            + "handlers:\n"
-            + "- url: /\n"
-            + "  script: unused\n"
-            + "  login: optional\n"
-            + "  secure: optional\n"
-            + "- url: /.*/\n"
-            + "  script: unused\n"
-            + "  login: optional\n"
-            + "  secure: optional\n"
-            + "- url: /_ah/.*\n"
-            + "  script: unused\n"
-            + "  login: optional\n"
-            + "  secure: optional\n"
-            + "- url: .*\\.jsp\n"
-            + "  script: unused\n"
-            + "  login: optional\n"
-            + "  secure: optional\n";
-    assertEquals(yaml, translator.getYaml());
-  }
-
-  public void testHealthCheck_vmEnabled_healthCheckSetTrue() {
-    HealthCheck healthCheck = new HealthCheck();
-    healthCheck.setEnableHealthCheck(true);
-    healthCheck.setCheckIntervalSec(5);
-    healthCheck.setTimeoutSec(6);
-    healthCheck.setUnhealthyThreshold(7);
-    healthCheck.setHealthyThreshold(8);
-    healthCheck.setRestartThreshold(9);
-    healthCheck.setHost("test.com");
-
-    appEngineWebXml.setHealthCheck(healthCheck);
-    appEngineWebXml.setUseVm(true);
-
-    AppYamlTranslator translator = createTranslator();
-    String yaml =
-        "application: 'app1'\n"
-            + "runtime: java8\n"
-            + "vm: True\n"
-            + "version: 'ver1'\n"
-            + "auto_id_policy: default\n"
-            + "health_check:\n"
-            + "  enable_health_check: True\n"
-            + "  check_interval_sec: 5\n"
-            + "  timeout_sec: 6\n"
-            + "  unhealthy_threshold: 7\n"
-            + "  healthy_threshold: 8\n"
-            + "  restart_threshold: 9\n"
-            + "  host: test.com\n"
-            + "api_version: '1.0'\n"
-            + "handlers:\n"
-            + "- url: /\n"
-            + "  script: unused\n"
-            + "  login: optional\n"
-            + "  secure: optional\n"
-            + "- url: /.*/\n"
-            + "  script: unused\n"
-            + "  login: optional\n"
-            + "  secure: optional\n"
-            + "- url: /_ah/.*\n"
-            + "  script: unused\n"
-            + "  login: optional\n"
-            + "  secure: optional\n"
-            + "- url: .*\\.jsp\n"
-            + "  script: unused\n"
-            + "  login: optional\n"
-            + "  secure: optional\n";
-    assertEquals(yaml, translator.getYaml());
-  }
-
-  public void testHealthCheck_vmEnabled_healthCheckSetFalse() {
-    HealthCheck healthCheck = new HealthCheck();
-    healthCheck.setEnableHealthCheck(false);
-    healthCheck.setCheckIntervalSec(5);
-    healthCheck.setTimeoutSec(6);
-    healthCheck.setUnhealthyThreshold(7);
-    healthCheck.setHealthyThreshold(8);
-    healthCheck.setRestartThreshold(9);
-    healthCheck.setHost("test.com");
-    appEngineWebXml.setHealthCheck(healthCheck);
-
-    appEngineWebXml.setUseVm(true);
-
-    AppYamlTranslator translator = createTranslator();
-    String yaml =
-        "application: 'app1'\n"
-            + "runtime: java8\n"
-            + "vm: True\n"
-            + "version: 'ver1'\n"
-            + "auto_id_policy: default\n"
-            + "health_check:\n"
-            + "  enable_health_check: False\n"
-            + "  check_interval_sec: 5\n"
-            + "  timeout_sec: 6\n"
-            + "  unhealthy_threshold: 7\n"
-            + "  healthy_threshold: 8\n"
-            + "  restart_threshold: 9\n"
-            + "  host: test.com\n"
-            + "api_version: '1.0'\n"
-            + "handlers:\n"
-            + "- url: /\n"
-            + "  script: unused\n"
-            + "  login: optional\n"
-            + "  secure: optional\n"
-            + "- url: /.*/\n"
-            + "  script: unused\n"
-            + "  login: optional\n"
-            + "  secure: optional\n"
-            + "- url: /_ah/.*\n"
-            + "  script: unused\n"
-            + "  login: optional\n"
-            + "  secure: optional\n"
-            + "- url: .*\\.jsp\n"
-            + "  script: unused\n"
-            + "  login: optional\n"
-            + "  secure: optional\n";
     assertEquals(yaml, translator.getYaml());
   }
 
@@ -1992,7 +1663,6 @@ public class AppYamlTranslatorTest extends TestCase {
             + "runtime: java8\n"
             + "version: 'ver1'\n"
             + "auto_id_policy: default\n"
-            + "api_version: '1.0'\n"
             + "handlers:\n"
             + "- url: /\n"
             + "  script: unused\n"
@@ -2003,40 +1673,6 @@ public class AppYamlTranslatorTest extends TestCase {
             + "  login: optional\n"
             + "  secure: optional\n"
             + "- url: /_ah/.*\n"
-            + "  script: unused\n"
-            + "  login: optional\n"
-            + "  secure: optional\n";
-
-    assertEquals(yaml, translator.getYaml());
-  }
-
-  public void testResourcesCpu() {
-    appEngineWebXml.getResources().setCpu(3.7);
-    appEngineWebXml.setUseVm(true);
-    AppYamlTranslator translator = createTranslator();
-    String yaml =
-        "application: 'app1'\n"
-            + "runtime: java8\n"
-            + "vm: True\n"
-            + "version: 'ver1'\n"
-            + "auto_id_policy: default\n"
-            + "resources:\n"
-            + "  cpu: 3.7\n"
-            + "api_version: '1.0'\n"
-            + "handlers:\n"
-            + "- url: /\n"
-            + "  script: unused\n"
-            + "  login: optional\n"
-            + "  secure: optional\n"
-            + "- url: /.*/\n"
-            + "  script: unused\n"
-            + "  login: optional\n"
-            + "  secure: optional\n"
-            + "- url: /_ah/.*\n"
-            + "  script: unused\n"
-            + "  login: optional\n"
-            + "  secure: optional\n"
-            + "- url: .*\\.jsp\n"
             + "  script: unused\n"
             + "  login: optional\n"
             + "  secure: optional\n";
@@ -2052,7 +1688,6 @@ public class AppYamlTranslatorTest extends TestCase {
             + "runtime: java8\n"
             + "version: 'ver1'\n"
             + "auto_id_policy: default\n"
-            + "api_version: '1.0'\n"
             + "handlers:\n"
             + "- url: /\n"
             + "  script: unused\n"
@@ -2063,51 +1698,6 @@ public class AppYamlTranslatorTest extends TestCase {
             + "  login: optional\n"
             + "  secure: optional\n"
             + "- url: /_ah/.*\n"
-            + "  script: unused\n"
-            + "  login: optional\n"
-            + "  secure: optional\n";
-
-    assertEquals(yaml, translator.getYaml());
-  }
-
-  public void testNetworkFull() {
-    appEngineWebXml.setUseVm(true);
-    appEngineWebXml.getNetwork().setInstanceTag("mytag");
-    appEngineWebXml.getNetwork().addForwardedPort("myport");
-    appEngineWebXml.getNetwork().addForwardedPort("myport2:myport3");
-    appEngineWebXml.getNetwork().setName("mynetwork");
-    appEngineWebXml.getNetwork().setSubnetworkName("mysubnetwork");
-    appEngineWebXml.getNetwork().setSessionAffinity(true);
-    AppYamlTranslator translator = createTranslator();
-    String yaml =
-        "application: 'app1'\n"
-            + "runtime: java8\n"
-            + "vm: True\n"
-            + "version: 'ver1'\n"
-            + "auto_id_policy: default\n"
-            + "network:\n"
-            + "  instance_tag: mytag\n"
-            + "  forwarded_ports:\n"
-            + "  - myport\n"
-            + "  - myport2:myport3\n"
-            + "  name: mynetwork\n"
-            + "  subnetwork_name: mysubnetwork\n"
-            + "  session_affinity: True\n"
-            + "api_version: '1.0'\n"
-            + "handlers:\n"
-            + "- url: /\n"
-            + "  script: unused\n"
-            + "  login: optional\n"
-            + "  secure: optional\n"
-            + "- url: /.*/\n"
-            + "  script: unused\n"
-            + "  login: optional\n"
-            + "  secure: optional\n"
-            + "- url: /_ah/.*\n"
-            + "  script: unused\n"
-            + "  login: optional\n"
-            + "  secure: optional\n"
-            + "- url: .*\\.jsp\n"
             + "  script: unused\n"
             + "  login: optional\n"
             + "  secure: optional\n";
@@ -2129,7 +1719,6 @@ public class AppYamlTranslatorTest extends TestCase {
             + "runtime: java8\n"
             + "version: 'ver1'\n"
             + "auto_id_policy: default\n"
-            + "api_version: '1.0'\n"
             + "handlers:\n"
             + "- url: /\n"
             + "  script: unused\n"
@@ -2144,40 +1733,6 @@ public class AppYamlTranslatorTest extends TestCase {
             + "  login: optional\n"
             + "  secure: optional\n";
 
-    assertEquals(yaml, translator.getYaml());
-  }
-
-  public void testVmEnvVariables() {
-    appEngineWebXml.setUseVm(true);
-    appEngineWebXml.addEnvironmentVariable("DEFAULT_ENCODING", "UTF-8");
-
-    AppYamlTranslator translator = createTranslator();
-    String yaml =
-        "application: 'app1'\n"
-            + "runtime: java8\n"
-            + "vm: True\n"
-            + "version: 'ver1'\n"
-            + "auto_id_policy: default\n"
-            + "env_variables:\n"
-            + "  'DEFAULT_ENCODING': 'UTF-8'\n"
-            + "api_version: '1.0'\n"
-            + "handlers:\n"
-            + "- url: /\n"
-            + "  script: unused\n"
-            + "  login: optional\n"
-            + "  secure: optional\n"
-            + "- url: /.*/\n"
-            + "  script: unused\n"
-            + "  login: optional\n"
-            + "  secure: optional\n"
-            + "- url: /_ah/.*\n"
-            + "  script: unused\n"
-            + "  login: optional\n"
-            + "  secure: optional\n"
-            + "- url: .*\\.jsp\n"
-            + "  script: unused\n"
-            + "  login: optional\n"
-            + "  secure: optional\n";
     assertEquals(yaml, translator.getYaml());
   }
 
@@ -2214,7 +1769,6 @@ public class AppYamlTranslatorTest extends TestCase {
             + "version: 'ver1'\n"
             + "auto_id_policy: default\n"
             + "service_account: foobar\n"
-            + "api_version: '1.0'\n"
             + "handlers:\n"
             + "- url: /\n"
             + "  script: unused\n"
@@ -2242,7 +1796,6 @@ public class AppYamlTranslatorTest extends TestCase {
             + "auto_id_policy: default\n"
             + "vpc_access_connector:\n"
             + "  name: barf\n"
-            + "api_version: '1.0'\n"
             + "handlers:\n"
             + "- url: /\n"
             + "  script: unused\n"
@@ -2286,7 +1839,6 @@ public class AppYamlTranslatorTest extends TestCase {
             + "    url: /bar\n"
             + "  - name: baz\n"
             + "    url: /bax\n"
-            + "api_version: '1.0'\n"
             + "handlers:\n"
             + "- url: /\n"
             + "  script: unused\n"
@@ -2319,7 +1871,6 @@ public class AppYamlTranslatorTest extends TestCase {
             + "- file: __static__/ohno.html\n"
             + "- file: __static__/timeout.html\n"
             + "  error_code: timeout\n"
-            + "api_version: '1.0'\n"
             + "handlers:\n"
             + "- url: (/.*)\n"
             + "  static_files: __static__\\1\n"
@@ -2369,7 +1920,6 @@ public class AppYamlTranslatorTest extends TestCase {
             + "runtime: java8\n"
             + "version: 'ver1'\n"
             + "auto_id_policy: default\n"
-            + "api_version: '1.0'\n"
             + "handlers:\n"
             + "- url: /admin\n"
             + "  script: unused\n"
@@ -2415,7 +1965,6 @@ public class AppYamlTranslatorTest extends TestCase {
             + "runtime: java8\n"
             + "version: 'ver1'\n"
             + "auto_id_policy: default\n"
-            + "api_version: '1.0'\n"
             + "handlers:\n"
             + "- url: (/admin/.*/)\n"
             + "  static_files: __static__\\1index.html\n"
@@ -2489,7 +2038,6 @@ public class AppYamlTranslatorTest extends TestCase {
             + "runtime: java8\n"
             + "version: 'ver1'\n"
             + "auto_id_policy: default\n"
-            + "api_version: '1.0'\n"
             + "handlers:\n"
             + "- url: (/my-static-files/.*)\n"
             + "  static_files: __static__\\1\n"
@@ -2544,7 +2092,6 @@ public class AppYamlTranslatorTest extends TestCase {
             + "  instances: 5\n"
             + "  class: B8\n"
             + "  options: dynamic, public\n"
-            + "api_version: '1.0'\n"
             + "handlers:\n"
             + "- url: /\n"
             + "  script: unused\n"
@@ -2576,7 +2123,6 @@ public class AppYamlTranslatorTest extends TestCase {
             + "api_config:\n"
             + "  url: /my/api\n"
             + "  script: unused\n"
-            + "api_version: '1.0'\n"
             + "handlers:\n"
             + "- url: /\n"
             + "  script: unused\n"
@@ -2611,7 +2157,6 @@ public class AppYamlTranslatorTest extends TestCase {
             + "runtime: java8\n"
             + "version: 'ver1'\n"
             + "auto_id_policy: default\n"
-            + "api_version: '1.0'\n"
             + "handlers:\n"
             + "- url: /\n"
             + "  script: unused\n"
@@ -2644,15 +2189,11 @@ public class AppYamlTranslatorTest extends TestCase {
   }
 
   private AppYamlTranslator createTranslator() {
-    return createTranslator("1.0", null);
+    return createTranslator(null);
   }
 
   private AppYamlTranslator createTranslator(String runtime) {
-    return createTranslator("1.0", runtime);
-  }
-
-  private AppYamlTranslator createTranslator(String apiVersion, String runtime) {
     return new AppYamlTranslator(
-        appEngineWebXml, webXml, backendsXml, apiVersion, staticFiles, apiConfig, runtime);
+        appEngineWebXml, webXml, backendsXml, staticFiles, apiConfig, runtime);
   }
 }

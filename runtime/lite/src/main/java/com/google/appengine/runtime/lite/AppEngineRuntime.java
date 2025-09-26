@@ -181,7 +181,7 @@ public class AppEngineRuntime {
     apiProxyImpl.setRequestManager(requestManager);
 
     AppInfoFactory appInfoFactory = new AppInfoFactory(System.getenv());
-    appInfo = appInfoFactory.getAppInfoWithApiVersion("user_defined");
+    appInfo = appInfoFactory.getAppInfo();
 
     this.appVersion = createAppVersion(servletWebappPath, appInfo, sessionsConfig, publicRoot);
 

@@ -95,10 +95,8 @@ public class ApplicationTest {
   private static final String TEST_ERROR_IN_TAGS_FILES = getWarPath("sample-error-in-tag-file");
   private static final String NOJSP_TEST_FILES = getWarPath("sample-nojsps");
   private static final String BAD_WEBXML_TEST_FILES = getWarPath("sample-badweb");
-  private static final String BAD_RUNTIME_CHANNEL = getWarPath("sample-badruntimechannel");
   private static final String TEST_JAVA11 = getWarPath("sample-java11");
   private static final String TEST_JAVA17 = getWarPath("sample-java17");
-  private static final String BAD_ENTRYPOINT = getWarPath("sample-badentrypoint");
   private static final String BAD_APPENGINEWEBXML_TEST_FILES = getWarPath("sample-badaeweb");
   private static final String BAD_INDEXESXML_TEST_FILES = getWarPath("sample-badindexes");
   private static final String MISSING_APP_ID_TEST_FILES = getWarPath("sample-missingappid");
@@ -518,7 +516,6 @@ public class ApplicationTest {
     assertThat(new File(stage, "nested/dukebanner.html").canRead()).isTrue();
     assertThat(new File(stage, "WEB-INF/lib").isDirectory()).isTrue();
     File appYaml = new File(stage, "WEB-INF/appengine-generated/app.yaml");
-    assertThat(Files.asCharSource(appYaml, UTF_8).read()).contains("api_version: 'user_defined'");
     int count = 0;
     for (File file : AppengineSdk.getSdk().getUserJspLibFiles()) {
       if (file.getName().contains("apache-jsp")) {
@@ -611,7 +608,6 @@ public class ApplicationTest {
     application.createStagingDirectory(opts);
     File stage = application.getStagingDir();
     File appYaml = new File(stage, "WEB-INF/appengine-generated/app.yaml");
-    assertFileContains(appYaml, "api_version: 'user_defined'");
     File stagedApiJar = new File(stage, "WEB-INF/lib/appengine-api.jar");
     assertWithMessage(stagedApiJar.toString()).that(stagedApiJar.exists()).isTrue();
     byte[] originalApiJarBytes = Files.toByteArray(apiJar);
@@ -1120,28 +1116,6 @@ public class ApplicationTest {
       fail("Bad datastore-indexes.xml wasn't detected");
     } catch (AppEngineConfigException ex) {
       // good
-    }
-  }
-
-  @Test
-  public void testBadRuntimeChannel() throws IOException {
-    try {
-      Application.readApplication(BAD_RUNTIME_CHANNEL);
-      fail("iappengine-web.xml content was incorrectly accepted with a runtime-channel.");
-    } catch (AppEngineConfigException ex) {
-      assertThat(ex)
-          .hasMessageThat()
-          .isEqualTo("'runtime-channel' is not valid with this runtime.");
-    }
-  }
-
-  @Test
-  public void testBadEntrypoint() throws IOException {
-    try {
-      Application.readApplication(BAD_ENTRYPOINT);
-      fail("appengine-web.xml content was incorrectly accepted with an entrypoint.");
-    } catch (AppEngineConfigException ex) {
-      assertThat(ex).hasMessageThat().isEqualTo("'entrypoint' is not valid with this runtime.");
     }
   }
 
@@ -1657,7 +1631,7 @@ public class ApplicationTest {
     assertThat(patterns).doesNotContain("/*");
   }
 
-  @Ignore // TODO(ludo): Re-enable this test for java25 JDK target build.
+  @Test
   public void testStageGaeStandardJava8WithOnlyJasperContextInitializer()
       throws IOException, ParserConfigurationException, SAXException {
 
@@ -1690,21 +1664,20 @@ public class ApplicationTest {
       assertThat(trimmedContextParams)
           .containsEntry("org.eclipse.jetty.containerInitializers", expectedJasperInitializer);
     } else if (Boolean.getBoolean("appengine.use.EE11")) {
-      List<String> possibleValues =
-          Arrays.asList(
-              "\"ContainerInitializer{org.eclipse.jetty.ee11.apache.jsp.JettyJasperInitializer,interested=[],applicable=[],annotated=[]}\",\n"
-                  + "        \"ContainerInitializer{org.glassfish.wasp.runtime.TldScanner,interested=[],applicable=[],annotated=[]}\"",
-              "\"ContainerInitializer{org.glassfish.wasp.runtime.TldScanner,interested=[],applicable=[],annotated=[]}\",\n"
-                  + "        \"ContainerInitializer{org.eclipse.jetty.ee11.apache.jsp.JettyJasperInitializer,interested=[],applicable=[],annotated=[]}\"");
-      assertThat(trimmedContextParams.get("org.eclipse.jetty.containerInitializers"))
-          .isIn(possibleValues);
+      String initializers = trimmedContextParams.get("org.eclipse.jetty.containerInitializers");
+      assertThat(initializers)
+          .contains(
+              "\"ContainerInitializer{org.eclipse.jetty.ee11.apache.jsp.JettyJasperInitializer,interested=[],applicable=[],annotated=[]}\"");
+      assertThat(initializers)
+          .contains(
+              "\"ContainerInitializer{org.glassfish.wasp.runtime.TldScanner,interested=[],applicable=[],annotated=[]}\"");
     } else {
       String expectedJasperInitializer =
           "\"ContainerInitializer"
               + "{org.eclipse.jetty.apache.jsp.JettyJasperInitializer"
               + ",interested=[],applicable=[],annotated=[]}\"";
-      assertThat(trimmedContextParams)
-          .containsEntry("org.eclipse.jetty.containerInitializers", expectedJasperInitializer);
+    assertThat(trimmedContextParams)
+        .containsEntry("org.eclipse.jetty.containerInitializers", expectedJasperInitializer);
     }
   }
 
@@ -1777,8 +1750,6 @@ public class ApplicationTest {
 
     File appYaml = new File(stageDir, "WEB-INF/appengine-generated/app.yaml");
     assertFileContains(appYaml, "runtime: java8");
-    assertFileContains(appYaml, "threadsafe: True");
-    assertFileContains(appYaml, "api_version: 'user_defined'");
   }
 
   /** returns the Java version of the first class in the jar, or -1 if error. */

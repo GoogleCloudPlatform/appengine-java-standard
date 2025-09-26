@@ -34,7 +34,7 @@ echo "JAVA_HOME = $JAVA_HOME"
 git config --global --add safe.directory /tmpfs/src/git/appengine-java-standard
 
 # Force usage of the aoss profile to point to google artifacts repository to be MOSS compliant.
-./mvnw -e -X clean install  spdx:createSPDX -Paoss -Dorg.slf4j.simpleLogger.showDateTime=true -Dorg.slf4j.simpleLogger.dateTimeFormat=HH:mm:ss,SSS
+./mvnw clean install  spdx:createSPDX -Paoss -Dorg.slf4j.simpleLogger.showDateTime=true -Dorg.slf4j.simpleLogger.dateTimeFormat=HH:mm:ss,SSS
 
 # The artifacts under `${KOKORO_ARTIFACTS_DIR}/maven-artifacts` will be uploaded as a zip file named maven_jars.binary
 TMP_STAGING_LOCATION=${KOKORO_ARTIFACTS_DIR}/tmp

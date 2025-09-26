@@ -15,10 +15,10 @@
  */
 package servletthree;
 
+import jakarta.servlet.ServletContainerInitializer;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletException;
 import java.util.Set;
-import javax.servlet.ServletContainerInitializer;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
 
 /** Simple ServletContainerInitializer */
 public class Servlet3ContainerInitializer implements ServletContainerInitializer {

@@ -20,7 +20,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.appengine.init.AppEngineWebXmlInitialParse;
 import com.google.appengine.tools.info.AppengineSdk;
-import com.google.appengine.tools.util.ApiVersionFinder;
 import com.google.appengine.tools.util.FileIterator;
 import com.google.appengine.tools.util.JarSplitter;
 import com.google.appengine.tools.util.JarTool;
@@ -422,14 +421,6 @@ public class Application implements GenericApplication {
           throw new AppEngineConfigException(
               "'readiness-check' is an <env>flex</env> specific " + "field.");
         }
-      }
-    }
-    if (!appEngineWebXml.isJava11OrAbove()) {
-      if (appEngineWebXml.getRuntimeChannel() != null) {
-        throw new AppEngineConfigException("'runtime-channel' is not valid with this runtime.");
-      }
-      if (appEngineWebXml.getEntrypoint() != null) {
-        throw new AppEngineConfigException("'entrypoint' is not valid with this runtime.");
       }
     }
   }
@@ -935,10 +926,6 @@ public class Application implements GenericApplication {
       }
     }
 
-    // Now determine our API version, and remove the API jars so we don't
-    // upload them, except for env:flex where we keep the jar at the user level.
-    apiVersion = findApiVersion(stageDir);
-
     StagingOptions staging = getStagingOptions(opts);
 
     if (opts.isCompileJspsSet()) {
@@ -1055,53 +1042,6 @@ public class Application implements GenericApplication {
       fw.write(yamlString);
       fw.close();
     }
-  }
-
-  private String findApiVersion(File baseDir) {
-    ApiVersionFinder finder = new ApiVersionFinder();
-
-    if (appEngineWebXml.isJava11OrAbove()) {
-      return "none";
-    }
-    if (!appEngineWebXml.isFlexible()) {
-      return "user_defined";
-    }
-    String foundApiVersion = null;
-    File webInf = new File(baseDir, "WEB-INF");
-    File libDir = new File(webInf, "lib");
-    for (File file : new FileIterator(libDir)) {
-      if (file.getPath().endsWith(".jar")) {
-        try {
-          String apiVersion = finder.findApiVersion(file);
-          if (apiVersion != null) {
-            if (foundApiVersion == null) {
-              foundApiVersion = apiVersion;
-            } else if (!foundApiVersion.equals(apiVersion)) {
-              logger.warning(
-                  "Warning: found duplicate API version: "
-                      + foundApiVersion
-                      + ", using "
-                      + apiVersion);
-            }
-          }
-        } catch (IOException ex) {
-          logger.log(Level.WARNING, "Could not identify API version in " + file, ex);
-        }
-      }
-    }
-
-    if (foundApiVersion == null) {
-      foundApiVersion = "none";
-      // We did not find an API jar, and we are on Flex: treat as error (or warning).
-      if (!Boolean.getBoolean("com.google.appengine.allow_missing_api_jar")) {
-        throw new AppEngineConfigException(
-            "GAE Flex compat applications need to depend on "
-                + "the GAE API jar, but it was not found in the WEB-INF/lib directory.");
-      } else {
-        logger.log(Level.WARNING, "Could not find the GAE API jar in the WEB-INF/lib directory.");
-      }
-    }
-    return foundApiVersion;
   }
 
   /**
@@ -1623,7 +1563,7 @@ public class Application implements GenericApplication {
 
     AppYamlTranslator translator =
         new AppYamlTranslator(
-            aeWebXml, getWebXml(), getBackendsXml(), getApiVersion(), staticFiles, null, runtime);
+            aeWebXml, getWebXml(), getBackendsXml(), staticFiles, null, runtime);
     String yaml = translator.getYaml();
     logger.fine("Generated app.yaml file:\n" + yaml);
     return yaml;

@@ -21,7 +21,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>com.google.appengine.demos</groupId>
-  <artifactId>bundle_standard_with_container_initializer</artifactId>
+  <artifactId>bundle_standard_with_container_initializer_jakarta</artifactId>
   <parent>
     <groupId>com.google.appengine</groupId>
     <artifactId>testlocalapps</artifactId>
@@ -29,7 +29,7 @@
   </parent>
   <packaging>war</packaging>
 
-  <name>AppEngine :: bundle_standard_with_container_initializer</name>
+  <name>AppEngine :: bundle_standard_with_container_initializer_jakarta</name>
   <url>https://github.com/GoogleCloudPlatform/appengine-java-standard/</url>
   <description>A sample application that bundles the standard App Engine API with a container initializer.</description>
 
@@ -44,10 +44,9 @@
   <dependencies>
     <!-- Include Servlet API -->
     <dependency>
-      <groupId>javax.servlet</groupId>
-      <artifactId>javax.servlet-api</artifactId>
-      <version>3.1.0</version>
-      <scope>provided</scope>
+        <groupId>jakarta.servlet</groupId>
+        <artifactId>jakarta.servlet-api</artifactId>
+        <scope>provided</scope>
     </dependency>
   </dependencies>
 

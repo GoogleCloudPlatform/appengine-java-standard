@@ -89,18 +89,6 @@ public class AppEngineWebXmlReader {
       is = getInputStream();
       appEngineWebXml = processXml(is);
       logger.fine("Successfully processed " + getFilename());
-      if (!appEngineWebXml.getThreadsafeValueProvided() && !appEngineWebXml.isJava11OrAbove()) {
-        if (allowMissingThreadsafeElement()) {
-          // make some noise if there is no <threadsafe> element.
-          logger.warning("appengine-web.xml does not contain a <threadsafe> element. This will "
-              + "be treated as an error the next time you deploy.\nSee " + CONCURRENT_REQUESTS_URL
-              + " for more information.\nYou probably want to enable concurrent requests.");
-        } else {
-          throw new AppEngineConfigException("appengine-web.xml does not contain a <threadsafe> "
-              + "element.\nSee " + CONCURRENT_REQUESTS_URL + " for more information.\nYou probably "
-              + "want to enable concurrent requests.");
-        }
-      }
       if ("legacy".equals(appEngineWebXml.getAutoIdPolicy())) {
         logger.warning("You have set the datastore auto id policy to 'legacy'. It is recommended "
             + "that you select 'default' instead.\nLegacy auto ids are deprecated. You can "

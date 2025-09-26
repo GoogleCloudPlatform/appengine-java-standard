@@ -15,9 +15,7 @@
 runtime: java21
 inbound_services:
 - warmup
-threadsafe: True
 auto_id_policy: default
-api_version: 'user_defined'
 handlers:
 - url: /.*
   script: unused

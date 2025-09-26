@@ -839,7 +839,7 @@ public final class AppEngineRuntimeTest {
   }
 
   @Test
-  public void makeRequestManagerBuilder_validate(@TestParameter boolean reusePort) {
+  public void makeRequestManagerBuilder_validate() {
     HostAndPort apiHostAddress = HostAndPort.fromParts("foobar", 1212);
     BackgroundRequestDispatcher dispatcher = new BackgroundRequestDispatcher();
 
@@ -910,7 +910,8 @@ public final class AppEngineRuntimeTest {
     Path webAppPath = Paths.get("/bogus/webapp/path");
 
     AppInfoFactory appInfoFactory = new AppInfoFactory(mockEnv);
-    AppinfoPb.AppInfo appInfo = appInfoFactory.getAppInfoWithApiVersion("user_defined");
+    AppinfoPb.AppInfo appInfo = appInfoFactory.getAppInfo();
+
 
     SessionsConfig givenSc =
         new SessionsConfig(
@@ -954,7 +955,7 @@ public final class AppEngineRuntimeTest {
     Path webAppPath = Paths.get("/bogus/webapp/path");
 
     AppInfoFactory appInfoFactory = new AppInfoFactory(mockEnv);
-    AppinfoPb.AppInfo appInfo = appInfoFactory.getAppInfoWithApiVersion("user_defined");
+    AppinfoPb.AppInfo appInfo = appInfoFactory.getAppInfo();
 
     AppVersion appVersion =
         AppEngineRuntime.createAppVersion(

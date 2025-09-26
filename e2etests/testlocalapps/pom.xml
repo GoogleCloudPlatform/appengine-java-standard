@@ -47,9 +47,7 @@
       <module>sampleapp-manual-module</module>
       <module>sampleapp-runtime</module>
       <module>sample-badaeweb</module>
-      <module>sample-badentrypoint</module>
       <module>sample-badindexes</module>
-      <module>sample-badruntimechannel</module>
       <module>sample-badweb</module>
       <module>sample-baddispatch</module>
       <module>sample-baddispatch-yaml</module>
@@ -69,6 +67,7 @@
       <module>xmlorder</module>
       <module>bundle_standard</module>
       <module>bundle_standard_with_container_initializer</module>
+      <module>bundle_standard_with_container_initializer_jakarta</module>
       <module>bundle_standard_with_no_jsp</module>
       <module>bundle_standard_with_weblistener_memcache</module>
       <module>allinone</module>

@@ -16,31 +16,21 @@
 
 package com.google.apphosting.runtime.jetty9;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-
-import com.esotericsoftware.yamlbeans.YamlReader;
 import com.google.apphosting.base.protos.AppinfoPb;
 import com.google.apphosting.utils.config.AppYaml;
-import com.google.common.flogger.GoogleLogger;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.util.Map;
 import java.util.Objects;
-import org.jspecify.annotations.Nullable;
 
 /** Builds AppinfoPb.AppInfo from the given ServletEngineAdapter.Config and environment. */
 public class AppInfoFactory {
-
-  private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
 
   private static final String DEFAULT_CLOUD_PROJECT = "testapp";
   private static final String DEFAULT_GAE_APPLICATION = "s~testapp";
   private static final String DEFAULT_GAE_SERVICE = "default";
   private static final String DEFAULT_GAE_VERSION = "1.0";
-  /** Path in the WAR layout to app.yaml */
-  private static final String APP_YAML_PATH = "WEB-INF/appengine-generated/app.yaml";
 
   private final String gaeVersion;
   private final String googleCloudProject;
@@ -91,37 +81,19 @@ public class AppInfoFactory {
     if (!new File(applicationPath).exists()) {
       throw new NoSuchFileException("Application does not exist under: " + applicationPath);
     }
-    @Nullable String apiVersion = null;
-    File appYamlFile = new File(applicationPath, APP_YAML_PATH);
-    try {
-      YamlReader reader = new YamlReader(Files.newBufferedReader(appYamlFile.toPath(), UTF_8));
-      Object apiVersionObj = ((Map<?, ?>) reader.read()).get("api_version");
-      if (apiVersionObj != null) {
-        apiVersion = (String) apiVersionObj;
-      }
-    } catch (NoSuchFileException ex) {
-      logger.atInfo().log(
-          "Cannot configure App Engine APIs, because the generated app.yaml file "
-              + "does not exist: %s",
-          appYamlFile.getAbsolutePath());
-    }
-    return getAppInfoWithApiVersion(apiVersion);
+    return getAppInfo();
   }
 
-  public AppinfoPb.AppInfo getAppInfoFromAppYaml(AppYaml appYaml) throws IOException {
-    return getAppInfoWithApiVersion(appYaml.getApi_version());
+  public AppinfoPb.AppInfo getAppInfoFromAppYaml(AppYaml unused) throws IOException {
+    return getAppInfo();
   }
 
-  public AppinfoPb.AppInfo getAppInfoWithApiVersion(@Nullable String apiVersion) {
+  public AppinfoPb.AppInfo getAppInfo() {
     final AppinfoPb.AppInfo.Builder appInfoBuilder =
         AppinfoPb.AppInfo.newBuilder()
             .setAppId(gaeApplication)
             .setVersionId(gaeVersion)
             .setRuntimeId("java8");
-
-    if (apiVersion != null) {
-      appInfoBuilder.setApiVersion(apiVersion);
-    }
 
     return appInfoBuilder.build();
   }

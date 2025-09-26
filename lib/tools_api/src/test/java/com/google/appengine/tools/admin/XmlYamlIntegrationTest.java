@@ -64,8 +64,7 @@ public class XmlYamlIntegrationTest extends TestCase {
       XML_HEADER
           + "<appengine-web-app xmlns=\"http://appengine.google.com/ns/1.0\">\n"
           + "  <application>my_app_id</application>\n"
-          + "  <version>1</version>\n"
-          + "  <threadsafe>true</threadsafe>\n";
+          + "  <version>1</version>\n";
   private static final String AE_WEB_XML_SUFFIX = "</appengine-web-app>";
 
   private static final String APP_YAML_PREFIX =
@@ -74,11 +73,7 @@ public class XmlYamlIntegrationTest extends TestCase {
           + "version: '1'\n"
           + "inbound_services:\n"
           + "- warmup\n"
-          + "derived_file_type:\n"
-          + "- java_precompiled\n"
-          + "threadsafe: True\n"
           + "auto_id_policy: default\n"
-          + "api_version: '1.7.3'\n"
           + "handlers:\n";
   private static final String APP_YAML_SUFFIX =
       "- url: /.*/\n"
@@ -316,7 +311,7 @@ public class XmlYamlIntegrationTest extends TestCase {
     BackendsXml backendsXml = new BackendsXml();
     AppYamlTranslator translator =
         new AppYamlTranslator(
-            aeWebXml, webXml, backendsXml, "1.7.3", staticFiles, apiConfig, "java8");
+            aeWebXml, webXml, backendsXml, staticFiles, apiConfig, "java8");
     assertEquals(buildYaml(expectedExtraYaml, useYamlSuffix), translator.getYaml());
   }
 

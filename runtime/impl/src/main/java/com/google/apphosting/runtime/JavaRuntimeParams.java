@@ -16,15 +16,12 @@
 
 package com.google.apphosting.runtime;
 
-import static com.google.common.io.BaseEncoding.base64;
-
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
 import com.beust.jcommander.Parameters;
 import com.google.common.collect.ImmutableList;
 import java.util.List;
-import java.util.Random;
 
 /** Command line parameters for Java runtime, and its dependencies. */
 @Parameters(separators = "=")
@@ -100,11 +97,6 @@ final class JavaRuntimeParams {
       description = "Maximum deadline for all offline API RPCs by package in seconds.",
       names = {"--max_offline_api_call_deadline_map"})
   private String maxOfflineApiCallDeadlineMap = "";
-
-  @Parameter(
-      description = "A base-64 encoded string of entropy for the CSPRNG.",
-      names = {"--entropy_string"})
-  private String entropyString = pseudoRandomBytes();
 
   @Parameter(
       description = "The name for the current release of Google App Engine.",
@@ -333,19 +325,7 @@ final class JavaRuntimeParams {
       arity = 1)
   private boolean logJsonToVarLog = false;
 
-  @Parameter(
-      description = "Enable using riptide for user code.",
-      names = {"--java8_riptide"},
-      arity = 1)
-  private boolean java8Riptide = false;
-
   private List<String> unknownParams;
-
-  private static String pseudoRandomBytes() {
-    byte[] bytes = new byte[32];
-    new Random().nextBytes(bytes);
-    return base64().encode(bytes);
-  }
 
   private JavaRuntimeParams() {}
 
@@ -465,10 +445,6 @@ final class JavaRuntimeParams {
 
   String getMaxOfflineApiCallDeadlineMap() {
     return maxOfflineApiCallDeadlineMap;
-  }
-
-  String getEntropyString() {
-    return entropyString;
   }
 
   String getAppengineReleaseName() {
@@ -601,10 +577,6 @@ final class JavaRuntimeParams {
 
   boolean getLogJsonToVarLog() {
     return logJsonToVarLog;
-  }
-
-  boolean getJava8Riptide() {
-    return java8Riptide;
   }
 
   List<String> getUnknownParams() {

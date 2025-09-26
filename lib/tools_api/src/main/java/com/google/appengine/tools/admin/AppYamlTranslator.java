@@ -40,6 +40,7 @@ import com.google.apphosting.utils.glob.Glob;
 import com.google.apphosting.utils.glob.GlobFactory;
 import com.google.apphosting.utils.glob.GlobIntersector;
 import com.google.apphosting.utils.glob.LongestPatternConflictResolver;
+import com.google.errorprone.annotations.InlineMe;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -55,7 +56,6 @@ import java.util.Set;
  *
  */
 public class AppYamlTranslator {
-  private static final String NO_API_VERSION = "none";
 
   private static final ConflictResolver RESOLVER =
       new LongestPatternConflictResolver();
@@ -84,22 +84,33 @@ public class AppYamlTranslator {
   private final AppEngineWebXml appEngineWebXml;
   private final WebXml webXml;
   private final BackendsXml backendsXml;
-  private final String apiVersion;
   private final Set<String> staticFiles;
   private final String runtime;
 
+  @InlineMe(
+      replacement = "this(appEngineWebXml, webXml, backendsXml, staticFiles, apiConfig, runtime)")
+  @Deprecated
   public AppYamlTranslator(
       AppEngineWebXml appEngineWebXml,
       WebXml webXml,
       BackendsXml backendsXml,
-      String apiVersion,
+      String apiVersion, // unused now
+      Set<String> staticFiles,
+      ApiConfig apiConfig,
+      String runtime) {
+        this(appEngineWebXml, webXml, backendsXml, staticFiles, apiConfig, runtime);
+      }
+
+ public AppYamlTranslator(
+      AppEngineWebXml appEngineWebXml,
+      WebXml webXml,
+      BackendsXml backendsXml,
       Set<String> staticFiles,
       ApiConfig apiConfig,
       String runtime) {
     this.appEngineWebXml = appEngineWebXml;
     this.webXml = webXml;
     this.backendsXml = backendsXml;
-    this.apiVersion = apiVersion;
     this.staticFiles = staticFiles;
     // apiConfig not used.
     if (runtime != null) {
@@ -115,10 +126,6 @@ public class AppYamlTranslator {
   public String getYaml() {
     StringBuilder builder = new StringBuilder();
     translateAppEngineWebXml(builder);
-    // No need to process the api_version field for Java11 or above.
-    if (!appEngineWebXml.isJava11OrAbove()) {
-      translateApiVersion(builder);
-    }
     translateWebXml(builder);
     return builder.toString();
   }
@@ -275,25 +282,11 @@ public class AppYamlTranslator {
       }
     }
 
-    // Precompilation is only for the Standard environment.
-    if (appEngineWebXml.getPrecompilationEnabled()
-        && !appEngineWebXml.getUseVm()
-        && !appEngineWebXml.isFlexible()
-        && !appEngineWebXml.isJava11OrAbove()) {
-      builder.append("derived_file_type:\n");
-      builder.append("- java_precompiled\n");
-
-    }
-
-    if (appEngineWebXml.getThreadsafe() && !appEngineWebXml.isJava11OrAbove()) {
-      builder.append("threadsafe: True\n");
-    }
-
-    if (appEngineWebXml.getAppEngineApis() && appEngineWebXml.isJava11OrAbove()) {
+    if (appEngineWebXml.getAppEngineApis()) {
       builder.append("app_engine_apis: True\n");
     }
 
-    if (appEngineWebXml.getThreadsafeValueProvided() && appEngineWebXml.isJava11OrAbove()) {
+    if (appEngineWebXml.getThreadsafeValueProvided()) {
       System.out.println(
           "Warning: The "
               + appEngineWebXml.getRuntime()
@@ -562,14 +555,6 @@ public class AppYamlTranslator {
    */
   private String yamlQuote(String str) {
     return "'" + str.replace("'", "''") + "'";
-  }
-
-  private void translateApiVersion(StringBuilder builder) {
-    if (apiVersion == null) {
-      builder.append("api_version: '" + NO_API_VERSION + "'\n");
-    } else {
-      builder.append("api_version: '" + apiVersion + "'\n");
-    }
   }
 
   private void translateWebXml(StringBuilder builder) {

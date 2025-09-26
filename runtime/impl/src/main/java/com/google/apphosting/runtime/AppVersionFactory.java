@@ -28,7 +28,6 @@ import com.google.apphosting.utils.config.AppEngineWebXml;
 import com.google.apphosting.utils.config.AppEngineWebXmlReader;
 import com.google.apphosting.utils.config.ClassPathBuilder;
 import com.google.auto.value.AutoBuilder;
-import com.google.common.base.Ascii;
 import com.google.common.base.Strings;
 import com.google.common.flogger.GoogleLogger;
 import java.io.File;
@@ -383,7 +382,6 @@ public class AppVersionFactory {
       AppInfo appInfo,
       AppEngineWebXml appEngineWebXml)
       throws IOException {
-    ClassPathUtils classPathUtils = sandboxPlugin.getClassPathUtils();
 
     ClassPathBuilder classPathBuilder =
         new ClassPathBuilder(appEngineWebXml.getClassLoaderConfig());
@@ -400,37 +398,6 @@ public class AppVersionFactory {
       logger.atWarning().withCause(ex).log("Could not add WEB-INF/classes");
     }
 
-    // If there is an API version specified in the AppInfo, then the
-    // user code does not include the API code and we need to append
-    // our own copy of the requested API version.
-    //
-    // N.B.: The API version jar should come after
-    // WEB-INF/classes (to avoid violating the servlet spec) but
-    // before other WEB-INF/lib jars (in case the user is including
-    // appengine-tools-api.jar or something else superfluous).
-    // Old apps would still use an ApiVersion of 1.0 (inside manifest of old api jar) and would
-    // not bundled the api jar.
-    // Newer apps are now using "user_defined" and they bundle the api jar, so no need to add it.
-    // App not using the api jar would have "none" or empty.
-    // Read ../runtime/jetty9/AppInfoFactory.java to see where it is setup.
-    String apiVersion = appInfo.getApiVersion();
-    if (!apiVersion.isEmpty()
-        && !Ascii.equalsIgnoreCase(apiVersion, "none")
-        && !Ascii.equalsIgnoreCase(apiVersion, "user_defined")) {
-      // For now, the only valid version has been "1.0" since the beginning of App Engine.
-
-      if (classPathUtils == null) {
-        logger.atInfo().log("Ignoring API version setting %s", apiVersion);
-      } else {
-        // TODO: We should probably return an
-        // UPResponse::UNKNOWN_API_VERSION here, but I'd like to be
-        // lenient until API versions are well established.
-        logger.atWarning().log(
-            "The Java runtime is not adding an API jar for this application, as the "
-                + "Java api_version defined in app.yaml or appinfo is unknown: %s",
-            apiVersion);
-      }
-    }
     if (!appInfo.getFileList().isEmpty()) {
       for (AppInfo.File appFile : appInfo.getFileList()) {
         File file = new File(root, appFile.getPath());
