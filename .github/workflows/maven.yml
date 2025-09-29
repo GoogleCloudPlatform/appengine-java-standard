@@ -31,7 +31,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        java: [17, 21, 25]
+        java: [17, 21, 25, 26-ea]
         jdk: [temurin]
         include:
           - java: 17
@@ -39,6 +39,8 @@ jobs:
           - java: 21
             maven_profile: "-Pjdk21"
           - java: 25
+            maven_profile: "-Pjdk25"
+          - java: 26-ea
             maven_profile: "-Pjdk25"
       fail-fast: false
 
@@ -61,6 +63,8 @@ jobs:
             echo "JAVA_HOME_21=$JAVA_HOME" >> $GITHUB_ENV
           elif [[ "${{ matrix.java }}" == "25" ]]; then
             echo "JAVA_HOME_25=$JAVA_HOME" >> $GITHUB_ENV
+          elif [[ "${{ matrix.java }}" == "26-ea" ]]; then
+            echo "JAVA_HOME_26=$JAVA_HOME" >> $GITHUB_ENV
           fi
 
       - name: Build with Maven
