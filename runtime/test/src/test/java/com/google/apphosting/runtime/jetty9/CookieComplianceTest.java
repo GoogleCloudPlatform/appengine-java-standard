@@ -17,7 +17,10 @@
 package com.google.apphosting.runtime.jetty9;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assume.assumeTrue;
 
+import java.util.Arrays;
+import java.util.List;
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -28,9 +31,9 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import org.junit.runners.Parameterized;
 
-@RunWith(JUnit4.class)
+@RunWith(Parameterized.class)
 public class CookieComplianceTest extends JavaRuntimeViaHttpBase {
 
   // This is set in the app appengine-web.xml file
@@ -38,18 +41,50 @@ public class CookieComplianceTest extends JavaRuntimeViaHttpBase {
     System.setProperty("com.google.apphosting.runtime.jetty94.LEGACY_MODE", "true");
   }
 
-  public CookieComplianceTest() {
-    //Test also running in google3, so we limit to jetty 9.4 for now.
-    // TODO(ludo): Enable for other versions once we remove internal jetty94 dependency.
-    // TODO(ludo): http connector true: fails, but http connector false: pass
-    super("java17", "9.4", "EE6", false);
+    @Parameterized.Parameters
+    public static List<Object[]> version() {
+        return Arrays.asList(
+                new Object[][] {
+                        {"java17", "9.4", "EE6", false},
+                        {"java17", "12.0", "EE8", false},
+                        {"java17", "12.0", "EE10", false},
+                        {"java17", "12.1", "EE11", false},
+                        {"java21", "12.0", "EE8", false},
+                        {"java21", "12.0", "EE10", false},
+                        {"java21", "12.1", "EE11", false},
+                        {"java25", "12.1", "EE8", false},
+                        {"java25", "12.1", "EE11", false},
+                        {"java17", "9.4", "EE6", true},
+                        {"java17", "12.0", "EE8", true},
+                        {"java17", "12.0", "EE10", true},
+                        {"java17", "12.1", "EE11", true},
+                        {"java21", "12.0", "EE8", true},
+                        {"java21", "12.0", "EE10", true},
+                        {"java21", "12.1", "EE11", true},
+                        {"java25", "12.1", "EE8", true},
+                        {"java25", "12.1", "EE11", true},
+                });
+    }
+
+  public CookieComplianceTest(String runtimeVersion, String jettyVersion, String version, boolean useHttpConnector) {
+      super(runtimeVersion, jettyVersion, version, useHttpConnector);
   }
 
   @Rule public TemporaryFolder temp = new TemporaryFolder();
 
   @Before
   public void copyAppToTemp() throws Exception {
-    copyAppToDir("cookiecomplianceapp", temp.getRoot().toPath());
+      // Internal testing is limited to Jetty 9.4 EE6 for now.
+      boolean internal = Boolean.getBoolean("test.running.internally");
+      assumeTrue(!internal || "EE6".equals(jakartaVersion));
+
+      String app = "com/google/apphosting/runtime/jetty9/cookiecomplianceapp/";
+      if (isJakarta()) {
+          app = app + "jakarta";
+      } else {
+          app = app + "javax";
+      }
+      copyAppToDir(app, temp.getRoot().toPath());
   }
 
   @Test

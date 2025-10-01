@@ -16,6 +16,7 @@
 
 package com.google.apphosting.runtime.jetty9;
 
+import static com.google.apphosting.runtime.AppEngineConstants.HTTP_CONNECTOR_MODE;
 import static com.google.apphosting.runtime.AppEngineConstants.LEGACY_MODE;
 
 import com.google.apphosting.base.protos.AppLogsPb;
@@ -35,12 +36,9 @@ import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.eclipse.jetty.http.CookieCompliance;
 import org.eclipse.jetty.http.HttpCompliance;
-import org.eclipse.jetty.server.HttpConfiguration;
-import org.eclipse.jetty.server.HttpConnectionFactory;
-import org.eclipse.jetty.server.Request;
-import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.server.*;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.eclipse.jetty.server.handler.SizeLimitHandler;
 import org.eclipse.jetty.server.handler.gzip.GzipHandler;
@@ -103,6 +101,13 @@ public class JettyHttpProxy {
     config.setSendDateHeader(false);
     config.setSendServerVersion(false);
     config.setSendXPoweredBy(false);
+
+    if (LEGACY_MODE && Boolean.getBoolean(HTTP_CONNECTOR_MODE))
+    {
+      config.setRequestCookieCompliance(CookieCompliance.RFC2965);
+      config.setResponseCookieCompliance(CookieCompliance.RFC2965);
+      config.setMultiPartFormDataCompliance(MultiPartFormDataCompliance.LEGACY);
+    }
 
     return connector;
   }
