@@ -38,7 +38,12 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.eclipse.jetty.http.CookieCompliance;
 import org.eclipse.jetty.http.HttpCompliance;
-import org.eclipse.jetty.server.*;
+import org.eclipse.jetty.server.HttpConfiguration;
+import org.eclipse.jetty.server.HttpConnectionFactory;
+import org.eclipse.jetty.server.MultiPartFormDataCompliance;
+import org.eclipse.jetty.server.Request;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.eclipse.jetty.server.handler.SizeLimitHandler;
 import org.eclipse.jetty.server.handler.gzip.GzipHandler;
@@ -92,8 +97,7 @@ public class JettyHttpProxy {
     connector.setPort(runtimeOptions.jettyHttpAddress().getPort());
 
     HttpConnectionFactory factory = connector.getConnectionFactory(HttpConnectionFactory.class);
-    factory.setHttpCompliance(
-        LEGACY_MODE ? HttpCompliance.RFC7230_LEGACY : HttpCompliance.RFC7230);
+    factory.setHttpCompliance(LEGACY_MODE ? HttpCompliance.RFC7230_LEGACY : HttpCompliance.RFC7230);
 
     HttpConfiguration config = factory.getHttpConfiguration();
     config.setRequestHeaderSize(runtimeOptions.jettyRequestHeaderSize());
@@ -102,8 +106,7 @@ public class JettyHttpProxy {
     config.setSendServerVersion(false);
     config.setSendXPoweredBy(false);
 
-    if (LEGACY_MODE && Boolean.getBoolean(HTTP_CONNECTOR_MODE))
-    {
+    if (LEGACY_MODE && Boolean.getBoolean(HTTP_CONNECTOR_MODE)) {
       config.setRequestCookieCompliance(CookieCompliance.RFC2965);
       config.setResponseCookieCompliance(CookieCompliance.RFC2965);
       config.setMultiPartFormDataCompliance(MultiPartFormDataCompliance.LEGACY);
