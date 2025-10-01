@@ -171,7 +171,7 @@ public abstract class JavaRuntimeViaHttpBase {
     System.out.println("javaVersionForTest " + javaVersionForTest);
 
     return allVersions.stream()
-        .filter(v -> v[0].toString().equals(javaVersionForTest) || v[1].equals("9.4"))
+        .filter(v -> v[0].toString().equals(javaVersionForTest))
         .collect(toImmutableList());
   }
 
