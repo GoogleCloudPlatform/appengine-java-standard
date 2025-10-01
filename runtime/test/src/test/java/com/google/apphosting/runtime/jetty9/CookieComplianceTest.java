@@ -19,7 +19,6 @@ package com.google.apphosting.runtime.jetty9;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assume.assumeTrue;
 
-import java.util.Arrays;
 import java.util.List;
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
@@ -36,34 +35,14 @@ import org.junit.runners.Parameterized;
 @RunWith(Parameterized.class)
 public class CookieComplianceTest extends JavaRuntimeViaHttpBase {
 
-  // This is set in the app appengine-web.xml file
+  // This is set in the app appengine-web.xml file.
   static {
     System.setProperty("com.google.apphosting.runtime.jetty94.LEGACY_MODE", "true");
   }
 
     @Parameterized.Parameters
     public static List<Object[]> version() {
-        return Arrays.asList(
-                new Object[][] {
-                        {"java17", "9.4", "EE6", false},
-                        {"java17", "12.0", "EE8", false},
-                        {"java17", "12.0", "EE10", false},
-                        {"java17", "12.1", "EE11", false},
-                        {"java21", "12.0", "EE8", false},
-                        {"java21", "12.0", "EE10", false},
-                        {"java21", "12.1", "EE11", false},
-                        {"java25", "12.1", "EE8", false},
-                        {"java25", "12.1", "EE11", false},
-                        {"java17", "9.4", "EE6", true},
-                        {"java17", "12.0", "EE8", true},
-                        {"java17", "12.0", "EE10", true},
-                        {"java17", "12.1", "EE11", true},
-                        {"java21", "12.0", "EE8", true},
-                        {"java21", "12.0", "EE10", true},
-                        {"java21", "12.1", "EE11", true},
-                        {"java25", "12.1", "EE8", true},
-                        {"java25", "12.1", "EE11", true},
-                });
+        return allVersions();
     }
 
   public CookieComplianceTest(String runtimeVersion, String jettyVersion, String version, boolean useHttpConnector) {
