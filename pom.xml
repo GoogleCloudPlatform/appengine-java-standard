@@ -709,7 +709,7 @@
       <dependency>
         <groupId>com.google.cloud</groupId>
         <artifactId>google-cloud-logging</artifactId>
-        <version>3.23.5</version>
+        <version>3.23.6</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
