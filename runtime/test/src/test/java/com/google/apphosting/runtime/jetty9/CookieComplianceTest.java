@@ -20,7 +20,6 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assume.assumeTrue;
 
 import java.util.List;
-import java.util.Objects;
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -41,30 +40,31 @@ public class CookieComplianceTest extends JavaRuntimeViaHttpBase {
     System.setProperty("com.google.apphosting.runtime.jetty94.LEGACY_MODE", "true");
   }
 
-    @Parameterized.Parameters
-    public static List<Object[]> version() {
-        return allVersions();
-    }
+  @Parameterized.Parameters
+  public static List<Object[]> version() {
+    return allVersions();
+  }
 
-  public CookieComplianceTest(String runtimeVersion, String jettyVersion, String version, boolean useHttpConnector) {
-      super(runtimeVersion, jettyVersion, version, useHttpConnector);
+  public CookieComplianceTest(
+      String runtimeVersion, String jettyVersion, String version, boolean useHttpConnector) {
+    super(runtimeVersion, jettyVersion, version, useHttpConnector);
   }
 
   @Rule public TemporaryFolder temp = new TemporaryFolder();
 
   @Before
   public void copyAppToTemp() throws Exception {
-      // Internal testing is limited to Jetty 9.4 EE6 for now.
-      boolean internal = Boolean.getBoolean("test.running.internally");
-    assumeTrue(!internal || Objects.equals(jakartaVersion, "EE6"));
+    // Internal testing is limited to Jetty 9.4 EE6 for now.
+    boolean internal = Boolean.getBoolean("test.running.internally");
+    assumeTrue(!internal);
 
-      String app = "com/google/apphosting/runtime/jetty9/cookiecomplianceapp/";
-      if (isJakarta()) {
-          app = app + "jakarta";
-      } else {
-          app = app + "javax";
-      }
-      copyAppToDir(app, temp.getRoot().toPath());
+    String app = "com/google/apphosting/runtime/jetty9/cookiecomplianceapp/";
+    if (isJakarta()) {
+      app = app + "jakarta";
+    } else {
+      app = app + "javax";
+    }
+    copyAppToDir(app, temp.getRoot().toPath());
   }
 
   @Test
