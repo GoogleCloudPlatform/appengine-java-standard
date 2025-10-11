@@ -59,11 +59,14 @@ public class AsyncServlet extends HttpServlet {
 
     PrintWriter out = resp.getWriter();
     out.println("isAsyncStarted : " + servReq.isAsyncStarted());
-    // This excecutor should be created in the init phase of AppContextListener.
+    // This executor should be created in the init phase of AppContextListener.
     ThreadPoolExecutor executor =
         (ThreadPoolExecutor) req.getServletContext().getAttribute("executor");
 
     executor.execute(new LongProcessingRunnable(asyncContext, millisecs));
+
+    checkTagSupportClass();
+
     long endTime = System.currentTimeMillis();
     System.out.println(
         "AsyncServlet End::Thread Name="
@@ -73,5 +76,21 @@ public class AsyncServlet extends HttpServlet {
             + "::Time Taken="
             + (endTime - startTime)
             + " ms.");
+  }
+
+  private void checkTagSupportClass() throws RuntimeException {
+    try {
+      Class.forName(
+          "javax.servlet.jsp.tagext.TagSupport",
+          false,
+          Thread.currentThread().getContextClassLoader());
+      Class.forName(
+          "javax.el.Expression",
+          false,
+          Thread.currentThread().getContextClassLoader());
+      System.out.println("Successfully loaded javax.servlet.jsp.tagext.TagSupport");
+    } catch (ClassNotFoundException e) {
+      throw new RuntimeException("Could not load javax.servlet.jsp.tagext.TagSupport: " + e);
+    }
   }
 }

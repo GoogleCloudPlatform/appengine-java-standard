@@ -30,13 +30,13 @@
     <url>https://github.com/GoogleCloudPlatform/appengine-java-standard/</url>
     <description>App Engine runtime shared components for Jetty 12 and EE10.</description>
 
-  <dependencies>
+    <dependencies>
         <dependency>
             <groupId>com.google.appengine</groupId>
             <artifactId>sessiondata</artifactId>
             <optional>true</optional>
         </dependency>
-         <dependency>
+        <dependency>
             <groupId>com.google.appengine</groupId>
             <artifactId>runtime-shared</artifactId>
             <optional>true</optional>
@@ -44,43 +44,42 @@
         <dependency>
             <groupId>jakarta.servlet</groupId>
             <artifactId>jakarta.servlet-api</artifactId>
-            <version>6.0.0</version>
+            <version>6.0.0</version> <!--6.0.x is EE10-->
             <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>jakarta.servlet.jsp.jstl</groupId>
             <artifactId>jakarta.servlet.jsp.jstl-api</artifactId>
-            <version>3.0.2</version>
+            <version>3.0.2</version> <!--3.0.x is EE10-->
             <optional>true</optional>
         </dependency>
         <dependency>
-           <groupId>org.jspecify</groupId>
+            <groupId>org.jspecify</groupId>
             <artifactId>jspecify</artifactId>
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>org.mortbay.jasper</groupId>
-            <artifactId>apache-jsp</artifactId>
-            <version>10.1.16</version>
-           <optional>true</optional>
-       </dependency>
-        <dependency>
-            <groupId>org.mortbay.jasper</groupId>
-            <artifactId>apache-el</artifactId>
-            <version>10.1.16</version>
-            <optional>true</optional>
+            <!-- https://central.sonatype.com/artifact/jakarta.platform/jakarta.jakartaee-web-api/11.0.0-RC1/jar -->
+            <groupId>jakarta.el</groupId>
+            <artifactId>jakarta.el-api</artifactId>
+            <version>5.0.1</version> <!--5.0.x is EE10-->
         </dependency>
         <dependency>
-          <groupId>com.google.errorprone</groupId>
-          <artifactId>error_prone_annotations</artifactId>
-           <optional>true</optional>
-       </dependency>
+            <groupId>jakarta.servlet.jsp</groupId>
+            <artifactId>jakarta.servlet.jsp-api</artifactId>
+            <version>3.1.1</version> <!--3.1.x is EE10-->
+        </dependency>
+        <dependency>
+            <groupId>com.google.errorprone</groupId>
+            <artifactId>error_prone_annotations</artifactId>
+            <optional>true</optional>
+        </dependency>
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-xml</artifactId>
             <version>${jetty12.version}</version>
         </dependency>
-  </dependencies>
+    </dependencies>
 
     <build>
         <plugins>
@@ -96,39 +95,18 @@
                         <configuration>
                             <createSourcesJar>true</createSourcesJar>
                             <artifactSet>
-                                <excludes>
-                                    <exclude>org.eclipse.jdt:ecj</exclude>
-                                 </excludes>
                                 <includes>
                                     <include>org.eclipse.jetty.toolchain:jetty-schemas</include>
                                     <include>org.eclipse.jetty:jetty-xml</include>
-                                    <include>org.mortbay.jasper:apache-jsp</include>
-                                    <include>org.mortbay.jasper:apache-el</include>
                                     <include>com.google.appengine:sessiondata</include>
                                     <include>jakarta.servlet:jakarta.servlet-api</include>
+                                    <include>jakarta.el:jakarta.el-api</include>
+                                    <include>jakarta.servlet.jsp:jakarta.servlet.jsp-api</include>
                                     <include>jakarta.servlet.jsp.jstl:jakarta.servlet.jsp.jstl-api</include>
                                     <include>com.google.appengine:runtime-shared</include>
                                 </includes>
                             </artifactSet>
                             <filters>
-                                <filter>
-                                    <artifact>org.mortbay.jasper:apache-el</artifact>
-                                    <includes>
-                                        <include>javax/el/**</include>
-                                    </includes>
-                                    <excludes>
-                                        <exclude>org/**</exclude>
-                                    </excludes>
-                                </filter>
-                                <filter>
-                                    <artifact>org.mortbay.jasper:apache-jsp</artifact>
-                                    <includes>
-                                        <include>javax/servlet/jsp/**</include>
-                                    </includes>
-                                    <excludes>
-                                        <exclude>org/**</exclude>
-                                    </excludes>
-                                </filter>
                                 <filter>
                                     <artifact>org.eclipse.jetty:jetty-xml</artifact>
                                     <includes>
