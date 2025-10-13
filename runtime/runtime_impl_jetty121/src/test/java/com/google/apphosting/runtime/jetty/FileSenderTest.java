@@ -19,13 +19,14 @@ package com.google.apphosting.runtime.jetty;
 import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.google.apphosting.runtime.jetty.ee8.FileSender;
 import com.google.apphosting.utils.config.AppYaml;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.time.Instant;
 import java.util.Collections;
@@ -36,7 +37,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpMethod;
-import org.eclipse.jetty.util.IO;
 import org.eclipse.jetty.util.resource.Resource;
 import org.junit.Before;
 import org.junit.Rule;
@@ -44,8 +44,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.mockito.Mock;
-import org.mockito.MockedStatic;
-import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
@@ -64,13 +62,15 @@ public class FileSenderTest {
   // or retrieving them with getHeader or getDateHeader, for example.
   @Mock private HttpServletRequest mockRequest;
   @Mock private HttpServletResponse mockResponse;
+  @Mock private FileSender.OutputWriter mockWriter;
   private AppYaml appYaml;
   private FileSender testInstance;
 
   @Before
   public void setUp() {
     appYaml = new AppYaml();
-    testInstance = new FileSender(appYaml);
+    mockWriter = mock(FileSender.IoOutputWriter.class);
+    testInstance = new FileSender(appYaml, mockWriter);
   }
 
   @Test
@@ -78,17 +78,16 @@ public class FileSenderTest {
     when(mockResource.length()).thenReturn(1L);
     when(mockResource.lastModified()).thenReturn(Instant.now());
     when(mockServletContext.getMimeType(any())).thenReturn("fake_content_type");
-    testInstance = new FileSender(/* appYaml= */ null);
+    testInstance = new FileSender(/* appYaml= */ null, mockWriter);
 
-    try (MockedStatic<IO> io = Mockito.mockStatic(IO.class)) {
-      testInstance.sendData(
-          mockServletContext, mockResponse, /* include= */ false, mockResource, FAKE_URL_PATH);
+    testInstance.sendData(
+        mockServletContext, mockResponse, /* include= */ false, mockResource, FAKE_URL_PATH);
 
-      verify(mockResponse).setContentType("fake_content_type");
-      verify(mockResponse).setContentLength(1);
-      verify(mockResponse).setHeader(HttpHeader.CACHE_CONTROL.asString(), "public, max-age=600");
-      io.verify(() -> IO.copy(any(), (OutputStream) any(), eq(1L)), times(1));
-    }
+    verify(mockResponse).setContentType("fake_content_type");
+    verify(mockResponse).setContentLength(1);
+    verify(mockResponse).setHeader(HttpHeader.CACHE_CONTROL.asString(), "public, max-age=600");
+
+    verify(mockWriter).writeTo((InputStream) any(), (OutputStream) any(), eq(1L));
   }
 
   @Test
@@ -103,15 +102,14 @@ public class FileSenderTest {
     appYaml.setHandlers(Collections.singletonList(handler));
     when(mockResource.length()).thenReturn(1L);
     when(mockResource.lastModified()).thenReturn(Instant.now());
-    try (MockedStatic<IO> io = Mockito.mockStatic(IO.class)) {
-      testInstance.sendData(
-          mockServletContext, mockResponse, /* include= */ false, mockResource, FAKE_URL_PATH);
 
-      verify(mockResponse).setHeader(HttpHeader.CACHE_CONTROL.asString(), "public, max-age=93780");
-      verify(mockResponse).addHeader("fake_name", "fake_value");
+    testInstance.sendData(
+        mockServletContext, mockResponse, /* include= */ false, mockResource, FAKE_URL_PATH);
 
-      io.verify(() -> IO.copy(any(), (OutputStream) any(), eq(1L)), times(1));
-    }
+    verify(mockResponse).setHeader(HttpHeader.CACHE_CONTROL.asString(), "public, max-age=93780");
+    verify(mockResponse).addHeader("fake_name", "fake_value");
+
+    verify(mockWriter).writeTo((InputStream) any(), (OutputStream) any(), eq(1L));
   }
 
   @Test
@@ -126,20 +124,19 @@ public class FileSenderTest {
     appYaml.setHandlers(Collections.singletonList(handler));
     when(mockResource.length()).thenReturn(1L);
     when(mockResource.lastModified()).thenReturn(Instant.now());
-    try (MockedStatic<IO> io = Mockito.mockStatic(IO.class)) {
-      testInstance.sendData(
-          mockServletContext,
-          mockResponse,
-          /* include= */ false,
-          mockResource,
-          "/different_url_path");
 
-      verify(mockResponse, never())
-          .setHeader(HttpHeader.CACHE_CONTROL.asString(), "public, max-age=93780");
-      verify(mockResponse, never()).addHeader("fake_name", "fake_value");
+    testInstance.sendData(
+        mockServletContext,
+        mockResponse,
+        /* include= */ false,
+        mockResource,
+        "/different_url_path");
 
-      io.verify(() -> IO.copy(any(), (OutputStream) any(), eq(1L)), times(1));
-    }
+    verify(mockResponse, never())
+        .setHeader(HttpHeader.CACHE_CONTROL.asString(), "public, max-age=93780");
+    verify(mockResponse, never()).addHeader("fake_name", "fake_value");
+
+    verify(mockWriter).writeTo((InputStream) any(), (OutputStream) any(), eq(1L));
   }
 
   @Test

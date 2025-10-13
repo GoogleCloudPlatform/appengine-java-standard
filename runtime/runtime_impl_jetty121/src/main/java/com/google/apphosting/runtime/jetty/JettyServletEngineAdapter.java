@@ -176,7 +176,7 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
         EvaluationRuntimeServerInterface evaluationRuntimeServerInterface =
             Objects.requireNonNull(runtimeOptions.evaluationRuntimeServerInterface());
         evaluationRuntimeServerInterface.addAppVersion(context, appinfo);
-        context.getResponse();
+        var unused = context.getResponse();
         appVersionKey = AppVersionKey.fromAppInfo(appinfo);
       } catch (Exception e) {
         throw new IllegalStateException(e);
@@ -262,8 +262,11 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
     }
 
     DelegateRpcExchange rpcExchange = new DelegateRpcExchange(upRequest, upResponse);
-    rpcExchange.setAttribute(AppEngineConstants.APP_VERSION_KEY_REQUEST_ATTR, appVersionKey);
-    rpcExchange.setAttribute(AppEngineConstants.ENVIRONMENT_ATTR, ApiProxy.getCurrentEnvironment());
+    var unusedApiVersionKey =
+        rpcExchange.setAttribute(AppEngineConstants.APP_VERSION_KEY_REQUEST_ATTR, appVersionKey);
+    var unusedEnvironment =
+        rpcExchange.setAttribute(
+            AppEngineConstants.ENVIRONMENT_ATTR, ApiProxy.getCurrentEnvironment());
     rpcConnector.service(rpcExchange);
     try {
       rpcExchange.awaitResponse();

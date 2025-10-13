@@ -27,6 +27,7 @@ import com.google.appengine.api.datastore.Key;
 import com.google.appengine.api.datastore.KeyFactory;
 import com.google.apphosting.runtime.SessionStore;
 import com.google.common.flogger.GoogleLogger;
+// <internal22>
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -91,7 +92,7 @@ class DatastoreSessionStore implements SessionStore {
   @Override
   public void deleteSession(String key) {
     try {
-      impl.delete(key);
+      var unused = impl.delete(key);
     } catch (Exception e) {
       throw new RuntimeException(e);
     }

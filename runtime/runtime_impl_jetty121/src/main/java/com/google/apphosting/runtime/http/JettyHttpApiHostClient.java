@@ -165,7 +165,7 @@ class JettyHttpApiHostClient extends HttpApiHostClient {
     }
 
     private void abortBecauseTooLarge(Response response) {
-      response.abort(new ApiProxy.ResponseTooLargeException(null, null));
+      var unused = response.abort(new ApiProxy.ResponseTooLargeException(null, null));
       // This exception will be replaced with a proper one in onComplete().
     }
 

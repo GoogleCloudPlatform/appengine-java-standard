@@ -15,9 +15,8 @@
  */
 package com.google.apphosting.runtime.jetty;
 
+import java.lang.reflect.InvocationTargetException;
 import com.google.apphosting.runtime.AppVersion;
-import com.google.apphosting.runtime.jetty.ee11.EE11AppVersionHandlerFactory;
-import com.google.apphosting.runtime.jetty.ee8.EE8AppVersionHandlerFactory;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
 
@@ -39,15 +38,33 @@ public interface AppVersionHandlerFactory {
     }
   }
 
-  static AppVersionHandlerFactory newInstance(Server server, String serverInfo) {
-    switch (getEEVersion()) {
-      case EE11:
-        return new EE11AppVersionHandlerFactory(server, serverInfo);
-      case EE8:
-        return new EE8AppVersionHandlerFactory(server, serverInfo);
-      default:
-        throw new IllegalStateException("Unknown EE version: " + getEEVersion());
+    static AppVersionHandlerFactory newInstance(Server server, String serverInfo) {
+    String appVersionHandlerFactoryNameClassName = getAppVersionHandlerFactoryNameClassName();
+    try {
+      return Class.forName(appVersionHandlerFactoryNameClassName)
+                .asSubclass(AppVersionHandlerFactory.class)
+                .getConstructor(Server.class, String.class)
+                .newInstance(server, serverInfo);
+    } catch (ClassNotFoundException
+          | IllegalAccessException
+          | IllegalArgumentException
+          | InstantiationException
+          | NoSuchMethodException
+          | SecurityException
+          | InvocationTargetException ex) {
+      throw new IllegalStateException(
+          "Unable to create instance of " + appVersionHandlerFactoryNameClassName, ex);
+    } catch (ClassCastException cce) {
+       throw new IllegalStateException("Not a subtype of " + AppVersionHandlerFactory.class.getName(), cce);
     }
+  }
+
+  static String getAppVersionHandlerFactoryNameClassName() {
+    return switch (getEEVersion()) {
+      case EE11 -> "com.google.apphosting.runtime.jetty.ee11.EE11AppVersionHandlerFactory";
+      case EE8 -> "com.google.apphosting.runtime.jetty.ee8.EE8AppVersionHandlerFactory";
+      default -> throw new IllegalStateException("Unknown EE version: " + getEEVersion());
+    };
   }
 
   Handler createHandler(AppVersion appVersion) throws Exception;

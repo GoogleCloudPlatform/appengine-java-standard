@@ -37,6 +37,7 @@ import javax.servlet.jsp.JspFactory;
 import org.eclipse.jetty.ee8.annotations.AnnotationConfiguration;
 import org.eclipse.jetty.ee8.nested.ContextHandler;
 import org.eclipse.jetty.ee8.nested.Dispatcher;
+import org.eclipse.jetty.ee8.nested.Request;
 import org.eclipse.jetty.ee8.quickstart.QuickStartConfiguration;
 import org.eclipse.jetty.ee8.servlet.ErrorPageErrorHandler;
 import org.eclipse.jetty.ee8.webapp.FragmentConfiguration;
@@ -197,34 +198,32 @@ public class EE8AppVersionHandlerFactory implements AppVersionHandlerFactory {
           .setAsyncPersistence(sessionsConfig.isAsyncPersistence())
           .setServletContextHandler(context);
 
-      SessionManagerHandler.create(builder.build());
+      var unused = SessionManagerHandler.create(builder.build());
       // Pass the AppVersion on to any of our servlets (e.g. ResourceFileServlet).
       context.setAttribute(AppEngineConstants.APP_VERSION_CONTEXT_ATTR, appVersion);
 
       if (Boolean.getBoolean(HTTP_CONNECTOR_MODE)) {
-        context.addEventListener(
-            new ContextHandler.ContextScopeListener() {
-              @Override
-              public void enterScope(
-                  ContextHandler.APIContext context,
-                  org.eclipse.jetty.ee8.nested.Request request,
-                  Object reason) {
-                if (request != null) {
-                  ApiProxy.Environment environment =
-                      (ApiProxy.Environment)
-                          request.getAttribute(AppEngineConstants.ENVIRONMENT_ATTR);
-                  if (environment != null) {
-                    ApiProxy.setEnvironmentForCurrentThread(environment);
+        var unusedEventListener =
+            context.addEventListener(
+                new ContextHandler.ContextScopeListener() {
+                  @Override
+                  public void enterScope(
+                      ContextHandler.APIContext context, Request request, Object reason) {
+                    if (request != null) {
+                      ApiProxy.Environment environment =
+                          (ApiProxy.Environment)
+                              request.getAttribute(AppEngineConstants.ENVIRONMENT_ATTR);
+                      if (environment != null) {
+                        ApiProxy.setEnvironmentForCurrentThread(environment);
+                      }
+                    }
                   }
-                }
-              }
 
-              @Override
-              public void exitScope(
-                  ContextHandler.APIContext context, org.eclipse.jetty.ee8.nested.Request request) {
-                ApiProxy.clearEnvironmentForCurrentThread();
-              }
-            });
+                  @Override
+                  public void exitScope(ContextHandler.APIContext context, Request request) {
+                    ApiProxy.clearEnvironmentForCurrentThread();
+                  }
+                });
       }
 
       return context.get();
@@ -244,7 +243,7 @@ public class EE8AppVersionHandlerFactory implements AppVersionHandlerFactory {
     @Override
     public void handle(
         String target,
-        org.eclipse.jetty.ee8.nested.Request baseRequest,
+        Request baseRequest,
         HttpServletRequest request,
         HttpServletResponse response)
         throws IOException, ServletException {

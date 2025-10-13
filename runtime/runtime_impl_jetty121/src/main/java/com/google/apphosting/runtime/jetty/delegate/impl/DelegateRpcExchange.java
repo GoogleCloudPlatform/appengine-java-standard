@@ -67,7 +67,7 @@ public class DelegateRpcExchange implements DelegateExchange {
     final boolean skipAdmin = hasSkipAdminCheck(request);
     // Translate the X-Google-Internal-SkipAdminCheck to a servlet attribute.
     if (skipAdmin) {
-      setAttribute(SKIP_ADMIN_CHECK_ATTR, true);
+      var unused = setAttribute(SKIP_ADMIN_CHECK_ATTR, true);
 
       // N.B.: If SkipAdminCheck is set, we're actually lying
       // to Jetty here to tell it that HTTPS is in use when it may not

@@ -246,7 +246,7 @@ public class AppEngineWebAppContext extends WebAppContext {
   @Override
   public void doStart() throws Exception {
     super.doStart();
-    addEventListener(new TransactionCleanupListener(getClassLoader()));
+    var unused = addEventListener(new TransactionCleanupListener(getClassLoader()));
   }
 
   @Override

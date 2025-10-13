@@ -20,6 +20,7 @@ import com.google.apphosting.runtime.jetty.CacheControlHeader;
 import com.google.apphosting.utils.config.AppYaml;
 import com.google.common.base.Strings;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Map;
 import java.util.Optional;
@@ -36,9 +37,27 @@ import org.eclipse.jetty.util.resource.Resource;
 public class FileSender {
 
   private final AppYaml appYaml;
+  private final OutputWriter outputWriter;
+
+  public interface OutputWriter {
+    void writeTo(InputStream in, OutputStream out, long contentLength) throws IOException;
+  }
+
+  public static class IoOutputWriter implements OutputWriter {
+    @Override
+    public void writeTo(InputStream in, OutputStream out, long contentLength) throws IOException {
+      IO.copy(in, out, contentLength);
+    }
+  }
 
   public FileSender(AppYaml appYaml) {
     this.appYaml = appYaml;
+    this.outputWriter = new IoOutputWriter();
+  }
+
+  public FileSender(AppYaml appYaml, OutputWriter outputWriter) {
+    this.appYaml = appYaml;
+    this.outputWriter = outputWriter;
   }
 
   /** Writes or includes the specified resource. */
@@ -61,7 +80,11 @@ public class FileSender {
     } catch (IllegalStateException e) {
       out = new WriterOutputStream(response.getWriter());
     }
-    IO.copy(resource.newInputStream(), out, contentLength);
+    this.outputWriter.writeTo(resource.newInputStream(), out, contentLength);
+  }
+
+  public void writeTo(InputStream in, OutputStream out, long contentLength) throws IOException {
+    IO.copy(in, out, contentLength);
   }
 
   /** Writes the headers that should accompany the specified resource. */
@@ -85,8 +108,7 @@ public class FileSender {
       }
     }
 
-    response.setDateHeader(
-        HttpHeader.LAST_MODIFIED.asString(), resource.lastModified().toEpochMilli());
+    response.setDateHeader(HttpHeader.LAST_MODIFIED.asString(), resource.lastModified().toEpochMilli());
     if (appYaml != null) {
       // Add user specific static headers
       Optional<AppYaml.Handler> maybeHandler =

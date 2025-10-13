@@ -17,9 +17,8 @@
 package com.google.apphosting.runtime.jetty;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import com.google.appengine.tools.development.resource.ResourceExtractor;
 import com.google.apphosting.runtime.jetty.ee8.AppEngineWebAppContext;
@@ -130,7 +129,7 @@ public final class AppEngineWebAppContextTest {
       assertTrue(tempDirectory.isDirectory());
       String[] files = tempDirectory.list();
       assertNotNull(files);
-      assertEquals(files.length, 0);
+      assertThat(files).isEmpty();
     }
   }
 }
