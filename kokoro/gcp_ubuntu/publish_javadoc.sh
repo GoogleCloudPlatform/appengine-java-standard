@@ -22,12 +22,14 @@ setup_docuploader() {
  curl -fsSL --retry 10 -o /tmp/jar1.jar https://github.com/googleapis/java-docfx-doclet/releases/download/1.9.0/docfx-doclet-1.9.0-jar-with-dependencies.jar
  # Update Python 3 and Maven
  sudo apt-get update
- sudo apt-get install -y python3 python3-pip maven
+ sudo apt-get install -y python3 python3-pip python3-venv maven
  # install docuploader package with upgrade to get latest correct versions.
  echo "Trying to install gcp-docuploader."
- python3 -m pip install --require-hashes --upgrade pip --user
- python3 -m pip install --require-hashes gcp-docuploader --user
- python3 -m pip install --require-hashes --upgrade protobuf --user
+ python3 -m venv env
+ source env/bin/activate
+ python3 -m pip install --require-hashes --upgrade pip
+ python3 -m pip install --require-hashes gcp-docuploader==0.7.2
+ python3 -m pip install --require-hashes --upgrade protobuf
 }
 
 if [[ -z "${CREDENTIALS}" ]]; then
