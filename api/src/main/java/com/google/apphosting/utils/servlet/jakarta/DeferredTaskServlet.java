@@ -43,7 +43,7 @@ import java.util.Map;
  *    &lt;servlet&gt;
  *      &lt;servlet-name&gt;/_ah/queue/__deferred__&lt;/servlet-name&gt;
  *      &lt;servlet-class
- *        &gt;com.google.apphosting.utils.servlet.DeferredTaskServlet&lt;/servlet-class&gt;
+ *        &gt;com.google.apphosting.utils.servlet.jakarta.DeferredTaskServlet&lt;/servlet-class&gt;
  *    &lt;/servlet&gt;
  *
  *    &lt;servlet-mapping&gt;

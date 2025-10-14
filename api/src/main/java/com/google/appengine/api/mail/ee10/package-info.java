@@ -14,15 +14,10 @@
  * limitations under the License.
  */
 
-package com.google.appengine.api.blobstore.jakarta;
-
-
-/** Creates {@link BlobstoreService} implementations for jakarta APIs. */
-public final class BlobstoreServiceFactory {
-
-  /** Creates a {@code BlobstoreService} for jakarta APIs. */
-  public static BlobstoreService getBlobstoreService() {
-    return new BlobstoreServiceImpl();
-  }
-
-}
+/**
+/**
+ * @deprecated as of version 3.0, use {@link
+ *     com.google.appengine.api.mail.jakarta} instead.
+ */
+@Deprecated(since = "3.0.0")
+package com.google.appengine.api.mail.ee10;

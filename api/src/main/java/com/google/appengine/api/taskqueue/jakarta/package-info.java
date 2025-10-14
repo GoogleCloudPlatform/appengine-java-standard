@@ -14,15 +14,11 @@
  * limitations under the License.
  */
 
-package com.google.appengine.api.blobstore.jakarta;
-
-
-/** Creates {@link BlobstoreService} implementations for jakarta APIs. */
-public final class BlobstoreServiceFactory {
-
-  /** Creates a {@code BlobstoreService} for jakarta APIs. */
-  public static BlobstoreService getBlobstoreService() {
-    return new BlobstoreServiceImpl();
-  }
-
-}
+/**
+ * Provides a mechanism to perform work initiated by a user request, outside of that request.
+ *
+ * @see com.google.appengine.api.taskqueue.Queue
+ * @see <a href="http://cloud.google.com/appengine/docs/java/taskqueue/">The Task Queue Java API in
+ *     the <em>Google App Engine Developer's Guide</em></a>.
+ */
+package com.google.appengine.api.taskqueue.jakarta;

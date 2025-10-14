@@ -49,9 +49,9 @@ export NAME=appengine-java11-bundled-services
 export VERSION=11
 
 sudo apt-get update
-sudo apt-get install -y openjdk-17-jdk
-sudo update-java-alternatives --set java-1.17.0-openjdk-amd64
-export JAVA_HOME="$(update-java-alternatives -l | grep "1.17" | head -n 1 | tr -s " " | cut -d " " -f 3)"
+sudo apt-get install -y openjdk-21-jdk
+sudo update-java-alternatives --set java-1.21.0-openjdk-amd64
+export JAVA_HOME="$(update-java-alternatives -l | grep "1.21" | head -n 1 | tr -s " " | cut -d " " -f 3)"
 
 # Make sure `JAVA_HOME` is set.
 echo "JAVA_HOME = $JAVA_HOME"
@@ -68,7 +68,7 @@ cd api
 
 pushd target/docfx-yml
 
-# create metadata for Java11/17
+# create metadata for Java11/17/25
 python3 -m docuploader create-metadata \
  --name appengine-java-gen2-bundled-services \
  --version 2.0.0 \

@@ -23,11 +23,11 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.util.Map;
 
 /**
- * Resources for managing {@link DeferredTask}.
+ * Resources for managing {@link com.google.appengine.api.taskqueue.DeferredTask}.
  *
  */
 public class DeferredTaskContext {
-  /** The content type of a serialized {@link DeferredTask}. */
+  /** The content type of a serialized {@link com.google.appengine.api.taskqueue.DeferredTask}. */
   public static final String RUNNABLE_TASK_CONTENT_TYPE =
       "application/x-binary-app-engine-java-runnable-task";
 

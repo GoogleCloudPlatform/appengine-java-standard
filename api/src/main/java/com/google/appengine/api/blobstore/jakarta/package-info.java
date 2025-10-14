@@ -14,15 +14,13 @@
  * limitations under the License.
  */
 
+/**
+ * Provides management and persistent storage of large, immutable byte arrays. This allows
+ * applications to accept, save, and later serve files of any size.
+ *
+ * @see com.google.appengine.api.blobstore.BlobstoreService
+ * @see <a href="http://cloud.google.com/appengine/docs/java/blobstore/">The Blobstore Java API in
+ *     the <em>Google App Engine Developer's Guide</em></a>.
+ */
+
 package com.google.appengine.api.blobstore.jakarta;
-
-
-/** Creates {@link BlobstoreService} implementations for jakarta APIs. */
-public final class BlobstoreServiceFactory {
-
-  /** Creates a {@code BlobstoreService} for jakarta APIs. */
-  public static BlobstoreService getBlobstoreService() {
-    return new BlobstoreServiceImpl();
-  }
-
-}
