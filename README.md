@@ -362,6 +362,55 @@ For example, if your application code needs more `-add-opens` flags, you can use
      </env-variables>
   ```
 
+**Note:**
+
+*   Only one of `appengine.use.EE8`, `appengine.use.EE10`, or `appengine.use.EE11` can be set to `true` at a time.
+*   Flags can be set in `WEB-INF/appengine-web.xml` or via Java system properties (e.g., `-Dappengine.use.EE10=true`). System properties override `appengine-web.xml`.
+*   EE6 = Servlet 3.1 (`javax.*`), EE8 = Servlet 4.0 (`javax.*`), EE10 = Servlet 5.0 (`jakarta.*`), EE11 = Servlet 6.0 (`jakarta.*`).
+*   Jetty 12.1 should be fully backward compatible with Jetty 12.0 and EE11 version should also be backward compatible with EE10.
+*   EE8 should also be backward compatible with EE6.
+
+
+
+
+### Java 17 (`<runtime>java17</runtime>`)
+
+| Flag(s) Set in `appengine-web.xml` or System Properties | Resulting Jetty | Support | Resulting EE Version | Notes |
+| :--- | :--- | :--- | :--- | :--- |
+| _None (default)_ | 9.4 | GA | 6 | |
+| `appengine.use.EE8=true` | 12.0 | GA | 8 | |
+| `appengine.use.EE10=true` | 12.0 | GA | 10 | |
+| `appengine.use.EE8=true`, `appengine.use.jetty121=true` | 12.1 | Early Access | 8 | |
+| `appengine.use.EE10=true`, `appengine.use.jetty121=true` | 12.1 | Early Access | 11 | **Upgraded**: EE10 is upgraded to EE11 on Jetty 12.1 |
+| `appengine.use.EE11=true` | 12.1 | Early Access | 11 | `appengine.use.jetty121=true` is used automatically |
+
+##
+
+### Java 21 (`<runtime>java21</runtime>`)
+
+| Flag(s) Set in `appengine-web.xml` or System Properties | Resulting Jetty | Support | Resulting EE Version | Notes |
+| :--- | :--- | :--- | :--- | :--- |
+| _None (default)_ | 12.0 | GA | 10 | |
+| `appengine.use.EE8=true` | 12.0 | GA | 8 | |
+| `appengine.use.EE10=true` | 12.0 | GA | 10 | |
+| `appengine.use.jetty121=true` | 12.1 | Early Access | 11 | If no EE flag is set, `jetty121` defaults to EE11 |
+| `appengine.use.EE8=true`, `appengine.use.jetty121=true` | 12.1 | Early Access | 8 | |
+| `appengine.use.EE10=true`, `appengine.use.jetty121=true` | 12.1 | Early Access | 11 | **Upgraded**: EE10 is upgraded to EE11 on Jetty 12.1 |
+| `appengine.use.EE11=true` | 12.1 | Early Access | 11 | `appengine.use.jetty121=true` is used automatically |
+
+##
+
+### Java 25 (`<runtime>java25</runtime>`)
+
+| Flag(s) Set in `appengine-web.xml` or System Properties | Resulting Jetty | Support | Resulting EE Version | Notes |
+| :--- | :--- | :--- | :--- | :--- |
+| _None (default)_ | 12.1 | Early Access | 11 | `appengine.use.jetty121=true` is used |
+| `appengine.use.EE8=true` | 12.1 | Early Access | 8 | `appengine.use.jetty121=true` is used |
+| `appengine.use.EE11=true` | 12.1 | Early Access | 11 | `appengine.use.jetty121=true` is used |
+| `appengine.use.EE10=true` | **ERROR** | Unsupported | **ERROR** | EE10 is not supported, use compatible version EE11 instead|
+
+##
+
 ## Contributing
 
 Check out the [contributing guide](CONTRIBUTING.md) to learn how you can report issues and help make changes.
