@@ -27,9 +27,9 @@ setup_docuploader() {
  echo "Trying to install gcp-docuploader."
  python3 -m venv env
  source env/bin/activate
- python3 -m pip install --require-hashes --upgrade pip
+ python3 -m pip install --require-hashes --upgrade pip==25.0.1
  python3 -m pip install --require-hashes gcp-docuploader==0.7.2
- python3 -m pip install --require-hashes --upgrade protobuf
+ python3 -m pip install --require-hashes --upgrade protobuf==3.25.2
 }
 
 if [[ -z "${CREDENTIALS}" ]]; then
