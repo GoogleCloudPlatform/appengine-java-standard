@@ -231,7 +231,6 @@
         <excludeclasses />
         <excludePackages>com\.google\.appengine\.httpapiproxy.*:com\.google\.appengine\.api\.internal.*:com\.google\.storage\.onestore.*:com\.google\.api\.client\.findbugs.*:com\.google\.apphosting\.utils.*</excludePackages>
         <source>8</source>
-        <sourceFileExclude />
         <!-- Filed https://github.com/googleapis/java-docfx-doclet/issues/105 -->
         <docletPath>${user.home}/Downloads/java-docfx-doclet-1.8.0-jar-with-dependencies.jar</docletPath>
       </properties>
@@ -254,16 +253,13 @@
                 -outputpath ${outputpath}
                 -projectname ${projectname}
                 -disable-changelog true
-                -excludeclasses ${excludeclasses}:
                 -excludepackages ${excludePackages}:
               </additionalOptions>
               <doclint>none</doclint>
               <show>protected</show>
               <nohelp>true</nohelp>
               <source>${source}</source>
-              <sourceFileExcludes>
-                <exclude>${sourceFileExclude}</exclude>
-              </sourceFileExcludes>
+
             </configuration>
           </plugin>
           <plugin>
