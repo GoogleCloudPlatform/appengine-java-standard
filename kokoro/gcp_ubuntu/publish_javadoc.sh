@@ -27,9 +27,12 @@ setup_docuploader() {
  echo "Trying to install gcp-docuploader."
  python3 -m venv env
  source env/bin/activate
- python3 -m pip install --require-hashes --upgrade pip==25.0.1
- python3 -m pip install --require-hashes gcp-docuploader==0.7.2
- python3 -m pip install --require-hashes --upgrade protobuf==3.25.2
+cat > /tmp/requirements.txt << EOF
+pip==25.0.1 --hash=sha256:c46efd13b6aa8279f33f2864459c8ce587ea6a1a59ee20de055868d8f7688f7f
+gcp-docuploader==0.7.2 --hash=sha256:b1c37b55c360c7f1f3a60f8b1d3d6110f7b0f0a42f01f4f8b1c411a7a0c8b2c5
+protobuf==4.25.3 --hash=sha256:29b0f0119c6e6169c004b068a070c7ab7707c9a9307d8d481dae181febc2e6f3
+EOF
+ python3 -m pip install --require-hashes -r /tmp/requirements.txt
 }
 
 if [[ -z "${CREDENTIALS}" ]]; then
