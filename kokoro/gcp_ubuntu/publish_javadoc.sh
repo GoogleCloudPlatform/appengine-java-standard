@@ -29,8 +29,8 @@ setup_docuploader() {
  source env/bin/activate
 cat > /tmp/requirements.txt << EOF
 pip==25.0.1 --hash=sha256:c46efd13b6aa8279f33f2864459c8ce587ea6a1a59ee20de055868d8f7688f7f
-gcp-docuploader==0.7.2 --hash=sha256:b1c37b55c360c7f1f3a60f8b1d3d6110f7b0f0a42f01f4f8b1c411a7a0c8b2c5
-protobuf==4.25.3 --hash=sha256:29b0f0119c6e6169c004b068a070c7ab7707c9a9307d8d481dae181febc2e6f3
+gcp-docuploader==0.7.2 --hash=sha256:3916d2b46239a2d86ba9427a7f21e3762f21c1e1d34e4f066317a9765e43c90c
+protobuf==4.25.3 --hash=sha256:7c8daa26095f82482307bc717364e7c13f4f1c99659be82890dcfc215194554d
 EOF
  python3 -m pip install --require-hashes -r /tmp/requirements.txt
 }
