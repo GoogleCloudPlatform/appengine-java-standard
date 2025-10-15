@@ -22,10 +22,13 @@ setup_docuploader() {
  curl -fsSL --retry 10 -o /tmp/jar1.jar https://github.com/googleapis/java-docfx-doclet/releases/download/1.9.0/docfx-doclet-1.9.0-jar-with-dependencies.jar
  # Update Python 3 and Maven
  sudo apt-get update
- sudo apt-get install -y python3 python3-pip python3-venv maven
+ sudo apt-get install -y software-properties-common
+ sudo add-apt-repository -y ppa:deadsnakes/ppa
+ sudo apt-get update
+ sudo apt-get install -y python3.12 python3.12-venv python3-pip maven
  # install docuploader package with upgrade to get latest correct versions.
  echo "Trying to install gcp-docuploader."
- python3 -m venv env
+ python3.12 -m venv env
  source env/bin/activate
 cat > /tmp/requirements.txt << EOF
 #
@@ -285,7 +288,7 @@ urllib3==2.5.0 \
     --hash=sha256:e6b01673c0fa6a13e374b50871808eb3bf7046c4b125b216f6bf1cc604cff0dc
 
 EOF
- python3 -m pip install --require-hashes -r /tmp/requirements.txt
+ python -m pip install --require-hashes -r /tmp/requirements.txt
 }
 
 if [[ -z "${CREDENTIALS}" ]]; then
@@ -327,7 +330,7 @@ cd api
 pushd target/docfx-yml
 
 # create metadata for Java11/17/25
-python3 -m docuploader create-metadata \
+python -m docuploader create-metadata \
  --name appengine-java-gen2-bundled-services \
  --version 2.0.0 \
  --stem /appengine/docs/standard/java-gen2/reference/services/bundled \
@@ -337,7 +340,7 @@ python3 -m docuploader create-metadata \
  echo "Done creating metadata."
 
 # upload yml to production bucket
-python3 -m docuploader upload . \
+python -m docuploader upload . \
  --credentials ${CREDENTIALS} \
  --staging-bucket ${STAGING_BUCKET_V2} \
  --destination-prefix docfx
