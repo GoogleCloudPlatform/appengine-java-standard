@@ -261,10 +261,9 @@ pushd target/docfx-yml
 # create metadata for Java11/17/25
 python -m docuploader create-metadata \
  --name appengine-java-gen2-bundled-services \
- --version 2.0.0 \
+ --version 3.0 \
  --stem /appengine/docs/standard/java-gen2/reference/services/bundled \
  --language java
-
 
  echo "Done creating metadata."
 

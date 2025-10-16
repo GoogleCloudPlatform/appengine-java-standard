@@ -15,7 +15,6 @@
  */
 
 /**
-/**
  * @deprecated as of version 3.0, use {@link
  *     com.google.appengine.api.mail.jakarta} instead.
  */
