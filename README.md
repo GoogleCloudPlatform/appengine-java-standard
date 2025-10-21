@@ -17,11 +17,11 @@
 [![Maven][maven-version-image]][maven-version-link]
 [![Code of conduct](https://img.shields.io/badge/%E2%9D%A4-code%20of%20conduct-blue.svg)](https://github.com/GoogleCloudPlatform/appengine-java-standard/blob/main/CODE_OF_CONDUCT.md)
 
-# Google App Engine Standard Environment Source Code for Java 17, Java 21, Java 25.
+# Google App Engine (GAE) standard environment source code for Java 17, Java 21, Java 25.
 
 
-This repository contains the Java Source Code for [Google App Engine
-standard environment][ae-docs], the production runtime, the AppEngine APIs, and the local SDK.
+This repository contains the Java source code for [Google App Engine
+standard environment][ae-docs], the production runtime, the App Engine APIs, and the local SDK.
 
 [ae-docs]: https://cloud.google.com/appengine/docs/standard/java
 
@@ -29,21 +29,21 @@ standard environment][ae-docs], the production runtime, the AppEngine APIs, and 
 
 ### Use a JDK17 environment, so it can build the Java17 GAE runtime.
 
-[jdk8](https://adoptium.net/), but using a JDK21 or JDK25 is also possible.
+[jdk17](https://adoptium.net/), but using a JDK21 or JDK25 is also possible.
 
-The shared code base is also used for GAE Java 17, Java 17 and Java 25 build and test targets, using GitHub actions:
+The shared codebase is also used for GAE Java 17, Java 21 and Java 25 build and test targets, using GitHub actions:
 
 - [Java 17/21/25 Continuous Integration](https://github.com/GoogleCloudPlatform/appengine-java-standard/actions/workflows/maven.yml)
 
 ## Releases
 
 This repository is the open source mirror of the Google App Engine Java source code that was used to produce Maven artifacts and runtime jars.
-On Maven Central, the released artifacts from the internal source repository are using the versions like 1.9.xx.
-The open source release mechanism used with this GitHub repository is using the version starting at 2.0.x.
-Soon we will stop entirely pushing internal 1.9.xx artifacts and encourage all App Engine customers to use the new artifacts built from the GitHub project.
+The open source release mechanism used with this GitHub repository is using the version starting at 3.0.x, compatible for Java 17 or above.
 
 
 ## Modules
+
+This repository is organized into several Maven modules. For a detailed description of each module, its dependencies, and how they relate to each other, see [modules.md](modules.md).
 
 Orange items are public modules artifacts and yellow are internal ones.
 Modules ending with * are only used on the production server side.
@@ -56,9 +56,14 @@ Source code for all public APIs for com.google.appengine.api.* packages.
 
 - [Public Documentation][ae-docs]
 - [Latest javadoc.io API Javadocs from this repository](https://javadoc.io/doc/com.google.appengine/appengine-apis/latest/index.html)
-- [Javadocs](https://cloud.google.com/appengine/docs/standard/java/javadoc)
+- [Javadocs](https://cloud.google.com/appengine/docs/standard/java-gen2/reference/services/bundled/latest/overview)
 - [Source Code](https://github.com/GoogleCloudPlatform/appengine-java-standard/tree/master/api)
 - [Source Code for repackaged API jar](https://github.com/GoogleCloudPlatform/appengine-java-standard/tree/master/appengine-api-1.0-sdk)
+
+Note that some App Engine APIs such as Blobstore and Taskqueues provide classes that depend on servlet APIs.
+The base packages `com.google.appengine.api.blobstore` and `com.google.appengine.api.taskqueue` contain classes that use `javax.servlet.*` for EE6/EE8 compatibility.
+For EE10 and EE11 environments that use the `jakarta.servlet.*` namespace, use classes from `com.google.appengine.api.blobstore.jakarta` and `com.google.appengine.api.taskqueue.jakarta` packages.
+The packages `com.google.appengine.api.blobstore.ee10` and `com.google.appengine.api.taskqueue.ee10` are deprecated starting from version 3.0.0.
 
 *  Maven pom.xml
 
@@ -80,7 +85,7 @@ Source code for all public APIs for com.google.appengine.api.* packages.
     ...
     ```
 
-*  Maven Java 21 with Jarkata EE 10 support pom.xml
+*  Maven Java 21 with jakarta EE 10 support pom.xml
 
     ```
     <packaging>war</packaging><!-- Servlet 6.0 WAR packaging-->
@@ -100,7 +105,7 @@ Source code for all public APIs for com.google.appengine.api.* packages.
     ...
     ```
 
-*  Maven Java 25 Alpha with Jakarta EE 11 support pom.xml (EE10 is not supported in Java25, EE11 is fully compatible with EE10)
+*  Maven Java 25 Alpha with jakarta EE 11 support pom.xml (EE10 is not supported in Java25, EE11 is fully compatible with EE10)
 
     ```
     <packaging>war</packaging><!-- Servlet 6.1 WAR packaging-->
@@ -133,13 +138,12 @@ Source code for all public APIs for com.google.appengine.api.* packages.
       <system-properties>
         <property name="appengine.use.EE8" value="true"/>
     </system-properties>
-    If you want to keep javax.servlet APIs and not jarkata.servlet by default
+    If you want to keep javax.servlet APIs and not jakarta.servlet by default
     -->
     </appengine-web-app>
     ```
 
-
-- [Public Java 21/25 Documentation](https://cloud.google.com/appengine/docs/standard/java-gen2/runtime)
+- [Public Java 17/21/25 Documentation](https://cloud.google.com/appengine/docs/standard/java-gen2/runtime)
 - [How to upgrade to Java21/25](https://cloud.google.com/appengine/docs/standard/java-gen2/upgrade-java-runtime)
 
 *  Java 17 appengine-web.xml
@@ -199,7 +203,7 @@ Source code for remote APIs for App Engine.
 ```
 
 
-* Servlet Jarkata EE10 and EE11 web.xml
+* Servlet jakarta EE10 and EE11 web.xml
 
 ```
    <servlet>
