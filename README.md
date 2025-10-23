@@ -13,7 +13,7 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 -->
-[![Java8/11/17/21](https://github.com/GoogleCloudPlatform/appengine-java-standard/actions/workflows/maven.yml/badge.svg)](https://github.com/GoogleCloudPlatform/appengine-java-standard/actions/workflows/maven.yml)
+[![Java17/21/25](https://github.com/GoogleCloudPlatform/appengine-java-standard/actions/workflows/maven.yml/badge.svg)](https://github.com/GoogleCloudPlatform/appengine-java-standard/actions/workflows/maven.yml)
 [![Maven][maven-version-image]][maven-version-link]
 [![Code of conduct](https://img.shields.io/badge/%E2%9D%A4-code%20of%20conduct-blue.svg)](https://github.com/GoogleCloudPlatform/appengine-java-standard/blob/main/CODE_OF_CONDUCT.md)
 
@@ -74,7 +74,7 @@ The packages `com.google.appengine.api.blobstore.ee10` and `com.google.appengine
         <dependency>
             <groupId>com.google.appengine</groupId>
             <artifactId>appengine-api-1.0-sdk</artifactId>
-            <version>2.0.39</version><!-- or later-->
+            <version>3.0.1</version><!-- or later-->
         </dependency>
         <dependency>
           <groupId>javax.servlet</groupId>
@@ -94,7 +94,7 @@ The packages `com.google.appengine.api.blobstore.ee10` and `com.google.appengine
         <dependency>
             <groupId>com.google.appengine</groupId>
             <artifactId>appengine-api-1.0-sdk</artifactId>
-            <version>2.0.39</version><!-- or later-->
+            <version>3.0.1</version><!-- or later-->
         </dependency>
         <dependency>
           <groupId>jakarta.servlet</groupId>
@@ -114,7 +114,7 @@ The packages `com.google.appengine.api.blobstore.ee10` and `com.google.appengine
         <dependency>
             <groupId>com.google.appengine</groupId>
             <artifactId>appengine-api-1.0-sdk</artifactId>
-            <version>3.0.0-beta</version><!-- or later-->
+            <version>3.0.1</version><!-- or later-->
         </dependency>
         <dependency>
           <groupId>jakarta.servlet</groupId>
@@ -224,7 +224,7 @@ Source code for remote APIs for App Engine.
     <dependency>
        <groupId>com.google.appengine</groupId>
        <artifactId>appengine-remote-api</artifactId>
-       <version>2.0.39</version><!-- Or later-->
+       <version>3.0.1</version><!-- or later-->
     </dependency>
 ```
 
@@ -247,11 +247,11 @@ We moved `com.google.appengine.api.memcache.stdimpl` and its old dependency
     <dependency>
        <groupId>com.google.appengine</groupId>
        <artifactId>appengine-api-legacy.jar/artifactId>
-       <version>2.0.39</version><!-- Or later-->
+       <version>3.0.1</version><!-- Or later-->
     </dependency>
 ```
 
-###  Local Unit Testing for Java 8, 11, 17, 21
+###  Local Unit Testing for Java 17, 21, 25
 
 - [Code Sample](https://github.com/GoogleCloudPlatform/java-docs-samples/tree/main/unittests)
 - [Latest javadoc.io Javadocs from this repository](https://javadoc.io/doc/com.google.appengine/appengine-testing)
@@ -262,19 +262,19 @@ We moved `com.google.appengine.api.memcache.stdimpl` and its old dependency
     <dependency>
       <groupId>com.google.appengine</groupId>
       <artifactId>appengine-testing</artifactId>
-       <version>2.0.39</version><!-- Or later-->
+      <version>3.0.1</version><!-- or later-->
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>com.google.appengine</groupId>
       <artifactId>appengine-api-stubs</artifactId>
-       <version>2.0.39</version><!-- Or later-->
+      <version>3.0.1</version><!-- or later-->
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>com.google.appengine</groupId>
       <artifactId>appengine-tools-sdk</artifactId>
-       <version>2.0.39</version><!-- Or later-->
+      <version>3.0.1</version><!-- or later-->
       <scope>test</scope>
     </dependency>
 ```

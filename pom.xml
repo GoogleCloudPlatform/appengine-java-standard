@@ -19,7 +19,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.google.appengine</groupId>
   <artifactId>parent</artifactId>
-  <version>3.0.1-SNAPSHOT</version>
+  <version>3.0.2-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>AppEngine :: Parent project</name>
   <url>https://github.com/GoogleCloudPlatform/appengine-java-standard/</url>
@@ -62,7 +62,7 @@
     <module>jetty121_assembly</module>
     <module>sdk_assembly</module>
     <module>applications</module>
-   <module>runtime/test</module>
+    <module>runtime/test</module>
     <module>appengine_testing_tests</module>
     <module>e2etests</module>
   </modules>
@@ -91,7 +91,7 @@
   <licenses>
       <license>
           <name>Apache License 2.0</name>
-          <url>http://www.apache.org/licenses/LICENSE-2.0.html</url>
+          <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
           <distribution>repo</distribution>
           <comments>
            Copyright 2021 the original author or authors.

@@ -17,7 +17,7 @@
 # Access legacy bundled services from customer owned Jetty server.
 
 ## Before you begin
-1. Follow the instructions in [Java 11/17 runtime environment](https://cloud.google.com/appengine/docs/standard/java-gen2/runtime#java-17) to build a Java 11/17 application.
+1. Follow the instructions in [Java 17+ runtime environment](https://cloud.google.com/appengine/docs/standard/java-gen2/runtime#java-17) to build a Java 17/21/25 application.
 2. Example Java 11 application built with JettyServer - [github](https://github.com/GoogleCloudPlatform/java-docs-samples/tree/8f899982b9200b44b7e2b69224309637150d9783/appengine-java11/appengine-simple-jetty-main)
 
 ## Setting App Engine SDK
@@ -26,7 +26,7 @@
     <dependency>
       <groupId>com.google.appengine</groupId>
       <artifactId>appengine-api-1.0-sdk</artifactId>
-      <version>2.0.27</version>
+      <version>3.0.1</version>
     </dependency>
 ```
 ### Setup Filter
