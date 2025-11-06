@@ -22,7 +22,7 @@ src_dir="${KOKORO_ARTIFACTS_DIR}/git/appengine-java-standard"
 cd $src_dir
 
 sudo apt-get update
-#Update Python 3
+# Update Python 3, needed for Cloud CLI used to Maven stage some GAE test apps.
 sudo apt-get install -y make build-essential libssl-dev zlib1g-dev libbz2-dev \
 libreadline-dev libsqlite3-dev wget curl llvm libncurses5-dev libncursesw5-dev \
 xz-utils tk-dev libffi-dev liblzma-dev python3-openssl git
@@ -31,10 +31,9 @@ export PYENV_ROOT="$HOME/.pyenv"
 export PATH="$PYENV_ROOT/bin:$PATH"
 eval "$(pyenv init --path)"
 eval "$(pyenv init -)"
-pyenv install 3.11
-pyenv global 3.11
-python -m pip install --upgrade pip
-pip install virtualenv
+pyenv install 3.12
+pyenv global 3.12
+pip install --require-hashes -r kokoro/gcp_ubuntu/requirements.txt
 sudo apt-get install -y openjdk-21-jdk
 sudo update-java-alternatives --set java-1.21.0-openjdk-amd64
 export JAVA_HOME="$(update-java-alternatives -l | grep "1.21" | head -n 1 | tr -s " " | cut -d " " -f 3)"

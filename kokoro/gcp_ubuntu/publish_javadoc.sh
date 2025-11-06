@@ -246,6 +246,9 @@ export JAVA_HOME="$(update-java-alternatives -l | grep "1.21" | head -n 1 | tr -
 # Make sure `JAVA_HOME` is set.
 echo "JAVA_HOME = $JAVA_HOME"
 
+VERSION=$(./mvnw help:evaluate -Dexpression=project.version -q -DforceStdout | sed 's/-SNAPSHOT//')
+echo "Detected version: $VERSION"
+
 # Do a build of all dependent modules first.
 ./mvnw install -B  -DskipTests=true
 
@@ -261,7 +264,7 @@ pushd target/docfx-yml
 # create metadata for Java11/17/25
 python -m docuploader create-metadata \
  --name appengine-java-gen2-bundled-services \
- --version 3.0 \
+ --version "$VERSION" \
  --stem /appengine/docs/standard/java-gen2/reference/services/bundled \
  --language java
 
@@ -273,5 +276,5 @@ python -m docuploader upload . \
  --staging-bucket ${STAGING_BUCKET_V2} \
  --destination-prefix docfx
 
-echo "Done publishing Javadocs."
+echo "Done publishing Javadocs version $VERSION to staging bucket $STAGING_BUCKET_V2"
 

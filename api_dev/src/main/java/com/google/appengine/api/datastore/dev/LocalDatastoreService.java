@@ -126,6 +126,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
@@ -531,7 +532,7 @@ public abstract class LocalDatastoreService {
 
     logger.info(
         String.format(
-            "Local Datastore initialized: \n" + "\tType: %s\n" + "\tStorage: %s",
+            "Local Datastore initialized: " + "Type: %s " + "Storage: %s",
             spannerBacked() ? "VNext" : "High Replication",
             noStorage ? "In-memory" : backingStore));
   }
@@ -543,7 +544,7 @@ public abstract class LocalDatastoreService {
       return defaultIfNotSet;
     }
     try {
-      return Enum.valueOf(enumType, propertyValue.toUpperCase());
+      return Enum.valueOf(enumType, propertyValue.toUpperCase(Locale.ROOT));
     } catch (IllegalArgumentException e) {
       throw new IllegalArgumentException(
           String.format("Invalid value \"%s\" for property \"%s\"", propertyValue, propertyName),
@@ -3138,7 +3139,7 @@ public abstract class LocalDatastoreService {
      * isStored == false, then we strip the property when it transitions from user to storage.
      */
     private SpecialProperty(boolean isVisible, boolean isStored, Meaning meaning) {
-      this.name = "__" + name().toLowerCase() + "__";
+      this.name = "__" + name().toLowerCase(Locale.ROOT) + "__";
       this.isVisible = isVisible;
       this.isStored = isStored;
       this.meaning = meaning;
