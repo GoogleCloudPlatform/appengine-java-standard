@@ -320,7 +320,7 @@ public class JettyContainerService extends AbstractContainerService implements C
               null,
               null,
               0,
-              Runtime.getRuntime().availableProcessors(),
+              Math.min(Runtime.getRuntime().availableProcessors(), 150),
               new HttpConnectionFactory());
       connector.addBean(new CompletionListener());
       connector.setHost(address);

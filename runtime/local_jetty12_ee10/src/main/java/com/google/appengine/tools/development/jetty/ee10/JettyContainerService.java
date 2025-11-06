@@ -357,7 +357,7 @@ public class JettyContainerService extends AbstractContainerService
               null,
               null,
               0,
-              Runtime.getRuntime().availableProcessors(),
+              Math.min(Runtime.getRuntime().availableProcessors(), 150),
               new HttpConnectionFactory(configuration));
       connector.setHost(address);
       connector.setPort(port);
