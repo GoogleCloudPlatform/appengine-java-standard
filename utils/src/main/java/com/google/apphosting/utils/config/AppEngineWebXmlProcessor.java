@@ -79,6 +79,7 @@ class AppEngineWebXmlProcessor {
       processSecondLevelNode((Element) node, appEngineWebXml);
     }
     checkScalingConstraints(appEngineWebXml);
+    checkApiConstraints(appEngineWebXml);
     // Do not allow service and module to be defined in the same app.yaml.
     if (serviceNodeFound && moduleNodeFound) {
       throw new AppEngineConfigException(
@@ -106,6 +107,20 @@ class AppEngineWebXmlProcessor {
       throw new AppEngineConfigException(
           "There may be only one of 'automatic-scaling', 'manual-scaling' or " +
           "'basic-scaling' elements.");
+    }
+  }
+
+  /**
+   * Given an AppEngineWebXml, ensure it has no contradictory API settings.
+   *
+   * @throws AppEngineConfigException If there are contradictory API settings.
+   */
+  private static void checkApiConstraints(AppEngineWebXml appEngineWebXml) {
+    if (appEngineWebXml.getAppEngineApis()
+        && !appEngineWebXml.getAppEngineBundledServices().isEmpty()) {
+      throw new AppEngineConfigException(
+          "Cannot specify both <app-engine-apis> and <app-engine-bundled-services> in"
+              + " appengine-web.xml.");
     }
   }
 
@@ -271,6 +286,9 @@ class AppEngineWebXmlProcessor {
         break;
       case "service-account":
         processServiceAccountNode(elt, appEngineWebXml);
+        break;
+      case "app-engine-bundled-services":
+        processAppEngineBundledServicesNode(elt, appEngineWebXml);
         break;
       default:
         throw new AppEngineConfigException("Unrecognized element <" + elementName + ">");
@@ -810,6 +828,13 @@ class AppEngineWebXmlProcessor {
     for (Element subNode : getNodeIterable(node, "service")) {
       String service = XmlUtils.getText(subNode);
       appEngineWebXml.addInboundService(service);
+    }
+  }
+
+  private void processAppEngineBundledServicesNode(Element node, AppEngineWebXml appEngineWebXml) {
+    for (Element subNode : getNodeIterable(node, "api")) {
+      String api = XmlUtils.getText(subNode);
+      appEngineWebXml.addAppEngineBundledService(api);
     }
   }
 

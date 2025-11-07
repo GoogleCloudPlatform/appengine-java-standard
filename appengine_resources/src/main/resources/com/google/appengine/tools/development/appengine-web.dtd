@@ -20,7 +20,7 @@
                              resource-files?, system-properties?, vm-settings?,
                              env-variables?, ssl-enabled?, sessions-enabled?,
                              async-session-persistence?, user-permissions?,
-                             public-root?, inbound-services?, env?,
+                             public-root?, inbound-services?, app-engine-bundled-services?, env?,
                              precompilation-enabled?, admin-console?,
                              static-error-handlers?, warmup-requests-enabled?,
                              threadsafe?, servers?, code-lock?, vm?,
@@ -113,6 +113,8 @@
 <!ELEMENT public-root (#PCDATA)>
 <!ELEMENT inbound-services (service)*>
 <!ELEMENT service (#PCDATA)>
+<!ELEMENT app-engine-bundled-services (api)*>
+<!ELEMENT api (#PCDATA)>
 <!ELEMENT admin-console (page)*>
 <!ELEMENT page (#PCDATA)>
 <!ATTLIST page

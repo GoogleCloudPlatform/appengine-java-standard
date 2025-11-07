@@ -48,11 +48,11 @@ public class AppEngineWebXml implements Cloneable {
   public static enum ScalingType {AUTOMATIC, MANUAL, BASIC}
 
   // System properties defined by the application in appengine-web.xml
-  private final Map<String, String> systemProperties = Maps.newHashMap();
+  private final Map<String, String> systemProperties;
 
   // Beta settings defined by the application in appengine-web.xml.
   // Using a linked hash map is not strictly needed but makes testing easier.
-  private final Map<String, String> betaSettings = Maps.newLinkedHashMap();
+  private final Map<String, String> betaSettings;
 
   private final Resources resources;
 
@@ -67,11 +67,11 @@ public class AppEngineWebXml implements Cloneable {
   private ReadinessCheck readinessCheck;
 
   // Environment variables defined by the application in appengine-web.xml
-  private final Map<String, String> envVariables = Maps.newHashMap();
+  private final Map<String, String> envVariables;
 
-  private final Map<String, String> buildEnvVariables = Maps.newHashMap();
+  private final Map<String, String> buildEnvVariables;
 
-  private final List<UserPermission> userPermissions = new ArrayList<UserPermission>();
+  private final List<UserPermission> userPermissions;
 
   public static final String WARMUP_SERVICE = "warmup";
 
@@ -123,8 +123,8 @@ public class AppEngineWebXml implements Cloneable {
   private final Set<String> inboundServices;
   private boolean precompilationEnabled = true;
 
-  private final List<AdminConsolePage> adminConsolePages = new ArrayList<AdminConsolePage>();
-  private final List<ErrorHandler> errorHandlers = new ArrayList<ErrorHandler>();
+  private final List<AdminConsolePage> adminConsolePages;
+  private final List<ErrorHandler> errorHandlers;
 
   private ClassLoaderConfig classLoaderConfig;
 
@@ -155,6 +155,8 @@ public class AppEngineWebXml implements Cloneable {
 
   private String serviceAccount;
 
+  private final Set<String> appEngineBundledServices;
+
   /**
    * Represent user's choice w.r.t the usage of Google's customized connector-j.
    */
@@ -174,7 +176,11 @@ public class AppEngineWebXml implements Cloneable {
     resources = new Resources();
     network = new Network();
     staging = StagingOptions.EMPTY;
-
+    systemProperties = Maps.newHashMap();
+    betaSettings = Maps.newLinkedHashMap();
+    envVariables = Maps.newHashMap();
+    buildEnvVariables = Maps.newHashMap();
+    userPermissions = new ArrayList<>();
     staticFileIncludes = new ArrayList<StaticFileInclude>();
     staticFileExcludes = new ArrayList<String>();
     staticFileExcludes.add("WEB-INF/**");
@@ -182,7 +188,10 @@ public class AppEngineWebXml implements Cloneable {
     resourceFileIncludes = new ArrayList<String>();
     resourceFileExcludes = new ArrayList<String>();
     inboundServices = new LinkedHashSet<String>();
+    adminConsolePages = new ArrayList<>();
+    errorHandlers = new ArrayList<>();
     apiEndpointIds = new ArrayList<String>();
+    appEngineBundledServices = new LinkedHashSet<>();
   }
 
   @Override
@@ -667,6 +676,14 @@ public class AppEngineWebXml implements Cloneable {
     apiEndpointIds.add(id);
   }
 
+  public void addAppEngineBundledService(String service) {
+    appEngineBundledServices.add(service);
+  }
+
+  public Set<String> getAppEngineBundledServices() {
+    return Collections.unmodifiableSet(appEngineBundledServices);
+  }
+
   public void setUseGoogleConnectorJ(boolean useGoogleConnectorJ) {
     if (useGoogleConnectorJ) {
       this.useGoogleConnectorJ = UseGoogleConnectorJ.TRUE;
@@ -784,6 +801,8 @@ public class AppEngineWebXml implements Cloneable {
         + entrypoint
         + ", runtimeChannel="
         + runtimeChannel
+        + ", appEngineBundledServices="
+        + appEngineBundledServices
         + '}';
   }
 
@@ -848,6 +867,7 @@ public class AppEngineWebXml implements Cloneable {
         && Objects.equals(vpcAccessConnector, that.vpcAccessConnector)
         && Objects.equals(serviceAccount, that.serviceAccount)
         && Objects.equals(urlStreamHandlerType, that.urlStreamHandlerType)
+        && Objects.equals(appEngineBundledServices, that.appEngineBundledServices)
         && useGoogleConnectorJ == that.useGoogleConnectorJ;
   }
 
@@ -903,7 +923,8 @@ public class AppEngineWebXml implements Cloneable {
         resources,
         network,
         entrypoint,
-        runtimeChannel);
+        runtimeChannel,
+        appEngineBundledServices);
   }
 
   public boolean includesResource(String path) {

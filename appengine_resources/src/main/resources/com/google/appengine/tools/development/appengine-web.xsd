@@ -109,6 +109,7 @@
       <xs:element type="ns:userPermissionsType" name="user-permissions" minOccurs="0" xmlns:ns="http://appengine.google.com/ns/1.0"/>
       <xs:element type="xs:string" name="public-root" minOccurs="0"/>
       <xs:element type="ns:inboundServicesType" name="inbound-services" minOccurs="0" xmlns:ns="http://appengine.google.com/ns/1.0"/>
+      <xs:element type="ns:AppEngineBundledServicesType" name="app-engine-bundled-services" minOccurs="0" xmlns:ns="http://appengine.google.com/ns/1.0"/>
       <xs:element type="xs:boolean" name="precompilation-enabled" minOccurs="0" xmlns:ns="http://appengine.google.com/ns/1.0"/>
       <xs:element type="ns:admin-console" name="admin-console" minOccurs="0" xmlns:ns="http://appengine.google.com/ns/1.0"/>
       <xs:element type="ns:static-error-handlers" name="static-error-handlers" minOccurs="0" xmlns:ns="http://appengine.google.com/ns/1.0"/>
@@ -312,6 +313,11 @@
   <xs:complexType name="inboundServicesType">
     <xs:sequence>
       <xs:element type="xs:string" name="service" maxOccurs="unbounded" minOccurs="0" xmlns:ns="http://appengine.google.com/ns/1.0"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="AppEngineBundledServicesType">
+    <xs:sequence>
+      <xs:element type="xs:string" name="api" maxOccurs="unbounded" minOccurs="0" xmlns:ns="http://appengine.google.com/ns/1.0"/>
     </xs:sequence>
   </xs:complexType>
   <xs:simpleType name="expirationType">

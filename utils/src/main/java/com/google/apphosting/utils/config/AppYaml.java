@@ -20,6 +20,7 @@ import com.esotericsoftware.yamlbeans.YamlException;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Maps;
 import com.google.common.flogger.GoogleLogger;
@@ -31,6 +32,7 @@ import java.io.Writer;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
@@ -807,6 +809,7 @@ public class AppYaml {
   private ImmutableList<String> welcomeFiles;
   private ImmutableList<String> listeners;
   private ImmutableList<String> inboundServices;
+  private ImmutableSet<String> appEngineBundledServices;
   private ImmutableList<String> derivedFileType;
   private AdminConsole adminConsole;
   private ImmutableList<ErrorHandler> errorHandlers;
@@ -1158,6 +1161,14 @@ public class AppYaml {
     this.inboundServices = ImmutableList.copyOf(inboundServices);
   }
 
+  public Set<String> getApp_engine_bundled_services() {
+    return appEngineBundledServices;
+  }
+
+  public void setApp_engine_bundled_services(List<String> appEngineBundledServices) {
+    this.appEngineBundledServices = ImmutableSet.copyOf(appEngineBundledServices);
+  }
+
   public List<String> getDerived_file_type() {
     return derivedFileType;
   }
@@ -1454,6 +1465,13 @@ public class AppYaml {
         }
       }
       xml.endElement("inbound-services");
+    }
+    if (appEngineBundledServices != null) {
+      xml.startElement("app-engine-bundled-services");
+      for (String api : appEngineBundledServices) {
+        xml.simpleElement("api", api);
+      }
+      xml.endElement("app-engine-bundled-services");
     }
     xml.simpleElement("warmup-requests-enabled", Boolean.toString(warmupService));
     if (adminConsole != null && adminConsole.getPages() != null) {

@@ -17,6 +17,7 @@
 package com.google.appengine.tools.admin;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertThrows;
 
 import com.google.apphosting.utils.config.AppEngineConfigException;
 import com.google.apphosting.utils.config.AppEngineWebXml;
@@ -1821,6 +1822,39 @@ public class AppYamlTranslatorTest extends TestCase {
         "vpc_access_connector:\n"
             + "  name: barf\n"
             + "  egress_setting: all-traffic\n");
+  }
+
+  public void testAppEngineBundledServices() {
+    appEngineWebXml.addAppEngineBundledService("blobstore");
+    appEngineWebXml.addAppEngineBundledService("memcache");
+    appEngineWebXml.addAppEngineBundledService("app_identity_service");
+    AppYamlTranslator translator = createTranslator();
+    assertThat(translator.getYaml())
+        .contains(
+            """
+            app_engine_bundled_services:
+            - blobstore
+            - memcache
+            - app_identity_service
+            """);
+  }
+
+  public void testAppEngineBundledServices_empty() {
+    AppYamlTranslator translator = createTranslator();
+    assertThat(translator.getYaml()).doesNotContain("app_engine_bundled_services");
+  }
+
+  public void testAppEngineBundledServicesAndApisFail() {
+    appEngineWebXml.addAppEngineBundledService("blobstore");
+    appEngineWebXml.setAppEngineApis(true);
+    AppYamlTranslator translator = createTranslator();
+    AppEngineConfigException e =
+        assertThrows(AppEngineConfigException.class, () -> translator.getYaml());
+    assertThat(e)
+        .hasMessageThat()
+        .contains(
+            "Cannot specify both <app-engine-apis> and <app-engine-bundled-services> in"
+                + " appengine-web.xml.");
   }
 
   public void testAdminConsolePages() {

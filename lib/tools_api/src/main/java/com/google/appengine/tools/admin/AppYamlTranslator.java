@@ -281,6 +281,19 @@ public class AppYamlTranslator {
         builder.append("- " + service + "\n");
       }
     }
+    Collection<String> appEngineBundledServices = appEngineWebXml.getAppEngineBundledServices();
+    if (!appEngineBundledServices.isEmpty()) {
+      builder.append("app_engine_bundled_services:\n");
+      for (String service : appEngineBundledServices) {
+        builder.append("- " + service + "\n");
+      }
+    }
+
+    if (appEngineWebXml.getAppEngineApis() && !appEngineWebXml.getAppEngineBundledServices().isEmpty()) {
+      throw new AppEngineConfigException(
+          "Cannot specify both <app-engine-apis> and <app-engine-bundled-services> in"
+              + " appengine-web.xml.");
+    }
 
     if (appEngineWebXml.getAppEngineApis()) {
       builder.append("app_engine_apis: True\n");
