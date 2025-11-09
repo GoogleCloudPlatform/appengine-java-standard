@@ -248,9 +248,7 @@ public class DispatchXsdTest extends TestCase {
     } catch (SAXParseException e) {
       if (expectedSaxParserExceptionMessage != null) {
         assertWithMessage(
-                String.format(
-                    "Message [%s] must contain [%s]",
-                    e.getMessage(), expectedSaxParserExceptionMessage))
+                "Message [%s] must contain [%s]", e.getMessage(), expectedSaxParserExceptionMessage)
             .that(e.getMessage().contains(expectedSaxParserExceptionMessage))
             .isTrue();
       } else {

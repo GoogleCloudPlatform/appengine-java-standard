@@ -283,9 +283,12 @@ public class LocalModulesServiceTestConfig implements LocalServiceTestConfig {
   }
 
   private synchronized void addModuleVersion(ModuleVersion moduleVersion) {
-    checkArgument(!moduleVersionMap.containsKey(moduleVersion.getKey()),
-        String.format("Module version module %s version %s is already defined: %s",
-            moduleVersion.getModule(), moduleVersion.getVersion(), moduleVersionMap.values()));
+    checkArgument(
+        !moduleVersionMap.containsKey(moduleVersion.getKey()),
+        "Module version module %s version %s is already defined: %s",
+        moduleVersion.getModule(),
+        moduleVersion.getVersion(),
+        moduleVersionMap.values());
     moduleVersionMap.put(moduleVersion.getKey(), moduleVersion);
   }
 
