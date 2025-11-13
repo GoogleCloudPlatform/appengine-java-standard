@@ -23,7 +23,7 @@
   <parent>
     <groupId>com.google.appengine</groupId>
     <artifactId>parent</artifactId>
-    <version>3.0.2-SNAPSHOT</version>
+    <version>3.0.3-SNAPSHOT</version>
   </parent>
   <name>AppEngine :: runtime projects</name>
   <url>https://github.com/GoogleCloudPlatform/appengine-java-standard/</url>
