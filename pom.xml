@@ -711,6 +711,11 @@
         <artifactId>google-cloud-logging</artifactId>
         <version>3.23.8</version>
       </dependency>
+      <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-lang3</artifactId>
+        <version>3.18.0</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
   <build>
