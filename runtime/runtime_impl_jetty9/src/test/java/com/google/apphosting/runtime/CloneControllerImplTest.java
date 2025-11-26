@@ -44,7 +44,6 @@ public class CloneControllerImplTest {
   private static final double API_DEADLINE = 10.0;
   private static final Duration RPC_DEADLINE = Duration.ofSeconds(3);
   private static final long MAX_RUNTIME_LOG_PER_REQUEST = 3000L * 1024L;
-  private static final long HARD_DEADLINE_DELAY = 250;
   private static final long SOFT_DEADLINE_DELAY = 750;
   private static final int HSPERFDATA_SIZE = 32768;
   private static final int FAKE_HSPERFDATA_SIZE = 100;
@@ -115,16 +114,14 @@ public class CloneControllerImplTest {
             .initDeadlineMap(API_DEADLINE, "", 0.0, "")
             .initOfflineDeadlineMap(API_DEADLINE, "", 0.0, "")
             .build(),
-        createRequestManager(false, true, false),
+        createRequestManager(true, false),
         hotspotPerformanceData);
   }
 
   private RequestManager createRequestManager(
-      boolean disableTimers, boolean terminateClones, boolean interruptOnSoftDeadline) {
+      boolean terminateClones, boolean interruptOnSoftDeadline) {
     return RequestManager.builder()
         .setSoftDeadlineDelay(SOFT_DEADLINE_DELAY)
-        .setHardDeadlineDelay(HARD_DEADLINE_DELAY)
-        .setDisableDeadlineTimers(disableTimers)
         .setRuntimeLogSink(Optional.of(new RuntimeLogSink(MAX_RUNTIME_LOG_PER_REQUEST)))
         .setApiProxyImpl(ApiProxyImpl.builder().build())
         .setMaxOutstandingApiRpcs(10)

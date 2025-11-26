@@ -59,10 +59,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -93,12 +91,6 @@ import org.jspecify.annotations.Nullable;
 public class RequestManager implements RequestThreadManager {
   private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
 
-  /**
-   * The number of threads to use to execute scheduled {@code Future}
-   * actions.
-   */
-  private static final int SCHEDULER_THREADS = 1;
-
   // SimpleDateFormat is not threadsafe, so we'll just share the format string and let
   // clients instantiate the format instances as-needed.  At the moment the usage of the format
   // objects shouldn't be too high volume, but if the construction of the format instance ever has
@@ -125,9 +117,6 @@ public class RequestManager implements RequestThreadManager {
   private static final Duration THREAD_INTERRUPT_WAIT_TIME = Duration.ofSeconds(1);
 
   private final long softDeadlineDelay;
-  private final long hardDeadlineDelay;
-  private final boolean disableDeadlineTimers;
-  private final ScheduledThreadPoolExecutor executor;
   private final TimerFactory timerFactory;
   private final Optional<RuntimeLogSink> runtimeLogSink;
   private final ApiProxyImpl apiProxyImpl;
@@ -152,14 +141,6 @@ public class RequestManager implements RequestThreadManager {
     public abstract Builder setSoftDeadlineDelay(long x);
 
     public abstract long softDeadlineDelay();
-
-    public abstract Builder setHardDeadlineDelay(long x);
-
-    public abstract long hardDeadlineDelay();
-
-    public abstract Builder setDisableDeadlineTimers(boolean x);
-
-    public abstract boolean disableDeadlineTimers();
 
     public abstract Builder setRuntimeLogSink(Optional<RuntimeLogSink> x);
 
@@ -193,8 +174,6 @@ public class RequestManager implements RequestThreadManager {
 
   RequestManager(
       long softDeadlineDelay,
-      long hardDeadlineDelay,
-      boolean disableDeadlineTimers,
       Optional<RuntimeLogSink> runtimeLogSink,
       ApiProxyImpl apiProxyImpl,
       int maxOutstandingApiRpcs,
@@ -204,9 +183,6 @@ public class RequestManager implements RequestThreadManager {
       boolean waitForDaemonRequestThreads,
       ImmutableMap<String, String> environment) {
     this.softDeadlineDelay = softDeadlineDelay;
-    this.hardDeadlineDelay = hardDeadlineDelay;
-    this.disableDeadlineTimers = disableDeadlineTimers;
-    this.executor = new ScheduledThreadPoolExecutor(SCHEDULER_THREADS);
     this.timerFactory =
         new TimerFactory(cyclesPerSecond, new JmxHotspotTimerSet(), new JmxGcTimerSet());
     this.runtimeLogSink = runtimeLogSink;
@@ -349,15 +325,6 @@ public class RequestManager implements RequestThreadManager {
     // Start counting CPU cycles used by this thread.
     timer.start();
 
-    if (!disableDeadlineTimers) {
-      // The timing conventions here are a bit wonky, but this is what
-      // the Python runtime does.
-      logger.atInfo().log(
-          "Scheduling soft deadline in %d ms for %s", millisUntilSoftDeadline, requestId);
-      token.addScheduledFuture(
-          schedule(new DeadlineRunnable(this, token, false), millisUntilSoftDeadline));
-    }
-
     return token;
   }
 
@@ -393,33 +360,6 @@ public class RequestManager implements RequestThreadManager {
     // Stop the timer first so the user does get charged for our clean-up.
     CpuRatioTimer timer = requestToken.getRequestTimer();
     timer.stop();
-
-    // Cancel any scheduled future actions associated with this
-    // request.
-    //
-    // N.B.: Copy the list to avoid a
-    // ConcurrentModificationException due to a race condition where
-    // the soft deadline runnable runs and adds the hard deadline
-    // runnable while we are waiting for it to finish.  We don't
-    // actually care about this race because we set
-    // RequestToken.finished above and both runnables check that
-    // first.
-    for (Future<?> future : new ArrayList<Future<?>>(requestToken.getScheduledFutures())) {
-      // Unit tests will fail if a future fails to execute correctly, but
-      // we won't get a good error message if it was due to some exception.
-      // Log a future failure due to exception here.
-      if (future.isDone()) {
-        try {
-          future.get();
-        } catch (Exception e) {
-          logger.atSevere().withCause(e).log("Future failed execution: %s", future);
-        }
-      } else if (future.cancel(false)) {
-        logger.atFine().log("Removed scheduled future: %s", future);
-      } else {
-        logger.atFine().log("Unable to remove scheduled future: %s", future);
-      }
-    }
 
     // Store the CPU usage for this request in the UPResponse.
     logger.atInfo().log("Stopped timer for request %s %s", requestToken.getRequestId(), timer);
@@ -820,15 +760,6 @@ public class RequestManager implements RequestThreadManager {
   }
 
   /**
-   * Arrange for the specified {@code Runnable} to be executed in
-   * {@code time} milliseconds.
-   */
-  private Future<?> schedule(Runnable runnable, long time) {
-    logger.atFine().log("Scheduling %s to run in %d ms.", runnable, time);
-    return executor.schedule(runnable, time, TimeUnit.MILLISECONDS);
-  }
-
-  /**
    * Adjusts the deadline for this RPC by the padding constant along with the
    * elapsed time.  Will return the defaultValue if the rpc is not valid.
    */
@@ -963,13 +894,6 @@ public class RequestManager implements RequestThreadManager {
 
     private final ResponseAPIData response;
 
-    /**
-     * A collection of {@code Future} objects that have been scheduled
-     * on behalf of this request.  These futures will each be
-     * cancelled when the request completes.
-     */
-    private final Collection<Future<?>> scheduledFutures;
-
     private final Collection<Future<?>> asyncFutures;
 
     private final String requestId;
@@ -1017,7 +941,6 @@ public class RequestManager implements RequestThreadManager {
       this.securityTicket = securityTicket;
       this.requestTimer = requestTimer;
       this.asyncFutures = asyncFutures;
-      this.scheduledFutures = new ArrayList<Future<?>>();
       this.finished = false;
       this.appVersion = appVersion;
       this.deadline = deadline;
@@ -1068,14 +991,6 @@ public class RequestManager implements RequestThreadManager {
       return startTimeMillis;
     }
 
-    Collection<Future<?>> getScheduledFutures() {
-      return scheduledFutures;
-    }
-
-    void addScheduledFuture(Future<?> future) {
-      scheduledFutures.add(future);
-    }
-
     Collection<Future<?>> getAsyncFutures() {
       return asyncFutures;
     }
@@ -1110,52 +1025,6 @@ public class RequestManager implements RequestThreadManager {
 
     void runEndAction() {
       endAction.run();
-    }
-  }
-
-  /**
-   * {@code DeadlineRunnable} causes the specified {@code Throwable}
-   * to be thrown within the specified thread.  The stack trace of the
-   * Throwable is ignored, and is replaced with the stack trace of the
-   * thread at the time the exception is thrown.
-   */
-  public class DeadlineRunnable implements Runnable {
-    private final RequestManager requestManager;
-    private final RequestToken token;
-    private final boolean isUncatchable;
-
-    public DeadlineRunnable(
-        RequestManager requestManager, RequestToken token, boolean isUncatchable) {
-      this.requestManager = requestManager;
-      this.token = token;
-      this.isUncatchable = isUncatchable;
-    }
-
-    @Override
-    public void run() {
-      requestManager.sendDeadline(token, isUncatchable);
-
-      if (!token.isFinished()) {
-        if (!isUncatchable) {
-          token.addScheduledFuture(
-              schedule(
-                  new DeadlineRunnable(requestManager, token, true),
-                  softDeadlineDelay - hardDeadlineDelay));
-        }
-
-        logger.atInfo().log("Finished execution of %s", this);
-      }
-    }
-
-    @Override
-    public String toString() {
-      return "DeadlineRunnable("
-          + token.getRequestThread()
-          + ", "
-          + token.getRequestId()
-          + ", "
-          + isUncatchable
-          + ")";
     }
   }
 }

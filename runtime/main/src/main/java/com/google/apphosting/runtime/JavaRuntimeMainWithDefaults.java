@@ -166,7 +166,6 @@ public class JavaRuntimeMainWithDefaults {
         "--port=0",
         "--runtime_http_compression=true",
         "--trusted_host=" + trustedPort,
-        "--use_clone_controller_for_deadlines=true",
         "--use_env_vars_from_app_info=true",
         "--use_jetty_http_proxy=true",
         "--wait_for_daemon_request_threads=false",

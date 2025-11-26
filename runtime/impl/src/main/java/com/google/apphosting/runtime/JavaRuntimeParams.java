@@ -47,13 +47,6 @@ final class JavaRuntimeParams {
   @Parameter(
       description =
           "Number of milliseconds before the deadline for a request "
-              + "to throw an uncatchable exception.",
-      names = {"--java_hard_deadline_ms"})
-  private int javaHardDeadlineMs = 200;
-
-  @Parameter(
-      description =
-          "Number of milliseconds before the deadline for a request "
               + "to throw a catchable exception.",
       names = {"--java_soft_deadline_ms"})
   private int javaSoftDeadlineMs = 600;
@@ -148,14 +141,6 @@ final class JavaRuntimeParams {
               + "appserver (only applies to non-frontend requests).",
       names = {"--max_log_flush_seconds"})
   private int maxLogFlushSeconds = 60;
-
-  @Parameter(
-      description =
-          "Should we use CloneController.sendDeadline for request "
-              + "deadlines instead of using timers.",
-      names = {"--use_clone_controller_for_deadlines"},
-      arity = 1)
-  private boolean useCloneControllerForDeadlines = false;
 
   @Parameter(
       description = "Compress HTTP responses in the runtime.",
@@ -407,10 +392,6 @@ final class JavaRuntimeParams {
     return trustedHost;
   }
 
-  int getJavaHardDeadlineMs() {
-    return javaHardDeadlineMs;
-  }
-
   int getJavaSoftDeadlineMs() {
     return javaSoftDeadlineMs;
   }
@@ -477,10 +458,6 @@ final class JavaRuntimeParams {
 
   int getMaxLogFlushSeconds() {
     return maxLogFlushSeconds;
-  }
-
-  boolean getUseCloneControllerForDeadlines() {
-    return useCloneControllerForDeadlines;
   }
 
   boolean getRuntimeHttpCompression() {
