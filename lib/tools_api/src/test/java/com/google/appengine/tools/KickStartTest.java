@@ -18,7 +18,6 @@ package com.google.appengine.tools;
 
 import static com.google.common.base.StandardSystemProperty.JAVA_CLASS_PATH;
 import static com.google.common.base.StandardSystemProperty.JAVA_HOME;
-import static com.google.common.base.StandardSystemProperty.JAVA_SPECIFICATION_VERSION;
 import static com.google.common.base.StandardSystemProperty.PATH_SEPARATOR;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
@@ -168,27 +167,17 @@ public class KickStartTest {
             javaBinary,
             "-classpath",
             classpath,
+            "--add-opens",
+            "java.base/java.net=ALL-UNNAMED",
+            "--add-opens",
+            "java.base/sun.net.www.protocol.http=ALL-UNNAMED",
+            "--add-opens",
+            "java.base/sun.net.www.protocol.https=ALL-UNNAMED",
             KickStart.class.getName(),
             "--test_mode",
             "com.google.appengine.tools.PrintDefaultCharset",
             webInfDir.getPath());
-    if (!JAVA_SPECIFICATION_VERSION.value().equals("1.8")) {
-      args =
-          ImmutableList.of(
-              javaBinary,
-              "-classpath",
-              classpath,
-              "--add-opens",
-              "java.base/java.net=ALL-UNNAMED",
-              "--add-opens",
-              "java.base/sun.net.www.protocol.http=ALL-UNNAMED",
-              "--add-opens",
-              "java.base/sun.net.www.protocol.https=ALL-UNNAMED",
-              KickStart.class.getName(),
-              "--test_mode",
-              "com.google.appengine.tools.PrintDefaultCharset",
-              webInfDir.getPath());
-    }
+
     Process p =
         new ProcessBuilder(args)
             .redirectErrorStream(true)

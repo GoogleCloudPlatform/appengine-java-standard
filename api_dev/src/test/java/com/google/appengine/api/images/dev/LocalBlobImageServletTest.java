@@ -33,7 +33,6 @@ import com.google.appengine.tools.development.testing.LocalBlobstoreServiceTestC
 import com.google.appengine.tools.development.testing.LocalDatastoreServiceTestConfig;
 import com.google.appengine.tools.development.testing.LocalImagesServiceTestConfig;
 import com.google.appengine.tools.development.testing.LocalServiceTestHelper;
-import com.google.common.base.StandardSystemProperty;
 import com.google.common.io.Resources;
 import com.google.common.truth.Expect;
 import java.io.File;
@@ -112,11 +111,9 @@ public class LocalBlobImageServletTest {
    * @return The file contents as a byte array.
    */
   private byte[] readImage(String filename) throws IOException {
-    URL resource = null;
-    if (!isJDK8()) {
-      String jdk11Name = newerJDKFileName(filename);
-      resource = getClass().getResource("testdata/" + jdk11Name);
-    }
+    String jdk11Name = newerJDKFileName(filename);
+    URL resource = getClass().getResource("testdata/" + jdk11Name);
+
     if (resource == null) {
       resource = getClass().getResource("testdata/" + filename);
     }
@@ -201,17 +198,13 @@ public class LocalBlobImageServletTest {
     LocalBlobImageServlet.Image image =
         servlet.transformImage(LocalBlobImageServlet.ParsedUrl.createParsedUrl(url));
     byte[] expectedImage = readImage(expectedImageFile);
-    if (!Arrays.equals(image.getImage(), expectedImage) && !isJDK8()) {
+    if (!Arrays.equals(image.getImage(), expectedImage)) {
       File jdkFile = new File(TESTDATA, newerJDKFileName(expectedImageFile));
       if (!jdkFile.exists() && generateGoldenFiles != null) {
         generateGoldenFiles.accept(jdkFile, image.getImage());
       }
     }
     expect.that(image.getImage()).isEqualTo(expectedImage);
-  }
-
-  private static boolean isJDK8() {
-    return StandardSystemProperty.JAVA_SPECIFICATION_VERSION.value().equals("1.8");
   }
 
   private static final String newerJDKFileName(String filename) {

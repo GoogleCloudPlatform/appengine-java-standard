@@ -18,7 +18,6 @@ package com.google.appengine.tools;
 
 import static com.google.common.base.StandardSystemProperty.JAVA_CLASS_PATH;
 import static com.google.common.base.StandardSystemProperty.JAVA_HOME;
-import static com.google.common.base.StandardSystemProperty.JAVA_SPECIFICATION_VERSION;
 import static com.google.common.base.StandardSystemProperty.OS_NAME;
 import static com.google.common.base.StandardSystemProperty.USER_DIR;
 
@@ -181,15 +180,13 @@ public class KickStart {
       // For more details, see http://b/issue?id=1709075.
       jvmArgs.add("-XstartOnFirstThread");
     }
-    if (!JAVA_SPECIFICATION_VERSION.value().equals("1.8")) {
-      // Java11 or later need more flags:
-      jvmArgs.add("--add-opens");
-      jvmArgs.add("java.base/java.net=ALL-UNNAMED");
-      jvmArgs.add("--add-opens");
-      jvmArgs.add("java.base/sun.net.www.protocol.http=ALL-UNNAMED");
-      jvmArgs.add("--add-opens");
-      jvmArgs.add("java.base/sun.net.www.protocol.https=ALL-UNNAMED");
-    }
+    // Java11 or later need more flags:
+    jvmArgs.add("--add-opens");
+    jvmArgs.add("java.base/java.net=ALL-UNNAMED");
+    jvmArgs.add("--add-opens");
+    jvmArgs.add("java.base/sun.net.www.protocol.http=ALL-UNNAMED");
+    jvmArgs.add("--add-opens");
+    jvmArgs.add("java.base/sun.net.www.protocol.https=ALL-UNNAMED");
 
     // Whatever classpath we were invoked with might have been relative.
     // We make all paths in the classpath absolute.
