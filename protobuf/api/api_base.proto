@@ -23,7 +23,7 @@ syntax = "proto2";
 
 package java.apphosting.base;
 
-option java_package = "com.google.apphosting.base.protos.api";
+option java_package = "com.google.apphosting.api.proto2api";
 option java_outer_classname = "ApiBasePb";
 
 message StringProto {
