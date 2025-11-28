@@ -33,7 +33,6 @@ import com.google.appengine.tools.info.AppengineSdk;
 import com.google.apphosting.api.ApiProxy;
 import com.google.apphosting.runtime.jetty.EE10SessionManagerHandler;
 import com.google.apphosting.utils.config.AppEngineConfigException;
-import com.google.apphosting.utils.config.AppEngineWebXml;
 import com.google.apphosting.utils.config.WebModule;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
@@ -56,27 +55,21 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import org.eclipse.jetty.ee10.servlet.ServletApiRequest;
+import org.eclipse.jetty.ee10.servlet.ServletContextHandler;
 import org.eclipse.jetty.ee10.servlet.ServletContextRequest;
 import org.eclipse.jetty.ee10.servlet.ServletHolder;
 import org.eclipse.jetty.ee10.webapp.Configuration;
 import org.eclipse.jetty.ee10.webapp.JettyWebXmlConfiguration;
 import org.eclipse.jetty.ee10.webapp.WebAppContext;
-import org.eclipse.jetty.server.Context;
-import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.HttpConnectionFactory;
-import org.eclipse.jetty.server.HttpStream;
 import org.eclipse.jetty.server.NetworkTrafficServerConnector;
 import org.eclipse.jetty.server.Request;
-import org.eclipse.jetty.server.Response;
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.handler.ContextHandler;
-import org.eclipse.jetty.util.Callback;
 import org.eclipse.jetty.util.Fields;
 import org.eclipse.jetty.util.Scanner;
 import org.eclipse.jetty.util.VirtualThreads;
@@ -85,8 +78,7 @@ import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
 
 /** Implements a Jetty backed {@link ContainerService}. */
-public class JettyContainerService extends AbstractContainerService
-    implements ContainerService {
+public class JettyContainerService extends AbstractContainerService implements ContainerService {
 
   private static final Logger log = Logger.getLogger(JettyContainerService.class.getName());
 
@@ -178,15 +170,17 @@ public class JettyContainerService extends AbstractContainerService
             appDir, externalResourceDir, devAppServerVersion, apiProxyDelegate, devAppServer);
 
     context.addEventListener(
-        new ContextHandler.ContextScopeListener() {
+        new ServletContextHandler.ServletContextScopeListener() {
           @Override
-          public void enterScope(Context context, Request request) {
+          public void enterScope(
+              ServletContextHandler.ServletScopedContext context, ServletContextRequest request) {
             JettyContainerService.this.enterScope(request);
           }
 
           @Override
-          public void exitScope(Context context, Request request) {
-            JettyContainerService.this.exitScope(null);
+          public void exitScope(
+              ServletContextHandler.ServletScopedContext context, ServletContextRequest request) {
+            ApiProxy.setEnvironmentForCurrentThread(null);
           }
         });
 
@@ -214,8 +208,7 @@ public class JettyContainerService extends AbstractContainerService
     try {
       Thread.currentThread().setContextClassLoader(WebAppContext.class.getClassLoader());
       context.setConfigurationClasses(CONFIG_CLASSES);
-    }
-    finally {
+    } finally {
       Thread.currentThread().setContextClassLoader(contextClassLoader);
     }
     // Create the webapp ClassLoader.
@@ -269,7 +262,8 @@ public class JettyContainerService extends AbstractContainerService
 
     URL[] classPath = getClassPathForApp(appRoot);
 
-    IsolatedAppClassLoader isolatedClassLoader = new IsolatedAppClassLoader(
+    IsolatedAppClassLoader isolatedClassLoader =
+        new IsolatedAppClassLoader(
             appRoot, externalResourceDir, classPath, JettyContainerService.class.getClassLoader());
     context.setClassLoader(isolatedClassLoader);
     if (Boolean.parseBoolean(System.getProperty("appengine.allowRemoteShutdown"))) {
@@ -279,26 +273,40 @@ public class JettyContainerService extends AbstractContainerService
     return appRoot;
   }
 
-  private ApiProxy.Environment enterScope(Request request) {
-    ApiProxy.Environment oldEnv = ApiProxy.getCurrentEnvironment();
+  private void enterScope(ServletContextRequest request) {
 
     // We should have a request that use its associated environment, if there is no request
     // we cannot select a local environment as picking the wrong one could result in
     // waiting on the LocalEnvironment API call semaphore forever.
-    LocalEnvironment env = request == null ? null
-                    : (LocalEnvironment) request.getAttribute(LocalEnvironment.class.getName());
-    if (env != null) {
-      ApiProxy.setEnvironmentForCurrentThread(env);
-      DevAppServerModulesFilter.injectBackendServiceCurrentApiInfo(
-              backendName, backendInstance, portMappingProvider.getPortMapping());
+    if (request == null) {
+      return;
     }
 
-    return oldEnv;
-  }
+    LocalEnvironment env =
+        (LocalEnvironment) request.getAttribute(LocalEnvironment.class.getName());
+    if (env == null) {
+      env =
+          new LocalHttpRequestEnvironment(
+              appEngineWebXml.getAppId(),
+              WebModule.getModuleName(appEngineWebXml),
+              appEngineWebXml.getMajorVersionId(),
+              instance,
+              getPort(),
+              request.getServletApiRequest(),
+              SOFT_DEADLINE_DELAY_MS,
+              modulesFilterHelper);
+      env.getAttributes()
+          .put(LocalEnvironment.API_CALL_SEMAPHORE, new Semaphore(MAX_SIMULTANEOUS_API_CALLS));
+      env.getAttributes().put(DEFAULT_VERSION_HOSTNAME, "localhost:" + devAppServer.getPort());
 
-  private void exitScope(ApiProxy.Environment environment)
-  {
-    ApiProxy.setEnvironmentForCurrentThread(environment);
+      request.setAttribute(LocalEnvironment.class.getName(), env);
+      environments.add(env);
+      addCompletionListener(request);
+    }
+
+    ApiProxy.setEnvironmentForCurrentThread(env);
+    DevAppServerModulesFilter.injectBackendServiceCurrentApiInfo(
+        backendName, backendInstance, portMappingProvider.getPortMapping());
   }
 
   /** Check if the application contains a JSP file. */
@@ -387,11 +395,8 @@ public class JettyContainerService extends AbstractContainerService
     currentThread.setContextClassLoader(null);
 
     try {
-      // Wrap context in a handler that manages the ApiProxy ThreadLocal.
-      ApiProxyHandler apiHandler = new ApiProxyHandler(appEngineWebXml);
-      context.insertHandler(apiHandler);
       server.setHandler(context);
-      EE10SessionManagerHandler unused =
+      EE10SessionManagerHandler ignored =
           EE10SessionManagerHandler.create(
               EE10SessionManagerHandler.Config.builder()
                   .setEnableSession(isSessionsEnabled())
@@ -495,8 +500,7 @@ public class JettyContainerService extends AbstractContainerService
     } else {
       // by this point, we know the WEB-INF must exist
       // TODO: consider scanning the whole web-inf
-      return new File(
-          context.getWebInf().getPath() + File.separator + "appengine-web.xml");
+      return new File(context.getWebInf().getPath() + File.separator + "appengine-web.xml");
     }
   }
 
@@ -516,10 +520,12 @@ public class JettyContainerService extends AbstractContainerService
     scanner.setReportExistingFilesOnStartup(false);
     scanner.setScanDepth(3);
 
-    scanner.addListener((Scanner.BulkListener) filenames -> {
-      log.info("A file has changed, reloading the web application.");
-      reloadWebApp();
-    });
+    scanner.addListener(
+        (Scanner.BulkListener)
+            filenames -> {
+              log.info("A file has changed, reloading the web application.");
+              reloadWebApp();
+            });
 
     LifeCycle.start(scanner);
   }
@@ -553,10 +559,8 @@ public class JettyContainerService extends AbstractContainerService
       context.setAttribute(APPENGINE_WEB_XML_ATTR, appEngineWebXml);
 
       // reset the handler
-      ApiProxyHandler apiHandler = new ApiProxyHandler(appEngineWebXml);
-      context.insertHandler(apiHandler);
       server.setHandler(context);
-      EE10SessionManagerHandler unused =
+      EE10SessionManagerHandler ignored =
           EE10SessionManagerHandler.create(
               EE10SessionManagerHandler.Config.builder()
                   .setEnableSession(isSessionsEnabled())
@@ -598,144 +602,83 @@ public class JettyContainerService extends AbstractContainerService
     return webInf.getPath().toFile().getParentFile();
   }
 
-  /**
-   * {@code ApiProxyHandler} wraps around an existing {@link Handler} and creates a {@link
-   * com.google.apphosting.api.ApiProxy.Environment} which is stored as a request Attribute and then
-   * set/cleared on a ThreadLocal by the ContextScopeListener {@link ThreadLocal}.
-   */
-  private class ApiProxyHandler extends Handler.Wrapper {
-    @SuppressWarnings("hiding") // Hides AbstractContainerService.appEngineWebXml
-    private final AppEngineWebXml appEngineWebXml;
-
-    public ApiProxyHandler(AppEngineWebXml appEngineWebXml) {
-      this.appEngineWebXml = appEngineWebXml;
-    }
-
-    @Override
-    public boolean handle(Request request, Response response, Callback callback) throws Exception {
-      Semaphore semaphore = new Semaphore(MAX_SIMULTANEOUS_API_CALLS);
-
-      ServletContextRequest contextRequest = Request.as(request, ServletContextRequest.class);
-      LocalEnvironment env =
-          new LocalHttpRequestEnvironment(
-              appEngineWebXml.getAppId(),
-              WebModule.getModuleName(appEngineWebXml),
-              appEngineWebXml.getMajorVersionId(),
-              instance,
-              getPort(),
-              contextRequest.getServletApiRequest(),
-              SOFT_DEADLINE_DELAY_MS,
-              modulesFilterHelper);
-      env.getAttributes().put(LocalEnvironment.API_CALL_SEMAPHORE, semaphore);
-      env.getAttributes().put(DEFAULT_VERSION_HOSTNAME, "localhost:" + devAppServer.getPort());
-
-      request.setAttribute(LocalEnvironment.class.getName(), env);
-      environments.add(env);
-
-      // We need this here because the ContextScopeListener is invoked before
-      // this and so the Environment has not yet been created.
-      ApiProxy.Environment oldEnv = enterScope(request);
-      try {
-        request.addHttpStreamWrapper(s -> new HttpStream.Wrapper(s)
-        {
-          @Override
-          public void succeeded() {
-            onComplete(contextRequest);
-            super.succeeded();
-          }
-
-          @Override
-          public void failed(Throwable x) {
-            onComplete(contextRequest);
-            super.failed(x);
-          }
-        });
-        return super.handle(request, response, callback);
-      }
-      finally {
-        exitScope(oldEnv);
-      }
-    }
-  }
-
-  private void onComplete(ServletContextRequest request) {
-      try {
-      // a special hook with direct access to the container instance
-      // we invoke this only after the normal request processing,
-      // in order to generate a valid response
-      if (request.getHttpURI().getPath().startsWith(AH_URL_RELOAD)) {
+  private void addCompletionListener(ServletContextRequest request) {
+    org.eclipse.jetty.server.Request.addCompletionListener(
+        request,
+        t -> {
           try {
-            reloadWebApp();
-          Fields parameters = Request.getParameters(request);
-          log.info("Reloaded the webapp context: " + parameters.get("info"));
-          } catch (Exception ex) {
-            log.log(Level.WARNING, "Failed to reload the current webapp context.", ex);
-          }
-        }
-      } finally {
+            // a special hook with direct access to the container instance
+            // we invoke this only after the normal request processing,
+            // in order to generate a valid response
+            if (request.getHttpURI().getPath().startsWith(AH_URL_RELOAD)) {
+              try {
+                reloadWebApp();
+                Fields parameters = Request.getParameters(request);
+                log.info("Reloaded the webapp context: " + parameters.get("info"));
+              } catch (Exception ex) {
+                log.log(Level.WARNING, "Failed to reload the current webapp context.", ex);
+              }
+            }
+          } finally {
 
-        LocalEnvironment env =
-            (LocalEnvironment) request.getAttribute(LocalEnvironment.class.getName());
-        if (env != null) {
-          environments.remove(env);
+            LocalEnvironment env =
+                (LocalEnvironment) request.getAttribute(LocalEnvironment.class.getName());
+            if (env != null) {
+              environments.remove(env);
 
-          // Acquire all of the semaphores back, which will block if any are outstanding.
-          Semaphore semaphore =
-              (Semaphore) env.getAttributes().get(LocalEnvironment.API_CALL_SEMAPHORE);
-          try {
-            semaphore.acquire(MAX_SIMULTANEOUS_API_CALLS);
-          } catch (InterruptedException ex) {
-            Thread.currentThread().interrupt();
-            log.log(Level.WARNING, "Interrupted while waiting for API calls to complete:", ex);
-          }
+              // Acquire all of the semaphores back, which will block if any are outstanding.
+              Semaphore semaphore =
+                  (Semaphore) env.getAttributes().get(LocalEnvironment.API_CALL_SEMAPHORE);
+              try {
+                semaphore.acquire(MAX_SIMULTANEOUS_API_CALLS);
+              } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
+                log.log(Level.WARNING, "Interrupted while waiting for API calls to complete:", ex);
+              }
 
-          try {
-            ApiProxy.setEnvironmentForCurrentThread(env);
+              try {
+                ApiProxy.setEnvironmentForCurrentThread(env);
 
-            // Invoke all of the registered RequestEndListeners.
-            env.callRequestEndListeners();
+                // Invoke all of the registered RequestEndListeners.
+                env.callRequestEndListeners();
 
-            if (apiProxyDelegate instanceof ApiProxyLocal) {
-              // If apiProxyDelegate is not instanceof ApiProxyLocal, we are presumably running in
-              // the devappserver2 environment, where the master web server in Python will take care
-              // of logging requests.
-              ApiProxyLocal apiProxyLocal = (ApiProxyLocal) apiProxyDelegate;
-              String appId = env.getAppId();
-              String versionId = env.getVersionId();
-              String requestId = DevLogHandler.getRequestId();
+                if (apiProxyDelegate instanceof ApiProxyLocal) {
+                  // If apiProxyDelegate is not instanceof ApiProxyLocal, we are presumably
+                  // running in the devappserver2 environment, where the master web server in Python
+                  // will take care of logging requests.
+                  ApiProxyLocal apiProxyLocal = (ApiProxyLocal) apiProxyDelegate;
+                  String appId = env.getAppId();
+                  String versionId = env.getVersionId();
+                  String requestId = DevLogHandler.getRequestId();
 
-              LocalLogService logService =
-                  (LocalLogService) apiProxyLocal.getService(LocalLogService.PACKAGE);
+                  LocalLogService logService =
+                      (LocalLogService) apiProxyLocal.getService(LocalLogService.PACKAGE);
 
-            ServletApiRequest httpServletRequest = request.getServletApiRequest();
-              @SuppressWarnings("NowMillis")
-              long nowMillis = System.currentTimeMillis();
-            try {
-              logService.addRequestInfo(
-                  appId,
-                  versionId,
-                  requestId,
-                  httpServletRequest.getRemoteAddr(),
-                  httpServletRequest.getRemoteUser(),
-                  Request.getTimeStamp(request) * 1000,
-                  nowMillis * 1000,
-                  request.getMethod(),
-                  httpServletRequest.getRequestURI(),
-                  httpServletRequest.getProtocol(),
-                  httpServletRequest.getHeader("User-Agent"),
-                  true,
-                  request.getHttpServletResponse().getStatus(),
-                  request.getHeaders().get("Referrer"));
-              logService.clearResponseSize();
-            } catch (NullPointerException ignored) {
-              // TODO remove when
-              // https://github.com/GoogleCloudPlatform/appengine-java-standard/issues/70 is fixed
+                  ServletApiRequest httpServletRequest = request.getServletApiRequest();
+                  @SuppressWarnings("NowMillis")
+                  long nowMillis = System.currentTimeMillis();
+                  logService.addRequestInfo(
+                      appId,
+                      versionId,
+                      requestId,
+                      httpServletRequest.getRemoteAddr(),
+                      httpServletRequest.getRemoteUser(),
+                      Request.getTimeStamp(request) * 1000,
+                      nowMillis * 1000,
+                      request.getMethod(),
+                      httpServletRequest.getRequestURI(),
+                      httpServletRequest.getProtocol(),
+                      httpServletRequest.getHeader("User-Agent"),
+                      true,
+                      request.getHttpServletResponse().getStatus(),
+                      request.getHeaders().get("Referrer"));
+                  logService.clearResponseSize();
+                }
+              } finally {
+                ApiProxy.clearEnvironmentForCurrentThread();
+              }
             }
           }
-          } finally {
-            ApiProxy.clearEnvironmentForCurrentThread();
-          }
-        }
-      }
-    }
+        });
+  }
 }
