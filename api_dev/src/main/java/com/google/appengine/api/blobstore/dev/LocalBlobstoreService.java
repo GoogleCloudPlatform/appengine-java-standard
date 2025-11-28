@@ -33,7 +33,7 @@ import com.google.appengine.tools.development.AbstractLocalRpcService;
 import com.google.appengine.tools.development.LocalRpcService;
 import com.google.appengine.tools.development.LocalServiceContext;
 import com.google.apphosting.api.ApiProxy;
-import com.google.apphosting.base.protos.api.ApiBasePb.VoidProto;
+import com.google.apphosting.api.proto2api.ApiBasePb.VoidProto;
 import com.google.apphosting.utils.config.GenerationDirectory;
 import com.google.auto.service.AutoService;
 import com.google.common.io.ByteStreams;

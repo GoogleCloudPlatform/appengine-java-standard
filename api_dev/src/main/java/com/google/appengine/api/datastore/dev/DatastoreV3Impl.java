@@ -18,7 +18,7 @@ package com.google.appengine.api.datastore.dev;
 
 import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueBulkAddRequest;
 import com.google.appengine.tools.development.LocalRpcService.Status;
-import com.google.apphosting.base.protos.api.ApiBasePb.StringProto;
+import com.google.apphosting.api.proto2api.ApiBasePb.StringProto;
 import com.google.apphosting.datastore.DatastoreV3Pb.AllocateIdsRequest;
 import com.google.apphosting.datastore.DatastoreV3Pb.AllocateIdsResponse;
 import com.google.apphosting.datastore.DatastoreV3Pb.BeginTransactionRequest;

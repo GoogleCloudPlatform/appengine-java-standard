@@ -134,8 +134,6 @@ public class JavaRuntimeFactory {
     RequestManager.Builder requestManagerBuilder =
         RequestManager.builder()
             .setSoftDeadlineDelay(params.getJavaSoftDeadlineMs())
-            .setHardDeadlineDelay(params.getJavaHardDeadlineMs())
-            .setDisableDeadlineTimers(params.getUseCloneControllerForDeadlines())
             .setRuntimeLogSink(Optional.of(logSink))
             .setApiProxyImpl(apiProxyImpl)
             .setMaxOutstandingApiRpcs(params.getCloneMaxOutstandingApiRpcs())

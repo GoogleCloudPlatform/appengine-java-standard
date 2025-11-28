@@ -51,7 +51,6 @@ import com.google.appengine.tools.development.testing.LocalDatastoreServiceTestC
 import com.google.appengine.tools.development.testing.LocalImagesServiceTestConfig;
 import com.google.appengine.tools.development.testing.LocalServiceTestHelper;
 import com.google.apphosting.api.ApiProxy;
-import com.google.common.base.StandardSystemProperty;
 import com.google.common.io.Resources;
 import com.google.protobuf.ByteString;
 import java.io.IOException;
@@ -487,10 +486,6 @@ public class LocalImagesServiceTest {
     assertThat(responseImage).isEqualTo(expectedImage);
   }
 
-  private static boolean isJDK8() {
-    return StandardSystemProperty.JAVA_SPECIFICATION_VERSION.value().equals("1.8");
-  }
-
   /**
    * We have 2 test files per image: one for jdk8 and the other one (11) used by jdk 11,17 and above
    */
@@ -498,18 +493,14 @@ public class LocalImagesServiceTest {
     return filename.replaceAll("(?!-jdk11)\\.(png|jpg)$", "-jdk11.$1");
   }
 
-
   /**
    * Reads in an image and returns its contents as a byte array.
    * @param filename Name of the file to be opened.
    * @return The file contents as a byte array.
    */
   private byte[] readImage(String filename) throws IOException {
-    URL resource = null;
-    if (!isJDK8()) {
-      String jdk11Name = jdk11(filename);
-      resource = getClass().getResource("testdata/" + jdk11Name);
-    }
+    String jdk11Name = jdk11(filename);
+    URL resource = getClass().getResource("testdata/" + jdk11Name);
     if (resource == null) {
       resource = getClass().getResource("testdata/" + filename);
     }

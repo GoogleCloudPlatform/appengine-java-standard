@@ -16,15 +16,10 @@
 
 package com.google.apphosting.runtime.jetty.proxy;
 
-import static com.google.common.base.StandardSystemProperty.JAVA_SPECIFICATION_VERSION;
-
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.net.InetSocketAddress;
-import java.net.SocketOption;
 import java.net.StandardSocketOptions;
 import java.nio.channels.ServerSocketChannel;
-import java.util.Objects;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.util.IO;
@@ -42,27 +37,9 @@ public class JettyServerConnectorWithReusePort extends ServerConnector {
     this.reusePort = reusePort;
   }
 
-  /**
-   * Set SO_REUSEPORT via reflection. As of this writing, google3 is building for Java 8 but running
-   * with a Java 11 JVM. Thus we have to use reflection to fish out the SO_REUSEPORT setting.
-   */
+  /** Set SO_REUSEPORT. */
   static void setReusePort(ServerSocketChannel serverChannel) throws IOException {
-    if (Objects.equals(JAVA_SPECIFICATION_VERSION.value(), "1.8")) {
-      throw new IOException("Cannot use SO_REUSEPORT with Java <9.");
-    }
-
-    Object o;
-    try {
-      Field f = StandardSocketOptions.class.getField("SO_REUSEPORT");
-      o = f.get(null);
-    } catch (ReflectiveOperationException e) {
-      throw new IOException("Could not set SO_REUSEPORT as requested", e);
-    }
-
-    @SuppressWarnings("unchecked") // safe by specification
-    SocketOption<Boolean> so = (SocketOption<Boolean>) o;
-
-    serverChannel.setOption(so, true);
+    serverChannel.setOption(StandardSocketOptions.SO_REUSEPORT, true);
   }
 
   @Override

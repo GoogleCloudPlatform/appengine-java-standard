@@ -16,13 +16,9 @@
 
 package com.google.apphosting.runtime;
 
-import static com.google.common.base.StandardSystemProperty.JAVA_VERSION;
 import static com.google.common.truth.Truth.assertThat;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static org.junit.Assert.fail;
 
 import com.google.apphosting.api.ApiProxy;
-import com.google.apphosting.api.DeadlineExceededException;
 import com.google.apphosting.base.AppVersionKey;
 import com.google.apphosting.base.protos.AppinfoPb.AppInfo;
 import com.google.apphosting.base.protos.RuntimePb.UPRequest;
@@ -34,12 +30,10 @@ import com.google.apphosting.base.protos.TraceEvents.StartSpanProto;
 import com.google.apphosting.base.protos.TraceEvents.TraceEventsProto;
 import com.google.apphosting.base.protos.TracePb.TraceContextProto;
 import com.google.apphosting.runtime.anyrpc.APIHostClientInterface;
-import com.google.apphosting.runtime.anyrpc.AnyRpcServerContext;
 import com.google.apphosting.runtime.test.MockAnyRpcServerContext;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.flogger.GoogleLogger;
-import com.google.common.util.concurrent.SettableFuture;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import java.io.File;
@@ -48,12 +42,6 @@ import java.time.Duration;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.Optional;
-import java.util.concurrent.CancellationException;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicReference;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -71,9 +59,7 @@ public class RequestManagerTest {
   private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
 
   private static final double RPC_DEADLINE = 3.0;
-  private static final long SLEEP_TIME = 5000;
   private static final long SOFT_DEADLINE_DELAY = 750;
-  private static final long HARD_DEADLINE_DELAY = 250;
   private static final long MAX_RUNTIME_LOG_PER_REQUEST = 3000L * 1024L;
   private static final String APP_ID = "app123";
   private static final String ENGINE_ID = "engine";
@@ -88,50 +74,12 @@ public class RequestManagerTest {
   private RuntimeLogSink logSink;
   @Mock private APIHostClientInterface mockApiHost;
 
-  private boolean isJava8() {
-    return JAVA_VERSION.value().startsWith("1.8");
-  }
-
   // Ensure that Truth is loaded. Otherwise we can get weird errors if the exceptions we are
   // flinging about with Thread.stop0 end up hitting a thread that is running the Truth static
   // initializer. Likewise for Mockito.
   @BeforeClass
   public static void initClasses() {
     assertThat(true).isTrue();
-  }
-
-  private static class DeadlineThread extends Thread {
-    private final RequestManager requestManager;
-    private final RequestManager.RequestToken token;
-    private final boolean isUncatchable;
-    private final CountDownLatch started = new CountDownLatch(1);
-
-    private DeadlineThread(
-        RequestManager requestManager, RequestManager.RequestToken token, boolean isUncatchable) {
-      this.requestManager = requestManager;
-      this.token = token;
-      this.isUncatchable = isUncatchable;
-    }
-
-    static void startAndWait(
-        RequestManager requestManager, RequestManager.RequestToken token, boolean isUncatchable) {
-      DeadlineThread thread = new DeadlineThread(requestManager, token, isUncatchable);
-      thread.start();
-      try {
-        // Wait for the thread's run() method to start.
-        thread.started.await();
-        // Further small sleep to allow the run() method to progress before we return.
-        Thread.sleep(1);
-      } catch (InterruptedException e) {
-        throw new RuntimeException(e);
-      }
-    }
-
-    @Override
-    public void run() {
-      started.countDown();
-      requestManager.sendDeadline(token, isUncatchable);
-    }
   }
 
   @Before
@@ -171,13 +119,11 @@ public class RequestManagerTest {
   private RequestManager.Builder requestManagerBuilder() {
     return RequestManager.builder()
         .setSoftDeadlineDelay(SOFT_DEADLINE_DELAY)
-        .setHardDeadlineDelay(HARD_DEADLINE_DELAY)
         .setRuntimeLogSink(Optional.of(logSink))
         .setApiProxyImpl(ApiProxyImpl.builder().setApiHost(mockApiHost).build())
         .setMaxOutstandingApiRpcs(10)
         .setCyclesPerSecond(CYCLES_PER_SECOND)
         .setWaitForDaemonRequestThreads(true)
-        .setDisableDeadlineTimers(false)
         .setThreadStopTerminatesClone(true)
         .setInterruptFirstOnSoftDeadline(false);
   }
@@ -228,148 +174,6 @@ public class RequestManagerTest {
     assertThat(ApiProxy.getCurrentEnvironment()).isEqualTo(null);
   }
 
-  @Test
-  public void testSoftException() {
-    if (!isJava8()) {
-      return;
-    }
-    RequestManager requestManager = createRequestManager();
-    MockAnyRpcServerContext rpc = createRpc();
-    RequestManager.RequestToken token =
-        requestManager.startRequest(
-            appVersion, rpc, upRequest, upResponse, new ThreadGroup("test"));
-    long deadline = Math.round(RPC_DEADLINE * 1000) - SOFT_DEADLINE_DELAY;
-    try {
-      try {
-        Thread.sleep(deadline * 2);
-        fail("Slept for double the allotted deadline.");
-      } catch (InterruptedException ex) {
-        ex.printStackTrace();
-        fail("Thread was interrupted.  Interesting, but not expected.");
-      } catch (DeadlineExceededException ex) {
-        // expected
-        double elapsed = System.currentTimeMillis() - rpc.getStartTimeMillis();
-        assertThat(elapsed).isGreaterThan((double) deadline);
-        assertThat(elapsed).isWithin(1500.0).of((double) deadline);
-      }
-    } finally {
-      requestManager.finishRequest(token);
-    }
-    assertThat(upResponse.getTerminateClone()).isTrue();
-    assertThat(upResponse.getCloneIsInUncleanState()).isTrue();
-  }
-
-  @Test
-  public void testHardException() {
-    if (!isJava8()) {
-      return;
-    }
-    RequestManager requestManager = createRequestManager();
-    MockAnyRpcServerContext rpc = createRpc();
-    RequestManager.RequestToken token =
-        requestManager.startRequest(
-            appVersion, rpc, upRequest, upResponse, new ThreadGroup("test"));
-    long deadline = Math.round(RPC_DEADLINE * 1000) - SOFT_DEADLINE_DELAY;
-    try {
-      try {
-        Thread.sleep(2 * deadline);
-        fail("Slept for double the allotted deadline.");
-      } catch (InterruptedException ex) {
-        ex.printStackTrace();
-        fail("Thread was interrupted.  Interesting, but not expected.");
-      } catch (DeadlineExceededException softException) {
-        // expected
-        double elapsed = System.currentTimeMillis() - rpc.getStartTimeMillis();
-        assertThat(elapsed).isGreaterThan((double) deadline);
-        assertThat(elapsed).isWithin(1500.0).of((double) deadline);
-        assertThat(softException.getStackTrace()).isNotEmpty();
-        try {
-          Thread.sleep(SLEEP_TIME);
-          fail("Slept past the allotted deadline after soft exception.");
-        } catch (InterruptedException ex) {
-          ex.printStackTrace();
-          fail("Thread was interrupted.  Interesting, but not expected.");
-        } catch (HardDeadlineExceededError hardException) {
-          // expected
-          assertThat(hardException.getStackTrace()).isNotEmpty();
-          double elapsed2 = System.currentTimeMillis() - rpc.getStartTimeMillis();
-          double hardDeadline = (RPC_DEADLINE * 1000) - HARD_DEADLINE_DELAY;
-          assertThat(elapsed2).isGreaterThan(hardDeadline);
-          assertThat(elapsed2).isWithin(1500.0).of(hardDeadline);
-        }
-      }
-    } finally {
-      requestManager.finishRequest(token);
-    }
-    assertThat(upResponse.getTerminateClone()).isTrue();
-    assertThat(upResponse.getCloneIsInUncleanState()).isTrue();
-  }
-
-  @Test
-  public void testSoftExceptionNoCloneTermination() {
-    if (!isJava8()) {
-      return;
-    }
-    RequestManager requestManager =
-        requestManagerBuilder()
-            .setThreadStopTerminatesClone(false)
-            .build();
-    MockAnyRpcServerContext rpc = createRpc();
-    RequestManager.RequestToken token =
-        requestManager.startRequest(
-            appVersion, rpc, upRequest, upResponse, new ThreadGroup("test"));
-    try {
-      try {
-        Thread.sleep(SLEEP_TIME);
-        fail("Slept for double the allotted deadline.");
-      } catch (InterruptedException ex) {
-        ex.printStackTrace();
-        fail("Thread was interrupted.  Interesting, but not expected.");
-      } catch (DeadlineExceededException ex) {
-        // expected
-        double elapsed = System.currentTimeMillis() - rpc.getStartTimeMillis();
-        double deadline = (RPC_DEADLINE * 1000) - SOFT_DEADLINE_DELAY;
-        assertThat(elapsed).isGreaterThan(deadline);
-        assertThat(elapsed).isWithin(1200.0).of(deadline);
-      }
-    } finally {
-      requestManager.finishRequest(token);
-    }
-    assertThat(upResponse.getTerminateClone()).isFalse();
-    assertThat(upResponse.hasCloneIsInUncleanState()).isFalse();
-  }
-
-  @Test
-  public void testSoftExceptionNoTimer() {
-    if (!isJava8()) {
-      return;
-    }
-    RequestManager requestManager =
-        requestManagerBuilder()
-            .setDisableDeadlineTimers(true)
-            .build();
-    MockAnyRpcServerContext rpc = createRpc();
-    RequestManager.RequestToken token =
-        requestManager.startRequest(
-            appVersion, rpc, upRequest, upResponse, new ThreadGroup("test"));
-    try {
-      try {
-        DeadlineThread.startAndWait(requestManager, token, false);
-        Thread.sleep(1000);
-        fail("Deadline should be raised immediately.");
-      } catch (InterruptedException ex) {
-        ex.printStackTrace();
-        fail("Thread was interrupted.  Interesting, but not expected.");
-      } catch (DeadlineExceededException ex) {
-        // expected
-      }
-    } finally {
-      requestManager.finishRequest(token);
-    }
-    assertThat(upResponse.getTerminateClone()).isTrue();
-    assertThat(upResponse.getCloneIsInUncleanState()).isTrue();
-  }
-
   // Outcome of the request thread in the next test (testSoftExceptionWithInterruption).
   enum TestOutcome {
     NONE("Unexpected outcome"),
@@ -387,100 +191,6 @@ public class RequestManagerTest {
     }
 
     private final String message;
-  }
-
-  @Test
-  public void testSoftExceptionWithInterruption() throws Exception {
-    RequestManager requestManager =
-        requestManagerBuilder()
-            .setInterruptFirstOnSoftDeadline(true)
-            .build();
-    MockAnyRpcServerContext rpc = createRpc();
-    ThreadGroup threadGroup = new ThreadGroup("test-interruption");
-    AtomicReference<TestOutcome> outcome = new AtomicReference<>(TestOutcome.NONE);
-    // We cannot simply use the thread from the test environment, because interruption
-    // only applies to the request thread group. Note also that startRequest and finishRequest
-    // must be called by the same thread.
-    Thread t =
-        new Thread(
-            threadGroup,
-            () -> doTestSoftExceptionWithInterruption(requestManager, rpc, threadGroup, outcome));
-    t.start();
-    t.join();
-    if (outcome.get() != TestOutcome.OK) {
-      fail(outcome.get().getMessage());
-    }
-    assertThat(upResponse.getTerminateClone()).isFalse();
-  }
-
-  private void doTestSoftExceptionWithInterruption(
-      RequestManager requestManager,
-      AnyRpcServerContext rpc,
-      ThreadGroup threadGroup,
-      AtomicReference<TestOutcome> outcome) {
-    RequestManager.RequestToken token =
-        requestManager.startRequest(appVersion, rpc, upRequest, upResponse, threadGroup);
-    Future<Void> asyncFuture = SettableFuture.create();
-    token.getAsyncFutures().add(asyncFuture);
-    try {
-      try {
-        asyncFuture.get(SLEEP_TIME, MILLISECONDS);
-      } catch (CancellationException e) {
-        // Expected.
-      } catch (InterruptedException | ExecutionException | TimeoutException e) {
-        // Unexpected or downright impossible cases. Do nothing and let the outcome
-        // be set by the test for cancellation.
-      }
-      if (!asyncFuture.isCancelled()) {
-        outcome.set(TestOutcome.ASYNC_FUTURE_NOT_CANCELLED);
-      } else {
-        // Now test the second step, thread interruption.
-        try {
-          Thread.sleep(SLEEP_TIME);
-          outcome.set(TestOutcome.THREAD_NOT_INTERRUPTED);
-        } catch (InterruptedException ex) {
-          // All went as expected.
-          outcome.set(TestOutcome.OK);
-        }
-      }
-    } catch (DeadlineExceededException ex) {
-      outcome.set(TestOutcome.DEADLINE_THROWN);
-    } finally {
-      requestManager.finishRequest(token);
-    }
-  }
-
-  @Test
-  public void testHardExceptionNoTimer() {
-    if (!isJava8()) {
-      return;
-    }
-    RequestManager requestManager =
-        requestManagerBuilder()
-            .setDisableDeadlineTimers(true)
-            .setThreadStopTerminatesClone(false)
-            .build();
-    MockAnyRpcServerContext rpc = createRpc();
-    RequestManager.RequestToken token =
-        requestManager.startRequest(
-            appVersion, rpc, upRequest, upResponse, new ThreadGroup("test"));
-    try {
-      try {
-        DeadlineThread.startAndWait(requestManager, token, true);
-        Thread.sleep(1000);
-        fail("Deadline should be raised immediately.");
-      } catch (InterruptedException ex) {
-        ex.printStackTrace();
-        fail("Thread was interrupted.  Interesting, but not expected.");
-      } catch (HardDeadlineExceededError hardException) {
-        // expected
-        assertThat(hardException.getStackTrace()).isNotEmpty();
-      }
-    } finally {
-      requestManager.finishRequest(token);
-    }
-    assertThat(upResponse.getTerminateClone()).isTrue();
-    assertThat(upResponse.getCloneIsInUncleanState()).isTrue();
   }
 
   @Test

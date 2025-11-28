@@ -27,7 +27,7 @@ import com.google.appengine.api.datastore.Index.IndexState;
 import com.google.appengine.api.datastore.Query.FilterOperator;
 import com.google.appengine.api.utils.FutureWrapper;
 import com.google.apphosting.api.ApiProxy.ApiConfig;
-import com.google.apphosting.base.protos.api.ApiBasePb.StringProto;
+import com.google.apphosting.api.proto2api.ApiBasePb.StringProto;
 import com.google.apphosting.datastore.DatastoreV3Pb;
 import com.google.apphosting.datastore.DatastoreV3Pb.AllocateIdsRequest;
 import com.google.apphosting.datastore.DatastoreV3Pb.AllocateIdsResponse;

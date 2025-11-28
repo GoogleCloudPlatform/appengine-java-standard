@@ -252,7 +252,6 @@ public class JavaRuntimeParamsTest {
     assertThat(params.getApplicationRoot()).isEqualTo("appdata");
     assertThat(params.getPort()).isEqualTo(0);
     assertThat(params.getTrustedHost()).isEmpty();
-    assertThat(params.getJavaHardDeadlineMs()).isEqualTo(200);
     assertThat(params.getJavaSoftDeadlineMs()).isEqualTo(600);
     assertThat(params.getApiCallDeadline()).isEqualTo(5.0);
     assertThat(params.getMaxApiCallDeadline()).isEqualTo(10.0);
@@ -270,7 +269,6 @@ public class JavaRuntimeParamsTest {
     assertThat(params.getByteCountBeforeFlushing()).isEqualTo(100 * 1024L);
     assertThat(params.getMaxLogLineSize()).isEqualTo(16 * 1024);
     assertThat(params.getMaxLogFlushSeconds()).isEqualTo(60);
-    assertThat(params.getUseCloneControllerForDeadlines()).isFalse();
     assertThat(params.getRuntimeHttpCompression()).isFalse();
     assertThat(params.getMaxRuntimeLogPerRequest()).isEqualTo(3000L * 1024L);
     assertThat(params.getEnableGaeCloudSqlJdbcConnectivity()).isFalse();

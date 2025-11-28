@@ -16,10 +16,8 @@
 
 package com.google.apphosting.runtime;
 
-import static com.google.common.base.StandardSystemProperty.JAVA_SPECIFICATION_VERSION;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
-import static com.google.common.truth.TruthJUnit.assume;
 import static com.google.common.util.concurrent.Futures.immediateFuture;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 import static org.mockito.ArgumentMatchers.eq;
@@ -37,7 +35,6 @@ import com.google.apphosting.base.protos.SourcePb.SourceLocation;
 import com.google.common.base.Splitter;
 import com.google.common.base.Stopwatch;
 import com.google.common.base.Strings;
-import com.google.common.base.Throwables;
 import com.google.common.base.Ticker;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.AbstractFuture;
@@ -86,8 +83,6 @@ public class AppLogsWriterTest {
 
   @After
   public void tearDown() throws Exception {
-    delegate = null;
-    environment = null;
     ApiProxy.setDelegate(null);
     ApiProxy.clearEnvironmentForCurrentThread();
     response = null;
@@ -462,16 +457,6 @@ public class AppLogsWriterTest {
         .isGreaterThan(2);
     assertThat(lines[0] + '\n').isEqualTo(AppLogsWriter.LOG_CONTINUATION_PREFIX);
     assertThat(lines[1]).isEqualTo(context);
-  }
-
-  @Test
-  public void testFastStackTrace() {
-    // N.B.(jmacd): The intent here is to avoid releasing an appengine
-    // runtime that suddenly performs badly if for some reason the
-    // lazy stacktrace mechanism becomes unavailable. Should this be
-    // moved to AppLogsWriter to prevent the runtime from starting?
-    assume().that(JAVA_SPECIFICATION_VERSION.value()).isEqualTo("1.8");
-    assertThat(Throwables.lazyStackTraceIsLazy()).isTrue();
   }
 
   private static StackTraceElement makeFrame(String frameInfo) {
