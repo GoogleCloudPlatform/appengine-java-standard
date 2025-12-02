@@ -240,7 +240,6 @@
                     <include>com/google/common/cache/**</include>
                     <include>com/google/common/collect/**</include>
                     <include>com/google/common/escape/**</include>
-                    <include>com/google/common/flags/**</include>
                     <include>com/google/common/flogger/**</include>
                     <include>com/google/common/graph/**</include>
                     <include>com/google/common/hash/**</include>
