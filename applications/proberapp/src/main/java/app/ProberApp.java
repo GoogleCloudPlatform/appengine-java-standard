@@ -295,7 +295,7 @@ public final class ProberApp extends HttpServlet {
   }
 
   // For testHttpGet
-  private static final String URL = "https://cloud.google.com/appengine/docs/java";
+  private static final String URL = "https://docs.cloud.google.com/appengine/docs/java";
 
   /** Tests HTTP connection. */
   private static void testHttpGet(HttpServletRequest request) throws IOException {
