@@ -26,8 +26,8 @@
   <groupId>com.google.appengine.setup.testapps</groupId>
   <artifactId>jetty12_testapp</artifactId>
   <properties>
-    <jetty.version>12.0.30</jetty.version>
-    <jetty121.version>12.1.4</jetty121.version>
+    <jetty.version>12.0.31</jetty.version>
+    <jetty121.version>12.1.5</jetty121.version>
     <aspectj.version>1.9.25</aspectj.version>
   </properties>
   <dependencies>
