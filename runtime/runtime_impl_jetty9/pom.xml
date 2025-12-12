@@ -107,11 +107,6 @@
             <optional>true</optional>
        </dependency>
         <dependency>
-            <groupId>com.google.protobuf</groupId>
-            <artifactId>protobuf-java-util</artifactId>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-client</artifactId>
             <optional>true</optional>
@@ -372,7 +367,6 @@
                                     <include>com.google.guava:listenablefuture</include>
                                     <include>com.google.j2objc:j2objc-annotations</include>
                                     <include>com.google.protobuf:protobuf-java</include>
-                                    <include>com.google.protobuf:protobuf-java-util</include>
                                     <include>commons-codec:commons-codec</include>
                                     <include>io.perfmark:perfmark-api</include>
                                     <include>javax.annotation:javax.annotation-api</include>

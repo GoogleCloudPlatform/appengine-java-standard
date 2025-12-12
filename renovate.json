@@ -16,7 +16,6 @@
         "org.mortbay.jasper:apache-jsp",
         "org.apache.lucene:lucene-core",
         "com.google.protobuf:protobuf-java",
-        "com.google.protobuf:protobuf-java-util",
         "com.google.api.grpc:proto-google-common-protos",
         "com.google.api.grpc:proto-google-cloud-datastore-v1",
         "com.google.cloud.datastore:datastore-v1-proto-client",

@@ -77,6 +77,7 @@
     <jetty12.version>12.0.31</jetty12.version>
     <jetty121.version>12.1.5</jetty121.version>
     <slf4j.version>2.0.17</slf4j.version>
+    <protoc.version>3.21.12</protoc.version>
     <distributionManagement.snapshot.url>https://oss.sonatype.org/content/repositories/google-snapshots/</distributionManagement.snapshot.url>
     <distributionManagement.snapshot.id>sonatype-nexus-snapshots</distributionManagement.snapshot.id>
     <distributionManagement.release.url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</distributionManagement.release.url>
@@ -521,12 +522,7 @@
       <dependency>
         <groupId>com.google.protobuf</groupId>
         <artifactId>protobuf-java</artifactId>
-        <version>3.21.12</version> <!-- keep -->
-      </dependency>
-      <dependency>
-        <groupId>com.google.protobuf</groupId>
-        <artifactId>protobuf-java-util</artifactId>
-        <version>3.21.12</version> <!-- keep -->
+        <version>${protoc.version}</version>
       </dependency>
       <dependency>
         <groupId>javax.activation</groupId>
@@ -835,12 +831,16 @@
           <groupId>com.github.os72</groupId>
           <artifactId>protoc-jar-maven-plugin</artifactId>
           <version>3.11.4</version>
+          <executions>
+              <execution>
+                  <phase>generate-sources</phase>
+                  <goals>
+                      <goal>run</goal>
+                  </goals>
+              </execution>
+          </executions>
           <configuration>
-            <!-- Try to keep this protoc compiler version up to date with:
-                 https://github.com/protocolbuffers/protobuf/blob/master/java/pom.xml#L7
-                 Read https://github.com/os72/protoc-jar-maven-plugin/issues/107 for context.
-             -->
-             <protocVersion>3.21.12</protocVersion>
+              <protocArtifact>com.google.protobuf:protoc:${protoc.version}</protocArtifact>
           </configuration>
         </plugin>
         <plugin>
