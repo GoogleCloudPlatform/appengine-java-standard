@@ -45,12 +45,12 @@ class DevAppServerClassLoader extends URLClassLoader {
       = "com.google.appengine.tools.development.agent.AppEngineDevAgent";
 
   /**
-   * A system property defining a prefix where, if a class name begins with the prefix, the class
-   * will be loaded by the system class loader. If unset, no classes are loaded by the system
-   * class loader.
+   * A system property defining a comma-separated list of prefixes. If a class name begins with one
+   * of these prefixes, the class will be loaded by the system class loader. If unset, only classes
+   * that are required to be loaded by it, such as Jacoco, will be loaded by the system class
+   * loader.
    */
-  static final String SYSTEM_CLASS_PREFIX_PROPERTY =
-      "com.google.appengine.system.class.prefix";
+  static final String SYSTEM_CLASS_PREFIX_PROPERTY = "com.google.appengine.system.class.prefix";
 
   /**
    * Creates a new {@code DevAppServerClassLoader}, which will load
@@ -101,18 +101,30 @@ class DevAppServerClassLoader extends URLClassLoader {
   }
 
   @Override
+  @SuppressWarnings("StringSplitter") // Avoid Guava in Classloader and manual check for weird case
   protected synchronized Class<?> loadClass(String name, boolean resolve)
       throws ClassNotFoundException {
 
-    // No class can begin with /// so the default value disables the extraPrefix logic.
-    String systemClassPrefix = System.getProperty(SYSTEM_CLASS_PREFIX_PROPERTY, "///");
-
-    if (name.startsWith(systemClassPrefix) || name.startsWith("org.jacoco.agent.")) {
-      Class<?> c = ClassLoader.getSystemClassLoader().loadClass(name);
-      if (resolve) {
-        resolveClass(c);
+    // A comma-separated list of prefixes of classes that should be loaded by the system class
+    // loader.
+    String systemClassPrefixes = System.getProperty(SYSTEM_CLASS_PREFIX_PROPERTY, "");
+    List<String> systemPrefixStrings = new ArrayList<>();
+    for (String prefix : systemClassPrefixes.split(",")) {
+      if (!prefix.trim().isEmpty()) {
+        systemPrefixStrings.add(prefix.trim());
       }
-      return c;
+    }
+    // jacoco agent needs to be loaded by the system class loader.
+    systemPrefixStrings.add("org.jacoco.agent.");
+
+    for (String prefix : systemPrefixStrings) {
+      if (name.startsWith(prefix)) {
+        Class<?> c = ClassLoader.getSystemClassLoader().loadClass(name);
+        if (resolve) {
+          resolveClass(c);
+        }
+        return c;
+      }
     }
     // Special-case a few classes that need to be shared.
     if (name.equals(DEV_APP_SERVER_INTERFACE)

@@ -146,6 +146,7 @@ public class IsolatedAppClassLoader extends URLClassLoader {
   }
 
   @Override
+  @SuppressWarnings("StringSplitter") // Avoid Guava in Classloader and manual check for weird case
   protected synchronized Class<?> loadClass(String name, boolean resolve)
       throws ClassNotFoundException {
 
@@ -182,11 +183,17 @@ public class IsolatedAppClassLoader extends URLClassLoader {
       }
 
       // A shared class that we can load
-      String systemClassPrefix =
-          System.getProperty(DevAppServerClassLoader.SYSTEM_CLASS_PREFIX_PROPERTY, "///");
+      boolean loadBySystemClassLoader = name.startsWith("org.jacoco.agent.");
+      String systemClassPrefixes =
+          System.getProperty(DevAppServerClassLoader.SYSTEM_CLASS_PREFIX_PROPERTY, "");
+      for (String prefix : systemClassPrefixes.split(",")) {
+        if (!prefix.trim().isEmpty() && name.startsWith(prefix.trim())) {
+          loadBySystemClassLoader = true;
+          break;
+        }
+      }
       if (classCanBeLoadedByRuntimeClassLoader(source.getLocation(), name)
-          || name.startsWith(systemClassPrefix)
-          || name.startsWith("org.jacoco.agent.")) {
+          || loadBySystemClassLoader) {
         if (resolve) {
           resolveClass(c);
         }
