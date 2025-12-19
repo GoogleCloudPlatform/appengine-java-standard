@@ -111,7 +111,6 @@ public class JavaRuntimeMainWithDefaults {
         // "--fixed_application_path=" + ...,
         "--force_readahead_on_cloudsql_socket=true",
         "--interrupt_threads_first_on_soft_deadline=true",
-        "--java_hard_deadline_ms=10200",
         "--java_soft_deadline_ms=10600",
         "--jetty_http_port=" + jettyPort,
         "--jetty_request_header_size=262144",
