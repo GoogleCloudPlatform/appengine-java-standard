@@ -21,7 +21,7 @@ import static com.google.common.truth.Truth.assertWithMessage;
 import static java.net.HttpURLConnection.HTTP_OK;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
-import com.google.apphosting.base.protos.api.RemoteApiPb;
+import com.google.apphosting.base.protos.api_bytes.RemoteApiPb;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.truth.Expect;
 import com.google.appengine.repackaged.com.google.protobuf.ByteString;
@@ -29,6 +29,7 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import java.io.Closeable;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.file.Path;
 import java.util.concurrent.CompletionService;
@@ -216,7 +217,7 @@ public class ApiCallsTest extends JavaRuntimeViaHttpBase {
    */
   private static class ApiServer extends DummyApiServer {
     static ApiServer create(int apiPort) throws IOException {
-      InetSocketAddress address = new InetSocketAddress(apiPort);
+      InetSocketAddress address = new InetSocketAddress(InetAddress.getLoopbackAddress(), apiPort);
       HttpServer httpServer = HttpServer.create(address, 0);
       ApiServer apiServer = new ApiServer(httpServer);
       httpServer.createContext("/", apiServer::handle);
@@ -276,7 +277,7 @@ public class ApiCallsTest extends JavaRuntimeViaHttpBase {
   private static class ErrorApiServer extends DummyApiServer {
     static ErrorApiServer create(int apiPort, RemoteApiPb.RpcError.ErrorCode error)
         throws IOException {
-      InetSocketAddress address = new InetSocketAddress(apiPort);
+      InetSocketAddress address = new InetSocketAddress(InetAddress.getLoopbackAddress(), apiPort);
       HttpServer httpServer = HttpServer.create(address, 0);
       ErrorApiServer apiServer = new ErrorApiServer(httpServer, error);
       httpServer.createContext("/", apiServer::handle);

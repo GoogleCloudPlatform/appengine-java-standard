@@ -25,7 +25,7 @@ import com.google.appengine.api.testing.LocalServiceTestHelperRule;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.testing.EqualsTester;
-import com.google.storage.onestore.v3.OnestoreEntity.EntityProto;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.EntityProto;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
@@ -236,8 +236,8 @@ public class EntityTest {
             "entity", new EmbeddedEntity());
 
     EntityProto proto = EntityTranslator.convertToPb(entity);
-    assertThat(proto.propertySize()).isEqualTo(1);
-    assertThat(proto.rawPropertySize()).isEqualTo(4);
+    assertThat(proto.getPropertyCount()).isEqualTo(1);
+    assertThat(proto.getRawPropertyCount()).isEqualTo(4);
   }
 
   @Test
@@ -249,8 +249,8 @@ public class EntityTest {
             "string", new EmbeddedEntity(), new Text("text"), new Blob(new byte[] {1, 2, 3})));
     assertThat(entity.isUnindexedProperty("prop")).isFalse();
     EntityProto proto = EntityTranslator.convertToPb(entity);
-    assertThat(proto.propertySize()).isEqualTo(1);
-    assertThat(proto.rawPropertySize()).isEqualTo(3);
+    assertThat(proto.getPropertyCount()).isEqualTo(1);
+    assertThat(proto.getRawPropertyCount()).isEqualTo(3);
     Entity restoredEntity = EntityTranslator.createFromPb(proto);
     assertThat(restoredEntity.getPropertyMap()).isEqualTo(entity.getPropertyMap());
     assertThat(restoredEntity.isUnindexedProperty("prop")).isFalse();

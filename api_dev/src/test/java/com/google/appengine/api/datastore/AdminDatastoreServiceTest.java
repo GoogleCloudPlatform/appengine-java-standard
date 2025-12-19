@@ -35,12 +35,12 @@ import com.google.appengine.api.datastore.Query.FilterOperator;
 import com.google.appengine.api.datastore.Query.FilterPredicate;
 import com.google.appengine.tools.development.testing.LocalDatastoreServiceTestConfig;
 import com.google.appengine.tools.development.testing.LocalServiceTestHelper;
-import com.google.apphosting.datastore.DatastoreV3Pb;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.primitives.Primitives;
-import com.google.storage.onestore.v3.OnestoreEntity;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Collection;
@@ -204,7 +204,7 @@ public class AdminDatastoreServiceTest {
     FetchOptions fo = FetchOptions.Builder.withDefaults();
     DatastoreV3Pb.Query queryPb = QueryTranslator.convertToPb(query, fo);
     CompositeIndexManager.IndexComponentsOnlyQuery ic =
-        new CompositeIndexManager.IndexComponentsOnlyQuery(queryPb);
+        new CompositeIndexManager.IndexComponentsOnlyQuery(queryPb.toBuilder());
     Index index =
         new Index(
             0,
@@ -212,7 +212,8 @@ public class AdminDatastoreServiceTest {
             true,
             ImmutableList.of(new Index.Property("p1", Query.SortDirection.DESCENDING)));
     OnestoreEntity.Index indexPb = IndexTranslator.convertToPb(index);
-    when(indexManager.compositeIndexForQuery(ic)).thenReturn(indexPb);
+    when(indexManager.compositeIndexForQuery(ic))
+        .thenReturn(indexPb);
     assertThat(adminDsWithMockDelegate.compositeIndexForQuery(query)).isEqualTo(index);
   }
 
@@ -222,7 +223,7 @@ public class AdminDatastoreServiceTest {
     FetchOptions fo = FetchOptions.Builder.withDefaults();
     DatastoreV3Pb.Query queryPb = QueryTranslator.convertToPb(query, fo);
     CompositeIndexManager.IndexComponentsOnlyQuery ic =
-        new CompositeIndexManager.IndexComponentsOnlyQuery(queryPb);
+        new CompositeIndexManager.IndexComponentsOnlyQuery(queryPb.toBuilder());
     Index index =
         new Index(
             0,

@@ -21,7 +21,7 @@ import com.google.apphosting.api.ApiProxy.ApiConfig;
 import com.google.apphosting.api.ApiProxy.ApiProxyException;
 import com.google.apphosting.api.ApiProxy.LogRecord;
 import com.google.apphosting.api.ApiProxy.RPCFailedException;
-import com.google.apphosting.base.protos.api.RemoteApiPb;
+import com.google.apphosting.base.protos.api_bytes.RemoteApiPb;
 import com.google.common.collect.Lists;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;

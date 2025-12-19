@@ -21,9 +21,9 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.appengine.api.datastore.dev.LocalDatastoreService.LiveTxn;
 import com.google.appengine.api.datastore.dev.LocalDatastoreService.Profile.EntityGroup;
-import com.google.apphosting.datastore.DatastoreV3Pb.Query;
-import com.google.storage.onestore.v3.OnestoreEntity.EntityProto;
-import com.google.storage.onestore.v3.OnestoreEntity.Reference;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.Query;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.EntityProto;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.Reference;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -38,8 +38,7 @@ import org.jspecify.annotations.Nullable;
  */
 class PseudoKinds {
   // Marker to indicate get() was not called on a pseudo-kind
-  static final EntityProto NOT_A_PSEUDO_KIND = new EntityProto();
-
+  static final EntityProto NOT_A_PSEUDO_KIND = EntityProto.newBuilder().buildPartial();
   // Key is kind name
   private final Map<String, PseudoKind> pseudoKinds;
 
@@ -52,7 +51,9 @@ class PseudoKinds {
     checkNotNull(implementation);
     PseudoKind previous = pseudoKinds.put(implementation.getKindName(), implementation);
     checkState(
-        previous == null, "duplicate registration for pseudo-kind " + implementation.getKindName());
+        previous == null,
+        "duplicate registration for pseudo-kind %s",
+        implementation.getKindName());
   }
 
   /**
@@ -68,10 +69,8 @@ class PseudoKinds {
     }
 
     // We've handled kind.
-    query.clearKind();
-
-    List<EntityProto> results = pseudoKind.runQuery(query);
-    checkNotNull(results, "pseudo-kind " + pseudoKind.getKindName() + " returned invalid result");
+    List<EntityProto> results = pseudoKind.runQuery(query.toBuilder().clearKind());
+    checkNotNull(results, "pseudo-kind %s returned invalid result", pseudoKind.getKindName());
     return results;
   }
 

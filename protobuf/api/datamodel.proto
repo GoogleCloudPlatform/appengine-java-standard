@@ -20,7 +20,7 @@ syntax = "proto2";
 
 package java.apphosting;
 
-import "entity.proto";
+import "entity_bytes.proto";
 
 option java_package = "com.google.appengine.tools.appstats.proto2api";
 option java_outer_classname = "StatsProtos";

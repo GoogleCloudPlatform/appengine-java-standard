@@ -19,14 +19,13 @@ package com.google.appengine.api.datastore;
 import static com.google.appengine.api.datastore.DatastoreApiHelper.makeAsyncCall;
 
 import com.google.apphosting.api.ApiProxy.ApiConfig;
-import com.google.apphosting.datastore.DatastoreV3Pb;
-import com.google.apphosting.datastore.DatastoreV3Pb.CompiledCursor;
-import com.google.apphosting.datastore.DatastoreV3Pb.DatastoreService_3.Method;
-import com.google.apphosting.datastore.DatastoreV3Pb.NextRequest;
-import com.google.apphosting.datastore.DatastoreV3Pb.QueryResult;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.CompiledCursor;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.NextRequest;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.QueryResult;
 import com.google.common.collect.Lists;
-import com.google.storage.onestore.v3.OnestoreEntity.CompositeIndex;
-import com.google.storage.onestore.v3.OnestoreEntity.EntityProto;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.CompositeIndex;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.EntityProto;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -37,7 +36,7 @@ import org.jspecify.annotations.Nullable;
  * V3 service specific code for iterating query results and requesting more results. Instances can
  * be shared between queries using the same ApiConfig.
  */
-class QueryResultsSourceV3 extends BaseQueryResultsSource<QueryResult, NextRequest, QueryResult> {
+class QueryResultsSourceV3 extends BaseQueryResultsSource<QueryResult, NextRequest.Builder, QueryResult> {
 
   private final ApiConfig apiConfig;
 
@@ -53,9 +52,9 @@ class QueryResultsSourceV3 extends BaseQueryResultsSource<QueryResult, NextReque
   }
 
   @Override
-  public NextRequest buildNextCallPrototype(QueryResult initialResult) {
-    DatastoreV3Pb.NextRequest req = new DatastoreV3Pb.NextRequest();
-    req.setCursor(initialResult.getCursor());
+  public NextRequest.Builder buildNextCallPrototype(QueryResult initialResult) {
+    DatastoreV3Pb.NextRequest.Builder req =
+        DatastoreV3Pb.NextRequest.newBuilder().setCursor(initialResult.getCursor());
     if (initialResult.hasCompiledCursor()) {
       // Compiled cursor setting should match original query.
       req.setCompile(true);
@@ -66,18 +65,23 @@ class QueryResultsSourceV3 extends BaseQueryResultsSource<QueryResult, NextReque
 
   @Override
   public Future<QueryResult> makeNextCall(
-      NextRequest reqPrototype,
+      NextRequest.Builder reqPrototype,
       WrappedQueryResult unused,
       @Nullable Integer fetchCount, /* Nullable */
       Integer offsetOrNull) {
-    DatastoreV3Pb.NextRequest req = reqPrototype.clone();
+    DatastoreV3Pb.NextRequest.Builder req = reqPrototype.clone();
     if (fetchCount != null) {
       req.setCount(fetchCount);
     }
     if (offsetOrNull != null) {
       req.setOffset(offsetOrNull);
     }
-    return makeAsyncCall(apiConfig, Method.Next, req, new DatastoreV3Pb.QueryResult());
+  // initialize required field to false
+   return makeAsyncCall(
+        apiConfig,
+        DatastoreV3Pb.DatastoreService_3.Method.Next,
+        req,
+        DatastoreV3Pb.QueryResult.newBuilder().setMoreResults(false));
   }
 
   @Override
@@ -99,13 +103,13 @@ class QueryResultsSourceV3 extends BaseQueryResultsSource<QueryResult, NextReque
 
     @Override
     public List<Entity> getEntities(Collection<Projection> projections) {
-      List<Entity> entities = Lists.newArrayListWithCapacity(res.resultSize());
+      List<Entity> entities = Lists.newArrayListWithCapacity(res.getResultCount());
       if (projections.isEmpty()) {
-        for (EntityProto entityProto : res.results()) {
+        for (EntityProto entityProto : res.getResultList()) {
           entities.add(EntityTranslator.createFromPb(entityProto));
         }
       } else {
-        for (EntityProto entityProto : res.results()) {
+        for (EntityProto entityProto : res.getResultList()) {
           entities.add(EntityTranslator.createFromPb(entityProto, projections));
         }
       }
@@ -114,12 +118,12 @@ class QueryResultsSourceV3 extends BaseQueryResultsSource<QueryResult, NextReque
 
     @Override
     public List<Cursor> getResultCursors() {
-      List<Cursor> cursors = Lists.newArrayListWithCapacity(res.resultSize());
+      List<Cursor> cursors = Lists.newArrayListWithCapacity(res.getResultCount());
 
-      for (CompiledCursor compiledCursor : res.resultCompiledCursors()) {
+      for (CompiledCursor compiledCursor : res.getResultCompiledCursorList()) {
         cursors.add(new Cursor(compiledCursor.toByteString()));
       }
-      cursors.addAll(Collections.<Cursor>nCopies(res.resultSize() - cursors.size(), null));
+      cursors.addAll(Collections.<Cursor>nCopies(res.getResultCount() - cursors.size(), null));
       return cursors;
     }
 
@@ -137,7 +141,7 @@ class QueryResultsSourceV3 extends BaseQueryResultsSource<QueryResult, NextReque
 
     @Override
     public boolean hasMoreResults() {
-      return res.isMoreResults();
+      return res.getMoreResults();
     }
 
     @Override
@@ -149,11 +153,11 @@ class QueryResultsSourceV3 extends BaseQueryResultsSource<QueryResult, NextReque
     // query result, or the query result future, or even the index pb list.
     @Override
     public List<Index> getIndexInfo(Collection<Index> monitoredIndexBuffer) {
-      List<Index> indexList = Lists.newArrayListWithCapacity(res.indexSize());
-      for (CompositeIndex indexProtobuf : res.indexs()) {
+      List<Index> indexList = Lists.newArrayListWithCapacity(res.getIndexCount());
+      for (CompositeIndex indexProtobuf : res.getIndexList()) {
         Index index = IndexTranslator.convertFromPb(indexProtobuf);
         indexList.add(index);
-        if (indexProtobuf.isOnlyUseIfRequired()) {
+        if (indexProtobuf.getOnlyUseIfRequired()) {
           monitoredIndexBuffer.add(index);
         }
       }

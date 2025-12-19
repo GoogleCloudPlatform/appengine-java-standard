@@ -17,13 +17,13 @@
 package com.google.appengine.api.taskqueue.dev;
 
 import com.google.appengine.api.taskqueue.QueueConstants;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueAddRequest;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueAddResponse;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueMode.Mode;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueModifyTaskLeaseRequest;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueModifyTaskLeaseResponse;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueServiceError.ErrorCode;
 import com.google.appengine.api.taskqueue.dev.QueueStateInfo.TaskStateInfo;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueAddRequest;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueAddResponse;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueMode.Mode;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueModifyTaskLeaseRequest;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueModifyTaskLeaseResponse;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueServiceError.ErrorCode;
 import com.google.appengine.tools.development.Clock;
 import com.google.apphosting.api.ApiProxy;
 import com.google.apphosting.utils.config.QueueXml.Entry;

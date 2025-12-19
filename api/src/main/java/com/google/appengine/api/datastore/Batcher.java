@@ -20,7 +20,7 @@ import com.google.appengine.api.datastore.FutureHelper.MultiFuture;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.io.protocol.Protocol;
+import com.google.protobuf.CodedOutputStream;
 import com.google.protobuf.MessageLite;
 import com.google.protobuf.MessageLiteOrBuilder;
 import java.util.Collection;
@@ -70,6 +70,9 @@ abstract class Batcher<R extends MessageLiteOrBuilder, F, T extends MessageLite>
 
   /** @return the protocol message version of the value */
   abstract T toPb(F value);
+
+  /** Returns the embedded size of the given message. */
+  protected abstract int getEmbeddedSize(T value);
 
   /**
    * Models an item and its associated index in some ordered collection.
@@ -228,11 +231,6 @@ abstract class Batcher<R extends MessageLiteOrBuilder, F, T extends MessageLite>
     public void remove() {
       throw new UnsupportedOperationException();
     }
-  }
-
-  /** @return the embedded size of the given message */
-  private static int getEmbeddedSize(MessageLite pb) {
-    return Protocol.stringSize(pb.getSerializedSize()) + 1;
   }
 
   /**

@@ -13,14 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+// LINT.IfChange
 
-package com.google.cloud.datastore.core.appengv3;
+package com.google.cloud.datastore.core.proto2;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-import com.google.storage.onestore.v3.OnestoreEntity.Path;
-import com.google.storage.onestore.v3.OnestoreEntity.PropertyValue;
-import com.google.storage.onestore.v3.OnestoreEntity.Reference;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.Path;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.PropertyValue;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.Reference;
 
 /** Helper class for dealing with key values in V3. */
 public class ReferenceValues {
@@ -35,34 +36,34 @@ public class ReferenceValues {
    * @return the corresponding {@link Reference}
    */
   public static Reference toReference(PropertyValue.ReferenceValue ref) {
-    Reference key = new Reference();
+    Reference.Builder key = Reference.newBuilder();
 
     if (ref.hasApp()) {
-      key.setAppAsBytes(ref.getAppAsBytes());
+      key.setAppBytes(ref.getAppBytes());
     }
 
     if (ref.hasDatabaseId()) {
-      key.setDatabaseIdAsBytes(ref.getDatabaseIdAsBytes());
+      key.setDatabaseIdBytes(ref.getDatabaseIdBytes());
     }
 
     if (ref.hasNameSpace()) {
-      key.setNameSpaceAsBytes(ref.getNameSpaceAsBytes());
+      key.setNameSpaceBytes(ref.getNameSpaceBytes());
     }
 
-    for (PropertyValue.ReferenceValuePathElement refElem : ref.pathElements()) {
-      Path.Element keyElem = key.getMutablePath().addElement();
+    for (PropertyValue.ReferenceValue.PathElement refElem : ref.getPathElementList()) {
+      Path.Element.Builder keyElem = key.getPathBuilder().addElementBuilder();
       if (refElem.hasType()) {
-        keyElem.setTypeAsBytes(refElem.getTypeAsBytes());
+        keyElem.setTypeBytes(refElem.getTypeBytes());
       }
       if (refElem.hasId()) {
         keyElem.setId(refElem.getId());
       }
       if (refElem.hasName()) {
-        keyElem.setNameAsBytes(refElem.getNameAsBytes());
+        keyElem.setNameBytes(refElem.getNameBytes());
       }
     }
 
-    return key;
+    return key.build();
   }
 
   /**
@@ -89,34 +90,35 @@ public class ReferenceValues {
    * @return the corresponding {@link PropertyValue}
    */
   public static PropertyValue toReferenceProperty(Reference key) {
-    PropertyValue prop = new PropertyValue();
-    PropertyValue.ReferenceValue ref = prop.getMutableReferenceValue();
+    PropertyValue.Builder prop = PropertyValue.newBuilder();
+    PropertyValue.ReferenceValue.Builder ref = prop.getReferenceValueBuilder();
 
     if (key.hasApp()) {
-      ref.setAppAsBytes(key.getAppAsBytes());
+      ref.setAppBytes(key.getAppBytes());
     }
 
     if (key.hasDatabaseId()) {
-      ref.setDatabaseIdAsBytes(key.getDatabaseIdAsBytes());
+      ref.setDatabaseIdBytes(key.getDatabaseIdBytes());
     }
 
     if (key.hasNameSpace()) {
-      ref.setNameSpaceAsBytes(key.getNameSpaceAsBytes());
+      ref.setNameSpaceBytes(key.getNameSpaceBytes());
     }
 
-    for (Path.Element keyElem : key.getPath().elements()) {
-      PropertyValue.ReferenceValuePathElement refElem = ref.addPathElement();
+    for (Path.Element keyElem : key.getPath().getElementList()) {
+      PropertyValue.ReferenceValue.PathElement.Builder refElem = ref.addPathElementBuilder();
       if (keyElem.hasType()) {
-        refElem.setTypeAsBytes(keyElem.getTypeAsBytes());
+        refElem.setTypeBytes(keyElem.getTypeBytes());
       }
       if (keyElem.hasId()) {
         refElem.setId(keyElem.getId());
       }
       if (keyElem.hasName()) {
-        refElem.setNameAsBytes(keyElem.getNameAsBytes());
+        refElem.setNameBytes(keyElem.getNameBytes());
       }
     }
 
-    return prop;
+    return prop.build();
   }
 }
+// LINT.ThenChange(//depot/google3/java/com/google/cloud/datastore/core/appengv3/ReferenceValues.java)

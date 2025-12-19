@@ -16,10 +16,10 @@
 
 package com.google.appengine.api.taskqueue.dev;
 
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueAddRequest;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueAddResponse;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueMode.Mode;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueRetryParameters;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueAddRequest;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueAddResponse;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueMode.Mode;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueRetryParameters;
 import com.google.apphosting.utils.config.QueueXml.Entry;
 import com.google.apphosting.utils.config.QueueXml.RetryParameters;
 import java.util.UUID;

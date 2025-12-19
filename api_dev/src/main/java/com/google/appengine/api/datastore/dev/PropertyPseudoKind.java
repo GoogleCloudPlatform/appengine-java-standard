@@ -24,16 +24,16 @@ import com.google.appengine.api.datastore.Key;
 import com.google.appengine.api.datastore.dev.LocalCompositeIndexManager.KeyTranslator;
 import com.google.appengine.api.datastore.dev.LocalDatastoreService.Extent;
 import com.google.appengine.api.datastore.dev.LocalDatastoreService.Profile;
-import com.google.apphosting.datastore.DatastoreV3Pb.Query;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.Query;
 import com.google.common.collect.Lists;
 import com.google.common.collect.SortedSetMultimap;
 import com.google.common.collect.TreeMultimap;
-import com.google.storage.onestore.PropertyType;
-import com.google.storage.onestore.v3.OnestoreEntity.EntityProto;
-import com.google.storage.onestore.v3.OnestoreEntity.Path;
-import com.google.storage.onestore.v3.OnestoreEntity.Property;
-import com.google.storage.onestore.v3.OnestoreEntity.PropertyValue;
-import com.google.storage.onestore.v3.OnestoreEntity.Reference;
+import com.google.protobuf.ByteString;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.EntityProto;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.Path;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.Property;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.PropertyValue;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.Reference;
 import java.util.List;
 import java.util.Map;
 
@@ -132,14 +132,14 @@ class PropertyPseudoKind extends KeyFilteredPseudoKind {
           end.kind = ancestor.kind + "\0";
           start.property = end.property = "";
         }
-        query.clearAncestor();
+        query = query.toBuilder().clearAncestor().build();
       }
     }
 
     return getProperties(
         query.getApp(),
         query.getNameSpace(),
-        query.isKeysOnly(),
+        query.getKeysOnly(),
         start,
         startInclusive,
         end,
@@ -196,7 +196,7 @@ class PropertyPseudoKind extends KeyFilteredPseudoKind {
         // report unindexed properties; details in http://b/1004244)
         SortedSetMultimap<String, String> allProps = TreeMultimap.create();
         for (EntityProto entity : entities) {
-          for (Property prop : entity.propertys()) {
+          for (Property prop : entity.getPropertyList()) {
             String name = prop.getName();
             PropertyType type = PropertyType.getType(prop.getValue());
 
@@ -256,30 +256,31 @@ class PropertyPseudoKind extends KeyFilteredPseudoKind {
     // {@link SortedSet}s so the results will be ordered.
     for (String prop : allProps.keySet()) {
       // Create schema entity and set its key based on the kind
-      EntityProto propEntity = new EntityProto();
-      schema.add(propEntity);
+      EntityProto.Builder propEntity = EntityProto.newBuilder();
 
-      Path path = new Path();
-      path.addElement().setType(KIND_METADATA_KIND).setName(kind);
-      path.addElement().setType(PROPERTY_METADATA_KIND).setName(prop);
-      Reference key = new Reference().setApp(app).setPath(path);
+      Path.Builder path = Path.newBuilder();
+      path.addElementBuilder().setType(KIND_METADATA_KIND).setName(kind);
+      path.addElementBuilder().setType(PROPERTY_METADATA_KIND).setName(prop);
+      Reference.Builder key = Reference.newBuilder().setApp(app).setPath(path);
       if (namespace.length() > 0) {
         key.setNameSpace(namespace);
       }
       propEntity.setKey(key);
       // EntityProto.entity_group is a required PB field.
-      propEntity.getMutableEntityGroup().addElement(path.getElement(0));
+      propEntity.getEntityGroupBuilder().addElement(path.getElement(0));
 
       if (!keysOnly) {
         for (String rep : allProps.get(prop)) {
-          PropertyValue repValue = new PropertyValue().setStringValue(rep);
+          PropertyValue repValue =
+              PropertyValue.newBuilder().setStringValue(ByteString.copyFromUtf8(rep)).build();
           propEntity
-              .addProperty()
+              .addPropertyBuilder()
               .setName("property_representation")
               .setValue(repValue)
               .setMultiple(true);
         }
       }
+      schema.add(propEntity.build());
     }
   }
 }

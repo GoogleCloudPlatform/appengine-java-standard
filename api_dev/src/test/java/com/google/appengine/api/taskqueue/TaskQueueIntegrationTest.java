@@ -30,7 +30,7 @@ import static org.junit.Assert.assertThrows;
 import com.google.appengine.api.datastore.DatastoreService;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
 import com.google.appengine.api.datastore.Transaction;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueRetryParameters;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueRetryParameters;
 import com.google.appengine.api.taskqueue.dev.LocalTaskQueue;
 import com.google.appengine.tools.development.Clock;
 import com.google.appengine.tools.development.testing.LocalDatastoreServiceTestConfig;

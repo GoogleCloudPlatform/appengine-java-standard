@@ -27,20 +27,20 @@ import com.google.appengine.api.datastore.DatastoreServiceFactory;
 import com.google.appengine.api.datastore.Transaction;
 import com.google.appengine.api.datastore.TransactionHelper;
 import com.google.appengine.api.taskqueue.TaskOptions.Param;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueAddRequest;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueBulkAddRequest;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueBulkAddResponse;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueDeleteRequest;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueDeleteResponse;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueMode;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueModifyTaskLeaseRequest;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueModifyTaskLeaseResponse;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueuePurgeQueueRequest;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueuePurgeQueueResponse;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueQueryAndOwnTasksRequest;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueQueryAndOwnTasksResponse;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueRetryParameters;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueServiceError;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueAddRequest;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueBulkAddRequest;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueBulkAddResponse;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueDeleteRequest;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueDeleteResponse;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueMode;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueModifyTaskLeaseRequest;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueModifyTaskLeaseResponse;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueuePurgeQueueRequest;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueuePurgeQueueResponse;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueQueryAndOwnTasksRequest;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueQueryAndOwnTasksResponse;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueRetryParameters;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueServiceError;
 import com.google.apphosting.api.ApiProxy.ApiConfig;
 import com.google.common.base.Strings;
 import com.google.protobuf.ByteString;
@@ -55,6 +55,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Future;
@@ -363,7 +364,8 @@ class QueueImpl implements Queue {
     for (Map.Entry<String, List<String>> entry : headers.entrySet()) {
       // If the POST method is being used with parameters then ignore the content-type provided
       // by the user and use application/x-www-form-urlencoded.
-      if (useUrlEncodedContentType && entry.getKey().toLowerCase().equals("content-type")) {
+      if (useUrlEncodedContentType
+          && entry.getKey().toLowerCase(Locale.ROOT).equals("content-type")) {
         continue;
       }
 

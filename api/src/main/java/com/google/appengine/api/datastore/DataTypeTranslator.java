@@ -16,6 +16,7 @@
 
 package com.google.appengine.api.datastore;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Objects.requireNonNull;
 
 import com.google.appengine.api.blobstore.BlobKey;
@@ -37,30 +38,28 @@ import com.google.datastore.v1.Value;
 import com.google.datastore.v1.Value.ValueTypeCase;
 import com.google.datastore.v1.ValueOrBuilder;
 import com.google.datastore.v1.client.DatastoreHelper;
-import com.google.io.protocol.ProtocolSupport;
 import com.google.protobuf.ByteString;
+import com.google.protobuf.ExtensionRegistry;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.NullValue;
-import com.google.storage.onestore.v3.OnestoreEntity.EntityProto;
-import com.google.storage.onestore.v3.OnestoreEntity.Path;
-import com.google.storage.onestore.v3.OnestoreEntity.Path.Element;
-import com.google.storage.onestore.v3.OnestoreEntity.Property;
-import com.google.storage.onestore.v3.OnestoreEntity.Property.Meaning;
-import com.google.storage.onestore.v3.OnestoreEntity.PropertyValue;
-import com.google.storage.onestore.v3.OnestoreEntity.PropertyValue.ReferenceValue;
-import com.google.storage.onestore.v3.OnestoreEntity.PropertyValue.ReferenceValuePathElement;
-import com.google.storage.onestore.v3.OnestoreEntity.PropertyValue.UserValue;
-import com.google.storage.onestore.v3.OnestoreEntity.Reference;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.EntityProto;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.Path;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.Path.Element;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.Property;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.Property.Meaning;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.PropertyValue;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.PropertyValue.PointValue;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.PropertyValue.ReferenceValue;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.PropertyValue.UserValue;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.Reference;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -159,10 +158,15 @@ public final class DataTypeTranslator {
   static final Type<?>[] MEANING_INT_TO_TYPE;
 
   static {
-    Type<?>[] meaningIntToType = new Type<?>[Meaning.Meaning_MAX.getValue()];
-    Set<Type<?>> typesWithoutMeaning = new HashSet<>();
+    int meaningMax = 0;
+    for (Meaning meaning : Meaning.values()) {
+      if (meaning.getNumber() > meaningMax) {
+        meaningMax = meaning.getNumber();
+      }
+    }
+    Type<?>[] meaningIntToType = new Type<?>[meaningMax];
     for (Type<?> type : TYPE_MAP.values()) {
-      int meaningInt = type.getV3Meaning().getValue();
+      int meaningInt = type.getV3Meaning().getNumber();
       if (meaningInt != 0) {
         meaningIntToType[meaningInt] = type;
       }
@@ -179,13 +183,14 @@ public final class DataTypeTranslator {
       new HashMap<Class<? extends Comparable<?>>, Integer>();
 
   static {
-    comparableTypeMap.put(ComparableByteArray.class, PropertyValue.kstringValue);
-    comparableTypeMap.put(Long.class, PropertyValue.kint64Value);
-    comparableTypeMap.put(Double.class, PropertyValue.kdoubleValue);
-    comparableTypeMap.put(Boolean.class, PropertyValue.kbooleanValue);
-    comparableTypeMap.put(User.class, PropertyValue.kUserValueGroup);
-    comparableTypeMap.put(Key.class, PropertyValue.kReferenceValueGroup);
-    comparableTypeMap.put(GeoPt.class, PropertyValue.kPointValueGroup);
+    // hardcoding the tag numbers from appengine-java-standard/protobuf/api/entity.proto
+    comparableTypeMap.put(ComparableByteArray.class, 3); // stringValue = 3
+    comparableTypeMap.put(Long.class, 1); // int64Value = 1
+    comparableTypeMap.put(Double.class, 4); // doubleValue = 4
+    comparableTypeMap.put(Boolean.class, 2); // booleanValue = 2
+    comparableTypeMap.put(User.class, 8); // UserValue = 8
+    comparableTypeMap.put(Key.class, 12); // ReferenceValue = 12
+    comparableTypeMap.put(GeoPt.class, 5); // PointValue = 5
   }
 
   /**
@@ -199,7 +204,7 @@ public final class DataTypeTranslator {
    * @param map A not {@code null} map of all the properties which will be set on {@code proto}
    * @param proto A not {@code null} protocol buffer
    */
-  public static void addPropertiesToPb(Map<String, ?> map, EntityProto proto) {
+  public static void addPropertiesToPb(Map<String, ?> map, EntityProto.Builder proto) {
     for (Map.Entry<String, ?> entry : map.entrySet()) {
       String name = entry.getKey();
 
@@ -223,7 +228,7 @@ public final class DataTypeTranslator {
     }
   }
 
-  /** @see #addPropertiesToPb(Map, EntityProto) */
+  /** See {@link #addPropertiesToPb(Map, EntityProto.Builder)}. */
   static void addPropertiesToPb(Map<String, ?> map, com.google.datastore.v1.Entity.Builder proto) {
     for (Map.Entry<String, ?> entry : map.entrySet()) {
       proto.putProperties(entry.getKey(), toV1Value(entry.getValue()).build());
@@ -231,15 +236,13 @@ public final class DataTypeTranslator {
   }
 
   private static void addListPropertyToPb(
-      EntityProto proto,
+      EntityProto.Builder proto,
       String name,
       boolean indexed,
       Collection<?> values,
       boolean forceIndexedEmbeddedEntity) {
     if (values.isEmpty()) {
-      Property property = new Property();
-      property.setName(name);
-      property.setMultiple(false);
+      Property.Builder property = Property.newBuilder().setName(name).setMultiple(false);
       if (DatastoreServiceConfig.getEmptyListSupport()) {
         // DS now supports empty lists, so we write a real empty list
         property.setMeaning(Meaning.EMPTY_LIST);
@@ -248,7 +251,7 @@ public final class DataTypeTranslator {
         // If the value is indexed it appears in queries, but distinction between
         // null and empty list is lost.
       }
-      property.getMutableValue(); // Indicate to the proto that we have set this field
+      property.setValue(PropertyValue.getDefaultInstance());
       if (indexed) {
         proto.addProperty(property);
       } else {
@@ -258,7 +261,7 @@ public final class DataTypeTranslator {
       // Write every element to the PB
       for (Object listValue : values) {
         addPropertyToPb(
-            name, listValue, indexed, forceIndexedEmbeddedEntity, true /* multiple */, proto);
+            name, listValue, indexed, forceIndexedEmbeddedEntity, /* multiple= */ true, proto);
       }
     }
   }
@@ -281,15 +284,13 @@ public final class DataTypeTranslator {
       boolean indexed,
       boolean forceIndexedEmbeddedEntity,
       boolean multiple,
-      EntityProto entity) {
-    Property property = new Property();
-    property.setName(name);
-    property.setMultiple(multiple);
-    PropertyValue newValue = property.getMutableValue();
+      EntityProto.Builder entity) {
+    Property.Builder property = Property.newBuilder().setName(name).setMultiple(multiple);
+    PropertyValue.Builder newValue = property.getValueBuilder();
     if (value != null) {
       Type<?> type = getType(value.getClass());
       Meaning meaning = type.getV3Meaning();
-      if (meaning != property.getMeaningEnum()) {
+      if (meaning != property.getMeaning()) {
         property.setMeaning(meaning);
       }
       type.toV3Value(value, newValue);
@@ -315,17 +316,17 @@ public final class DataTypeTranslator {
 
   // Used by QueryTranslator.
   static PropertyValue toV3Value(Object value) {
-    PropertyValue propertyValue = new PropertyValue();
+    PropertyValue.Builder propertyValue = PropertyValue.newBuilder();
     if (value != null) {
       getType(value.getClass()).toV3Value(value, propertyValue);
     }
-    return propertyValue;
+    return propertyValue.build();
   }
 
   /** Copy all of the indexed properties present on {@code proto} into {@code map}. */
   public static void extractIndexedPropertiesFromPb(
       EntityProto proto, Map<String, @Nullable Object> map) {
-    for (Property property : proto.propertys()) {
+    for (Property property : proto.getPropertyList()) {
       addPropertyToMap(property, true, map);
     }
   }
@@ -333,7 +334,7 @@ public final class DataTypeTranslator {
   /** Copy all of the unindexed properties present on {@code proto} into {@code map}. */
   private static void extractUnindexedPropertiesFromPb(
       EntityProto proto, Map<String, @Nullable Object> map) {
-    for (Property property : proto.rawPropertys()) {
+    for (Property property : proto.getRawPropertyList()) {
       addPropertyToMap(property, false, map);
     }
   }
@@ -380,12 +381,14 @@ public final class DataTypeTranslator {
   }
 
   private static Property buildImplicitKeyProperty(EntityProto proto) {
-    Property keyProp = new Property();
-    keyProp.setName(Entity.KEY_RESERVED_PROPERTY);
-    PropertyValue propVal = new PropertyValue();
-    propVal.setReferenceValue(KeyType.toReferenceValue(proto.getKey()));
+    Property.Builder keyProp = Property.newBuilder().setName(Entity.KEY_RESERVED_PROPERTY);
+    PropertyValue propVal =
+        PropertyValue.newBuilder()
+            .setReferenceValue(KeyType.toReferenceValue(proto.getKey()))
+            .build();
     keyProp.setValue(propVal);
-    return keyProp;
+    keyProp.setMultiple(false); //Multiple is a required field, so set to false as default.
+    return keyProp.build();
   }
 
   /**
@@ -398,19 +401,19 @@ public final class DataTypeTranslator {
   public static Collection<Property> findIndexedPropertiesOnPb(
       EntityProto proto, String propertyName) {
     if (propertyName.equals(Entity.KEY_RESERVED_PROPERTY)) {
-      return Collections.singleton(buildImplicitKeyProperty(proto));
+      return Collections.singletonList(buildImplicitKeyProperty(proto));
     }
     List<Property> matchingMultipleProps = new ArrayList<>();
-    for (Property prop : proto.propertys()) {
+    for (Property prop : proto.getPropertyList()) {
       if (prop.getName().equals(propertyName)) {
-        if (!prop.isMultiple()) {
-          return Collections.singleton(prop);
+        if (!prop.getMultiple()) {
+          return Collections.singletonList(prop);
         } else {
           matchingMultipleProps.add(prop);
         }
       }
     }
-    return matchingMultipleProps;
+    return Collections.unmodifiableList(matchingMultipleProps);
   }
 
   private static @Nullable Object wrapIfUnindexed(boolean indexed, @Nullable Object value) {
@@ -421,7 +424,7 @@ public final class DataTypeTranslator {
       Property property, boolean indexed, Map<String, @Nullable Object> map) {
     String name = property.getName();
 
-    if (property.getMeaningEnum() == Meaning.EMPTY_LIST) {
+    if (property.getMeaning() == Meaning.EMPTY_LIST) {
       // Read an empty list, but user hasn't enabled empty list support.  In order to be
       // backward compatible, return null because thats what they used to get for empty lists.
       Object emptyListValue =
@@ -429,7 +432,7 @@ public final class DataTypeTranslator {
       map.put(name, wrapIfUnindexed(indexed, emptyListValue));
     } else {
       Object value = getPropertyValue(property);
-      if (property.isMultiple()) {
+      if (property.getMultiple()) {
         @SuppressWarnings({"unchecked"})
         List<Object> resultList = (List<Object>) PropertyContainer.unwrapValue(map.get(name));
         if (resultList == null) {
@@ -506,7 +509,7 @@ public final class DataTypeTranslator {
    * @return {@code null} if no value was set for {@code property}
    */
   public static @Nullable Object getPropertyValue(Property property) {
-    int meaningInt = property.getMeaning();
+    int meaningInt = property.getMeaning().getNumber();
     PropertyValue value = property.getValue();
     if (meaningInt == 0) {
       // The value has no meaning.  Check possible types, most likely first.
@@ -616,7 +619,7 @@ public final class DataTypeTranslator {
   }
 
   private static Meaning getV3MeaningOf(ValueOrBuilder value) {
-    return Meaning.valueOf(value.getMeaning());
+    return Meaning.forNumber(value.getMeaning());
   }
 
   private static AppIdNamespace toAppIdNamespace(PartitionIdOrBuilder partitionId) {
@@ -786,7 +789,7 @@ public final class DataTypeTranslator {
    * Get the rank of the given datastore type relative to other datastore types. Note that datastore
    * types do not necessarily have unique ranks.
    */
-  @SuppressWarnings({"unchecked", "rawtypes"})
+  @SuppressWarnings("rawtypes")
   public static int getTypeRank(Class<? extends Comparable> datastoreType) {
     // We just use the protobuf tag id.
     return requireNonNull(comparableTypeMap.get(datastoreType));
@@ -831,7 +834,7 @@ public final class DataTypeTranslator {
     public abstract @Nullable Comparable<?> asComparable(Object value);
 
     /** Sets the value of {@code propertyValue} to {@code value}. */
-    public abstract void toV3Value(Object value, PropertyValue propertyValue);
+    public abstract void toV3Value(Object value, PropertyValue.Builder propertyValue);
 
     /** @return Whether the value is indexable */
     public abstract boolean canBeIndexed();
@@ -891,8 +894,8 @@ public final class DataTypeTranslator {
    */
   private abstract static class BaseStringType<T> extends BaseVariantType<String, T> {
     @Override
-    public void toV3Value(Object value, PropertyValue propertyValue) {
-      propertyValue.setStringValue(toDatastoreValue(value));
+    public void toV3Value(Object value, PropertyValue.Builder propertyValue) {
+      propertyValue.setStringValue(ByteString.copyFromUtf8(toDatastoreValue(value)));
     }
 
     @Override
@@ -906,13 +909,13 @@ public final class DataTypeTranslator {
       Value.Builder builder = Value.newBuilder();
       builder.setStringValue(toDatastoreValue(value));
       builder.setExcludeFromIndexes(!indexed); // Assume indexable.
-      builder.setMeaning(getV3Meaning().getValue()); // Assume v1 Meaning == v3 Meaning.
+      builder.setMeaning(getV3Meaning().getNumber()); // Assume v1 Meaning == v3 Meaning.
       return builder;
     }
 
     @Override
     public final T getValue(PropertyValue propertyValue) {
-      return fromDatastoreValue(propertyValue.getStringValue());
+      return fromDatastoreValue(propertyValue.getStringValue().toStringUtf8());
     }
 
     @Override
@@ -932,7 +935,7 @@ public final class DataTypeTranslator {
 
     @Override
     public @Nullable ComparableByteArray asComparable(Object value) {
-      return new ComparableByteArray(ProtocolSupport.toBytesUtf8(toDatastoreValue(value)));
+      return new ComparableByteArray(toDatastoreValue(value).getBytes(UTF_8));
     }
   }
 
@@ -950,8 +953,8 @@ public final class DataTypeTranslator {
     }
 
     @Override
-    public final void toV3Value(Object value, PropertyValue propertyValue) {
-      propertyValue.setStringValueAsBytes(toDatastoreValue(value));
+    public final void toV3Value(Object value, PropertyValue.Builder propertyValue) {
+      propertyValue.setStringValue(ByteString.copyFrom(toDatastoreValue(value)));
     }
 
     @Override
@@ -970,7 +973,7 @@ public final class DataTypeTranslator {
 
     @Override
     public final T getValue(PropertyValue propertyValue) {
-      return fromDatastoreValue(propertyValue.getStringValueAsBytes());
+      return fromDatastoreValue(propertyValue.getStringValue().toByteArray());
     }
 
     @Override
@@ -1024,7 +1027,7 @@ public final class DataTypeTranslator {
    */
   private abstract static class BaseInt64Type<T> extends BaseVariantType<Long, T> {
     @Override
-    public final void toV3Value(Object value, PropertyValue propertyValue) {
+    public final void toV3Value(Object value, PropertyValue.Builder propertyValue) {
       propertyValue.setInt64Value(toDatastoreValue(value));
     }
 
@@ -1039,7 +1042,7 @@ public final class DataTypeTranslator {
       Value.Builder builder = Value.newBuilder();
       builder.setIntegerValue(toDatastoreValue(value));
       builder.setExcludeFromIndexes(!indexed);
-      builder.setMeaning(getV3Meaning().getValue());
+      builder.setMeaning(getV3Meaning().getNumber());
       return builder;
     }
 
@@ -1087,7 +1090,7 @@ public final class DataTypeTranslator {
     }
 
     @Override
-    public void toV3Value(Object value, PropertyValue propertyValue) {
+    public void toV3Value(Object value, PropertyValue.Builder propertyValue) {
       throw new UnsupportedOperationException();
     }
 
@@ -1112,13 +1115,15 @@ public final class DataTypeTranslator {
       return new RawValue(propertyValue);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
+ @  SuppressWarnings("PatternMatchingInstanceof") 
     public @Nullable Comparable<?> asComparable(Object value) {
       Object value2 = ((RawValue) value).getValue();
       // All possible values except byte[] are already comparable.
       if (value2 instanceof byte[]) {
         return new ComparableByteArray((byte[]) value2);
+      } else if (value2 instanceof ByteString) {
+        return new ComparableByteArray(((ByteString) value2).toByteArray());
       }
       return (Comparable<?>) value2;
     }
@@ -1153,7 +1158,7 @@ public final class DataTypeTranslator {
   /** The raw double type. */
   private static final class DoubleType extends Type<Double> {
     @Override
-    public void toV3Value(Object value, PropertyValue propertyValue) {
+    public void toV3Value(Object value, PropertyValue.Builder propertyValue) {
       propertyValue.setDoubleValue(((Number) value).doubleValue());
     }
 
@@ -1200,7 +1205,7 @@ public final class DataTypeTranslator {
   /** The raw boolean type. */
   private static final class BoolType extends Type<Boolean> {
     @Override
-    public void toV3Value(Object value, PropertyValue propertyValue) {
+    public void toV3Value(Object value, PropertyValue.Builder propertyValue) {
       propertyValue.setBooleanValue((Boolean) value);
     }
 
@@ -1220,7 +1225,7 @@ public final class DataTypeTranslator {
 
     @Override
     public Boolean getValue(PropertyValue propertyValue) {
-      return propertyValue.isBooleanValue();
+      return propertyValue.getBooleanValue();
     }
 
     @Override
@@ -1273,17 +1278,16 @@ public final class DataTypeTranslator {
     }
 
     @Override
-    public void toV3Value(Object value, PropertyValue propertyValue) {
+    public void toV3Value(Object value, PropertyValue.Builder propertyValue) {
       User user = (User) value;
-      UserValue userValue = new UserValue();
-      userValue.setEmail(user.getEmail());
-      userValue.setAuthDomain(user.getAuthDomain());
+      UserValue.Builder userValue =
+          UserValue.newBuilder().setEmail(user.getEmail()).setAuthDomain(user.getAuthDomain());
       if (user.getUserId() != null) {
         userValue.setObfuscatedGaiaid(user.getUserId());
       }
       // This value is filled in by the app server.  The runtime process doesn't know it.
       userValue.setGaiaid(0);
-      propertyValue.setUserValue(userValue);
+      propertyValue.setUserValue(userValue.build());
     }
 
     @Override
@@ -1342,10 +1346,10 @@ public final class DataTypeTranslator {
     }
 
     @Override
-    public void toV3Value(Object value, PropertyValue propertyValue) {
+    public void toV3Value(Object value, PropertyValue.Builder propertyValue) {
       GeoPt geoPt = (GeoPt) value;
       PropertyValue.PointValue pv =
-          new PropertyValue.PointValue().setX(geoPt.getLatitude()).setY(geoPt.getLongitude());
+          PointValue.newBuilder().setX(geoPt.getLatitude()).setY(geoPt.getLongitude()).build();
       propertyValue.setPointValue(pv);
     }
 
@@ -1405,7 +1409,7 @@ public final class DataTypeTranslator {
   /** The key/reference type. */
   private static final class KeyType extends Type<Key> {
     @Override
-    public void toV3Value(Object value, PropertyValue propertyValue) {
+    public void toV3Value(Object value, PropertyValue.Builder propertyValue) {
       Reference keyRef = KeyTranslator.convertToPb((Key) value);
       propertyValue.setReferenceValue(toReferenceValue(keyRef));
     }
@@ -1452,37 +1456,34 @@ public final class DataTypeTranslator {
     }
 
     private static ReferenceValue toReferenceValue(Reference keyRef) {
-      ReferenceValue refValue = new ReferenceValue();
-      refValue.setApp(keyRef.getApp());
+      ReferenceValue.Builder refValue = ReferenceValue.newBuilder().setApp(keyRef.getApp());
       if (keyRef.hasNameSpace()) {
         refValue.setNameSpace(keyRef.getNameSpace());
       }
       Path path = keyRef.getPath();
-      for (Element element : path.elements()) {
-        ReferenceValuePathElement newElement = new ReferenceValuePathElement();
-        newElement.setType(element.getType());
+      for (Element element : path.getElementList()) {
+        ReferenceValue.PathElement.Builder newElement =
+            ReferenceValue.PathElement.newBuilder().setType(element.getType());
         if (element.hasName()) {
           newElement.setName(element.getName());
         }
         if (element.hasId()) {
           newElement.setId(element.getId());
         }
-        refValue.addPathElement(newElement);
+        refValue.addPathElement(newElement.build());
       }
 
-      return refValue;
+      return refValue.build();
     }
 
     private static Reference toReference(ReferenceValue refValue) {
-      Reference reference = new Reference();
-      reference.setApp(refValue.getApp());
+      Reference.Builder reference = Reference.newBuilder().setApp(refValue.getApp());
       if (refValue.hasNameSpace()) {
         reference.setNameSpace(refValue.getNameSpace());
       }
-      Path path = new Path();
-      for (ReferenceValuePathElement element : refValue.pathElements()) {
-        Element newElement = new Element();
-        newElement.setType(element.getType());
+      Path.Builder path = Path.newBuilder();
+      for (ReferenceValue.PathElement element : refValue.getPathElementList()) {
+        Element.Builder newElement = Element.newBuilder().setType(element.getType());
         if (element.hasName()) {
           newElement.setName(element.getName());
         }
@@ -1492,7 +1493,7 @@ public final class DataTypeTranslator {
         path.addElement(newElement);
       }
       reference.setPath(path);
-      return reference;
+      return reference.build();
     }
   }
 
@@ -1564,7 +1565,7 @@ public final class DataTypeTranslator {
       if (!indexed) {
         // If a short blob was not indexed, the meaning needs to be set to disambiguate it from
         // the non-indexable blob type.
-        builder.setMeaning(getV3Meaning().getValue());
+        builder.setMeaning(getV3Meaning().getNumber());
       }
       return builder;
     }
@@ -1630,10 +1631,13 @@ public final class DataTypeTranslator {
 
     @Override
     public EmbeddedEntity getValue(PropertyValue propertyValue) {
-      EntityProto proto = new EntityProto();
-      boolean parsed = proto.mergeFrom(propertyValue.getStringValueAsBytes());
-      if (!parsed) {
-        throw new IllegalArgumentException("Could not parse EntityProto value");
+      EntityProto.Builder proto = EntityProto.newBuilder();
+      try {
+        // Keep mergeFrom as it might be a partial proto.
+        proto.mergeFrom(
+            propertyValue.getStringValue(), ExtensionRegistry.getEmptyRegistry());
+      } catch (InvalidProtocolBufferException e) {
+        throw new IllegalArgumentException("Could not parse EntityProto value", e);
       }
       EmbeddedEntity result = new EmbeddedEntity();
       // NOTE: Java proto1 encodes the immutable default
@@ -1642,7 +1646,14 @@ public final class DataTypeTranslator {
       if (proto.hasKey() && !proto.getKey().getApp().isEmpty()) {
         result.setKey(KeyTranslator.createFromPb(proto.getKey()));
       }
-      extractPropertiesFromPb(proto, result.getPropertyMap());
+      if (!proto.hasKey()) {
+        proto.setKey(
+            Reference.newBuilder().setApp("").setPath(Path.getDefaultInstance()));
+      }
+      if (!proto.hasEntityGroup()) {
+        proto.setEntityGroup(Path.getDefaultInstance());
+      }
+      extractPropertiesFromPb(proto.build(), result.getPropertyMap());
       return result;
     }
 
@@ -1658,15 +1669,20 @@ public final class DataTypeTranslator {
     }
 
     @Override
-    public void toV3Value(Object value, PropertyValue propertyValue) {
+    public void toV3Value(Object value, PropertyValue.Builder propertyValue) {
       EmbeddedEntity structProp = (EmbeddedEntity) value;
-      EntityProto proto = new EntityProto();
+      EntityProto.Builder proto = EntityProto.newBuilder();
       if (structProp.getKey() != null) {
         proto.setKey(KeyTranslator.convertToPb(structProp.getKey()));
+      } else {
+        proto.setKey(
+            Reference.newBuilder().setApp("").setPath(Path.getDefaultInstance()));
+      }
+      if (!proto.hasEntityGroup()) {
+        proto.setEntityGroup(Path.getDefaultInstance());
       }
       addPropertiesToPb(structProp.getPropertyMap(), proto);
-      // TODO: Figure out how to do partial serialization.
-      propertyValue.setStringValueAsBytes(proto.toByteArray());
+      propertyValue.setStringValue(proto.build().toByteString());
     }
 
     @Override
@@ -1699,11 +1715,6 @@ public final class DataTypeTranslator {
     @Override
     public Meaning getV3Meaning() {
       return Meaning.TEXT;
-    }
-
-    @Override
-    public void toV3Value(Object value, PropertyValue propertyValue) {
-      super.toV3Value(value, propertyValue);
     }
 
     @Override
@@ -1745,7 +1756,7 @@ public final class DataTypeTranslator {
         Object value, boolean indexed, boolean forceIndexedEmbeddedEntity) {
       Value.Builder builder = Value.newBuilder();
       builder.setStringValue(toDatastoreValue(value));
-      builder.setMeaning(Meaning.BLOBKEY.getValue());
+      builder.setMeaning(Meaning.BLOBKEY.getNumber());
       builder.setExcludeFromIndexes(!indexed);
       return builder;
     }
@@ -1810,7 +1821,7 @@ public final class DataTypeTranslator {
       } else {
         builder = Value.newBuilder();
         builder.setIntegerValue(toDatastoreValue(date));
-        builder.setMeaning(Meaning.GD_WHEN.getValue());
+        builder.setMeaning(Meaning.GD_WHEN.getNumber());
       }
       builder.setExcludeFromIndexes(!indexed);
       return builder;
@@ -1846,7 +1857,7 @@ public final class DataTypeTranslator {
 
     private static boolean isNonRfc3339Value(Value propertyValue) {
       return propertyValue.getValueTypeCase() == ValueTypeCase.INTEGER_VALUE
-          && propertyValue.getMeaning() == Meaning.GD_WHEN.getValue();
+          && propertyValue.getMeaning() == Meaning.GD_WHEN.getNumber();
     }
 
     private static boolean isIndexValue(Value propertyValue) {

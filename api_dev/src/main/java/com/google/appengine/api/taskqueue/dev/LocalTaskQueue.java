@@ -19,23 +19,23 @@ package com.google.appengine.api.taskqueue.dev;
 import com.google.appengine.api.taskqueue.InternalFailureException;
 import com.google.appengine.api.taskqueue.Queue;
 import com.google.appengine.api.taskqueue.QueueConstants;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueAddRequest;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueAddResponse;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueBulkAddRequest;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueBulkAddResponse;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueDeleteRequest;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueDeleteResponse;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueFetchQueueStatsRequest;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueFetchQueueStatsResponse;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueMode.Mode;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueModifyTaskLeaseRequest;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueModifyTaskLeaseResponse;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueuePurgeQueueRequest;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueuePurgeQueueResponse;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueQueryAndOwnTasksRequest;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueQueryAndOwnTasksResponse;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueScannerQueueInfo;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueServiceError.ErrorCode;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueAddRequest;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueAddResponse;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueBulkAddRequest;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueBulkAddResponse;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueDeleteRequest;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueDeleteResponse;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueFetchQueueStatsRequest;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueFetchQueueStatsResponse;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueMode.Mode;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueModifyTaskLeaseRequest;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueModifyTaskLeaseResponse;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueuePurgeQueueRequest;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueuePurgeQueueResponse;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueQueryAndOwnTasksRequest;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueQueryAndOwnTasksResponse;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueScannerQueueInfo;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueServiceError.ErrorCode;
 import com.google.appengine.api.urlfetch.URLFetchServicePb;
 import com.google.appengine.api.urlfetch.dev.LocalURLFetchService;
 import com.google.appengine.tools.development.AbstractLocalRpcService;
@@ -495,12 +495,11 @@ public final class LocalTaskQueue extends AbstractLocalRpcService {
     DevQueue queue =
         getQueueByName(bulkAddRequestBuilder.getAddRequest(0).getQueueName().toStringUtf8());
 
-    IdentityHashMap<TaskQueueBulkAddResponse.TaskResult.Builder, String> chosenNames =
-        new IdentityHashMap<>();
+    HashMap<Integer, String> chosenNames = new HashMap<>();
     boolean errorFound = false;
 
-    for (TaskQueueAddRequest.Builder addRequest :
-        bulkAddRequestBuilder.getAddRequestBuilderList()) {
+    for (int i = 0; i < bulkAddRequestBuilder.getAddRequestCount(); ++i) {
+      TaskQueueAddRequest.Builder addRequest = bulkAddRequestBuilder.getAddRequestBuilder(i);
       TaskQueueBulkAddResponse.TaskResult.Builder taskResult =
           bulkAddResponse.addTaskResultBuilder();
       ErrorCode error = validateAddRequest(addRequest);
@@ -509,7 +508,7 @@ public final class LocalTaskQueue extends AbstractLocalRpcService {
 
         if (!addRequest.hasTaskName() || addRequest.getTaskName().isEmpty()) {
           addRequest.setTaskName(ByteString.copyFromUtf8(DevQueue.genTaskName()));
-          chosenNames.put(taskResult, addRequest.getTaskName().toStringUtf8());
+          chosenNames.put(i, addRequest.getTaskName().toStringUtf8());
         }
         // Initialize the result as SKIPPED - this will be set to the actual result value if the
         // request does not contain any errors and proceeds to the AddActions/BulkAdd stage.
@@ -551,19 +550,20 @@ public final class LocalTaskQueue extends AbstractLocalRpcService {
 
         try {
           // Validation of task mode will be performed in DevQueue object.
-          queue.add(addRequest);
+          var unused = queue.add(addRequest);
         } catch (ApiProxy.ApplicationException exception) {
           taskResult.setResult(ErrorCode.forNumber(exception.getApplicationError()));
         }
       }
     }
 
-    for (TaskQueueBulkAddResponse.TaskResult.Builder taskResult :
-        bulkAddResponse.getTaskResultBuilderList()) {
+    for (int i = 0; i < bulkAddResponse.getTaskResultCount(); ++i) {
+      TaskQueueBulkAddResponse.TaskResult.Builder taskResult =
+          bulkAddResponse.getTaskResultBuilder(i);
       if (taskResult.getResult() == ErrorCode.SKIPPED) {
         taskResult.setResult(ErrorCode.OK);
-        if (chosenNames.containsKey(taskResult)) {
-          taskResult.setChosenTaskName(ByteString.copyFromUtf8(chosenNames.get(taskResult)));
+        if (chosenNames.containsKey(i)) {
+          taskResult.setChosenTaskName(ByteString.copyFromUtf8(chosenNames.get(i)));
         }
       }
     }

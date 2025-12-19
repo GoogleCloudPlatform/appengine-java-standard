@@ -23,7 +23,7 @@
     <parent>
         <groupId>com.google.appengine</groupId>
         <artifactId>runtime-parent</artifactId>
-        <version>3.0.4-SNAPSHOT</version>
+        <version>4.0.0-SNAPSHOT</version>
     </parent>
 
     <packaging>jar</packaging>
@@ -190,11 +190,6 @@
         </dependency>
         <!-- Test dependencies. -->
         <dependency>
-            <groupId>com.google.appengine</groupId>
-            <artifactId>proto1</artifactId>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
            <groupId>javax.activation</groupId>
            <artifactId>activation</artifactId>
        </dependency>
@@ -259,28 +254,7 @@
                               <filter>
                                     <artifact>com.google.appengine:protos</artifact>
                                     <includes>
-                                        <include>com/google/apphosting/api/**</include>
-                                        <include>com/google/apphosting/base/protos/*</include>
-                                        <include>com/google/apphosting/base/protos/api/*</include>
-                                        <include>com/google/apphosting/datastore/proto2api/**</include>
-                                        <include>com/google/cloud/datastore/logs/*</include>
-                                        <include>com/google/storage/onestore/v3/proto2api/*</include>
-                                        <include>com/google/appengine/api/appidentity/*</include>
-                                        <include>com/google/appengine/api/datastore/*</include>
-                                        <include>com/google/appengine/api/memcache/*</include>
-                                        <include>com/google/appengine/api/oauth/*</include>
-                                        <include>com/google/appengine/api/taskqueue/*</include>
-                                        <include>com/google/appengine/api/urlfetch/*</include>
-                                        <include>com/google/appengine/api/users/*</include>
-                                        <include>com/google/appengine/api/utils/*</include>
-                                        <include>com/google/apphosting/datastore/proto2api/**</include>
-                                        <include>com/google/apphosting/base/protos/Codes*</include>
-                                        <include>com/google/apphosting/base/protos/SourcePb*</include>
-                                        <include>com/google/apphosting/api/proto2api/ApiBasePb*</include>
-                                        <include>com/google/apphosting/base/protos/api/RemoteApiPb*</include>
-                                        <include>com/google/protos/proto2/bridge/*</include>
-                                        <include>com/google/storage/onestore/v3/proto2api/*</include>
-                                        <include>com/google/apphosting/executor/*</include>
+                                        <include>com/**</include>
                                   </includes>
                                 </filter>
                                   <filter>
@@ -295,6 +269,7 @@
                                         <include>com/google/appengine/api/internal/*</include>
                                         <include>com/google/appengine/api/oauth/*</include>
                                         <include>com/google/appengine/api/taskqueue/*</include>
+                                        <include>com/google/appengine/api/taskqueue_bytes/*</include>
                                         <include>com/google/appengine/api/urlfetch/*</include>
                                         <include>com/google/appengine/api/users/*</include>
                                         <include>com/google/appengine/api/utils/*</include>
@@ -348,7 +323,6 @@
                                     <include>com.google.api.grpc:proto-google-common-protos</include>
                                     <include>com.google.appengine:appengine-utils</include>
                                     <include>com.google.appengine:runtime-impl</include>
-                                    <include>com.google.appengine:proto1</include>
                                     <include>com.google.appengine:protos</include>
                                     <include>com.google.appengine:runtime-util</include>
                                     <include>com.google.appengine:appengine-apis</include>

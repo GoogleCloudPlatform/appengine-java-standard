@@ -29,8 +29,8 @@ import com.google.appengine.api.memcache.MemcacheServicePb.MemcacheSetResponse;
 import com.google.apphosting.base.protos.AppinfoPb;
 import com.google.apphosting.base.protos.SystemServicePb.StartBackgroundRequestRequest;
 import com.google.apphosting.base.protos.SystemServicePb.StartBackgroundRequestResponse;
-import com.google.apphosting.base.protos.api.RemoteApiPb;
-import com.google.apphosting.datastore.DatastoreV3Pb.PutResponse;
+import com.google.apphosting.base.protos.api_bytes.RemoteApiPb;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.PutResponse;
 import com.google.apphosting.runtime.ApiDeadlineOracle;
 import com.google.apphosting.runtime.ApiProxyImpl;
 import com.google.apphosting.runtime.AppVersion;
@@ -46,7 +46,7 @@ import com.google.common.net.HostAndPort;
 import com.google.common.util.concurrent.Uninterruptibles;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.ExtensionRegistry;
-import com.google.storage.onestore.v3.OnestoreEntity.Reference;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.Reference;
 import com.google.testing.junit.testparameterinjector.TestParameter;
 import com.google.testing.junit.testparameterinjector.TestParameterInjector;
 import java.io.ByteArrayInputStream;
@@ -118,15 +118,15 @@ public final class AppEngineRuntimeTest {
             .setResponse(memcacheSetResponse.build().toByteString())
             .build();
 
-    com.google.storage.onestore.v3.OnestoreEntity.Path path =
-        new com.google.storage.onestore.v3.OnestoreEntity.Path();
-    path.addElement().setType("bogus_type").setId(1234);
+    com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.Path.Builder path =
+         com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.Path.newBuilder();
+    path.addElementBuilder().setType("bogus_type").setId(1234);
     DATASTORE_PUT_RESPONSE =
         RemoteApiPb.Response.newBuilder()
             .setResponse(
-                new PutResponse()
-                    .addKey(new Reference().setApp("bogus_app").setPath(path))
-                    .toByteString())
+                 PutResponse.newBuilder()
+                    .addKey( Reference.newBuilder().setApp("bogus_app").setPath(path))
+                    .build().toByteString())
             .build();
   }
 

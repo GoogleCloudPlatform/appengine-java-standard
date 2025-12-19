@@ -17,8 +17,8 @@
 package com.google.appengine.apicompat.usage;
 
 import com.google.appengine.api.taskqueue.QueueFactory;
-import com.google.appengine.api.taskqueue.TaskQueuePb;
-import com.google.appengine.api.taskqueue.TaskQueuePbInternalDescriptors;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePbInternalDescriptors;
 import com.google.common.collect.ImmutableList;
 import java.util.Collections;
 import java.util.List;

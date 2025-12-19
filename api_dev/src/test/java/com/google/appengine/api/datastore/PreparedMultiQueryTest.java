@@ -34,7 +34,7 @@ import com.google.appengine.api.datastore.PreparedMultiQuery.EntitySource;
 import com.google.appengine.api.datastore.Query.FilterPredicate;
 import com.google.appengine.api.testing.LocalServiceTestHelperRule;
 import com.google.apphosting.api.ApiProxy;
-import com.google.apphosting.datastore.DatastoreV3Pb.Query.Order;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.Query.Order;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import java.util.ArrayList;

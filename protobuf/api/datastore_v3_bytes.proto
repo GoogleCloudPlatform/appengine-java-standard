@@ -51,10 +51,10 @@ syntax = "proto2";
 package apphosting_datastore_v3;
 
 import "action.proto";
-import "entity.proto";
+import "entity_bytes.proto";
 import "snapshot.proto";
 
-option java_package = "com.google.apphosting.datastore.proto2api";
+option java_package = "com.google.apphosting.datastore_bytes.proto2api";
 option java_outer_classname = "DatastoreV3Pb";
 
 //
@@ -358,14 +358,14 @@ message CompiledQuery {
 
     // Encoded key range. If index_name is set these are index keys.
     // Otherwise these are encoded primary keys.
-    optional string start_key = 3;  // May contain arbitrary bytes.
+    optional bytes start_key = 3;
     optional bool start_inclusive = 4;
-    optional string end_key = 5;  // May contain arbitrary bytes.
+    optional bytes end_key = 5;
     optional bool end_inclusive = 6;
 
     // Merge join postfix constraints
-    repeated string start_postfix_value = 22;  // May contain arbitrary bytes.
-    repeated string end_postfix_value = 23;    // May contain arbitrary bytes.
+    repeated bytes start_postfix_value = 22;
+    repeated bytes end_postfix_value = 23;
 
     // This field is set for a special groomer query only. It sets the maximum
     // timestamp of an unfinished transaction.
@@ -385,7 +385,7 @@ message CompiledQuery {
     // encoded/decoded by the associated megastore property type. This is
     // needed as only a fully specified key can be split into its individual
     // values through Key.getValue().
-    repeated string prefix_value = 9;  // May contain arbitrary bytes.
+    repeated bytes prefix_value = 9;
 
     // If the specified prefix is a value prefix (last component is a prefix of
     // the value for that field).
@@ -456,7 +456,7 @@ message CompiledCursor {
     // encoded index or primary key.
     // TODO: rename to "encoded_key"
     // TODO: consider removing after 1.4.5
-    optional string start_key = 27 [deprecated = true];  // Arbitrary bytes.
+    optional bytes start_key = 27 [deprecated = true];
 
     repeated group IndexValue = 29 [deprecated = true] {
       optional string property = 30 [deprecated = true];

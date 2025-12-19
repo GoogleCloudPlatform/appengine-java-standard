@@ -23,8 +23,8 @@ import com.google.appengine.api.datastore.CompositeIndexManager;
 import com.google.appengine.api.datastore.CompositeIndexUtils;
 import com.google.appengine.tools.development.Clock;
 import com.google.apphosting.api.ApiProxy;
-import com.google.apphosting.datastore.DatastoreV3Pb;
-import com.google.apphosting.datastore.DatastoreV3Pb.Error.ErrorCode;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.Error.ErrorCode;
 import com.google.apphosting.utils.config.AppEngineConfigException;
 import com.google.apphosting.utils.config.GenerationDirectory;
 import com.google.apphosting.utils.config.IndexYamlReader;
@@ -38,10 +38,10 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.io.Closeables;
-import com.google.storage.onestore.v3.OnestoreEntity.Index;
-import com.google.storage.onestore.v3.OnestoreEntity.Index.Property;
-import com.google.storage.onestore.v3.OnestoreEntity.Index.Property.Direction;
-import com.google.storage.onestore.v3.OnestoreEntity.Index.Property.Mode;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.Index;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.Index.Property;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.Index.Property.Direction;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.Index.Property.Mode;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -383,7 +383,7 @@ class LocalCompositeIndexManager extends CompositeIndexManager {
     }
 
     private static Index toIndex(Element datastoreIndexElement) {
-      Index index = new Index();
+      Index.Builder index = Index.newBuilder();
       // TODO: Should we be doing more validation here?
       // TODO: surely we should instead be reusing the parse
       // validation that we're already doing in IndexesXml,
@@ -396,8 +396,10 @@ class LocalCompositeIndexManager extends CompositeIndexManager {
 
       for (Element propertyElement :
           XmlUtils.getChildren(datastoreIndexElement, IndexesXmlReader.PROPERTY_TAG)) {
-        Property prop = index.addProperty();
-        prop.setName(trim(propertyElement.getAttribute(IndexesXmlReader.NAME_PROP)));
+        Property.Builder prop =
+            index
+                .addPropertyBuilder()
+                .setName(trim(propertyElement.getAttribute(IndexesXmlReader.NAME_PROP)));
         String directionValue =
             XmlUtils.getAttributeOrNull(propertyElement, IndexesXmlReader.DIRECTION_PROP);
         if (directionValue != null) {
@@ -408,7 +410,7 @@ class LocalCompositeIndexManager extends CompositeIndexManager {
           prop.setMode(toMode(trim(modeValue)));
         }
       }
-      return index;
+      return index.build();
     }
 
     private static boolean isAutoGenerateIndexes(Element datastoreIndexesElement) {
@@ -454,23 +456,24 @@ class LocalCompositeIndexManager extends CompositeIndexManager {
 
     private IndexesXml.Index toConfigIndex(Index index) {
       IndexesXml.Index configIndex =
-          new IndexesXml.Index(index.getEntityType(), index.isAncestor());
-      for (Property property : index.propertys()) {
+          new IndexesXml.Index(index.getEntityType(), index.getAncestor());
+      for (Property property : index.getPropertyList()) {
         configIndex.addNewProperty(
             property.getName(),
-            toConfigDirection(property.getDirectionEnum()),
-            toConfigMode(property.getModeEnum()));
+            toConfigDirection(property.getDirection()),
+            toConfigMode(property.getMode()));
       }
       return configIndex;
     }
 
     private Index toIndex(IndexesXml.Index configIndex) {
-      Index index =
-          new Index()
+      Index.Builder index =
+          Index.newBuilder()
               .setEntityType(configIndex.getKind())
               .setAncestor(configIndex.doIndexAncestors());
       for (IndexesXml.PropertySort propertySort : configIndex.getProperties()) {
-        Property property = index.addProperty().setName(propertySort.getPropertyName());
+        Property.Builder property =
+            index.addPropertyBuilder().setName(propertySort.getPropertyName());
         // Always set direction.
         property.setDirection(toDirection(propertySort.getDirection()));
         // Only set mode if present.
@@ -478,7 +481,7 @@ class LocalCompositeIndexManager extends CompositeIndexManager {
           property.setMode(toMode(propertySort.getMode()));
         }
       }
-      return index;
+      return index.build();
     }
 
     // @Nullable
@@ -708,10 +711,9 @@ class LocalCompositeIndexManager extends CompositeIndexManager {
     } else {
       checkState(
           LocalCompositeIndexManager.indexConfigurationFormat == indexConfigurationFormat,
-          "Cannot change index configuration format from "
-              + LocalCompositeIndexManager.indexConfigurationFormat
-              + " to "
-              + indexConfigurationFormat);
+          "Cannot change index configuration format from %s to %s",
+          LocalCompositeIndexManager.indexConfigurationFormat,
+          indexConfigurationFormat);
     }
   }
 
@@ -769,7 +771,7 @@ class LocalCompositeIndexManager extends CompositeIndexManager {
    *     generation is disabled and the index required to fulfill this query is not present in the
    *     index file.
    */
-  public void processQuery(DatastoreV3Pb.Query query) {
+  public void processQuery(DatastoreV3Pb.Query.Builder query) {
     IndexComponentsOnlyQuery indexOnlyQuery = new IndexComponentsOnlyQuery(query);
     boolean isNewQuery = updateQueryHistory(indexOnlyQuery);
     if (isNewQuery) {
@@ -916,7 +918,7 @@ class LocalCompositeIndexManager extends CompositeIndexManager {
           Index minimumIndexForMessage = minimumIndex.equals(index) ? null : minimumIndex;
           String message =
               fileManager.getMissingCompositeIndexMessage(query, minimumIndexForMessage);
-          throw new ApiProxy.ApplicationException(ErrorCode.NEED_INDEX.getValue(), message);
+          throw new ApiProxy.ApplicationException(ErrorCode.NEED_INDEX.getNumber(), message);
         }
       }
     }
@@ -946,7 +948,7 @@ class LocalCompositeIndexManager extends CompositeIndexManager {
   }
 
   /** Get the single composite index used by this query, if any, as a list. */
-  public List<Index> queryIndexList(DatastoreV3Pb.Query query) {
+  public List<Index> queryIndexList(DatastoreV3Pb.Query.Builder query) {
     IndexComponentsOnlyQuery indexOnlyQuery = new IndexComponentsOnlyQuery(query);
     Index index = compositeIndexForQuery(indexOnlyQuery);
     List<Index> indexList;
@@ -984,11 +986,11 @@ class LocalCompositeIndexManager extends CompositeIndexManager {
 
   /** Aliasing to make the class available in the package. */
   protected static class ValidatedQuery extends CompositeIndexManager.ValidatedQuery {
-    protected ValidatedQuery(DatastoreV3Pb.Query query) {
+    protected ValidatedQuery(DatastoreV3Pb.Query.Builder query) {
       super(query);
     }
 
-    public DatastoreV3Pb.Query getV3Query() {
+    public DatastoreV3Pb.Query.Builder getV3Query() {
       return super.getQuery();
     }
   }
@@ -1001,11 +1003,11 @@ class LocalCompositeIndexManager extends CompositeIndexManager {
   /** Aliasing to make the class available in the package. */
   protected static class IndexComponentsOnlyQuery
       extends CompositeIndexManager.IndexComponentsOnlyQuery {
-    protected IndexComponentsOnlyQuery(DatastoreV3Pb.Query query) {
+    protected IndexComponentsOnlyQuery(DatastoreV3Pb.Query.Builder query) {
       super(query);
     }
 
-    public DatastoreV3Pb.Query getV3Query() {
+    public DatastoreV3Pb.Query.Builder getV3Query() {
       return super.getQuery();
     }
   }

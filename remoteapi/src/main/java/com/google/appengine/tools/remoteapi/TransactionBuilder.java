@@ -16,14 +16,14 @@
  */
 package com.google.appengine.tools.remoteapi;
 
-import com.google.apphosting.base.protos.api.RemoteApiPb;
-import com.google.apphosting.datastore.proto2api.DatastoreV3Pb;
+import com.google.apphosting.base.protos.api_bytes.RemoteApiPb;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.ExtensionRegistry;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
 // <internal24>
-import com.google.storage.onestore.v3.proto2api.OnestoreEntity;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ConcurrentModificationException;
@@ -183,7 +183,7 @@ class TransactionBuilder {
       OnestoreEntity.EntityProto entityPb) {
     return RemoteApiPb.TransactionRequest.Precondition.newBuilder()
         .setKey(entityPb.getKey())
-        .setHashBytes(ByteString.copyFrom(computeSha1(entityPb)))
+        .setHash(ByteString.copyFrom(computeSha1(entityPb)))
         .build();
   }
   // <internal25>

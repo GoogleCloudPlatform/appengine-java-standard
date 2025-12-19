@@ -16,12 +16,12 @@
 
 package com.google.appengine.api.taskqueue.dev;
 
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueAddRequest;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueAddRequest.Header;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueAddResponse;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueMode.Mode;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueRetryParameters;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueServiceError.ErrorCode;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueAddRequest;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueAddRequest.Header;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueAddResponse;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueMode.Mode;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueRetryParameters;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueServiceError.ErrorCode;
 import com.google.appengine.api.taskqueue.dev.QueueStateInfo.TaskStateInfo;
 import com.google.appengine.tools.development.Clock;
 import com.google.apphosting.api.ApiProxy;

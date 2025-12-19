@@ -17,9 +17,9 @@
 package com.google.appengine.api.datastore.dev;
 
 import com.google.appengine.api.datastore.Key;
-import com.google.apphosting.datastore.DatastoreV3Pb.Cost;
-import com.google.storage.onestore.v3.OnestoreEntity.EntityProto;
-import com.google.storage.onestore.v3.OnestoreEntity.Reference;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.Cost;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.EntityProto;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.Reference;
 import org.jspecify.annotations.Nullable;
 
 /**

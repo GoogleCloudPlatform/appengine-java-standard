@@ -31,6 +31,7 @@ import com.google.appengine.api.blobstore.BlobstoreServicePb.CreateEncodedGoogle
 import com.google.appengine.api.blobstore.BlobstoreServicePb.FetchDataRequest;
 import com.google.appengine.api.blobstore.UploadOptions;
 import com.google.appengine.tools.development.testing.LocalBlobstoreServiceTestConfig;
+import com.google.appengine.tools.development.testing.LocalDatastoreServiceTestConfig;
 import com.google.appengine.tools.development.testing.LocalServiceTestHelper;
 import com.google.apphosting.api.ApiProxy;
 import com.google.common.io.MoreFiles;
@@ -65,7 +66,9 @@ public class LocalBlobstoreServiceTest {
 
   public LocalBlobstoreServiceTest(boolean noStorage) {
     helper =
-        new LocalServiceTestHelper(new LocalBlobstoreServiceTestConfig().setNoStorage(noStorage));
+        new LocalServiceTestHelper(
+            new LocalBlobstoreServiceTestConfig().setNoStorage(noStorage),
+            new LocalDatastoreServiceTestConfig());
   }
 
   @Before

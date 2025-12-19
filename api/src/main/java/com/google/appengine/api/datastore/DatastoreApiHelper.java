@@ -23,13 +23,14 @@ import com.google.appengine.api.appidentity.AppIdentityServiceFactory;
 import com.google.appengine.api.utils.FutureWrapper;
 import com.google.apphosting.api.ApiProxy;
 import com.google.apphosting.api.ApiProxy.ApiConfig;
-import com.google.apphosting.datastore.DatastoreV3Pb.DatastoreService_3;
-import com.google.apphosting.datastore.DatastoreV3Pb.Error;
-import com.google.io.protocol.ProtocolMessage;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.DatastoreService_3;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.Error;
+import com.google.protobuf.ExtensionRegistry;
 import com.google.protobuf.InvalidProtocolBufferException;
-import com.google.protobuf.MessageLite;
+import com.google.protobuf.Message;
 import com.google.rpc.Code;
 import java.util.ConcurrentModificationException;
+import java.util.List;
 import java.util.concurrent.Future;
 
 /**
@@ -58,7 +59,7 @@ public final class DatastoreApiHelper {
   // Corresponds to _ToDatastoreError in datastore.py.
   // Keep in sync!
   public static RuntimeException translateError(ApiProxy.ApplicationException exception) {
-    Error.ErrorCode errorCode = Error.ErrorCode.valueOf(exception.getApplicationError());
+    Error.ErrorCode errorCode = Error.ErrorCode.forNumber(exception.getApplicationError());
     if (errorCode == null) {
       return new DatastoreFailureException(exception.getErrorDetail());
     }
@@ -117,14 +118,19 @@ public final class DatastoreApiHelper {
     }
   }
 
-  static <T extends ProtocolMessage<T>> Future<T> makeAsyncCall(
+  static <T extends Message, S extends Message.Builder> Future<T> makeAsyncCall(
       ApiConfig apiConfig,
       final DatastoreService_3.Method method,
-      MessageLite request,
-      final T responseProto) {
+      Message.Builder request,
+      final S responseProto) {
     Future<byte[]> response =
         ApiProxy.makeAsyncCall(
-            DATASTORE_V3_PACKAGE, method.name(), request.toByteArray(), apiConfig);
+            DATASTORE_V3_PACKAGE, method.name(), request.build().toByteArray(), apiConfig);
+
+    if (response == null) {
+      throw new DatastoreFailureException("API call failed: null response received.");
+    }
+
     return new FutureWrapper<byte[], T>(response) {
       @Override
       protected T wrap(byte[] responseBytes) throws InvalidProtocolBufferException {
@@ -132,16 +138,26 @@ public final class DatastoreApiHelper {
         // (specifically ones using EasyMock, where the default behavior
         // is to return null).
         if (responseBytes != null && responseProto != null) {
-          if (!responseProto.parseFrom(responseBytes)) {
+
+          try {
+            responseProto.clear();
+            responseProto.mergeFrom(responseBytes, ExtensionRegistry.getEmptyRegistry());
+          } catch (InvalidProtocolBufferException e) {
             throw new InvalidProtocolBufferException(
-                String.format("Invalid %s.%s response", DATASTORE_V3_PACKAGE, method.name()));
+                String.format("Invalid %s.%s response", DATASTORE_V3_PACKAGE, method.name()), e);
           }
-          String initializationError = responseProto.findInitializationError();
-          if (initializationError != null) {
-            throw new InvalidProtocolBufferException(initializationError);
+          List<String> initializationErrors = responseProto.findInitializationErrors();
+          if (initializationErrors != null && !initializationErrors.isEmpty()) {
+            throw new InvalidProtocolBufferException(initializationErrors.toString());
           }
         }
-        return responseProto;
+        if (responseProto != null) {
+          @SuppressWarnings("unchecked")
+          T result = (T) responseProto.build();
+          return result;
+        } else {
+          return null;
+        }
       }
 
       @Override

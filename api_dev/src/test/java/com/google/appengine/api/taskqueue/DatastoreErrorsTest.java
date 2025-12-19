@@ -16,11 +16,12 @@
 
 package com.google.appengine.api.taskqueue;
 
-import static com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueServiceError.ErrorCode.DATASTORE_ERROR_VALUE;
+import static com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueServiceError.ErrorCode.DATASTORE_ERROR_VALUE;
 import static com.google.common.collect.ImmutableMap.toImmutableMap;
 import static com.google.common.truth.Truth.assertThat;
 
-import com.google.apphosting.datastore.proto2api.DatastoreV3Pb;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.truth.Expect;
 import com.google.protobuf.ProtocolMessageEnum;

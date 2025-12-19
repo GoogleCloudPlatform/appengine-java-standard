@@ -19,11 +19,11 @@ package com.google.appengine.api.taskqueue.dev;
 import static com.google.common.truth.Truth.assertThat;
 import static junit.framework.TestCase.assertTrue;
 
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueAddRequest;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueAddResponse;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueMode.Mode;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueModifyTaskLeaseRequest;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueServiceError.ErrorCode;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueAddRequest;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueAddResponse;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueMode.Mode;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueModifyTaskLeaseRequest;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueServiceError.ErrorCode;
 import com.google.appengine.tools.development.Clock;
 import com.google.apphosting.api.ApiProxy;
 import com.google.apphosting.utils.config.QueueXml;
@@ -91,10 +91,10 @@ public class DevPullQueueTest extends TestCase {
   public void testAddDupe() throws Exception {
     TaskQueueAddRequest.Builder addRequest =
         newAddRequest(1000).setTaskName(ByteString.copyFromUtf8("foo"));
-    queue.add(addRequest);
+    var unused = queue.add(addRequest);
 
     try {
-      queue.add(addRequest);
+      unused = queue.add(addRequest);
       fail();
     } catch (ApiProxy.ApplicationException exception) {
       // expected.
@@ -119,7 +119,7 @@ public class DevPullQueueTest extends TestCase {
       String taskName = "task" + i;
       addRequest.setTaskName(ByteString.copyFromUtf8(taskName));
       jobNames.add(taskName);
-      queue.add(addRequest);
+      var unused = queue.add(addRequest);
     }
 
     QueueStateInfo info = queue.getStateInfo();
@@ -135,7 +135,7 @@ public class DevPullQueueTest extends TestCase {
       TaskQueueAddRequest.Builder addRequest = newAddRequest(i * 1000);
       String taskName = "task" + i;
       addRequest.setTaskName(ByteString.copyFromUtf8(taskName));
-      queue.add(addRequest);
+      var unused = queue.add(addRequest);
     }
     assertEquals(16, queue.getStateInfo().getCountTasks());
     queue.flush();
@@ -181,7 +181,7 @@ public class DevPullQueueTest extends TestCase {
     List<TaskQueueAddRequest.Builder> all = new ArrayList<>();
     for (int i = 0; i < 16; i++) {
       TaskQueueAddRequest.Builder addRequest = newAddRequest(i * 1000);
-      queue.add(addRequest);
+      var unused = queue.add(addRequest);
       all.add(addRequest);
     }
 
@@ -208,7 +208,7 @@ public class DevPullQueueTest extends TestCase {
       } else {
         untagged.add(addRequest);
       }
-      queue.add(addRequest);
+      var unused = queue.add(addRequest);
       all.add(addRequest);
     }
 
@@ -237,7 +237,7 @@ public class DevPullQueueTest extends TestCase {
     List<TaskQueueAddRequest.Builder> all = new ArrayList<>();
     for (int i = 0; i < 16; i++) {
       TaskQueueAddRequest.Builder addRequest = newAddRequest(i * 1000);
-      queue.add(addRequest);
+      var unused = queue.add(addRequest);
       all.add(addRequest);
     }
 
@@ -253,7 +253,7 @@ public class DevPullQueueTest extends TestCase {
     List<TaskQueueAddRequest.Builder> all = new ArrayList<>();
     for (int i = 0; i < 16; i++) {
       TaskQueueAddRequest.Builder addRequest = newAddRequest(i * 1000);
-      queue.add(addRequest);
+      var unused = queue.add(addRequest);
       all.add(addRequest);
     }
 
@@ -270,7 +270,7 @@ public class DevPullQueueTest extends TestCase {
     for (int i = 0; i < 8; i++) {
       TaskQueueAddRequest.Builder addRequest =
           newAddRequest(i * 1000).setTaskName(ByteString.copyFromUtf8("foo" + i));
-      queue.add(addRequest);
+      var unused = queue.add(addRequest);
       all.add(addRequest);
     }
 
@@ -306,7 +306,7 @@ public class DevPullQueueTest extends TestCase {
 
   public void testExtendTaskLease() {
     TaskQueueAddRequest.Builder addRequest = newAddRequest(0);
-    queue.add(addRequest);
+    var unused = queue.add(addRequest);
 
     clock.setTimeMillis(10000);
     List<TaskQueueAddRequest.Builder> response = queue.queryAndOwnTasks(30, 1, false, null);
@@ -326,7 +326,7 @@ public class DevPullQueueTest extends TestCase {
 
   public void testExtendTaskLeaseLeaseExpiredByClock() {
     TaskQueueAddRequest.Builder addRequest = newAddRequest(0);
-    queue.add(addRequest);
+    var unused = queue.add(addRequest);
 
     clock.setTimeMillis(10000);
     List<TaskQueueAddRequest.Builder> response = queue.queryAndOwnTasks(30, 1, false, null);
@@ -351,7 +351,7 @@ public class DevPullQueueTest extends TestCase {
 
   public void testExtendTaskLeaseLeaseExpiredByReLease() {
     TaskQueueAddRequest.Builder addRequest = newAddRequest(0);
-    queue.add(addRequest);
+    var unused = queue.add(addRequest);
 
     clock.setTimeMillis(10000);
     List<TaskQueueAddRequest.Builder> response = queue.queryAndOwnTasks(30, 1, false, null);
@@ -376,7 +376,7 @@ public class DevPullQueueTest extends TestCase {
 
   public void testExtendTaskLeaseUnknownTaskName() {
     TaskQueueAddRequest.Builder addRequest = newAddRequest(0);
-    queue.add(addRequest);
+    var unused = queue.add(addRequest);
 
     clock.setTimeMillis(10000);
     List<TaskQueueAddRequest.Builder> response = queue.queryAndOwnTasks(30, 1, false, null);

@@ -18,7 +18,7 @@ package com.google.apphosting.runtime.http;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.google.apphosting.base.protos.api.RemoteApiPb;
+import com.google.apphosting.base.protos.api_bytes.RemoteApiPb;
 import com.google.apphosting.testing.PortPicker;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.ExtensionRegistry;

@@ -54,24 +54,24 @@ import com.google.appengine.api.datastore.DatastoreFailureException;
 import com.google.appengine.api.datastore.DatastoreService;
 import com.google.appengine.api.datastore.DatastoreTimeoutException;
 import com.google.appengine.api.datastore.Transaction;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueAddRequest;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueAddRequest.Header;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueBulkAddRequest;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueBulkAddResponse;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueDeleteRequest;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueDeleteResponse;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueMode.Mode;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueModifyTaskLeaseRequest;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueModifyTaskLeaseResponse;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueuePurgeQueueRequest;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueuePurgeQueueResponse;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueQueryAndOwnTasksRequest;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueQueryAndOwnTasksResponse;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueServiceError.ErrorCode;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueAddRequest;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueAddRequest.Header;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueBulkAddRequest;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueBulkAddResponse;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueDeleteRequest;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueDeleteResponse;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueMode.Mode;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueModifyTaskLeaseRequest;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueModifyTaskLeaseResponse;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueuePurgeQueueRequest;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueuePurgeQueueResponse;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueQueryAndOwnTasksRequest;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueQueryAndOwnTasksResponse;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueServiceError.ErrorCode;
 import com.google.apphosting.api.ApiProxy;
 import com.google.apphosting.api.ApiProxy.ApiConfig;
 import com.google.apphosting.api.ApiProxy.Environment;
-import com.google.apphosting.datastore.DatastoreV3Pb;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
 import com.google.common.truth.Correspondence;
@@ -1730,7 +1730,7 @@ public class TaskQueueTest {
 
   private void doBulkAddDatastoreApplicationErrorTest(
       DatastoreV3Pb.Error.ErrorCode code, Class<?> class1) {
-    int errorCode = ErrorCode.DATASTORE_ERROR_VALUE + code.getValue();
+    int errorCode = ErrorCode.DATASTORE_ERROR_VALUE + code.getNumber();
     TransactionalTaskException exception =
         assertThrows(
             TransactionalTaskException.class,
@@ -1755,7 +1755,7 @@ public class TaskQueueTest {
 
   private void doBulkAddDatastoreTaskResultErrorTest(
       DatastoreV3Pb.Error.ErrorCode code, Class<?> class1) {
-    int errorCode = ErrorCode.DATASTORE_ERROR_VALUE + code.getValue();
+    int errorCode = ErrorCode.DATASTORE_ERROR_VALUE + code.getNumber();
     TransactionalTaskException exception =
         assertThrows(
             TransactionalTaskException.class,
@@ -1791,8 +1791,8 @@ public class TaskQueueTest {
   @Test
   public void testBulkAddImplicitTransactionEnlistment_NoTaskOptions() {
     MockQueueBulkAddApiHelper helper = newBasicAddRequest();
-    com.google.apphosting.datastore.proto2api.DatastoreV3Pb.Transaction pbTxn =
-        com.google.apphosting.datastore.proto2api.DatastoreV3Pb.Transaction.newBuilder()
+    com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.Transaction pbTxn =
+        com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.Transaction.newBuilder()
             .setHandle(44)
             .setApp(APP)
             .build();
@@ -1809,8 +1809,8 @@ public class TaskQueueTest {
   @Test
   public void testBulkAddImplicitTransactionEnlistment_TaskOptions() {
     MockQueueBulkAddApiHelper helper = newBasicAddRequest();
-    com.google.apphosting.datastore.proto2api.DatastoreV3Pb.Transaction pbTxn =
-        com.google.apphosting.datastore.proto2api.DatastoreV3Pb.Transaction.newBuilder()
+    com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.Transaction pbTxn =
+        com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.Transaction.newBuilder()
             .setHandle(44)
             .setApp(APP)
             .build();

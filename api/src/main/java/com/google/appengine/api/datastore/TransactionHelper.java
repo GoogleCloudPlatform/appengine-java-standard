@@ -18,7 +18,7 @@ package com.google.appengine.api.datastore;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueAddRequest;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueAddRequest;
 import com.google.apphosting.api.AppEngineInternal;
 
 /**

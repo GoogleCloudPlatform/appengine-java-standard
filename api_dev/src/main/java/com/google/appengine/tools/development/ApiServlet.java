@@ -18,8 +18,8 @@ package com.google.appengine.tools.development;
 
 import com.google.apphosting.api.ApiProxy.ApiProxyException;
 import com.google.apphosting.api.ApiProxy.CallNotFoundException;
-import com.google.apphosting.base.protos.api.RemoteApiPb;
-import com.google.apphosting.base.protos.api.RemoteApiPb.RpcError;
+import com.google.apphosting.base.protos.api_bytes.RemoteApiPb;
+import com.google.apphosting.base.protos.api_bytes.RemoteApiPb.RpcError;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Ascii;
 import com.google.common.primitives.Doubles;
@@ -167,6 +167,7 @@ public class ApiServlet extends HttpServlet {
 
   // Simulates deadline handling by running the request in a separate thread and waiting for
   // the result with a deadline.
+  @SuppressWarnings("Interruption")
   private RemoteApiPb.Response handleRequestInThread(
       final ApiProxyLocal apiProxy, final RemoteApiPb.Request requestPb, double deadline) {
 
@@ -200,8 +201,11 @@ public class ApiServlet extends HttpServlet {
   @VisibleForTesting
   byte[] invokeApiMethodJava(
       ApiProxyLocal apiProxy, String packageName, String methodName, byte[] requestBytes)
-      throws IllegalAccessException, InstantiationException, InvocationTargetException,
-          NoSuchMethodException {
+      throws IllegalAccessException,
+          InstantiationException,
+          InvocationTargetException,
+          NoSuchMethodException,
+          ClassNotFoundException {
 
     LocalRpcService service = apiProxy.getService(packageName);
     if (service == null) {
@@ -250,9 +254,10 @@ public class ApiServlet extends HttpServlet {
       logger.log(
           Level.INFO,
           "Exception calling service"
-          + request.getServiceName()
-          + " and method: "
-          + request.getMethod(), ex);
+              + request.getServiceName()
+              + " and method: "
+              + request.getMethod(),
+          ex);
       throw new ApiProxyException(
           "API invocation error for service: "
               + request.getServiceName()
@@ -263,9 +268,10 @@ public class ApiServlet extends HttpServlet {
       logger.log(
           Level.INFO,
           "Exception calling service"
-          + request.getServiceName()
-          + " and method: "
-          + request.getMethod(), ex);
+              + request.getServiceName()
+              + " and method: "
+              + request.getMethod(),
+          ex);
       throw new CallNotFoundException(request.getServiceName(), request.getMethod());
     }
     return RemoteApiPb.Response.newBuilder().setResponse(ByteString.copyFrom(resp)).build();

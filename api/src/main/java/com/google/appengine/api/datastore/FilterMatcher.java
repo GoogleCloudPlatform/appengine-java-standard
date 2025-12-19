@@ -18,9 +18,9 @@ package com.google.appengine.api.datastore;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-import com.google.apphosting.datastore.DatastoreV3Pb;
-import com.google.apphosting.datastore.DatastoreV3Pb.Query.Filter;
-import com.google.apphosting.datastore.DatastoreV3Pb.RegionPoint;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.Query.Filter;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.RegionPoint;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -174,7 +174,7 @@ class FilterMatcher {
 
   public void addFilter(Filter filter) {
     Comparable<Object> value = DataTypeTranslator.getComparablePropertyValue(filter.getProperty(0));
-    switch (filter.getOpEnum()) {
+    switch (filter.getOp()) {
       case EQUAL:
         equalValues.add(value);
         break;

@@ -25,22 +25,22 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.google.appengine.api.taskqueue.QueueConstants;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueAddRequest;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueAddResponse;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueBulkAddRequest;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueBulkAddResponse;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueDeleteRequest;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueDeleteResponse;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueFetchQueueStatsRequest;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueFetchQueueStatsResponse;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueMode;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueModifyTaskLeaseRequest;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueModifyTaskLeaseResponse;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueuePurgeQueueRequest;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueQueryAndOwnTasksRequest;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueQueryAndOwnTasksResponse;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueScannerQueueInfo;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueServiceError.ErrorCode;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueAddRequest;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueAddResponse;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueBulkAddRequest;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueBulkAddResponse;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueDeleteRequest;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueDeleteResponse;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueFetchQueueStatsRequest;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueFetchQueueStatsResponse;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueMode;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueModifyTaskLeaseRequest;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueModifyTaskLeaseResponse;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueuePurgeQueueRequest;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueQueryAndOwnTasksRequest;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueQueryAndOwnTasksResponse;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueScannerQueueInfo;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueServiceError.ErrorCode;
 import com.google.appengine.tools.development.Clock;
 import com.google.appengine.tools.development.LocalRpcService.Status;
 import com.google.appengine.tools.development.LocalServerEnvironment;
@@ -671,7 +671,7 @@ public class LocalTaskQueueTest {
   public void testFlushQueue() throws Exception {
     QueueStateInfo queueInfo;
 
-    localService.bulkAdd(new Status(), bulkAddRequest.build());
+    var unused = localService.bulkAdd(new Status(), bulkAddRequest.build());
     queueInfo = localService.getQueueStateInfo().get(entry.getName());
     assertThat(queueInfo.getCountTasks()).isEqualTo(3);
 
@@ -688,19 +688,19 @@ public class LocalTaskQueueTest {
   public void testPurgeQueue() throws Exception {
     QueueStateInfo queueInfo;
 
-    localService.bulkAdd(new Status(), bulkAddRequest.build());
+    var unused1 = localService.bulkAdd(new Status(), bulkAddRequest.build());
     queueInfo = localService.getQueueStateInfo().get(entry.getName());
     assertThat(queueInfo.getCountTasks()).isEqualTo(3);
 
-    localService.purgeQueue(new Status(), purgeQueueRequest.build());
+    var unused2 = localService.purgeQueue(new Status(), purgeQueueRequest.build());
     queueInfo = localService.getQueueStateInfo().get(entry.getName());
     assertThat(queueInfo.getCountTasks()).isEqualTo(0);
 
-    localService.bulkAdd(new Status(), bulkAddRequest.build());
+    var unused3 = localService.bulkAdd(new Status(), bulkAddRequest.build());
     queueInfo = localService.getQueueStateInfo().get(entry.getName());
     assertThat(queueInfo.getCountTasks()).isEqualTo(3);
 
-    localService.purgeQueue(new Status(), purgeQueueRequest.build());
+    var unused4 = localService.purgeQueue(new Status(), purgeQueueRequest.build());
     queueInfo = localService.getQueueStateInfo().get(entry.getName());
     assertThat(queueInfo.getCountTasks()).isEqualTo(0);
   }
@@ -709,19 +709,19 @@ public class LocalTaskQueueTest {
   public void testPurgeEmptyQueue() throws Exception {
     QueueStateInfo queueInfo;
 
-    localService.purgeQueue(new Status(), purgeQueueRequest.build());
+    var unused1 = localService.purgeQueue(new Status(), purgeQueueRequest.build());
     queueInfo = localService.getQueueStateInfo().get(entry.getName());
     assertThat(queueInfo.getCountTasks()).isEqualTo(0);
 
-    localService.bulkAdd(new Status(), bulkAddRequest.build());
+    var unused2 = localService.bulkAdd(new Status(), bulkAddRequest.build());
     queueInfo = localService.getQueueStateInfo().get(entry.getName());
     assertThat(queueInfo.getCountTasks()).isEqualTo(3);
 
-    localService.purgeQueue(new Status(), purgeQueueRequest.build());
+    var unused3 = localService.purgeQueue(new Status(), purgeQueueRequest.build());
     queueInfo = localService.getQueueStateInfo().get(entry.getName());
     assertThat(queueInfo.getCountTasks()).isEqualTo(0);
 
-    localService.purgeQueue(new Status(), purgeQueueRequest.build());
+    var unused4 = localService.purgeQueue(new Status(), purgeQueueRequest.build());
     queueInfo = localService.getQueueStateInfo().get(entry.getName());
     assertThat(queueInfo.getCountTasks()).isEqualTo(0);
   }
@@ -739,7 +739,7 @@ public class LocalTaskQueueTest {
   public void testDeleteTask() throws Exception {
     QueueStateInfo queueInfo;
 
-    localService.bulkAdd(new Status(), bulkAddRequest.build());
+    var unused = localService.bulkAdd(new Status(), bulkAddRequest.build());
     queueInfo = localService.getQueueStateInfo().get(entry.getName());
     assertThat(queueInfo.getCountTasks()).isEqualTo(3);
 
@@ -760,7 +760,7 @@ public class LocalTaskQueueTest {
 
   @Test
   public void testDelete() throws Exception {
-    localService.bulkAdd(new Status(), bulkAddRequest.build());
+    var unused = localService.bulkAdd(new Status(), bulkAddRequest.build());
 
     TaskQueueDeleteRequest deleteRequest =
         TaskQueueDeleteRequest.newBuilder()
@@ -778,7 +778,7 @@ public class LocalTaskQueueTest {
 
   @Test
   public void testDeleteMultiple() throws Exception {
-    localService.bulkAdd(new Status(), bulkAddRequest.build());
+    var unused = localService.bulkAdd(new Status(), bulkAddRequest.build());
 
     TaskQueueDeleteRequest deleteRequest =
         TaskQueueDeleteRequest.newBuilder()
@@ -798,7 +798,7 @@ public class LocalTaskQueueTest {
 
   @Test
   public void testDeleteUnknownTask() throws Exception {
-    localService.bulkAdd(new Status(), bulkAddRequest.build());
+    var unused = localService.bulkAdd(new Status(), bulkAddRequest.build());
 
     TaskQueueDeleteRequest deleteRequest =
         TaskQueueDeleteRequest.newBuilder()
@@ -920,7 +920,7 @@ public class LocalTaskQueueTest {
 
   @Test
   public void testQueryAndOwnTasksOnPushQueue() throws Exception {
-    localService.bulkAdd(new Status(), bulkAddRequest.build());
+    var unused = localService.bulkAdd(new Status(), bulkAddRequest.build());
 
     TaskQueueQueryAndOwnTasksRequest request =
         TaskQueueQueryAndOwnTasksRequest.newBuilder()

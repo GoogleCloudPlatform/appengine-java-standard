@@ -28,24 +28,26 @@ import com.google.appengine.api.datastore.Query.FilterOperator;
 import com.google.appengine.api.utils.FutureWrapper;
 import com.google.apphosting.api.ApiProxy.ApiConfig;
 import com.google.apphosting.api.proto2api.ApiBasePb.StringProto;
-import com.google.apphosting.datastore.DatastoreV3Pb;
-import com.google.apphosting.datastore.DatastoreV3Pb.AllocateIdsRequest;
-import com.google.apphosting.datastore.DatastoreV3Pb.AllocateIdsResponse;
-import com.google.apphosting.datastore.DatastoreV3Pb.BeginTransactionRequest.TransactionMode;
-import com.google.apphosting.datastore.DatastoreV3Pb.CompositeIndices;
-import com.google.apphosting.datastore.DatastoreV3Pb.DatastoreService_3;
-import com.google.apphosting.datastore.DatastoreV3Pb.DeleteRequest;
-import com.google.apphosting.datastore.DatastoreV3Pb.DeleteResponse;
-import com.google.apphosting.datastore.DatastoreV3Pb.GetRequest;
-import com.google.apphosting.datastore.DatastoreV3Pb.GetResponse;
-import com.google.apphosting.datastore.DatastoreV3Pb.PutRequest;
-import com.google.apphosting.datastore.DatastoreV3Pb.PutResponse;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.AllocateIdsRequest;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.AllocateIdsResponse;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.BeginTransactionRequest.TransactionMode;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.CompositeIndices;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.DatastoreService_3;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.DeleteRequest;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.DeleteResponse;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.GetRequest;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.GetResponse;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.PutRequest;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.PutResponse;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.io.protocol.ProtocolMessage;
-import com.google.storage.onestore.v3.OnestoreEntity.CompositeIndex;
-import com.google.storage.onestore.v3.OnestoreEntity.EntityProto;
-import com.google.storage.onestore.v3.OnestoreEntity.Reference;
+import com.google.protobuf.CodedOutputStream;
+import com.google.protobuf.Message;
+import com.google.protobuf.MessageLite;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.CompositeIndex;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.EntityProto;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.Reference;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -77,14 +79,12 @@ class AsyncDatastoreServiceImpl extends BaseAsyncDatastoreServiceImpl {
    * @param <T> the proto representation of value
    */
   private abstract class V3Batcher<
-          S extends ProtocolMessage<S>,
-          R extends ProtocolMessage<R>,
-          F,
-          T extends ProtocolMessage<T>>
+          S extends Message, R extends MessageLite.Builder, F, T extends Message>
       extends BaseRpcBatcher<S, R, F, T> {
     @Override
+    @SuppressWarnings("unchecked")
     final R newBatch(R baseBatch) {
-      return baseBatch.clone();
+      return (R) baseBatch.clone();
     }
   }
 
@@ -94,7 +94,7 @@ class AsyncDatastoreServiceImpl extends BaseAsyncDatastoreServiceImpl {
    * @param <S> the response message type
    * @param <R> the request message type
    */
-  private abstract class V3KeyBatcher<S extends ProtocolMessage<S>, R extends ProtocolMessage<R>>
+  private abstract class V3KeyBatcher<S extends Message, R extends Message.Builder>
       extends V3Batcher<S, R, Key, Reference> {
     @Override
     final Object getGroup(Key value) {
@@ -107,10 +107,10 @@ class AsyncDatastoreServiceImpl extends BaseAsyncDatastoreServiceImpl {
     }
   }
 
-  private final V3KeyBatcher<DeleteResponse, DeleteRequest> deleteBatcher =
-      new V3KeyBatcher<DeleteResponse, DeleteRequest>() {
+  private final V3KeyBatcher<DeleteResponse, DeleteRequest.Builder> deleteBatcher =
+      new V3KeyBatcher<DeleteResponse, DeleteRequest.Builder>() {
         @Override
-        void addToBatch(Reference value, DeleteRequest batch) {
+        void addToBatch(Reference value, DeleteRequest.Builder batch) {
           batch.addKey(value);
         }
 
@@ -120,16 +120,21 @@ class AsyncDatastoreServiceImpl extends BaseAsyncDatastoreServiceImpl {
         }
 
         @Override
-        protected Future<DeleteResponse> makeCall(DeleteRequest batch) {
+        protected Future<DeleteResponse> makeCall(DeleteRequest.Builder batch) {
           return makeAsyncCall(
-              apiConfig, DatastoreService_3.Method.Delete, batch, new DeleteResponse());
+              apiConfig, DatastoreService_3.Method.Delete, batch, DeleteResponse.newBuilder());
+        }
+
+        @Override
+        protected int getEmbeddedSize(Reference value) {
+          return CodedOutputStream.computeMessageSize(DeleteRequest.KEY_FIELD_NUMBER, value);
         }
       };
 
-  private final V3KeyBatcher<GetResponse, GetRequest> getByKeyBatcher =
-      new V3KeyBatcher<GetResponse, GetRequest>() {
+  private final V3KeyBatcher<GetResponse, GetRequest.Builder> getByKeyBatcher =
+      new V3KeyBatcher<GetResponse, GetRequest.Builder>() {
         @Override
-        void addToBatch(Reference value, GetRequest batch) {
+        void addToBatch(Reference value, GetRequest.Builder batch) {
           batch.addKey(value);
         }
 
@@ -139,13 +144,18 @@ class AsyncDatastoreServiceImpl extends BaseAsyncDatastoreServiceImpl {
         }
 
         @Override
-        protected Future<GetResponse> makeCall(GetRequest batch) {
-          return makeAsyncCall(apiConfig, DatastoreService_3.Method.Get, batch, new GetResponse());
+        protected Future<GetResponse> makeCall(GetRequest.Builder batch) {
+          return makeAsyncCall(apiConfig, DatastoreService_3.Method.Get, batch, GetResponse.newBuilder());
+        }
+
+        @Override
+        protected int getEmbeddedSize(Reference value) {
+          return CodedOutputStream.computeMessageSize(GetRequest.KEY_FIELD_NUMBER, value);
         }
       };
 
-  private final V3Batcher<GetResponse, GetRequest, Reference, Reference> getByReferenceBatcher =
-      new V3Batcher<GetResponse, GetRequest, Reference, Reference>() {
+  private final V3Batcher<GetResponse, GetRequest.Builder, Reference, Reference> getByReferenceBatcher =
+      new V3Batcher<GetResponse, GetRequest.Builder, Reference, Reference>() {
         @Override
         final Object getGroup(Reference value) {
           return value.getPath().getElement(0);
@@ -157,7 +167,7 @@ class AsyncDatastoreServiceImpl extends BaseAsyncDatastoreServiceImpl {
         }
 
         @Override
-        void addToBatch(Reference value, GetRequest batch) {
+        void addToBatch(Reference value, GetRequest.Builder batch) {
           batch.addKey(value);
         }
 
@@ -167,20 +177,25 @@ class AsyncDatastoreServiceImpl extends BaseAsyncDatastoreServiceImpl {
         }
 
         @Override
-        protected Future<GetResponse> makeCall(GetRequest batch) {
-          return makeAsyncCall(apiConfig, DatastoreService_3.Method.Get, batch, new GetResponse());
+        protected Future<GetResponse> makeCall(GetRequest.Builder batch) {
+          return makeAsyncCall(apiConfig, DatastoreService_3.Method.Get, batch, GetResponse.newBuilder());
+        }
+
+        @Override
+        protected int getEmbeddedSize(Reference value) {
+          return CodedOutputStream.computeMessageSize(GetRequest.KEY_FIELD_NUMBER, value);
         }
       };
 
-  private final V3Batcher<PutResponse, PutRequest, Entity, EntityProto> putBatcher =
-      new V3Batcher<PutResponse, PutRequest, Entity, EntityProto>() {
+  private final V3Batcher<PutResponse, PutRequest.Builder, Entity, EntityProto> putBatcher =
+      new V3Batcher<PutResponse, PutRequest.Builder, Entity, EntityProto>() {
         @Override
         Object getGroup(Entity value) {
           return value.getKey().getRootKey();
         }
 
         @Override
-        void addToBatch(EntityProto value, PutRequest batch) {
+        void addToBatch(EntityProto value, PutRequest.Builder batch) {
           batch.addEntity(value);
         }
 
@@ -190,13 +205,18 @@ class AsyncDatastoreServiceImpl extends BaseAsyncDatastoreServiceImpl {
         }
 
         @Override
-        protected Future<PutResponse> makeCall(PutRequest batch) {
-          return makeAsyncCall(apiConfig, DatastoreService_3.Method.Put, batch, new PutResponse());
+        protected Future<PutResponse> makeCall(PutRequest.Builder batch) {
+          return makeAsyncCall(apiConfig, DatastoreService_3.Method.Put, batch, PutResponse.newBuilder());
         }
 
         @Override
         EntityProto toPb(Entity value) {
           return EntityTranslator.convertToPb(value);
+        }
+
+        @Override
+        protected int getEmbeddedSize(EntityProto value) {
+          return CodedOutputStream.computeMessageSize(PutRequest.ENTITY_FIELD_NUMBER, value);
         }
       };
 
@@ -215,10 +235,11 @@ class AsyncDatastoreServiceImpl extends BaseAsyncDatastoreServiceImpl {
 
   @Override
   protected TransactionImpl.InternalTransaction doBeginTransaction(TransactionOptions options) {
-    DatastoreV3Pb.Transaction remoteTxn = new DatastoreV3Pb.Transaction();
-    DatastoreV3Pb.BeginTransactionRequest request = new DatastoreV3Pb.BeginTransactionRequest();
-    request.setApp(datastoreServiceConfig.getAppIdNamespace().getAppId());
-    request.setAllowMultipleEg(options.isXG());
+    DatastoreV3Pb.Transaction.Builder remoteTxn = DatastoreV3Pb.Transaction.newBuilder();
+    DatastoreV3Pb.BeginTransactionRequest.Builder request =
+        DatastoreV3Pb.BeginTransactionRequest.newBuilder()
+            .setApp(datastoreServiceConfig.getAppIdNamespace().getAppId())
+            .setAllowMultipleEg(options.isXG());
     if (options.previousTransaction() != null) {
       try {
         request.setPreviousTransaction(
@@ -255,8 +276,7 @@ class AsyncDatastoreServiceImpl extends BaseAsyncDatastoreServiceImpl {
   protected final Future<Map<Key, Entity>> doBatchGet(
       @Nullable Transaction txn, final Set<Key> keysToGet, final Map<Key, Entity> resultMap) {
     // Initializing base request.
-    final GetRequest baseReq = new GetRequest();
-    baseReq.setAllowDeferred(true);
+    final GetRequest.Builder baseReq = GetRequest.newBuilder().setAllowDeferred(true);
     if (txn != null) {
       TransactionImpl.ensureTxnActive(txn);
       baseReq.setTransaction(InternalTransactionV3.toProto(txn));
@@ -270,9 +290,9 @@ class AsyncDatastoreServiceImpl extends BaseAsyncDatastoreServiceImpl {
         txn == null && datastoreServiceConfig.getReadPolicy().getConsistency() != EVENTUAL;
 
     // Batch and issue the request(s).
-    Iterator<GetRequest> batches =
+    Iterator<GetRequest.Builder> batches =
         getByKeyBatcher.getBatches(
-            keysToGet, baseReq, baseReq.getSerializedSize(), shouldUseMultipleBatches);
+            keysToGet, baseReq, baseReq.build().getSerializedSize(), shouldUseMultipleBatches);
     List<Future<GetResponse>> futures = getByKeyBatcher.makeCalls(batches);
 
     return registerInTransaction(
@@ -329,7 +349,7 @@ class AsyncDatastoreServiceImpl extends BaseAsyncDatastoreServiceImpl {
                 GetResponse resp =
                     getFutureWithOptionalTimeout(currentFuture, timeout, timeoutUnit);
                 addEntitiesToResultMap(resp);
-                deferredRefs.addAll(resp.deferreds());
+                deferredRefs.addAll(resp.getDeferredList());
               }
 
               if (deferredRefs.isEmpty()) {
@@ -338,9 +358,9 @@ class AsyncDatastoreServiceImpl extends BaseAsyncDatastoreServiceImpl {
               }
 
               // Some keys were deferred.  Issue followup requests, and loop again.
-              Iterator<GetRequest> followupBatches =
+              Iterator<GetRequest.Builder> followupBatches =
                   getByReferenceBatcher.getBatches(
-                      deferredRefs, baseReq, baseReq.getSerializedSize(), shouldUseMultipleBatches);
+                      deferredRefs, baseReq, baseReq.build().getSerializedSize(), shouldUseMultipleBatches);
               currentFutures = getByReferenceBatcher.makeCalls(followupBatches);
             }
           }
@@ -370,14 +390,14 @@ class AsyncDatastoreServiceImpl extends BaseAsyncDatastoreServiceImpl {
            * #findKeyFromRequestIgnoringAppId(Reference)}
            */
           private void addEntitiesToResultMap(GetResponse response) {
-            for (GetResponse.Entity entityResult : response.entitys()) {
+            for (GetResponse.Entity entityResult : response.getEntityList()) {
               if (entityResult.hasEntity()) {
                 Entity responseEntity = EntityTranslator.createFromPb(entityResult.getEntity());
                 Key responseKey = responseEntity.getKey();
 
                 // Hack for Remote API which rewrites App Ids on Keys.
                 if (!keysToGet.contains(responseKey)) {
-                  responseKey = findKeyFromRequestIgnoringAppId(entityResult.getEntity().getKey());
+                  responseKey = findKeyFromRequestIgnoringAppId(entityResult.getEntity().getKey().toBuilder());
                 }
                 resultMap.put(responseKey, responseEntity);
               }
@@ -406,19 +426,18 @@ class AsyncDatastoreServiceImpl extends BaseAsyncDatastoreServiceImpl {
            * @return the Key from the request that corresponds to the given Reference from the
            *     Response (ignoring AppId.)
            */
-          private Key findKeyFromRequestIgnoringAppId(Reference referenceFromResponse) {
+          private Key findKeyFromRequestIgnoringAppId(Reference.Builder referenceFromResponse) {
             // We'll create this Map lazily the first time, then cache it for future calls.
             if (keyMapIgnoringAppId == null) {
               keyMapIgnoringAppId = Maps.newHashMap();
               for (Key requestKey : keysToGet) {
-                Reference requestKeyAsRefWithoutApp =
-                    KeyTranslator.convertToPb(requestKey).clearApp();
-                keyMapIgnoringAppId.put(requestKeyAsRefWithoutApp, requestKey);
+                Reference.Builder requestKeyAsRefWithoutApp =
+                    KeyTranslator.convertToPb(requestKey).toBuilder().setApp("");
+                keyMapIgnoringAppId.put(requestKeyAsRefWithoutApp.build(), requestKey);
               }
             }
-
             // Note: mutating the input ref, but that's ok.
-            Key result = keyMapIgnoringAppId.get(referenceFromResponse.clearApp());
+            Key result = keyMapIgnoringAppId.get(referenceFromResponse.setApp("").build());
             if (result == null) {
               // TODO: What should we do here?
               throw new DatastoreFailureException("Internal error");
@@ -430,15 +449,15 @@ class AsyncDatastoreServiceImpl extends BaseAsyncDatastoreServiceImpl {
 
   @Override
   protected Future<List<Key>> doBatchPut(@Nullable Transaction txn, final List<Entity> entities) {
-    PutRequest baseReq = new PutRequest();
+    PutRequest.Builder baseReq = PutRequest.newBuilder();
     if (txn != null) {
       TransactionImpl.ensureTxnActive(txn);
       baseReq.setTransaction(InternalTransactionV3.toProto(txn));
     }
     boolean group = !baseReq.hasTransaction(); // Do not group when inside a transaction.
     final List<Integer> order = Lists.newArrayListWithCapacity(entities.size());
-    Iterator<PutRequest> batches =
-        putBatcher.getBatches(entities, baseReq, baseReq.getSerializedSize(), group, order);
+    Iterator<PutRequest.Builder> batches =
+        putBatcher.getBatches(entities, baseReq, baseReq.build().getSerializedSize(), group, order);
     List<Future<PutResponse>> futures = putBatcher.makeCalls(batches);
 
     return registerInTransaction(
@@ -447,7 +466,7 @@ class AsyncDatastoreServiceImpl extends BaseAsyncDatastoreServiceImpl {
           @Override
           protected List<Key> aggregate(
               PutResponse intermediateResult, Iterator<Integer> indexItr, List<Key> result) {
-            for (Reference reference : intermediateResult.keys()) {
+            for (Reference reference : intermediateResult.getKeyList()) {
               int index = indexItr.next();
               Key key = entities.get(index).getKey();
               KeyTranslator.updateKey(reference, key);
@@ -467,14 +486,14 @@ class AsyncDatastoreServiceImpl extends BaseAsyncDatastoreServiceImpl {
 
   @Override
   protected Future<Void> doBatchDelete(@Nullable Transaction txn, Collection<Key> keys) {
-    DeleteRequest baseReq = new DeleteRequest();
+    DeleteRequest.Builder baseReq = DeleteRequest.newBuilder();
     if (txn != null) {
       TransactionImpl.ensureTxnActive(txn);
       baseReq.setTransaction(InternalTransactionV3.toProto(txn));
     }
     boolean group = !baseReq.hasTransaction(); // Do not group inside a transaction.
-    Iterator<DeleteRequest> batches =
-        deleteBatcher.getBatches(keys, baseReq, baseReq.getSerializedSize(), group);
+    Iterator<DeleteRequest.Builder> batches =
+        deleteBatcher.getBatches(keys, baseReq, baseReq.build().getSerializedSize(), group);
     List<Future<DeleteResponse>> futures = deleteBatcher.makeCalls(batches);
     return registerInTransaction(
         txn,
@@ -521,8 +540,9 @@ class AsyncDatastoreServiceImpl extends BaseAsyncDatastoreServiceImpl {
     // kind validation taken care of by the next call
     final AppIdNamespace appIdNamespace = datastoreServiceConfig.getAppIdNamespace();
     Reference allocateIdsRef = buildAllocateIdsRef(parent, kind, appIdNamespace);
-    AllocateIdsRequest req = new AllocateIdsRequest().setSize(num).setModelKey(allocateIdsRef);
-    AllocateIdsResponse resp = new AllocateIdsResponse();
+    AllocateIdsRequest.Builder req =
+        AllocateIdsRequest.newBuilder().setSize(num).setModelKey(allocateIdsRef);
+    AllocateIdsResponse.Builder resp = AllocateIdsResponse.newBuilder();
     Future<AllocateIdsResponse> future =
         makeAsyncCall(apiConfig, DatastoreService_3.Method.AllocateIds, req, resp);
     return new FutureWrapper<AllocateIdsResponse, KeyRange>(future) {
@@ -545,11 +565,11 @@ class AsyncDatastoreServiceImpl extends BaseAsyncDatastoreServiceImpl {
     final long start = range.getStart().getId();
     long end = range.getEnd().getId();
 
-    AllocateIdsRequest req =
-        new AllocateIdsRequest()
+    AllocateIdsRequest.Builder req =
+        AllocateIdsRequest.newBuilder()
             .setModelKey(AsyncDatastoreServiceImpl.buildAllocateIdsRef(parent, kind, null))
             .setMax(end);
-    AllocateIdsResponse resp = new AllocateIdsResponse();
+    AllocateIdsResponse.Builder resp = AllocateIdsResponse.newBuilder();
     Future<AllocateIdsResponse> future =
         makeAsyncCall(apiConfig, DatastoreService_3.Method.AllocateIds, req, resp);
     return new FutureWrapper<AllocateIdsResponse, KeyRangeState>(future) {
@@ -588,19 +608,18 @@ class AsyncDatastoreServiceImpl extends BaseAsyncDatastoreServiceImpl {
 
   @Override
   public Future<Map<Index, IndexState>> getIndexes() {
-    StringProto req =
+    StringProto.Builder req =
         StringProto.newBuilder()
-            .setValue(datastoreServiceConfig.getAppIdNamespace().getAppId())
-            .build();
+            .setValue(datastoreServiceConfig.getAppIdNamespace().getAppId());
     return new FutureWrapper<CompositeIndices, Map<Index, IndexState>>(
         makeAsyncCall(
-            apiConfig, DatastoreService_3.Method.GetIndices, req, new CompositeIndices())) {
+            apiConfig, DatastoreService_3.Method.GetIndices, req, CompositeIndices.newBuilder())) {
       @Override
       protected Map<Index, IndexState> wrap(CompositeIndices indices) throws Exception {
         Map<Index, IndexState> answer = new LinkedHashMap<Index, IndexState>();
-        for (CompositeIndex ci : indices.indexs()) {
+        for (CompositeIndex ci : indices.getIndexList()) {
           Index index = IndexTranslator.convertFromPb(ci);
-          switch (ci.getStateEnum()) {
+          switch (ci.getState()) {
             case DELETED:
               answer.put(index, IndexState.DELETING);
               break;

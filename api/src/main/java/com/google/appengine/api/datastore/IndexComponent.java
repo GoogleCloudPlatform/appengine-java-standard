@@ -16,7 +16,7 @@
 
 package com.google.appengine.api.datastore;
 
-import com.google.storage.onestore.v3.OnestoreEntity.Index.Property;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.Index.Property;
 import java.util.List;
 
 /**

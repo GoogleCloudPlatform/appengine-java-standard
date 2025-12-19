@@ -17,11 +17,11 @@
 package com.google.appengine.tools.remoteapi;
 
 import com.google.apphosting.api.ApiProxy;
-import com.google.apphosting.datastore.proto2api.DatastoreV3Pb;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb;
 import com.google.protobuf.ExtensionRegistry;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
-import com.google.storage.onestore.v3.proto2api.OnestoreEntity;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;

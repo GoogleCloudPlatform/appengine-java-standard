@@ -19,9 +19,9 @@ package com.google.appengine.api.datastore;
 import static com.google.appengine.api.datastore.DataTypeTranslator.getComparablePropertyValue;
 
 import com.google.appengine.api.datastore.Query.SortPredicate;
-import com.google.apphosting.datastore.DatastoreV3Pb;
-import com.google.apphosting.datastore.DatastoreV3Pb.Query.Filter;
-import com.google.apphosting.datastore.DatastoreV3Pb.Query.Order;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.Query.Filter;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.Query.Order;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -40,6 +40,7 @@ class EntityComparator extends BaseEntityComparator<Entity> {
 
   @Override
   @Nullable
+  @SuppressWarnings("MixedMutabilityReturnType")
   List<Comparable<Object>> getComparablePropertyValues(Entity entity, String propertyName) {
     Object prop;
     if (propertyName.equals(Entity.KEY_RESERVED_PROPERTY)) {

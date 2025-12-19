@@ -28,13 +28,14 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertThrows;
 
 import com.google.appengine.api.testing.LocalServiceTestHelperRule;
-import com.google.apphosting.datastore.DatastoreV3Pb;
-import com.google.apphosting.datastore.DatastoreV3Pb.Query.Filter;
-import com.google.apphosting.datastore.DatastoreV3Pb.Query.Filter.Operator;
-import com.google.apphosting.datastore.DatastoreV3Pb.Query.Order;
-import com.google.apphosting.datastore.DatastoreV3Pb.Query.Order.Direction;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.Query.Filter;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.Query.Filter.Operator;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.Query.Order;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.Query.Order.Direction;
 import com.google.common.collect.Lists;
-import com.google.storage.onestore.v3.OnestoreEntity.PropertyValue;
+import com.google.protobuf.ByteString;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.PropertyValue;
 import java.util.Arrays;
 import org.junit.Rule;
 import org.junit.Test;
@@ -70,9 +71,9 @@ public class QueryTranslatorTest {
 
     DatastoreV3Pb.Query proto = QueryTranslator.convertToPb(query, withLimit(42));
     assertThat(proto.hasAncestor()).isTrue();
-    assertThat(proto.getAncestor().getPath().elementSize()).isEqualTo(1);
-    assertThat(proto.getAncestor().getPath().elements().get(0).getType()).isEqualTo("foo");
-    assertThat(proto.getAncestor().getPath().elements().get(0).getId()).isEqualTo(12345L);
+    assertThat(proto.getAncestor().getPath().getElementCount()).isEqualTo(1);
+    assertThat(proto.getAncestor().getPath().getElementList().get(0).getType()).isEqualTo("foo");
+    assertThat(proto.getAncestor().getPath().getElementList().get(0).getId()).isEqualTo(12345L);
   }
 
   @Test
@@ -102,14 +103,14 @@ public class QueryTranslatorTest {
     query.addProjection(new PropertyProjection("hi", null));
     proto = QueryTranslator.convertToPb(query, withDefaults());
 
-    assertThat(proto.groupByPropertyNameSize()).isEqualTo(1);
+    assertThat(proto.getGroupByPropertyNameCount()).isEqualTo(1);
     assertThat(proto.getGroupByPropertyName(0)).isEqualTo("hi");
 
     query.addProjection(new PropertyProjection("bye", String.class));
     proto = QueryTranslator.convertToPb(query, withDefaults());
 
-    assertThat(proto.groupByPropertyNameSize()).isEqualTo(2);
-    assertThat(proto.groupByPropertyNames()).containsExactly("hi", "bye");
+    assertThat(proto.getGroupByPropertyNameCount()).isEqualTo(2);
+    assertThat(proto.getGroupByPropertyNameList()).containsExactly("hi", "bye");
   }
 
   @SuppressWarnings("deprecation")
@@ -123,33 +124,34 @@ public class QueryTranslatorTest {
     query.addFilter("multiValuedProp2", Query.FilterOperator.IN, Lists.newArrayList(31, 32));
 
     DatastoreV3Pb.Query proto = QueryTranslator.convertToPb(query, withDefaults());
-    assertThat(proto.filterSize()).isEqualTo(5);
+    assertThat(proto.getFilterCount()).isEqualTo(5);
 
     Filter filter1 = proto.getFilter(0);
     assertThat(filter1.getProperty(0).getName()).isEqualTo("stringProp");
-    assertThat(filter1.getProperty(0).getValue().getStringValue()).isEqualTo("stringValue");
-    assertThat(filter1.getOpEnum()).isEqualTo(Operator.EQUAL);
+    assertThat(filter1.getProperty(0).getValue().getStringValue())
+        .isEqualTo(ByteString.copyFromUtf8("stringValue"));
+    assertThat(filter1.getOp()).isEqualTo(Operator.EQUAL);
 
     Filter filter2 = proto.getFilter(1);
     assertThat(filter2.getProperty(0).getName()).isEqualTo("doubleProp");
     assertThat(filter2.getProperty(0).getValue().getDoubleValue()).isWithin(0.00001).of(42.0);
-    assertThat(filter2.getOpEnum()).isEqualTo(Operator.GREATER_THAN);
+    assertThat(filter2.getOp()).isEqualTo(Operator.GREATER_THAN);
 
     Filter filter3 = proto.getFilter(2);
     assertThat(filter3.getProperty(0).getName()).isEqualTo("nullProp");
-    assertThat(filter3.getProperty(0).getValue()).isEqualTo(new PropertyValue());
-    assertThat(filter3.getOpEnum()).isEqualTo(Operator.EQUAL);
+    assertThat(filter3.getProperty(0).getValue()).isEqualTo(PropertyValue.getDefaultInstance());
+    assertThat(filter3.getOp()).isEqualTo(Operator.EQUAL);
 
     Filter filter4 = proto.getFilter(3);
     assertThat(filter4.getProperty(0).getName()).isEqualTo("multiValuedProp1");
     assertThat(filter4.getProperty(0).getValue().getInt64Value()).isEqualTo(31L);
-    assertThat(filter4.getOpEnum()).isEqualTo(Operator.IN);
+    assertThat(filter4.getOp()).isEqualTo(Operator.IN);
 
     Filter filter5 = proto.getFilter(4);
     assertThat(filter5.getProperty(0).getName()).isEqualTo("multiValuedProp2");
     assertThat(filter5.getProperty(0).getValue().getInt64Value()).isEqualTo(31L);
     assertThat(filter5.getProperty(1).getValue().getInt64Value()).isEqualTo(32L);
-    assertThat(filter5.getOpEnum()).isEqualTo(Operator.IN);
+    assertThat(filter5.getOp()).isEqualTo(Operator.IN);
   }
 
   @Test
@@ -163,11 +165,11 @@ public class QueryTranslatorTest {
         new Query.StContainsFilter("location", new Query.GeoRegion.Circle(point, radius)));
 
     DatastoreV3Pb.Query proto = QueryTranslator.convertToPb(query, withDefaults());
-    assertThat(proto.filterSize()).isEqualTo(1);
+    assertThat(proto.getFilterCount()).isEqualTo(1);
 
     Filter filter1 = proto.getFilter(0);
     assertThat(filter1.getProperty(0).getName()).isEqualTo("location");
-    assertThat(filter1.getOpEnum()).isEqualTo(Operator.CONTAINED_IN_REGION);
+    assertThat(filter1.getOp()).isEqualTo(Operator.CONTAINED_IN_REGION);
     // it "has a value" only because "value" is a required field.  But the value has
     // nothing in it: i.e., no point_value (nor any other kind either).
     assertThat(filter1.getProperty(0).getValue().hasPointValue()).isFalse();
@@ -189,11 +191,11 @@ public class QueryTranslatorTest {
         new Query.StContainsFilter("location", new Query.GeoRegion.Rectangle(point1, point2)));
 
     DatastoreV3Pb.Query proto = QueryTranslator.convertToPb(query, withDefaults());
-    assertThat(proto.filterSize()).isEqualTo(1);
+    assertThat(proto.getFilterCount()).isEqualTo(1);
 
     Filter filter1 = proto.getFilter(0);
     assertThat(filter1.getProperty(0).getName()).isEqualTo("location");
-    assertThat(filter1.getOpEnum()).isEqualTo(Operator.CONTAINED_IN_REGION);
+    assertThat(filter1.getOp()).isEqualTo(Operator.CONTAINED_IN_REGION);
     DatastoreV3Pb.GeoRegion geoRegion = filter1.getGeoRegion();
     assertThat(geoRegion.hasRectangle()).isTrue();
     assertThat(geoRegion.hasCircle()).isFalse();
@@ -223,18 +225,18 @@ public class QueryTranslatorTest {
                 Query.FilterOperator.EQUAL.of("rating", rating))));
 
     DatastoreV3Pb.Query proto = QueryTranslator.convertToPb(query, withDefaults());
-    assertThat(proto.filterSize()).isEqualTo(2);
+    assertThat(proto.getFilterCount()).isEqualTo(2);
 
     Filter filter1 = proto.getFilter(0);
     assertThat(filter1.getProperty(0).getName()).isEqualTo("location");
-    assertThat(filter1.getOpEnum()).isEqualTo(Operator.CONTAINED_IN_REGION);
+    assertThat(filter1.getOp()).isEqualTo(Operator.CONTAINED_IN_REGION);
 
     Filter filter2 = proto.getFilter(1);
     assertThat(filter2.getProperty(0).getName()).isEqualTo("rating");
-    assertThat(filter2.getOpEnum()).isEqualTo(Operator.EQUAL);
+    assertThat(filter2.getOp()).isEqualTo(Operator.EQUAL);
     assertThat(filter2.hasGeoRegion()).isFalse();
     PropertyValue value = filter2.getProperty(0).getValue();
-    assertThat(value.getStringValue()).isEqualTo(rating);
+    assertThat(value.getStringValue()).isEqualTo(ByteString.copyFromUtf8(rating));
   }
 
   /**
@@ -264,11 +266,11 @@ public class QueryTranslatorTest {
                 Query.FilterOperator.EQUAL.of("bar", bar))));
 
     DatastoreV3Pb.Query proto = QueryTranslator.convertToPb(query, withDefaults());
-    assertThat(proto.filterSize()).isEqualTo(3);
+    assertThat(proto.getFilterCount()).isEqualTo(3);
 
     Filter filter1 = proto.getFilter(0);
     assertThat(filter1.getProperty(0).getName()).isEqualTo("location");
-    assertThat(filter1.getOpEnum()).isEqualTo(Operator.CONTAINED_IN_REGION);
+    assertThat(filter1.getOp()).isEqualTo(Operator.CONTAINED_IN_REGION);
 
     Filter filter2 = proto.getFilter(1);
     assertThat(filter2.getProperty(0).getName()).isEqualTo("rating");
@@ -323,15 +325,15 @@ public class QueryTranslatorTest {
     query.addSort("doubleProp", Query.SortDirection.DESCENDING);
 
     DatastoreV3Pb.Query proto = QueryTranslator.convertToPb(query, withDefaults());
-    assertThat(proto.orderSize()).isEqualTo(2);
+    assertThat(proto.getOrderCount()).isEqualTo(2);
 
     Order order1 = proto.getOrder(0);
     assertThat(order1.getProperty()).isEqualTo("stringProp");
-    assertThat(order1.getDirectionEnum()).isEqualTo(Direction.ASCENDING);
+    assertThat(order1.getDirection()).isEqualTo(Direction.ASCENDING);
 
     Order order2 = proto.getOrder(1);
     assertThat(order2.getProperty()).isEqualTo("doubleProp");
-    assertThat(order2.getDirectionEnum()).isEqualTo(Direction.DESCENDING);
+    assertThat(order2.getDirection()).isEqualTo(Direction.DESCENDING);
   }
 
   @Test
@@ -363,17 +365,17 @@ public class QueryTranslatorTest {
     Query query = new Query("foo");
     assertThat(query.isKeysOnly()).isFalse();
     DatastoreV3Pb.Query proto = QueryTranslator.convertToPb(query, withChunkSize(10));
-    assertThat(proto.isKeysOnly()).isFalse();
+    assertThat(proto.getKeysOnly()).isFalse();
 
     query.setKeysOnly();
     assertThat(query.isKeysOnly()).isTrue();
     proto = QueryTranslator.convertToPb(query, withDefaults());
-    assertThat(proto.isKeysOnly()).isTrue();
+    assertThat(proto.getKeysOnly()).isTrue();
 
     query.clearKeysOnly();
     assertThat(query.isKeysOnly()).isFalse();
     proto = QueryTranslator.convertToPb(query, withChunkSize(10));
-    assertThat(proto.isKeysOnly()).isFalse();
+    assertThat(proto.getKeysOnly()).isFalse();
   }
 
   @Test
@@ -381,7 +383,7 @@ public class QueryTranslatorTest {
     Query query = new Query("foo");
     assertThat(query.getProjections()).isEmpty();
     DatastoreV3Pb.Query proto = QueryTranslator.convertToPb(query, withChunkSize(10));
-    assertThat(proto.propertyNameSize()).isEqualTo(0);
+    assertThat(proto.getPropertyNameCount()).isEqualTo(0);
 
     query
         .addProjection(new PropertyProjection("hi", null))
@@ -390,9 +392,9 @@ public class QueryTranslatorTest {
         .containsExactly(
             new PropertyProjection("hi", null), new PropertyProjection("bye", String.class));
     proto = QueryTranslator.convertToPb(query, withDefaults());
-    assertThat(proto.propertyNameSize()).isEqualTo(2);
-    assertThat(proto.propertyNames()).contains("hi");
-    assertThat(proto.propertyNames()).contains("bye");
+    assertThat(proto.getPropertyNameCount()).isEqualTo(2);
+    assertThat(proto.getPropertyNameList()).contains("hi");
+    assertThat(proto.getPropertyNameList()).contains("bye");
   }
 
   @Test

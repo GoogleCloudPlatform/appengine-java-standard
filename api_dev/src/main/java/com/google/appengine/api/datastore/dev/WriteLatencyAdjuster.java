@@ -13,12 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.google.appengine.api.datastore.dev;
-
 import com.google.appengine.tools.development.DynamicLatencyAdjuster;
 import com.google.appengine.tools.development.LocalRpcService;
-import com.google.apphosting.datastore.DatastoreV3Pb;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb;
 
 /**
  * {@link DynamicLatencyAdjuster} that adds the paxos penalty for writes and takes the fact that
@@ -52,3 +50,4 @@ public class WriteLatencyAdjuster implements DynamicLatencyAdjuster {
     return latencyMs;
   }
 }
+

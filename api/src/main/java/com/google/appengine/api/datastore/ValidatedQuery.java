@@ -17,19 +17,18 @@
 package com.google.appengine.api.datastore;
 
 import com.google.apphosting.api.ApiProxy;
-import com.google.apphosting.datastore.DatastoreV3Pb;
-import com.google.apphosting.datastore.DatastoreV3Pb.GeoRegion;
-import com.google.apphosting.datastore.DatastoreV3Pb.Query;
-import com.google.apphosting.datastore.DatastoreV3Pb.Query.Filter;
-import com.google.apphosting.datastore.DatastoreV3Pb.Query.Filter.Operator;
-import com.google.apphosting.datastore.DatastoreV3Pb.Query.Order;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.GeoRegion;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.Query;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.Query.Filter;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.Query.Filter.Operator;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.Query.Order;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
-import com.google.storage.onestore.v3.OnestoreEntity.Property;
-import com.google.storage.onestore.v3.OnestoreEntity.PropertyValue;
-import com.google.storage.onestore.v3.OnestoreEntity.PropertyValue.ReferenceValue;
-import com.google.storage.onestore.v3.OnestoreEntity.Reference;
-import java.util.HashSet;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.Property;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.PropertyValue;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.PropertyValue.ReferenceValue;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.Reference;
 import java.util.Set;
 import org.jspecify.annotations.Nullable;
 
@@ -40,7 +39,7 @@ class ValidatedQuery extends NormalizedQuery {
   private boolean isGeo;
 
   /** @throws IllegalQueryException If the provided query fails validation. */
-  ValidatedQuery(Query query) {
+  ValidatedQuery(Query.Builder query) {
     super(query);
     validateQuery();
   }
@@ -51,21 +50,22 @@ class ValidatedQuery extends NormalizedQuery {
    * @throws IllegalQueryException If the provided query fails validation.
    */
   private void validateQuery() {
-    if (query.propertyNameSize() > 0 && query.isKeysOnly()) {
+    if (query.getPropertyNameCount() > 0 && query.getKeysOnly()) {
       throw new IllegalQueryException(
           "projection and keys_only cannot both be set", IllegalQueryType.ILLEGAL_PROJECTION);
     }
 
-    Set<String> projectionProperties = new HashSet<String>(query.propertyNameSize());
-    for (String property : query.propertyNames()) {
+    Set<String> projectionProperties =
+        Sets.newHashSetWithExpectedSize(query.getPropertyNameCount());
+    for (String property : query.getPropertyNameList()) {
       if (!projectionProperties.add(property)) {
         throw new IllegalQueryException(
             "cannot project a property multiple times", IllegalQueryType.ILLEGAL_PROJECTION);
       }
     }
 
-    Set<String> groupBySet = Sets.newHashSetWithExpectedSize(query.groupByPropertyNameSize());
-    for (String name : query.groupByPropertyNames()) {
+    Set<String> groupBySet = Sets.newHashSetWithExpectedSize(query.getGroupByPropertyNameCount());
+    for (String name : query.getGroupByPropertyNameList()) {
       if (!groupBySet.add(name)) {
         throw new IllegalQueryException(
             "cannot group by a property multiple times", IllegalQueryType.ILLEGAL_GROUPBY);
@@ -82,8 +82,8 @@ class ValidatedQuery extends NormalizedQuery {
 
     /* Validate group by properties in orderings. */
     Set<String> groupByInOrderSet =
-        Sets.newHashSetWithExpectedSize(query.groupByPropertyNameSize());
-    for (Order order : query.orders()) {
+        Sets.newHashSetWithExpectedSize(query.getGroupByPropertyNameCount());
+    for (Order order : query.getOrderList()) {
       if (groupBySet.contains(order.getProperty())) {
         groupByInOrderSet.add(order.getProperty());
       } else if (groupByInOrderSet.size() != groupBySet.size()) {
@@ -95,15 +95,15 @@ class ValidatedQuery extends NormalizedQuery {
 
     // Filters and sort orders require kind.
     if (!query.hasKind()) {
-      for (Filter filter : query.filters()) {
+      for (Filter filter : query.getFilterList()) {
         if (!filter.getProperty(0).getName().equals(Entity.KEY_RESERVED_PROPERTY)) {
           throw new IllegalQueryException(
               "kind is required for non-__key__ filters", IllegalQueryType.KIND_REQUIRED);
         }
       }
-      for (Order order : query.orders()) {
+      for (Order order : query.getOrderList()) {
         if (!(order.getProperty().equals(Entity.KEY_RESERVED_PROPERTY)
-            && order.getDirection() == Order.Direction.ASCENDING.getValue())) {
+            && order.getDirection() == Order.Direction.ASCENDING)) {
           throw new IllegalQueryException(
               "kind is required for all orders except __key__ ascending",
               IllegalQueryType.KIND_REQUIRED);
@@ -133,8 +133,8 @@ class ValidatedQuery extends NormalizedQuery {
     // per filter and one property with an inequality filter.
     String ineqProp = null;
     this.isGeo = false;
-    for (Filter filter : query.filters()) {
-      int numProps = filter.propertySize();
+    for (Filter filter : query.getFilterList()) {
+      int numProps = filter.getPropertyCount();
       if (numProps != 1) {
         throw new IllegalQueryException(
             String.format("Filter has %s properties, expected 1", numProps),
@@ -175,7 +175,7 @@ class ValidatedQuery extends NormalizedQuery {
         }
       }
 
-      if (INEQUALITY_OPERATORS.contains(filter.getOpEnum())) {
+      if (INEQUALITY_OPERATORS.contains(filter.getOp())) {
         if (ineqProp == null) {
           ineqProp = propName;
         } else if (!ineqProp.equals(propName)) {
@@ -186,7 +186,7 @@ class ValidatedQuery extends NormalizedQuery {
                   ineqProp, propName),
               IllegalQueryType.MULTIPLE_INEQ_FILTERS);
         }
-      } else if (filter.getOpEnum() == Operator.EQUAL) {
+      } else if (filter.getOp() == Operator.EQUAL) {
         if (projectionProperties.contains(propName)) {
           throw new IllegalQueryException(
               "cannot use projection on a property with an equality filter",
@@ -196,7 +196,7 @@ class ValidatedQuery extends NormalizedQuery {
               "cannot use group by on a property with an equality filter",
               IllegalQueryType.ILLEGAL_GROUPBY);
         }
-      } else if (filter.getOpEnum() == Operator.CONTAINED_IN_REGION) {
+      } else if (filter.getOp() == Operator.CONTAINED_IN_REGION) {
         isGeo = true;
         if (!filter.hasGeoRegion() || prop.getValue().hasPointValue()) {
           throw new IllegalQueryException(
@@ -214,7 +214,7 @@ class ValidatedQuery extends NormalizedQuery {
                   propName),
               IllegalQueryType.UNSUPPORTED_FILTER);
         }
-      } else if (UNSUPPORTED_OPERATORS.contains(filter.getOpEnum())) {
+      } else if (UNSUPPORTED_OPERATORS.contains(filter.getOp())) {
         throw new IllegalQueryException(
             String.format("Unsupported filter operator: %s", filter.getOp()),
             IllegalQueryType.UNSUPPORTED_FILTER);
@@ -241,7 +241,7 @@ class ValidatedQuery extends NormalizedQuery {
       }
     }
 
-    if (ineqProp != null && query.groupByPropertyNameSize() > 0) {
+    if (ineqProp != null && query.getGroupByPropertyNameCount() > 0) {
       if (!groupBySet.contains(ineqProp)) {
         throw new IllegalQueryException(
             String.format(
@@ -253,7 +253,7 @@ class ValidatedQuery extends NormalizedQuery {
     }
 
     if (ineqProp != null) {
-      if (query.orderSize() > 0) {
+      if (query.getOrderCount() > 0) {
         if (!ineqProp.equals(query.getOrder(0).getProperty())) {
           // First order must match the inequality filter.
           throw new IllegalQueryException(
@@ -283,7 +283,7 @@ class ValidatedQuery extends NormalizedQuery {
 
     ValidatedQuery that = (ValidatedQuery) o;
 
-    if (!query.equals(that.query)) {
+    if (!query.build().equals(that.query.build())) {
       return false;
     }
 
@@ -316,7 +316,7 @@ class ValidatedQuery extends NormalizedQuery {
     private final IllegalQueryType illegalQueryType;
 
     IllegalQueryException(String errorDetail, IllegalQueryType illegalQueryType) {
-      super(DatastoreV3Pb.Error.ErrorCode.BAD_REQUEST.getValue(), errorDetail);
+      super(DatastoreV3Pb.Error.ErrorCode.BAD_REQUEST.getNumber(), errorDetail);
       this.illegalQueryType = illegalQueryType;
     }
 

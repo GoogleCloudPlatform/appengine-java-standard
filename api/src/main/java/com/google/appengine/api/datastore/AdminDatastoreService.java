@@ -23,10 +23,10 @@ import com.google.appengine.api.datastore.CompositeIndexManager.IndexComponentsO
 import com.google.appengine.api.datastore.Index.IndexState;
 import com.google.appengine.api.datastore.Query.FilterPredicate;
 import com.google.apphosting.api.AppEngineInternal;
-import com.google.apphosting.datastore.DatastoreV3Pb;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.google.storage.onestore.v3.OnestoreEntity;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -264,7 +264,7 @@ public final class AdminDatastoreService implements AsyncDatastoreService {
         convertQueryToPbs(query, FetchOptions.Builder.withDefaults());
     Set<Index> resultSet = new HashSet<Index>();
     for (DatastoreV3Pb.Query queryProto : pbQueries) {
-      IndexComponentsOnlyQuery indexQuery = new IndexComponentsOnlyQuery(queryProto);
+      IndexComponentsOnlyQuery indexQuery = new IndexComponentsOnlyQuery(queryProto.toBuilder());
 
       OnestoreEntity.Index index =
           factory.getCompositeIndexManager().compositeIndexForQuery(indexQuery);
@@ -291,7 +291,7 @@ public final class AdminDatastoreService implements AsyncDatastoreService {
 
     Set<Index> resultSet = new HashSet<Index>();
     for (DatastoreV3Pb.Query queryProto : pbQueries) {
-      IndexComponentsOnlyQuery indexQuery = new IndexComponentsOnlyQuery(queryProto);
+      IndexComponentsOnlyQuery indexQuery = new IndexComponentsOnlyQuery(queryProto.toBuilder());
 
       OnestoreEntity.Index index =
           factory.getCompositeIndexManager().minimumCompositeIndexForQuery(indexQuery, indexPbs);
@@ -310,7 +310,7 @@ public final class AdminDatastoreService implements AsyncDatastoreService {
     // All Filters should be in queriesToRun
     query.setFilter(null);
     query.getFilterPredicates().clear();
-    List<DatastoreV3Pb.Query> resultQueries = new ArrayList<DatastoreV3Pb.Query>();
+    List<DatastoreV3Pb.Query> resultQueries = new ArrayList<>();
     for (MultiQueryBuilder multiQuery : queriesToRun) {
       for (List<List<FilterPredicate>> parallelQueries : multiQuery) {
         for (List<FilterPredicate> singleQuery : parallelQueries) {

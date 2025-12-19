@@ -23,11 +23,11 @@ import static junit.framework.TestCase.assertFalse;
 import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.mock;
 
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueAddRequest;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueAddRequest.Header;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueAddResponse;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueRetryParameters;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueServiceError.ErrorCode;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueAddRequest;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueAddRequest.Header;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueAddResponse;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueRetryParameters;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueServiceError.ErrorCode;
 import com.google.appengine.api.urlfetch.URLFetchServicePb.URLFetchRequest;
 import com.google.appengine.tools.development.Clock;
 import com.google.appengine.tools.development.LocalServerEnvironment;
@@ -153,7 +153,7 @@ public class DevQueueIntegrationTest {
     TaskQueueAddRequest.Builder add =
         newAddRequest(1000).setTaskName(ByteString.copyFromUtf8("the name"));
 
-    queue.add(add);
+    var unused = queue.add(add);
     waitForJobExecution();
     assertThat(providedFetchReqs).hasSize(1);
     assertFetchReqEquals(
@@ -242,7 +242,7 @@ public class DevQueueIntegrationTest {
     TaskQueueAddRequest.Builder a =
         newAddRequest(getNowMilliseconds(10000000))
             .setTaskName(ByteString.copyFromUtf8("task 9"));
-    queue.add(a);
+    var unused = queue.add(a);
     ApiProxy.ApplicationException exception =
         assertThrows(ApiProxy.ApplicationException.class, () -> queue.add(a));
     // expected.
@@ -259,7 +259,7 @@ public class DevQueueIntegrationTest {
     TaskQueueAddRequest.Builder addRequest =
         newAddRequest(getNowMilliseconds(10000000))
             .setTaskName(ByteString.copyFromUtf8("task 9"));
-    queue.add(addRequest);
+    var unused = queue.add(addRequest);
     assertThat(queue.deleteTask("task 9")).isTrue();
     assertFalse(queue.deleteTask("task 9"));
 
@@ -276,7 +276,7 @@ public class DevQueueIntegrationTest {
     TaskQueueAddRequest.Builder addRequest =
         newAddRequest(getNowMilliseconds(10000000))
             .setTaskName(ByteString.copyFromUtf8("task 9"));
-    queue.add(addRequest);
+    var unused = queue.add(addRequest);
     assertThat(queue.runTask("task 9")).isTrue();
     assertThat(providedFetchReqs).isNotEmpty();
     assertFetchReqEquals(
@@ -310,7 +310,7 @@ public class DevQueueIntegrationTest {
       SimpleTrigger trig =
           new SimpleTrigger(taskName, "default", new Date(addRequest.getEtaUsec() / 1000));
       etas.add(trig.getStartTime().getTime());
-      queue.add(addRequest);
+      var unused = queue.add(addRequest);
 
       assertThat(providedFetchReqs).isEmpty();
     }
@@ -349,7 +349,7 @@ public class DevQueueIntegrationTest {
     // schedule way in the past
     TaskQueueAddRequest.Builder addRequest =
         newAddRequest(1000).setTaskName(ByteString.copyFromUtf8("task 9"));
-    queue.add(addRequest);
+    var unused = queue.add(addRequest);
     // we'll give the task 3 seconds to execute but it shouldn't ever happen
     boolean success = latch.await(3, SECONDS);
     assertWithMessage("Job was automatically executed").that(success).isFalse();
@@ -371,7 +371,7 @@ public class DevQueueIntegrationTest {
     providedFetchReqs.clear();
 
     // now we'll add another task and delete it
-    queue.add(addRequest);
+    unused = queue.add(addRequest);
     assertThat(queue.deleteTask("task 9")).isTrue();
   }
 
@@ -390,7 +390,7 @@ public class DevQueueIntegrationTest {
     // schedule way in the past
     TaskQueueAddRequest.Builder addRequest =
         newAddRequest(1000).setTaskName(ByteString.copyFromUtf8("task 9"));
-    queue.add(addRequest);
+    var unused = queue.add(addRequest);
     Set<?> triggerGroups = scheduler.getPausedTriggerGroups();
     assertThat(triggerGroups).containsExactly(entry.getName());
 
@@ -417,7 +417,7 @@ public class DevQueueIntegrationTest {
     providedFetchReqs.clear();
 
     // now we'll add another task and delete it
-    queue.add(addRequest);
+    unused = queue.add(addRequest);
     assertThat(queue.deleteTask("task 9")).isTrue();
   }
 
@@ -437,7 +437,7 @@ public class DevQueueIntegrationTest {
     TaskQueueAddRequest.Builder add =
         newAddRequest(1000).setTaskName(ByteString.copyFromUtf8("the name"));
 
-    queue.add(add);
+    var unused = queue.add(add);
     Set<?> triggerGroups = scheduler.getPausedTriggerGroups();
     assertThat(triggerGroups).isEmpty();
     waitForJobExecution();
@@ -465,7 +465,7 @@ public class DevQueueIntegrationTest {
       // schedule way in the past
       TaskQueueAddRequest.Builder add =
           newAddRequest(1000).setTaskName(ByteString.copyFromUtf8("the name" + httpResponseCode));
-      queue.add(add);
+      var unused = queue.add(add);
       waitForJobExecution();
     }
   }
@@ -489,7 +489,7 @@ public class DevQueueIntegrationTest {
     // schedule way in the past
     TaskQueueAddRequest.Builder add =
         newAddRequest(1000).setTaskName(ByteString.copyFromUtf8("the name"));
-    queue.add(add);
+    var unused = queue.add(add);
     waitForJobExecution();
     assertThat(providedFetchReqs).hasSize(3);
     assertFetchReqEquals(
@@ -528,7 +528,7 @@ public class DevQueueIntegrationTest {
     // Schedule no retries, so only the initial task execution should occur.
     retryParams.setRetryLimit(0);
 
-    queue.add(add);
+    var unused = queue.add(add);
     waitForJobExecution();
     // Give the scheduler a chance to run additional fetches (which of course it
     // shouldn't).
@@ -554,7 +554,7 @@ public class DevQueueIntegrationTest {
     // We expect the handler to be called twice.
     latch = new CountDownLatch(2);
 
-    queue.add(add);
+    var unused = queue.add(add);
     waitForJobExecution();
     // Give the scheduler a chance to run additional fetches (which of course it
     // shouldn't).
@@ -587,7 +587,7 @@ public class DevQueueIntegrationTest {
     add.getRetryParametersBuilder().setAgeLimitSec(1);
     ;
 
-    queue.add(add);
+    var unused = queue.add(add);
     // Give the scheduler a chance to run plenty of fetches.
     Thread.sleep(5000);
     // The expectations here are somewhat subtle.  Ideally the task would be
@@ -627,7 +627,7 @@ public class DevQueueIntegrationTest {
     retryParams.setAgeLimitSec(0);
     retryParams.setRetryLimit(0);
 
-    queue.add(add);
+    var unused = queue.add(add);
     // Give the scheduler a chance to run plenty of fetches.
     Thread.sleep(500);
     // See comment in testAgeLimitSec(). Note that retries weren't limited to zero retries.
@@ -666,7 +666,7 @@ public class DevQueueIntegrationTest {
     add.getRetryParametersBuilder().setMinBackoffSec(10.0);
     ;
 
-    queue.add(add);
+    var unused = queue.add(add);
     // Give the scheduler a chance to run plenty of fetches.
     Thread.sleep(5000);
     // No retries should be run.

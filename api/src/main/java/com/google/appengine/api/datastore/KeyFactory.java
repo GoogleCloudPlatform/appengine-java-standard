@@ -19,7 +19,9 @@ package com.google.appengine.api.datastore;
 import static com.google.common.io.BaseEncoding.base64Url;
 
 import com.google.common.base.CharMatcher;
-import com.google.storage.onestore.v3.OnestoreEntity.Reference;
+import com.google.protobuf.ExtensionRegistry;
+import com.google.protobuf.InvalidProtocolBufferException;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.Reference;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -202,14 +204,16 @@ public class KeyFactory {
       throw new IllegalArgumentException("Cannot parse: " + encoded, ex);
     }
 
-    Reference reference = new Reference();
-    boolean parsed = reference.parseFrom(decodedBytes);
-    if (!parsed) {
-      throw new IllegalArgumentException("Could not parse Reference");
+    try {
+      Reference reference =
+          Reference.parseFrom(decodedBytes, ExtensionRegistry.getEmptyRegistry());
+
+      // The validation in createFromPb should cover missing required fields, so no need for
+      // an isInitialized check.
+      return KeyTranslator.createFromPb(reference);
+    } catch (InvalidProtocolBufferException e) {
+      throw new IllegalArgumentException("Could not parse Reference", e);
     }
-    // The validation in createFromPb should cover missing required fields, so no need for
-    // an isInitialized check.
-    return KeyTranslator.createFromPb(reference);
   }
 
   /**

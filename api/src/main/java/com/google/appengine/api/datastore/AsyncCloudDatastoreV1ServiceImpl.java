@@ -45,6 +45,7 @@ import com.google.datastore.v1.MutationResult;
 import com.google.datastore.v1.ReadOptions;
 import com.google.datastore.v1.TransactionOptions.ReadOnly;
 import com.google.datastore.v1.TransactionOptions.ReadWrite;
+import com.google.protobuf.CodedOutputStream;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
 import java.util.ArrayList;
@@ -117,6 +118,11 @@ class AsyncCloudDatastoreV1ServiceImpl extends BaseAsyncDatastoreServiceImpl {
         final Mutation toPb(Key value) {
           return Mutation.newBuilder().setDelete(DataTypeTranslator.toV1Key(value)).build();
         }
+
+        @Override
+        protected int getEmbeddedSize(Mutation value) {
+          return CodedOutputStream.computeMessageSize(CommitRequest.MUTATIONS_FIELD_NUMBER, value);
+        }
       };
 
   private final V1Batcher<LookupResponse, LookupRequest.Builder, Key, com.google.datastore.v1.Key>
@@ -145,6 +151,11 @@ class AsyncCloudDatastoreV1ServiceImpl extends BaseAsyncDatastoreServiceImpl {
             @Override
             final com.google.datastore.v1.Key toPb(Key value) {
               return DataTypeTranslator.toV1Key(value).build();
+            }
+
+            @Override
+            protected int getEmbeddedSize(com.google.datastore.v1.Key value) {
+              return CodedOutputStream.computeMessageSize(LookupRequest.KEYS_FIELD_NUMBER, value);
             }
           };
 
@@ -183,6 +194,11 @@ class AsyncCloudDatastoreV1ServiceImpl extends BaseAsyncDatastoreServiceImpl {
             final com.google.datastore.v1.Key toPb(com.google.datastore.v1.Key value) {
               return value;
             }
+
+            @Override
+            protected int getEmbeddedSize(com.google.datastore.v1.Key value) {
+              return CodedOutputStream.computeMessageSize(LookupRequest.KEYS_FIELD_NUMBER, value);
+            }
           };
 
   private final V1Batcher<CommitResponse, CommitRequest.Builder, Entity, Mutation> putBatcher =
@@ -214,6 +230,11 @@ class AsyncCloudDatastoreV1ServiceImpl extends BaseAsyncDatastoreServiceImpl {
         @Override
         final Mutation toPb(Entity value) {
           return Mutation.newBuilder().setUpsert(DataTypeTranslator.toV1Entity(value)).build();
+        }
+
+        @Override
+        protected int getEmbeddedSize(Mutation value) {
+          return CodedOutputStream.computeMessageSize(CommitRequest.MUTATIONS_FIELD_NUMBER, value);
         }
       };
 
@@ -253,6 +274,12 @@ class AsyncCloudDatastoreV1ServiceImpl extends BaseAsyncDatastoreServiceImpl {
             @Override
             final com.google.datastore.v1.Key toPb(Key value) {
               return DataTypeTranslator.toV1Key(value).build();
+            }
+
+            @Override
+            protected int getEmbeddedSize(com.google.datastore.v1.Key value) {
+              return CodedOutputStream.computeMessageSize(
+                  AllocateIdsRequest.KEYS_FIELD_NUMBER, value);
             }
           };
 

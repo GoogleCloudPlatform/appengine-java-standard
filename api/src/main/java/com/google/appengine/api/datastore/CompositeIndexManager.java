@@ -18,17 +18,17 @@ package com.google.appengine.api.datastore;
 
 import static java.util.Objects.requireNonNull;
 
-import com.google.apphosting.datastore.DatastoreV3Pb;
-import com.google.apphosting.datastore.DatastoreV3Pb.Query.Filter;
-import com.google.apphosting.datastore.DatastoreV3Pb.Query.Order;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.Query.Filter;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.Query.Order;
 import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.google.storage.onestore.v3.OnestoreEntity.Index;
-import com.google.storage.onestore.v3.OnestoreEntity.Index.Property;
-import com.google.storage.onestore.v3.OnestoreEntity.Index.Property.Direction;
-import com.google.storage.onestore.v3.OnestoreEntity.Index.Property.Mode;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.Index;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.Index.Property;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.Index.Property.Direction;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.Index.Property.Mode;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -89,12 +89,12 @@ public class CompositeIndexManager {
    *     index is needed.
    */
   protected @Nullable Index compositeIndexForQuery(final IndexComponentsOnlyQuery indexOnlyQuery) {
-    DatastoreV3Pb.Query query = indexOnlyQuery.getQuery();
+    DatastoreV3Pb.Query.Builder query = indexOnlyQuery.getQuery();
 
     boolean hasKind = query.hasKind();
     boolean isAncestor = query.hasAncestor();
-    List<Filter> filters = query.filters();
-    List<Order> orders = query.orders();
+    List<Filter> filters = query.getFilterList();
+    List<Order> orders = query.getOrderList();
 
     if (filters.isEmpty() && orders.isEmpty()) {
       // If there are no filters or sorts no composite index is needed; the
@@ -128,7 +128,7 @@ public class CompositeIndexManager {
         && indexProperties.size() <= 1
         && !indexOnlyQuery.isGeo()
         && (!indexOnlyQuery.hasKeyProperty()
-            || indexProperties.get(0).getDirectionEnum() == Property.Direction.ASCENDING)) {
+            || indexProperties.get(0).getDirection() == Property.Direction.ASCENDING)) {
       // For traditional indexes, we never need kind-only or
       // single-property composite indexes unless it's a single
       // property, descending index on key. The built-in primary key
@@ -137,11 +137,10 @@ public class CompositeIndexManager {
       return null;
     }
 
-    Index index = new Index();
-    index.setEntityType(query.getKind());
-    index.setAncestor(isAncestor);
-    index.mutablePropertys().addAll(indexProperties);
-    return index;
+    return Index.newBuilder()
+        .setEntityType(query.getKind())
+        .setAncestor(isAncestor)
+        .addAllProperty(indexProperties).build();
   }
 
   /** We compare {@link Property Properties} by comparing their names. */
@@ -182,12 +181,11 @@ public class CompositeIndexManager {
 
     @Override
     public Property apply(String name) {
-      Property p = new Property();
-      p.setName(name);
+      Property.Builder p = Property.newBuilder().setName(name);
       if (mode != null) {
         p.setMode(mode);
       }
-      return p;
+      return p.build();
     }
   }
 
@@ -258,16 +256,16 @@ public class CompositeIndexManager {
       !indexOnlyQuery.getQuery().getKind().equals(index.getEntityType())
           ||
           // Ancestor indexes can only be used on ancestor queries.
-          (!indexOnlyQuery.getQuery().hasAncestor() && index.isAncestor())) {
+          (!indexOnlyQuery.getQuery().hasAncestor() && index.getAncestor())) {
         continue;
       }
 
       // Matching the postfix.
-      int postfixSplit = index.propertySize();
+      int postfixSplit = index.getPropertyCount();
       for (IndexComponent component : Lists.reverse(indexOnlyQuery.getPostfix())) {
         if (!component.matches(
             index
-                .propertys()
+                .getPropertyList()
                 .subList(Math.max(postfixSplit - component.size(), 0), postfixSplit))) {
           continue index_for;
         }
@@ -276,7 +274,7 @@ public class CompositeIndexManager {
 
       // Postfix matches! Now checking the prefix.
       Set<String> indexEqProps = Sets.newHashSetWithExpectedSize(postfixSplit);
-      for (Property prop : index.propertys().subList(0, postfixSplit)) {
+      for (Property prop : index.getPropertyList().subList(0, postfixSplit)) {
         // Index must not contain extra properties in the prefix.
         if (!indexOnlyQuery.getPrefix().contains(prop.getName())) {
           continue index_for;
@@ -287,7 +285,8 @@ public class CompositeIndexManager {
       // Index matches!
 
       // Find the matching remaining requirements.
-      List<Property> indexPostfix = index.propertys().subList(postfixSplit, index.propertySize());
+      List<Property> indexPostfix =
+          index.getPropertyList().subList(postfixSplit, index.getPropertyCount());
 
       Set<String> remainingEqProps;
       boolean remainingAncestor;
@@ -304,7 +303,7 @@ public class CompositeIndexManager {
 
       // Remove any remaining requirements handled by this index.
       boolean modified = remainingEqProps.removeAll(indexEqProps);
-      if (remainingAncestor && index.isAncestor()) {
+      if (remainingAncestor && index.getAncestor()) {
         modified = true;
         remainingAncestor = false;
       }
@@ -345,24 +344,27 @@ public class CompositeIndexManager {
     requireNonNull(minimumPostfix);
 
     // Populating suggesting the minimal index instead.
-    suggestedIndex.clearProperty();
-    suggestedIndex.setAncestor(minimumRemaining.ancestorConstraint);
+    Index.Builder newSuggestedIndex =
+        suggestedIndex.toBuilder().clearProperty().setAncestor(minimumRemaining.ancestorConstraint);
+    List<Property> propertyList = new ArrayList<>();
     for (String name : minimumRemaining.equalityProperties) {
-      suggestedIndex.addProperty().setName(name).setDirection(Direction.ASCENDING);
+      propertyList.add(Property.newBuilder().setName(name).setDirection(Direction.ASCENDING).build());
     }
-    Collections.sort(suggestedIndex.mutablePropertys(), PROPERTY_NAME_COMPARATOR);
 
-    suggestedIndex.mutablePropertys().addAll(minimumPostfix);
-    return suggestedIndex;
+    Collections.sort(propertyList, PROPERTY_NAME_COMPARATOR);
+    newSuggestedIndex.addAllProperty(propertyList);
+    for (Property property : minimumPostfix) {
+      newSuggestedIndex.addProperty(property);
+    }
+    return newSuggestedIndex.build();
   }
-
   /**
    * Protected alias that allows us to make this class available to the local datastore without
    * publicly exposing it in the api.
    */
   protected static class IndexComponentsOnlyQuery
       extends com.google.appengine.api.datastore.IndexComponentsOnlyQuery {
-    public IndexComponentsOnlyQuery(DatastoreV3Pb.Query query) {
+    public IndexComponentsOnlyQuery(DatastoreV3Pb.Query.Builder query) {
       super(query);
     }
   }
@@ -372,7 +374,7 @@ public class CompositeIndexManager {
    * publicly exposing it in the api.
    */
   protected static class ValidatedQuery extends com.google.appengine.api.datastore.ValidatedQuery {
-    public ValidatedQuery(DatastoreV3Pb.Query query) {
+    public ValidatedQuery(DatastoreV3Pb.Query.Builder query) {
       super(query);
     }
   }

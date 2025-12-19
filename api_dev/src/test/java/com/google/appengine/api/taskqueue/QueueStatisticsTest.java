@@ -19,10 +19,10 @@ package com.google.appengine.api.taskqueue;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.util.concurrent.Futures.immediateFuture;
 
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueFetchQueueStatsRequest;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueFetchQueueStatsResponse;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueFetchQueueStatsResponse.QueueStats;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueScannerQueueInfo;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueFetchQueueStatsRequest;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueFetchQueueStatsResponse;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueFetchQueueStatsResponse.QueueStats;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueScannerQueueInfo;
 import com.google.apphosting.api.ApiProxy.ApiConfig;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.MessageLite;

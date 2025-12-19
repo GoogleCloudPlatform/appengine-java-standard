@@ -20,7 +20,7 @@ import static com.google.appengine.api.datastore.FetchOptions.Builder.withStartC
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.io.BaseEncoding.base64Url;
 
-import com.google.apphosting.datastore.DatastoreV3Pb.Query;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.Query;
 import com.google.common.base.CharMatcher;
 import com.google.common.io.ByteStreams;
 import com.google.protobuf.ByteString;

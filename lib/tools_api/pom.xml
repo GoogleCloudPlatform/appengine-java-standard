@@ -23,7 +23,7 @@
   <parent>
     <groupId>com.google.appengine</groupId>
     <artifactId>lib-parent</artifactId>
-    <version>3.0.4-SNAPSHOT</version>
+    <version>4.0.0-SNAPSHOT</version>
   </parent>
 
   <packaging>jar</packaging>
@@ -201,16 +201,6 @@
                   </includes>
                 </filter>
                 <filter>
-                  <artifact>com.google.appengine:proto1:*</artifact>
-                  <includes>
-                    <include>com/google/common/annotations/GoogleInternal*</include>
-                    <include>com/google/common/base/StringUtil*</include>
-                    <include>com/google/common/util/concurrent/internal/*</include>
-                    <include>com/google/common/flags/*</include>
-                    <include>com/google/protobuf/**</include>
-                  </includes>
-                </filter>
-                <filter>
                   <artifact>com.google.protobuf:protobuf-java</artifact>
                   <includes>
                     <include>com/google/protobuf/*</include>
@@ -219,7 +209,7 @@
                 <filter>
                   <artifact>com.google.appengine:protos</artifact>
                   <includes>
-                    <include>com/google/apphosting/base/protos/api/RemoteApiPb*</include>
+                    <include>com/google/apphosting/base/protos/api_bytes/RemoteApiPb*</include>
                   </includes>
                 </filter>
                 <filter>
@@ -300,7 +290,6 @@
                   <include>com.google.appengine:appengine-apis-dev</include>
                   <include>com.google.appengine:shared-sdk</include>
                   <include>com.google.appengine:protos</include>
-                  <include>com.google.appengine:proto1:*</include>
                   <include>com.google.appengine:appengine-utils</include>
                   <include>com.google.flogger:google-extensions</include>
                   <include>com.google.flogger:flogger-system-backend</include>

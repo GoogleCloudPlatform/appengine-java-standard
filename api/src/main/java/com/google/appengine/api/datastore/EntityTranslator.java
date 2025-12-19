@@ -17,9 +17,11 @@
 package com.google.appengine.api.datastore;
 
 import com.google.common.collect.Maps;
-import com.google.storage.onestore.v3.OnestoreEntity.EntityProto;
-import com.google.storage.onestore.v3.OnestoreEntity.Path;
-import com.google.storage.onestore.v3.OnestoreEntity.Reference;
+import com.google.protobuf.ExtensionRegistry;
+import com.google.protobuf.InvalidProtocolBufferException;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.EntityProto;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.Path;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.Reference;
 import java.util.Collection;
 import java.util.Map;
 import org.jspecify.annotations.Nullable;
@@ -58,30 +60,33 @@ public class EntityTranslator {
   }
 
   public static Entity createFromPbBytes(byte[] pbBytes) {
-    EntityProto proto = new EntityProto();
-    boolean parsed = proto.mergeFrom(pbBytes);
+    EntityProto.Builder proto = EntityProto.newBuilder();
+    boolean parsed = true;
+    try{
+      proto.mergeFrom(pbBytes, ExtensionRegistry.getEmptyRegistry());
+    }catch (InvalidProtocolBufferException e){
+      parsed = false;
+    }
     if (!parsed || !proto.isInitialized()) {
       throw new IllegalArgumentException("Could not parse EntityProto bytes");
     }
-    return createFromPb(proto);
+    return createFromPb(proto.build());
   }
 
   public static EntityProto convertToPb(Entity entity) {
     Reference reference = KeyTranslator.convertToPb(entity.getKey());
 
-    EntityProto proto = new EntityProto();
-    proto.setKey(reference);
+    EntityProto.Builder proto = EntityProto.newBuilder().setKey(reference);
 
     // If we've already been stored, make sure the entity group is set
     // to match our key.
-    Path entityGroup = proto.getMutableEntityGroup();
+    Path.Builder entityGroup = proto.getEntityGroupBuilder();
     Key key = entity.getKey();
     if (key.isComplete()) {
-      entityGroup.addElement(reference.getPath().elements().get(0));
+      entityGroup.addElement(reference.getPath().getElement(0));
     }
-
     DataTypeTranslator.addPropertiesToPb(entity.getPropertyMap(), proto);
-    return proto;
+    return proto.build();
   }
 
   // All methods are static.  Do not instantiate.

@@ -16,15 +16,16 @@
 
 package com.google.appengine.api.datastore;
 
-import com.google.apphosting.datastore.DatastoreV3Pb.Query;
-import com.google.apphosting.datastore.DatastoreV3Pb.Query.Filter;
-import com.google.apphosting.datastore.DatastoreV3Pb.Query.Filter.Operator;
-import com.google.apphosting.datastore.DatastoreV3Pb.Query.Order;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.Query;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.Query.Filter;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.Query.Filter.Operator;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.Query.Order;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.storage.onestore.v3.OnestoreEntity.Property;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.Property;
+import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 class NormalizedQuery {
@@ -35,14 +36,14 @@ class NormalizedQuery {
           Operator.LESS_THAN,
           Operator.LESS_THAN_OR_EQUAL);
 
-  protected final Query query;
+  protected final Query.Builder query;
 
-  public NormalizedQuery(Query query) {
-    this.query = query.clone();
+  public NormalizedQuery(Query.Builder query) {
+    this.query = query;
     normalizeQuery();
   }
 
-  public Query getQuery() {
+  public Query.Builder getQuery() {
     return query;
   }
 
@@ -55,68 +56,80 @@ class NormalizedQuery {
     Set<String> equalityProperties = new HashSet<String>();
     Set<String> inequalityProperties = new HashSet<String>();
 
-    for (Iterator<Filter> itr = query.mutableFilters().iterator(); itr.hasNext(); ) {
-      Filter f = itr.next();
+    List<Filter> filters = new ArrayList<>(query.getFilterList());
+    query.clearFilter();
+
+    for (Filter f : filters) {
+      Filter.Builder fb = f.toBuilder();
       /* Normalize IN filters to EQUAL. */
-      if (f.propertySize() == 1 && f.getOpEnum() == Operator.IN) {
-        f.setOp(Operator.EQUAL);
+      if (fb.getPropertyCount() == 1 && fb.getOp() == Operator.IN) {
+        fb.setOp(Operator.EQUAL);
       }
-      if (f.propertySize() >= 1) {
-        String name = f.getProperty(0).getName();
-        if (f.getOpEnum() == Operator.EQUAL) {
-          if (!equalityFilterProperties.add(f.getProperty(0))) {
-            // The filter is an exact duplicate, remove it.
-            itr.remove();
-          } else {
+      if (fb.getPropertyCount() >= 1) {
+        String name = fb.getProperty(0).getName();
+        if (fb.getOp() == Operator.EQUAL) {
+          if (equalityFilterProperties.add(fb.getProperty(0))) {
+            query.addFilter(fb);
             equalityProperties.add(name);
           }
-        } else if (INEQUALITY_OPERATORS.contains(f.getOpEnum())) {
-          inequalityProperties.add(name);
+        } else {
+          query.addFilter(fb);
+          if (INEQUALITY_OPERATORS.contains(fb.getOp())) {
+            inequalityProperties.add(name);
+          }
         }
+      } else {
+        query.addFilter(fb);
       }
     }
 
     equalityProperties.removeAll(inequalityProperties);
 
     // Strip repeated orders and orders coinciding with EQUAL filters.
-    for (Iterator<Order> itr = query.mutableOrders().iterator(); itr.hasNext(); ) {
-      if (!equalityProperties.add(itr.next().getProperty())) {
-        itr.remove();
+    List<Order> orders = new ArrayList<>(query.getOrderList());
+    query.clearOrder();
+    for (Order o : orders) {
+      if (equalityProperties.add(o.getProperty())) {
+        query.addOrder(o);
       }
     }
 
-    Set<String> allProperties = equalityProperties;
+    Set<String> allProperties = new HashSet<>(equalityProperties);
     allProperties.addAll(inequalityProperties);
 
     // Removing redundant exists filters.
-    for (Iterator<Filter> itr = query.mutableFilters().iterator(); itr.hasNext(); ) {
-      Filter f = itr.next();
-      if (f.getOpEnum() == Operator.EXISTS
-          && f.propertySize() >= 1
+    List<Filter> filtersAfterLoop1 = new ArrayList<>(query.getFilterList());
+    query.clearFilter();
+    for (Filter f : filtersAfterLoop1) {
+      boolean keep = true;
+      if (f.getOp() == Operator.EXISTS
+          && f.getPropertyCount() >= 1
           && !allProperties.add(f.getProperty(0).getName())) {
-        itr.remove();
+        keep = false;
+      }
+      if (keep) {
+        query.addFilter(f);
       }
     }
 
     // Adding exist filters for any requested properties or group by properties that need them.
-    for (String propName : Iterables.concat(query.propertyNames(), query.groupByPropertyNames())) {
+    for (String propName : Iterables.concat(query.getPropertyNameList(), query.getGroupByPropertyNameList())) {
       if (allProperties.add(propName)) {
         query
-            .addFilter()
+            .addFilterBuilder()
             .setOp(Operator.EXISTS)
-            .addProperty()
+            .addPropertyBuilder()
             .setName(propName)
             .setMultiple(false)
-            .getMutableValue();
+            .getValueBuilder();
       }
     }
-
     // NOTE: Keep in sync with MegastoreQueryPlanner#normalizeForKeyComponents()
 
     /* Strip all orders if filtering on __key__ with equals. */
-    for (Filter f : query.filters()) {
-      if (f.getOpEnum() == Operator.EQUAL
-          && f.propertySize() >= 1
+    for (Filter f : query.getFilterList()) {
+      if (f.getOp() == Operator.EQUAL
+          && f.getPropertyCount() >= 1
           && f.getProperty(0).getName().equals(Entity.KEY_RESERVED_PROPERTY)) {
         query.clearOrder();
         break;
@@ -126,12 +139,14 @@ class NormalizedQuery {
     /* Strip all orders that follow a ordering on __key__ as keys are unique
      * thus additional ordering has no effect. */
     boolean foundKeyOrder = false;
-    for (Iterator<Order> i = query.mutableOrders().iterator(); i.hasNext(); ) {
-      String property = i.next().getProperty();
-      if (foundKeyOrder) {
-        i.remove();
-      } else if (property.equals(Entity.KEY_RESERVED_PROPERTY)) {
-        foundKeyOrder = true;
+    List<Order> ordersAfterLoop2 = new ArrayList<>(query.getOrderList());
+    query.clearOrder();
+    for (Order o : ordersAfterLoop2) {
+      if (!foundKeyOrder) {
+        query.addOrder(o);
+        if (o.getProperty().equals(Entity.KEY_RESERVED_PROPERTY)) {
+          foundKeyOrder = true;
+        }
       }
     }
   }

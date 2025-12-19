@@ -27,9 +27,10 @@ import com.google.appengine.api.testing.LocalServiceTestHelperRule;
 import com.google.appengine.api.testing.SerializationTestBase;
 import com.google.appengine.tools.development.testing.LocalDatastoreServiceTestConfig;
 import com.google.appengine.tools.development.testing.LocalServiceTestHelper;
-import com.google.apphosting.datastore.DatastoreV3Pb;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb;
 import com.google.common.collect.ImmutableList;
-import com.google.storage.onestore.v3.OnestoreEntity.PropertyValue;
+import com.google.protobuf.ByteString;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.PropertyValue;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -116,7 +117,7 @@ public class SerializationTest extends SerializationTestBase {
         new PropertyProjection("prop", String.class),
         new MonitoredIndexUsageTracker.UsageIdCacheMap(1),
         DataTypeUtils.CheckValueOption.ALLOW_MULTI_VALUE,
-        new RawValue(new PropertyValue()),
+        new RawValue(PropertyValue.getDefaultInstance()),
         CloudDatastoreRemoteServiceConfig.AppId.Location.US_CENTRAL,
         Mode.READ_WRITE);
   }
@@ -186,13 +187,12 @@ public class SerializationTest extends SerializationTestBase {
   }
 
   private static Cursor canonicalCursor() {
-    DatastoreV3Pb.CompiledCursor compiledCursor = new DatastoreV3Pb.CompiledCursor();
+    DatastoreV3Pb.CompiledCursor.Builder compiledCursor = DatastoreV3Pb.CompiledCursor.newBuilder();
     compiledCursor
-        .getMutablePosition()
-        .setStartKey("Happiness is a warm cursor")
+        .getPositionBuilder()
+        .setStartKey(ByteString.copyFromUtf8("Happiness is a warm cursor"))
         .setStartInclusive(true);
-    Cursor c = new Cursor(compiledCursor.toByteString());
-    return c;
+    return new Cursor(compiledCursor.build().toByteString());
   }
 
   private static Index canonicalIndex() {

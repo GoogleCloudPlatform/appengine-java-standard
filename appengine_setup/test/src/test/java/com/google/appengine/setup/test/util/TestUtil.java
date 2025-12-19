@@ -62,7 +62,7 @@ public class TestUtil {
     @SneakyThrows
     public static Process initializeHttpApiServer() {
     String apiServerRelativeJarPath =
-        "../apiserver_local/target/" + "apiserver_local-3.0.4-SNAPSHOT-jar-with-dependencies.jar";
+        "../apiserver_local/target/" + "apiserver_local-4.0.0-SNAPSHOT-jar-with-dependencies.jar";
         File currentDirectory = new File("").getAbsoluteFile();
         File apiServerJar = new File(currentDirectory, apiServerRelativeJarPath);
         ImmutableList<String> processArgs = ImmutableList.<String>builder()

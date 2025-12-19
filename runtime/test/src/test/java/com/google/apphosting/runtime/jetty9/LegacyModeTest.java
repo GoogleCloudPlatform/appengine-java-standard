@@ -23,7 +23,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.Inet4Address;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.nio.file.Path;
@@ -158,7 +158,7 @@ public class LegacyModeTest extends JavaRuntimeViaHttpBase {
 
   private static String executeHttpDirect(String request) throws IOException {
     try (Socket socket = new Socket()) {
-      socket.connect(new InetSocketAddress(Inet4Address.getLocalHost(), runtime.getPort()));
+      socket.connect(new InetSocketAddress(InetAddress.getLoopbackAddress(), runtime.getPort()));
       socket.getOutputStream().write(request.getBytes(ISO_8859_1));
       ByteArrayOutputStream response = new ByteArrayOutputStream();
       InputStream in = socket.getInputStream();

@@ -18,15 +18,14 @@ package com.google.appengine.api.datastore.dev;
 
 import static com.google.appengine.api.datastore.Entities.NAMESPACE_METADATA_KIND;
 import static com.google.appengine.api.datastore.dev.Utils.checkRequest;
-
 import com.google.appengine.api.datastore.Key;
 import com.google.appengine.api.datastore.dev.LocalDatastoreService.Extent;
 import com.google.appengine.api.datastore.dev.LocalDatastoreService.Profile;
-import com.google.apphosting.datastore.DatastoreV3Pb.Query;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.Query;
 import com.google.common.collect.Lists;
-import com.google.storage.onestore.v3.OnestoreEntity.EntityProto;
-import com.google.storage.onestore.v3.OnestoreEntity.Path;
-import com.google.storage.onestore.v3.OnestoreEntity.Reference;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.EntityProto;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.Path;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.Reference;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -127,23 +126,23 @@ class NamespacePseudoKind extends KeyFilteredPseudoKind {
     List<EntityProto> namespaces = Lists.newArrayListWithCapacity(namespaceSet.size());
     for (String namespace : namespaceSet) {
       // Create namespace entity and set its key based on the namespace
-      EntityProto namespaceEntity = new EntityProto();
-      namespaces.add(namespaceEntity);
+      EntityProto.Builder namespaceEntity = EntityProto.newBuilder();
 
-      Path path = new Path();
+      Path.Builder path = Path.newBuilder();
       // Empty namespaces use an EMPTY_NAMESPACE_ID key
       if (namespace.isEmpty()) {
-        path.addElement().setType(NAMESPACE_METADATA_KIND).setId(EMPTY_NAMESPACE_ID);
+        path.addElementBuilder().setType(NAMESPACE_METADATA_KIND).setId(EMPTY_NAMESPACE_ID);
       } else {
-        path.addElement().setType(NAMESPACE_METADATA_KIND).setName(namespace);
+        path.addElementBuilder().setType(NAMESPACE_METADATA_KIND).setName(namespace);
       }
-      Reference key = new Reference().setApp(app).setPath(path);
+      Reference.Builder key = Reference.newBuilder().setApp(app).setPath(path);
       if (executionNamespace.length() > 0) {
         key.setNameSpace(executionNamespace);
       }
       namespaceEntity.setKey(key);
       // EntityProto.entity_group is a required PB field.
-      namespaceEntity.getMutableEntityGroup().addElement(path.getElement(0));
+      namespaceEntity.getEntityGroupBuilder().addElement(path.getElement(0));
+      namespaces.add(namespaceEntity.build());
     }
     return namespaces;
   }

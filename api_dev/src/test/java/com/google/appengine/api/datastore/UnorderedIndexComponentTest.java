@@ -20,7 +20,7 @@ import static com.google.common.collect.Collections2.permutations;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.collect.Sets;
-import com.google.storage.onestore.v3.OnestoreEntity.Index.Property;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.Index.Property;
 import java.util.List;
 import org.junit.Before;
 import org.junit.Test;

@@ -18,8 +18,8 @@ package com.google.appengine.api.datastore;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.google.storage.onestore.v3.OnestoreEntity.Index.Property;
-import com.google.storage.onestore.v3.OnestoreEntity.Index.Property.Direction;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.Index.Property;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.Index.Property.Direction;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Set;
@@ -57,9 +57,8 @@ class UnorderedIndexComponent implements IndexComponent {
   public List<Property> preferredIndexProperties() {
     List<Property> indexProps = Lists.newArrayListWithExpectedSize(matcherProperties.size());
     for (String name : matcherProperties) {
-      Property indexProperty = new Property();
-      indexProperty.setName(name);
-      indexProperty.setDirection(Direction.ASCENDING);
+      Property indexProperty =
+          Property.newBuilder().setName(name).setDirection(Direction.ASCENDING).build();
       indexProps.add(indexProperty);
     }
     return indexProps;

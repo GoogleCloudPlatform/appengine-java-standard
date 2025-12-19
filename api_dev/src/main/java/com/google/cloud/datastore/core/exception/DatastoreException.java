@@ -19,7 +19,7 @@ package com.google.cloud.datastore.core.exception;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import com.google.apphosting.datastore.DatastoreV3Pb.Error.ErrorCode;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.Error.ErrorCode;
 import com.google.cloud.datastore.logs.ProblemCode;
 import org.jspecify.annotations.Nullable;
 

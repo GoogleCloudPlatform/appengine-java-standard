@@ -24,7 +24,7 @@
     <parent>
       <groupId>com.google.appengine</groupId>
       <artifactId>applications</artifactId>
-      <version>3.0.4-SNAPSHOT</version>
+      <version>4.0.0-SNAPSHOT</version>
     </parent>
     <groupId>com.google.appengine.demos</groupId>
     <artifactId>guestbook</artifactId>
@@ -38,7 +38,7 @@
 
     <properties>
         <maven.deploy.skip>true</maven.deploy.skip>
-        <appengine.target.version>3.0.4-SNAPSHOT</appengine.target.version>
+        <appengine.target.version>4.0.0-SNAPSHOT</appengine.target.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.target>1.8</maven.compiler.target>
         <maven.compiler.source>1.8</maven.compiler.source>

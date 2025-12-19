@@ -13,21 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+// LINT.IfChange
 
-package com.google.cloud.datastore.core.appengv3;
+package com.google.cloud.datastore.core.proto2;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.storage.onestore.v3.OnestoreEntity.Property.Meaning.ENTITY_PROTO;
+import static com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.Property.Meaning.ENTITY_PROTO;
 
 import com.google.cloud.datastore.core.names.Kinds;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.protobuf.InvalidProtocolBufferException;
-import com.google.storage.onestore.v3.OnestoreEntity.EntityProto;
-import com.google.storage.onestore.v3.OnestoreEntity.Property;
-import com.google.storage.onestore.v3.OnestoreEntity.Property.Meaning;
-import java.util.Iterator;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.EntityProto;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.Property;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.Property.Meaning;
 
 /** Business logic for preparing entities for storage. */
 public final class EntityStorageConversions {
@@ -37,7 +37,7 @@ public final class EntityStorageConversions {
   }
 
   /** Handles any moves / creations related to indexes. */
-  public static void preprocessIndexes(EntityProto diskEntity) {
+  public static void preprocessIndexes(EntityProto.Builder diskEntity) {
     // This call may add EMPTY_LIST meanings to properties.  In order to keep code
     // somewhat orthogonal, we remove any EMPTY_LISTs with computed set from properties
     // below. (We never want to index EMPTY_LIST)
@@ -57,7 +57,7 @@ public final class EntityStorageConversions {
    * <p>NOTE: there is no clear reason why the emulators are not stashing empty lists, this may be a
    * bug.
    */
-  public static void preprocessIndexesWithoutEmptyListSupport(EntityProto diskEntity) {
+  public static void preprocessIndexesWithoutEmptyListSupport(EntityProto.Builder diskEntity) {
     // This call may add EMPTY_LIST meanings to properties.  In order to keep code
     // somewhat orthogonal, we remove any EMPTY_LISTs with computed set from properties
     // below. (We never want to index EMPTY_LIST)
@@ -75,7 +75,7 @@ public final class EntityStorageConversions {
    *
    * @param storageEntity The EntityProto to modify.
    */
-  public static void postprocessIndexes(EntityProto storageEntity) {
+  public static void postprocessIndexes(EntityProto.Builder storageEntity) {
     checkNotNull(storageEntity);
 
     // Computed properties have to be removed before stashed properties are restored.
@@ -88,11 +88,12 @@ public final class EntityStorageConversions {
    *
    * @param storageEntity The EntityProto to modify.
    */
-  private static void removeComputedProperties(EntityProto storageEntity) {
-    for (Iterator<Property> propertyIterator = storageEntity.mutablePropertys().iterator();
-        propertyIterator.hasNext(); ) {
-      if (propertyIterator.next().isComputed()) {
-        propertyIterator.remove();
+  private static void removeComputedProperties(EntityProto.Builder storageEntity) {
+    ImmutableList<Property> properties = ImmutableList.copyOf(storageEntity.getPropertyList());
+    storageEntity.clearProperty();
+    for (Property property : properties) {
+      if (!property.getComputed()) {
+        storageEntity.addProperty(property);
       }
     }
   }
@@ -105,9 +106,10 @@ public final class EntityStorageConversions {
    *
    * @param storageEntity The EntityProto to modify.
    */
-  static void restoreStashedProperties(EntityProto storageEntity) {
-    ImmutableList<Property> properties = ImmutableList.copyOf(storageEntity.propertys());
-    ImmutableList<Property> rawProperties = ImmutableList.copyOf(storageEntity.rawPropertys());
+  static void restoreStashedProperties(EntityProto.Builder storageEntity) {
+    ImmutableList<Property> properties = ImmutableList.copyOf(storageEntity.getPropertyList());
+    ImmutableList<Property> rawProperties =
+        ImmutableList.copyOf(storageEntity.getRawPropertyList());
     ImmutableList.Builder<Property> badlyStashedProperties = ImmutableList.builder();
     int propertyListIndex = 0;
 
@@ -117,32 +119,28 @@ public final class EntityStorageConversions {
     for (Property rawProperty : rawProperties) {
       if (rawProperty.hasStashed()) {
         int stashed = rawProperty.getStashed();
-        int advance = stashed - storageEntity.propertySize();
+        int advance = stashed - storageEntity.getPropertyCount();
 
-        if (stashed < storageEntity.propertySize() // Not at the end (out-of-order, duplicate)
+        if (stashed < storageEntity.getPropertyCount() // Not at the end (out-of-order, duplicate)
             || propertyListIndex + advance > properties.size()) { // Past the end
           // The value of stashed is bad.
-          badlyStashedProperties.add(rawProperty.clearStashed());
+          badlyStashedProperties.add(rawProperty.toBuilder().clearStashed().build());
         } else {
           // Copy until before the position where the stashed property needs to be restored.
           if (advance > 0) {
-            storageEntity
-                .mutablePropertys()
-                .addAll(properties.subList(propertyListIndex, propertyListIndex + advance));
+            storageEntity.addAllProperty(
+                properties.subList(propertyListIndex, propertyListIndex + advance));
             propertyListIndex = propertyListIndex + advance;
           }
-          storageEntity.addProperty(rawProperty.clearStashed());
+          storageEntity.addProperty(rawProperty.toBuilder().clearStashed().build());
         }
       } else {
         storageEntity.addRawProperty(rawProperty);
       }
     }
 
-    storageEntity
-        .mutablePropertys()
-        .addAll(properties.subList(propertyListIndex, properties.size()));
-
-    storageEntity.mutablePropertys().addAll(badlyStashedProperties.build());
+    storageEntity.addAllProperty(properties.subList(propertyListIndex, properties.size()));
+    storageEntity.addAllProperty(badlyStashedProperties.build());
   }
 
   /**
@@ -156,11 +154,11 @@ public final class EntityStorageConversions {
    * <p>If EntityValue created the entry, it will be removed in the stashing step (as all computed
    * properties marked for stashing are removed).
    */
-  private static void markEmptyListsForStashing(EntityProto diskEntity) {
-    for (int i = 0; i < diskEntity.propertySize(); i++) {
+  private static void markEmptyListsForStashing(EntityProto.Builder diskEntity) {
+    for (int i = 0; i < diskEntity.getPropertyCount(); i++) {
       Property property = diskEntity.getProperty(i);
-      if (property.getMeaningEnum() == Meaning.EMPTY_LIST) {
-        property.setStashed(i); // Mark for stashing.
+      if (property.getMeaning().equals(Meaning.EMPTY_LIST)) {
+        diskEntity.setProperty(i, property.toBuilder().setStashed(i).build());
       }
     }
   }
@@ -171,13 +169,13 @@ public final class EntityStorageConversions {
    *
    * @param diskEntity The EntityProto to modify.
    */
-  private static void stashProperties(EntityProto diskEntity) {
-    ImmutableList<Property> properties = ImmutableList.copyOf(diskEntity.propertys());
+  private static void stashProperties(EntityProto.Builder diskEntity) {
+    ImmutableList<Property> properties = ImmutableList.copyOf(diskEntity.getPropertyList());
     diskEntity.clearProperty();
 
     for (Property property : properties) {
       if (property.hasStashed()) {
-        if (!property.isComputed()) {
+        if (!property.getComputed()) {
           diskEntity.addRawProperty(property);
         }
       } else {
@@ -192,22 +190,23 @@ public final class EntityStorageConversions {
    *
    * @param diskEntity The EntityProto to modify.
    */
-  private static void createComputedAndStashedValuesForEntityValues(EntityProto diskEntity) {
+  private static void createComputedAndStashedValuesForEntityValues(
+      EntityProto.Builder diskEntity) {
     ImmutableList.Builder<Property> computedProperties = ImmutableList.builder();
 
-    for (int i = 0; i < diskEntity.propertySize(); i++) {
-      Property property = diskEntity.getProperty(i);
-      if (isEntityValue(property)) {
+    for (int i = 0; i < diskEntity.getPropertyCount(); i++) {
+      Property.Builder property = diskEntity.getPropertyBuilder(i);
+      if (isEntityValue(property.build())) {
         property.setStashed(i); // Mark for stashing.
         flattenIndexedEntityValues(
             property.getName(),
-            property.isMultiple(),
-            property.getValue().getStringValueAsBytes(),
+            property.getMultiple(),
+            property.getValue().getStringValue().toByteArray(),
             computedProperties);
       }
     }
 
-    diskEntity.mutablePropertys().addAll(computedProperties.build());
+    diskEntity.addAllProperty(computedProperties.build());
   }
 
   /**
@@ -248,31 +247,33 @@ public final class EntityStorageConversions {
     EntityProto currentEntityValue =
         deserializeEmbeddedEntityProto(currentSerializedEntityValue, pathPrefix);
 
-    if (currentEntityValue.getKey().getPath().elementSize() > 0) {
+    if (currentEntityValue.getKey().getPath().getElementCount() > 0) {
       // Path is not empty
       flattenedProperties.add(
-          new Property()
+          Property.newBuilder()
               .setName(pathPrefix + Kinds.PROPERTY_PATH_DELIMITER_AND_KEY_SUFFIX)
               .setValue(ReferenceValues.toReferenceProperty(currentEntityValue.getKey()))
               .setMultiple(multiplePath)
-              .setComputed(true));
+              .setComputed(true)
+              .build());
     }
 
-    for (Property property : currentEntityValue.propertys()) {
+    for (Property property : currentEntityValue.getPropertyList()) {
       if (isEntityValue(property)) {
         // This is a nested entity value.
         flattenIndexedEntityValues(
             pathPrefix + Kinds.PROPERTY_PATH_DELIMITER + property.getName(),
-            multiplePath || property.isMultiple(),
-            property.getValue().getStringValueAsBytes(),
+            multiplePath || property.getMultiple(),
+            property.getValue().getStringValue().toByteArray(),
             flattenedProperties);
       } else {
         // This is a leaf sub-property.
         flattenedProperties.add(
-            property
+            property.toBuilder()
                 .setName(pathPrefix + Kinds.PROPERTY_PATH_DELIMITER + property.getName())
-                .setMultiple(multiplePath || property.isMultiple())
-                .setComputed(true));
+                .setMultiple(multiplePath || property.getMultiple())
+                .setComputed(true)
+                .build());
       }
     }
   }
@@ -284,6 +285,7 @@ public final class EntityStorageConversions {
    * @return True if the meaning is ENTITY_PROTO, false otherwise.
    */
   static boolean isEntityValue(Property property) {
-    return property.getMeaningEnum().equals(ENTITY_PROTO);
+    return property.getMeaning().equals(ENTITY_PROTO);
   }
 }
+// LINT.ThenChange(//depot/google3/java/com/google/cloud/datastore/core/appengv3/EntityStorageConversions.java)

@@ -18,7 +18,7 @@ package com.google.apphosting.runtime.http;
 
 import com.google.apphosting.api.CloudTraceContext;
 import com.google.apphosting.base.protos.TracePb.TraceContextProto;
-import com.google.apphosting.base.protos.api.RemoteApiPb;
+import com.google.apphosting.base.protos.api_bytes.RemoteApiPb;
 import com.google.apphosting.runtime.ApiProxyImpl;
 import com.google.apphosting.runtime.MutableUpResponse;
 import com.google.apphosting.runtime.TraceWriter;

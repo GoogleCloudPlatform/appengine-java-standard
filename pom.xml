@@ -19,7 +19,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.google.appengine</groupId>
   <artifactId>parent</artifactId>
-  <version>3.0.4-SNAPSHOT</version>
+  <version>4.0.0-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>AppEngine :: Parent project</name>
   <url>https://github.com/GoogleCloudPlatform/appengine-java-standard/</url>
@@ -77,7 +77,7 @@
     <jetty12.version>12.0.31</jetty12.version>
     <jetty121.version>12.1.5</jetty121.version>
     <slf4j.version>2.0.17</slf4j.version>
-    <protoc.version>3.21.12</protoc.version>
+    <protoc.version>4.33.2</protoc.version>
     <distributionManagement.snapshot.url>https://oss.sonatype.org/content/repositories/google-snapshots/</distributionManagement.snapshot.url>
     <distributionManagement.snapshot.id>sonatype-nexus-snapshots</distributionManagement.snapshot.id>
     <distributionManagement.release.url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</distributionManagement.release.url>
@@ -395,14 +395,9 @@
         <version>4.4.16</version>
       </dependency>
       <dependency>
-        <groupId>com.google.appengine</groupId>
-        <artifactId>proto1</artifactId>
-        <version>0.7</version>
-      </dependency>
-      <dependency>
         <groupId>com.google.cloud.datastore</groupId>
         <artifactId>datastore-v1-proto-client</artifactId>
-        <version>2.18.2</version> <!--keep>-->
+        <version>2.33.0</version>
       </dependency>
       <dependency>
         <groupId>com.google.geometry</groupId>
@@ -465,12 +460,12 @@
       <dependency>
         <groupId>com.google.api.grpc</groupId>
         <artifactId>proto-google-cloud-datastore-v1</artifactId>
-        <version>0.108.5</version>  <!--keep--> 
+        <version>0.124.0</version> 
       </dependency>
       <dependency>
         <groupId>com.google.api.grpc</groupId>
         <artifactId>proto-google-common-protos</artifactId>
-        <version>2.32.0</version> <!--keep-->
+        <version>2.63.1</version>
       </dependency>
       <dependency>
         <groupId>com.google.code.findbugs</groupId>
@@ -716,13 +711,7 @@
   </dependencyManagement>
   <build>
 
-  <extensions>
-    <extension>
-        <groupId>com.google.cloud.artifactregistry</groupId>
-        <artifactId>artifactregistry-maven-wagon</artifactId>
-        <version>2.2.5</version>
-    </extension>
-  </extensions>
+
 
    <plugins>
       <plugin>

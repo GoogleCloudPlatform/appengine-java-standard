@@ -36,10 +36,10 @@ syntax = "proto2";
 
 package java.apphosting.ext.remote_api;
 
-import "datastore_v3.proto";
-import "entity.proto";
+import "datastore_v3_bytes.proto";
+import "entity_bytes.proto";
 
-option java_package = "com.google.apphosting.base.protos.api";
+option java_package = "com.google.apphosting.base.protos.api_bytes";
 option java_outer_classname = "RemoteApiPb";
 option go_package = "remote_api";
 
@@ -110,7 +110,7 @@ message TransactionRequest {
   repeated group Precondition = 1 {
     required storage_onestore_v3.Reference key = 2;
     // No hash means the entity should not exist.
-    optional string hash = 3;  // Arbitrary bytes
+    optional bytes hash = 3;
   }
 
   optional apphosting_datastore_v3.PutRequest puts = 4;

@@ -433,7 +433,7 @@ public class ApiProxyLocalImpl implements ApiProxyLocal, DevServices {
      */
     public byte[] invokeApiMethodJava(String packageName, String methodName, byte[] requestBytes)
         throws IllegalAccessException, InstantiationException, InvocationTargetException,
-            NoSuchMethodException {
+            NoSuchMethodException, ClassNotFoundException {
       logger.log(
           Level.FINE,
           "Making an API call to a Java implementation: " + packageName + "." + methodName);
@@ -443,7 +443,9 @@ public class ApiProxyLocalImpl implements ApiProxyLocal, DevServices {
       }
 
       if (requestBytes.length > getMaxApiRequestSize(service)) {
-        throw new RequestTooLargeException(packageName, methodName);
+        throw new RequestTooLargeException(
+            packageName,
+            methodName + " " + requestBytes.length + " versus " + getMaxApiRequestSize(service));
       }
 
       Method method = getDispatchMethod(service, packageName, methodName);

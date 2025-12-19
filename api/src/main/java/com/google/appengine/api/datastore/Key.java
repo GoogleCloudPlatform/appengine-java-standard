@@ -518,6 +518,9 @@ public final class Key implements Serializable, Comparable<Key> {
     if (thisKey.getName() == null) {
       return otherKey.getName() == null ? 0 : 1;
     }
+    if (otherKey.getName() == null) {
+      return -1;
+    }
     return thisKey.getName().compareTo(otherKey.getName());
   }
 

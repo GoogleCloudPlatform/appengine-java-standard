@@ -15,26 +15,24 @@
  */
 
 package com.google.appengine.api.datastore.dev;
-
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueBulkAddRequest;
-import com.google.apphosting.datastore.DatastoreV3Pb.AllocateIdsRequest;
-import com.google.apphosting.datastore.DatastoreV3Pb.AllocateIdsResponse;
-import com.google.apphosting.datastore.DatastoreV3Pb.BeginTransactionRequest;
-import com.google.apphosting.datastore.DatastoreV3Pb.CommitResponse;
-import com.google.apphosting.datastore.DatastoreV3Pb.CompositeIndices;
-import com.google.apphosting.datastore.DatastoreV3Pb.Cursor;
-import com.google.apphosting.datastore.DatastoreV3Pb.DeleteRequest;
-import com.google.apphosting.datastore.DatastoreV3Pb.DeleteResponse;
-import com.google.apphosting.datastore.DatastoreV3Pb.GetRequest;
-import com.google.apphosting.datastore.DatastoreV3Pb.GetResponse;
-import com.google.apphosting.datastore.DatastoreV3Pb.NextRequest;
-import com.google.apphosting.datastore.DatastoreV3Pb.PutRequest;
-import com.google.apphosting.datastore.DatastoreV3Pb.PutResponse;
-import com.google.apphosting.datastore.DatastoreV3Pb.Query;
-import com.google.apphosting.datastore.DatastoreV3Pb.QueryResult;
-import com.google.apphosting.datastore.DatastoreV3Pb.Transaction;
-import com.google.storage.onestore.v3.OnestoreEntity.CompositeIndex;
-
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueBulkAddRequest;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.AllocateIdsRequest;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.AllocateIdsResponse;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.BeginTransactionRequest;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.CommitResponse;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.CompositeIndices;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.Cursor;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.DeleteRequest;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.DeleteResponse;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.GetRequest;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.GetResponse;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.NextRequest;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.PutRequest;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.PutResponse;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.Query;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.QueryResult;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.Transaction;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.CompositeIndex;
 /** An interface for an implementation of a local version of the Datastore V3 service. */
 public interface DatastoreV3 {
 
@@ -64,7 +62,7 @@ public interface DatastoreV3 {
 
   void rollback(Transaction req);
 
-  QueryResult runQuery(Query req);
+  QueryResult runQuery(Query.Builder req);
 
   void updateIndex(CompositeIndex req);
 }

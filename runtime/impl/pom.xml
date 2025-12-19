@@ -23,7 +23,7 @@
     <parent>
         <groupId>com.google.appengine</groupId>
         <artifactId>runtime-parent</artifactId>
-        <version>3.0.4-SNAPSHOT</version>
+        <version>4.0.0-SNAPSHOT</version>
     </parent>
 
     <packaging>jar</packaging>
@@ -156,11 +156,6 @@
             <groupId>com.google.appengine</groupId>
             <artifactId>appengine-tools-sdk</artifactId>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.google.appengine</groupId>
-            <artifactId>proto1</artifactId>
-            <optional>true</optional>
         </dependency>
         <dependency>
            <groupId>javax.activation</groupId>

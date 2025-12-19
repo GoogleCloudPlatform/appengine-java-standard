@@ -23,7 +23,7 @@
   <parent>
     <groupId>com.google.appengine</groupId>
     <artifactId>parent</artifactId>
-    <version>3.0.4-SNAPSHOT</version>
+    <version>4.0.0-SNAPSHOT</version>
   </parent>
 
   <packaging>jar</packaging>
@@ -73,12 +73,8 @@
               <shadeSourcesContent>true</shadeSourcesContent>
               <relocations>
                 <relocation>
-                  <pattern>com.google.apphosting.datastore.DatastoreV3Pb</pattern>
-                  <shadedPattern>com.google.apphosting.api.DatastorePb</shadedPattern>
-                </relocation>
-                <relocation>
-                  <pattern>com.google.apphosting.datastore.proto2api.DatastoreV3Pb</pattern>
-                  <shadedPattern>com.google.apphosting.api.proto2api.DatastorePb</shadedPattern>
+                  <pattern>com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb</pattern>
+                  <shadedPattern>com.google.apphosting.api_bytes.proto2api.DatastorePb</shadedPattern>
                 </relocation>
                 <relocation>
                   <!-- Apache commons codec is repackaged via one of the 'android' dependencies
@@ -240,8 +236,8 @@
                   <shadedPattern>com.google.appengine.repackaged.com.google.storage.blobstore.proto</shadedPattern>
                 </relocation>
                 <relocation>
-                  <pattern>com.google.storage.onestore.v3.proto2api</pattern>
-                  <shadedPattern>com.google.appengine.repackaged.com.google.storage.onestore.v3.proto2api</shadedPattern>
+                  <pattern>com.google.storage.onestore.v3_bytes.proto2api</pattern>
+                  <shadedPattern>com.google.appengine.repackaged.com.google.storage.onestore.v3_bytes.proto2api</shadedPattern>
                 </relocation>
                 <relocation>
                   <pattern>org.codehaus.jackson</pattern>

@@ -17,7 +17,7 @@
 package com.google.appengine.api.testing;
 
 /**
- * ASCII representations of {@link com.google.apphosting.datastore.DatastoreV3Pb.Query} instances.
+ * ASCII representations of {@link com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.Query} instances.
  *
  */
 public final class TestQueries {

@@ -21,7 +21,7 @@ import com.google.apphosting.base.protos.RuntimePb.APIResponse;
 import com.google.apphosting.base.protos.RuntimePb.APIResponse.ERROR;
 import com.google.apphosting.base.protos.RuntimePb.APIResponse.RpcError;
 import com.google.apphosting.base.protos.Status.StatusProto;
-import com.google.apphosting.base.protos.api.RemoteApiPb;
+import com.google.apphosting.base.protos.api_bytes.RemoteApiPb;
 import com.google.apphosting.runtime.anyrpc.APIHostClientInterface;
 import com.google.apphosting.runtime.anyrpc.AnyRpcCallback;
 import com.google.apphosting.runtime.anyrpc.AnyRpcClientContext;

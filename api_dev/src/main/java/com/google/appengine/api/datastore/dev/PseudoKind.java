@@ -18,9 +18,9 @@ package com.google.appengine.api.datastore.dev;
 
 import com.google.appengine.api.datastore.dev.LocalDatastoreService.LiveTxn;
 import com.google.appengine.api.datastore.dev.LocalDatastoreService.Profile.EntityGroup;
-import com.google.apphosting.datastore.DatastoreV3Pb.Query;
-import com.google.storage.onestore.v3.OnestoreEntity.EntityProto;
-import com.google.storage.onestore.v3.OnestoreEntity.Reference;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.Query;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.EntityProto;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.Reference;
 import java.util.List;
 import org.jspecify.annotations.Nullable;
 
@@ -41,7 +41,7 @@ interface PseudoKind {
    * Returns entities that match the query. Any orders or filters that have already been applied
    * must be removed from {@code query}.
    */
-  List<EntityProto> runQuery(Query query);
+  List<EntityProto> runQuery(Query.Builder query);
 
   /**
    * Return entity with the given {@code key}, or {@code null} if the pseudo-entity doesn't exist.

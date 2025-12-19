@@ -23,12 +23,12 @@ import com.google.appengine.api.datastore.Entity;
 import com.google.appengine.api.datastore.Key;
 import com.google.appengine.api.datastore.dev.LocalDatastoreService.LiveTxn;
 import com.google.appengine.api.datastore.dev.LocalDatastoreService.Profile.EntityGroup;
-import com.google.apphosting.datastore.DatastoreV3Pb.Query;
-import com.google.apphosting.datastore.DatastoreV3Pb.Query.Filter;
-import com.google.apphosting.datastore.DatastoreV3Pb.Query.Filter.Operator;
-import com.google.apphosting.datastore.DatastoreV3Pb.Query.Order;
-import com.google.storage.onestore.v3.OnestoreEntity.EntityProto;
-import com.google.storage.onestore.v3.OnestoreEntity.Reference;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.Query;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.Query.Filter;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.Query.Filter.Operator;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.Query.Order;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.EntityProto;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.Reference;
 import java.util.List;
 import org.jspecify.annotations.Nullable;
 
@@ -52,7 +52,7 @@ abstract class KeyFilteredPseudoKind implements PseudoKind {
   }
 
   @Override
-  public List<EntityProto> runQuery(Query query) {
+  public List<EntityProto> runQuery(Query.Builder query) {
     Key startKey = null;
     Key endKey = null;
     boolean startInclusive = false;
@@ -65,12 +65,12 @@ abstract class KeyFilteredPseudoKind implements PseudoKind {
      * Explicit code to handle range, as {@link com.google.appengine.api.datastore.FilterMatcher}
      * is somewhat specialized to deal with {@link PropertyValue} in {@link EntityProto}s.
      */
-    for (Filter filter : query.filters()) {
-      Operator op = filter.getOpEnum();
+    for (Filter filter : query.getFilterList()) {
+      Operator op = filter.getOp();
 
       // Report error for filters we can't handle
       checkRequest(
-          filter.propertySize() == 1
+          filter.getPropertyCount() == 1
               && filter.getProperty(0).getName().equals(Entity.KEY_RESERVED_PROPERTY)
               && (op == Operator.LESS_THAN
                   || op == Operator.LESS_THAN_OR_EQUAL
@@ -110,21 +110,21 @@ abstract class KeyFilteredPseudoKind implements PseudoKind {
         }
       }
     }
-    query.clearFilter();
+    query.clearFilter(); //Ok?
 
     // The only allowed order we can handle is an initial ascending on key
-    if (query.orderSize() > 0) {
+    if (query.getOrderCount() > 0) {
       Order order = query.getOrder(0);
-      if (order.getDirectionEnum() == Order.Direction.ASCENDING
+      if (order.getDirection() == Order.Direction.ASCENDING
           && Entity.KEY_RESERVED_PROPERTY.equals(order.getProperty())) {
         query.removeOrder(0);
       }
     }
     checkRequest(
-        query.orderSize() == 0,
+        query.getOrderCount() == 0,
         "Only ascending order on " + Entity.KEY_RESERVED_PROPERTY + " supported");
 
-    return runQuery(query, startKey, startInclusive, endKey, endInclusive);
+    return runQuery(query.build(), startKey, startInclusive, endKey, endInclusive);
   }
 
   /**

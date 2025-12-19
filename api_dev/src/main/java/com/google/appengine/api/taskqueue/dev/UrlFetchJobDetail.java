@@ -16,7 +16,7 @@
 
 package com.google.appengine.api.taskqueue.dev;
 
-import com.google.appengine.api.taskqueue.TaskQueuePb;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb;
 import com.google.apphosting.utils.config.QueueXml;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;

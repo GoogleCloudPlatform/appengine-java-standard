@@ -31,11 +31,7 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
 
-import com.google.appengine.repackaged.com.google.protobuf.ByteString;
-import com.google.appengine.repackaged.com.google.protobuf.ExtensionRegistry;
-import com.google.appengine.repackaged.com.google.protobuf.InvalidProtocolBufferException;
-import com.google.appengine.repackaged.com.google.protobuf.UninitializedMessageException;
-import com.google.apphosting.base.protos.api.RemoteApiPb;
+import com.google.apphosting.base.protos.api_bytes.RemoteApiPb;
 import com.google.apphosting.testing.PortPicker;
 import com.google.auto.value.AutoValue;
 import com.google.common.base.Splitter;
@@ -49,6 +45,10 @@ import com.google.common.reflect.ClassPath.ResourceInfo;
 import com.google.common.reflect.Reflection;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.errorprone.annotations.ForOverride;
+import com.google.appengine.repackaged.com.google.protobuf.ByteString;
+import com.google.appengine.repackaged.com.google.protobuf.ExtensionRegistry;
+import com.google.appengine.repackaged.com.google.protobuf.InvalidProtocolBufferException;
+import com.google.appengine.repackaged.com.google.protobuf.UninitializedMessageException;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import java.io.BufferedReader;
@@ -58,6 +58,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.URL;
@@ -249,7 +250,7 @@ public abstract class JavaRuntimeViaHttpBase {
     assertWithMessage("Runtime directory %s should exist and be a directory", runtimeDir)
         .that(runtimeDir.isDirectory())
         .isTrue();
-    InetSocketAddress apiSocketAddress = new InetSocketAddress(apiPort);
+    InetSocketAddress apiSocketAddress = new InetSocketAddress(InetAddress.getLoopbackAddress(), apiPort);
     ImmutableList.Builder<String> builder = ImmutableList.<String>builder();
     builder.add(JAVA_HOME.value() + "/bin/java");
     Integer debugPort = Integer.getInteger("appengine.debug.port");
@@ -282,7 +283,7 @@ public abstract class JavaRuntimeViaHttpBase {
                 "--jetty_http_port=" + jettyPort,
                 "--port=" + apiPort,
                 "--trusted_host="
-                    + HostAndPort.fromParts(apiSocketAddress.getHostString(), apiPort),
+                    + HostAndPort.fromParts(apiSocketAddress.getAddress().getHostAddress(), apiPort),
                 runtimeDir.getAbsolutePath())
             .addAll(config.launcherFlags())
             .build();
@@ -462,7 +463,7 @@ public abstract class JavaRuntimeViaHttpBase {
     public String jettyUrl(String urlPath) {
       return String.format(
           "http://%s%s",
-          HostAndPort.fromParts(new InetSocketAddress(jettyPort).getHostString(), jettyPort),
+          HostAndPort.fromParts(InetAddress.getLoopbackAddress().getHostAddress(), jettyPort),
           urlPath);
     }
 
@@ -687,8 +688,8 @@ public abstract class JavaRuntimeViaHttpBase {
         ImmutableMap<String, Function<ByteString, ByteString>> handlerMap,
         Consumer<RemoteApiPb.Request> requestObserver)
         throws IOException {
-      InetSocketAddress address = new InetSocketAddress(apiPort);
-      HttpServer httpServer = HttpServer.create(address, 0);
+      InetSocketAddress address = new InetSocketAddress(InetAddress.getLoopbackAddress(), apiPort);
+      HttpServer httpServer = HttpServer.create(address, 1024);
       DummyApiServer apiServer = new DummyApiServer(httpServer, handlerMap::get, requestObserver);
       httpServer.createContext("/", apiServer::handle);
       httpServer.setExecutor(Executors.newCachedThreadPool());

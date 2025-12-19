@@ -18,10 +18,9 @@ package com.google.appengine.api.datastore.dev;
 
 import static com.google.appengine.api.datastore.dev.Utils.checkRequest;
 import static com.google.appengine.api.datastore.dev.Utils.getKind;
-import static com.google.appengine.api.datastore.dev.Utils.getLastElement;
 import static com.google.appengine.api.datastore.dev.Utils.newError;
-import static com.google.cloud.datastore.core.appengv3.EntityStorageConversions.postprocessIndexes;
-import static com.google.cloud.datastore.core.appengv3.EntityStorageConversions.preprocessIndexesWithoutEmptyListSupport;
+import static com.google.cloud.datastore.core.proto2.EntityStorageConversions.postprocessIndexes;
+import static com.google.cloud.datastore.core.proto2.EntityStorageConversions.preprocessIndexesWithoutEmptyListSupport;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
@@ -36,8 +35,8 @@ import com.google.appengine.api.datastore.Key;
 import com.google.appengine.api.datastore.dev.LocalCompositeIndexManager.IndexConfigurationFormat;
 import com.google.appengine.api.datastore.dev.LocalDatastoreService.LiveTxn.ConcurrencyMode;
 import com.google.appengine.api.images.dev.ImagesReservedKinds;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueAddRequest;
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueBulkAddRequest;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueAddRequest;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueBulkAddRequest;
 import com.google.appengine.tools.development.Clock;
 import com.google.appengine.tools.development.LocalRpcService.Status;
 import com.google.appengine.tools.development.LocalServiceContext;
@@ -45,33 +44,33 @@ import com.google.apphosting.api.ApiProxy.ApplicationException;
 import com.google.apphosting.api.proto2api.ApiBasePb.Integer64Proto;
 import com.google.apphosting.api.proto2api.ApiBasePb.StringProto;
 import com.google.apphosting.api.proto2api.ApiBasePb.VoidProto;
-import com.google.apphosting.datastore.DatastoreV3Pb.AllocateIdsRequest;
-import com.google.apphosting.datastore.DatastoreV3Pb.AllocateIdsResponse;
-import com.google.apphosting.datastore.DatastoreV3Pb.BeginTransactionRequest;
-import com.google.apphosting.datastore.DatastoreV3Pb.BeginTransactionRequest.TransactionMode;
-import com.google.apphosting.datastore.DatastoreV3Pb.CommitResponse;
-import com.google.apphosting.datastore.DatastoreV3Pb.CompiledCursor;
-import com.google.apphosting.datastore.DatastoreV3Pb.CompiledQuery;
-import com.google.apphosting.datastore.DatastoreV3Pb.CompiledQuery.PrimaryScan;
-import com.google.apphosting.datastore.DatastoreV3Pb.CompositeIndices;
-import com.google.apphosting.datastore.DatastoreV3Pb.Cost;
-import com.google.apphosting.datastore.DatastoreV3Pb.Cursor;
-import com.google.apphosting.datastore.DatastoreV3Pb.DeleteRequest;
-import com.google.apphosting.datastore.DatastoreV3Pb.DeleteResponse;
-import com.google.apphosting.datastore.DatastoreV3Pb.Error.ErrorCode;
-import com.google.apphosting.datastore.DatastoreV3Pb.GetRequest;
-import com.google.apphosting.datastore.DatastoreV3Pb.GetResponse;
-import com.google.apphosting.datastore.DatastoreV3Pb.NextRequest;
-import com.google.apphosting.datastore.DatastoreV3Pb.PutRequest;
-import com.google.apphosting.datastore.DatastoreV3Pb.PutResponse;
-import com.google.apphosting.datastore.DatastoreV3Pb.Query;
-import com.google.apphosting.datastore.DatastoreV3Pb.Query.Order;
-import com.google.apphosting.datastore.DatastoreV3Pb.QueryResult;
-import com.google.apphosting.datastore.DatastoreV3Pb.Transaction;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.AllocateIdsRequest;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.AllocateIdsResponse;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.BeginTransactionRequest;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.BeginTransactionRequest.TransactionMode;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.CommitResponse;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.CompiledCursor;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.CompiledQuery;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.CompiledQuery.PrimaryScan;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.CompositeIndices;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.Cost;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.Cursor;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.DeleteRequest;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.DeleteResponse;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.Error.ErrorCode;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.GetRequest;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.GetResponse;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.NextRequest;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.PutRequest;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.PutResponse;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.Query;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.Query.Order;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.QueryResult;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.Transaction;
 import com.google.apphosting.utils.config.GenerationDirectory;
 import com.google.auto.value.AutoValue;
-import com.google.cloud.datastore.core.appengv3.converter.CursorModernizer;
 import com.google.cloud.datastore.core.exception.InvalidConversionException;
+import com.google.cloud.datastore.core.proto2.CursorModernizer;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
@@ -85,20 +84,22 @@ import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.protobuf.ByteString;
+import com.google.protobuf.ExtensionRegistry;
 import com.google.protobuf.InvalidProtocolBufferException;
 // <internal22>
 // <internal24>
-import com.google.storage.onestore.v3.OnestoreEntity.CompositeIndex;
-import com.google.storage.onestore.v3.OnestoreEntity.EntityProto;
-import com.google.storage.onestore.v3.OnestoreEntity.Index;
-import com.google.storage.onestore.v3.OnestoreEntity.IndexPostfix;
-import com.google.storage.onestore.v3.OnestoreEntity.IndexPostfix_IndexValue;
-import com.google.storage.onestore.v3.OnestoreEntity.Path;
-import com.google.storage.onestore.v3.OnestoreEntity.Path.Element;
-import com.google.storage.onestore.v3.OnestoreEntity.Property;
-import com.google.storage.onestore.v3.OnestoreEntity.Property.Meaning;
-import com.google.storage.onestore.v3.OnestoreEntity.PropertyValue;
-import com.google.storage.onestore.v3.OnestoreEntity.Reference;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.CompositeIndex;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.EntityProto;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.EntityProtoOrBuilder;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.Index;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.IndexPostfix;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.Path;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.Path.Element;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.Property;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.Property.Meaning;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.PropertyOrBuilder;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.PropertyValue;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.Reference;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
@@ -741,13 +742,13 @@ public abstract class LocalDatastoreService {
   }
 
   public GetResponse get(@SuppressWarnings("unused") Status status, GetRequest request) {
-    GetResponse response = new GetResponse();
+    GetResponse.Builder response = GetResponse.newBuilder();
     LiveTxn liveTxn = null;
-    for (Reference key : request.keys()) {
+    for (Reference key : request.getKeyList()) {
       validatePathComplete(key);
       String app = key.getApp();
       Path groupPath = getGroup(key);
-      GetResponse.Entity responseEntity = response.addEntity();
+      GetResponse.Entity.Builder responseEntity = response.addEntityBuilder();
       Profile profile = getOrCreateProfile(app);
       synchronized (profile) {
         Profile.EntityGroup eg = profile.getGroup(groupPath);
@@ -774,10 +775,10 @@ public abstract class LocalDatastoreService {
           }
         }
         if (entity != null) {
-          responseEntity.getMutableEntity().copyFrom(entity);
-          postprocessEntity(responseEntity.getMutableEntity());
+          responseEntity.setEntity(entity);
+          postprocessEntity(responseEntity.getEntityBuilder());
         } else {
-          responseEntity.getMutableKey().copyFrom(key);
+          responseEntity.setKey(key);
         }
         // Give all entity groups with unapplied jobs the opportunity to catch
         // up.  Note that this will not impact the result we're about to return.
@@ -785,7 +786,7 @@ public abstract class LocalDatastoreService {
       }
     }
 
-    return response;
+    return response.build();
   }
 
   public PutResponse put(Status status, PutRequest request) {
@@ -798,13 +799,13 @@ public abstract class LocalDatastoreService {
   }
 
   /** Prepares an entity provided by a client for storage. */
-  private void preprocessEntity(EntityProto entity) {
+  private void preprocessEntity(EntityProto.Builder entity) {
     preprocessIndexesWithoutEmptyListSupport(entity);
     processEntityForSpecialProperties(entity, true);
   }
 
   /** Prepares a stored entity to be returned to a client. */
-  private void postprocessEntity(EntityProto entity) {
+  private void postprocessEntity(EntityProto.Builder entity) {
     processEntityForSpecialProperties(entity, false);
     postprocessIndexes(entity);
   }
@@ -816,12 +817,14 @@ public abstract class LocalDatastoreService {
    * @param entity the entity to modify.
    * @param store true if we're storing the entity, false if we're loading it.
    */
-  private void processEntityForSpecialProperties(EntityProto entity, boolean store) {
-    for (Iterator<Property> iter = entity.mutablePropertys().iterator(); iter.hasNext(); ) {
-      if (specialPropertyMap.containsKey(iter.next().getName())) {
-        iter.remove();
+  private void processEntityForSpecialProperties(EntityProto.Builder entity, boolean store) {
+    List<Property> properties = new ArrayList<>();
+    for (Property property : entity.getPropertyList()) {
+      if (!specialPropertyMap.containsKey(property.getName())) {
+        properties.add(property);
       }
     }
+    entity.clearProperty().addAllProperty(properties);
 
     for (SpecialProperty specialProp : specialPropertyMap.values()) {
       if (store ? specialProp.isStored() : specialProp.isVisible()) {
@@ -835,24 +838,26 @@ public abstract class LocalDatastoreService {
 
   @SuppressWarnings("unused") // status
   public PutResponse putImpl(Status status, PutRequest request) {
-    PutResponse response = new PutResponse();
-    if (request.entitySize() == 0) {
-      return response;
+    PutResponse.Builder response = PutResponse.newBuilder();
+    if (request.getEntityCount() == 0) {
+      return response.build();
     }
-    Cost totalCost = response.getMutableCost();
-    String app = request.entitys().get(0).getKey().getApp();
+    Cost.Builder totalCost = response.getCostBuilder();
+    String app = request.getEntity(0).getKey().getApp();
     List<EntityProto> clones = new ArrayList<>();
-    for (EntityProto entity : request.entitys()) {
-      validateAndProcessEntityProto(entity);
-      EntityProto clone = entity.clone();
-      clones.add(clone);
+    for (EntityProto entity : request.getEntityList()) {
+      EntityProto.Builder clone = entity.toBuilder();
+      validateAndProcessEntityProto(clone);
+
       checkArgument(clone.hasKey());
-      Reference key = clone.getKey();
-      checkArgument(key.getPath().elementSize() > 0);
+      Reference.Builder key = clone.getKeyBuilder();
+      checkArgument(key.getPath().getElementCount() > 0);
 
-      clone.getMutableKey().setApp(app);
+      key.setApp(app);
 
-      Element lastPath = getLastElement(key);
+      Path.Builder path = key.getPathBuilder();
+      int lastIndex = path.getElementCount() - 1;
+      Element.Builder lastPath = path.getElementBuilder(lastIndex);
 
       if (lastPath.getId() == 0 && !lastPath.hasName()) {
         if (autoIdAllocationPolicy == AutoIdAllocationPolicy.SEQUENTIAL) {
@@ -864,11 +869,11 @@ public abstract class LocalDatastoreService {
 
       preprocessEntity(clone);
 
-      if (clone.getEntityGroup().elementSize() == 0) {
+      if (clone.getEntityGroup().getElementCount() == 0) {
         // The entity needs its entity group set.
-        Path group = clone.getMutableEntityGroup();
-        Element root = key.getPath().elements().get(0);
-        Element pathElement = group.addElement();
+        Path.Builder group = clone.getEntityGroupBuilder();
+        Element root = key.getPath().getElement(0);
+        Element.Builder pathElement = group.addElementBuilder();
         pathElement.setType(root.getType());
         if (root.hasName()) {
           pathElement.setName(root.getName());
@@ -877,8 +882,9 @@ public abstract class LocalDatastoreService {
         }
       } else {
         // update an existing entity
-        checkState(clone.hasEntityGroup() && clone.getEntityGroup().elementSize() > 0);
+        checkState(clone.hasEntityGroup() && clone.getEntityGroup().getElementCount() > 0);
       }
+      clones.add(clone.build());
     }
 
     Map<Path, List<EntityProto>> entitiesByEntityGroup = new LinkedHashMap<>();
@@ -906,7 +912,7 @@ public abstract class LocalDatastoreService {
           }
           entities.add(clone);
         }
-        response.mutableKeys().add(clone.getKey());
+        response.addKey(clone.getKey());
       }
       for (final Map.Entry<Path, List<EntityProto>> entry : entitiesByEntityGroup.entrySet()) {
         Profile.EntityGroup eg = profile.getGroup(entry.getKey());
@@ -928,23 +934,23 @@ public abstract class LocalDatastoreService {
     }
 
     if (!request.hasTransaction()) {
-      logger.fine("put: " + request.entitySize() + " entities");
+      logger.fine("put: " + request.getEntityCount() + " entities");
       // Fill the version numbers, in the same order
-      for (Reference key : response.keys()) {
+      for (Reference key : response.getKeyList()) {
         response.addVersion(writtenVersions.get(key));
       }
     }
     response.setCost(totalCost);
-    return response;
+    return response.build();
   }
 
-  private void validateAndProcessEntityProto(EntityProto entity) {
+  private void validateAndProcessEntityProto(EntityProto.Builder entity) {
     validatePathForPut(entity.getKey());
-    for (Property prop : entity.propertys()) {
+    for (Property.Builder prop : entity.getPropertyBuilderList()) {
       validateAndProcessProperty(prop);
       validateLengthLimit(prop);
     }
-    for (Property prop : entity.rawPropertys()) {
+    for (Property.Builder prop : entity.getRawPropertyBuilderList()) {
       validateAndProcessProperty(prop);
       validateRawPropLengthLimit(prop);
     }
@@ -952,7 +958,7 @@ public abstract class LocalDatastoreService {
 
   private void validatePathComplete(Reference key) {
     Path path = key.getPath();
-    for (Element ele : path.elements()) {
+    for (Element ele : path.getElementList()) {
       if (ele.getName().isEmpty() && ele.getId() == 0) {
         throw newError(
             ErrorCode.BAD_REQUEST, String.format("Incomplete key.path.element: %s", ele));
@@ -962,40 +968,40 @@ public abstract class LocalDatastoreService {
 
   private void validatePathForPut(Reference key) {
     Path path = key.getPath();
-    for (Element ele : path.elements()) {
+    for (Element ele : path.getElementList()) {
       String type = ele.getType();
       if (RESERVED_NAME.matcher(type).matches() && !RESERVED_KIND_ALLOWLIST.contains(type)) {
         throw newError(
             ErrorCode.BAD_REQUEST,
             String.format("The key path element kind \"%s\" is reserved.", ele.getType()));
       }
-      if (ele.hasName() && ele.getNameAsBytes().length > MAX_STRING_LENGTH) {
+      if (ele.hasName() && ele.getNameBytes().size() > MAX_STRING_LENGTH) {
         throw newError(ErrorCode.BAD_REQUEST, NAME_TOO_LONG);
       }
     }
   }
 
-  private void validateAndProcessProperty(Property prop) {
+  private void validateAndProcessProperty(Property.Builder prop) {
     if (RESERVED_NAME.matcher(prop.getName()).matches()) {
       throw newError(
           ErrorCode.BAD_REQUEST, String.format("illegal property.name: %s", prop.getName()));
     }
 
-    PropertyValue val = prop.getMutableValue();
+    PropertyValue.Builder val = prop.getValueBuilder();
     if (val.hasUserValue() && !val.getUserValue().hasObfuscatedGaiaid()) {
       // If not already set, populate obfuscated gaia id with hash of email address.
-      PropertyValue.UserValue userVal = val.getMutableUserValue();
+      PropertyValue.UserValue.Builder userVal = val.getUserValueBuilder();
       userVal.setObfuscatedGaiaid(Integer.toString(userVal.getEmail().hashCode()));
     }
   }
 
-  private void validateLengthLimit(Property property) {
+  private void validateLengthLimit(PropertyOrBuilder property) {
     String name = property.getName();
     PropertyValue value = property.getValue();
 
     if (value.hasStringValue()) {
-      if (property.hasMeaning() && property.getMeaningEnum() == Property.Meaning.ATOM_LINK) {
-        if (value.getStringValueAsBytes().length > MAX_LINK_LENGTH) {
+      if (property.hasMeaning() && property.getMeaning() == Property.Meaning.ATOM_LINK) {
+        if (value.getStringValue().size() > MAX_LINK_LENGTH) {
           throw newError(
               ErrorCode.BAD_REQUEST,
               "Link property "
@@ -1004,9 +1010,8 @@ public abstract class LocalDatastoreService {
                   + MAX_LINK_LENGTH
                   + " bytes.");
         }
-      } else if (property.hasMeaning()
-          && property.getMeaningEnum() == Property.Meaning.ENTITY_PROTO) {
-        if (value.getStringValueAsBytes().length > MAX_BLOB_LENGTH) {
+      } else if (property.hasMeaning() && property.getMeaning() == Property.Meaning.ENTITY_PROTO) {
+        if (value.getStringValue().size() > MAX_BLOB_LENGTH) {
           throw newError(
               ErrorCode.BAD_REQUEST,
               "embedded entity property "
@@ -1016,7 +1021,7 @@ public abstract class LocalDatastoreService {
                   + " bytes.");
         }
       } else {
-        if (value.getStringValueAsBytes().length > MAX_STRING_LENGTH) {
+        if (value.getStringValue().size() > MAX_STRING_LENGTH) {
           throw newError(
               ErrorCode.BAD_REQUEST,
               "string property "
@@ -1029,16 +1034,16 @@ public abstract class LocalDatastoreService {
     }
   }
 
-  private void validateRawPropLengthLimit(Property property) {
+  private void validateRawPropLengthLimit(PropertyOrBuilder property) {
     String name = property.getName();
     PropertyValue value = property.getValue();
     if (!value.hasStringValue() || !property.hasMeaning()) {
       return;
     }
-    if (property.getMeaningEnum() == Property.Meaning.BLOB
-        || property.getMeaningEnum() == Property.Meaning.ENTITY_PROTO
-        || property.getMeaningEnum() == Property.Meaning.TEXT) {
-      if (value.getStringValueAsBytes().length > MAX_BLOB_LENGTH) {
+    if (property.getMeaning() == Property.Meaning.BLOB
+        || property.getMeaning() == Property.Meaning.ENTITY_PROTO
+        || property.getMeaning() == Property.Meaning.TEXT) {
+      if (value.getStringValue().size() > MAX_BLOB_LENGTH) {
         throw newError(
             ErrorCode.BAD_REQUEST,
             "Property " + name + " is too long. It cannot exceed " + MAX_BLOB_LENGTH + " bytes.");
@@ -1071,21 +1076,21 @@ public abstract class LocalDatastoreService {
    */
   private Path getGroup(Reference key) {
     Path path = key.getPath();
-    Path group = new Path();
+    Path.Builder group = Path.newBuilder();
     group.addElement(path.getElement(0));
-    return group;
+    return group.build();
   }
 
   @SuppressWarnings("unused") // status
   public DeleteResponse deleteImpl(Status status, DeleteRequest request) {
-    DeleteResponse response = new DeleteResponse();
-    if (request.keySize() == 0) {
-      return response;
+    DeleteResponse.Builder response = DeleteResponse.newBuilder();
+    if (request.getKeyCount() == 0) {
+      return response.build();
     }
-    Cost totalCost = response.getMutableCost();
+    Cost.Builder totalCost = response.getCostBuilder();
     // We don't support requests that span apps, so the app for the first key
     // is the app for all keys.
-    String app = request.keys().get(0).getApp();
+    String app = request.getKey(0).getApp();
     final Profile profile = getOrCreateProfile(app);
     LiveTxn liveTxn = null;
     // Maintain a mapping of keys by entity group so that we can apply one job
@@ -1093,7 +1098,7 @@ public abstract class LocalDatastoreService {
     Map<Path, List<Reference>> keysByEntityGroup = new LinkedHashMap<>();
     Map<Reference, Long> writtenVersions = new HashMap<>();
     synchronized (profile) {
-      for (final Reference key : request.keys()) {
+      for (final Reference key : request.getKeyList()) {
         validatePathComplete(key);
         Path group = getGroup(key);
         if (request.hasTransaction()) {
@@ -1136,11 +1141,11 @@ public abstract class LocalDatastoreService {
     }
 
     if (!request.hasTransaction()) {
-      for (Reference key : request.keys()) {
+      for (Reference key : request.getKeyList()) {
         response.addVersion(writtenVersions.get(key));
       }
     }
-    return response;
+    return response.build();
   }
 
   @SuppressWarnings("unused") // status
@@ -1181,15 +1186,18 @@ public abstract class LocalDatastoreService {
     liveTxn.addActions(addRequests);
   }
 
-  static Transaction toProto1(
-      com.google.apphosting.datastore.proto2api.DatastoreV3Pb.Transaction txn) {
-    Transaction txnProto = new Transaction();
-    boolean unused = txnProto.mergeFrom(txn.toByteArray());
-    return txnProto;
+  static Transaction toProto1(Transaction txn) {
+    Transaction.Builder txnProto = Transaction.newBuilder();
+    try {
+      txnProto.mergeFrom(txn.toByteArray(), ExtensionRegistry.getEmptyRegistry());
+    } catch (InvalidProtocolBufferException e) {
+      throw newError(ErrorCode.BAD_REQUEST, "Invalid transaction");
+    }
+    return txnProto.build();
   }
 
   @SuppressWarnings("unused") // status
-  public QueryResult runQuery(Status status, Query query) {
+  public QueryResult runQuery(Status status, Query.Builder query) {
     // Construct a validated query right away so we can fail fast
     // if something is wrong.
     final LocalCompositeIndexManager.ValidatedQuery validatedQuery =
@@ -1209,7 +1217,6 @@ public abstract class LocalDatastoreService {
     Profile profile = getOrCreateProfile(app);
 
     synchronized (profile) {
-
       if (query.hasTransaction()) {
         if (!app.equals(query.getTransaction().getApp())) {
           throw newError(
@@ -1245,7 +1252,7 @@ public abstract class LocalDatastoreService {
       }
 
       // Run as a PseudoKind query if necessary, otherwise check the actual local datastore
-      List<EntityProto> queryEntities = pseudoKinds.runQuery(query);
+      List<EntityProto> queryEntities = pseudoKinds.runQuery(query.build());
       Map<Reference, Long> versions = null;
 
       if (queryEntities == null) {
@@ -1260,10 +1267,10 @@ public abstract class LocalDatastoreService {
           // Kind-less query, so we need a list containing all entities of
           // all kinds.
           versionedEntities = profile.getAllEntities();
-          if (query.orderSize() == 0) {
+          if (query.getOrderCount() == 0) {
             // add a sort by key asc to match the behavior of prod
             query.addOrder(
-                new Order()
+                Order.newBuilder()
                     .setDirection(Query.Order.Direction.ASCENDING)
                     .setProperty(Entity.KEY_RESERVED_PROPERTY));
           }
@@ -1295,26 +1302,26 @@ public abstract class LocalDatastoreService {
       List<Predicate<EntityProto>> predicates = new ArrayList<>();
       // apply ancestor restriction
       if (query.hasAncestor()) {
-        final List<Element> ancestorPath = query.getAncestor().getPath().elements();
+        final List<Element> ancestorPath = query.getAncestor().getPath().getElementList();
         predicates.add(
             new Predicate<EntityProto>() {
               @Override
               public boolean apply(EntityProto entity) {
-                List<Element> path = entity.getKey().getPath().elements();
+                List<Element> path = entity.getKey().getPath().getElementList();
                 return path.size() >= ancestorPath.size()
                     && path.subList(0, ancestorPath.size()).equals(ancestorPath);
               }
             });
       }
 
-      if (query.isShallow()) {
+      if (query.getShallow()) {
         final long keyPathLength =
-            query.hasAncestor() ? query.getAncestor().getPath().elementSize() + 1 : 1;
+            query.hasAncestor() ? query.getAncestor().getPath().getElementCount() + 1 : 1;
         predicates.add(
             new Predicate<EntityProto>() {
               @Override
               public boolean apply(EntityProto entity) {
-                return entity.getKey().getPath().elementSize() == keyPathLength;
+                return entity.getKey().getPath().getElementCount() == keyPathLength;
               }
             });
       }
@@ -1344,7 +1351,7 @@ public abstract class LocalDatastoreService {
       // Get entityComparator with filter matching capability
       final EntityProtoComparator entityComparator =
           new EntityProtoComparator(
-              validatedQuery.getQuery().orders(), validatedQuery.getQuery().filters());
+              validatedQuery.getQuery().getOrderList(), validatedQuery.getQuery().getFilterList());
 
       // applying filter restrictions
       predicates.add(
@@ -1365,7 +1372,7 @@ public abstract class LocalDatastoreService {
       Iterables.removeIf(queryEntities, queryPredicate);
 
       // Expanding projections
-      if (query.propertyNameSize() > 0) {
+      if (query.getPropertyNameCount() > 0) {
         queryEntities = createIndexOnlyQueryResults(queryEntities, entityComparator);
       }
       // Sorting entities
@@ -1381,24 +1388,28 @@ public abstract class LocalDatastoreService {
       LocalCompositeIndexManager.getInstance().processQuery(validatedQuery.getV3Query());
 
       // Using next function to prefetch results and return them from runQuery
-      QueryResult result =
+      QueryResult.Builder result =
           liveQuery.nextResult(
               query.hasOffset() ? query.getOffset() : null,
               query.hasCount() ? query.getCount() : null,
-              query.isCompile());
-      if (query.isCompile()) {
+              query.getCompile());
+      if (query.getCompile()) {
         result.setCompiledQuery(liveQuery.compileQuery());
       }
-      if (result.isMoreResults()) {
+      if (result.getMoreResults()) {
         long cursor = queryId.getAndIncrement();
         profile.addQuery(cursor, liveQuery);
-        result.getMutableCursor().setApp(query.getApp()).setCursor(cursor);
+        result.getCursorBuilder().setApp(query.getApp()).setCursor(cursor);
       }
       // Copy the index list for the query into the result.
       for (Index index : LocalCompositeIndexManager.getInstance().queryIndexList(query)) {
         result.addIndex(wrapIndexInCompositeIndex(app, index));
       } // for
-      return result;
+      if (!result
+          .hasMoreResults()) { // more_results is a required field so we need to set it to false}
+        result.setMoreResults(false);
+      }
+      return result.build();
     }
   }
 
@@ -1420,8 +1431,9 @@ public abstract class LocalDatastoreService {
    * @param query the current query.
    * @return a new list of entities with unique properties.
    */
-  private List<EntityProto> applyGroupByProperties(List<EntityProto> queryEntities, Query query) {
-    Set<String> groupByProperties = Sets.newHashSet(query.groupByPropertyNames());
+  private List<EntityProto> applyGroupByProperties(
+      List<EntityProto> queryEntities, Query.Builder query) {
+    Set<String> groupByProperties = Sets.newHashSet(query.getGroupByPropertyNameList());
 
     // Nothing to do if there are no group by properties.
     if (groupByProperties.isEmpty()) {
@@ -1432,7 +1444,7 @@ public abstract class LocalDatastoreService {
     List<EntityProto> results = Lists.newArrayList();
     for (EntityProto entity : queryEntities) {
       boolean isFirst = false;
-      for (Property prop : entity.propertys()) {
+      for (Property prop : entity.getPropertyList()) {
         if (groupByProperties.contains(prop.getName())
             && !lastEntity.contains(NameValue.of(prop.getName(), prop.getValue()))) {
           isFirst = true;
@@ -1443,7 +1455,7 @@ public abstract class LocalDatastoreService {
         results.add(entity);
         // Set lastEntity to be the new set of properties.
         lastEntity.clear();
-        for (Property prop : entity.propertys()) {
+        for (Property prop : entity.getPropertyList()) {
           if (groupByProperties.contains(prop.getName())) {
             lastEntity.add(NameValue.of(prop.getName(), prop.getValue()));
           }
@@ -1490,7 +1502,7 @@ public abstract class LocalDatastoreService {
         MultimapBuilder.hashKeys(postfixProps.size()).hashSetValues(1).build();
     Set<String> seen = Sets.newHashSet();
     boolean splitRequired = false;
-    for (Property prop : entity.propertys()) {
+    for (Property prop : entity.getPropertyList()) {
       if (postfixProps.contains(prop.getName())) {
         // If we have multiple values for any postfix property, we need to split.
         splitRequired |= !seen.add(prop.getName());
@@ -1506,41 +1518,47 @@ public abstract class LocalDatastoreService {
       return ImmutableList.of(entity);
     }
 
-    EntityProto clone = new EntityProto();
-    clone.getMutableKey().copyFrom(entity.getKey());
-    clone.getMutableEntityGroup();
-    List<EntityProto> results = Lists.newArrayList(clone);
+    EntityProto.Builder clone = EntityProto.newBuilder();
+    clone.getKeyBuilder().mergeFrom(entity.getKey());
+    clone.setEntityGroup(Path.getDefaultInstance());
+    List<EntityProto.Builder> results = Lists.newArrayList(clone);
 
     for (Map.Entry<String, Collection<PropertyValue>> entry : toSplit.asMap().entrySet()) {
       if (entry.getValue().size() == 1) {
         // No need for cloning!
-        for (EntityProto result : results) {
+        for (EntityProto.Builder result : results) {
           result
-              .addProperty()
+              .addPropertyBuilder()
               .setName(entry.getKey())
               .setMeaning(Property.Meaning.INDEX_VALUE)
-              .getMutableValue()
-              .copyFrom(Iterables.getOnlyElement(entry.getValue()));
+              .setMultiple(false)
+              .getValueBuilder()
+              .mergeFrom(Iterables.getOnlyElement(entry.getValue()));
         }
         continue;
       }
-      List<EntityProto> splitResults =
+      List<EntityProto.Builder> splitResults =
           Lists.newArrayListWithCapacity(results.size() * entry.getValue().size());
       for (PropertyValue value : entry.getValue()) {
-        for (EntityProto result : results) {
-          EntityProto split = result.clone();
+        for (EntityProto.Builder result : results) {
+          EntityProto.Builder split = result.clone();
           split
-              .addProperty()
+              .addPropertyBuilder()
               .setName(entry.getKey())
               .setMeaning(Property.Meaning.INDEX_VALUE)
-              .getMutableValue()
-              .copyFrom(value);
+              .setMultiple(false)
+              .getValueBuilder()
+              .mergeFrom(value);
           splitResults.add(split);
         }
       }
       results = splitResults;
     }
-    return ImmutableList.copyOf(results);
+    ImmutableList.Builder<EntityProto> builder = ImmutableList.builder();
+    for (EntityProto.Builder result : results) {
+      builder.add(result.build());
+    }
+    return builder.build();
   }
 
   /**
@@ -1560,19 +1578,19 @@ public abstract class LocalDatastoreService {
     Profile profile = profiles.get(request.getCursor().getApp());
     LiveQuery liveQuery = profile.getQuery(request.getCursor().getCursor());
 
-    QueryResult result =
+    QueryResult.Builder result =
         liveQuery.nextResult(
             request.hasOffset() ? request.getOffset() : null,
             request.hasCount() ? request.getCount() : null,
-            request.isCompile());
+            request.getCompile());
 
-    if (result.isMoreResults()) {
+    if (result.getMoreResults()) {
       result.setCursor(request.getCursor());
     } else {
       profile.removeQuery(request.getCursor().getCursor());
     }
 
-    return result;
+    return result.build();
   }
 
   @SuppressWarnings("unused") // status
@@ -1587,7 +1605,7 @@ public abstract class LocalDatastoreService {
     Profile profile = getOrCreateProfile(req.getApp());
 
     if (req.hasPreviousTransaction()) {
-      if (req.getModeEnum() == TransactionMode.READ_ONLY) {
+      if (req.getMode() == TransactionMode.READ_ONLY) {
         throw newError(ErrorCode.BAD_REQUEST, TRANSACTION_RETRY_ON_READ_ONLY);
       }
 
@@ -1601,7 +1619,7 @@ public abstract class LocalDatastoreService {
             throw newError(ErrorCode.BAD_REQUEST, TRANSACTION_RETRY_ON_PREVIOUSLY_READ_ONLY);
           }
 
-          if (previousTransaction.allowMultipleEg != req.isAllowMultipleEg()) {
+          if (previousTransaction.allowMultipleEg != req.getAllowMultipleEg()) {
             throw newError(ErrorCode.BAD_REQUEST, TRANSACTION_OPTIONS_CHANGED_ON_RESET);
           }
 
@@ -1610,20 +1628,20 @@ public abstract class LocalDatastoreService {
       }
     }
 
-    Transaction txn =
-        new Transaction()
+    Transaction.Builder txn =
+        Transaction.newBuilder()
             .setApp(req.getApp())
             .setHandle(transactionHandleProvider.getAndIncrement());
-    ConcurrencyMode mode = toConcurrencyMode(req.getModeEnum());
-    profile.addTxn(txn.getHandle(), new LiveTxn(clock, req.isAllowMultipleEg(), req.getModeEnum()));
-    return txn;
+    ConcurrencyMode mode = toConcurrencyMode(req.getMode());
+    profile.addTxn(txn.getHandle(), new LiveTxn(clock, req.getAllowMultipleEg(), req.getMode()));
+    return txn.build();
   }
 
   @SuppressWarnings("unused") // status
   public CommitResponse commit(Status status, final Transaction req) {
     Profile profile = profiles.get(req.getApp());
     checkNotNull(profile);
-    CommitResponse response = new CommitResponse();
+    CommitResponse.Builder response = CommitResponse.newBuilder();
 
     globalLock.readLock().lock();
 
@@ -1639,7 +1657,7 @@ public abstract class LocalDatastoreService {
             response = commitImpl(liveTxn, profile);
           } else {
             // cost of a read-only txn is 0
-            response.setCost(new Cost().setEntityWrites(0).setIndexWrites(0));
+            response.setCost(Cost.newBuilder().setEntityWrites(0).setIndexWrites(0).build());
           }
         } catch (ApplicationException e) {
           // commit failed, re-add transaction so that it can be rolled back or reset.
@@ -1666,13 +1684,13 @@ public abstract class LocalDatastoreService {
         }
       }
     }
-    return response;
+    return response.build();
   }
 
   /** Requires a lock on the provided profile. */
-  private CommitResponse commitImpl(LiveTxn liveTxn, final Profile profile) {
+  private CommitResponse.Builder commitImpl(LiveTxn liveTxn, final Profile profile) {
     // assumes we already have a lock on the profile
-    CommitResponse response = new CommitResponse();
+    CommitResponse.Builder response = CommitResponse.newBuilder();
 
     for (EntityGroupTracker tracker : liveTxn.getAllTrackers()) {
       // This will throw an exception if the entity group
@@ -1682,7 +1700,7 @@ public abstract class LocalDatastoreService {
 
     int deleted = 0;
     int written = 0;
-    Cost totalCost = new Cost();
+    Cost.Builder totalCost = Cost.newBuilder();
     long commitTimestamp = profile.incrementAndGetCommitTimestamp();
     for (EntityGroupTracker tracker : liveTxn.getAllTrackers()) {
       Profile.EntityGroup eg = tracker.getEntityGroup();
@@ -1702,13 +1720,13 @@ public abstract class LocalDatastoreService {
 
       for (EntityProto writtenEntity : writtenEntities) {
         response
-            .addVersion()
+            .addVersionBuilder()
             .setRootEntityKey(writtenEntity.getKey())
             .setVersion(job.getMutationTimestamp(writtenEntity.getKey()));
       }
       for (Reference deletedKey : deletedKeys) {
         response
-            .addVersion()
+            .addVersionBuilder()
             .setRootEntityKey(deletedKey)
             .setVersion(job.getMutationTimestamp(deletedKey));
       }
@@ -1745,23 +1763,26 @@ public abstract class LocalDatastoreService {
   }
 
   private CompositeIndex wrapIndexInCompositeIndex(String app, @Nullable Index index) {
-    CompositeIndex ci =
-        new CompositeIndex().setAppId(app).setState(CompositeIndex.State.READ_WRITE);
+    CompositeIndex.Builder ci =
+        CompositeIndex.newBuilder()
+            .setAppId(app)
+            .setId(0)
+            .setState(CompositeIndex.State.READ_WRITE);
     if (index != null) {
       ci.setDefinition(index);
     }
-    return ci;
+    return ci.build();
   }
 
   @SuppressWarnings("unused") // status
   public CompositeIndices getIndices(Status status, StringProto req) {
     Set<Index> indexSet = LocalCompositeIndexManager.getInstance().getIndexes();
-    CompositeIndices answer = new CompositeIndices();
+    CompositeIndices.Builder answer = CompositeIndices.newBuilder();
     for (Index index : indexSet) {
       CompositeIndex ci = wrapIndexInCompositeIndex(req.getValue(), index);
       answer.addIndex(ci);
     }
-    return answer;
+    return answer.build();
   }
 
   @SuppressWarnings("unused") // status
@@ -1794,7 +1815,10 @@ public abstract class LocalDatastoreService {
       // Now the next request asks for 10.
       // We'll return a range of 105 - 114, leaving entityIdSequential with a value of 115.
       long start = entityIdSequential.getAndAdd(req.getSize());
-      return new AllocateIdsResponse().setStart(start).setEnd(start + req.getSize() - 1);
+      return AllocateIdsResponse.newBuilder()
+          .setStart(start)
+          .setEnd(start + req.getSize() - 1)
+          .build();
     } else {
       long current = entityIdSequential.get();
       while (current <= req.getMax()) {
@@ -1803,9 +1827,10 @@ public abstract class LocalDatastoreService {
         }
         current = entityIdSequential.get();
       }
-      return new AllocateIdsResponse()
+      return AllocateIdsResponse.newBuilder()
           .setStart(current)
-          .setEnd(Math.max(req.getMax(), current - 1));
+          .setEnd(Math.max(req.getMax(), current - 1))
+          .build();
     }
   }
 
@@ -1822,6 +1847,7 @@ public abstract class LocalDatastoreService {
       Profile profile = profiles.get(app);
       if (profile == null) {
         profile = new Profile();
+        profile.setAppId(app);
         profiles.put(app, profile);
       }
       return profile;
@@ -1869,6 +1895,9 @@ public abstract class LocalDatastoreService {
       }
       @SuppressWarnings("unchecked")
       Map<String, Profile> profilesOnDisk = (Map<String, Profile>) objectIn.readObject();
+      for (Map.Entry<String, Profile> entry : profilesOnDisk.entrySet()) {
+        entry.getValue().setAppId(entry.getKey());
+      }
       synchronized (profiles) {
         profiles.clear();
         profiles.putAll(profilesOnDisk);
@@ -1891,6 +1920,16 @@ public abstract class LocalDatastoreService {
 
     /* Default serial version from 195 SDK. */
     private static final long serialVersionUID = -4667954926644227154L;
+
+    private transient String appId;
+
+    String getAppId() {
+      return appId;
+    }
+
+    void setAppId(String appId) {
+      this.appId = appId;
+    }
 
     /**
      * An EntityGroup maintains a consistent view of a profile during a transaction. All access to
@@ -1986,7 +2025,9 @@ public abstract class LocalDatastoreService {
           oos.close();
           ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
           ObjectInputStream ois = new ObjectInputStream(bis);
-          return (Profile) ois.readObject();
+          Profile profile = (Profile) ois.readObject();
+          profile.setAppId(Profile.this.getAppId());
+          return profile;
         } catch (IOException | ClassNotFoundException ex) {
           throw new RuntimeException("Unable to take transaction snapshot.", ex);
         }
@@ -2053,9 +2094,10 @@ public abstract class LocalDatastoreService {
       }
 
       public Key pathAsKey() {
-        Reference entityGroupRef = new Reference();
+        Reference.Builder entityGroupRef = Reference.newBuilder();
         entityGroupRef.setPath(path);
-        return LocalCompositeIndexManager.KeyTranslator.createFromPb(entityGroupRef);
+        entityGroupRef.setApp(getAppId());
+        return LocalCompositeIndexManager.KeyTranslator.createFromPb(entityGroupRef.build());
       }
     }
 
@@ -2086,6 +2128,7 @@ public abstract class LocalDatastoreService {
     // because initializers for transient fields don't run when an object is
     // deserialized.
     private transient Set<Path> groupsWithUnappliedJobs;
+
     /** The set of outstanding query results, keyed by query id (also referred to as "cursor"). */
     private transient Map<Long, LiveQuery> queries;
 
@@ -2238,6 +2281,7 @@ public abstract class LocalDatastoreService {
      * compatible as proto internals change.
      */
     private Map<Reference, EntityProto> entities = new LinkedHashMap<>();
+
     /**
      * A mapping from entity keys to last updated versions. If an entity exists in the extent, then
      * it is guaranteed to have a version in this map. We use MINIMUM_VERSION to represent entities
@@ -2294,14 +2338,15 @@ public abstract class LocalDatastoreService {
      * implementation of {@link Extent}.
      */
     private byte[] serializeEntity(VersionedEntity entity) {
-      EntityProto stored = new EntityProto();
-      stored.copyFrom(entity.entityProto());
+      EntityProto.Builder stored = EntityProto.newBuilder();
+      stored.mergeFrom(entity.entityProto());
 
-      Property version = stored.addProperty();
+      Property.Builder version = stored.addPropertyBuilder();
       version.setName(ENTITY_VERSION_RESERVED_PROPERTY);
-      version.setValue(new PropertyValue().setInt64Value(entity.version()));
+      version.setMultiple(false);
+      version.setValue(PropertyValue.newBuilder().setInt64Value(entity.version()));
 
-      return stored.toByteArray();
+      return stored.build().toByteArray();
     }
 
     /**
@@ -2309,13 +2354,16 @@ public abstract class LocalDatastoreService {
      * #serializeEntity(VersionedEntity)}.
      */
     private VersionedEntity deserializeEntity(byte[] serialized) throws IOException {
-      EntityProto entityProto = new EntityProto();
-      if (!entityProto.parseFrom(serialized)) {
+      EntityProto.Builder entityProto = EntityProto.newBuilder();
+      try {
+        entityProto.mergeFrom(serialized, ExtensionRegistry.getEmptyRegistry());
+      } catch (InvalidProtocolBufferException e) {
         throw new IOException("Corrupt or incomplete EntityProto");
       }
 
       long version = Profile.MINIMUM_VERSION;
-      for (Iterator<Property> iter = entityProto.mutablePropertys().iterator(); iter.hasNext(); ) {
+      List<Property> properties = new ArrayList<>(entityProto.getPropertyList());
+      for (Iterator<Property> iter = properties.iterator(); iter.hasNext(); ) {
         Property property = iter.next();
         if (property.getName().equals(ENTITY_VERSION_RESERVED_PROPERTY)) {
           version = property.getValue().getInt64Value();
@@ -2323,8 +2371,10 @@ public abstract class LocalDatastoreService {
           break;
         }
       }
+      entityProto.clearProperty();
+      entityProto.addAllProperty(properties);
 
-      return VersionedEntity.create(entityProto, version);
+      return VersionedEntity.create(entityProto.build(), version);
     }
 
     private void writeObject(ObjectOutputStream out) throws IOException {
@@ -2436,7 +2486,7 @@ public abstract class LocalDatastoreService {
 
     @Override
     Cost calculateJobCost() {
-      Cost totalCost = new Cost();
+      Cost.Builder totalCost = Cost.newBuilder();
       // Deletes
       for (Reference key : deletes) {
         EntityProto oldEntity = getSnapshotEntity(key);
@@ -2449,7 +2499,7 @@ public abstract class LocalDatastoreService {
         EntityProto oldEntity = getSnapshotEntity(entity.getKey());
         addTo(totalCost, costAnalysis.getWriteOps(oldEntity, entity));
       }
-      return totalCost;
+      return totalCost.build();
     }
 
     @Override
@@ -2539,14 +2589,14 @@ public abstract class LocalDatastoreService {
         IndexPostfix position = compiledCursor.getPostfixPosition();
         // The cursor has been set but without any position data. Treating as the default start
         // cursor places it before all entities.
-        if (!(position.hasKey() || position.indexValueSize() > 0)) {
+        if (!(position.hasKey() || position.getIndexValueCount() > 0)) {
           cursorEntity = null;
           inclusive = false;
           this.isStart = true;
           return;
         }
         cursorEntity = decompilePosition(position);
-        inclusive = position.isBefore();
+        inclusive = position.getBefore();
         this.isStart = isStart;
       }
 
@@ -2571,7 +2621,7 @@ public abstract class LocalDatastoreService {
     private final Set<String> orderProperties;
     private final Set<String> projectedProperties;
     private final Set<String> groupByProperties;
-    private final Query query;
+    private final Query.Builder query;
 
     private final List<EntityProto> entities;
     private final Map<Reference, Long> versions;
@@ -2581,7 +2631,7 @@ public abstract class LocalDatastoreService {
     public LiveQuery(
         List<EntityProto> entities,
         @Nullable Map<Reference, Long> versions,
-        Query query,
+        Query.Builder query,
         EntityProtoComparator entityComparator,
         Clock clock) {
       super(clock.getCurrentTime());
@@ -2598,13 +2648,13 @@ public abstract class LocalDatastoreService {
           orderProperties.add(order.getProperty());
         }
       }
-      groupByProperties = Sets.newHashSet(query.groupByPropertyNames());
-      projectedProperties = Sets.newHashSet(query.propertyNames());
+      groupByProperties = Sets.newHashSet(query.getGroupByPropertyNameList());
+      projectedProperties = Sets.newHashSet(query.getPropertyNameList());
 
       this.entities = Lists.newArrayList(entities);
 
       ImmutableMap.Builder<Reference, Long> versionsBuilder = ImmutableMap.builder();
-      if (this.projectedProperties.isEmpty() && !this.query.isKeysOnly() && versions != null) {
+      if (this.projectedProperties.isEmpty() && !this.query.getKeysOnly() && versions != null) {
         for (EntityProto entity : this.entities) {
           Reference key = entity.getKey();
           checkArgument(versions.containsKey(key));
@@ -2621,6 +2671,7 @@ public abstract class LocalDatastoreService {
               query.hasEndCompiledCursor() ? query.getEndCompiledCursor() : null, false);
 
       lastResult = startCursor.getCursorEntity();
+
       int endCursorPos = Math.min(endCursor.getPosition(entityComparator), this.entities.size());
       int startCursorPos = Math.min(endCursorPos, startCursor.getPosition(entityComparator));
 
@@ -2649,8 +2700,8 @@ public abstract class LocalDatastoreService {
       return realOffset;
     }
 
-    public QueryResult nextResult(Integer offset, Integer count, boolean compile) {
-      QueryResult result = new QueryResult();
+    public QueryResult.Builder nextResult(Integer offset, Integer count, boolean compile) {
+      QueryResult.Builder result = QueryResult.newBuilder().setMoreResults(false);
 
       if (count == null) {
         if (query.hasCount()) {
@@ -2669,7 +2720,7 @@ public abstract class LocalDatastoreService {
         result.setSkippedResults(offsetResults(offset));
         if (compile) {
           result
-              .getMutableSkippedResultsCompiledCursor()
+              .getSkippedResultsCompiledCursorBuilder()
               .setPostfixPosition(compilePosition(lastResult));
         }
       }
@@ -2678,20 +2729,20 @@ public abstract class LocalDatastoreService {
         // Offset has been satisfied so return real results
         List<EntityProto> entities = removeEntities(Math.min(MAX_QUERY_RESULTS, count));
         for (EntityProto entity : entities) {
-          result.mutableResults().add(postProcessEntityForQuery(entity));
+          result.addResult(postProcessEntityForQuery(entity).buildPartial());
           if (!versions.isEmpty()) {
-            result.mutableVersions().add(versions.get(entity.getKey()));
+            result.addVersion(versions.get(entity.getKey()));
           }
           if (compile) {
-            result.addResultCompiledCursor().setPostfixPosition(compilePosition(entity));
+            result.addResultCompiledCursorBuilder().setPostfixPosition(compilePosition(entity));
           }
         }
       }
       result.setMoreResults(!entities.isEmpty());
-      result.setKeysOnly(query.isKeysOnly());
-      result.setIndexOnly(query.propertyNameSize() > 0);
+      result.setKeysOnly(query.getKeysOnly());
+      result.setIndexOnly(query.getPropertyNameCount() > 0);
       if (compile) {
-        result.getMutableCompiledCursor().setPostfixPosition(compilePosition(lastResult));
+        result.getCompiledCursorBuilder().setPostfixPosition(compilePosition(lastResult));
       }
       return result;
     }
@@ -2711,14 +2762,14 @@ public abstract class LocalDatastoreService {
     }
 
     /** Converts an entity to the format requested by the user. */
-    private EntityProto postProcessEntityForQuery(EntityProto entity) {
-      EntityProto result;
+    private EntityProto.Builder postProcessEntityForQuery(EntityProto entity) {
+      EntityProto.Builder result;
       if (!projectedProperties.isEmpty()) {
-        result = new EntityProto();
-        result.getMutableKey().copyFrom(entity.getKey());
-        result.getMutableEntityGroup();
-        Set<String> seenProps = Sets.newHashSetWithExpectedSize(query.propertyNameSize());
-        for (Property prop : entity.propertys()) {
+        result = EntityProto.newBuilder();
+        result.getKeyBuilder().mergeFrom(entity.getKey());
+        result.setEntityGroup(Path.getDefaultInstance());
+        Set<String> seenProps = Sets.newHashSetWithExpectedSize(query.getPropertyNameCount());
+        for (Property prop : entity.getPropertyList()) {
           if (projectedProperties.contains(prop.getName())) {
             // Dev stubs should have already removed multi-valued properties.
             if (!seenProps.add(prop.getName())) {
@@ -2726,31 +2777,31 @@ public abstract class LocalDatastoreService {
                   ErrorCode.INTERNAL_ERROR, "LocalDatastoreServer produced invalid results.");
             }
             result
-                .addProperty()
+                .addPropertyBuilder()
                 .setName(prop.getName())
                 .setMeaning(Property.Meaning.INDEX_VALUE)
                 .setMultiple(false)
-                .getMutableValue()
-                .copyFrom(prop.getValue());
+                .getValueBuilder()
+                .mergeFrom(prop.getValue());
           }
         }
-      } else if (query.isKeysOnly()) {
-        result = new EntityProto();
-        result.getMutableKey().copyFrom(entity.getKey());
-        result.getMutableEntityGroup();
+      } else if (query.getKeysOnly()) {
+        result = EntityProto.newBuilder();
+        result.getKeyBuilder().mergeFrom(entity.getKey());
+        result.setEntityGroup(Path.getDefaultInstance());
       } else {
-        result = entity.clone();
+        result = entity.toBuilder().clone();
       }
       postprocessEntity(result);
       return result;
     }
 
-    private EntityProto decompilePosition(IndexPostfix position) {
-      EntityProto result = new EntityProto();
+    EntityProto decompilePosition(IndexPostfix position) {
+      EntityProto.Builder result = EntityProto.newBuilder();
       if (position.hasKey()) {
         if (query.hasKind()) {
           String queryKind = query.getKind();
-          String cursorKind = getLast(position.getKey().getPath().elements()).getType();
+          String cursorKind = getLast(position.getKey().getPath().getElementList()).getType();
           if (!queryKind.equals(cursorKind)) {
             // This is not technically a problem, but we try to throw exceptions in as many
             // 'unsupported' use cases as possible
@@ -2767,20 +2818,28 @@ public abstract class LocalDatastoreService {
       Set<String> cursorProperties =
           groupByProperties.isEmpty() ? orderProperties : groupByProperties;
       Set<String> remainingProperties = new HashSet<>(cursorProperties);
-      for (IndexPostfix_IndexValue prop : position.indexValues()) {
+      for (IndexPostfix.IndexValue prop : position.getIndexValueList()) {
         if (!cursorProperties.contains(prop.getPropertyName())) {
           // This is not technically a problem, but the datastore will likely
           // an throw exception in this case.
           throw newError(ErrorCode.BAD_REQUEST, "cursor does not match query");
         }
         remainingProperties.remove(prop.getPropertyName());
-        result.addProperty().setName(prop.getPropertyName()).setValue(prop.getValue());
+        Property.Builder propBuilder =
+            result
+                .addPropertyBuilder()
+                .setName(prop.getPropertyName())
+                .setValue(prop.getValue())
+                .setMultiple(false);
+        if (query.getPropertyNameCount() > 0 || query.getGroupByPropertyNameCount() > 0) {
+          propBuilder.setMeaning(Property.Meaning.INDEX_VALUE);
+        }
       }
 
       if (!remainingProperties.isEmpty()) {
         throw newError(ErrorCode.BAD_REQUEST, "cursor does not match query");
       }
-      return result;
+      return result.buildPartial(); // No key.
     }
 
     private IndexPostfix compilePosition(EntityProto entity) {
@@ -2791,7 +2850,7 @@ public abstract class LocalDatastoreService {
        * set). We can do this because result set does not contain duplicates.
        * However if Query.distinct=false was supported this would not work.
        */
-      IndexPostfix position = new IndexPostfix();
+      IndexPostfix.Builder position = IndexPostfix.newBuilder();
 
       if (entity != null) {
         // The cursor properties will be the group by properties, or the order properties if no
@@ -2806,26 +2865,30 @@ public abstract class LocalDatastoreService {
           cursorProperties = groupByProperties;
         }
 
-        for (Property prop : entity.propertys()) {
+        for (Property prop : entity.getPropertyList()) {
           if (cursorProperties.contains(prop.getName())) {
-            position.addIndexValue().setPropertyName(prop.getName()).setValue(prop.getValue());
+            position
+                .addIndexValueBuilder()
+                .setPropertyName(prop.getName())
+                .setValue(prop.getValue());
           }
         }
         // This entity has already been returned so exclude it.
         position.setBefore(false);
         CursorModernizer.setBeforeAscending(position, CursorModernizer.firstSortDirection(query));
       }
-      return position;
+      return position.build();
     }
 
     public CompiledQuery compileQuery() {
-      CompiledQuery result = new CompiledQuery();
-      PrimaryScan scan = result.getMutablePrimaryScan();
+      CompiledQuery.Builder result = CompiledQuery.newBuilder();
+      result.setKeysOnly(query.getKeysOnly());
+      PrimaryScan.Builder scan = result.getPrimaryScanBuilder();
 
       // saving the entire original query as the index
-      scan.setIndexNameAsBytes(query.toByteArray());
+      scan.setIndexNameBytes(query.build().toByteString());
 
-      return result;
+      return result.build();
     }
   }
 
@@ -3073,9 +3136,9 @@ public abstract class LocalDatastoreService {
       // <internal25>
       @SuppressWarnings("UnsafeFinalization")
       @Override
-      PropertyValue getValue(EntityProto entity) {
+      PropertyValue getValue(EntityProtoOrBuilder entity) {
         int hashCode = 0;
-        for (Element elem : entity.getKey().getPath().elements()) {
+        for (Element elem : entity.getKey().getPath().getElementList()) {
           if (elem.hasId()) {
             // Convert to string and take the hash of that in order to get a
             // nice distribution in the upper bits.
@@ -3098,9 +3161,9 @@ public abstract class LocalDatastoreService {
           System.arraycopy(digest, 0, miniDigest, 0, SMALL_LENGTH);
 
           if ((miniDigest[0] & 0x01) != 0) {
-            PropertyValue value = new PropertyValue();
-            value.setStringValueAsBytes(miniDigest);
-            return value;
+            return PropertyValue.newBuilder()
+                .setStringValue(ByteString.copyFrom(miniDigest))
+                .build();
           }
         } catch (NoSuchAlgorithmException ex) {
           Logger logger = Logger.getLogger(SpecialProperty.class.getName());
@@ -3169,18 +3232,18 @@ public abstract class LocalDatastoreService {
      *
      * @param entity the entity for which the value is being obtained
      */
-    PropertyValue getValue(EntityProto entity) {
+    PropertyValue getValue(EntityProtoOrBuilder entity) {
       throw new UnsupportedOperationException();
     }
 
     /** Returns a property with the given value for this SpecialProperty. */
     Property getProperty(PropertyValue value) {
-      Property processedProp = new Property();
-      processedProp.setName(getName());
-      processedProp.setValue(value);
-      processedProp.setMultiple(false);
-      processedProp.setMeaning(meaning);
-      return processedProp;
+      return Property.newBuilder()
+          .setName(getName())
+          .setValue(value)
+          .setMultiple(false)
+          .setMeaning(meaning)
+          .build();
     }
   }
 
@@ -3312,12 +3375,12 @@ public abstract class LocalDatastoreService {
   /** Returns true if the two given {@link EntityProto entities} have the same property values. */
   static boolean equalProperties(@Nullable EntityProto entity1, EntityProto entity2) {
     return entity1 != null
-        && entity1.propertys().equals(entity2.propertys())
-        && entity1.rawPropertys().equals(entity2.rawPropertys());
+        && entity1.getPropertyList().equals(entity2.getPropertyList())
+        && entity1.getRawPropertyList().equals(entity2.getRawPropertyList());
   }
 
   /** Adds {@code addMe} to {@code target}. */
-  private static void addTo(Cost target, Cost addMe) {
+  private static void addTo(Cost.Builder target, Cost addMe) {
     target.setEntityWrites(target.getEntityWrites() + addMe.getEntityWrites());
     target.setIndexWrites(target.getIndexWrites() + addMe.getIndexWrites());
   }
@@ -3326,7 +3389,7 @@ public abstract class LocalDatastoreService {
   private static ConcurrencyMode toConcurrencyMode(TransactionMode transactionMode) {
     switch (transactionMode) {
       case UNKNOWN:
-        // TODO: map to SHARED_READ in spanner mode.
+      // TODO: map to SHARED_READ in spanner mode.
       case READ_WRITE:
         // TODO: map to SHARED_READ in spanner mode.
         // TODO: map to PESSIMISTIC in megastore mode.

@@ -14,24 +14,19 @@
  * limitations under the License.
  */
 
-// Copyright 2009 Google Inc. All Rights Reserved.
 //
 // The Task Queue API provides App Engine applications access to the Prometheus
 // Executor: a reliable, scalable, and distributed task queue workflow. Clients
 // input tasks into queues, and they are executed according to the task eta and
 // the queue throttling rate.
-//
-//   http://g3doc/apphosting/g3doc/wiki-carryover/executor.md
-//   http://g3doc/apphosting/g3doc/wiki-carryover/task_queue_api.md
-//
 
 syntax = "proto2";
 
 package java.apphosting;
 
-import "datastore_v3.proto";
+import "datastore_v3_bytes.proto";
 
-option java_package = "com.google.appengine.api.taskqueue";
+option java_package = "com.google.appengine.api.taskqueue_bytes";
 option java_outer_classname = "TaskQueuePb";
 
 message TaskQueueServiceError {

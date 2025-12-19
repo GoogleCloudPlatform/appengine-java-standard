@@ -19,7 +19,7 @@ package com.google.appengine.api.taskqueue.dev;
 import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.Mockito.mock;
 
-import com.google.appengine.api.taskqueue.TaskQueuePb.TaskQueueRetryParameters;
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueRetryParameters;
 import com.google.apphosting.utils.config.QueueXml;
 import org.junit.Test;
 import org.junit.runner.RunWith;

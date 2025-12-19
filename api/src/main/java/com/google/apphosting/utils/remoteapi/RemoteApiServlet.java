@@ -16,8 +16,8 @@
  */
 package com.google.apphosting.utils.remoteapi;
 
-import static com.google.apphosting.datastore.proto2api.DatastoreV3Pb.Error.ErrorCode.BAD_REQUEST;
-import static com.google.apphosting.datastore.proto2api.DatastoreV3Pb.Error.ErrorCode.CONCURRENT_TRANSACTION;
+import static com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.Error.ErrorCode.BAD_REQUEST;
+import static com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.Error.ErrorCode.CONCURRENT_TRANSACTION;
 import static com.google.common.base.Verify.verify;
 
 import com.google.appengine.api.oauth.OAuthRequestException;
@@ -26,26 +26,26 @@ import com.google.appengine.api.oauth.OAuthServiceFactory;
 import com.google.appengine.api.users.UserService;
 import com.google.appengine.api.users.UserServiceFactory;
 import com.google.apphosting.api.ApiProxy;
-import com.google.apphosting.base.protos.api.RemoteApiPb.Request;
-import com.google.apphosting.base.protos.api.RemoteApiPb.Response;
-import com.google.apphosting.base.protos.api.RemoteApiPb.TransactionQueryResult;
-import com.google.apphosting.base.protos.api.RemoteApiPb.TransactionRequest;
-import com.google.apphosting.base.protos.api.RemoteApiPb.TransactionRequest.Precondition;
-import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.BeginTransactionRequest;
-import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.DeleteRequest;
-import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.GetRequest;
-import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.GetResponse;
-import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.NextRequest;
-import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.PutRequest;
-import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.Query;
-import com.google.apphosting.datastore.proto2api.DatastoreV3Pb.QueryResult;
+import com.google.apphosting.base.protos.api_bytes.RemoteApiPb.Request;
+import com.google.apphosting.base.protos.api_bytes.RemoteApiPb.Response;
+import com.google.apphosting.base.protos.api_bytes.RemoteApiPb.TransactionQueryResult;
+import com.google.apphosting.base.protos.api_bytes.RemoteApiPb.TransactionRequest;
+import com.google.apphosting.base.protos.api_bytes.RemoteApiPb.TransactionRequest.Precondition;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.BeginTransactionRequest;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.DeleteRequest;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.GetRequest;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.GetResponse;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.NextRequest;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.PutRequest;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.Query;
+import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.QueryResult;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.ExtensionRegistry;
 import com.google.protobuf.Message;
 // <internal24>
-import com.google.storage.onestore.v3.proto2api.OnestoreEntity;
-import com.google.storage.onestore.v3.proto2api.OnestoreEntity.EntityProto;
-import com.google.storage.onestore.v3.proto2api.OnestoreEntity.Path.Element;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.EntityProto;
+import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.Path.Element;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -302,13 +302,13 @@ public class RemoteApiServlet extends HttpServlet {
     if (entityResult.hasEntity()) {
       // Both params have an Entity.  Make sure the Entities match using a SHA-1 hash.
       EntityProto entity = entityResult.getEntity();
-      if (Arrays.equals(precondition.getHashBytes().toByteArray(), computeSha1(entity))) {
+      if (Arrays.equals(precondition.getHash().toByteArray(), computeSha1(entity))) {
         // They match.  We're done.
         return;
       }
       // See javadoc of computeSha1OmittingLastByteForBackwardsCompatibility for explanation.
       byte[] backwardsCompatibleHash = computeSha1OmittingLastByteForBackwardsCompatibility(entity);
-      if (!Arrays.equals(precondition.getHashBytes().toByteArray(), backwardsCompatibleHash)) {
+      if (!Arrays.equals(precondition.getHash().toByteArray(), backwardsCompatibleHash)) {
         throw new ApiProxy.ApplicationException(
             CONCURRENT_TRANSACTION.getNumber(), "Transaction precondition failed");
       }

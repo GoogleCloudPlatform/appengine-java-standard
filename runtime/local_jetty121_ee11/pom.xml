@@ -23,7 +23,7 @@
   <parent>
     <groupId>com.google.appengine</groupId>
     <artifactId>runtime-parent</artifactId>
-    <version>3.0.4-SNAPSHOT</version>
+    <version>4.0.0-SNAPSHOT</version>
   </parent>
 
   <packaging>jar</packaging>
@@ -69,10 +69,6 @@
       <groupId>com.google.protobuf</groupId>
       <artifactId>protobuf-java</artifactId>
    </dependency>
-    <dependency>
-      <groupId>com.google.appengine</groupId>
-      <artifactId>proto1</artifactId>
-    </dependency>
     <dependency>
       <groupId>org.eclipse.jetty.ee11</groupId>
       <artifactId>jetty-ee11-webapp</artifactId>
@@ -224,18 +220,6 @@
                   </includes>
                 </filter>
                 <filter>
-                  <artifact>com.google.appengine:proto1:*</artifact>
-                  <includes>
-                    <include>com/google/common/flags/*</include>
-                    <include>com/google/common/flags/ext/*</include>
-                    <include>com/google/io/protocol/**</include>
-                    <include>com/google/protobuf/**</include>
-                  </includes>
-                  <excludes>
-                    <exclude>com/google/io/protocol/proto2/*</exclude>
-                  </excludes>
-                </filter>
-                <filter>
                   <artifact>com.google.appengine:shared-sdk-jetty12:*</artifact>
                   <includes>
                     <include>com/google/apphosting/runtime/**</include>
@@ -249,7 +233,6 @@
                     <include>com/google/common/cache/**</include>
                     <include>com/google/common/collect/**</include>
                     <include>com/google/common/escape/**</include>
-                    <include>com/google/common/flags/**</include>
                     <include>com/google/common/flogger/**</include>
                     <include>com/google/common/graph/**</include>
                     <include>com/google/common/hash/**</include>

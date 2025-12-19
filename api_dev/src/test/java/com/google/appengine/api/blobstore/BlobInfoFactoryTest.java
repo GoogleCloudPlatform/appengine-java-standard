@@ -20,6 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.google.appengine.api.NamespaceManager;
 import com.google.appengine.api.blobstore.dev.BlobInfoStorage;
+import com.google.appengine.tools.development.testing.LocalDatastoreServiceTestConfig;
 import com.google.appengine.tools.development.testing.LocalServiceTestHelper;
 import com.google.common.io.MoreFiles;
 import com.google.common.io.RecursiveDeleteOption;
@@ -41,7 +42,8 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class BlobInfoFactoryTest {
 
-  private final LocalServiceTestHelper helper = new LocalServiceTestHelper();
+  private final LocalServiceTestHelper helper =
+      new LocalServiceTestHelper(new LocalDatastoreServiceTestConfig());
   private BlobInfoFactory blobInfoFactory;
   private BlobInfoStorage blobInfoStorage;
 
