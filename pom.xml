@@ -40,7 +40,6 @@
     <module>api_legacy</module>
     <module>appengine_jsr107</module>
     <module>appengine-api-stubs</module>
-    <module>local_runtime_shared_jetty9</module>
     <module>local_runtime_shared_jetty12</module>
     <module>lib</module>
     <module>appengine_testing</module>
@@ -53,12 +52,8 @@
     <module>runtime_shared_jetty121_ee8</module>
     <module>runtime_shared_jetty121_ee11</module>
     <module>utils</module>
-    <module>quickstartgenerator</module>
-    <module>quickstartgenerator_jetty12</module>
-    <module>quickstartgenerator_jetty12_ee10</module>
     <module>quickstartgenerator_jetty121_ee8</module>
     <module>quickstartgenerator_jetty121_ee11</module>
-    <module>jetty12_assembly</module>
     <module>jetty121_assembly</module>
     <module>sdk_assembly</module>
     <module>applications</module>
@@ -345,17 +340,7 @@
       </dependency>
       <dependency>
         <groupId>com.google.appengine</groupId>
-        <artifactId>appengine-local-runtime-shared-jetty9</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.appengine</groupId>
         <artifactId>appengine-testing</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.appengine</groupId>
-        <artifactId>quickstartgenerator</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>

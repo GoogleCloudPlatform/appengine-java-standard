@@ -69,7 +69,7 @@ public class JettySdkTest {
     System.setProperty("appengine.use.jetty121", "false");
     System.out.println("Jetty 12 EE8");
     AppengineSdk sdk = AppengineSdk.getSdk();
-    assertThat(sdk.getClass().getSimpleName()).isEqualTo("Jetty12Sdk");
+    assertThat(sdk.getClass().getSimpleName()).isEqualTo("Jetty121EE8Sdk");
     System.out.println("getUserLibFiles");
     assertFilesExist(sdk.getUserLibFiles());
     System.out.println("getUserJspLibFiles");
@@ -92,7 +92,7 @@ public class JettySdkTest {
     System.setProperty("appengine.use.jetty121", "false");
     System.out.println("Jetty 12 EE10");
     AppengineSdk sdk = AppengineSdk.getSdk();
-    assertThat(sdk.getClass().getSimpleName()).isEqualTo("Jetty12Sdk");
+    assertThat(sdk.getClass().getSimpleName()).isEqualTo("Jetty121EE11Sdk");
     System.out.println("getUserLibFiles");
     assertFilesExist(sdk.getUserLibFiles());
     System.out.println("getUserJspLibFiles");

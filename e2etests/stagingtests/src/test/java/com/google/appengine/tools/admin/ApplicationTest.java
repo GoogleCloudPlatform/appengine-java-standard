@@ -155,34 +155,45 @@ public class ApplicationTest {
 
   @Parameterized.Parameters
   public static List<Object[]> version() {
-    return Arrays.asList(new Object[][] {{"EE6"}, {"EE8"}, {"EE10"}, {"EE11"}});
+    return Arrays.asList(new Object[][] {{"EE6"}, {"EE8"},  {"EE8_"}, {"EE10"}, {"EE11"}});
   }
 
   public ApplicationTest(String version) {
     switch (version) {
       case "EE6":
-        System.setProperty("appengine.use.EE8", "false");
+        System.setProperty("appengine.use.EE8", "true"); //forcing jetty12.1  ee8 for jetty9 local
         System.setProperty("appengine.use.EE10", "false");
         System.setProperty("appengine.use.EE11", "false");
+        System.setProperty("appengine.use.jetty121", "true");
         assumeTrue(Runtime.version().feature() < 25);
         break;
       case "EE8":
         System.setProperty("appengine.use.EE8", "true");
         System.setProperty("appengine.use.EE10", "false");
         System.setProperty("appengine.use.EE11", "false");
-        assumeTrue(Runtime.version().feature() <= 25);
+         System.setProperty("appengine.use.jetty121", "false");
+       assumeTrue(Runtime.version().feature() <= 25);
         break;
-      case "EE10":
+       case "EE8_":
+        System.setProperty("appengine.use.EE8", "true");
+        System.setProperty("appengine.use.EE10", "false");
+        System.setProperty("appengine.use.EE11", "false");
+        System.setProperty("appengine.use.jetty121", "true");
+       assumeTrue(Runtime.version().feature() <= 25);
+        break;
+             case "EE10":
         System.setProperty("appengine.use.EE8", "false");
         System.setProperty("appengine.use.EE10", "true");
         System.setProperty("appengine.use.EE11", "false");
-        assumeTrue(Runtime.version().feature() < 25);
+         System.setProperty("appengine.use.jetty121", "false");
+       assumeTrue(Runtime.version().feature() < 25);
         break;
       case "EE11":
         System.setProperty("appengine.use.EE8", "false");
         System.setProperty("appengine.use.EE10", "false");
         System.setProperty("appengine.use.EE11", "true");
-        assumeTrue(Runtime.version().feature() >= 21);
+         System.setProperty("appengine.use.jetty121", "true");
+       assumeTrue(Runtime.version().feature() >= 21);
         break;
       default:
         // fall through
@@ -1333,42 +1344,6 @@ public class ApplicationTest {
   }
 
   @Test
-  public void testUseJava8Standard() throws Exception {
-    Application testApp = Application.readApplication(SERVLET3_STANDARD_APP_ROOT);
-    testApp.setDetailsWriter(
-        new PrintWriter(new BufferedWriter(new OutputStreamWriter(System.out, UTF_8))));
-
-    assertThat(testApp.getAppId()).isEqualTo(SERVLET3_APP_ID);
-
-    ApplicationProcessingOptions opts = new ApplicationProcessingOptions();
-
-    File stageDir = testApp.createStagingDirectory(opts, temporaryFolder.newFolder());
-    File appYaml = new File(stageDir, "WEB-INF/appengine-generated/app.yaml");
-    assertFileContains(appYaml, "runtime: java8");
-    // See if the index.jsp file has been pre-compiled:
-    File jspJar = new File(stageDir, "WEB-INF/lib/_ah_compiled_jsps-0000.jar");
-    assertThat(jspJar.exists()).isTrue();
-    // Test that the classes in the generated jar are for Java8.
-    assertThat(getJavaJarVersion(jspJar)).isEqualTo(8);
-
-    // See if one of the Jetty9 or Jetty12  JSP jars is being added:
-    assertThat(
-            new File(stageDir, "WEB-INF/lib/org.apache.taglibs.taglibs-standard-impl-1.2.5.jar")
-                    .exists()
-                || new File(
-                        stageDir,
-                        "WEB-INF/lib/org.glassfish.web.jakarta.servlet.jsp.jstl-3.0.1.jar")
-                    .exists()
-                || new File(
-                        stageDir, "WEB-INF/lib/org.glassfish.web.javax.servlet.jsp.jstl-1.2.5.jar")
-                    .exists()
-                || new File(
-                        stageDir, "WEB-INF/lib/wasp-4.0.0.jar")
-                    .exists())
-        .isTrue();
-  }
-
-  @Test
   public void testStageGaeStandardJava8Servlet31QuickstartWebListenerMemcache()
       throws IOException, ParserConfigurationException, SAXException {
     Application testApp = Application.readApplication(SERVLET3_STANDARD_WEBLISTENER_MEMCACHE);
@@ -1513,11 +1488,7 @@ public class ApplicationTest {
     // TODO: review. This expectation used to be 3, this is because the Jetty
     //  QuickStartGeneratorConfiguration.generateQuickStartWebXml will now
     //  add an empty set if it doesn't have any SCIs instead of not setting the context param.
-    if (Boolean.getBoolean("appengine.use.EE8") || Boolean.getBoolean("appengine.use.EE10") || Boolean.getBoolean("appengine.use.EE11")) {
-      assertThat(nodeList.getLength()).isEqualTo(4);
-    } else {
-      assertThat(nodeList.getLength()).isEqualTo(3);
-    }
+    assertThat(nodeList.getLength()).isEqualTo(4);
     for (int i = 0; i < nodeList.getLength(); i++) {
       Node contextParam = nodeList.item(i).getFirstChild();
       int nbParamValue = 0;
@@ -1656,13 +1627,14 @@ public class ApplicationTest {
               + ",interested=[],applicable=[],annotated=[]}\"";
       assertThat(trimmedContextParams)
           .containsEntry("org.eclipse.jetty.containerInitializers", expectedJasperInitializer);
-    } else if (Boolean.getBoolean("appengine.use.EE10")) {
-      String expectedJasperInitializer =
-          "\"ContainerInitializer"
-              + "{org.eclipse.jetty.ee10.apache.jsp.JettyJasperInitializer"
-              + ",interested=[],applicable=[],annotated=[]}\"";
-      assertThat(trimmedContextParams)
-          .containsEntry("org.eclipse.jetty.containerInitializers", expectedJasperInitializer);
+    } else if (Boolean.getBoolean("appengine.use.EE10")) { //Now EE11 locally
+       String initializers = trimmedContextParams.get("org.eclipse.jetty.containerInitializers");
+      assertThat(initializers)
+          .contains(
+              "\"ContainerInitializer{org.eclipse.jetty.ee11.apache.jsp.JettyJasperInitializer,interested=[],applicable=[],annotated=[]}\"");
+      assertThat(initializers)
+          .contains(
+              "\"ContainerInitializer{org.glassfish.wasp.runtime.TldScanner,interested=[],applicable=[],annotated=[]}\"");
     } else if (Boolean.getBoolean("appengine.use.EE11")) {
       String initializers = trimmedContextParams.get("org.eclipse.jetty.containerInitializers");
       assertThat(initializers)
@@ -1674,7 +1646,7 @@ public class ApplicationTest {
     } else {
       String expectedJasperInitializer =
           "\"ContainerInitializer"
-              + "{org.eclipse.jetty.apache.jsp.JettyJasperInitializer"
+              + "{org.eclipse.jetty.ee8.apache.jsp.JettyJasperInitializer"
               + ",interested=[],applicable=[],annotated=[]}\"";
     assertThat(trimmedContextParams)
         .containsEntry("org.eclipse.jetty.containerInitializers", expectedJasperInitializer);

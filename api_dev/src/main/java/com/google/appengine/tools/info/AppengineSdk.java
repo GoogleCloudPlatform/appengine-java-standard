@@ -97,12 +97,6 @@ public abstract class AppengineSdk {
     }
 
     URL codeLocation = AppengineSdk.class.getProtectionDomain().getCodeSource().getLocation();
-    String msg =
-        "Unable to discover the Google App Engine SDK root. This code should be loaded "
-            + "from the SDK directory, but was instead loaded from "
-            + codeLocation
-            + ".  Specify "
-            + "-Dappengine.sdk.root to override the SDK location.";
     File libDir;
     try {
       libDir = new File(codeLocation.toURI());
@@ -186,20 +180,6 @@ public abstract class AppengineSdk {
   }
 
   /**
-   * Optional user libs reside under <sdk_root>/lib/opt/user. Each top-level directory under this
-   * path identifies an optional user library, and each sub-directory for a specific library
-   * represents a version of that library. So for example we could have:
-   * lib/opt/user/mylib1/v1/mylib.jar lib/opt/user/mylib1/v2/mylib.jar
-   * lib/opt/user/mylib2/v1/mylib.jar lib/opt/user/mylib2/v2/mylib.jar
-   *
-   * @return A {@link SortedMap} from the name of the library to an {@link OptionalLib} that
-   *     describes the library. The map is sorted by library name.
-   */
-  private SortedMap<String, OptionalLib> determineOptionalUserLibs() {
-    return determineOptionalLibs(new File(sdkRoot, "lib/opt/user"));
-  }
-
-  /**
    * Optional tools libs reside under <sdk_root>/lib/opt/tools. Each top-level directory under this
    * path identifies an optional tools library, and each sub-directory for a specific library
    * represents a version of that library. So for example we could have:
@@ -278,31 +258,7 @@ public abstract class AppengineSdk {
     if (currentSdk != null) {
       return currentSdk;
     }
-
-    boolean useJetty121 = Boolean.getBoolean("appengine.use.jetty121");
-    boolean useEE8 = Boolean.getBoolean("appengine.use.EE8");
-    boolean useEE10 = Boolean.getBoolean("appengine.use.EE10");
-    boolean useEE11 = Boolean.getBoolean("appengine.use.EE11");
-
-    if (useJetty121) { // Jetty121 case, supports EE8, EE10, EE11
-      if (useEE8) {
-        currentSdk = new Jetty121EE8Sdk();
-      } else if (useEE10) {
-        throw new IllegalArgumentException("appengine.use.EE10 is not supported in Jetty121");
-      } else if (useEE11) {
-        currentSdk = new Jetty121EE11Sdk();
-      } else {
-        currentSdk = new Jetty121EE11Sdk(); // EE11 is the default for Jetty121
-      }
-    } else { // Jetty12 case, supports EE8, EE10 or classic which is Jetty 9.4
-      if (useEE8 || useEE10) {
-        currentSdk = new Jetty12Sdk();
-      } else if (useEE11) {
-        throw new IllegalArgumentException("appengine.use.EE11 is not supported in Jetty12");
-      } else {
-        currentSdk = new ClassicSdk();
-      }
-    }
+    currentSdk = SdkFactory.getSdk();
     return currentSdk;
   }
 
