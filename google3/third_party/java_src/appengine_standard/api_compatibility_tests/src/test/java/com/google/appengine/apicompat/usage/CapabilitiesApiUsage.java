@@ -46,7 +46,7 @@ public class CapabilitiesApiUsage {
     @Override
     public Set<Class<?>> useApi() {
       CapabilitiesService cs = CapabilitiesServiceFactory.getCapabilitiesService();
-      CapabilitiesServiceFactory csf = new CapabilitiesServiceFactory(); // TODO(maxr): deprecate
+      CapabilitiesServiceFactory csf = new CapabilitiesServiceFactory(); // TODO: deprecate
       return classes(Object.class);
     }
   }

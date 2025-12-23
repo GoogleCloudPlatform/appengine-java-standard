@@ -221,7 +221,7 @@ class Jetty121EE11Sdk extends Jetty121EE8Sdk {
             || f.getName().contains("jakarta.interceptor")
             || f.getName().contains("jakarta.servlet-api-6.0.0") // for EE10
             || f.getName().contains("jakarta.transaction")
-            // TODO(ludo) Still needed for EE11, not sure why
+            // TODO Still needed for EE11, not sure why
             // || f.getName().contains("jetty-servlet-api-") // no javax.
             || f.getName().contains("ee8") // we want ee11 only. jakarta apis should be in shared
             || f.getName().contains("ee9") // we want ee11 only. jakarta apis should be in shared

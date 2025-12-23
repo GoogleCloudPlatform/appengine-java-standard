@@ -297,7 +297,7 @@ public class MailApiUsage {
 
     @Override
     public Set<Class<?>> useApi() {
-      BounceNotificationParser unused = new BounceNotificationParser(); // TODO(maxr): deprecate
+      BounceNotificationParser unused = new BounceNotificationParser(); // TODO: deprecate
       HttpServletRequest request = null;
       try {
         BounceNotificationParser.parse(request);

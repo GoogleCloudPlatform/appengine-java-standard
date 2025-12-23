@@ -970,7 +970,7 @@ public final class ProberApp extends HttpServlet {
     mailService.send(
         new MailService.Message(
             sender, "nobody@google.com", "java-prober-test-subject", "java-prober-test-textbody"));
-    // TODO(jihuinie): decide if we want to test sendToAdmins() in probers
+    // TODO: decide if we want to test sendToAdmins() in probers
     // mailService.sendToAdmins(
     //     new MailService.Message(sender, /* to= */ null, "test-subject", "test-textbody"));
   }
@@ -1161,7 +1161,7 @@ public final class ProberApp extends HttpServlet {
     // The SSL certificate in GAE QA environment doesn't include `uc.r.prom-qa.sandbox.google.com`,
     // and this blocks the QA app from sending HTTP request to itself. We need to suppress the cert
     // validation in QA for now.
-    // TODO(jihuinie): remove when b/190648760 is fixed.
+    // TODO: remove when b/190648760 is fixed.
     if (isRunningInQa()) {
       httpClient = makeHttpClientWithoutSslValidation();
     }

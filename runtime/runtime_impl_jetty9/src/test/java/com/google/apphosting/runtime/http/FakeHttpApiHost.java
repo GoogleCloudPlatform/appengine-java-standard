@@ -31,7 +31,6 @@ import com.sun.net.httpserver.HttpServer;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.URL;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -71,7 +70,7 @@ public class FakeHttpApiHost {
 
   public static FakeHttpApiHost create(int port, ApiRequestHandler apiRequestHandler)
       throws IOException {
-    InetSocketAddress socketAddress = new InetSocketAddress(InetAddress.getLoopbackAddress(), port);
+    InetSocketAddress socketAddress = new InetSocketAddress(port);
     HttpServer httpApiHostServer = HttpServer.create(socketAddress, 0);
     ReentrantLock freezeLock = new ReentrantLock();
     httpApiHostServer.createContext(

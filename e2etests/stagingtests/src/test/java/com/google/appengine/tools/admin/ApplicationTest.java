@@ -377,7 +377,7 @@ public class ApplicationTest {
     testApp.validateForStaging();
   }
 
-  // TODO(ludo)  @Test
+  // TODO  @Test
   public void testReadApplicationForStagingWithAppIdAndVersionFromFile() throws IOException {
     Application testApp =
         Application.readApplication(STAGE_WITH_APPID_AND_VERSION_TEST_APP, null, null, null);
@@ -537,7 +537,7 @@ public class ApplicationTest {
     assertThat(count).isEqualTo(2); // org.eclipse and org.mortbay
   }
 
-  // TODO(ludo) @Test
+  // TODO @Test
   public void testStageForGcloudOnlyCopyAppYamlToRoot() throws IOException {
     Application testApp =
         Application.readApplication(getWarPath("stage-with-all-xmls"), null, null, null);
@@ -567,7 +567,7 @@ public class ApplicationTest {
     assertThat(new File(stagingDir, "queue.yaml").exists()).isFalse();
   }
 
-  // TODO(ludo) @Test
+  // TODO @Test
   public void testDoNotStageDispatchForUpdate() throws IOException {
     Application testApp =
         Application.readApplication(getWarPath("sample-dispatch"), null, null, null);
@@ -596,15 +596,15 @@ public class ApplicationTest {
     File sdkRoot = new File(SDK_ROOT);
     File apiJar = new File(sdkRoot, apiJarPath);
     assertWithMessage(apiJar.toString()).that(apiJar.exists()).isTrue();
-    // TODO(ludo)  File remoteApiJar = new File(sdkRoot, "lib/appengine-remote-api.jar");
-    // TODO(ludo) assertWithMessage(remoteApiJar.toString()).that(remoteApiJar.exists()).isTrue();
+    // TODO  File remoteApiJar = new File(sdkRoot, "lib/appengine-remote-api.jar");
+    // TODO assertWithMessage(remoteApiJar.toString()).that(remoteApiJar.exists()).isTrue();
     File testDir = new File(tmpDir, testName);
     File webInf = new File(testDir, "WEB-INF");
     File webInfLib = new File(webInf, "lib");
     boolean madeWebInfLib = webInfLib.mkdirs();
     assertThat(madeWebInfLib).isTrue();
     Files.copy(apiJar, new File(webInfLib, "appengine-api.jar"));
-    // TODO(ludo) Files.copy(remoteApiJar, new File(webInfLib, "appengine-remote-api.jar"));
+    // TODO Files.copy(remoteApiJar, new File(webInfLib, "appengine-remote-api.jar"));
     File testAppRoot = new File(TEST_FILES);
     Files.copy(new File(testAppRoot, "WEB-INF/web.xml"), new File(webInf, "web.xml"));
     Files.copy(
@@ -1309,7 +1309,7 @@ public class ApplicationTest {
     assertThat(testApp.getDispatchXml().toYaml()).isEqualTo(expectYaml);
   }
 
-  // TODO(ludo)  @Test
+  // TODO  @Test
   public void testDispatch_xmlAndYaml() throws IOException {
     Application testApp = Application.readApplication(getWarPath("sample-dispatch-xml-and-yaml"));
     String expectYaml = "dispatch:\n" + "- url: '*/userapp/*'\n" + "  module: web\n";
@@ -1653,7 +1653,7 @@ public class ApplicationTest {
     }
   }
 
-  // TODO(ludo) @Test
+  // TODO @Test
   public void testStageGaeStandardJava8WithContextInitializers()
       throws IOException, ParserConfigurationException, SAXException {
     Application testApp = Application.readApplication(SERVLET3_STANDARD_APP_WITH_CONTAINER_INIT);

@@ -29,7 +29,6 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import java.io.Closeable;
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.file.Path;
 import java.util.concurrent.CompletionService;
@@ -217,7 +216,7 @@ public class ApiCallsTest extends JavaRuntimeViaHttpBase {
    */
   private static class ApiServer extends DummyApiServer {
     static ApiServer create(int apiPort) throws IOException {
-      InetSocketAddress address = new InetSocketAddress(InetAddress.getLoopbackAddress(), apiPort);
+      InetSocketAddress address = new InetSocketAddress(apiPort);
       HttpServer httpServer = HttpServer.create(address, 0);
       ApiServer apiServer = new ApiServer(httpServer);
       httpServer.createContext("/", apiServer::handle);
@@ -277,7 +276,7 @@ public class ApiCallsTest extends JavaRuntimeViaHttpBase {
   private static class ErrorApiServer extends DummyApiServer {
     static ErrorApiServer create(int apiPort, RemoteApiPb.RpcError.ErrorCode error)
         throws IOException {
-      InetSocketAddress address = new InetSocketAddress(InetAddress.getLoopbackAddress(), apiPort);
+      InetSocketAddress address = new InetSocketAddress(apiPort);
       HttpServer httpServer = HttpServer.create(address, 0);
       ErrorApiServer apiServer = new ErrorApiServer(httpServer, error);
       httpServer.createContext("/", apiServer::handle);

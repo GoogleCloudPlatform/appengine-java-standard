@@ -29,7 +29,7 @@ option cc_enable_arenas = true;
 // A single key/value pair.
 message LabelProto {
   oneof id {
-    // TODO(36442493): unnest from the oneof.
+    // TODO: unnest from the oneof.
     // The size of the key is up to 128 bytes.
     string key = 1;
   }

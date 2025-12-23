@@ -125,7 +125,7 @@ import org.mockito.Mockito;
 /**
  * Exhaustive usage of the Datastore Api. Used for backward compatibility checks.
  */
-// TODO(maxr): Add usage for the rest of the Datastore API.
+// TODO: Add usage for the rest of the Datastore API.
 @SuppressWarnings({"unused", "SelfEquals"})
 public class DatastoreApiUsage {
 
@@ -1036,7 +1036,7 @@ public class DatastoreApiUsage {
   //   }
   // }
 
-  // TODO(maxr): Make public when functionality is complete
+  // TODO: Make public when functionality is complete
   // /**
   //  * Exhaustive use of {@link EntityCachingCriteria}.
   //  */
@@ -1926,7 +1926,7 @@ public class DatastoreApiUsage {
       ___apiConstant_KIND_METADATA_KIND = Entities.KIND_METADATA_KIND;
       ___apiConstant_PROPERTY_METADATA_KIND = Entities.PROPERTY_METADATA_KIND;
 
-      Entities entities = new Entities(); // TODO(maxr) deprecate
+      Entities entities = new Entities(); // TODO deprecate
       Key key = KeyFactory.createKey("yar", 23L);
       key = Entities.createEntityGroupKey(key);
       key = Entities.createKindKey("yar");

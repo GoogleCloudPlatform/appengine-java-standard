@@ -20,7 +20,6 @@ import static com.google.common.truth.Truth.assertThat;
 import com.google.common.net.HostAndPort;
 import java.io.File;
 import java.io.IOException;
-import java.net.InetSocketAddress;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.http.Header;
@@ -94,7 +93,7 @@ public class DevAppServerMainTest extends DevAppServerTestBase {
         new HttpGet(
             String.format(
                 "http://%s%s",
-                HostAndPort.fromParts(new InetSocketAddress(jettyPort).getHostString(), jettyPort),
+                HostAndPort.fromParts("127.0.0.1", jettyPort),
                 "/_ah/admin/search"));
     String content;
     HttpResponse response = httpClient.execute(get);
@@ -115,7 +114,7 @@ public class DevAppServerMainTest extends DevAppServerTestBase {
     String url =
         String.format(
             "http://%s%s",
-            HostAndPort.fromParts(new InetSocketAddress(jettyPort).getHostString(), jettyPort),
+            HostAndPort.fromParts("127.0.0.1", jettyPort),
             "/session");
     HttpGet get1 = new HttpGet(url);
     HttpResponse response1 = httpClient.execute(get1);

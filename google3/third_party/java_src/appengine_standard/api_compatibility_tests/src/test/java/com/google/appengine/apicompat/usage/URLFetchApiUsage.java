@@ -53,7 +53,7 @@ public class URLFetchApiUsage {
 
     @Override
     public Set<Class<?>> useApi() {
-      URLFetchServiceFactory unused = new URLFetchServiceFactory(); // TODO(maxr): deprecate
+      URLFetchServiceFactory unused = new URLFetchServiceFactory(); // TODO: deprecate
       URLFetchServiceFactory.getURLFetchService();
       return classes(Object.class);
     }

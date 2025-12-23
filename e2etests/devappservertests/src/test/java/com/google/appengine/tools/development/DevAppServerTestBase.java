@@ -30,11 +30,11 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.RequestConfig;
@@ -181,7 +181,7 @@ public abstract class DevAppServerTestBase {
     runtimeArgs.add("-cp");
     runtimeArgs.add(TOOLS_JAR);
     runtimeArgs.add("com.google.appengine.tools.development.DevAppServerMain");
-    runtimeArgs.add("--address=" + new InetSocketAddress(jettyPort).getHostString());
+    runtimeArgs.add("--address=127.0.0.1");
     runtimeArgs.add("--port=" + jettyPort);
     runtimeArgs.add("--allow_remote_shutdown"); // Keep as used in Maven plugin
     runtimeArgs.add("--disable_update_check"); // Keep, as used in Maven plugin
@@ -210,7 +210,9 @@ public abstract class DevAppServerTestBase {
 
   @After
   public void destroyRuntime() throws Exception {
-    runtimeProc.destroy();
+    if (runtimeProc != null) {
+      runtimeProc.destroy();
+    }
   }
 
   private Process launchRuntime(
@@ -224,7 +226,12 @@ public abstract class DevAppServerTestBase {
     OutputPump errPump = new OutputPump(process.getErrorStream(), serverStarted);
     new Thread(outPump).start();
     new Thread(errPump).start();
-    serverStarted.await();
+    if (!serverStarted.await(120, TimeUnit.SECONDS)) {
+      throw new RuntimeException("Dev App Server failed to start (timed out).");
+    }
+    if (!process.isAlive()) {
+      throw new RuntimeException("Dev App Server exited prematurely.");
+    }
     return process;
   }
 
@@ -240,9 +247,7 @@ public abstract class DevAppServerTestBase {
     HttpGet get =
         new HttpGet(
             String.format(
-                "http://%s%s",
-                HostAndPort.fromParts(new InetSocketAddress(jettyPort).getHostString(), jettyPort),
-                url));
+                "http://%s%s", HostAndPort.fromParts("127.0.0.1", jettyPort), url));
     String content = "";
     int retCode = 0;
     for (int i = 0; i < numberOfRetries; i++) {
@@ -264,9 +269,7 @@ public abstract class DevAppServerTestBase {
     HttpGet get =
         new HttpGet(
             String.format(
-                "http://%s%s",
-                HostAndPort.fromParts(new InetSocketAddress(jettyPort).getHostString(), jettyPort),
-                url));
+                "http://%s%s", HostAndPort.fromParts("127.0.0.1", jettyPort), url));
     String content = "";
     int retCode = 0;
     for (int i = 0; i < numberOfRetries; i++) {
@@ -303,6 +306,8 @@ public abstract class DevAppServerTestBase {
         }
       } catch (IOException ignored) {
         // ignored
+      } finally {
+        serverStarted.countDown();
       }
     }
   }
