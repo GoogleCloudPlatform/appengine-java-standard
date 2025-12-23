@@ -293,7 +293,7 @@
                     <include>com/google/appengine/api/*</include>
                     <include>com/google/appengine/api/backends/*</include>
                     <include>com/google/appengine/api/blobstore/*</include>
-                    <include>com/google/appengine/api/blobstore/ee10/*</include>
+                    <include>com/google/appengine/api/blobstore/jakarta/*</include>
                     <include>com/google/appengine/api/capabilities/*</include>
                     <include>com/google/appengine/api/images/*</include>
                     <include>com/google/appengine/api/internal/*</include>
@@ -346,16 +346,6 @@
                     <include>com/google/apphosting/utils/servlet/SnapshotServlet*</include>
                     <include>com/google/apphosting/utils/servlet/TransactionCleanupFilter*</include>
                     <include>com/google/apphosting/utils/servlet/WarmupServlet*</include>
-                    <!-- marked as deprecated in 3.0, but not removed from the API surface -->
-                    <include>com/google/apphosting/utils/servlet/ee10/DeferredTaskServlet*</include>
-                    <include>com/google/apphosting/utils/servlet/ee10/JdbcMySqlConnectionCleanupFilter*</include>
-                    <include>com/google/apphosting/utils/servlet/ee10/MultipartMimeUtils*</include>
-                    <include>com/google/apphosting/utils/servlet/ee10/ParseBlobUploadFilter*</include>
-                    <include>com/google/apphosting/utils/servlet/ee10/SessionCleanupServlet*</include>
-                    <include>com/google/apphosting/utils/servlet/ee10/SnapshotServlet*</include>
-                    <include>com/google/apphosting/utils/servlet/ee10/TransactionCleanupFilter*</include>
-                    <include>com/google/apphosting/utils/servlet/ee10/WarmupServlet*</include>
-                    <!-- end marked as deprecated in 3.0 -->
                     <include>com/google/apphosting/utils/servlet/jakarta/DeferredTaskServlet*</include>
                     <include>com/google/apphosting/utils/servlet/jakarta/JdbcMySqlConnectionCleanupFilter*</include>
                     <include>com/google/apphosting/utils/servlet/jakarta/MultipartMimeUtils*</include>
@@ -443,6 +433,7 @@
                 <filter>
                   <artifact>*:*</artifact>
                   <excludes>
+                    <exclude>google/datastore/v1/*.proto</exclude>
                     <exclude>org/apache/juli/**</exclude>
                     <exclude>META-INF/maven/**</exclude>
                     <exclude>META-INF/versions/**</exclude>
