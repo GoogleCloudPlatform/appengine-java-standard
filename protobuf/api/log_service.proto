@@ -20,8 +20,6 @@ syntax = "proto2";
 
 package java.apphosting;
 
-import "source.proto";
-
 option java_package = "com.google.apphosting.api.logservice";
 option java_outer_classname = "LogServicePb";
 
@@ -42,8 +40,6 @@ message UserAppLogLine {
   required int64 level = 2;
   required string message = 3;
 
-  // Line of code that generated this log message.
-  optional SourceLocation source_location = 4;
 }
 
 message UserAppLogGroup {
@@ -81,8 +77,6 @@ message LogLine {
   // User provided log message.
   required string log_message = 3;
 
-  // Line of code that generated this log message.
-  optional SourceLocation source_location = 4;
 }
 
 // Complete log information about a single request to an application.

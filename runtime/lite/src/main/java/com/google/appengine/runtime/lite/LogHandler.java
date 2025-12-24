@@ -17,16 +17,11 @@
 package com.google.appengine.runtime.lite;
 
 import static com.google.common.base.Throwables.getStackTraceAsString;
-import static java.util.Arrays.stream;
 
 import com.google.apphosting.api.ApiProxy;
 import com.google.cloud.logging.LogEntry;
 import com.google.cloud.logging.LoggingHandler;
 import com.google.cloud.logging.LoggingOptions;
-import com.google.cloud.logging.SourceLocation;
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.flogger.LogSite;
-import com.google.common.flogger.backend.system.AbstractLogRecord;
 import java.util.Optional;
 import java.util.logging.Formatter;
 import java.util.logging.Level;
@@ -102,9 +97,6 @@ public class LogHandler extends LoggingHandler {
       environmentImpl.getSpanId().ifPresent(builder::setSpanId);
     }
 
-    // Get the source location from a couple potential options:
-    getSourceLocation(record).ifPresent(builder::setSourceLocation);
-
     // Set some extra thread information:
     builder.addLabel(THREAD_ID_LABEL, Integer.toString(record.getThreadID()));
     builder.addLabel(THREAD_NAME_LABEL, Thread.currentThread().getName());
@@ -114,52 +106,5 @@ public class LogHandler extends LoggingHandler {
         .ifPresent(x -> builder.addLabel(EXCEPTION_LABEL, x.getClass().getName()));
 
     return builder;
-  }
-
-  private static Optional<SourceLocation> getSourceLocation(LogRecord record) {
-    // Java log records contain a class name and method, but no file and line information.
-    // The Cloud Logger proto has this, so try our best to fill it in...
-
-    // First, try reading flogger metadata (which involves downcasting the LogRecord to a flogger
-    // type):
-    Optional<SourceLocation> ret = getSrcInfoFromFloggerMetadata(record);
-    if (ret.isPresent()) {
-      return ret;
-    }
-
-    // Secondly, for logs which didn't come from flogger, try searching the stack for an entry
-    // which looks like the record:
-    return getSrcInfoFromStack(record);
-  }
-
-  @VisibleForTesting
-  static Optional<SourceLocation> getSrcInfoFromFloggerMetadata(LogRecord record) {
-    if (record instanceof AbstractLogRecord) {
-      LogSite logSite = ((AbstractLogRecord) record).getLogData().getLogSite();
-      return Optional.of(
-          SourceLocation.newBuilder()
-              .setFunction(logSite.getClassName() + "." + logSite.getMethodName())
-              .setFile(logSite.getFileName())
-              .setLine(Long.valueOf(logSite.getLineNumber()))
-              .build());
-    }
-    return Optional.empty();
-  }
-
-  @VisibleForTesting
-  static Optional<SourceLocation> getSrcInfoFromStack(LogRecord record) {
-    return stream(new Throwable().getStackTrace())
-        .filter(
-            frame ->
-                record.getSourceClassName().equals(frame.getClassName())
-                    && record.getSourceMethodName().equals(frame.getMethodName()))
-        .findFirst()
-        .map(
-            frame ->
-                SourceLocation.newBuilder()
-                    .setFile(frame.getFileName())
-                    .setFunction(frame.getClassName() + "." + frame.getMethodName())
-                    .setLine(Long.valueOf(frame.getLineNumber()))
-                    .build());
   }
 }

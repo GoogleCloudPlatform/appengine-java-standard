@@ -23,20 +23,14 @@ import static org.mockito.Mockito.when;
 import com.google.apphosting.api.ApiProxy;
 import com.google.cloud.logging.LogEntry;
 import com.google.cloud.logging.LoggingOptions;
-import com.google.cloud.logging.SourceLocation;
 import com.google.common.collect.Range;
 import com.google.common.flogger.GoogleLogger;
-import com.google.common.flogger.LogSite;
-import com.google.common.flogger.backend.LogData;
-import com.google.common.flogger.backend.Metadata;
-import com.google.common.flogger.backend.system.SimpleLogRecord;
 import java.io.UnsupportedEncodingException;
 import java.time.Instant;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import org.junit.Rule;
@@ -56,8 +50,6 @@ public final class LogHandlerTest {
   @Rule public final MockitoRule mockito = MockitoJUnit.rule();
 
   @Mock private ApiProxy.EnvironmentWithTrace mockEnv;
-  @Mock private LogData mockLogData;
-  @Mock private LogSite mockLogSite;
 
   private static Instant now() {
     // Timestamps in logging have only millisecond precision.
@@ -104,11 +96,7 @@ public final class LogHandlerTest {
     assertThat(labels).containsEntry("threadId", threadId());
     assertThat(labels).containsEntry("threadName", threadName());
     assertThat(labels).containsEntry("exception", "java.lang.Exception");
-    SourceLocation sourceLocation = logEntry.getSourceLocation();
-    assertThat(sourceLocation.getFile()).isEqualTo("LogHandlerTest.java");
-    assertThat(sourceLocation.getLine()).isGreaterThan(0);
-    assertThat(sourceLocation.getFunction())
-        .isEqualTo("com.google.appengine.runtime.lite.LogHandlerTest.testLogEntryFor");
+
     assertThat(logEntry.getTrace()).isEqualTo("projects/null/traces/dummy_trace_id");
     assertThat(logEntry.getSpanId()).isEqualTo("dummy_span_id");
   }
@@ -119,63 +107,5 @@ public final class LogHandlerTest {
 
   private static String threadName() {
     return Thread.currentThread().getName();
-  }
-
-  @Test
-  public void getSrcInfoFromFloggerMetadata_works() {
-    when(mockLogSite.getClassName()).thenReturn("some.package.SomeClass");
-    when(mockLogSite.getMethodName()).thenReturn("someMethod");
-    when(mockLogSite.getFileName()).thenReturn("SomeFile.java");
-    when(mockLogSite.getLineNumber()).thenReturn(1234);
-    when(mockLogData.getLogSite()).thenReturn(mockLogSite);
-    when(mockLogData.getLevel()).thenReturn(Level.INFO);
-    when(mockLogData.getMetadata()).thenReturn(Metadata.empty());
-    LogRecord logRecord = SimpleLogRecord.create(mockLogData, Metadata.empty());
-
-    Optional<SourceLocation> ret = LogHandler.getSrcInfoFromFloggerMetadata(logRecord);
-
-    assertThat(ret).isPresent();
-    SourceLocation sourceLocation = ret.get();
-    assertThat(sourceLocation.getFile()).isEqualTo("SomeFile.java");
-    assertThat(sourceLocation.getFunction()).isEqualTo("some.package.SomeClass.someMethod");
-    assertThat(sourceLocation.getLine()).isEqualTo(1234);
-  }
-
-  @Test
-  public void getSrcInfoFromFloggerMetadata_failsGracefully() {
-    LogRecord record = new LogRecord(Level.INFO, "a message");
-    record.setSourceClassName("ThisDoesNotComeFromFlogger");
-    record.setSourceMethodName("foobar");
-
-    Optional<SourceLocation> ret = LogHandler.getSrcInfoFromFloggerMetadata(record);
-
-    assertThat(ret).isEmpty();
-  }
-
-  @Test
-  public void getSrcInfoFromStack_works() {
-    LogRecord record = new LogRecord(Level.INFO, "a message");
-    record.setSourceClassName("com.google.appengine.runtime.lite.LogHandlerTest");
-    record.setSourceMethodName("getSrcInfoFromStack_works");
-
-    Optional<SourceLocation> ret = LogHandler.getSrcInfoFromStack(record);
-
-    assertThat(ret).isPresent();
-    SourceLocation sourceLocation = ret.get();
-    assertThat(sourceLocation.getFile()).isEqualTo("LogHandlerTest.java");
-    assertThat(sourceLocation.getFunction())
-        .isEqualTo("com.google.appengine.runtime.lite.LogHandlerTest.getSrcInfoFromStack_works");
-    assertThat(sourceLocation.getLine()).isGreaterThan(100);
-  }
-
-  @Test
-  public void getSrcInfoFromStack_failsGracefully() {
-    LogRecord record = new LogRecord(Level.INFO, "a message");
-    record.setSourceClassName("ThisClassDoesNotExist");
-    record.setSourceMethodName("getSrcInfoFromStack_failsGracefully");
-
-    Optional<SourceLocation> ret = LogHandler.getSrcInfoFromStack(record);
-
-    assertThat(ret).isEmpty();
   }
 }

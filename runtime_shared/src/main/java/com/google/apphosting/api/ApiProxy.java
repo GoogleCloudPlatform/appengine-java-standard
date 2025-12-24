@@ -599,11 +599,6 @@ public class ApiProxy {
       this.timestamp = timestamp;
       this.message = message;
       this.stackFrame = stackFrame;
-      if (sourceLocation == null && stackFrame != null) {
-        if (stackFrame.getFileName() == null || stackFrame.getLineNumber() <= 0) {
-          sourceLocation = new Throwable();
-        }
-      }
       this.sourceLocation = sourceLocation;
     }
 

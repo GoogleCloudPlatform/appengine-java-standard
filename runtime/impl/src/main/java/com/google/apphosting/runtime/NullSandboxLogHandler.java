@@ -55,22 +55,10 @@ public final class NullSandboxLogHandler extends LogHandler {
     }
   }
 
-  private boolean logSourceLocationFor(LogRecord record) {
-    // It is completely possible for the class or method name to be null, especially if the
-    // LogRecord came from the form of Logger.logp that has explicit class and method name params.
-    return record.getSourceClassName() != null && record.getSourceMethodName() != null;
-  }
-
   private ApiProxy.LogRecord convertLogRecord(LogRecord record, String message) {
     ApiProxy.LogRecord.Level level = AppLogsWriter.convertLogLevel(record.getLevel());
     long timestamp = record.getMillis() * 1000;
-    if (logSourceLocationFor(record)) {
-      StackTraceElement stackFrame = new StackTraceElement(
-          record.getSourceClassName(), record.getSourceMethodName(), null, -1);
-      return new ApiProxy.LogRecord(level, timestamp, message, stackFrame);
-    } else {
-      return new ApiProxy.LogRecord(level, timestamp, message);
-    }
+    return new ApiProxy.LogRecord(level, timestamp, message);
   }
 
   @Override

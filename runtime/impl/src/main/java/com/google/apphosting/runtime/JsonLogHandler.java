@@ -33,7 +33,6 @@ import org.jspecify.annotations.Nullable;
 /** A log handler that publishes log messages in a json format. */
 public final class JsonLogHandler extends LogHandler {
   private static final String TRACE_KEY = "\"logging.googleapis.com/trace\": ";
-  private static final String SOURCE_LOCATION_KEY = "\"logging.googleapis.com/sourceLocation\": ";
   private static final String SPAN_KEY = "\"logging.googleapis.com/spanId\": ";
   private static final String DEBUG = "DEBUG";
   private static final String INFO = "INFO";
@@ -75,7 +74,6 @@ public final class JsonLogHandler extends LogHandler {
     appendTraceId(json);
     appendSpanId(json);
     appendSeverity(json, record);
-    appendSourceLocation(json, record);
     appendMessage(json, record); // must be last, see appendMessage
     json.append("}");
     // We must output the log all at once (should only call println once per call to publish)
@@ -133,24 +131,6 @@ public final class JsonLogHandler extends LogHandler {
 
   private static void appendSeverity(StringBuilder json, LogRecord record) {
     json.append("\"severity\": \"").append(levelToSeverity(record.getLevel())).append("\", ");
-  }
-
-  private static void appendSourceLocation(StringBuilder json, LogRecord record) {
-    if (record.getSourceClassName() != null && record.getSourceMethodName() != null) {
-      StackTraceElement stackFrame =
-          AppLogsWriter.findStackFrame(
-              record.getSourceClassName(), record.getSourceMethodName(), new Throwable());
-      String function = '"' + stackFrame.getClassName() + "." + stackFrame.getMethodName() + '"';
-      json.append(SOURCE_LOCATION_KEY)
-          .append('{')
-          .append("\"function\": ")
-          .append(function)
-          .append(", \"file\": \"")
-          .append(stackFrame.getFileName())
-          .append("\", \"line\": \"")
-          .append(stackFrame.getLineNumber())
-          .append("\"}, ");
-    }
   }
 
   private static String levelToSeverity(Level level) {

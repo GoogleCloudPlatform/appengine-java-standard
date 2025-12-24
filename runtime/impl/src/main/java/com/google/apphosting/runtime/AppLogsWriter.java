@@ -21,18 +21,16 @@ import com.google.apphosting.api.logservice.LogServicePb.FlushRequest;
 import com.google.apphosting.base.protos.AppLogsPb.AppLogGroup;
 import com.google.apphosting.base.protos.AppLogsPb.AppLogLine;
 import com.google.apphosting.base.protos.RuntimePb.UPResponse;
-import com.google.apphosting.base.protos.SourcePb.SourceLocation;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Stopwatch;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.flogger.GoogleLogger;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.logging.Level;
-import java.util.regex.Pattern;
 import javax.annotation.concurrent.GuardedBy;
 
 /**
@@ -77,17 +75,6 @@ public class AppLogsWriter {
   static final String LOG_TRUNCATED_SUFFIX = "\n<truncated>";
   static final int LOG_TRUNCATED_SUFFIX_LENGTH = LOG_TRUNCATED_SUFFIX.length();
 
-  // This regular expression should match a leading prefix of all
-  // sensitive class names that are to be disregarded for the purposes
-  // of finding the log source location.
-  private static final String PROTECTED_LOGS_CLASSES_REGEXP =
-      "(com\\.google\\.apphosting\\.runtime\\.security"
-          + "|java\\.lang\\.reflect"
-          + "|java\\.lang\\.invoke"
-          + "|java\\.security"
-          + "|sun\\.reflect"
-          + ")\\..+";
-
   private final Object lock = new Object();
 
   private final int maxLogMessageLength;
@@ -105,8 +92,6 @@ public class AppLogsWriter {
   private Future<byte[]> currentFlush;
   @GuardedBy("lock")
   private Stopwatch stopwatch;
-  private static final Pattern PROTECTED_LOGS_CLASSES =
-      Pattern.compile(PROTECTED_LOGS_CLASSES_REGEXP);
 
   public AppLogsWriter(
       MutableUpResponse upResponse,
@@ -192,14 +177,6 @@ public class AppLogsWriter {
           .setTimestampUsec(record.getTimestamp())
           .setMessage(record.getMessage());
 
-      StackTraceElement frame = stackFrameFor(record.getStackFrame(), record.getSourceLocation());
-      if (frame != null) {
-        SourceLocation sourceLocation = getSourceLocationProto(frame);
-        if (sourceLocation != null) {
-          logLineBuilder.setSourceLocation(sourceLocation);
-        }
-      }
-
       appLogLines.add(logLineBuilder.build());
     }
 
@@ -228,7 +205,8 @@ public class AppLogsWriter {
       currentByteCount += serializedSize;
     }
 
-    if (maxSecondsBetweenFlush > 0 && stopwatch.elapsed().getSeconds() >= maxSecondsBetweenFlush) {
+    if (maxSecondsBetweenFlush > 0
+        && stopwatch.elapsed().compareTo(Duration.ofSeconds(maxSecondsBetweenFlush)) >= 0) {
       waitForCurrentFlushAndStartNewFlush();
     }
   }
@@ -399,69 +377,6 @@ public class AppLogsWriter {
   }
 
   /**
-   * Converts the stack trace stored in the Throwable into a SourceLocation
-   * proto. Heuristics are applied to strip out non user code, such as the App
-   * Engine logging infrastructure, and the servlet engine. Heuristics are also
-   * employed to convert class paths into file names.
-   */
-  @VisibleForTesting
-  SourceLocation getSourceLocationProto(StackTraceElement sourceLocationFrame) {
-    if (sourceLocationFrame == null || sourceLocationFrame.getFileName() == null) {
-      return null;
-    }
-    return SourceLocation.newBuilder()
-        .setFile(sourceLocationFrame.getFileName())
-        .setLine(sourceLocationFrame.getLineNumber())
-        .setFunctionName(
-            sourceLocationFrame.getClassName() + "." + sourceLocationFrame.getMethodName())
-        .build();
-  }
-
-  /**
-   * Rewrites the given StackTraceElement with a filename and line number found by looking through
-   * the given Throwable for a frame that has the same class and method as the input
-   * StackTraceElement. If the input frame already has source information then just return it
-   * unchanged.
-   */
-  private static StackTraceElement stackFrameFor(StackTraceElement frame, Throwable stack) {
-    if (frame == null) {
-      // No user-provided stack frame.
-      if (stack == null) {
-        return null;
-      }
-      return getTopUserStackFrame(Throwables.lazyStackTrace(stack));
-    }
-
-    // If we have a user-provided file:line, use it.
-    if (frame.getFileName() != null && frame.getLineNumber() > 0) {
-      return frame;
-    }
-
-    // We should have a Throwable given the preceding, but if for some reason we don't, avoid
-    // throwing NullPointerException.
-    if (stack == null) {
-      return null;
-    }
-
-    return findStackFrame(frame.getClassName(), frame.getMethodName(), stack);
-  }
-
-  /** Searches for the stack frame where the Throwable matches the provided class and method. */
-  static StackTraceElement findStackFrame(String className, String methodName, Throwable stack) {
-    List<StackTraceElement> stackFrames = Throwables.lazyStackTrace(stack);
-    for (StackTraceElement stackFrame : stackFrames) {
-      if (className.equals(stackFrame.getClassName())
-          && methodName.equals(stackFrame.getMethodName())) {
-        return stackFrame;
-      }
-    }
-
-    // No matching stack frame was found, return the top user frame, which should be
-    // the one that called the log method.
-    return AppLogsWriter.getTopUserStackFrame(stackFrames);
-  }
-
-  /**
    * Converts from a Java Logging level to an App Engine logging level.
    * SEVERE maps to error, WARNING to warn, INFO to info, and all
    * lower levels to debug.  We reserve the fatal level for exceptions
@@ -484,33 +399,4 @@ public class AppLogsWriter {
     }
   }
 
-  /**
-   * Analyzes a stack trace and returns the topmost frame that contains user
-   * code, so as to filter out App Engine logging and servlet infrastructure
-   * and just return frames relevant to user code.
-   */
-  public static StackTraceElement getTopUserStackFrame(List<StackTraceElement> stack) {
-    // Find the top-most stack frame in code that belongs to the user.
-    boolean loggerFrameEncountered = false; // Set on the first java.util.logging.Logger frame
-    for (StackTraceElement element : stack) {
-      if (isLoggerFrame(element.getClassName())) {
-        loggerFrameEncountered = true;
-      } else if (loggerFrameEncountered) {
-        // Skip protected frames, e.g., mirrors.
-        if (!isProtectedFrame(element.getClassName())) {
-          return element;
-        }
-      }
-    }
-    return null;
-  }
-
-  private static boolean isLoggerFrame(String cname) {
-    return cname.equals("java.util.logging.Logger")
-        || cname.equals("com.google.devtools.cdbg.debuglets.java.GaeDynamicLogHelper");
-  }
-
-  private static boolean isProtectedFrame(String cname) {
-    return PROTECTED_LOGS_CLASSES.matcher(cname).lookingAt();
-  }
 }

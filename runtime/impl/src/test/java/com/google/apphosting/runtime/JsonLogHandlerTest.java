@@ -55,49 +55,25 @@ public final class JsonLogHandlerTest {
 
     logRecord.setSourceMethodName("testPublish");
     logRecord.setThrown(new Throwable("test throwable"));
-    // Publish twice to ensure the logger is not buffering messages. We need the next 3 lines to be
-    // kept together so the assertion of line numbers is correct
-    Throwable referenceLine = new Throwable();
+    // Publish twice to ensure the logger is not buffering messages.
     handler.publish(logRecord);
     handler.publish(logRecord);
 
-    // The line numbers from the publish calls are being used as part of the test output, so we
-    // calculate it to be used as part of the expected output
-    int firstPublishLine = referenceLine.getStackTrace()[0].getLineNumber() + 1;
-    int secondPublishLine = firstPublishLine + 1;
     String expectedJson =
         "{\"logging.googleapis.com/trace\":"
             + " \"projects/test-project-id/traces/01020304050607080910111213141516\","
             + " \"logging.googleapis.com/spanId\": \"000000000000004a\", \"severity\": \"INFO\","
-            + " \"logging.googleapis.com/sourceLocation\": {\"function\":"
-            + " \"com.google.apphosting.runtime.JsonLogHandlerTest.testPublish\", \"file\":"
-            + " \"JsonLogHandlerTest.java\", \"line\": \""
-            + firstPublishLine
-            + "\"}, \"message\": \"This is a log"
+            + " \"message\": \"This is a log"
             + " message that covers \\\"quotes\\\" \\n"
             + " newlines and \\\\ escaped characters.\\n"
             + JsonLogHandler.ESCAPER.escape(Throwables.getStackTraceAsString(logRecord.getThrown()))
             + "\"}";
-    String expectedJson2 =
-        "{\"logging.googleapis.com/trace\":"
-            + " \"projects/test-project-id/traces/01020304050607080910111213141516\","
-            + " \"logging.googleapis.com/spanId\": \"000000000000004a\", \"severity\": \"INFO\","
-            + " \"logging.googleapis.com/sourceLocation\": {\"function\":"
-            + " \"com.google.apphosting.runtime.JsonLogHandlerTest.testPublish\", \"file\":"
-            + " \"JsonLogHandlerTest.java\", \"line\": \""
-            + secondPublishLine
-            + "\"}, \"message\": \"This is a log"
-            + " message that covers \\\"quotes\\\" \\n"
-            + " newlines and \\\\ escaped characters.\\n"
-            + JsonLogHandler.ESCAPER.escape(Throwables.getStackTraceAsString(logRecord.getThrown()))
-            + "\"}";
-    verify(out, times(1)).println(expectedJson);
-    verify(out, times(1)).println(expectedJson2);
+    verify(out, times(2)).println(expectedJson);
 
     // Verify the escaper removes illegal characters from the JSON:
-    assertThat(expectedJson2).doesNotContain("\t");
-    assertThat(expectedJson2).doesNotContain("\r");
-    assertThat(expectedJson2).doesNotContain("\n");
+    assertThat(expectedJson).doesNotContain("\t");
+    assertThat(expectedJson).doesNotContain("\r");
+    assertThat(expectedJson).doesNotContain("\n");
   }
 
   /** Verify the log handler still works if the project ID is null. */
@@ -109,36 +85,16 @@ public final class JsonLogHandlerTest {
 
     logRecord.setSourceMethodName("testPublishNullProject");
 
-    // Publish twice to ensure the logger is not buffering messages. We need the next 3 lines to be
-    // kept together so the assertion of line numbers is correct
-    Throwable referenceLine = new Throwable();
+    // Publish twice to ensure the logger is not buffering messages.
     handler.publish(logRecord);
     handler.publish(logRecord);
 
-    // The line numbers from the publish calls are being used as part of the test output, so we
-    // calculate it to be used as part of the expected output
-    int firstPublishLine = referenceLine.getStackTrace()[0].getLineNumber() + 1;
-    int secondPublishLine = firstPublishLine + 1;
     String expectedJson =
         "{\"logging.googleapis.com/spanId\": \"000000000000004a\", \"severity\": \"INFO\","
-            + " \"logging.googleapis.com/sourceLocation\": {\"function\":"
-            + " \"com.google.apphosting.runtime.JsonLogHandlerTest.testPublishNullProject\""
-            + ", \"file\": \"JsonLogHandlerTest.java\", \"line\": \""
-            + firstPublishLine
-            + "\"}, \"message\": \"This is a log"
+            + " \"message\": \"This is a log"
             + " message that covers \\\"quotes\\\" \\n"
             + " newlines and \\\\ escaped characters.\"}";
-    String expectedJson2 =
-        "{\"logging.googleapis.com/spanId\": \"000000000000004a\", \"severity\": \"INFO\","
-            + " \"logging.googleapis.com/sourceLocation\": {\"function\":"
-            + " \"com.google.apphosting.runtime.JsonLogHandlerTest.testPublishNullProject\""
-            + ", \"file\": \"JsonLogHandlerTest.java\", \"line\": \""
-            + secondPublishLine
-            + "\"}, \"message\": \"This is a log"
-            + " message that covers \\\"quotes\\\" \\n"
-            + " newlines and \\\\ escaped characters.\"}";
-    verify(out, times(1)).println(expectedJson);
-    verify(out, times(1)).println(expectedJson2);
+    verify(out, times(2)).println(expectedJson);
   }
 
   /** Verify the log handler still works if the message is null. */
