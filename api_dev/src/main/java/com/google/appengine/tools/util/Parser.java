@@ -63,9 +63,8 @@ public class Parser {
    * Finds the action for a particular name.
    *
    * @param actions the actions available
-   * @param name the name of the desired action
-   * @returns an {@link com.google.appengine.tools.util.Action} for the given name, or {@code null}
-   *     if there is no match.
+   * @return an {@link com.google.appengine.tools.util.Action} for the given
+   *     name, or {@code null} if there is no match.
    */
   public static Action lookupAction(List<Action> actions, String[] args, int index) {
     for (Action action : actions) {
@@ -94,7 +93,7 @@ public class Parser {
    * assumes that there is only a single {@link com.google.appengine.tools.util.Action} and, as a
    * result, the user does not specify an action name on the command line.
    *
-   * @param actions a single not-{@code null} {@link com.google.appengine.tools.util.Action}
+   * @param action a single not-{@code null} {@link com.google.appengine.tools.util.Action}
    * @param options a not {@code null}, optionally empty, list
    * @param cmdLineArgs a not {@code null} array of command line arguments
    * @return a not {@code null} {@code ParseResult}

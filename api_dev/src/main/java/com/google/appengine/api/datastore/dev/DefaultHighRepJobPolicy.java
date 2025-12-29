@@ -38,7 +38,8 @@ public class DefaultHighRepJobPolicy implements HighRepJobPolicy {
       "datastore.default_high_rep_job_policy_random_seed";
 
   /**
-   * A float >= 0 and <= 100 representing the percentage of job application attempts that will fail.
+   * A float &gt;= 0 and &lt;= 100 representing the percentage of job application
+   * attempts that will fail.
    * Must be parsable via {@link Float#parseFloat(String)}. Any portion of the value beyond two
    * decimal places will be truncated. If not provided we set the percentage to 0.
    */

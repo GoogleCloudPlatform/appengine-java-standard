@@ -49,10 +49,6 @@ public class AppAdminImplTest {
 
   @Before
   public void setUp() {
-    when(app.getAppId()).thenReturn("app1");
-    when(app.getModule()).thenReturn("module1");
-    when(app.getVersion()).thenReturn("v1");
-
     appAdmin = new AppAdminImpl(app, errorWriter, appOptions);
   }
 

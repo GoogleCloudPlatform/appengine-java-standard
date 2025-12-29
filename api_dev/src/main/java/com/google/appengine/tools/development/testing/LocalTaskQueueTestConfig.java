@@ -49,11 +49,11 @@ import javax.servlet.http.HttpServletResponse;
  * {@link #tearDown()} does not restore default configuration values modified
  * using:
  * <ul>
- * <li>{@link #setDisableAutoTaskExecution()}</li>
- * <li>{@link #setQueueXmlPath()}</li>
- * <li>{@link #setCallbackClass()}</li>
- * <li>{@link #setShouldCopyApiProxyEnvironment()}</li>
- * <li>{@link #setTaskExecutionLatch()}</li>
+ * <li>{@link #setDisableAutoTaskExecution(boolean)}</li>
+ * <li>{@link #setQueueXmlPath(String)}</li>
+ * <li>{@link #setCallbackClass(Class)}</li>
+ * <li>{@link #setShouldCopyApiProxyEnvironment(boolean)}</li>
+ * <li>{@link #setTaskExecutionLatch(CountDownLatch)}</li>
  * </ul>
  *
  */
@@ -398,7 +398,8 @@ public final class LocalTaskQueueTestConfig implements LocalServiceTestConfig {
 
   /**
    * A {@link CountDownLatch} extension that can be reset.  Pass an instance of
-   * this class to {@link LocalTaskQueueTestConfig#setTaskExecutionLatch)} when
+   * this class to {@link
+   * LocalTaskQueueTestConfig#setTaskExecutionLatch(CountDownLatch)} when
    * you need to reuse the latch within or across tests.  Only one thread at a
    * time should ever call any of the {@link #await} or {@link #reset} methods.
    */

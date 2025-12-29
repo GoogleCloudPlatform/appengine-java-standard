@@ -21,12 +21,11 @@ import java.io.Serializable;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.logging.Logger;
 
 /**
  * A client-side cookie.
- *
- * @see com.google.yans.ClientCookieManager
  */
 public class ClientCookie implements Comparable<ClientCookie>, Serializable {
 
@@ -196,7 +195,7 @@ public class ClientCookie implements Comparable<ClientCookie>, Serializable {
    * @return true if the cookie matches this request, false if not.
    */
   public boolean match(URL url) {
-    final String requestHost = url.getHost().toLowerCase();
+    final String requestHost = url.getHost().toLowerCase(Locale.ROOT);
     final String requestPath = url.getPath();
     if (effectiveDomain_.startsWith(".")) {
       if (!requestHost.endsWith(effectiveDomain_) &&
@@ -373,7 +372,7 @@ public class ClientCookie implements Comparable<ClientCookie>, Serializable {
       while (parser.peek() == ';') {
         parser.eatChar(';');
         parser.eatLWS();
-        final String name = parser.eatToken().toLowerCase();
+        final String name = parser.eatToken().toLowerCase(Locale.ROOT);
         parser.eatLWS();
         if (name.equals("secure")) {
           cookie.secure_ = true;
@@ -386,7 +385,7 @@ public class ClientCookie implements Comparable<ClientCookie>, Serializable {
           if (name.equals("comment")) {
             cookie.comment_ = value;
           } else if (name.equals("domain")) {
-            cookie.domain_ = value.toLowerCase();
+            cookie.domain_ = value.toLowerCase(Locale.ROOT);
           } else if (name.equals("max-age")) {
             final int maxAge;
             try {
@@ -398,7 +397,7 @@ public class ClientCookie implements Comparable<ClientCookie>, Serializable {
               throw new HttpHeaderParseException("invalid max-age: " +
                 setCookie1Header);
             }
-            cookie.expires_ = System.currentTimeMillis() + 1000 * maxAge;
+            cookie.expires_ = System.currentTimeMillis() + 1000L * maxAge;
           } else if (name.equals("path")) {
             cookie.path_ = value;
           } else if (name.equals("version")) {
@@ -423,7 +422,7 @@ public class ClientCookie implements Comparable<ClientCookie>, Serializable {
 
       // validate the cookie - see RFC 2109 sec. 4.3.1, 4.3.2
       boolean valid = true;
-      final String requestHost = url.getHost().toLowerCase();
+      final String requestHost = url.getHost().toLowerCase(Locale.ROOT);
       final String requestPath = url.getPath();
       if (cookie.domain_ == null) {
         cookie.effectiveDomain_ = requestHost;
@@ -508,7 +507,7 @@ public class ClientCookie implements Comparable<ClientCookie>, Serializable {
     while (!parser.isEnd()) {
       parser.eatChar(';');
       parser.eatLWS();
-      final String name = parser.eatV0CookieToken().toLowerCase();
+      final String name = parser.eatV0CookieToken().toLowerCase(Locale.ROOT);
       if (name.equals("secure")) {
         cookie.secure_ = true;
       } else if (name.equals("httponly")) {
@@ -522,7 +521,7 @@ public class ClientCookie implements Comparable<ClientCookie>, Serializable {
         } else {
           final String value = parser.eatV0CookieValue();
           if (name.equals("domain")) {
-            cookie.domain_ = value.toLowerCase();
+            cookie.domain_ = value.toLowerCase(Locale.ROOT);
           } else if (name.equals("path")) {
             cookie.path_ = value;
           } else {
@@ -535,7 +534,7 @@ public class ClientCookie implements Comparable<ClientCookie>, Serializable {
     }
 
     // validate the cookie -- see Netscape V0 spec
-    final String requestHost = url.getHost().toLowerCase();
+    final String requestHost = url.getHost().toLowerCase(Locale.ROOT);
     final String requestPath = url.getPath();
     boolean valid = true;
     if (cookie.domain_ == null) {

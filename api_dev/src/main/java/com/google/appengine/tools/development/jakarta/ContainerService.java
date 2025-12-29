@@ -22,8 +22,9 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 /**
- * Provides the backing servlet container support for the {@link DevAppServer}, as discovered via
- * {@link ServiceProvider}.
+ * Provides the backing servlet container support for the {@link
+ * com.google.appengine.tools.development.DevAppServer}, as discovered via
+ * ServiceProvider.
  *
  * <p>More specifically, this interface encapsulates the interactions between the {@link
  * DevAppServer} and the underlying servlet container, which by default uses Jetty.

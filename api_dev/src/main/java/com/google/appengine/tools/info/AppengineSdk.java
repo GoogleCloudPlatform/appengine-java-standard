@@ -120,7 +120,7 @@ public abstract class AppengineSdk {
   public abstract List<URL> getSharedLibs();
 
   /**
-   * @deprecated Use {@link #getOptionalUserLibs()} instead.
+   * @deprecated Use getOptionalUserLibs() instead.
    */
   @Deprecated
   public List<URL> getUserLibs() {
@@ -128,7 +128,7 @@ public abstract class AppengineSdk {
   }
 
   /**
-   * @deprecated Use {@link #getOptionalUserLibs()} instead.
+   * @deprecated Use getOptionalUserLibs() instead.
    */
   @Deprecated
   public List<File> getUserLibFiles() {

@@ -21,7 +21,7 @@ import com.google.cloud.datastore.logs.ProblemCode;
 /**
  * For use with "legacy" problems, i.e. ones specified via a string constant error message and not a
  * {@link ProblemCode}. <b>Do not add uses</b>; instead, specify a new problem code and an error
- * message to {@link ErrorMessages} so that we can do API-specific translation.
+ * message to ErrorMessages so that we can do API-specific translation.
  */
 public class LegacyProblem extends Problem {
 

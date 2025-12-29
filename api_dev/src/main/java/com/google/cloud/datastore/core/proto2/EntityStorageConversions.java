@@ -51,7 +51,8 @@ public final class EntityStorageConversions {
   }
 
   /**
-   * Same as {@link #preprocessIndexes(EntityProto)} except empty list are not stashed, this is the
+   * Same as {@link #preprocessIndexes(EntityProto.Builder)} except empty list
+   * are not stashed, this is the
    * current behavior of the emulators.
    *
    * <p>NOTE: there is no clear reason why the emulators are not stashing empty lists, this may be a

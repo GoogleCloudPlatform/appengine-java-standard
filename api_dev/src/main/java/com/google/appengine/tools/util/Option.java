@@ -126,9 +126,9 @@ public abstract class Option {
    *
    * This method will be called exactly one time (even if the option was
    * specified on the command line multiple times). If the value is singular,
-   * the method can call {@link Option.getValue()} to get the appropriate
+   * the method can call {@link Option#getValue()} to get the appropriate
    * value; if the value is multiple, the method can call {@link
-   * Option.getValues()} to get all the values.
+   * Option#getValues()} to get all the values.
    *
    * @throws IllegalArgumentException if the parsed value is invalid.
    */

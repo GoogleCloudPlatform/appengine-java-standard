@@ -18,7 +18,7 @@ package com.google.appengine.tools.development;
 
 /**
  * A {@link ModulesFilterHelper} for delegating requests to either
- * {@link BackendServers} for backends or {@link Modules} for module instances.
+ * {@link BackendServersBase} for backends or {@link Modules} for module instances.
  */
 public class DelegatingModulesFilterHelper implements ModulesFilterHelper {
 

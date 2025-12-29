@@ -40,8 +40,8 @@ public interface ModulesFilterHelper {
    * instance id. If no instance has capacity this returns -1.
    * <p>
    * For backends which support queued requests this may block for a limited
-   * time waiting for an instance to become available (see {@link
-   * AbstractBackendServers#getAndReserveFreeInstance} for details).
+   * time waiting for an instance to become available (see
+   * AbstractBackendServers#getAndReserveFreeInstance for details).
    *
    * Supported for modules that support load balancing (currently {@link ManualModule}).
    * The client can check with {@link #isLoadBalancingInstance(String, int)}.

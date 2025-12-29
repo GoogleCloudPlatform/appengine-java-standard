@@ -33,7 +33,8 @@ public class LocalUserServiceTestConfig implements LocalServiceTestConfig {
   @Nullable private Boolean oauthIsAdmin;
 
   /**
-   * Consumer key to return from {@link com.google.appengine.api.oauth#getOAuthConsumerKey}.
+   * Consumer key to return from {@link
+   * com.google.appengine.api.oauth.OAuthService#getOAuthConsumerKey}.
    * @param oauthConsumerKey
    * @return {@code this} (for chaining)
    */
@@ -51,7 +52,8 @@ public class LocalUserServiceTestConfig implements LocalServiceTestConfig {
   }
 
   /**
-   * Email to return from {@link com.google.appengine.api.oauth#getCurrentUser}.
+   * Email to return from {@link
+   * com.google.appengine.api.oauth.OAuthService#getCurrentUser}.
    * @param oauthEmail
    * @return {@code this} (for chaining)
    */
@@ -69,7 +71,8 @@ public class LocalUserServiceTestConfig implements LocalServiceTestConfig {
   }
 
   /**
-   * User ID to return from {@link com.google.appengine.api.oauth#getCurrentUser}.
+   * User ID to return from {@link
+   * com.google.appengine.api.oauth.OAuthService#getCurrentUser}.
    * @param oauthUserId
    * @return {@code this} (for chaining)
    */
@@ -87,7 +90,8 @@ public class LocalUserServiceTestConfig implements LocalServiceTestConfig {
   }
 
   /**
-   * Auth domain to return from {@link com.google.appengine.api.oauth#getCurrentUser}.
+   * Auth domain to return from {@link
+   * com.google.appengine.api.oauth.OAuthService#getCurrentUser}.
    * @param oauthAuthDomain
    * @return {@code this} (for chaining)
    */
@@ -105,7 +109,7 @@ public class LocalUserServiceTestConfig implements LocalServiceTestConfig {
   }
 
   /**
-   * Value to return from {@link com.google.appengine.api.oauth#isUserAdmin}.
+   * Value to return from {@link com.google.appengine.api.oauth.OAuthService#isUserAdmin}.
    * @param oauthIsAdmin
    * @return {@code this} (for chaining)
    */

@@ -57,7 +57,7 @@ public final class UploadOptions {
   }
 
   /**
-   * @returns the maximum upload size per blob.
+   * @return the maximum upload size per blob.
    */
   public long getMaxUploadSizeBytesPerBlob() {
     if (maxUploadSizeBytesPerBlob == null) {
@@ -86,7 +86,7 @@ public final class UploadOptions {
   }
 
   /**
-   * @returns the maximum upload size.
+   * @return the maximum upload size.
    */
   public long getMaxUploadSizeBytes() {
     if (maxUploadSizeBytes == null) {
@@ -106,7 +106,7 @@ public final class UploadOptions {
   }
 
   /**
-   * @returns the storage bucket name.
+   * @return the storage bucket name.
    */
   public String getGoogleStorageBucketName() {
     if (gsBucketName == null) {

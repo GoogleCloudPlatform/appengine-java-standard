@@ -27,7 +27,8 @@ import javax.servlet.http.HttpServletRequest;
  * This sets {@link LocalEnvironment#getAttributes()} from
  * <ol>
  * <li> Authentication details from the cookie that is maintained
- *      by the stub implementation of {@link UserService}
+ *      by the stub implementation of {@link
+ *      com.google.appengine.api.users.UserService}
  * </li>
  * <li> The passed in {@link ModulesFilterHelper}. </li>
  * </ol>

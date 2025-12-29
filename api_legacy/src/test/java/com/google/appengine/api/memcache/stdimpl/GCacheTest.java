@@ -199,7 +199,6 @@ public class GCacheTest {
     Map<String, Object> map = makeMap();
     Set<String> failureSet = makeSet();
 
-    when(service.putAll(map, null, ADD_ONLY_IF_NOT_PRESENT)).thenReturn(failureSet);
     properties.put(GCacheFactory.SET_POLICY, REPLACE_ONLY_IF_PRESENT);
     Cache cache = new GCache(properties);
     when(service.putAll(map, null, REPLACE_ONLY_IF_PRESENT)).thenReturn(failureSet);

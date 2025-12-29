@@ -694,11 +694,32 @@
       </dependency>
     </dependencies>
   </dependencyManagement>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
   <build>
 
 
 
    <plugins>
+     <plugin>
+       <groupId>org.apache.maven.plugins</groupId>
+       <artifactId>maven-dependency-plugin</artifactId>
+       <version>3.8.1</version>
+       <executions>
+         <execution>
+           <goals>
+             <goal>properties</goal>
+           </goals>
+         </execution>
+       </executions>
+     </plugin>
       <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-surefire-plugin</artifactId>
@@ -713,6 +734,7 @@
                   --add-opens java.base/java.lang=ALL-UNNAMED
                   --add-opens java.base/java.nio.charset=ALL-UNNAMED
                   --add-opens java.base/java.util.concurrent=ALL-UNNAMED
+                  -javaagent:${org.mockito:mockito-core:jar}
               </argLine>
               <!-- Most of these tests were developed with Google's build system, which runs each test
               in its own process. So they don't always clean up completely after themselves, for

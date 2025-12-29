@@ -38,7 +38,7 @@ public final class EntityProtoComparators {
       BaseEntityComparator.MULTI_TYPE_COMPARATOR;
 
   /**
-   * A comparator for {@link com.google.storage.onestore.v3.OnestoreEntity.EntityProto} objects with
+   * A comparator for {@link EntityProto} objects with
    * the same ordering as {@link EntityComparator}.
    */
   public static final class EntityProtoComparator

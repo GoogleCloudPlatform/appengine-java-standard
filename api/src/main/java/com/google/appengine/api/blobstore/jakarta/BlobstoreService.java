@@ -18,8 +18,11 @@ package com.google.appengine.api.blobstore.jakarta;
 
 import com.google.appengine.api.blobstore.BlobInfo;
 import com.google.appengine.api.blobstore.BlobKey;
+import com.google.appengine.api.blobstore.BlobstoreFailureException;
 import com.google.appengine.api.blobstore.ByteRange;
 import com.google.appengine.api.blobstore.FileInfo;
+import com.google.appengine.api.blobstore.RangeFormatException;
+import com.google.appengine.api.blobstore.UnsupportedRangeFormatException;
 import com.google.appengine.api.blobstore.UploadOptions;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

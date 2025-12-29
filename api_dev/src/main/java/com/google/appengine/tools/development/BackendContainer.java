@@ -37,7 +37,6 @@ public interface BackendContainer {
   /**
    * Start all backend instances.
    *
-   * @param backendsXml Parsed backends.xml file with servers configuration
    * @throws Exception
    */
   public void startupAll() throws Exception;

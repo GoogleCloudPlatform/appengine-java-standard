@@ -23,7 +23,10 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
 
-/** Manager for {@link DevAppServer} servers. */
+/**
+ * Manager for {@link com.google.appengine.tools.development.DevAppServer}
+ * servers.
+ */
 public class Modules extends com.google.appengine.tools.development.Modules {
 
   public Modules(List<com.google.appengine.tools.development.Module> modules) {

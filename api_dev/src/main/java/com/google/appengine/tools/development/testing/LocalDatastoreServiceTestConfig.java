@@ -179,7 +179,8 @@ public final class LocalDatastoreServiceTestConfig implements LocalServiceTestCo
 
   /**
    * The percentage of job application attempts that will fail.  Must be
-   * >= 0 and <= 100.  This validation is performed during the initialization
+   * &gt;= 0 and &lt;= 100.  This validation is performed during the
+   * initialization
    * of {@link LocalDatastoreService}, not in the setter, so it will not fail
    * fast.  In addition, any portion of the value beyond two decimal places
    * will be truncated.  This method cannot be used in combination with

@@ -36,8 +36,7 @@ import java.util.TimeZone;
 
 /**
  * Contains operations common to the {@linkplain DevAppServerMain Java dev app server startup} and
- * the {@linkplain com.google.appengine.tools.development.devappserver2.StandaloneInstance
- * devappserver2 subprocess instance}.
+ * the devappserver2 subprocess instance.
  */
 public abstract class SharedMain {
 

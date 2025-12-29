@@ -34,7 +34,7 @@ import java.util.TreeMap;
  * with the field for the given type set to minimum and human-readable
  * placeholder values.
  *
- * @see OnestoreEntity.PropertyValue
+ * @see PropertyValue
  *
  */
 public enum PropertyType {
