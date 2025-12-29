@@ -52,6 +52,7 @@ import com.google.apphosting.utils.config.XmlUtils;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
+import com.google.common.base.StandardSystemProperty;
 import com.google.common.collect.Sets;
 import com.google.common.io.FileWriteMode;
 import com.google.common.io.Files;
@@ -1101,22 +1102,30 @@ public class Application implements GenericApplication {
 
       // We do not want the -compile flag there, as we will compile all the generated files
       // at once, in a second step.
-      String[] args = {
-        "-classpath",
-        classpath,
-        "-uriroot",
-        stage.getPath(),
-        "-p",
-        "org.apache.jsp",
-        "-l",
-        "-v",
-        "-webinc",
-        generatedWebXml.getPath(),
-        "-d",
-        getJspJavaFilesGeneratedTempDirectory().getPath(),
-        "-javaEncoding",
-        staging.compileEncoding().get(),
-      };
+      List<String> argsList =
+          new ArrayList<>(
+              Arrays.asList(
+                  "-classpath",
+                  classpath,
+                  "-uriroot",
+                  stage.getPath(),
+                  "-p",
+                  "org.apache.jsp",
+                  "-l",
+                  "-v",
+                  "-webinc",
+                  generatedWebXml.getPath(),
+                  "-d",
+                  getJspJavaFilesGeneratedTempDirectory().getPath(),
+                  "-javaEncoding",
+                  staging.compileEncoding().get()));
+
+      String javaVersion = getJavaVersionForJsp(runtime);
+      argsList.addAll(Arrays.asList("-source", javaVersion));
+      argsList.addAll(Arrays.asList("-target", javaVersion));
+
+      String[] args = argsList.toArray(new String[0]);
+
       if (detailsWriter == null) {
         detailsWriter =
             new PrintWriter(
@@ -1140,7 +1149,7 @@ public class Application implements GenericApplication {
       // Now that the Java servlet files from jsp have been generated, we compile them in a single
       // invocation to speed up the deployment process.
       compileJspJavaFiles(
-          classpath, webInf, getJspJavaFilesGeneratedTempDirectory(), opts, runtime);
+          classpath, webInf, getJspJavaFilesGeneratedTempDirectory(), opts, javaVersion);
 
       // Reread the web.xml as it has been modified by Jasper to add the mapping of the generated
       // servlets.
@@ -1153,12 +1162,54 @@ public class Application implements GenericApplication {
     return jspJavaFilesGeneratedTempDirectory;
   }
 
+  private String getJavaVersionForJsp(String runtime) {
+    String version = "21"; // Default to 21.
+    switch (runtime) {
+      case JAVA_11_RUNTIME_ID:
+        version = "11";
+        break;
+      case JAVA_17_RUNTIME_ID:
+        version = "17";
+        break;
+      case JAVA_21_RUNTIME_ID:
+        version = "21";
+        break;
+      case JAVA_25_RUNTIME_ID:
+        version = "25";
+        break;
+      default:
+        if (runtime.startsWith(GOOGLE_LEGACY_RUNTIME_ID)) {
+          version = "21";
+        } else if (runtime.startsWith(JAVA_8_RUNTIME_ID)) {
+          version = "8";
+        }
+        break;
+    }
+
+    int currentJdkVersion = Runtime.version().feature();
+
+    int runtimeVersion = Integer.parseInt(version);
+    if (currentJdkVersion < runtimeVersion) {
+      statusUpdate(
+          "Warning: Current JDK version used for JSP compilation is "
+              + currentJdkVersion
+              + " but the AppEngine runtime is "
+              + runtime
+              + ". JSPs will be compiled with source/target "
+              + currentJdkVersion
+              + " instead of "
+              + version);
+      version = String.valueOf(currentJdkVersion);
+    }
+    return version;
+  }
+
   private void compileJspJavaFiles(
       String classpath,
       File webInf,
       File jspClassDir,
       ApplicationProcessingOptions opts,
-      String runtime)
+      String javaVersion)
       throws IOException {
 
     JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
@@ -1184,19 +1235,9 @@ public class Application implements GenericApplication {
     optionList.addAll(Arrays.asList("-encoding", staging.compileEncoding().get()));
     // Depending on the runtime, select the correct bytecode target for the jsp classes compilation.
     // If the runtime is unknown and forced (like java9), keep the default settings.
-    if (runtime.startsWith(JAVA_8_RUNTIME_ID)) {
-      optionList.addAll(Arrays.asList("-source", "8"));
-      optionList.addAll(Arrays.asList("-target", "8"));
-    } else if (runtime.startsWith(GOOGLE_LEGACY_RUNTIME_ID)
-        || runtime.equals(JAVA_11_RUNTIME_ID)
-        || runtime.equals(JAVA_17_RUNTIME_ID)
-        || runtime.equals(JAVA_21_RUNTIME_ID)
-        || runtime.equals(JAVA_25_RUNTIME_ID)) {
-      // TODO(b/115569833): for now, it's still possible to use a JDK8 to compile and deploy Java11
-      // apps.
-      optionList.addAll(Arrays.asList("-source", "8"));
-      optionList.addAll(Arrays.asList("-target", "8"));
-    }
+    // If the current JDK is older than the runtime, we fallback to the current JDK version.
+    optionList.addAll(Arrays.asList("-source", javaVersion));
+    optionList.addAll(Arrays.asList("-target", javaVersion));
 
     Iterable<? extends JavaFileObject> compilationUnits =
         fileManager.getJavaFileObjectsFromFiles(files);

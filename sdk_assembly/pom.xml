@@ -215,14 +215,6 @@
                                     <destFileName>appengine-local-runtime-shared.jar</destFileName>
                                 </artifactItem>
                                 <artifactItem>
-                                    <groupId>org.eclipse.jetty</groupId>
-                                    <artifactId>apache-jsp</artifactId>
-                                    <overWrite>true</overWrite>
-                                    <classifier>nolog</classifier>
-                                    <outputDirectory>${assembly-directory}/jetty94/jetty-home/lib/apache-jsp</outputDirectory>
-                                    <destFileName>org.eclipse.jetty.apache-jsp-${jetty.version}-nolog.jar</destFileName>
-                                </artifactItem>
-                                <artifactItem>
                                     <groupId>com.google.appengine</groupId>
                                     <artifactId>appengine-api-1.0-sdk</artifactId>
                                     <version>${project.version}</version>
@@ -241,26 +233,6 @@
                                     <includes>**</includes>
                                     <outputDirectory>${assembly-directory}/lib/impl</outputDirectory>
                                     <destFileName>appengine-api-stubs.jar</destFileName>
-                                </artifactItem>
-                                <artifactItem>
-                                    <groupId>com.google.appengine</groupId>
-                                    <artifactId>appengine-local-runtime-jetty12</artifactId>
-                                    <version>${project.version}</version>
-                                    <type>jar</type>
-                                    <overWrite>true</overWrite>
-                                    <includes>**</includes>
-                                    <outputDirectory>${assembly-directory}/lib/impl/jetty12</outputDirectory>
-                                    <destFileName>appengine-local-runtime-jetty12.jar</destFileName>
-                                </artifactItem>
-                                 <artifactItem>
-                                    <groupId>com.google.appengine</groupId>
-                                    <artifactId>appengine-local-runtime-jetty12-ee10</artifactId>
-                                    <version>${project.version}</version>
-                                    <type>jar</type>
-                                    <overWrite>true</overWrite>
-                                    <includes>**</includes>
-                                    <outputDirectory>${assembly-directory}/lib/impl/jetty12</outputDirectory>
-                                    <destFileName>appengine-local-runtime-jetty12-ee10.jar</destFileName>
                                 </artifactItem>
                                 <artifactItem>
                                     <groupId>com.google.appengine</groupId>
@@ -334,16 +306,6 @@
                                 </artifactItem>
                                 <artifactItem>
                                     <groupId>com.google.appengine</groupId>
-                                    <artifactId>appengine-local-runtime-jetty12</artifactId>
-                                    <version>${project.version}</version>
-                                    <type>jar</type>
-                                    <overWrite>true</overWrite>
-                                    <includes>**</includes>
-                                    <outputDirectory>${assembly-directory}/lib/impl/jetty12</outputDirectory>
-                                    <destFileName>appengine-local-runtime-jetty12.jar</destFileName>
-                                </artifactItem>
-                                <artifactItem>
-                                    <groupId>com.google.appengine</groupId>
                                     <artifactId>appengine-local-runtime-jetty121</artifactId>
                                     <version>${project.version}</version>
                                     <type>jar</type>
@@ -380,8 +342,6 @@
                         <configuration>
                             <target>
                                 <chmod dir="${assembly-directory}/bin" perm="755" includes="**/*.sh" />
-                                <delete file="${assembly-directory}/jetty94/jetty-home/lib/apache-jsp/org.eclipse.jetty.apache-jsp-${jetty.version}.jar"/>
-                                <delete dir="${assembly-directory}/jetty94/jetty-home/demo-base"/>
                             </target>
                         </configuration>
                     </execution>
@@ -460,16 +420,6 @@
         <dependency>
             <groupId>com.google.appengine</groupId>
             <artifactId>quickstartgenerator-jetty121-ee11</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-         <dependency>
-            <groupId>com.google.appengine</groupId>
-            <artifactId>appengine-local-runtime-jetty12</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-         <dependency>
-            <groupId>com.google.appengine</groupId>
-            <artifactId>appengine-local-runtime-jetty12-ee10</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

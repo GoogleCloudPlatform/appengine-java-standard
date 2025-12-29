@@ -38,8 +38,6 @@
     <module>runtime_impl_jetty12</module>
     <module>runtime_impl_jetty121</module>
     <module>deployment</module>
-    <module>local_jetty12_ee10</module>
-    <module>local_jetty12</module>
     <module>local_jetty121</module>
     <module>local_jetty121_ee11</module>
     <module>nogaeapiswebapp</module>
