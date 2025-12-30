@@ -74,7 +74,7 @@ The packages `com.google.appengine.api.blobstore.ee10` and `com.google.appengine
         <dependency>
             <groupId>com.google.appengine</groupId>
             <artifactId>appengine-api-1.0-sdk</artifactId>
-            <version>3.0.3</version><!-- or later-->
+            <version>4.0.0</version><!-- or later-->
         </dependency>
         <dependency>
           <groupId>javax.servlet</groupId>
@@ -94,7 +94,7 @@ The packages `com.google.appengine.api.blobstore.ee10` and `com.google.appengine
         <dependency>
             <groupId>com.google.appengine</groupId>
             <artifactId>appengine-api-1.0-sdk</artifactId>
-            <version>3.0.3</version><!-- or later-->
+            <version>4.0.0</version><!-- or later-->
         </dependency>
         <dependency>
           <groupId>jakarta.servlet</groupId>
@@ -105,7 +105,7 @@ The packages `com.google.appengine.api.blobstore.ee10` and `com.google.appengine
     ...
     ```
 
-*  Maven Java 25 Alpha with jakarta EE 11 support pom.xml (EE10 is not supported in Java25, EE11 is fully compatible with EE10)
+*  Maven Java 25 with jakarta EE 11 support pom.xml (EE10 is not supported in Java25, EE11 is fully compatible with EE10)
 
     ```
     <packaging>war</packaging><!-- Servlet 6.1 WAR packaging-->
@@ -114,7 +114,7 @@ The packages `com.google.appengine.api.blobstore.ee10` and `com.google.appengine
         <dependency>
             <groupId>com.google.appengine</groupId>
             <artifactId>appengine-api-1.0-sdk</artifactId>
-            <version>3.0.3</version><!-- or later-->
+            <version>4.0.0</version><!-- or later-->
         </dependency>
         <dependency>
           <groupId>jakarta.servlet</groupId>
@@ -131,7 +131,7 @@ The packages `com.google.appengine.api.blobstore.ee10` and `com.google.appengine
     ```
     <?xml version="1.0" encoding="utf-8"?>
     <appengine-web-app xmlns="http://appengine.google.com/ns/1.0">
-      <runtime>java21</runtime> <-- or java25 alpha-->
+      <runtime>java25</runtime> <-- or java21-->
       <app-engine-apis>true</app-engine-apis>
 
       <!-- Add optionally:
@@ -156,7 +156,7 @@ The packages `com.google.appengine.api.blobstore.ee10` and `com.google.appengine
     </appengine-web-app>
     ```
 
-*  Java 21  appengine-web.xml (will default to EE10, but EE8 possible)
+*  Java 21 appengine-web.xml (will default to EE10, but EE8 possible)
 
     ```
     <?xml version="1.0" encoding="utf-8"?>
@@ -166,8 +166,7 @@ The packages `com.google.appengine.api.blobstore.ee10` and `com.google.appengine
     </appengine-web-app>
     ```
 
-
-*  Java 25  appengine-web.xml (will default to EE11, but EE8 possible) Alpha
+*  Java 25 appengine-web.xml (will default to EE11, but EE8 possible)
 
     ```
     <?xml version="1.0" encoding="utf-8"?>
@@ -224,14 +223,14 @@ Source code for remote APIs for App Engine.
     <dependency>
        <groupId>com.google.appengine</groupId>
        <artifactId>appengine-remote-api</artifactId>
-       <version>3.0.3</version><!-- or later-->
+       <version>4.0.0</version><!-- or later-->
     </dependency>
 ```
 
 #### User Visible Changes With Maven Builds
 
 We moved `com.google.appengine.api.memcache.stdimpl` and its old dependency
-`javax.cache` from `appengine-api-1.0-sdk.jar` to  a new jar `appengine-api-legacy.jar`.
+`javax.cache` from `appengine-api-1.0-sdk.jar` to a new jar `appengine-api-legacy.jar`.
 
 - [Latest javadoc.io Javadocs from this repository](https://javadoc.io/doc/com.google.appengine/appengine-api-legacy)
 
@@ -247,7 +246,7 @@ We moved `com.google.appengine.api.memcache.stdimpl` and its old dependency
     <dependency>
        <groupId>com.google.appengine</groupId>
        <artifactId>appengine-api-legacy.jar/artifactId>
-       <version>3.0.3</version><!-- Or later-->
+       <version>4.0.0</version><!-- Or later-->
     </dependency>
 ```
 
@@ -262,19 +261,19 @@ We moved `com.google.appengine.api.memcache.stdimpl` and its old dependency
     <dependency>
       <groupId>com.google.appengine</groupId>
       <artifactId>appengine-testing</artifactId>
-      <version>3.0.3</version><!-- or later-->
+      <version>4.0.0</version><!-- or later-->
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>com.google.appengine</groupId>
       <artifactId>appengine-api-stubs</artifactId>
-      <version>3.0.3</version><!-- or later-->
+      <version>4.0.0</version><!-- or later-->
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>com.google.appengine</groupId>
       <artifactId>appengine-tools-sdk</artifactId>
-      <version>3.0.3</version><!-- or later-->
+      <version>4.0.0</version><!-- or later-->
       <scope>test</scope>
     </dependency>
 ```
