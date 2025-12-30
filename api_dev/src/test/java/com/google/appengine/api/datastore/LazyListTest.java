@@ -134,24 +134,16 @@ public class LazyListTest {
     @Override
     protected LazyList create(Entity[] elements) {
       LazyList list = super.create(elements);
-      ByteArrayOutputStream baos = new ByteArrayOutputStream();
-      ByteArrayInputStream bais = null;
-      try {
-        try {
-          ObjectOutputStream oos = new ObjectOutputStream(baos);
-          oos.writeObject(list);
-          bais = new ByteArrayInputStream(baos.toByteArray());
-          ObjectInputStream ois = new ObjectInputStream(bais);
+      byte[] listBytes;
+      try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
+          ObjectOutputStream oos = new ObjectOutputStream(baos)) {
+        oos.writeObject(list);
+        listBytes = baos.toByteArray();
+        try (ByteArrayInputStream bais = new ByteArrayInputStream(listBytes);
+            ObjectInputStream ois = new ObjectInputStream(bais)) {
           return (LazyList) ois.readObject();
-        } finally {
-          baos.close();
-          if (bais != null) {
-            bais.close();
-          }
         }
-      } catch (IOException e) {
-        throw new RuntimeException(e);
-      } catch (ClassNotFoundException e) {
+      } catch (IOException | ClassNotFoundException e) {
         throw new RuntimeException(e);
       }
     }
@@ -238,20 +230,8 @@ public class LazyListTest {
                 ListFeature.GENERAL_PURPOSE,
                 ListFeature.SUPPORTS_SET)
             .suppressing(methodsToSuppress())
-            .withSetUp(
-                new Runnable() {
-                  @Override
-                  public void run() {
-                    helper.setUp();
-                  }
-                })
-            .withTearDown(
-                new Runnable() {
-                  @Override
-                  public void run() {
-                    helper.tearDown();
-                  }
-                })
+            .withSetUp(() -> helper.setUp())
+            .withTearDown(() -> helper.tearDown())
             .createTestSuite());
   }
 }

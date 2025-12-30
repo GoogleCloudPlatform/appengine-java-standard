@@ -25,6 +25,7 @@ import com.google.appengine.api.datastore.Entity.WrappedValue;
 import com.google.appengine.api.datastore.Entity.WrappedValueImpl;
 import com.google.appengine.api.users.User;
 import com.google.apphosting.api.ApiProxy;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.datastore.v1.ArrayValue;
@@ -180,7 +181,7 @@ public final class DataTypeTranslator {
    * values that don't map to the same pb code point.
    */
   private static final Map<Class<? extends Comparable<?>>, Integer> comparableTypeMap =
-      new HashMap<Class<? extends Comparable<?>>, Integer>();
+      new HashMap<>();
 
   static {
     // hardcoding the tag numbers from appengine-java-standard/protobuf/api/entity.proto
@@ -212,15 +213,13 @@ public final class DataTypeTranslator {
       boolean indexed = true;
       Object value = entry.getValue();
 
-      if (entry.getValue() instanceof WrappedValue) {
-        WrappedValue wrappedValue = (WrappedValue) entry.getValue();
+      if (entry.getValue() instanceof WrappedValue wrappedValue) {
         forceIndexedEmbeddedEntity = wrappedValue.getForceIndexedEmbeddedEntity();
         indexed = wrappedValue.isIndexed();
         value = wrappedValue.getValue();
       }
 
-      if (value instanceof Collection<?>) {
-        Collection<?> values = (Collection<?>) value;
+      if (value instanceof Collection<?> values) {
         addListPropertyToPb(proto, name, indexed, values, forceIndexedEmbeddedEntity);
       } else {
         addPropertyToPb(name, value, indexed, forceIndexedEmbeddedEntity, false, proto);
@@ -428,7 +427,7 @@ public final class DataTypeTranslator {
       // Read an empty list, but user hasn't enabled empty list support.  In order to be
       // backward compatible, return null because thats what they used to get for empty lists.
       Object emptyListValue =
-          DatastoreServiceConfig.getEmptyListSupport() ? new ArrayList<Object>() : null;
+          DatastoreServiceConfig.getEmptyListSupport() ? new ArrayList<>() : null;
       map.put(name, wrapIfUnindexed(indexed, emptyListValue));
     } else {
       Object value = getPropertyValue(property);
@@ -436,7 +435,7 @@ public final class DataTypeTranslator {
         @SuppressWarnings({"unchecked"})
         List<Object> resultList = (List<Object>) PropertyContainer.unwrapValue(map.get(name));
         if (resultList == null) {
-          resultList = new ArrayList<Object>();
+          resultList = new ArrayList<>();
           map.put(name, indexed ? resultList : new UnindexedValue(resultList));
         }
         if (indexed && value instanceof EmbeddedEntity) {
@@ -575,15 +574,13 @@ public final class DataTypeTranslator {
     boolean indexed = true;
     boolean forceIndexedEmbeddedEntity = false;
 
-    if (value instanceof WrappedValue) {
-      WrappedValue wrappedValue = (WrappedValue) value;
+    if (value instanceof WrappedValue wrappedValue) {
       indexed = wrappedValue.isIndexed();
       forceIndexedEmbeddedEntity = wrappedValue.getForceIndexedEmbeddedEntity();
       value = wrappedValue.getValue();
     }
 
-    if (value instanceof Collection<?>) {
-      Collection<?> values = (Collection<?>) value;
+    if (value instanceof Collection<?> values) {
       if (values.isEmpty()) {
         if (DatastoreServiceConfig.getEmptyListSupport()) {
           return Value.newBuilder()
@@ -1120,10 +1117,10 @@ public final class DataTypeTranslator {
     public @Nullable Comparable<?> asComparable(Object value) {
       Object value2 = ((RawValue) value).getValue();
       // All possible values except byte[] are already comparable.
-      if (value2 instanceof byte[]) {
-        return new ComparableByteArray((byte[]) value2);
-      } else if (value2 instanceof ByteString) {
-        return new ComparableByteArray(((ByteString) value2).toByteArray());
+      if (value2 instanceof byte[] bytes) {
+        return new ComparableByteArray(bytes);
+      } else if (value2 instanceof ByteString byteString) {
+        return new ComparableByteArray(byteString.toByteArray());
       }
       return (Comparable<?>) value2;
     }

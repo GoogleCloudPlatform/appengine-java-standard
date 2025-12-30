@@ -71,7 +71,7 @@ public class AppEngineWebXml implements Cloneable {
 
   private final Map<String, String> buildEnvVariables;
 
-  private final List<UserPermission> userPermissions;
+  private final List<UserPermission> userPermissions = new ArrayList<UserPermission>();
 
   public static final String WARMUP_SERVICE = "warmup";
 
@@ -180,7 +180,6 @@ public class AppEngineWebXml implements Cloneable {
     betaSettings = Maps.newLinkedHashMap();
     envVariables = Maps.newHashMap();
     buildEnvVariables = Maps.newHashMap();
-    userPermissions = new ArrayList<>();
     staticFileIncludes = new ArrayList<StaticFileInclude>();
     staticFileExcludes = new ArrayList<String>();
     staticFileExcludes.add("WEB-INF/**");

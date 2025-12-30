@@ -30,7 +30,6 @@ import com.google.protobuf.ByteString;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
@@ -185,7 +184,7 @@ class DevPushQueue extends DevQueue {
   /** Returns a QueueStateInfo describing the current state of this queue. */
   @Override
   QueueStateInfo getStateInfo() {
-    ArrayList<TaskStateInfo> taskInfoList = new ArrayList<TaskStateInfo>();
+    ArrayList<TaskStateInfo> taskInfoList = new ArrayList<>();
     try {
       // Get the names of all jobs belonging to this queue (group).
       for (String jobName : getSortedJobNames()) {
@@ -214,12 +213,9 @@ class DevPushQueue extends DevQueue {
 
     Collections.sort(
         taskInfoList,
-        new Comparator<TaskStateInfo>() {
-          @Override
-          public int compare(TaskStateInfo t1, TaskStateInfo t2) {
-            // Order by ascending ETA.
-            return Long.compare(t1.getEtaMillis(), t2.getEtaMillis());
-          }
+        (t1, t2) -> {
+          // Order by ascending ETA.
+          return Long.compare(t1.getEtaMillis(), t2.getEtaMillis());
         });
 
     return new QueueStateInfo(queueXmlEntry, taskInfoList);

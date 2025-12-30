@@ -23,7 +23,6 @@ import com.google.appengine.api.blobstore.dev.BlobStorageFactory;
 import com.google.appengine.api.blobstore.dev.LocalBlobstoreService;
 import com.google.appengine.api.datastore.DatastoreService;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
-import com.google.appengine.api.datastore.Entity;
 import com.google.appengine.api.datastore.Key;
 import com.google.appengine.api.datastore.KeyFactory;
 import com.google.appengine.api.images.ImagesService;
@@ -51,6 +50,7 @@ import com.google.appengine.tools.development.LocalServerEnvironment;
 import com.google.appengine.tools.development.LocalServiceContext;
 import com.google.apphosting.api.ApiProxy;
 import com.google.auto.service.AutoService;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.protobuf.ByteString;
 import java.awt.AlphaComposite;
 import java.awt.Composite;
@@ -65,7 +65,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
@@ -262,7 +261,7 @@ public final class LocalImagesService extends AbstractLocalRpcService {
    */
   public ImagesCompositeResponse composite(
       final Status status, final ImagesCompositeRequest request) {
-    List<BufferedImage> images = new ArrayList<BufferedImage>(request.getImageCount());
+    List<BufferedImage> images = new ArrayList<>(request.getImageCount());
     for (int i = 0; i < request.getImageCount(); i++) {
       images.add(openImage(request.getImage(i), status));
     }
@@ -312,27 +311,14 @@ public final class LocalImagesService extends AbstractLocalRpcService {
    */
   public String getMimeType(ImageData imageData) {
     try {
-      boolean swallowDueToThrow = true;
-      ImageInputStream in = ImageIO.createImageInputStream(extractImageData(imageData));
-      try {
+      try (ImageInputStream in = ImageIO.createImageInputStream(extractImageData(imageData))) {
         Iterator<ImageReader> readers = ImageIO.getImageReaders(in);
         if (!readers.hasNext()) {
           throw new ApiProxy.ApplicationException(
               ErrorCode.NOT_IMAGE.getNumber(), "Failed to read image");
         }
         ImageReader reader = readers.next();
-        swallowDueToThrow = false;
         return reader.getFormatName();
-      } finally {
-        try {
-          in.close();
-        } catch (IOException ex) {
-          if (swallowDueToThrow) {
-            log.log(Level.WARNING, "IOException thrown in close().", ex);
-          } else {
-            throw ex;
-          }
-        }
       }
     } catch (IOException ex) {
       throw new ApiProxy.ApplicationException(
@@ -694,6 +680,8 @@ public final class LocalImagesService extends AbstractLocalRpcService {
    * @param status RPC status.
    * @return The canvas with the composition operation performed.
    */
+  @CanIgnoreReturnValue
+  @SuppressWarnings("NarrowCalculation")
   private BufferedImage processComposite(
       BufferedImage canvas, CompositeImageOptions options, BufferedImage image, Status status) {
     float opacity = options.getOpacity();
@@ -768,19 +756,6 @@ public final class LocalImagesService extends AbstractLocalRpcService {
       return getBlobStorage().fetchBlob(new BlobKey(imageData.getBlobKey()));
     } else {
       return new ByteArrayInputStream(imageData.getContent().toByteArray());
-    }
-  }
-
-  private void addServingUrlEntry(String blobKey) {
-    String namespace = NamespaceManager.get();
-    try {
-      NamespaceManager.set("");
-      Entity blobServingUrlEntity = new Entity(ImagesReservedKinds.BLOB_SERVING_URL_KIND,
-          blobKey);
-      blobServingUrlEntity.setProperty("blob_key", blobKey);
-      datastoreService.put(blobServingUrlEntity);
-    } finally {
-      NamespaceManager.set(namespace);
     }
   }
 

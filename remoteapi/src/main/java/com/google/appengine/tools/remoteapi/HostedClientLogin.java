@@ -70,7 +70,7 @@ public class HostedClientLogin extends ClientLogin {
     if (resp.getResponseCode() != 302) {
       throw new LoginException("unexpected response from app engine: " + resp.getResponseCode());
     }
-    List<Cookie> cookies = new ArrayList<Cookie>();
+    List<Cookie> cookies = new ArrayList<>();
     for (HTTPHeader header : resp.getHeaders()) {
       if (header.getName().toLowerCase().equals("set-cookie")) {
         // We'll get a little help from HttpClient to parse the cookie

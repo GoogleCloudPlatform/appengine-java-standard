@@ -335,36 +335,16 @@ public final class Field implements Serializable {
     type = builder.type;
     if (builder.type != null) {
       switch (builder.type) {
-        case TEXT:
-          text = builder.text;
-          break;
-        case HTML:
-          html = builder.html;
-          break;
-        case ATOM:
-          atom = builder.atom;
-          break;
-        case DATE:
-          date = builder.date;
-          break;
-        case NUMBER:
-          number = builder.number;
-          break;
-        case GEO_POINT:
-          geoPoint = builder.geoPoint;
-          break;
-        case UNTOKENIZED_PREFIX:
-          untokenizedPrefix = builder.untokenizedPrefix;
-          break;
-        case TOKENIZED_PREFIX:
-          tokenizedPrefix = builder.tokenizedPrefix;
-          break;
-        case VECTOR:
-          vector = builder.vector;
-          break;
-        default:
-          throw new IllegalArgumentException(String.format("Unknown field type given %s",
-                                                           builder.type));
+        case TEXT -> text = builder.text;
+        case HTML -> html = builder.html;
+        case ATOM -> atom = builder.atom;
+        case DATE -> date = builder.date;
+        case NUMBER -> number = builder.number;
+        case GEO_POINT -> geoPoint = builder.geoPoint;
+        case UNTOKENIZED_PREFIX -> untokenizedPrefix = builder.untokenizedPrefix;
+        case TOKENIZED_PREFIX -> tokenizedPrefix = builder.tokenizedPrefix;
+        case VECTOR -> vector = builder.vector;
+        default -> throw new IllegalArgumentException("Unknown field type: " + builder.type);
       }
     }
     locale = builder.locale;
@@ -487,32 +467,15 @@ public final class Field implements Serializable {
     FieldChecker.checkFieldName(name);
     if (type != null) {
       switch (type) {
-        case TEXT:
-          FieldChecker.checkText(text);
-          break;
-        case HTML:
-          FieldChecker.checkHTML(html);
-          break;
-        case ATOM:
-          FieldChecker.checkAtom(atom);
-          break;
-        case DATE:
-          FieldChecker.checkDate(date);
-          break;
-        case NUMBER:
-        case GEO_POINT:
-          break;
-        case UNTOKENIZED_PREFIX:
-          FieldChecker.checkPrefix(untokenizedPrefix);
-          break;
-        case TOKENIZED_PREFIX:
-          FieldChecker.checkPrefix(tokenizedPrefix);
-          break;
-        case VECTOR:
-          FieldChecker.checkVector(vector);
-          break;
-        default:
-          throw new IllegalArgumentException(String.format("unknown field type %s", type));
+        case TEXT -> FieldChecker.checkText(text);
+        case HTML -> FieldChecker.checkHTML(html);
+        case ATOM -> FieldChecker.checkAtom(atom);
+        case DATE -> FieldChecker.checkDate(date);
+        case NUMBER, GEO_POINT -> {}
+        case UNTOKENIZED_PREFIX -> FieldChecker.checkPrefix(untokenizedPrefix);
+        case TOKENIZED_PREFIX -> FieldChecker.checkPrefix(tokenizedPrefix);
+        case VECTOR -> FieldChecker.checkVector(vector);
+        default -> throw new IllegalArgumentException("Unknown field type: " + type);
       }
     }
     return this;
@@ -598,7 +561,7 @@ public final class Field implements Serializable {
   DocumentPb.Field copyToProtocolBuffer() {
     DocumentPb.FieldValue.Builder fieldValueBuilder = DocumentPb.FieldValue.newBuilder();
     if (locale != null) {
-      fieldValueBuilder.setLanguage(locale.toString());
+      fieldValueBuilder.setLanguage(locale.toLanguageTag());
     }
     if (type != null) {
       switch (type) {

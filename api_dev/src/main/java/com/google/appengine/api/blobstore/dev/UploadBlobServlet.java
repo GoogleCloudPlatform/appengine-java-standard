@@ -25,6 +25,7 @@ import com.google.appengine.tools.development.Clock;
 import com.google.apphosting.utils.servlet.MultipartMimeUtils;
 import com.google.common.base.Ascii;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Maps;
 import com.google.common.io.Closeables;
 // <internal24>
 import java.io.BufferedReader;
@@ -44,6 +45,7 @@ import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -132,11 +134,11 @@ public final class UploadBlobServlet extends HttpServlet {
 
   private Map<String, String> getInfoFromStorage(BlobKey key, BlobUploadSession uploadSession) {
     BlobInfo blobInfo = blobInfoStorage.loadBlobInfo(key);
-    Map<String, String> info = new HashMap<String, String>(6);
+    Map<String, String> info = Maps.newHashMapWithExpectedSize(6);
     info.put("key", key.getKeyString());
     info.put("content-type", blobInfo.getContentType());
     info.put("creation-date", new SimpleDateFormat(
-        "yyyy-MM-dd HH:mm:ss.SSS").format(blobInfo.getCreation()));
+        "yyyy-MM-dd HH:mm:ss.SSS", Locale.US).format(blobInfo.getCreation()));
     info.put("filename", blobInfo.getFilename());
     info.put("size", Long.toString(blobInfo.getSize()));
     info.put("md5-hash", blobInfo.getMd5Hash());
@@ -163,10 +165,10 @@ public final class UploadBlobServlet extends HttpServlet {
       return;
     }
 
-    Map<String, List<String>> blobKeys = new HashMap<String, List<String>>();
+    Map<String, List<String>> blobKeys = new HashMap<>();
     Map<String, List<Map<String, String>>> blobInfos =
-          new HashMap<String, List<Map<String, String>>>();
-    final Map<String, List<String>> otherParams = new HashMap<String, List<String>>();
+          new HashMap<>();
+    final Map<String, List<String>> otherParams = new HashMap<>();
     try {
       MimeMultipart multipart = MultipartMimeUtils.parseMultipartRequest(req);
       int parts = multipart.getCount();
@@ -213,7 +215,7 @@ public final class UploadBlobServlet extends HttpServlet {
             BlobKey blobKey = assignBlobKey(session);
             List<String> keys = blobKeys.get(fieldName);
             if (keys == null) {
-              keys = new ArrayList<String>();
+              keys = new ArrayList<>();
               blobKeys.put(fieldName, keys);
             }
             keys.add(blobKey.getKeyString());
@@ -271,7 +273,7 @@ public final class UploadBlobServlet extends HttpServlet {
             // This codes must be run after the BlobInfo is persisted locally.
             List<Map<String, String>> infos = blobInfos.get(fieldName);
             if (infos == null) {
-              infos = new ArrayList<Map<String, String>>();
+              infos = new ArrayList<>();
               blobInfos.put(fieldName, infos);
             }
             infos.add(getInfoFromStorage(blobKey, session));
@@ -279,7 +281,7 @@ public final class UploadBlobServlet extends HttpServlet {
         } else {
           List<String> values = otherParams.get(fieldName);
           if (values == null) {
-            values = new ArrayList<String>();
+            values = new ArrayList<>();
             otherParams.put(fieldName, values);
           }
           values.add(MultipartMimeUtils.getTextContent(part));

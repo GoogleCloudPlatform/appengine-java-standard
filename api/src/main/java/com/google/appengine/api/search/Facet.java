@@ -148,30 +148,32 @@ public final class Facet implements Serializable {
    */
   static Facet withProtoMessage(DocumentPb.Facet facet) {
     FacetValue value = facet.getValue();
-    switch (value.getType()) {
-      case ATOM:
+    return switch (value.getType()) {
+      case ATOM -> {
         try {
-        return withAtom(facet.getName(), value.getStringValue());
+          yield Facet.withAtom(facet.getName(), value.getStringValue());
         } catch (IllegalArgumentException e) {
           throw new SearchException(
-              String.format("Failed to create facet %s from protocol message: %s", facet.getName(),
-              e.getMessage()));
+              String.format(
+                  "Failed to create facet %s from protocol message: %s",
+                  facet.getName(), e.getMessage()));
         }
-      case NUMBER:
+      }
+      case NUMBER -> {
         try {
-          return withNumber(facet.getName(), Facet.stringToNumber(value.getStringValue()));
+          yield Facet.withNumber(facet.getName(), Facet.stringToNumber(value.getStringValue()));
         } catch (NumberFormatException e) {
           throw new SearchException("Failed to parse double: " + value.getStringValue());
         } catch (IllegalArgumentException e) {
           throw new SearchException(
-              String.format("Failed to create facet %s from protocol message: %s", facet.getName(),
-              e.getMessage()));
+              String.format(
+                  "Failed to create facet %s from protocol message: %s",
+                  facet.getName(), e.getMessage()));
         }
-      default:
-        throw new SearchException(
-            String.format("unknown facet type %s for facet %s",
-                String.valueOf(value.getType()), facet.getName()));
-    }
+      }
+      default ->
+          throw new SearchException(String.format("Unsupported facet type: %s", value.getType()));
+    };
   }
 
 

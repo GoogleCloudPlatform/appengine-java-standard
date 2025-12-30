@@ -480,7 +480,7 @@ public class RemoteApiInstaller {
       throw new IOException("credentials don't match current host");
     }
 
-    List<Cookie> result = new ArrayList<Cookie>();
+    List<Cookie> result = new ArrayList<>();
     for (String line : props.get("cookie")) {
       result.add(parseCookie(line, host));
     }
@@ -518,7 +518,7 @@ public class RemoteApiInstaller {
         String value = line.substring(firstEqual + 1);
         List<String> values = props.get(key);
         if (values == null) {
-          values = new ArrayList<String>();
+          values = new ArrayList<>();
           props.put(key, values);
         }
         values.add(value);

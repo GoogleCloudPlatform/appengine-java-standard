@@ -93,7 +93,7 @@ public class DosXml {
 
   /** Create an empty configuration object. */
   public DosXml() {
-    blacklistEntries = new ArrayList<BlacklistEntry>();
+    blacklistEntries = new ArrayList<>();
   }
 
   /**

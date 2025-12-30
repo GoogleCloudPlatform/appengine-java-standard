@@ -88,12 +88,8 @@ class BlobstoreServiceImpl implements BlobstoreService {
           ApiProxy.makeSyncCall(PACKAGE, "CreateUploadURL", request.build().toByteArray());
     } catch (ApiProxy.ApplicationException ex) {
       switch (BlobstoreServiceError.ErrorCode.forNumber(ex.getApplicationError())) {
-        case URL_TOO_LONG:
-          throw new IllegalArgumentException("The resulting URL was too long.");
-        case INTERNAL_ERROR:
-          throw new BlobstoreFailureException("An internal blobstore error occurred.");
-        default:
-          throw new BlobstoreFailureException("An unexpected error occurred.", ex);
+        case URL_TOO_LONG -> throw new IllegalArgumentException("The resulting URL was too long.");
+        default -> throw new BlobstoreFailureException("An internal blobstore error occurred.");
       }
     }
 
@@ -334,14 +330,12 @@ class BlobstoreServiceImpl implements BlobstoreService {
       responseBytes = ApiProxy.makeSyncCall(PACKAGE, "FetchData", request.toByteArray());
     } catch (ApiProxy.ApplicationException ex) {
       switch (BlobstoreServiceError.ErrorCode.forNumber(ex.getApplicationError())) {
-        case PERMISSION_DENIED:
-          throw new SecurityException("This application does not have access to that blob.");
-        case BLOB_NOT_FOUND:
-          throw new IllegalArgumentException("Blob not found.");
-        case INTERNAL_ERROR:
-          throw new BlobstoreFailureException("An internal blobstore error occurred.");
-        default:
-          throw new BlobstoreFailureException("An unexpected error occurred.", ex);
+        case PERMISSION_DENIED ->
+            throw new SecurityException("This application does not have access to that blob.");
+        case BLOB_NOT_FOUND -> throw new IllegalArgumentException("Blob not found.");
+        case INTERNAL_ERROR ->
+            throw new BlobstoreFailureException("An internal blobstore error occurred.");
+        default -> throw new BlobstoreFailureException("An unexpected error occurred.", ex);
       }
     }
 
@@ -373,10 +367,9 @@ class BlobstoreServiceImpl implements BlobstoreService {
           ApiProxy.makeSyncCall(PACKAGE, "CreateEncodedGoogleStorageKey", request.toByteArray());
     } catch (ApiProxy.ApplicationException ex) {
       switch (BlobstoreServiceError.ErrorCode.forNumber(ex.getApplicationError())) {
-        case INTERNAL_ERROR:
-          throw new BlobstoreFailureException("An internal blobstore error occurred.");
-        default:
-          throw new BlobstoreFailureException("An unexpected error occurred.", ex);
+        case INTERNAL_ERROR ->
+            throw new BlobstoreFailureException("An internal blobstore error occurred.");
+        default -> throw new BlobstoreFailureException("An unexpected error occurred.", ex);
       }
     }
 

@@ -32,7 +32,6 @@ import com.google.protobuf.ByteString;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -123,12 +122,9 @@ public class DevPullQueue extends DevQueue {
 
     Collections.sort(
         taskInfoList,
-        new Comparator<TaskStateInfo>() {
-          @Override
-          public int compare(TaskStateInfo t1, TaskStateInfo t2) {
-            // Order by ascending ETA.
-            return Long.compare(t1.getEtaMillis(), t2.getEtaMillis());
-          }
+        (t1, t2) -> {
+          // Order by ascending ETA.
+          return Long.compare(t1.getEtaMillis(), t2.getEtaMillis());
         });
 
     return new QueueStateInfo(queueXmlEntry, taskInfoList);
@@ -155,12 +151,9 @@ public class DevPullQueue extends DevQueue {
       TaskStateInfo firstTask =
           Collections.min(
               taskInfoList,
-              new Comparator<TaskStateInfo>() {
-                @Override
-                public int compare(TaskStateInfo t1, TaskStateInfo t2) {
-                  // Order by ascending ETA.
-                  return Long.compare(t1.getEtaMillis(), t2.getEtaMillis());
-                }
+              (t1, t2) -> {
+                // Order by ascending ETA.
+                return Long.compare(t1.getEtaMillis(), t2.getEtaMillis());
               });
       if (firstTask != null) {
         tag = firstTask.getTagAsBytes();
@@ -170,25 +163,22 @@ public class DevPullQueue extends DevQueue {
     // Sort so that tasks of our tag come first.
     Collections.sort(
         taskInfoList,
-        new Comparator<TaskStateInfo>() {
-          @Override
-          public int compare(TaskStateInfo t1, TaskStateInfo t2) {
-            byte[] tag1 = t1.getTagAsBytes();
-            byte[] tag2 = t2.getTagAsBytes();
-            if (Arrays.equals(tag1, tag2)) {
-              // Order by ascending eta when tags are identical.
-              return Long.compare(t1.getEtaMillis(), t2.getEtaMillis());
-            }
-            // Make sure our special tag comes first.
-            if (Arrays.equals(tag1, chosenTag)) {
-              return -1;
-            }
-            if (Arrays.equals(tag2, chosenTag)) {
-              return 1;
-            }
-            // Keep the rest sorted by eta.
+        (t1, t2) -> {
+          byte[] tag1 = t1.getTagAsBytes();
+          byte[] tag2 = t2.getTagAsBytes();
+          if (Arrays.equals(tag1, tag2)) {
+            // Order by ascending eta when tags are identical.
             return Long.compare(t1.getEtaMillis(), t2.getEtaMillis());
           }
+          // Make sure our special tag comes first.
+          if (Arrays.equals(tag1, chosenTag)) {
+            return -1;
+          }
+          if (Arrays.equals(tag2, chosenTag)) {
+            return 1;
+          }
+          // Keep the rest sorted by eta.
+          return Long.compare(t1.getEtaMillis(), t2.getEtaMillis());
         });
     // Just keep the tasks with our tag.
     ArrayList<TaskStateInfo> taggedTaskInfoList = new ArrayList<>();
@@ -230,12 +220,7 @@ public class DevPullQueue extends DevQueue {
         Collections.binarySearch(
             tasks,
             new TaskStateInfo(null, nowMillis, null, null),
-            new Comparator<TaskStateInfo>() {
-              @Override
-              public int compare(TaskStateInfo t1, TaskStateInfo t2) {
-                return Long.compare(t1.getEtaMillis(), t2.getEtaMillis());
-              }
-            });
+            (t1, t2) -> Long.compare(t1.getEtaMillis(), t2.getEtaMillis()));
     // if no exact match of etaMillis, index will be negative.
     if (index < 0) {
       index = -index - 1;

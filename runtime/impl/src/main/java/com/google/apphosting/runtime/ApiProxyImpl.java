@@ -354,7 +354,7 @@ public class ApiProxyImpl implements ApiProxy.Delegate<ApiProxyImpl.EnvironmentI
     } catch (ExecutionException ex) {
       // This will almost always be an ApiProxyException.
       Throwable cause = ex.getCause();
-      if (cause instanceof ApiProxy.ApiProxyException) {
+      if (cause instanceof ApiProxy.ApiProxyException apiProxyException) {
         // The ApiProxyException was generated during a callback in a Stubby
         // thread, so the stack trace it contains is not very useful to the user.
         // It would be more useful to the user to replace the stack trace with
@@ -362,13 +362,12 @@ public class ApiProxyImpl implements ApiProxy.Delegate<ApiProxyImpl.EnvironmentI
         // could be useful to an App Engine developer. So we throw a copy of the
         // original exception that contains the current stack trace and contains
         // the original exception as the cause.
-        ApiProxy.ApiProxyException apiProxyException = (ApiProxy.ApiProxyException) cause;
         throw apiProxyException.copy(Thread.currentThread().getStackTrace());
-      } else if (cause instanceof RuntimeException) {
-        throw (RuntimeException) cause;
-      } else if (cause instanceof Error) {
+      } else if (cause instanceof RuntimeException runtimeException) {
+        throw runtimeException;
+      } else if (cause instanceof Error error) {
         logger.atSevere().withCause(cause).log("Error thrown from API call.");
-        throw (Error) cause;
+        throw error;
       } else {
         // Shouldn't happen, but just in case.
         logger.atWarning().withCause(cause).log("Checked exception thrown from API call.");
@@ -804,7 +803,7 @@ public class ApiProxyImpl implements ApiProxy.Delegate<ApiProxyImpl.EnvironmentI
         outstandingApiRpcSemaphore,
         byteCountBeforeFlushing,
         maxLogLineSize,
-        Ints.checkedCast(maxLogFlushTime.getSeconds()),
+        Ints.checkedCast(maxLogFlushTime.toSeconds()),
         requestThreadGroup,
         requestState,
         coordinator,
@@ -1083,6 +1082,7 @@ public class ApiProxyImpl implements ApiProxy.Delegate<ApiProxyImpl.EnvironmentI
       asyncFutures.add(future);
     }
 
+    @SuppressWarnings("CollectionUndefinedEquality")
     boolean removeAsyncFuture(Future<?> future) {
       return asyncFutures.remove(future);
     }
@@ -1092,7 +1092,7 @@ public class ApiProxyImpl implements ApiProxy.Delegate<ApiProxyImpl.EnvironmentI
         String externalDatacenterName,
         BackgroundRequestCoordinator coordinator,
         boolean cloudSqlJdbcConnectivityEnabled) {
-      Map<String, Object> attributes = new HashMap<String, Object>();
+      Map<String, Object> attributes = new HashMap<>();
       attributes.put(USER_ID_KEY, request.getObfuscatedGaiaId());
       attributes.put(USER_ORGANIZATION_KEY, request.getUserOrganization());
       // Federated Login is no longer supported, but these fields were previously set,

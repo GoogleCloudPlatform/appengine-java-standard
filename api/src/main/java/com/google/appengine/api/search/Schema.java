@@ -75,7 +75,7 @@ public final class Schema {
       FieldChecker.checkFieldName(fieldName);
       List<Field.FieldType> types = fieldMap.get(fieldName);
       if (types == null) {
-        types = new ArrayList<Field.FieldType>();
+        types = new ArrayList<>();
         fieldMap.put(fieldName, types);
       }
       types.add(fieldType);
@@ -136,28 +136,18 @@ public final class Schema {
    * Field.FieldType.
    */
   static Field.FieldType mapPBFieldTypeToPublic(DocumentPb.FieldValue.ContentType type) {
-    switch (type) {
-      case TEXT:
-        return Field.FieldType.TEXT;
-      case HTML:
-        return Field.FieldType.HTML;
-      case ATOM:
-        return Field.FieldType.ATOM;
-      case DATE:
-        return Field.FieldType.DATE;
-      case NUMBER:
-        return Field.FieldType.NUMBER;
-      case GEO:
-        return Field.FieldType.GEO_POINT;
-      case UNTOKENIZED_PREFIX:
-        return Field.FieldType.UNTOKENIZED_PREFIX;
-      case TOKENIZED_PREFIX:
-        return Field.FieldType.TOKENIZED_PREFIX;
-      case VECTOR:
-        return Field.FieldType.VECTOR;
-      default:
-        throw new IllegalArgumentException("Unsupported field type " + type);
-    }
+    return switch (type) {
+      case TEXT -> Field.FieldType.TEXT;
+      case HTML -> Field.FieldType.HTML;
+      case ATOM -> Field.FieldType.ATOM;
+      case DATE -> Field.FieldType.DATE;
+      case NUMBER -> Field.FieldType.NUMBER;
+      case GEO -> Field.FieldType.GEO_POINT;
+      case UNTOKENIZED_PREFIX -> Field.FieldType.UNTOKENIZED_PREFIX;
+      case TOKENIZED_PREFIX -> Field.FieldType.TOKENIZED_PREFIX;
+      case VECTOR -> Field.FieldType.VECTOR;
+      default -> throw new IllegalArgumentException("Unknown field type: " + type);
+    };
   }
 
   /**
@@ -165,28 +155,18 @@ public final class Schema {
    * TypeDocumentPb.FieldValue.ContentType enums.
    */
   static DocumentPb.FieldValue.ContentType mapPublicFieldTypeToPB(Field.FieldType type) {
-    switch (type) {
-      case TEXT:
-        return DocumentPb.FieldValue.ContentType.TEXT;
-      case HTML:
-        return DocumentPb.FieldValue.ContentType.HTML;
-      case ATOM:
-        return DocumentPb.FieldValue.ContentType.ATOM;
-      case DATE:
-        return DocumentPb.FieldValue.ContentType.DATE;
-      case NUMBER:
-        return DocumentPb.FieldValue.ContentType.NUMBER;
-      case GEO_POINT:
-        return DocumentPb.FieldValue.ContentType.GEO;
-      case UNTOKENIZED_PREFIX:
-        return DocumentPb.FieldValue.ContentType.UNTOKENIZED_PREFIX;
-      case TOKENIZED_PREFIX:
-        return DocumentPb.FieldValue.ContentType.TOKENIZED_PREFIX;
-      case VECTOR:
-        return DocumentPb.FieldValue.ContentType.VECTOR;
-      default:
-        throw new IllegalArgumentException("Unsupported field type " + type);
-    }
+    return switch (type) {
+      case TEXT -> DocumentPb.FieldValue.ContentType.TEXT;
+      case HTML -> DocumentPb.FieldValue.ContentType.HTML;
+      case ATOM -> DocumentPb.FieldValue.ContentType.ATOM;
+      case DATE -> DocumentPb.FieldValue.ContentType.DATE;
+      case NUMBER -> DocumentPb.FieldValue.ContentType.NUMBER;
+      case GEO_POINT -> DocumentPb.FieldValue.ContentType.GEO;
+      case UNTOKENIZED_PREFIX -> DocumentPb.FieldValue.ContentType.UNTOKENIZED_PREFIX;
+      case TOKENIZED_PREFIX -> DocumentPb.FieldValue.ContentType.TOKENIZED_PREFIX;
+      case VECTOR -> DocumentPb.FieldValue.ContentType.VECTOR;
+      default -> throw new IllegalArgumentException("Unknown field type: " + type);
+    };
   }
 
   /**

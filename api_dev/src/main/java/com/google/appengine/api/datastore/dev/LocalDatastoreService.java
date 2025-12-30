@@ -344,7 +344,7 @@ public abstract class LocalDatastoreService {
 
   /** The set of Profiles for this datastore, categorized by name. */
   private final Map<String, Profile> profiles =
-      Collections.synchronizedMap(new HashMap<String, Profile>());
+      Collections.synchronizedMap(new HashMap<>());
 
   private final Map<String, SpecialProperty> specialPropertyMap = Maps.newHashMap();
 
@@ -409,13 +409,7 @@ public abstract class LocalDatastoreService {
                 .build());
     scheduler.setRemoveOnCancelPolicy(true);
     Runtime.getRuntime()
-        .addShutdownHook(
-            new Thread() {
-              @Override
-              public void run() {
-                cleanupActiveServices();
-              }
-            });
+        .addShutdownHook(new Thread(LocalDatastoreService::cleanupActiveServices));
     return scheduler;
   }
 
@@ -635,24 +629,14 @@ public abstract class LocalDatastoreService {
     activeServices.add(this);
     scheduledTasks.add(
         scheduler.scheduleWithFixedDelay(
-            new Runnable() {
-              @Override
-              public void run() {
-                removeStaleQueries(clock.getCurrentTime());
-              }
-            },
+            () -> removeStaleQueries(clock.getCurrentTime()),
             maxQueryLifetimeMs * 5L,
             maxQueryLifetimeMs * 5L,
             TimeUnit.MILLISECONDS));
 
     scheduledTasks.add(
         scheduler.scheduleWithFixedDelay(
-            new Runnable() {
-              @Override
-              public void run() {
-                removeStaleTransactions(clock.getCurrentTime());
-              }
-            },
+            () -> removeStaleTransactions(clock.getCurrentTime()),
             maxTransactionLifetimeMs * 5L,
             maxTransactionLifetimeMs * 5L,
             TimeUnit.MILLISECONDS));
@@ -660,15 +644,7 @@ public abstract class LocalDatastoreService {
     if (!noStorage) {
       scheduledTasks.add(
           scheduler.scheduleWithFixedDelay(
-              new Runnable() {
-                @Override
-                public void run() {
-                  persist();
-                }
-              },
-              storeDelayMs,
-              storeDelayMs,
-              TimeUnit.MILLISECONDS));
+              () -> persist(), storeDelayMs, storeDelayMs, TimeUnit.MILLISECONDS));
     }
   }
 
@@ -1295,7 +1271,7 @@ public abstract class LocalDatastoreService {
 
       if (queryEntities == null) {
         // so we don't need to check for null anywhere else down below
-        queryEntities = Collections.emptyList();
+        queryEntities = new ArrayList<>();
       }
 
       // Building filter predicate
@@ -1304,13 +1280,10 @@ public abstract class LocalDatastoreService {
       if (query.hasAncestor()) {
         final List<Element> ancestorPath = query.getAncestor().getPath().getElementList();
         predicates.add(
-            new Predicate<EntityProto>() {
-              @Override
-              public boolean apply(EntityProto entity) {
-                List<Element> path = entity.getKey().getPath().getElementList();
-                return path.size() >= ancestorPath.size()
-                    && path.subList(0, ancestorPath.size()).equals(ancestorPath);
-              }
+            entity -> {
+              List<Element> path = entity.getKey().getPath().getElementList();
+              return path.size() >= ancestorPath.size()
+                  && path.subList(0, ancestorPath.size()).equals(ancestorPath);
             });
       }
 
@@ -1318,34 +1291,26 @@ public abstract class LocalDatastoreService {
         final long keyPathLength =
             query.hasAncestor() ? query.getAncestor().getPath().getElementCount() + 1 : 1;
         predicates.add(
-            new Predicate<EntityProto>() {
-              @Override
-              public boolean apply(EntityProto entity) {
-                return entity.getKey().getPath().getElementCount() == keyPathLength;
-              }
-            });
+            entity -> entity.getKey().getPath().getElementCount() == keyPathLength);
       }
 
       // apply namespace restriction
       final boolean hasNamespace = query.hasNameSpace();
       final String namespace = query.getNameSpace();
       predicates.add(
-          new Predicate<EntityProto>() {
-            @Override
-            public boolean apply(EntityProto entity) {
-              Reference ref = entity.getKey();
-              // Filter all elements not in the query's namespace.
-              if (hasNamespace) {
-                if (!ref.hasNameSpace() || !namespace.equals(ref.getNameSpace())) {
-                  return false;
-                }
-              } else {
-                if (ref.hasNameSpace()) {
-                  return false;
-                }
+          entity -> {
+            Reference ref = entity.getKey();
+            // Filter all elements not in the query's namespace.
+            if (hasNamespace) {
+              if (!ref.hasNameSpace() || !namespace.equals(ref.getNameSpace())) {
+                return false;
               }
-              return true;
+            } else {
+              if (ref.hasNameSpace()) {
+                return false;
+              }
             }
+            return true;
           });
 
       // Get entityComparator with filter matching capability
@@ -1354,13 +1319,7 @@ public abstract class LocalDatastoreService {
               validatedQuery.getQuery().getOrderList(), validatedQuery.getQuery().getFilterList());
 
       // applying filter restrictions
-      predicates.add(
-          new Predicate<EntityProto>() {
-            @Override
-            public boolean apply(EntityProto entity) {
-              return entityComparator.matches(entity);
-            }
-          });
+      predicates.add(entityComparator::matches);
 
       Predicate<EntityProto> queryPredicate =
           Predicates.<EntityProto>not(Predicates.<EntityProto>and(predicates));
@@ -2113,7 +2072,7 @@ public abstract class LocalDatastoreService {
     private long lastCommitTimestamp = MINIMUM_VERSION;
 
     private final Map<String, Extent> extents =
-        Collections.synchronizedMap(new HashMap<String, Extent>());
+        Collections.synchronizedMap(new HashMap<>());
 
     // These four maps are transient to preserve the Serialized format.
     // Since uncommitted transactions are not persisted it is
@@ -3387,17 +3346,14 @@ public abstract class LocalDatastoreService {
 
   /** Returns the transaction {@link ConcurrencyMode} for the given V3 transaction mode. */
   private static ConcurrencyMode toConcurrencyMode(TransactionMode transactionMode) {
-    switch (transactionMode) {
-      case UNKNOWN:
-      // TODO: map to SHARED_READ in spanner mode.
-      case READ_WRITE:
-        // TODO: map to SHARED_READ in spanner mode.
-        // TODO: map to PESSIMISTIC in megastore mode.
-        return ConcurrencyMode.OPTIMISTIC;
-      case READ_ONLY:
-        return ConcurrencyMode.READ_ONLY;
-      default:
-        throw new IllegalArgumentException("Unknown transaction mode: " + transactionMode);
-    }
+    return switch (transactionMode) {
+      case UNKNOWN, READ_WRITE ->
+          // TODO: map to SHARED_READ in spanner mode.
+          // TODO: map to SHARED_READ in spanner mode.
+          // TODO: map to PESSIMISTIC in megastore mode.
+          ConcurrencyMode.OPTIMISTIC;
+      case READ_ONLY -> ConcurrencyMode.READ_ONLY;
+      default -> throw new IllegalArgumentException("Unknown transaction mode: " + transactionMode);
+    };
   }
 }

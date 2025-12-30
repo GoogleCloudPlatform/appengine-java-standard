@@ -338,7 +338,7 @@ public class FieldTest {
                 FieldValue.newBuilder()
                     .setStringValue("value")
                     .setType(FieldValue.ContentType.HTML)
-                    .setLanguage(locale.toString()))
+                    .setLanguage(locale.toLanguageTag()))
             .build();
     Field field = Field.newBuilder(pb).build();
     assertThat(field.getName()).isEqualTo("name");
@@ -358,7 +358,7 @@ public class FieldTest {
                     .addVectorValue(2.0)
                     .addVectorValue(3.0)
                     .setType(FieldValue.ContentType.VECTOR)
-                    .setLanguage(locale.toString()))
+                    .setLanguage(locale.toLanguageTag()))
             .build();
     Field field = Field.newBuilder(pb).build();
     assertThat(field.getName()).isEqualTo("vector");
@@ -377,7 +377,7 @@ public class FieldTest {
                 FieldValue.newBuilder()
                     .setStringValue("uprefix_value")
                     .setType(FieldValue.ContentType.UNTOKENIZED_PREFIX)
-                    .setLanguage(locale.toString()))
+                    .setLanguage(locale.toLanguageTag()))
             .build();
     Field field = Field.newBuilder(pb).build();
     assertThat(field.getName()).isEqualTo("uprefix");
@@ -396,7 +396,7 @@ public class FieldTest {
                 FieldValue.newBuilder()
                     .setStringValue("tprefix_value")
                     .setType(FieldValue.ContentType.TOKENIZED_PREFIX)
-                    .setLanguage(locale.toString()))
+                    .setLanguage(locale.toLanguageTag()))
             .build();
     Field field = Field.newBuilder(pb).build();
     assertThat(field.getName()).isEqualTo("tprefix");
@@ -506,7 +506,7 @@ public class FieldTest {
     assertThat(pb.getName()).isEqualTo("name");
     FieldValue value = pb.getValue();
     assertThat(value.getStringValue()).isEqualTo("value");
-    assertThat(value.getLanguage()).isEqualTo(locale.toString());
+    assertThat(value.getLanguage()).isEqualTo(locale.toLanguageTag());
     assertThat(value.getType()).isEqualTo(FieldValue.ContentType.TEXT);
 
     value = newField().setHTML("<html>").build().copyToProtocolBuffer().getValue();

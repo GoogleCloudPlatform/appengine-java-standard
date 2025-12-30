@@ -97,12 +97,11 @@ public class InstanceHelper {
       // block the main thread and to allow multiple servers to run the
       // /_ah/start operation in parallel. Also, note a server can loop forever
       // on /_ah/start
-      Thread requestThread = new Thread(new Runnable() {
-        @Override
-        public void run() {
-          sendStartRequest(AH_REQUEST_INFINITE_TIMEOUT, runOnSuccess);
-        }
-      });
+      Thread requestThread =
+          new Thread(
+              () -> {
+                sendStartRequest(AH_REQUEST_INFINITE_TIMEOUT, runOnSuccess);
+              });
       requestThread.setDaemon(true);
       requestThread.setName(
           "BackendServersStartRequestThread." + instance + "." + serverOrBackendName);

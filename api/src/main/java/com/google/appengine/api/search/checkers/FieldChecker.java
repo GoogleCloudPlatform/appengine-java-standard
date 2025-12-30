@@ -315,7 +315,10 @@ public final class FieldChecker {
     if (locale == null) {
       return null;
     }
-    String[] parts = locale.split("_", 3);
+    // Use limit 3 to parse language, country and variant. If locale string
+    // has more than 2 separators, e.g. "en-US-variant-with-hyphen",
+    // we want 3 parts: "en", "US", "variant-with-hyphen".
+    String[] parts = locale.split("[-_]", 3);
     if (parts.length == 1) {
       return new Locale(parts[0]);
     }

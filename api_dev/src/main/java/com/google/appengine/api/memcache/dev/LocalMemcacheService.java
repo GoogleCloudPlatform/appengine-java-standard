@@ -52,6 +52,7 @@ import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -117,7 +118,7 @@ public final class LocalMemcacheService extends AbstractLocalRpcService {
       this.flags = flags;
       this.expires = expiration;
       this.access = clock.getCurrentTime();
-      this.bytes = key.getBytes().length + value.length;
+      this.bytes = (long) key.getBytes().length + value.length;
       this.casId = null;
     }
 
@@ -248,9 +249,9 @@ public final class LocalMemcacheService extends AbstractLocalRpcService {
   private Clock clock;
 
   public LocalMemcacheService() {
-    lru = new LRU<CacheEntry>();
-    mockCache = new HashMap<String, Map<Key, CacheEntry>>();
-    deleteHold = new HashMap<String, Map<Key, Long>>();
+    lru = new LRU<>();
+    mockCache = new HashMap<>();
+    deleteHold = new HashMap<>();
     stats = new LocalStats(0, 0, 0, 0, 0);
     globalNextCasId = new AtomicLong(1);
   }
@@ -258,7 +259,7 @@ public final class LocalMemcacheService extends AbstractLocalRpcService {
   private <K1, K2, V> Map<K2, V> getOrMakeSubMap(Map<K1, Map<K2, V>> map, K1 key) {
     Map<K2, V> subMap = map.get(key);
     if (subMap == null) {
-      subMap = new HashMap<K2, V>();
+      subMap = new HashMap<>();
       map.put(key, subMap);
     }
     return subMap;
@@ -322,7 +323,7 @@ public final class LocalMemcacheService extends AbstractLocalRpcService {
     if (propValue == null) {
       propValue = DEFAULT_MAX_SIZE;
     } else {
-      propValue = propValue.toUpperCase();
+      propValue = propValue.toUpperCase(Locale.ROOT);
     }
     int multiplier = 1;
     if (propValue.endsWith("M") || propValue.endsWith("K")) {
@@ -512,7 +513,7 @@ public final class LocalMemcacheService extends AbstractLocalRpcService {
         throw new ApiProxy.UnknownException(UTF8 + " encoding was not found.");
       }
       // don't change the flags; it keeps its original size/type
-      ce.bytes = key.getBytes().length + ce.value.length;
+      ce.bytes = (long) key.getBytes().length + ce.value.length;
       Map<Key, CacheEntry> namespaceMap = getOrMakeSubMap(mockCache, namespace);
       namespaceMap.remove(key);
       namespaceMap.put(key, ce);
@@ -589,7 +590,7 @@ public final class LocalMemcacheService extends AbstractLocalRpcService {
         }
 
         // don't change the flags; it keeps its original size/type
-        ce.bytes = key.getBytes().length + ce.value.length;
+        ce.bytes = (long) key.getBytes().length + ce.value.length;
         Map<Key, CacheEntry> namespaceMap = getOrMakeSubMap(mockCache, namespace);
         namespaceMap.remove(key);
         namespaceMap.put(key, ce);

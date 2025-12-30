@@ -109,15 +109,15 @@ public class ClassPathUtils {
     if (Boolean.getBoolean("appengine.use.jetty121")) { // Jetty121 case (EE8 and EE11)
       runtimeImplJar = "runtime-impl-jetty121.jar";
       switch (eeVersion) {
-        case "EE8":
+        case "EE8" -> {
           profileMessage = "AppEngine is using Jetty 12.1 EE8 profile.";
           runtimeSharedJar = "runtime-shared-jetty121-ee8.jar";
-          break;
-        case "EE11":
+        }
+        case "EE11" -> {
           profileMessage = "AppEngine is using Jetty 12.1 EE11 profile.";
           runtimeSharedJar = "runtime-shared-jetty121-ee11.jar";
-          break;
-        case "EE10":
+        }
+        case "EE10" -> {
           logger.log(
               Level.WARNING,
               "appengine.use.EE10 is not supported with Jetty 12.1, upgrading to EE11.");
@@ -125,31 +125,29 @@ public class ClassPathUtils {
               "AppEngine is using Jetty 12.1 and requested EE10 profile has been upgraded to"
                   + " EE11.";
           runtimeSharedJar = "runtime-shared-jetty121-ee11.jar";
-          break;
-        default:
-          throw new IllegalArgumentException(
-              "Invalid Jetty121 configuration for eeVersion=" + eeVersion);
+        }
+        default -> throw new IllegalArgumentException(
+            "Invalid Jetty121 configuration for eeVersion=" + eeVersion);
       }
     } else {
       switch (eeVersion) {
-        case "EE10": // Jetty12 case
+        case "EE10" -> { // Jetty12 case
           runtimeImplJar = "runtime-impl-jetty12.jar";
           profileMessage = "AppEngine is using jetty 12. EE10 profile.";
           runtimeSharedJar = "runtime-shared-jetty12-ee10.jar";
-          break;
-        case "EE8": // Jetty12 case
+        }
+        case "EE8" -> { // Jetty12 case
           runtimeImplJar = "runtime-impl-jetty12.jar";
           profileMessage = "AppEngine is using jetty 12. EE8 profile.";
           runtimeSharedJar = "runtime-shared-jetty12.jar";
-          break;
-        case "EE6": // Default to jetty9
+        }
+        case "EE6" -> { // Default to jetty9
           runtimeImplJar = "runtime-impl-jetty9.jar";
           runtimeSharedJar = "runtime-shared-jetty9.jar";
           profileMessage = null;
-          break;
-        default:
-          throw new IllegalArgumentException(
-              "Invalid Jetty12 configuration for eeVersion=" + eeVersion);
+        }
+        default -> throw new IllegalArgumentException(
+            "Invalid Jetty12 configuration for eeVersion=" + eeVersion);
       }
     }
     if (profileMessage != null) {
@@ -207,7 +205,7 @@ public class ClassPathUtils {
    * return an array containing a {@link URL} object representing each file.
    */
   public URL[] parseClasspath(String classpath) {
-    List<URL> urls = new ArrayList<URL>();
+    List<URL> urls = new ArrayList<>();
 
     StringTokenizer tokenizer = new StringTokenizer(classpath, File.pathSeparator);
     while (tokenizer.hasMoreTokens()) {

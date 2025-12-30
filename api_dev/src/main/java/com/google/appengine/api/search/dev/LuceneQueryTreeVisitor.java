@@ -33,6 +33,7 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -55,7 +56,7 @@ class LuceneQueryTreeVisitor implements QueryTreeVisitor<LuceneQueryTreeContext>
     DISTANCE;
 
     Function() {
-      this.token = name().toLowerCase();
+      this.token = name().toLowerCase(Locale.ROOT);
     }
 
     final String token;
@@ -211,7 +212,7 @@ class LuceneQueryTreeVisitor implements QueryTreeVisitor<LuceneQueryTreeContext>
       LuceneQueryTreeContext.ComparisonOp op) {
     LuceneQueryTreeContext lhs = context.getChild(0);
     LuceneQueryTreeContext rhs = context.getChild(1);
-    List<Query> children = new ArrayList<Query>();
+    List<Query> children = new ArrayList<>();
     for (LuceneQueryTreeContext.Type type : lhs.getCommonReturnTypes(rhs)) {
       children.addAll(newQuery(type, lhs, op, rhs));
     }
@@ -343,9 +344,12 @@ class LuceneQueryTreeVisitor implements QueryTreeVisitor<LuceneQueryTreeContext>
         + ": \"" + node.getText() + "\"");
   }
 
-  private List<Query> newQuery(LuceneQueryTreeContext.Type type, LuceneQueryTreeContext lhs,
-      LuceneQueryTreeContext.ComparisonOp op, LuceneQueryTreeContext rhs) {
-    List<Query> queries = new ArrayList<Query>();
+  private List<Query> newQuery(
+      QueryTreeContext.Type type,
+      LuceneQueryTreeContext lhs,
+      LuceneQueryTreeContext.ComparisonOp op,
+      LuceneQueryTreeContext rhs) {
+    List<Query> queries = new ArrayList<>();
     switch (type) {
       case TEXT:
         Set<DocumentPb.FieldValue.ContentType> types;
@@ -375,7 +379,8 @@ class LuceneQueryTreeVisitor implements QueryTreeVisitor<LuceneQueryTreeContext>
       case LOCATION:
         throw new SearchQueryException("Comparison operator not available for Geo type");
       default:
-        throw new SearchQueryException("Unknown field type " + type.name().toLowerCase());
+        throw new SearchQueryException(
+            "Unknown field type " + type.name().toLowerCase(Locale.ROOT));
     }
     return queries;
   }
@@ -529,7 +534,7 @@ class LuceneQueryTreeVisitor implements QueryTreeVisitor<LuceneQueryTreeContext>
     }
     switch (subType) {
       case ATOM:
-        return new TermQuery(new Term(field, value.toLowerCase()));
+        return new TermQuery(new Term(field, value.toLowerCase(Locale.ROOT)));
       case TEXT:
       case HTML:
         value = WordSeparatorAnalyzer.removeDiacriticals(value);
@@ -562,7 +567,8 @@ class LuceneQueryTreeVisitor implements QueryTreeVisitor<LuceneQueryTreeContext>
           conjunction.add(new TermQuery(new Term(field, token)), BooleanClause.Occur.MUST);
         }
         BooleanQuery disjunction = new BooleanQuery();
-        disjunction.add(new TermQuery(new Term(field, value.toLowerCase())),
+        disjunction.add(
+            new TermQuery(new Term(field, value.toLowerCase(Locale.ROOT))),
             BooleanClause.Occur.SHOULD);
         disjunction.add(conjunction, BooleanClause.Occur.SHOULD);
         return disjunction;
@@ -582,7 +588,7 @@ class LuceneQueryTreeVisitor implements QueryTreeVisitor<LuceneQueryTreeContext>
     disjunction.add(phraseQuery, BooleanClause.Occur.SHOULD);
 
     PhraseQuery literalPhraseQuery = new PhraseQuery();
-    literalPhraseQuery.add(new Term(field, value.toLowerCase()));
+    literalPhraseQuery.add(new Term(field, value.toLowerCase(Locale.ROOT)));
     disjunction.add(literalPhraseQuery, BooleanClause.Occur.SHOULD);
     return disjunction;
   }

@@ -90,27 +90,19 @@ class RemoteDatastore {
   byte[] handleDatastoreCall(String methodName, byte[] request) {
     // TODO(b/68190109) Perhaps replace with a map of handlers.
     // TODO Support AddActions.
-    switch (methodName) {
-      case "RunQuery":
-        return handleRunQuery(request);
-      case "Next":
-        return handleNext(request);
-      case "BeginTransaction":
-        return handleBeginTransaction(request);
-      case "Commit":
-        return handleCommit(request);
-      case "Rollback":
-        return handleRollback(request);
-      case "Get":
-        return handleGet(request);
-      case "Put":
-        return handlePut(request);
-      case "Delete":
-        return handleDelete(request);
-      default:
-        // other datastore call
-        return remoteRpc.call(DATASTORE_SERVICE, methodName, "", request);
-    }
+    return switch (methodName) {
+      case "RunQuery" -> handleRunQuery(request);
+      case "Next" -> handleNext(request);
+      case "BeginTransaction" -> handleBeginTransaction(request);
+      case "Commit" -> handleCommit(request);
+      case "Rollback" -> handleRollback(request);
+      case "Get" -> handleGet(request);
+      case "Put" -> handlePut(request);
+      case "Delete" -> handleDelete(request);
+      default ->
+          // other datastore call
+          remoteRpc.call(DATASTORE_SERVICE, methodName, "", request);
+    };
   }
 
   private byte[] handleRunQuery(byte[] request) {

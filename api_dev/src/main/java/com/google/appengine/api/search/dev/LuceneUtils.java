@@ -225,16 +225,15 @@ public final class LuceneUtils {
     DocumentPb.FacetValue facetValue = facet.getValue();
     String facetName = makeLuceneFieldName(facet.getName(), facet.getValue().getType());
     String value = facet.getValue().getStringValue();
-    switch(facetValue.getType()) {
-      case ATOM:
-        return new Field(facetName, value, Field.Store.YES, Field.Index.NOT_ANALYZED);
-      case NUMBER:
+    return switch (facetValue.getType()) {
+      case ATOM -> new Field(facetName, value, Field.Store.YES, Field.Index.NOT_ANALYZED);
+      case NUMBER -> {
         NumericField numericField = new NumericField(facetName, Field.Store.YES, true);
         numericField.setDoubleValue(stringValueToDouble(value));
-        return numericField;
-      default:
-        throw new IllegalArgumentException("Facet type " + facetValue.getType() + " not handled");
-    }
+        yield numericField;
+      }
+      default -> throw new IllegalArgumentException("Facet type " + facetValue.getType() + " not handled");
+    };
   }
 
   static boolean isFacetField(Fieldable field) {
@@ -264,41 +263,35 @@ public final class LuceneUtils {
     boolean makeGlobalField = true;
 
     switch (fieldValue.getType()) {
-      case HTML:
+      case HTML -> {
         // Store original html
         output.add(new Field(fieldName, value, Field.Store.YES, Field.Index.NOT_ANALYZED));
         value = extractTextFromHtml(value);
-        output.add(new Field(makeLuceneFieldNameWithExtractedText(field), value,
-            Field.Store.YES, Field.Index.ANALYZED));
-        break;
-
-      case TEXT:
-        output.add(new Field(fieldName, value, Field.Store.YES, globalIndexStrategy));
-        break;
-
-      case ATOM:
-        value = value.toLowerCase();
+        output.add(
+            new Field(makeLuceneFieldNameWithExtractedText(field), value, Field.Store.YES, Field.Index.ANALYZED));
+      }
+      case TEXT ->
+          output.add(new Field(fieldName, value, Field.Store.YES, globalIndexStrategy));
+      case ATOM -> {
+        value = value.toLowerCase(Locale.ROOT);
         output.add(new Field(fieldName, value, Field.Store.YES, Field.Index.NOT_ANALYZED));
         globalIndexStrategy = Field.Index.NOT_ANALYZED;
-        break;
-
-      case UNTOKENIZED_PREFIX:
+      }
+      case UNTOKENIZED_PREFIX -> {
         globalIndexStrategy = Field.Index.NOT_ANALYZED;
         value = PrefixFieldAnalyzerUtil.normalizePrefixField(value);
         for (String prefix : PrefixFieldAnalyzerUtil.createUntokenizedPrefixes(value)) {
           output.add(new Field(fieldName, prefix, Field.Store.NO, Field.Index.NOT_ANALYZED));
         }
         makeGlobalField = false;
-        break;
-
-      case TOKENIZED_PREFIX:
+      }
+      case TOKENIZED_PREFIX -> {
         TokenStream stream = PrefixFieldAnalyzerUtil.getTokenizedPrefixTokenStreamForIndexing(
-            new StringReader(value)); 
+            new StringReader(value));
         output.add(new Field(fieldName, stream));
         makeGlobalField = false;
-        break;
-
-      case DATE:
+      }
+      case DATE -> {
         NumericField dateField = new NumericField(fieldName, Field.Store.YES, true);
         // Store date as long value of days since Jan 1 1970
         try {
@@ -311,23 +304,20 @@ public final class LuceneUtils {
         }
         output.add(dateField);
         globalIndexStrategy = Field.Index.NOT_ANALYZED;
-        break;
-
-      case NUMBER:
+      }
+      case NUMBER -> {
         // TODO: Lucene docs insist on reusing the same NumericFields across documents.
         NumericField numericField = new NumericField(fieldName, Field.Store.YES, true);
         numericField.setDoubleValue(stringValueToDouble(value));
         output.add(numericField);
         globalIndexStrategy = Field.Index.NOT_ANALYZED;
-        break;
-
-      case GEO:
+      }
+      case GEO -> {
         output.add(new GeometricField(fieldName, fieldValue.getGeo()));
         makeGlobalField = false;
-        break;
-
-      default:
-        throw new IllegalArgumentException("Field type " + fieldValue.getType() + " not handled");
+      }
+      default ->
+          throw new IllegalArgumentException("Field type " + fieldValue.getType() + " not handled");
     }
 
     if (makeGlobalField) {
@@ -437,8 +427,7 @@ public final class LuceneUtils {
   public static double numericFieldToDouble(Fieldable f) {
     // Lucene returns Field instead of NumericField in getFields() call
     // for documents in index.
-    if (f instanceof NumericField) {
-      NumericField numericField = (NumericField) f;
+    if (f instanceof NumericField numericField) {
       return numericField.getNumericValue().doubleValue();
     } else {
       return Double.parseDouble(f.stringValue());
@@ -446,37 +435,34 @@ public final class LuceneUtils {
   }
 
   public static Object luceneFieldToValue(Fieldable f, ContentType type) {
-    switch (type) {
-      case TEXT:
-      case HTML:
-      case ATOM:
-        return ((Field) f).stringValue();
-      case DATE:
+    return switch (type) {
+      case TEXT, HTML, ATOM -> f.stringValue();
+      case DATE -> {
         // Lucene returns Field instead of NumericField in getFields() call
         // for documents in index.
         long value;
-        if (f instanceof NumericField) {
-          value = ((NumericField) f).getNumericValue().longValue();
+        if (f instanceof NumericField numericField) {
+          value = numericField.getNumericValue().longValue();
         } else {
           value = Long.parseLong(f.stringValue());
         }
-        return Long.toString(value);
-      case NUMBER:
-          // Lucene returns Field instead of NumericField in getFields() call
-          // for documents in index.
-          if (f instanceof NumericField) {
-            NumericField numericField = (NumericField) f;
-            return Double.toString(numericField.getNumericValue().doubleValue());
-          } else {
-            return f.stringValue();
-          }
-      case GEO:
+        yield Long.toString(value);
+      }
+      case NUMBER -> {
+        // Lucene returns Field instead of NumericField in getFields() call
+        // for documents in index.
+        if (f instanceof NumericField numericField) {
+          yield Double.toString(numericField.getNumericValue().doubleValue());
+        } else {
+          yield f.stringValue();
+        }
+      }
+      case GEO -> {
         String[] parts = ((Field) f).stringValue().split(",", 2);
-        return new double[] { Double.parseDouble(parts[0]), Double.parseDouble(parts[1]) };
-      default:
-        throw new IllegalArgumentException(
-            "Failed to correctly handle type " + type);
-    }
+        yield new double[] {Double.parseDouble(parts[0]), Double.parseDouble(parts[1])};
+      }
+      default -> throw new IllegalArgumentException("Failed to correctly handle type " + type);
+    };
   }
 
   static DocumentPb.Document.Builder toAppengineDocumentIdBuilder(Document d) {

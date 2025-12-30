@@ -32,7 +32,6 @@ import java.net.BindException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TimeZone;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
@@ -59,7 +58,7 @@ public class DevAppServerImpl implements DevAppServer {
 
   private final ApplicationConfigurationManager applicationConfigurationManager;
   private final Modules modules;
-  private Map<String, String> serviceProperties = new HashMap<String, String>();
+  private Map<String, String> serviceProperties = new HashMap<>();
   private final Map<String, Object> containerConfigProperties;
   private final int requestedPort;
   private final String customApplicationId;
@@ -228,6 +227,7 @@ public class DevAppServerImpl implements DevAppServer {
     return doStart();
   }
 
+  @SuppressWarnings("SystemExitOutsideMain")
   private CountDownLatch doStart() throws Exception {
     if (serverState != ServerState.INITIALIZING) {
       throw new IllegalStateException("Cannot start a server that has already been started.");
@@ -392,12 +392,9 @@ public class DevAppServerImpl implements DevAppServer {
 
     Future<Void> unused =
         shutdownScheduler.schedule(
-            new Callable<Void>() {
-              @Override
-              public Void call() throws Exception {
-                shutdown();
-                return null;
-              }
+            () -> {
+              shutdown();
+              return null;
             },
             1000,
             TimeUnit.MILLISECONDS);

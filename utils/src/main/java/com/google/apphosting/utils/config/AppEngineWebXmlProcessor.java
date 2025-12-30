@@ -137,161 +137,67 @@ class AppEngineWebXmlProcessor {
   private void processSecondLevelNode(Element elt, AppEngineWebXml appEngineWebXml) {
     String elementName = elt.getTagName();
     switch (elementName) {
-      case "system-properties":
-        processSystemPropertiesNode(elt, appEngineWebXml);
-        break;
-      case "vm-settings":
-      case "beta-settings":
-        processBetaSettingsNode(elt, appEngineWebXml);
-        break;
-      case "vm-health-check":
-      case "health-check":
-        processHealthCheckNode(elt, appEngineWebXml);
-        break;
-      case "liveness-check":
-        processLivenessCheckNode(elt, appEngineWebXml);
-        break;
-      case "readiness-check":
-        processReadinessCheckNode(elt, appEngineWebXml);
-        break;
-      case "resources":
-        processResourcesNode(elt, appEngineWebXml);
-        break;
-      case "network":
-        processNetworkNode(elt, appEngineWebXml);
-        break;
-      case "env-variables":
-        processEnvironmentVariablesNode(elt, appEngineWebXml);
-        break;
-      case "build-env-variables":
-        processBuildEnvironmentVariablesNode(elt, appEngineWebXml);
-        break;
-      case "application":
-        processApplicationNode(elt, appEngineWebXml);
-        break;
-      case "entrypoint":
-        processEntrypointNode(elt, appEngineWebXml);
-        break;
-      case "runtime-channel":
-        processRuntimeChannelNode(elt, appEngineWebXml);
-        break;
-      case "runtime":
-        processRuntimeNode(elt, appEngineWebXml);
-        break;
-      case "version":
-        processVersionNode(elt, appEngineWebXml);
-        break;
-      case "source-language":
-        logger.warning(
-            "The element <source-language> in appengine-web.xml file was ignored.");
-        break;
-      case "module":
+      case "system-properties" -> processSystemPropertiesNode(elt, appEngineWebXml);
+      case "vm-settings", "beta-settings" -> processBetaSettingsNode(elt, appEngineWebXml);
+      case "vm-health-check", "health-check" -> processHealthCheckNode(elt, appEngineWebXml);
+      case "liveness-check" -> processLivenessCheckNode(elt, appEngineWebXml);
+      case "readiness-check" -> processReadinessCheckNode(elt, appEngineWebXml);
+      case "resources" -> processResourcesNode(elt, appEngineWebXml);
+      case "network" -> processNetworkNode(elt, appEngineWebXml);
+      case "env-variables" -> processEnvironmentVariablesNode(elt, appEngineWebXml);
+      case "build-env-variables" -> processBuildEnvironmentVariablesNode(elt, appEngineWebXml);
+      case "application" -> processApplicationNode(elt, appEngineWebXml);
+      case "entrypoint" -> processEntrypointNode(elt, appEngineWebXml);
+      case "runtime-channel" -> processRuntimeChannelNode(elt, appEngineWebXml);
+      case "runtime" -> processRuntimeNode(elt, appEngineWebXml);
+      case "version" -> processVersionNode(elt, appEngineWebXml);
+      case "source-language" ->
+          logger.warning("The element <source-language> in appengine-web.xml file was ignored.");
+      case "module" -> {
         moduleNodeFound = true;
         processModuleNode(elt, appEngineWebXml);
-        break;
-      case "service":
+      }
+      case "service" -> {
         serviceNodeFound = true;
         processServiceNode(elt, appEngineWebXml);
-        break;
-      case "instance-class":
-        processInstanceClassNode(elt, appEngineWebXml);
-        break;
-      case "automatic-scaling":
-        processAutomaticScalingNode(elt, appEngineWebXml);
-        break;
-      case "manual-scaling":
-        processManualScalingNode(elt, appEngineWebXml);
-        break;
-      case "basic-scaling":
-        processBasicScalingNode(elt, appEngineWebXml);
-        break;
-      case "static-files":
-        processFilesetNode(elt, appEngineWebXml, FileType.STATIC);
-        break;
-      case "resource-files":
-        processFilesetNode(elt, appEngineWebXml, FileType.RESOURCE);
-        break;
-      case "ssl-enabled":
-        processSslEnabledNode(elt, appEngineWebXml);
-        break;
-      case "sessions-enabled":
-        processSessionsEnabledNode(elt, appEngineWebXml);
-        break;
-      case "async-session-persistence":
-        processAsyncSessionPersistenceNode(elt, appEngineWebXml);
-        break;
-      case "user-permissions":
-        processPermissionsNode(elt, appEngineWebXml);
-        break;
-      case "public-root":
-        processPublicRootNode(elt, appEngineWebXml);
-        break;
-      case "inbound-services":
-        processInboundServicesNode(elt, appEngineWebXml);
-        break;
-      case "precompilation-enabled":
-        processPrecompilationEnabledNode(elt, appEngineWebXml);
-        break;
-      case "admin-console":
-        processAdminConsoleNode(elt, appEngineWebXml);
-        break;
-      case "static-error-handlers":
-        processErrorHandlerNode(elt, appEngineWebXml);
-        break;
-      case "warmup-requests-enabled":
+      }
+      case "instance-class" -> processInstanceClassNode(elt, appEngineWebXml);
+      case "automatic-scaling" -> processAutomaticScalingNode(elt, appEngineWebXml);
+      case "manual-scaling" -> processManualScalingNode(elt, appEngineWebXml);
+      case "basic-scaling" -> processBasicScalingNode(elt, appEngineWebXml);
+      case "static-files" -> processFilesetNode(elt, appEngineWebXml, FileType.STATIC);
+      case "resource-files" -> processFilesetNode(elt, appEngineWebXml, FileType.RESOURCE);
+      case "ssl-enabled" -> processSslEnabledNode(elt, appEngineWebXml);
+      case "sessions-enabled" -> processSessionsEnabledNode(elt, appEngineWebXml);
+      case "async-session-persistence" -> processAsyncSessionPersistenceNode(elt, appEngineWebXml);
+      case "user-permissions" -> processPermissionsNode(elt, appEngineWebXml);
+      case "public-root" -> processPublicRootNode(elt, appEngineWebXml);
+      case "inbound-services" -> processInboundServicesNode(elt, appEngineWebXml);
+      case "precompilation-enabled" -> processPrecompilationEnabledNode(elt, appEngineWebXml);
+      case "admin-console" -> processAdminConsoleNode(elt, appEngineWebXml);
+      case "static-error-handlers" -> processErrorHandlerNode(elt, appEngineWebXml);
+      case "warmup-requests-enabled" -> {
         warmupNodeFound = true;
         processWarmupRequestsEnabledNode(elt, appEngineWebXml);
-        break;
-      case "threadsafe":
-        processThreadsafeNode(elt, appEngineWebXml);
-        break;
-      case "app-engine-apis":
-        appEngineWebXml.setAppEngineApis(getBooleanValue(elt));
-        break;
-      case "auto-id-policy":
-        processAutoIdPolicyNode(elt, appEngineWebXml);
-        break;
-      case "code-lock":
-        processCodeLockNode(elt, appEngineWebXml);
-        break;
-      case "vm":
-        processVmNode(elt, appEngineWebXml);
-        break;
-      case "env":
-        processEnvNode(elt, appEngineWebXml);
-        break;
-      case "api-config":
-        processApiConfigNode(elt, appEngineWebXml);
-        break;
-      case "class-loader-config":
-        processClassLoaderConfig(elt, appEngineWebXml);
-        break;
-      case "url-stream-handler":
-        processUrlStreamHandler(elt, appEngineWebXml);
-        break;
-      case "use-google-connector-j":
-        processUseGoogleConnectorJNode(elt, appEngineWebXml);
-        break;
-      case "pagespeed":
-        logger.warning(
-            "app_id "
-                + appEngineWebXml.getAppId()
-                + " has <pagespeed> in appengine-web.xml file, ignored.");
-        break;
-      case "staging":
-        processStagingNode(elt, appEngineWebXml);
-        break;
-      case "vpc-access-connector":
-        processVpcAccessConnector(elt, appEngineWebXml);
-        break;
-      case "service-account":
-        processServiceAccountNode(elt, appEngineWebXml);
-        break;
-      case "app-engine-bundled-services":
-        processAppEngineBundledServicesNode(elt, appEngineWebXml);
-        break;
-      default:
-        throw new AppEngineConfigException("Unrecognized element <" + elementName + ">");
+      }
+      case "threadsafe" -> processThreadsafeNode(elt, appEngineWebXml);
+      case "app-engine-apis" -> appEngineWebXml.setAppEngineApis(getBooleanValue(elt));
+      case "auto-id-policy" -> processAutoIdPolicyNode(elt, appEngineWebXml);
+      case "code-lock" -> processCodeLockNode(elt, appEngineWebXml);
+      case "vm" -> processVmNode(elt, appEngineWebXml);
+      case "env" -> processEnvNode(elt, appEngineWebXml);
+      case "api-config" -> processApiConfigNode(elt, appEngineWebXml);
+      case "class-loader-config" -> processClassLoaderConfig(elt, appEngineWebXml);
+      case "url-stream-handler" -> processUrlStreamHandler(elt, appEngineWebXml);
+      case "use-google-connector-j" -> processUseGoogleConnectorJNode(elt, appEngineWebXml);
+      case "pagespeed" -> logger.warning(
+          "app_id "
+              + appEngineWebXml.getAppId()
+              + " has <pagespeed> in appengine-web.xml file, ignored.");
+      case "staging" -> processStagingNode(elt, appEngineWebXml);
+      case "vpc-access-connector" -> processVpcAccessConnector(elt, appEngineWebXml);
+      case "service-account" -> processServiceAccountNode(elt, appEngineWebXml);
+      default -> throw new AppEngineConfigException("Unrecognized element <" + elementName + ">");
     }
   }
 

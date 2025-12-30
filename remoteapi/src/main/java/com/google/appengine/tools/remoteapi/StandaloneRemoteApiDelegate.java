@@ -64,13 +64,11 @@ class StandaloneRemoteApiDelegate extends RemoteApiDelegate {
   public Future<byte[]> makeAsyncCall(final Environment env, final String serviceName,
       final String methodName, final byte[] request, ApiConfig apiConfig) {
     // TODO(b/68190111): Respect deadline in apiConfig.
-    return executor.submit(new Callable<byte[]>() {
-      @Override
-      public byte[] call() throws Exception {
-        // Note that any exceptions thrown will be captured and thrown by the Future instead.
-        return makeSyncCall(env, serviceName, methodName, request);
-      }
-    });
+    return executor.submit(
+        () -> {
+          // Note that any exceptions thrown will be captured and thrown by the Future instead.
+          return makeSyncCall(env, serviceName, methodName, request);
+        });
   }
 
   @Override
@@ -97,19 +95,12 @@ class StandaloneRemoteApiDelegate extends RemoteApiDelegate {
   }
 
   private static Level toJavaLevel(ApiProxy.LogRecord.Level apiProxyLevel) {
-    switch (apiProxyLevel) {
-      case debug:
-        return Level.FINE;
-      case info:
-        return Level.INFO;
-      case warn:
-        return Level.WARNING;
-      case error:
-        return Level.SEVERE;
-      case fatal:
-        return Level.SEVERE;
-      default:
-        return Level.WARNING;
-    }
+    return switch (apiProxyLevel) {
+      case debug -> Level.FINE;
+      case info -> Level.INFO;
+      case warn -> Level.WARNING;
+      case error, fatal -> Level.SEVERE;
+      default -> Level.WARNING;
+    };
   }
 }

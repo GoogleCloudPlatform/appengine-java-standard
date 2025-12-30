@@ -65,13 +65,13 @@ public class BackendServersBase
   private File externalResourceDir;
   private Map<String, Object> containerConfigProperties;
   private ImmutableMap<BackendServersBase.ServerInstanceEntry, ServerWrapper> backendServers =
-      ImmutableMap.copyOf(new HashMap<ServerInstanceEntry, ServerWrapper>());
+      ImmutableMap.copyOf(new HashMap<>());
   private Map<String, String> portMapping =
-      ImmutableMap.copyOf(new HashMap<String, String>());
+      ImmutableMap.copyOf(new HashMap<>());
   // Should not be used until startup() is called.
   protected Logger logger = Logger.getLogger(BackendServersBase.class.getName());
 
-  private Map<String, String> serviceProperties = new HashMap<String, String>();
+  private Map<String, String> serviceProperties = new HashMap<>();
 
   // A reference to the devAppServer that initiated this BackendServers instance.
   private DevAppServer devAppServer;
@@ -765,17 +765,14 @@ public class BackendServersBase
     }
 
     void sendStartRequest() {
-       instanceHelper.sendStartRequest(new Runnable() {
-
-        @Override
-        public void run() {
-          // release permits so any queued requests can continue. The number
-          // of permits control how many concurrent requests the server can
-          // handle.
-          servingQueue.release(serverEntry.getMaxConcurrentRequests());
-        }
-      });
-     }
+      instanceHelper.sendStartRequest(
+          () -> {
+            // release permits so any queued requests can continue. The number
+            // of permits control how many concurrent requests the server can
+            // handle.
+            servingQueue.release(serverEntry.getMaxConcurrentRequests());
+          });
+    }
 
      /**
      * Acquires a serving permit for this server.

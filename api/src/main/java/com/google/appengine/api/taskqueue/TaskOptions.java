@@ -248,8 +248,8 @@ public final class TaskOptions implements Serializable {
 
   private TaskOptions() {
     this.method = Method.POST;
-    this.headers = new LinkedHashMap<String, List<String>>();
-    this.params = new ArrayList<Param>();
+    this.headers = new LinkedHashMap<>();
+    this.params = new ArrayList<>();
   }
 
   /** A copy constructor for {@link TaskOptions}. */
@@ -279,7 +279,7 @@ public final class TaskOptions implements Serializable {
       Map<String, List<String>> headers) {
     LinkedHashMap<String, List<String>> copy = new LinkedHashMap<>();
     for (Map.Entry<String, List<String>> entry : headers.entrySet()) {
-      copy.put(entry.getKey(), new ArrayList<String>(entry.getValue()));
+      copy.put(entry.getKey(), new ArrayList<>(entry.getValue()));
     }
     return copy;
   }

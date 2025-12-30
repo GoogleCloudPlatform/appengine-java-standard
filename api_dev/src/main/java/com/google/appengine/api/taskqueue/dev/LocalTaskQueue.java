@@ -59,7 +59,6 @@ import java.net.InetAddress;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -116,7 +115,7 @@ public final class LocalTaskQueue extends AbstractLocalRpcService {
   /** Collection of queues mapped by queue name, sorted by queue name. */
   private final Map<String, DevQueue> queues =
       // Using a TreeMap to get deterministic ordering.
-      Collections.synchronizedMap(new TreeMap<String, DevQueue>());
+      Collections.synchronizedMap(new TreeMap<>());
 
   private QueueXml queueConfig;
   private Scheduler scheduler;
@@ -276,13 +275,7 @@ public final class LocalTaskQueue extends AbstractLocalRpcService {
   private void start_() {
     // TODO Have DevAppServer install a shutdown hook and guarantee
     // the call of stop. (This to do was pulled from LocalDatastoreService, it applies here too).
-    shutdownHook =
-        new Thread() {
-          @Override
-          public void run() {
-            LocalTaskQueue.this.stop_();
-          }
-        };
+    shutdownHook = new Thread(LocalTaskQueue.this::stop_);
     Runtime.getRuntime().addShutdownHook(shutdownHook);
 
     // Start the local fetch service.

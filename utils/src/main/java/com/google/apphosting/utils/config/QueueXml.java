@@ -78,13 +78,13 @@ public class QueueXml {
     }
 
     static RateUnit valueOf(char unit) {
-      switch (unit) {
-        case 's' : return SECOND;
-        case 'm' : return MINUTE;
-        case 'h' : return HOUR;
-        case 'd' : return DAY;
-      }
-      throw new AppEngineConfigException("Invalid rate was specified.");
+      return switch (unit) {
+        case 's' -> SECOND;
+        case 'm' -> MINUTE;
+        case 'h' -> HOUR;
+        case 'd' -> DAY;
+        default -> throw new AppEngineConfigException("Invalid rate was specified.");
+      };
     }
 
     public char getIdent() {
@@ -491,7 +491,7 @@ public class QueueXml {
     }
   }
 
-  private final LinkedHashMap<String, Entry> entries = new LinkedHashMap<String, Entry>();
+  private final LinkedHashMap<String, Entry> entries = new LinkedHashMap<>();
   private Entry lastEntry;
 
   private String totalStorageLimit = "";

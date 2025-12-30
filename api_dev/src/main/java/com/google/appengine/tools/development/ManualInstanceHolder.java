@@ -177,13 +177,7 @@ class ManualInstanceHolder extends AbstractInstanceHolder  {
   }
 
   private void sendStartRequest() {
-    instanceHelper.sendStartRequest(new Runnable() {
-
-      @Override
-      public void run() {
-        startRequestLatch.countDown();
-      }
-    });
+    instanceHelper.sendStartRequest(() -> startRequestLatch.countDown());
   }
 
   @Override

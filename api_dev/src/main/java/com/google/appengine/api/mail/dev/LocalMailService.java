@@ -130,7 +130,7 @@ public final class LocalMailService extends AbstractLocalRpcService {
 
   /** All messages that have been sent. */
   private final List<MailServicePb.MailMessage> sentMessages =
-      Collections.synchronizedList(new ArrayList<MailServicePb.MailMessage>());
+      Collections.synchronizedList(new ArrayList<>());
 
   @Override
   public String getPackage() {

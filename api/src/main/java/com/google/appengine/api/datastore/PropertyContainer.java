@@ -26,6 +26,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 import org.jspecify.annotations.Nullable;
@@ -147,7 +148,7 @@ public abstract class PropertyContainer implements Serializable, Cloneable {
    */
   public boolean isUnindexedProperty(String propertyName) {
     Object value = getPropertyMap().get(propertyName);
-    return (value instanceof WrappedValue && !((WrappedValue) value).isIndexed())
+    return (value instanceof WrappedValue wrappedValue && !wrappedValue.isIndexed())
         || (value instanceof EmbeddedEntity)
         || (value != null && DataTypeUtils.isUnindexableType(value.getClass()));
   }
@@ -170,12 +171,11 @@ public abstract class PropertyContainer implements Serializable, Cloneable {
       boolean forceIndexedEntityValue = false;
       Object valueToAdd = entryValue;
 
-      if (entryValue instanceof UnindexedValue) {
+      if (entryValue instanceof UnindexedValue unindexedValue) {
         isUnindexedValue = true;
         indexed = false;
-        valueToAdd = ((UnindexedValue) entryValue).getValue();
-      } else if (entryValue instanceof WrappedValue) {
-        WrappedValue wrappedValue = (WrappedValue) entryValue;
+        valueToAdd = unindexedValue.getValue();
+      } else if (entryValue instanceof WrappedValue wrappedValue) {
         isWrappedValue = true;
         indexed = wrappedValue.isIndexed();
         forceIndexedEntityValue = wrappedValue.getForceIndexedEmbeddedEntity();
@@ -183,11 +183,10 @@ public abstract class PropertyContainer implements Serializable, Cloneable {
       }
 
       // Clone collections
-      if (valueToAdd instanceof Collection<?>) {
+      if (valueToAdd instanceof Collection<?> srcColl) {
         // Convert all collections to an ArrayList, as that is the representation
         // returned from the datastore.
-        Collection<?> srcColl = (Collection<?>) valueToAdd;
-        Collection<Object> destColl = new ArrayList<Object>(srcColl.size());
+        List<Object> destColl = new ArrayList<>(srcColl.size());
         valueToAdd = destColl;
         for (Object element : srcColl) {
           destColl.add(cloneIfMutable(element));
@@ -216,8 +215,8 @@ public abstract class PropertyContainer implements Serializable, Cloneable {
    * @param obj may be null
    */
   static @Nullable Object unwrapValue(@Nullable Object obj) {
-    if (obj instanceof WrappedValue) {
-      return ((WrappedValue) obj).getValue();
+    if (obj instanceof WrappedValue wrappedValue) {
+      return wrappedValue.getValue();
     } else {
       return obj;
     }
@@ -234,10 +233,10 @@ public abstract class PropertyContainer implements Serializable, Cloneable {
    */
   private static @Nullable Object cloneIfMutable(@Nullable Object obj) {
     // Needs to take into account all types listed in DataTypeTranslator
-    if (obj instanceof Date) {
-      return ((Date) obj).clone();
-    } else if (obj instanceof PropertyContainer) {
-      return ((PropertyContainer) obj).clone();
+    if (obj instanceof Date date) {
+      return date.clone();
+    } else if (obj instanceof PropertyContainer propertyContainer) {
+      return propertyContainer.clone();
     }
     return obj;
   }

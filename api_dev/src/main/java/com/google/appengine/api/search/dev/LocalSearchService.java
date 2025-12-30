@@ -744,8 +744,8 @@ public class LocalSearchService extends AbstractLocalRpcService {
    */
   private Map<String, Set<DocumentPb.FieldValue.ContentType>> getFieldTypes(
       String appId, SearchServicePb.IndexSpec indexSpec) {
-    Map<String, Set<DocumentPb.FieldValue.ContentType>> fieldTypes =
-        new TreeMap<String, Set<DocumentPb.FieldValue.ContentType>>();
+    Map<String, Set<DocumentPb.FieldValue.ContentType>> fieldTypes = new TreeMap<>();
+
     SearchServicePb.ListDocumentsRequest.Builder req =
         SearchServicePb.ListDocumentsRequest.newBuilder();
     req.getParamsBuilder().setIndexSpec(indexSpec);
@@ -773,7 +773,7 @@ public class LocalSearchService extends AbstractLocalRpcService {
       for (DocumentPb.Field field : document.getFieldList()) {
         Set<DocumentPb.FieldValue.ContentType> types = fieldTypes.get(field.getName());
         if (types == null) {
-          types = new LinkedHashSet<DocumentPb.FieldValue.ContentType>();
+          types = new LinkedHashSet<>();
           fieldTypes.put(field.getName(), types);
         }
         types.add(field.getValue().getType());
@@ -801,7 +801,7 @@ public class LocalSearchService extends AbstractLocalRpcService {
     return statusList;
   }
 
-  private static Map<Directory, IndexWriter> indexWriters = new HashMap<Directory, IndexWriter>();
+  private static final Map<Directory, IndexWriter> indexWriters = new HashMap<>();
 
   private IndexWriter getIndexWriter(Directory directory, boolean createIfNotPresent)
       throws IOException {
@@ -887,13 +887,13 @@ public class LocalSearchService extends AbstractLocalRpcService {
   private static Set<String> createFilter(SearchServicePb.SearchParams searchParams) {
     // TODO: check the priority in backend
     if (searchParams.getKeysOnly()) {
-      return new HashSet<String>();
+      return new HashSet<>();
     }
     if (searchParams.getFieldSpec().getNameList().isEmpty()) {
       // If no fields are specified, all fields should be returned.
       return null;
     }
-    return new HashSet<String>(searchParams.getFieldSpec().getNameList());
+    return new HashSet<>(searchParams.getFieldSpec().getNameList());
   }
 
   /**
@@ -926,9 +926,9 @@ public class LocalSearchService extends AbstractLocalRpcService {
       SearchServicePb.SearchParams searchParams, Map<String,
       Set<DocumentPb.FieldValue.ContentType>> fieldTypes) {
     ExpressionBuilder exprBuilder = new ExpressionBuilder(fieldTypes);
-    List<FieldGenerator> fieldGenerators = new ArrayList<FieldGenerator>();
+    List<FieldGenerator> fieldGenerators = new ArrayList<>();
     for (SearchServicePb.FieldSpec.Expression exprSpec :
-         searchParams.getFieldSpec().getExpressionList()) {
+        searchParams.getFieldSpec().getExpressionList()) {
       Expression expr = null;
       try {
         expr = exprBuilder.parse(exprSpec.getExpression());

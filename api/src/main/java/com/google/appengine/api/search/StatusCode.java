@@ -64,15 +64,15 @@ public enum StatusCode {
    * @return the corresponding user API enum
    */
   static StatusCode fromErrorCode(ErrorCode code) {
-    switch (code) {
-      case OK: return StatusCode.OK;
-      case INVALID_REQUEST: return StatusCode.INVALID_REQUEST;
-      case TRANSIENT_ERROR: return StatusCode.TRANSIENT_ERROR;
-      case INTERNAL_ERROR: return StatusCode.INTERNAL_ERROR;
-      case PERMISSION_DENIED: return StatusCode.PERMISSION_DENIED_ERROR;
-      case TIMEOUT: return StatusCode.TIMEOUT_ERROR;
-      case CONCURRENT_TRANSACTION: return StatusCode.CONCURRENT_TRANSACTION_ERROR;
-    }
-    throw new IllegalArgumentException("Failed to convert error code to status enum " + code);
+    return switch (code) {
+      case OK -> StatusCode.OK;
+      case INVALID_REQUEST -> StatusCode.INVALID_REQUEST;
+      case TRANSIENT_ERROR -> StatusCode.TRANSIENT_ERROR;
+      case INTERNAL_ERROR -> StatusCode.INTERNAL_ERROR;
+      case PERMISSION_DENIED -> StatusCode.PERMISSION_DENIED_ERROR;
+      case TIMEOUT -> StatusCode.TIMEOUT_ERROR;
+      case CONCURRENT_TRANSACTION -> StatusCode.CONCURRENT_TRANSACTION_ERROR;
+      default -> throw new IllegalArgumentException("Unknown error code: " + code);
+    };
   }
 }

@@ -57,10 +57,10 @@ class URLFetchServiceImpl implements URLFetchService {
       throw new IOException("The request exceeded the maximum permissible size");
     } catch (ApiProxy.ApplicationException ex) {
       Throwable cause = convertApplicationException(request.getURL(), ex);
-      if (cause instanceof RuntimeException) {
-        throw (RuntimeException) cause;
-      } else if (cause instanceof IOException) {
-        throw (IOException) cause;
+      if (cause instanceof RuntimeException runtimeException) {
+        throw runtimeException;
+      } else if (cause instanceof IOException iOException) {
+        throw iOException;
       } else {
         throw new RuntimeException(cause);
       }
@@ -105,8 +105,8 @@ class URLFetchServiceImpl implements URLFetchService {
 
       @Override
       protected Throwable convertException(Throwable cause) {
-        if (cause instanceof ApiProxy.ApplicationException) {
-          return convertApplicationException(url, (ApiProxy.ApplicationException) cause);
+        if (cause instanceof ApiProxy.ApplicationException applicationException) {
+          return convertApplicationException(url, applicationException);
         } else if (cause instanceof ApiProxy.ApiDeadlineExceededException) {
           return new SocketTimeoutException("Timeout while fetching URL: " + url);
         }
@@ -173,41 +173,40 @@ class URLFetchServiceImpl implements URLFetchService {
     // Keep in sync with urlfetch.py
     ErrorCode errorCode = ErrorCode.forNumber(ex.getApplicationError());
     String errorDetail = ex.getErrorDetail();
-    switch (errorCode) {
-      case INVALID_URL:
-        return new MalformedURLException(
-            getURLExceptionMessage("Invalid URL specified: %s", urlString, errorDetail));
-      case PAYLOAD_TOO_LARGE:
-        return new RequestPayloadTooLargeException(urlString);
-      case CLOSED:
-        return new IOException(getURLExceptionMessage(
-            "Connection closed unexpectedly by server at URL: %s", urlString, null));
-      case TOO_MANY_REDIRECTS:
-        return new IOException(getURLExceptionMessage(
-            "Too many redirects at URL: %s with redirect=true", urlString, null));
-      case MALFORMED_REPLY:
-        return new IOException(getURLExceptionMessage(
-            "Malformed HTTP reply received from server at URL: %s", urlString, errorDetail));
-      case RESPONSE_TOO_LARGE:
-        return new ResponseTooLargeException(urlString);
-      case DNS_ERROR:
-        return new UnknownHostException(
-            getURLExceptionMessage("DNS host lookup failed for URL: %s", urlString, null));
-      case FETCH_ERROR:
-        return new IOException(
-            getURLExceptionMessage("Could not fetch URL: %s", urlString, errorDetail));
-      case INTERNAL_TRANSIENT_ERROR:
-        return new InternalTransientException(urlString);
-      case DEADLINE_EXCEEDED:
-        return new SocketTimeoutException(
-            getURLExceptionMessage("Timeout while fetching URL: %s", urlString, null));
-      case SSL_CERTIFICATE_ERROR:
-        return new SSLHandshakeException(getURLExceptionMessage(
-            "Could not verify SSL certificate for URL: %s", urlString, null));
-      case UNSPECIFIED_ERROR:
-      default:
-        return new IOException(ex.getErrorDetail());
-    }
+    return switch (errorCode) {
+      case INVALID_URL ->
+          new MalformedURLException(
+              getURLExceptionMessage("Invalid URL specified: %s", urlString, errorDetail));
+      case PAYLOAD_TOO_LARGE -> new RequestPayloadTooLargeException(urlString);
+      case CLOSED ->
+          new IOException(
+              getURLExceptionMessage(
+                  "Connection closed unexpectedly by server at URL: %s", urlString, null));
+      case TOO_MANY_REDIRECTS ->
+          new IOException(
+              getURLExceptionMessage(
+                  "Too many redirects at URL: %s with redirect=true", urlString, null));
+      case MALFORMED_REPLY ->
+          new IOException(
+              getURLExceptionMessage(
+                  "Malformed HTTP reply received from server at URL: %s", urlString, errorDetail));
+      case RESPONSE_TOO_LARGE -> new ResponseTooLargeException(urlString);
+      case DNS_ERROR ->
+          new UnknownHostException(
+              getURLExceptionMessage("DNS host lookup failed for URL: %s", urlString, null));
+      case FETCH_ERROR ->
+          new IOException(
+              getURLExceptionMessage("Could not fetch URL: %s", urlString, errorDetail));
+      case INTERNAL_TRANSIENT_ERROR -> new InternalTransientException(urlString);
+      case DEADLINE_EXCEEDED ->
+          new SocketTimeoutException(
+              getURLExceptionMessage("Timeout while fetching URL: %s", urlString, null));
+      case SSL_CERTIFICATE_ERROR ->
+          new SSLHandshakeException(
+              getURLExceptionMessage(
+                  "Could not verify SSL certificate for URL: %s", urlString, null));
+      default -> new IOException(ex.getErrorDetail());
+    };
   }
 
   private URLFetchRequest convertToPb(HTTPRequest request) {
@@ -220,26 +219,13 @@ class URLFetchServiceImpl implements URLFetchService {
     }
 
     switch (request.getMethod()) {
-      case GET:
-        requestProto.setMethod(RequestMethod.GET);
-        break;
-      case POST:
-        requestProto.setMethod(RequestMethod.POST);
-        break;
-      case HEAD:
-        requestProto.setMethod(RequestMethod.HEAD);
-        break;
-      case PUT:
-        requestProto.setMethod(RequestMethod.PUT);
-        break;
-      case DELETE:
-        requestProto.setMethod(RequestMethod.DELETE);
-        break;
-      case PATCH:
-        requestProto.setMethod(RequestMethod.PATCH);
-        break;
-      default:
-        throw new IllegalArgumentException("unknown method: " + request.getMethod());
+      case GET -> requestProto.setMethod(RequestMethod.GET);
+      case POST -> requestProto.setMethod(RequestMethod.POST);
+      case HEAD -> requestProto.setMethod(RequestMethod.HEAD);
+      case PUT -> requestProto.setMethod(RequestMethod.PUT);
+      case DELETE -> requestProto.setMethod(RequestMethod.DELETE);
+      case PATCH -> requestProto.setMethod(RequestMethod.PATCH);
+      default -> throw new IllegalArgumentException("unknown method: " + request.getMethod());
     }
 
     for (HTTPHeader header : request.getHeaders()) {
@@ -252,15 +238,12 @@ class URLFetchServiceImpl implements URLFetchService {
     requestProto.setFollowRedirects(request.getFetchOptions().getFollowRedirects());
 
     switch (request.getFetchOptions().getCertificateValidationBehavior()) {
-      case VALIDATE:
-        requestProto.setMustValidateServerCertificate(true);
-        break;
-      case DO_NOT_VALIDATE:
-        requestProto.setMustValidateServerCertificate(false);
-        break;
-      default:
+      case VALIDATE -> requestProto.setMustValidateServerCertificate(true);
+      case DO_NOT_VALIDATE -> requestProto.setMustValidateServerCertificate(false);
+      default -> {
         // Leave mustValidateServerCertificate unset and the behavior up to the
         // urlfetch implementation.
+      }
     }
 
     return requestProto.build();

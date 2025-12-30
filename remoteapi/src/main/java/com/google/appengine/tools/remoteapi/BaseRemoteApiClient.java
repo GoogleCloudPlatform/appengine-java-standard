@@ -78,7 +78,7 @@ abstract class BaseRemoteApiClient implements RemoteApiClient {
    * in element 1.
    */
   List<String[]> getHeadersBase() {
-    List<String[]> headers = new ArrayList<String[]>();
+    List<String[]> headers = new ArrayList<>();
     headers.add(new String[]{"Host", hostname});
     // Required for Remote API (guards against XSRF attacks).
     headers.add(new String[]{"X-appcfg-api-version", "1"});
