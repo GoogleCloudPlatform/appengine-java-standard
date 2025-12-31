@@ -190,13 +190,16 @@ class AppEngineWebXmlProcessor {
       case "class-loader-config" -> processClassLoaderConfig(elt, appEngineWebXml);
       case "url-stream-handler" -> processUrlStreamHandler(elt, appEngineWebXml);
       case "use-google-connector-j" -> processUseGoogleConnectorJNode(elt, appEngineWebXml);
-      case "pagespeed" -> logger.warning(
-          "app_id "
-              + appEngineWebXml.getAppId()
-              + " has <pagespeed> in appengine-web.xml file, ignored.");
+      case "pagespeed" ->
+          logger.warning(
+              "app_id "
+                  + appEngineWebXml.getAppId()
+                  + " has <pagespeed> in appengine-web.xml file, ignored.");
       case "staging" -> processStagingNode(elt, appEngineWebXml);
       case "vpc-access-connector" -> processVpcAccessConnector(elt, appEngineWebXml);
       case "service-account" -> processServiceAccountNode(elt, appEngineWebXml);
+      case "app-engine-bundled-services" ->
+          processAppEngineBundledServicesNode(elt, appEngineWebXml);
       default -> throw new AppEngineConfigException("Unrecognized element <" + elementName + ">");
     }
   }
