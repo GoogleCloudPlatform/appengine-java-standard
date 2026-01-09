@@ -42,6 +42,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.CharStreams;
+import com.google.common.flogger.GoogleLogger;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -75,7 +76,10 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class LocalURLFetchServiceIntegrationTest {
 
+  private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
+
   private static final String GSE_URL_FORMAT = "http://localhost:%s";
+  private static final int MAX_RETRIES = 3;
 
   private static final PortPicker portPicker = PortPicker.create();
 
@@ -746,7 +750,21 @@ public class LocalURLFetchServiceIntegrationTest {
   }
 
   private void startServer() throws Exception {
-    server.start();
+    for (int i = 0; i < MAX_RETRIES; i++) {
+      try {
+        server.start();
+        return;
+      } catch (Exception e) {
+        if (i == MAX_RETRIES - 1) {
+          throw e;
+        }
+        logger.atWarning().withCause(e).log("Server start failed on port %d, retrying", port);
+        // Retry with a new port
+        port = portPicker.pickUnusedPort();
+        server = new Server(port);
+        server.setHandler(servletHandler);
+      }
+    }
   }
 
   private void addServlet(String servletPath, HttpServlet servlet) {
@@ -789,7 +807,6 @@ public class LocalURLFetchServiceIntegrationTest {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     protected void doPost(
         HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse)
         throws ServletException, IOException {

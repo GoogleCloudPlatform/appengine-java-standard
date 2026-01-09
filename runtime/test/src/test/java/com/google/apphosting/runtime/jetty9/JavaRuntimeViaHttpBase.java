@@ -65,7 +65,10 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Executors;
@@ -87,8 +90,10 @@ import org.junit.ClassRule;
 import org.junit.rules.TemporaryFolder;
 
 public abstract class JavaRuntimeViaHttpBase {
+  private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
   @ClassRule public static TemporaryFolder temporaryFolder = new TemporaryFolder();
   private static final String RUNTIME_LOCATION_ROOT = "java/com/google/apphosting";
+  private static final int MAX_RETRIES = 3;
   static final int RESPONSE_200 = 200;
 
   @FunctionalInterface
@@ -239,9 +244,8 @@ public abstract class JavaRuntimeViaHttpBase {
 
   public <ApiServerT extends Closeable> RuntimeContext<ApiServerT> createRuntimeContext(
       RuntimeContext.Config<ApiServerT> config) throws IOException, InterruptedException {
+    assertThat(MAX_RETRIES).isGreaterThan(0);
     PortPicker portPicker = PortPicker.create();
-    int jettyPort = portPicker.pickUnusedPort();
-    int apiPort = portPicker.pickUnusedPort();
     String runtimeDirProperty = System.getProperty("appengine.runtime.dir");
     File runtimeDir =
         (runtimeDirProperty == null)
@@ -250,62 +254,129 @@ public abstract class JavaRuntimeViaHttpBase {
     assertWithMessage("Runtime directory %s should exist and be a directory", runtimeDir)
         .that(runtimeDir.isDirectory())
         .isTrue();
-    InetSocketAddress apiSocketAddress = new InetSocketAddress(InetAddress.getLoopbackAddress(), apiPort);
-    ImmutableList.Builder<String> builder = ImmutableList.<String>builder();
-    builder.add(JAVA_HOME.value() + "/bin/java");
+
+    ImmutableList.Builder<String> baseArgsBuilder = ImmutableList.builder();
+    baseArgsBuilder.add(JAVA_HOME.value() + "/bin/java");
     Integer debugPort = Integer.getInteger("appengine.debug.port");
     if (debugPort != null) {
-      builder.add("-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:" + debugPort);
+      baseArgsBuilder.add("-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address:*:" + debugPort);
     }
-    ImmutableList<String> runtimeArgs =
-        builder
-            .add(
-                "-Dcom.google.apphosting.runtime.jetty94.LEGACY_MODE=" + legacyMode,
-                "-Dappengine.use.EE8=" + jakartaVersion.equals("EE8"),
-                "-Dappengine.use.EE10=" + jakartaVersion.equals("EE10"),
-                "-Dappengine.use.EE11=" + jakartaVersion.equals("EE11"),
-                "-Dappengine.use.jetty121=" + jettyVersion.equals("12.1"),
-                "-DGAE_RUNTIME=" + runtimeVersion,
-                "-Dappengine.use.HttpConnector=" + useHttpConnector,
-                "-Dappengine.ignore.responseSizeLimit="
-                    + Boolean.getBoolean("appengine.ignore.responseSizeLimit"),
-                "-Djetty.server.dumpAfterStart="
-                    + Boolean.getBoolean("jetty.server.dumpAfterStart"),
-                "-Duse.mavenjars=" + useMavenJars(),
-                "-cp",
-                useMavenJars()
-                    ? new File(runtimeDir, "jars/runtime-main.jar").getAbsolutePath()
-                    : new File(runtimeDir, "runtime-main.jar").getAbsolutePath())
-            .addAll(RuntimeContext.optionalFlags())
-            .addAll(RuntimeContext.jvmFlagsFromEnvironment(config.environmentEntries()))
-            .add(
-                "com.google.apphosting.runtime.JavaRuntimeMainWithDefaults",
-                "--jetty_http_port=" + jettyPort,
-                "--port=" + apiPort,
-                "--trusted_host="
-                    + HostAndPort.fromParts(apiSocketAddress.getAddress().getHostAddress(), apiPort),
-                runtimeDir.getAbsolutePath())
-            .addAll(config.launcherFlags())
-            .build();
-    System.out.println("ARGS=" + runtimeArgs);
-    Process runtimeProcess = RuntimeContext.launchRuntime(runtimeArgs, config.environmentEntries());
-    OutputPump outPump = new OutputPump(runtimeProcess.getInputStream(), "[stdout] ");
-    OutputPump errPump = new OutputPump(runtimeProcess.getErrorStream(), "[stderr] ");
-    new Thread(outPump).start();
-    new Thread(errPump).start();
-    await().atMost(30, SECONDS).until(() -> RuntimeContext.isPortAvailable("localhost", jettyPort));
-    int timeoutMillis = 30_000;
-    RequestConfig requestConfig =
-        RequestConfig.custom()
-            .setConnectTimeout(timeoutMillis)
-            .setConnectionRequestTimeout(timeoutMillis)
-            .setSocketTimeout(timeoutMillis)
-            .build();
-    HttpClient httpClient =
-        HttpClientBuilder.create().setDefaultRequestConfig(requestConfig).build();
-    ApiServerT httpApiServer = config.apiServerFactory().newApiServer(apiPort, jettyPort);
-    return new RuntimeContext<>(
-        runtimeProcess, httpApiServer, httpClient, jettyPort, outPump, errPump);
+    baseArgsBuilder
+        .add(
+            "-Dcom.google.apphosting.runtime.jetty94.LEGACY_MODE=" + legacyMode,
+            "-Dappengine.use.EE8=" + jakartaVersion.equals("EE8"),
+            "-Dappengine.use.EE10=" + jakartaVersion.equals("EE10"),
+            "-Dappengine.use.EE11=" + jakartaVersion.equals("EE11"),
+            "-Dappengine.use.jetty121=" + jettyVersion.equals("12.1"),
+            "-DGAE_RUNTIME=" + runtimeVersion,
+            "-Dappengine.use.HttpConnector=" + useHttpConnector,
+            "-Dappengine.ignore.responseSizeLimit="
+                + Boolean.getBoolean("appengine.ignore.responseSizeLimit"),
+            "-Djetty.server.dumpAfterStart=" + Boolean.getBoolean("jetty.server.dumpAfterStart"),
+            "-Duse.mavenjars=" + useMavenJars(),
+            "-cp",
+            useMavenJars()
+                ? new File(runtimeDir, "jars/runtime-main.jar").getAbsolutePath()
+                : new File(runtimeDir, "runtime-main.jar").getAbsolutePath())
+        .addAll(RuntimeContext.optionalFlags())
+        .addAll(RuntimeContext.jvmFlagsFromEnvironment(config.environmentEntries()));
+
+    ImmutableList<String> commonRuntimeArgs = baseArgsBuilder.build();
+
+    for (int i = 0; i < MAX_RETRIES; i++) {
+      OutputPump outPump = null;
+      OutputPump errPump = null;
+      ApiServerT httpApiServer = null;
+      int jettyPort = portPicker.pickUnusedPort();
+      int apiPort = portPicker.pickUnusedPort();
+      InetSocketAddress apiSocketAddress =
+          new InetSocketAddress(InetAddress.getLoopbackAddress(), apiPort);
+      String apiHost = apiSocketAddress.getAddress().getHostAddress();
+      int apiPortNum = apiPort;
+
+      ImmutableList<String> runtimeArgs =
+          ImmutableList.<String>builder()
+              .addAll(commonRuntimeArgs)
+              .add(
+                  "com.google.apphosting.runtime.JavaRuntimeMainWithDefaults",
+                  "--jetty_http_port=" + jettyPort,
+                  "--port=" + apiPort,
+                  "--trusted_host=" + HostAndPort.fromParts(apiHost, apiPortNum),
+                  runtimeDir.getAbsolutePath())
+              .addAll(config.launcherFlags())
+              .build();
+
+      System.out.println("ARGS=" + runtimeArgs);
+      Process runtimeProcess =
+          RuntimeContext.launchRuntime(runtimeArgs, config.environmentEntries());
+      try {
+        outPump = new OutputPump(runtimeProcess.getInputStream(), "[stdout] ");
+        errPump = new OutputPump(runtimeProcess.getErrorStream(), "[stderr] ");
+        OutputPump finalErrPump = errPump;
+        new Thread(outPump).start();
+        new Thread(errPump).start();
+        await()
+            .atMost(Duration.ofSeconds(30))
+            .until(
+                () -> {
+                  if (!runtimeProcess.isAlive()) {
+                    List<String> lastStderrLines = finalErrPump.getLastLines(20);
+                    throw new IllegalStateException(
+                        String.format(
+                            "Process died with exit code %d\nLast 20 lines of stderr:\n%s",
+                            runtimeProcess.exitValue(), String.join("\n", lastStderrLines)));
+                  }
+                  return RuntimeContext.isPortAvailable("localhost", jettyPort);
+                });
+        int timeoutMillis = 30_000;
+        RequestConfig requestConfig =
+            RequestConfig.custom()
+                .setConnectTimeout(timeoutMillis)
+                .setConnectionRequestTimeout(timeoutMillis)
+                .setSocketTimeout(timeoutMillis)
+                .build();
+        HttpClient httpClient =
+            HttpClientBuilder.create().setDefaultRequestConfig(requestConfig).build();
+        httpApiServer = config.apiServerFactory().newApiServer(apiPort, jettyPort);
+        return new RuntimeContext<>(
+            runtimeProcess, httpApiServer, httpClient, jettyPort, outPump, errPump);
+      } catch (Throwable t) {
+        // Log and clean up before retrying
+        logger.atWarning().withCause(t).log("Failed to start runtime, attempt %d of %d", i + 1, MAX_RETRIES);
+        runtimeProcess.destroyForcibly();
+        try {
+          runtimeProcess.waitFor(5, SECONDS);
+        } catch (InterruptedException e) {
+          Thread.currentThread().interrupt();
+        }
+        // Close pumps if they were initialized
+        if (outPump != null) {
+          try {
+            outPump.close();
+          } catch (IOException e) {
+            logger.atWarning().withCause(e).log("Failed to close stdout pump");
+          }
+        }
+        if (errPump != null) {
+          try {
+            errPump.close();
+          } catch (IOException e) {
+            logger.atWarning().withCause(e).log("Failed to close stderr pump");
+          }
+        }
+        if (httpApiServer != null) {
+          try {
+            httpApiServer.close();
+          } catch (IOException e) {
+            logger.atWarning().withCause(e).log("Failed to close httpApiServer");
+          }
+        }
+        if (i == MAX_RETRIES - 1) {
+          throw t;
+        }
+      }
+    }
+    throw new IllegalStateException("Should be unreachable");
   }
 
   public static class RuntimeContext<ApiServerT extends Closeable> implements AutoCloseable {
@@ -532,8 +603,28 @@ public abstract class JavaRuntimeViaHttpBase {
 
     @Override
     public void close() throws IOException {
-      runtimeProcess.destroy();
-      httpApiServer.close();
+      runtimeProcess.destroyForcibly();
+      try {
+        runtimeProcess.waitFor(5, SECONDS);
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+      }
+      // Close resources, logging any exceptions but ensuring all are attempted to be closed.
+      try {
+        outPump.close();
+      } catch (IOException e) {
+        logger.atWarning().withCause(e).log("Failed to close stdout pump");
+      }
+      try {
+        errPump.close();
+      } catch (IOException e) {
+        logger.atWarning().withCause(e).log("Failed to close stderr pump");
+      }
+      try {
+        httpApiServer.close();
+      } catch (IOException e) {
+        logger.atWarning().withCause(e).log("Failed to close httpApiServer");
+      }
     }
   }
 
@@ -541,7 +632,7 @@ public abstract class JavaRuntimeViaHttpBase {
     return Boolean.getBoolean("use.mavenjars");
   }
 
-  static class OutputPump implements Runnable {
+  static class OutputPump implements Runnable, AutoCloseable {
     private final BufferedReader stream;
     private final String echoPrefix;
     private final BlockingQueue<String> outputQueue = new LinkedBlockingQueue<>();
@@ -562,6 +653,18 @@ public abstract class JavaRuntimeViaHttpBase {
       } catch (IOException ignored) {
         // ignored, spurious log when we kill the process
       }
+    }
+
+    @Override
+    public void close() throws IOException {
+      stream.close();
+    }
+
+    /** Returns the last {@code n} lines captured by this pump. */
+    List<String> getLastLines(int n) {
+      List<String> allLines = new ArrayList<>(outputQueue);
+      int start = Math.max(0, allLines.size() - n);
+      return Collections.unmodifiableList(allLines.subList(start, allLines.size()));
     }
 
     void awaitOutputLineMatching(String pattern, long timeoutSeconds) throws InterruptedException {

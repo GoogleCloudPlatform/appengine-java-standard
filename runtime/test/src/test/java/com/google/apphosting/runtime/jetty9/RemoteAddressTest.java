@@ -71,7 +71,9 @@ public class RemoteAddressTest extends JavaRuntimeViaHttpBase {
   @After
   public void after() throws Exception {
     httpClient.stop();
-    runtime.close();
+    if (runtime != null) {
+      runtime.close();
+    }
   }
 
   @Test

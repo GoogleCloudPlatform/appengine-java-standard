@@ -15,13 +15,17 @@
  */
 package com.google.apphosting.runtime.jetty9;
 
+import static com.google.common.base.StandardSystemProperty.JAVA_CLASS_PATH;
+import static com.google.common.base.StandardSystemProperty.JAVA_HOME;
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
@@ -36,24 +40,76 @@ public final class SpringBootTest extends JavaRuntimeViaHttpBase {
 
   public void initialize() throws IOException, InterruptedException {
     File currentDirectory = new File("").getAbsoluteFile();
+    File appBasedir =
+        new File(currentDirectory.getParentFile().getParentFile(), "applications/springboot");
     Process process =
         new ProcessBuilder(
                 "../../mvnw"
                     + (System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("windows")
                         ? ".cmd" // Windows OS
                         : ""), // Linux OS, no extension for command name.
+                "clean",
                 "install",
-                "appengine:stage",
+                "-DskipTests",
                 "-f",
-                new File(currentDirectory.getParentFile().getParentFile(), "applications/springboot/pom.xml")
-                    .getAbsolutePath())
+                new File(appBasedir, "pom.xml").getAbsolutePath())
             .start();
     List<String> results = readOutput(process.getInputStream());
     System.out.println("mvn process output:" + results);
     int exitCode = process.waitFor();
     assertThat(0).isEqualTo(exitCode);
-    appRoot = new File(currentDirectory.getParentFile().getParentFile(), "applications/springboot/target/appengine-staging");
+
+    File targetDir = new File(appBasedir, "target");
+    // The build process creates an exploded web application directory in the target/
+    // directory, with a name like 'springboot-1.0-SNAPSHOT'. We find that
+    // directory to pass to the staging command.
+    List<File> appDirs = new ArrayList<>();
+    File[] files = targetDir.listFiles();
+    if (files != null) {
+      for (File f : files) {
+        if (f.isDirectory()
+            && f.getName().startsWith("springboot-")
+            && !f.getName().equals("appengine-staging")) {
+          appDirs.add(f);
+        }
+      }
+    }
+    // The maven build is expected to produce only one such directory.
+    assertWithMessage("The maven build is expected to produce only one such directory.")
+        .that(appDirs)
+        .hasSize(1);
+    File appDir = appDirs.get(0);
+    assertThat(appDir).isNotNull();
+    assertThat(appDir.isDirectory()).isTrue();
+
+    appRoot = new File(targetDir, "appengine-staging");
+    stageApp(appDir, appRoot);
     assertThat(appRoot.isDirectory()).isTrue();
+  }
+
+  private void stageApp(File appDir, File stagingDir) throws IOException, InterruptedException {
+    String javaHome = JAVA_HOME.value();
+    String javaBin = javaHome + File.separator + "bin" + File.separator + "java";
+    String classpath = JAVA_CLASS_PATH.value();
+
+    File currentDirectory = new File("").getAbsoluteFile();
+    File sdkRoot =
+        new File(currentDirectory.getParentFile().getParentFile(), "sdk_assembly/target/appengine-java-sdk");
+    ProcessBuilder pb =
+        new ProcessBuilder(
+            javaBin,
+            "-Dappengine.sdk.root=" + sdkRoot.getAbsolutePath(),
+            "-cp",
+            classpath,
+            "com.google.appengine.tools.admin.AppCfg",
+            "stage",
+            appDir.getAbsolutePath(),
+            stagingDir.getAbsolutePath());
+    // Inherit IO for debugging purposes. Output will be visible in the test logs.
+    pb.inheritIO();
+    Process process = pb.start();
+    int exitCode = process.waitFor();
+    assertThat(exitCode).isEqualTo(0);
   }
 
   public SpringBootTest() {
