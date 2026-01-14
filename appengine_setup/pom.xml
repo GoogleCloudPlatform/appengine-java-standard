@@ -37,8 +37,6 @@
   <description>DO NOT USE - Presently in Beta Mode. Library to help setup AppEngine features (bundled services, session management, etc).</description>
 
   <properties>
-    <maven.compiler.source>8</maven.compiler.source>
-    <maven.compiler.target>8</maven.compiler.target>
     <maven.deploy.skip>true</maven.deploy.skip>
   </properties>
 </project>

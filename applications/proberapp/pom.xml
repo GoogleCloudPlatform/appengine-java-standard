@@ -42,7 +42,6 @@
         <DB_PASSOWRD>prober_connectivity_test_database</DB_PASSOWRD>
         <gax.version>2.72.2</gax.version>
         <appengine.target.version>${project.version}</appengine.target.version>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <appengine.runtime.location>target/${project.artifactId}-${project.version}</appengine.runtime.location>
     </properties>
 
@@ -213,8 +212,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>
-                <!-- TODO it would good to have this version only in pluginManagement in top pom -->
-                <version>3.9.0</version>
                 <executions>
                     <execution>
                         <id>copy-file</id>
@@ -261,17 +258,10 @@
                     <automaticRestart>true</automaticRestart>
                 </configuration>
             </plugin>
-            <plugin>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.14.1</version>
-                <configuration>
-                    <release>8</release>
-                </configuration>
-            </plugin>
+
             <plugin>
               <groupId>org.apache.maven.plugins</groupId>
               <artifactId>maven-enforcer-plugin</artifactId>
-              <version>3.6.2</version>
               <executions>
                 <execution>
                   <id>enforce-maven</id>

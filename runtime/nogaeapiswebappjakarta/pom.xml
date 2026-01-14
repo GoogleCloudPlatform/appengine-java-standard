@@ -34,7 +34,6 @@
     <properties>
         <maven.deploy.skip>true</maven.deploy.skip>
         <appengine.app.version>1</appengine.app.version>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
     <dependencies>
@@ -62,13 +61,6 @@
                             <targetPath>WEB-INF</targetPath>
                         </resource>
                     </webResources>
-                </configuration>
-            </plugin>
-            <plugin>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.14.1</version>
-                <configuration>
-                    <release>8</release>
                 </configuration>
             </plugin>
         </plugins>
