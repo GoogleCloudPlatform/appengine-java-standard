@@ -16,6 +16,8 @@
 
 package com.google.appengine.tools.development;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.appengine.tools.development.BackendServersBase.ServerInstanceEntry;
 import java.util.HashSet;
 import junit.framework.TestCase;
@@ -28,7 +30,7 @@ public class BackendServersTest extends TestCase {
     ServerInstanceEntry server1copy = new ServerInstanceEntry("server1", 17);
     ServerInstanceEntry server2 = new ServerInstanceEntry("server2", 17);
     
-    assert(server1.hashCode() != server2.hashCode());
+    assertThat(server1.hashCode()).isNotEqualTo(server2.hashCode());
     assertEquals(server1.hashCode(), server1copy.hashCode());    
   }
   
@@ -54,7 +56,7 @@ public class BackendServersTest extends TestCase {
     
     HashSet<ServerInstanceEntry> set = new HashSet<ServerInstanceEntry>();
     set.add(server1);
-    assert(set.contains(server1copy));
+    assertThat(set).contains(server1copy);
     assertFalse(set.contains(server2));
     assertFalse(set.contains(server3));
     }

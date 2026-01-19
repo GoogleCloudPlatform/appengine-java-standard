@@ -500,6 +500,7 @@ public class JavaRuntime implements EvaluationRuntimeServerInterface {
     return null;
   }
 
+  @SuppressWarnings("SystemExitOutsideMain")
   public static void killCloneIfSeriousException(Throwable th) {
     if (RequestRunner.shouldKillCloneAfterException(th)) {
       try {
@@ -565,6 +566,7 @@ public class JavaRuntime implements EvaluationRuntimeServerInterface {
       }
     }
 
+    @SuppressWarnings("SystemExitOutsideMain")
     private void startServer() throws Exception {
       CloneControllerImplCallback callback = new CloneControllerImplCallback();
       CloneControllerImpl controller =

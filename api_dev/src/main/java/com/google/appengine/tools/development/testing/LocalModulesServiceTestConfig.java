@@ -76,7 +76,7 @@ import java.util.logging.Logger;
  *  <li> If the envInstance has not been set or is set to its default "-1" value then an
  *       automatic scaling module version will be added with module = envModuleId and
  *       version = envVerionId. Note here and below that in the event envVersionId contains
- *       a .<minor-version> suffix (eg "v1.9") the minor suffix is not included in the
+ *       a .&lt;minor-version&gt; suffix (eg "v1.9") the minor suffix is not included in the
  *       added module version.
  *  <li> If the envInstance has been set or is set to a non default ("-1") value then a
  *       manual scaling module version will be added with module = envModuleId and
@@ -200,7 +200,7 @@ public class LocalModulesServiceTestConfig implements LocalServiceTestConfig {
    * @return this for chaining
    * @throws IllegalArgumentException if a module version with the same name and version
    *         has already been added.
-   * @throws IllegalArgumentException if numInstances <= 0.
+   * @throws IllegalArgumentException if numInstances &lt;= 0.
    */
   public LocalModulesServiceTestConfig addManualScalingModuleVersion(String module, String version,
       int numInstances) {
@@ -219,7 +219,7 @@ public class LocalModulesServiceTestConfig implements LocalServiceTestConfig {
    * @return this for chaining
    * @throws IllegalArgumentException if a module version with the same name and version
    *         has already been added.
-   * @throws IllegalArgumentException if numInstances <= 0.
+   * @throws IllegalArgumentException if numInstances &lt;= 0.
    */
   public LocalModulesServiceTestConfig addBasicScalingModuleVersion(String module, String version,
       int numInstances) {
@@ -346,8 +346,10 @@ public class LocalModulesServiceTestConfig implements LocalServiceTestConfig {
       versionMapBuilder.put(moduleVersion.getModule(), moduleVersion.getVersion());
     }
 
-    checkArgument(defaultVersions.containsKey(DEFAULT_MODULE_NAME),
-        "No version of the default module is configured: moduleVersions=" + moduleVersions);
+    checkArgument(
+        defaultVersions.containsKey(DEFAULT_MODULE_NAME),
+        "No version of the default module is configured: moduleVersions=%s",
+        moduleVersions);
 
     ImmutableMap.Builder<String, String> defaultVersionsBuilder = ImmutableMap.builder();
     defaultVersionsBuilder.putAll(defaultVersions);
@@ -783,13 +785,19 @@ public class LocalModulesServiceTestConfig implements LocalServiceTestConfig {
       checkNotNull(module);
       checkNotNull(version);
       if (scalingType == ScalingType.AUTOMATIC) {
-        checkArgument(initialNumInstances == DYNAMIC_INSTANCE_COUNT,
-            "Automatic scaling module version module " + module
-            + " version " + version + " must have initialNumInstances " + DYNAMIC_INSTANCE_COUNT);
+        checkArgument(
+            initialNumInstances == DYNAMIC_INSTANCE_COUNT,
+            "Automatic scaling module version module %s version %s must have initialNumInstances %s",
+            module,
+            version,
+            DYNAMIC_INSTANCE_COUNT);
       } else {
-        checkArgument(initialNumInstances != DYNAMIC_INSTANCE_COUNT,
-            "Automatic scaling module version module " + module + " version " + version
-            + " must not have initialNumInstances " + DYNAMIC_INSTANCE_COUNT);
+        checkArgument(
+            initialNumInstances != DYNAMIC_INSTANCE_COUNT,
+            "Automatic scaling module version module %s version %s must not have initialNumInstances %s",
+            module,
+            version,
+            DYNAMIC_INSTANCE_COUNT);
       }
       version = stripMinorVersion(version);
       this.key = new ModuleVersionKey(module, version);

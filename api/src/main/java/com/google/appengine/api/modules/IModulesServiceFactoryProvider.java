@@ -26,6 +26,7 @@ import com.google.auto.service.AutoService;
  */
 @AutoService(FactoryProvider.class)
 @ServiceProvider(precedence = Integer.MIN_VALUE)
+@SuppressWarnings({"rawtypes", "UnnecessaryJavacSuppressWarnings"})
 public final class IModulesServiceFactoryProvider extends FactoryProvider<IModulesServiceFactory> {
   private final IModulesServiceFactory instance = new ModulesServiceFactoryImpl();
 

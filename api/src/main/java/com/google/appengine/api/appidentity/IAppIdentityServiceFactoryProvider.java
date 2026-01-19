@@ -27,6 +27,7 @@ import com.google.auto.service.AutoService;
  */
 @AutoService(FactoryProvider.class)
 @ServiceProvider(precedence = Integer.MIN_VALUE)
+@SuppressWarnings({"rawtypes", "UnnecessaryJavacSuppressWarnings"})
 public final class IAppIdentityServiceFactoryProvider
     extends FactoryProvider<IAppIdentityServiceFactory> {
 

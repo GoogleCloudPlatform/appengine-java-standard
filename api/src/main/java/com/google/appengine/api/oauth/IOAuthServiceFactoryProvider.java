@@ -28,6 +28,7 @@ import com.google.auto.service.AutoService;
  */
 @AutoService(FactoryProvider.class)
 @ServiceProvider(precedence = Integer.MIN_VALUE)
+@SuppressWarnings({"rawtypes", "UnnecessaryJavacSuppressWarnings"})
 public final class IOAuthServiceFactoryProvider extends FactoryProvider<IOAuthServiceFactory> {
 
   private final OAuthServiceFactoryImpl implementation = new OAuthServiceFactoryImpl();

@@ -108,6 +108,7 @@ final class FutureHelper {
    *
    * @param <T> the type of the Future
    */
+  @SuppressWarnings("ShouldNotSubclass")
   static class FakeFuture<T> implements Future<T> {
     private final T result;
 

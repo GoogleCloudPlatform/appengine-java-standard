@@ -26,6 +26,7 @@ import java.util.concurrent.TimeoutException;
  *
  * @param <T> the type of the Future.
  */
+@SuppressWarnings("ShouldNotSubclass")
 class TrackingFuture<T> implements Future<T> {
   private final T result;
   private int numCallsToGet = 0;

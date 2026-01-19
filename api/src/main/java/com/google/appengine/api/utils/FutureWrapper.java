@@ -31,6 +31,7 @@ import org.jspecify.annotations.Nullable;
  * @param <K> The type of this {@link Future}
  * @param <V> The type of the wrapped {@link Future}
  */
+@SuppressWarnings("ShouldNotSubclass")
 public abstract class FutureWrapper<K extends @Nullable Object, V> implements Future<V> {
 
   private final Future<K> parent;

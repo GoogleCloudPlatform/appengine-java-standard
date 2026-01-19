@@ -312,6 +312,7 @@ public class RequestManager implements RequestThreadManager {
    *
    * @throws IllegalStateException if called from the wrong thread.
    */
+  @SuppressWarnings("Interruption")
   public void finishRequest(RequestToken requestToken) {
     verifyRequestAndThread(requestToken);
 
@@ -440,6 +441,7 @@ public class RequestManager implements RequestThreadManager {
   // thrown it leaves their objects in a bad state.  Since objects
   // should not be shared across requests, this should not be a very
   // big problem.
+  @SuppressWarnings("Interruption")
   public void sendDeadline(RequestToken token, boolean isUncatchable) {
     if (token == null) {
       logger.atInfo().log("No token, can't send deadline");
@@ -544,6 +546,7 @@ public class RequestManager implements RequestThreadManager {
     return message.toString();
   }
 
+  @SuppressWarnings("Interruption")
   private void waitForUserCodeToComplete(RequestToken requestToken) {
     RequestState state = requestToken.getState();
     if (Thread.interrupted()) {
@@ -644,6 +647,7 @@ public class RequestManager implements RequestThreadManager {
     }
   }
 
+  @SuppressWarnings("Interruption")
   private void cancelPendingAsyncFutures(Collection<Future<?>> asyncFutures) {
     int size = asyncFutures.size();
     if (size > 0) {

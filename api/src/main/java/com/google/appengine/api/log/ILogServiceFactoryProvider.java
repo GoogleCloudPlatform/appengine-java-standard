@@ -28,6 +28,7 @@ import com.google.auto.service.AutoService;
  */
 @AutoService(FactoryProvider.class)
 @ServiceProvider(precedence = Integer.MIN_VALUE)
+@SuppressWarnings({"rawtypes", "UnnecessaryJavacSuppressWarnings"})
 public final class ILogServiceFactoryProvider extends FactoryProvider<ILogServiceFactory> {
 
   private final LogServiceFactoryImpl implementation = new LogServiceFactoryImpl();

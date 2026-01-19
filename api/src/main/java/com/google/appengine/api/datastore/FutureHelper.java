@@ -128,6 +128,7 @@ public final class FutureHelper {
    * @param <K> The type used by sub-futures.
    * @param <V> The type returned by this future.
    */
+  @SuppressWarnings("ShouldNotSubclass")
   abstract static class MultiFuture<K, V> implements Future<V> {
     protected final Iterable<Future<K>> futures;
 
@@ -168,6 +169,7 @@ public final class FutureHelper {
    * is called. This is important because if get() throws an exception, we don't want that exception
    * to resurface when the txn gets committed or rolled back.
    */
+  @SuppressWarnings("ShouldNotSubclass")
   static final class TxnAwareFuture<T> implements Future<T> {
     private final Future<T> future;
     private final Transaction txn;
@@ -213,6 +215,7 @@ public final class FutureHelper {
    *
    * @param <T> The type of the Future.
    */
+  @SuppressWarnings("ShouldNotSubclass")
   static class FakeFuture<T extends @Nullable Object> implements Future<T> {
     private final T result;
 

@@ -27,7 +27,8 @@ import java.io.IOException;
  * ServiceProvider.
  *
  * <p>More specifically, this interface encapsulates the interactions between the {@link
- * DevAppServer} and the underlying servlet container, which by default uses Jetty.
+ * com.google.appengine.tools.development.DevAppServer} and the underlying servlet container, which
+ * by default uses Jetty.
  */
 public interface ContainerService
     extends com.google.appengine.tools.development.ContainerService {

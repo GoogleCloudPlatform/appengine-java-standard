@@ -126,7 +126,7 @@ abstract  class JarMaker {
 
   /**
    * Generates one or more jar files based on the data provided in the constructor, a single call to
-   * {@link #getManifest()} and multiple calls to {@link #getNextJarEntry()}.
+   * {@code getManifest()} and multiple calls to {@code getNextJarEntry()}.
    *
    * @throws IOException
    */

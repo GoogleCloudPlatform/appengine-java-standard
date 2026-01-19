@@ -95,6 +95,7 @@ class HostedRemoteApiDelegate extends RemoteApiDelegate {
    * Wraps an already-resolved result in a {@link Future}.
    * @param <T> The type of the Future.
    */
+  @SuppressWarnings("ShouldNotSubclass")
   private static class FakeFuture<T> implements Future<T> {
     private final T result;
     private final Exception exception;

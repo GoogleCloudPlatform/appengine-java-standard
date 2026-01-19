@@ -33,6 +33,7 @@ import java.util.concurrent.TimeoutException;
  * this case.
  *
  */
+@SuppressWarnings("ShouldNotSubclass")
 public abstract class TimedFuture<T> implements Future<T> {
   private final Future<T> future;
   private final Clock clock;
