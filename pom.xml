@@ -626,7 +626,7 @@
       <dependency>
         <groupId>com.fasterxml.jackson.core</groupId>
         <artifactId>jackson-core</artifactId>
-        <version>2.20.1</version>
+        <version>2.21.0</version>
       </dependency>
       <dependency>
         <groupId>joda-time</groupId>
@@ -746,7 +746,7 @@
      <plugin>
           <groupId>org.codehaus.mojo</groupId>
           <artifactId>versions-maven-plugin</artifactId>
-          <version>2.20.1</version>
+          <version>2.21.0</version>
          <configuration>
             <rulesUri>file:///${session.executionRootDirectory}/maven-version-rules.xml</rulesUri>
             <generateBackupPoms>false</generateBackupPoms>
@@ -852,7 +852,7 @@
         <plugin>
            <groupId>org.codehaus.mojo</groupId>
            <artifactId>javacc-maven-plugin</artifactId>
-           <version>3.1.1</version>
+           <version>3.2.0</version>
         </plugin>
         <plugin>
           <groupId>org.codehaus.mojo</groupId>
@@ -905,7 +905,7 @@
         <!-- Call mvn versions:display-plugin-updates -->
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>versions-maven-plugin</artifactId>
-        <version>2.20.1</version>
+        <version>2.21.0</version>
       </plugin>
     </plugins>
   </reporting>
