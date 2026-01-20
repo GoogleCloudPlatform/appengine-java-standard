@@ -32,6 +32,7 @@
   </properties>
   <modules>
     <module>proberapp</module>
+    <module>proberapp_jakarta</module>
     <module>springboot</module>
     <module>guestbook</module>
     <module>guestbook_jakarta</module>
