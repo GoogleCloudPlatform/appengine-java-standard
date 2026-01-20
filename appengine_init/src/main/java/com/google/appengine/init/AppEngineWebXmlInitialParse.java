@@ -94,7 +94,9 @@ public final class AppEngineWebXmlInitialParse {
    * <ul>
    *   <li>{@code <runtime>java17</runtime>}:
    *       <ul>
-   *         <li>No flags set: Jetty 9.4 (EE6)
+   *         <li>No flags set: Jetty 9.4 (EE6) unless env variable
+   *             EXPERIMENT_ENABLE_JETTY12_FOR_JAVA is set to true, in which case Jetty 12.0 (EE8)
+   *             is used.
    *         <li>{@code appengine.use.EE8=true}: Jetty 12.0 (EE8)
    *         <li>{@code appengine.use.EE10=true}: Jetty 12.0 (EE10)
    *         <li>{@code appengine.use.EE10=true} and {@code appengine.use.jetty121=true}: Jetty 12.1
@@ -120,8 +122,8 @@ public final class AppEngineWebXmlInitialParse {
    *       </ul>
    * </ul>
    *
-   * @throws IllegalArgumentException if more than one EE version flag is set to true, or if
-   *     {@code appengine.use.EE10=true} with {@code runtime="java25"}.
+   * @throws IllegalArgumentException if more than one EE version flag is set to true, or if {@code
+   *     appengine.use.EE10=true} with {@code runtime="java25"}.
    */
   public void handleRuntimeProperties() {
 
@@ -203,7 +205,10 @@ public final class AppEngineWebXmlInitialParse {
     if (trueCount == 0) {
       // Apply defaults based on javaVersion
       if (Objects.equals(runtimeId, "java17")) {
-        System.setProperty("appengine.use.EE8", "false");
+        System.setProperty(
+            "appengine.use.EE8",
+            String.valueOf(
+                Objects.equals(System.getenv("EXPERIMENT_ENABLE_JETTY12_FOR_JAVA"), "true")));
       } else if (Objects.equals(runtimeId, "java21")) {
         if (Boolean.parseBoolean(System.getProperty("appengine.use.jetty121", "false"))) {
           System.setProperty("appengine.use.EE11", "true");
