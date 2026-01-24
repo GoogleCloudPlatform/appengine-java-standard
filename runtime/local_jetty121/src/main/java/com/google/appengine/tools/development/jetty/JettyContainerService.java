@@ -186,7 +186,11 @@ public class JettyContainerService extends AbstractContainerService implements C
     // Set the location of deployment descriptor.  This value might be null,
     // which is fine, it just means Jetty will look for it in the default
     // location (WEB-INF/web.xml).
-    context.setDescriptor(webXmlLocation == null ? null : webXmlLocation.getAbsolutePath());
+    // Only set the descriptor if the web.xml file actually exists.
+    // Jetty 12 throws an IllegalArgumentException if the descriptor path is invalid.
+      if (webXmlLocation != null && webXmlLocation.exists()) {
+          context.setDescriptor(webXmlLocation.getAbsolutePath());
+      }
 
     // Override the web.xml that Jetty automatically prepends to other
     // web.xml files.  This is where the DefaultServlet is registered,
@@ -353,6 +357,8 @@ public class JettyContainerService extends AbstractContainerService implements C
     } else {
       server = new Server();
     }
+server.setDumpAfterStart(true);
+
     try {
       NetworkTrafficServerConnector connector =
           new NetworkTrafficServerConnector(
