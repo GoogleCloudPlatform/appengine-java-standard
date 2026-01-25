@@ -132,5 +132,25 @@ public final class AppEngineConstants {
 
   public static final String IGNORE_RESPONSE_SIZE_LIMIT = "appengine.ignore.responseSizeLimit";
 
+  /**
+   * If positive, send thread interrupts this many milliseconds before the hard deadline.
+   */
+  public static final int SOFT_DEADLINE_DELAY_MS = 10600;
+
+  /**
+   * How many CPU cycles should be assumed per second for billing purposes.
+   */
+  public static final long CYCLES_PER_SECOND = 1000000000L;
+
+  /**
+   * The Jetty request header size in bytes (256K).
+   */
+  public static final int JETTY_REQUEST_HEADER_SIZE = 262144;
+
+  /**
+   * The Jetty response header size in bytes (256K).
+   */
+  public static final int JETTY_RESPONSE_HEADER_SIZE = 262144;
+
   private AppEngineConstants() {}
 }

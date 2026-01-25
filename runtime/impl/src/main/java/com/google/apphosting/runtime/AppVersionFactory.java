@@ -72,10 +72,7 @@ public class AppVersionFactory {
 
   public static Builder builderForTest() {
     return builder()
-        .setDefaultToNativeUrlStreamHandler(true)
         .setForceUrlfetchUrlStreamHandler(false)
-        .setIgnoreDaemonThreads(true)
-        .setUseEnvVarsFromAppInfo(false)
         .setFixedApplicationPath(null);
   }
 
@@ -90,13 +87,7 @@ public class AppVersionFactory {
     /** The runtime version which is reported to users. */
     public abstract Builder setRuntimeVersion(String x);
 
-    public abstract Builder setDefaultToNativeUrlStreamHandler(boolean x);
-
     public abstract Builder setForceUrlfetchUrlStreamHandler(boolean x);
-
-    public abstract Builder setIgnoreDaemonThreads(boolean x);
-
-    public abstract Builder setUseEnvVarsFromAppInfo(boolean x);
 
     public abstract Builder setFixedApplicationPath(String x);
 
@@ -113,13 +104,7 @@ public class AppVersionFactory {
 
   private final String runtimeVersion;
 
-  private final boolean defaultToNativeUrlStreamHandler;
-
   private final boolean forceUrlfetchUrlStreamHandler;
-
-  private final boolean ignoreDaemonThreads;
-
-  private final boolean useEnvVarsFromAppInfo;
 
   private final String fixedApplicationPath;
 
@@ -128,18 +113,12 @@ public class AppVersionFactory {
       NullSandboxPlugin sandboxPlugin,
       File sharedDirectory,
       String runtimeVersion,
-      boolean defaultToNativeUrlStreamHandler,
       boolean forceUrlfetchUrlStreamHandler,
-      boolean ignoreDaemonThreads,
-      boolean useEnvVarsFromAppInfo,
       @Nullable String fixedApplicationPath) {
     this.sandboxPlugin = sandboxPlugin;
     this.sharedDirectory = sharedDirectory;
     this.runtimeVersion = runtimeVersion;
-    this.defaultToNativeUrlStreamHandler = defaultToNativeUrlStreamHandler;
     this.forceUrlfetchUrlStreamHandler = forceUrlfetchUrlStreamHandler;
-    this.ignoreDaemonThreads = ignoreDaemonThreads;
-    this.useEnvVarsFromAppInfo = useEnvVarsFromAppInfo;
     this.fixedApplicationPath = fixedApplicationPath;
   }
 
@@ -216,7 +195,7 @@ public class AppVersionFactory {
             configuration);
 
     String urlStreamHandlerType = appEngineWebXml.getUrlStreamHandlerType();
-    if (urlStreamHandlerType == null && defaultToNativeUrlStreamHandler) {
+    if (urlStreamHandlerType == null) {
       urlStreamHandlerType = AppEngineWebXml.URL_HANDLER_NATIVE;
     }
     if (forceUrlfetchUrlStreamHandler) {
@@ -253,7 +232,7 @@ public class AppVersionFactory {
             .setParentThreadGroup(rootThreadGroup)
             .setThreadGroupNamePrefix("Request #")
             .setUncaughtExceptionHandler(uncaughtExceptionHandler)
-            .setIgnoreDaemonThreads(ignoreDaemonThreads)
+            .setIgnoreDaemonThreads(true)
             .build();
     setApplicationDirectory(rootDirectory.getAbsolutePath());
     return AppVersion.builder()
@@ -344,14 +323,12 @@ public class AppVersionFactory {
       AppInfo appInfo) {
     Map<String, String> envVars = new HashMap<>();
     envVars.putAll(appEngineWebXml.getEnvironmentVariables());
-    if (useEnvVarsFromAppInfo) {
-      // We add env vars from AppInfo on top of those from appengine-web.xml because
-      // for a long time Java appcfg was not correctly populating the env_variables
-      // section in the generated app.yaml (see b/79371098), meaning they were missing
-      // from AppInfos of deployed apps.
-      for (AppInfo.EnvironmentVariable envVar : appInfo.getEnvironmentVariableList()) {
-        envVars.put(envVar.getName(), envVar.getValue());
-      }
+    // We add env vars from AppInfo on top of those from appengine-web.xml because
+    // for a long time Java appcfg was not correctly populating the env_variables
+    // section in the generated app.yaml (see b/79371098), meaning they were missing
+    // from AppInfos of deployed apps.
+    for (AppInfo.EnvironmentVariable envVar : appInfo.getEnvironmentVariableList()) {
+      envVars.put(envVar.getName(), envVar.getValue());
     }
     String gaeEnv = System.getenv(GAE_ENV);
     if (USE_DEFAULT_VALUES_FOR_GAE_ENV_VARS && gaeEnv == null) {

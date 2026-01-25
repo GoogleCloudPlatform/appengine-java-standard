@@ -121,11 +121,9 @@ public class RequestManagerTest {
         .setSoftDeadlineDelay(SOFT_DEADLINE_DELAY)
         .setRuntimeLogSink(Optional.of(logSink))
         .setApiProxyImpl(ApiProxyImpl.builder().setApiHost(mockApiHost).build())
-        .setMaxOutstandingApiRpcs(10)
+        .setMaxOutstandingApiRpcs(100)
         .setCyclesPerSecond(CYCLES_PER_SECOND)
-        .setWaitForDaemonRequestThreads(true)
-        .setThreadStopTerminatesClone(true)
-        .setInterruptFirstOnSoftDeadline(false);
+        .setThreadStopTerminatesClone(true);
   }
 
   private RequestManager createRequestManager() {

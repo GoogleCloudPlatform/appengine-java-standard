@@ -27,27 +27,6 @@ import org.junit.runners.JUnit4;
 /** Unit tests for the {@link ApplicationEnvironment} class. */
 @RunWith(JUnit4.class)
 public class ApplicationEnvironmentTest {
-  private void getUseGoogleConnectorJDoesNotRequireSetterFuzz(boolean val) throws Exception {
-    ApplicationEnvironment ae =
-        new ApplicationEnvironment(
-            "an_appId",
-            "a_versionId",
-            ImmutableMap.of("a_sysprop_name", "a_sysprop_value"),
-            ImmutableMap.of("an_env_name", "an_env_value"),
-            new File("/foo/bar"),
-            ApplicationEnvironment.RuntimeConfiguration.builder()
-                .setCloudSqlJdbcConnectivityEnabled(true)
-                .setUseGoogleConnectorJ(val)
-                .build());
-
-    assertThat(ae.getUseGoogleConnectorJ()).isEqualTo(val);
-
-    ae.setUseGoogleConnectorJ(Boolean.valueOf(!val));
-    assertThat(ae.getUseGoogleConnectorJ()).isEqualTo(!val);
-
-    ae.setUseGoogleConnectorJ(null); // go back to the ctor default
-    assertThat(ae.getUseGoogleConnectorJ()).isEqualTo(val);
-  }
 
   /**
    * Verifies the getUseGoogleConnectorJ method does not require a call to the corresponding setter
@@ -55,8 +34,21 @@ public class ApplicationEnvironmentTest {
    */
   @Test
   public void getUseGoogleConnectorJ_doesNotRequireSetter() throws Exception {
-    // Try true and false just for good measure:
-    getUseGoogleConnectorJDoesNotRequireSetterFuzz(true);
-    getUseGoogleConnectorJDoesNotRequireSetterFuzz(false);
+    ApplicationEnvironment ae =
+        new ApplicationEnvironment(
+            "an_appId",
+            "a_versionId",
+            ImmutableMap.of("a_sysprop_name", "a_sysprop_value"),
+            ImmutableMap.of("an_env_name", "an_env_value"),
+            new File("/foo/bar"),
+            ApplicationEnvironment.RuntimeConfiguration.builder().build());
+
+    assertThat(ae.getUseGoogleConnectorJ()).isTrue();
+
+    ae.setUseGoogleConnectorJ(Boolean.valueOf(false));
+    assertThat(ae.getUseGoogleConnectorJ()).isFalse();
+
+    ae.setUseGoogleConnectorJ(null); // go back to the ctor default
+    assertThat(ae.getUseGoogleConnectorJ()).isTrue();
   }
 }

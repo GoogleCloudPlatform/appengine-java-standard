@@ -44,18 +44,7 @@ import org.junit.runners.JUnit4;
 public class JavaRuntimeParamsTest {
   @Rule public Expect expect = Expect.create();
 
-  @Test
-  public void testSomeDefaults() {
-    JavaRuntimeParams params = JavaRuntimeParams.parseArgs();
-    assertThat(params.getAppengineReleaseName()).isEqualTo("unknown");
-  }
 
-  @Test
-  public void testEqualsSeparator() {
-    String[] args = {"--application_root=ROOT"};
-    JavaRuntimeParams params = JavaRuntimeParams.parseArgs(args);
-    assertThat(params.getApplicationRoot()).isEqualTo("ROOT");
-  }
 
   @Test
   public void testBooleanDefaultTrue() {
@@ -149,8 +138,9 @@ public class JavaRuntimeParamsTest {
       if (param != null) {
         Class<?> fieldType = field.getType();
         if (fieldType == boolean.class || fieldType == Boolean.class) {
-          assertWithMessage("Boolean param " + param.names()[0] + " must have arity=1")
-              .that(param.arity()).isEqualTo(1);
+          assertWithMessage("Boolean param %s must have arity=1", param.names()[0])
+              .that(param.arity())
+              .isEqualTo(1);
         }
       }
     }
@@ -164,8 +154,9 @@ public class JavaRuntimeParamsTest {
         Class<?> fieldType = field.getType();
         if (fieldType == boolean.class || fieldType == Boolean.class) {
           for (String name : param.names()) {
-            assertWithMessage("Boolean param " + name + " cannot start with '--no'")
-                .that(name).doesNotMatch("--no.*");
+            assertWithMessage("Boolean param %s cannot start with '--no'", name)
+                .that(name)
+                .doesNotMatch("--no.*");
           }
         }
       }
@@ -221,88 +212,40 @@ public class JavaRuntimeParamsTest {
     assertThat(params).containsExactly("--unknown1", "--nounknown2").inOrder();
   }
 
-  @Test
-  public void testApplicationRootDefault() {
-    JavaRuntimeParams params = JavaRuntimeParams.parseArgs();
-    assertThat(params.getApplicationRoot()).isEqualTo("appdata");
-  }
 
-  @Test
-  public void testApplicationRoot() {
-    String[] args = {"--application_root=abc"};
-    JavaRuntimeParams params = JavaRuntimeParams.parseArgs(args);
-    assertThat(params.getApplicationRoot()).isEqualTo("abc");
-  }
-
-  @Test
-  public void testFixedApplicationPath() {
-    String[] args = {"--fixed_application_path=abc"};
-    JavaRuntimeParams params = JavaRuntimeParams.parseArgs(args);
-    assertThat(params.getFixedApplicationPath()).isEqualTo("abc");
-  }
 
   @Test
   public void testUnknownArgumentsAllowed() {
     String[] args = {"--xyz=abc"};
-    JavaRuntimeParams.parseArgs(args);
+    var unused = JavaRuntimeParams.parseArgs(args);
   }
   @Test
   public void testDefaults() {
     JavaRuntimeParams params = JavaRuntimeParams.parseArgs();
-    assertThat(params.getApplicationRoot()).isEqualTo("appdata");
-    assertThat(params.getPort()).isEqualTo(0);
     assertThat(params.getTrustedHost()).isEmpty();
-    assertThat(params.getJavaSoftDeadlineMs()).isEqualTo(600);
-    assertThat(params.getApiCallDeadline()).isEqualTo(5.0);
-    assertThat(params.getMaxApiCallDeadline()).isEqualTo(10.0);
-    assertThat(params.getApiCallDeadlineMap()).isEmpty();
-    assertThat(params.getMaxApiCallDeadlineMap()).isEmpty();
-    assertThat(params.getOfflineApiCallDeadline()).isEqualTo(5.0);
-    assertThat(params.getMaxOfflineApiCallDeadline()).isEqualTo(10.0);
     // Skipped entropyString.
-    assertThat(params.getAppengineReleaseName()).isEqualTo("unknown");
     assertThat(params.getLogJettyExceptionsToAppLogs()).isTrue();
-    assertThat(params.getExternalDatacenterName()).isNull();
     assertThat(params.getCloneMaxOutstandingApiRpcs()).isEqualTo(100);
     assertThat(params.getThreadStopTerminatesClone()).isTrue();
     // Skipped deprecated params.
     assertThat(params.getByteCountBeforeFlushing()).isEqualTo(100 * 1024L);
     assertThat(params.getMaxLogLineSize()).isEqualTo(16 * 1024);
     assertThat(params.getMaxLogFlushSeconds()).isEqualTo(60);
-    assertThat(params.getRuntimeHttpCompression()).isFalse();
     assertThat(params.getMaxRuntimeLogPerRequest()).isEqualTo(3000L * 1024L);
-    assertThat(params.getEnableGaeCloudSqlJdbcConnectivity()).isFalse();
-    assertThat(params.getForceReadaheadOnCloudsqlSocket()).isFalse();
     // Skipped deprecated params.
-    assertThat(params.getInterruptThreadsFirstOnSoftDeadline()).isFalse();
     assertThat(params.getEnableHotspotPerformanceMetrics()).isFalse();
     assertThat(params.getEnableCloudCpuProfiler()).isFalse();
     assertThat(params.getEnableCloudHeapProfiler()).isFalse();
     assertThat(params.getUrlfetchDeriveResponseMessage()).isTrue();
-    assertThat(params.getCyclesPerSecond()).isEqualTo(0L);
-    assertThat(params.getMailFilenamePreventsInlining()).isFalse();
-    assertThat(params.getMailSupportExtendedAttachmentEncodings()).isFalse();
-    assertThat(params.getWaitForDaemonRequestThreads()).isTrue();
     assertThat(params.getPollForNetwork()).isFalse();
-    assertThat(params.getDefaultToNativeUrlStreamHandler()).isFalse();
     assertThat(params.getForceUrlfetchUrlStreamHandler()).isFalse();
-    assertThat(params.getEnableSynchronizedAppLogsWriter()).isTrue();
-    assertThat(params.getUseEnvVarsFromAppInfo()).isFalse();
     assertThat(params.getFixedApplicationPath()).isNull();
     assertThat(params.getDisableApiCallLogging()).isFalse();
-    assertThat(params.getLogJsonToVarLog()).isFalse();
-  }
-
-  @Test
-  public void testAllowDuplicateParams() {
-    String[] args = {"--application_root=1", "--application_root=2"};
-    JavaRuntimeParams params = JavaRuntimeParams.parseArgs(args);
-    assertThat(params.getApplicationRoot()).isEqualTo("2");
   }
 
   @Test
   public void testGetUnknownParams() {
-    String[] args = {"--unknown1=xyz", "--application_root=abc", "--unknown2=xyz"};
+    String[] args = {"--unknown1=xyz", "--trusted_host=abc", "--unknown2=xyz"};
     JavaRuntimeParams params = JavaRuntimeParams.parseArgs(args);
     assertThat(params.getUnknownParams())
         .containsExactly("--unknown1=xyz", "--unknown2=xyz")

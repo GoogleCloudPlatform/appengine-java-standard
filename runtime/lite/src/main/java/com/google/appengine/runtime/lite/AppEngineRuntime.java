@@ -334,7 +334,6 @@ public class AppEngineRuntime {
         .setByteCountBeforeFlushing(DEFAULT_FLUSH_APP_LOGS_EVERY_BYTE_COUNT)
         .setMaxLogFlushTime(MAX_LOG_FLUSH_TIME)
         .setCoordinator(dispatcher)
-        .setCloudSqlJdbcConnectivityEnabled(true)
         .setLogToLogservice(false)
         .setDisableApiCallLogging(true)
         .setApiHost(apiHost);
@@ -361,8 +360,6 @@ public class AppEngineRuntime {
 
     ApplicationEnvironment.RuntimeConfiguration runtimeConfiguration =
         ApplicationEnvironment.RuntimeConfiguration.builder()
-            .setCloudSqlJdbcConnectivityEnabled(true)
-            .setUseGoogleConnectorJ(true)
             .build();
 
     ApplicationEnvironment environment =

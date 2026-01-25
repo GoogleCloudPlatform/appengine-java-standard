@@ -56,12 +56,6 @@ public interface ServletEngineAdapter extends UPRequestHandler {
   void addAppVersion(AppVersion appVersion) throws FileNotFoundException;
 
   /**
-   * Remove the specified application version and free up any
-   * resources associated with it.
-   */
-  void deleteAppVersion(AppVersion appVersion);
-
-  /**
    * Sets the {@link SessionStoreFactory} that will be used to create the list
    * of {@link SessionStore}s to which the HTTP Session will be
    * stored, if sessions are enabled. This method must be invoked after
@@ -75,9 +69,6 @@ public interface ServletEngineAdapter extends UPRequestHandler {
    */
   @AutoValue
   abstract class Config {
-    /** Boolean to turn on the Jetty HTTP server. False by default. */
-    public abstract boolean useJettyHttpProxy();
-
     /**
      * Base root area for a given application. The exploded web app can be located under the
      * appId/appVersion directory, to be fully compatible with GAE, or given as a Java runtime flag.
@@ -113,7 +104,6 @@ public interface ServletEngineAdapter extends UPRequestHandler {
     /** Returns an {@code Config.Builder}. */
     public static Builder builder() {
       return new AutoValue_ServletEngineAdapter_Config.Builder()
-          .setUseJettyHttpProxy(false)
           .setJettyHttpAddress(HostAndPort.fromParts("::", 8080))
           .setJettyReusePort(false)
           .setJettyRequestHeaderSize(16384)
@@ -125,8 +115,6 @@ public interface ServletEngineAdapter extends UPRequestHandler {
     /** Builder for {@code Config} instances. */
     @AutoValue.Builder
     public abstract static class Builder {
-      public abstract Builder setUseJettyHttpProxy(boolean useJettyHttpProxy);
-
       public abstract Builder setApplicationRoot(String applicationRoot);
 
       public abstract Builder setFixedApplicationPath(@Nullable String applicationpath);

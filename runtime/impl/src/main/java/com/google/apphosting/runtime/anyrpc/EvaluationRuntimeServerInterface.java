@@ -29,6 +29,4 @@ public interface EvaluationRuntimeServerInterface {
   void handleRequest(AnyRpcServerContext ctx, UPRequest req);
 
   void addAppVersion(AnyRpcServerContext ctx, AppInfo req);
-
-  void deleteAppVersion(AnyRpcServerContext ctx, AppInfo req);
 }

@@ -160,7 +160,6 @@ public class ApiProxyImpl implements ApiProxy.Delegate<ApiProxyImpl.EnvironmentI
   private final Duration maxLogFlushTime;
   private final BackgroundRequestCoordinator coordinator;
   private RequestThreadManager requestThreadManager;
-  private final boolean cloudSqlJdbcConnectivityEnabled;
   private final boolean disableApiCallLogging;
   private final AtomicBoolean enabled = new AtomicBoolean(true);
   private final boolean logToLogservice;
@@ -170,7 +169,6 @@ public class ApiProxyImpl implements ApiProxy.Delegate<ApiProxyImpl.EnvironmentI
         .setByteCountBeforeFlushing(DEFAULT_BYTE_COUNT_BEFORE_FLUSHING)
         .setMaxLogLineSize(DEFAULT_MAX_LOG_LINE_SIZE)
         .setMaxLogFlushTime(Duration.ZERO)
-        .setCloudSqlJdbcConnectivityEnabled(false)
         .setDisableApiCallLogging(false)
         .setLogToLogservice(true);
   }
@@ -204,10 +202,6 @@ public class ApiProxyImpl implements ApiProxy.Delegate<ApiProxyImpl.EnvironmentI
 
     public abstract BackgroundRequestCoordinator coordinator();
 
-    public abstract Builder setCloudSqlJdbcConnectivityEnabled(boolean x);
-
-    public abstract boolean cloudSqlJdbcConnectivityEnabled();
-
     public abstract Builder setDisableApiCallLogging(boolean x);
 
     public abstract boolean disableApiCallLogging();
@@ -225,7 +219,6 @@ public class ApiProxyImpl implements ApiProxy.Delegate<ApiProxyImpl.EnvironmentI
       int maxLogLineSize,
       Duration maxLogFlushTime,
       @Nullable BackgroundRequestCoordinator coordinator,
-      boolean cloudSqlJdbcConnectivityEnabled,
       boolean disableApiCallLogging,
       boolean logToLogservice) {
     this.apiHost = apiHost;
@@ -235,7 +228,6 @@ public class ApiProxyImpl implements ApiProxy.Delegate<ApiProxyImpl.EnvironmentI
     this.maxLogLineSize = maxLogLineSize;
     this.maxLogFlushTime = maxLogFlushTime;
     this.coordinator = coordinator;
-    this.cloudSqlJdbcConnectivityEnabled = cloudSqlJdbcConnectivityEnabled;
     this.disableApiCallLogging = disableApiCallLogging;
     this.logToLogservice = logToLogservice;
   }
@@ -807,7 +799,6 @@ public class ApiProxyImpl implements ApiProxy.Delegate<ApiProxyImpl.EnvironmentI
         requestThreadGroup,
         requestState,
         coordinator,
-        cloudSqlJdbcConnectivityEnabled,
         millisUntilSoftDeadline);
   }
 
@@ -963,7 +954,6 @@ public class ApiProxyImpl implements ApiProxy.Delegate<ApiProxyImpl.EnvironmentI
         ThreadGroup requestThreadGroup,
         RequestState requestState,
         BackgroundRequestCoordinator coordinator,
-        boolean cloudSqlJdbcConnectivityEnabled,
         @Nullable Long millisUntilSoftDeadline) {
       this.appVersion = appVersion;
       this.genericRequest = genericRequest;
@@ -971,8 +961,7 @@ public class ApiProxyImpl implements ApiProxy.Delegate<ApiProxyImpl.EnvironmentI
       this.requestId = requestId;
       this.asyncFutures = asyncFutures;
       this.attributes =
-          createInitialAttributes(
-              genericRequest, externalDatacenterName, coordinator, cloudSqlJdbcConnectivityEnabled);
+          createInitialAttributes(genericRequest, externalDatacenterName, coordinator);
       this.outstandingApiRpcSemaphore = outstandingApiRpcSemaphore;
       this.requestState = requestState;
       this.millisUntilSoftDeadline = millisUntilSoftDeadline;
@@ -1090,8 +1079,7 @@ public class ApiProxyImpl implements ApiProxy.Delegate<ApiProxyImpl.EnvironmentI
     private static Map<String, Object> createInitialAttributes(
         RequestAPIData request,
         String externalDatacenterName,
-        BackgroundRequestCoordinator coordinator,
-        boolean cloudSqlJdbcConnectivityEnabled) {
+        BackgroundRequestCoordinator coordinator) {
       Map<String, Object> attributes = new HashMap<>();
       attributes.put(USER_ID_KEY, request.getObfuscatedGaiaId());
       attributes.put(USER_ORGANIZATION_KEY, request.getUserOrganization());
@@ -1131,7 +1119,7 @@ public class ApiProxyImpl implements ApiProxy.Delegate<ApiProxyImpl.EnvironmentI
       attributes.put(REQUEST_THREAD_FACTORY_ATTR, CurrentRequestThreadFactory.SINGLETON);
       attributes.put(BACKGROUND_THREAD_FACTORY_ATTR, new BackgroundThreadFactory(coordinator));
 
-      attributes.put(CLOUD_SQL_JDBC_CONNECTIVITY_ENABLED_KEY, cloudSqlJdbcConnectivityEnabled);
+      attributes.put(CLOUD_SQL_JDBC_CONNECTIVITY_ENABLED_KEY, true);
 
       // Environments are associated with requests, and can now be
       // shared across more than one thread.  We'll synchronize all

@@ -54,6 +54,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -122,9 +123,7 @@ public class RequestManager implements RequestThreadManager {
   private final ApiProxyImpl apiProxyImpl;
   private final boolean threadStopTerminatesClone;
   private final Map<String, RequestToken> requests;
-  private final boolean interruptFirstOnSoftDeadline;
   private int maxOutstandingApiRpcs;
-  private final boolean waitForDaemonRequestThreads;
   private final Map<String, String> environmentVariables;
 
   /** Make a partly-initialized builder for a RequestManager. */
@@ -155,17 +154,9 @@ public class RequestManager implements RequestThreadManager {
 
     public abstract boolean threadStopTerminatesClone();
 
-    public abstract Builder setInterruptFirstOnSoftDeadline(boolean x);
-
-    public abstract boolean interruptFirstOnSoftDeadline();
-
     public abstract Builder setCyclesPerSecond(long x);
 
     public abstract long cyclesPerSecond();
-
-    public abstract Builder setWaitForDaemonRequestThreads(boolean x);
-
-    public abstract boolean waitForDaemonRequestThreads();
 
     public abstract Builder setEnvironment(Map<String, String> x);
 
@@ -178,9 +169,7 @@ public class RequestManager implements RequestThreadManager {
       ApiProxyImpl apiProxyImpl,
       int maxOutstandingApiRpcs,
       boolean threadStopTerminatesClone,
-      boolean interruptFirstOnSoftDeadline,
       long cyclesPerSecond,
-      boolean waitForDaemonRequestThreads,
       ImmutableMap<String, String> environment) {
     this.softDeadlineDelay = softDeadlineDelay;
     this.timerFactory =
@@ -189,8 +178,6 @@ public class RequestManager implements RequestThreadManager {
     this.apiProxyImpl = apiProxyImpl;
     this.maxOutstandingApiRpcs = maxOutstandingApiRpcs;
     this.threadStopTerminatesClone = threadStopTerminatesClone;
-    this.interruptFirstOnSoftDeadline = interruptFirstOnSoftDeadline;
-    this.waitForDaemonRequestThreads = waitForDaemonRequestThreads;
     this.requests = Collections.synchronizedMap(new HashMap<String, RequestToken>());
     this.environmentVariables = environment;
   }
@@ -450,7 +437,7 @@ public class RequestManager implements RequestThreadManager {
     logger.atInfo().log(
         "Sending deadline: %s, %s, %b", targetThread, token.getRequestId(), isUncatchable);
 
-    if (interruptFirstOnSoftDeadline && !isUncatchable) {
+    if (!isUncatchable) {
       // Disable thread creation and cancel all pending futures, then interrupt all threads,
       // all while giving the application some time to return a response after each step.
       token.getState().setAllowNewRequestThreadCreation(false);
@@ -478,7 +465,7 @@ public class RequestManager implements RequestThreadManager {
     // failed to elicit a response. On hard deadlines, there is no nudging.
     if (!token.isFinished()) {
       // SimpleDateFormat isn't threadsafe so just instantiate as-needed
-      final DateFormat dateFormat = new SimpleDateFormat(SIMPLE_DATE_FORMAT_STRING);
+      final DateFormat dateFormat = new SimpleDateFormat(SIMPLE_DATE_FORMAT_STRING, Locale.US);
       // Give the user as much information as we can.
       final Throwable throwable =
           createDeadlineThrowable(
@@ -726,24 +713,18 @@ public class RequestManager implements RequestThreadManager {
    */
   private Set<Thread> getActiveThreads(RequestToken token) {
     Collection<Thread> threads;
-    if (waitForDaemonRequestThreads) {
-      // Join all request threads created using the current request ThreadFactory, including
-      // daemon ones.
-      threads = token.getState().requestThreads();
-    } else {
-      // Join all live non-daemon request threads created using the current request ThreadFactory.
-      Set<Thread> nonDaemonThreads = new LinkedHashSet<>();
-      for (Thread thread : token.getState().requestThreads()) {
-        if (thread.isDaemon()) {
-          logger.atInfo().log("Ignoring daemon thread: %s", thread);
-        } else if (!thread.isAlive()) {
-          logger.atInfo().log("Ignoring dead thread: %s", thread);
-        } else {
-          nonDaemonThreads.add(thread);
-        }
+    // Join all live non-daemon request threads created using the current request ThreadFactory.
+    Set<Thread> nonDaemonThreads = new LinkedHashSet<>();
+    for (Thread thread : token.getState().requestThreads()) {
+      if (thread.isDaemon()) {
+        logger.atInfo().log("Ignoring daemon thread: %s", thread);
+      } else if (!thread.isAlive()) {
+        logger.atInfo().log("Ignoring dead thread: %s", thread);
+      } else {
+        nonDaemonThreads.add(thread);
       }
-      threads = nonDaemonThreads;
     }
+    threads = nonDaemonThreads;
     Set<Thread> activeThreads = new LinkedHashSet<>(threads);
     activeThreads.remove(Thread.currentThread());
     return activeThreads;

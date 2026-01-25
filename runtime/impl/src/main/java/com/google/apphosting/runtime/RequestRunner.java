@@ -55,7 +55,6 @@ public class RequestRunner implements Runnable {
   private final UPRequestHandler upRequestHandler;
   private final RequestManager requestManager;
   private final BackgroundRequestCoordinator coordinator;
-  private final boolean compressResponse;
   private final AppVersion appVersion;
   private final AnyRpcServerContext rpc;
   private final UPRequest upRequest;
@@ -77,8 +76,6 @@ public class RequestRunner implements Runnable {
 
     public abstract Builder setCoordinator(BackgroundRequestCoordinator coordinator);
 
-    public abstract Builder setCompressResponse(boolean compressResponse);
-
     public abstract Builder setAppVersion(AppVersion appVersion);
 
     public abstract Builder setRpc(AnyRpcServerContext rpc);
@@ -94,7 +91,6 @@ public class RequestRunner implements Runnable {
       UPRequestHandler upRequestHandler,
       RequestManager requestManager,
       BackgroundRequestCoordinator coordinator,
-      boolean compressResponse,
       AppVersion appVersion,
       AnyRpcServerContext rpc,
       UPRequest upRequest,
@@ -102,7 +98,6 @@ public class RequestRunner implements Runnable {
     this.upRequestHandler = upRequestHandler;
     this.requestManager = requestManager;
     this.coordinator = coordinator;
-    this.compressResponse = compressResponse;
     this.appVersion = appVersion;
     this.rpc = rpc;
     this.upRequest = upRequest;
@@ -348,18 +343,16 @@ public class RequestRunner implements Runnable {
 
   private void dispatchServletRequest() throws Exception {
     upRequestHandler.serviceRequest(upRequest, upResponse);
-    if (compressResponse) {
-      // try to compress if necessary (http://b/issue?id=3368468)
-      try {
-        HttpCompression compression = new HttpCompression();
-        compression.attemptCompression(upRequest, upResponse);
-      } catch (IOException ex) {
-        // Zip compression did not work... Response is not compressed.
-        logger.atWarning().withCause(ex).log("Error attempting the compression of the response.");
-      } catch (RuntimeException ex) {
-        // To be on the safe side and keep the request ok
-        logger.atWarning().withCause(ex).log("Error attempting the compression of the response.");
-      }
+    // try to compress if necessary (http://b/issue?id=3368468)
+    try {
+      HttpCompression compression = new HttpCompression();
+      compression.attemptCompression(upRequest, upResponse);
+    } catch (IOException ex) {
+      // Zip compression did not work... Response is not compressed.
+      logger.atWarning().withCause(ex).log("Error attempting the compression of the response.");
+    } catch (RuntimeException ex) {
+      // To be on the safe side and keep the request ok
+      logger.atWarning().withCause(ex).log("Error attempting the compression of the response.");
     }
   }
 

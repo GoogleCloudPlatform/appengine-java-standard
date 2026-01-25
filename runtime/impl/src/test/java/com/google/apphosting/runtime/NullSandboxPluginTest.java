@@ -67,6 +67,7 @@ public class NullSandboxPluginTest {
     when(classPathUtils.getRuntimeSharedUrls()).thenReturn(new URL[0]);
     when(classPathUtils.getRuntimeImplUrls()).thenReturn(new URL[0]);
     when(classPathUtils.getPrebundledUrls()).thenReturn(new URL[0]);
+    when(classPathUtils.getConnectorJUrls()).thenReturn(new URL[0]);
     return classPathUtils;
   }
 

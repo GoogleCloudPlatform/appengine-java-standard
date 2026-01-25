@@ -16,36 +16,41 @@
 
 package com.google.apphosting.runtime;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * {@code ApiDeadlineOracle} determines the appropriate deadline for
- * API calls based on the user-specified deadline, the per-package
- * maximum and default deadlines, and the fallthrough maximum and
- * default deadlines.
+ * {@code ApiDeadlineOracle} determines the appropriate deadline for API calls based on the
+ * user-specified deadline, the per-package maximum and default deadlines, and the fallthrough
+ * maximum and default deadlines.
  *
- * <p>This class is also used to track shared buffer counts and sizes
- * as they can also be specified on a per-package and online/offline
- * basis.
- *
+ * <p>This class is also used to track shared buffer counts and sizes as they can also be specified
+ * on a per-package and online/offline basis.
  */
 public class ApiDeadlineOracle {
   private final DeadlineMap deadlineMap;
-  private final DeadlineMap offlineDeadlineMap;
-
   // TODO: Rename this class to something less deadline-specific.
-  private ApiDeadlineOracle(DeadlineMap deadlineMap, DeadlineMap offlineDeadlineMap) {
+  private ApiDeadlineOracle(DeadlineMap deadlineMap) {
     this.deadlineMap = deadlineMap;
-    this.offlineDeadlineMap = offlineDeadlineMap;
   }
 
   public double getDeadline(String packageName, boolean isOffline, Number userDeadline) {
     if (isOffline) {
-      return offlineDeadlineMap.getDeadline(packageName, userDeadline);
-    } else {
-      return deadlineMap.getDeadline(packageName, userDeadline);
+      double deadline;
+      if (userDeadline == null) {
+        deadline =
+            ApiDeadlineMap.OFFLINE_DEFAULT_DEADLINE_MAP.getOrDefault(
+                packageName, 5.0); // Default offline deadline
+      } else {
+        deadline = userDeadline.doubleValue();
+      }
+      return Math.min(
+          deadline,
+          ApiDeadlineMap.OFFLINE_MAX_DEADLINE_MAP.getOrDefault(
+              packageName, 10.0)); // Default offline max deadline
     }
+    return deadlineMap.getDeadline(packageName, userDeadline);
   }
 
   public void addPackageDefaultDeadline(String packageName, double defaultDeadline) {
@@ -56,14 +61,6 @@ public class ApiDeadlineOracle {
     deadlineMap.addMaxDeadline(packageName, maxDeadline);
   }
 
-  public void addOfflinePackageDefaultDeadline(String packageName, double defaultDeadline) {
-    offlineDeadlineMap.addDefaultDeadline(packageName, defaultDeadline);
-  }
-
-  public void addOfflinePackageMaxDeadline(String packageName, double maxDeadline) {
-    offlineDeadlineMap.addMaxDeadline(packageName, maxDeadline);
-  }
-
   public void addPackageMinContentSizeForBuffer(String packageName, long minContentSizeForBuffer) {
     deadlineMap.addMinContentSizeForBuffer(packageName, minContentSizeForBuffer);
   }
@@ -72,29 +69,16 @@ public class ApiDeadlineOracle {
     deadlineMap.addMaxRequestSize(packageName, maxRequestSize);
   }
 
-  public void addOfflinePackageMinContentSizeForBuffer(
-      String packageName, long minContentSizeForBuffer) {
-    offlineDeadlineMap.addMinContentSizeForBuffer(packageName, minContentSizeForBuffer);
-  }
-
-  public void addOfflinePackageMaxRequestSize(String packageName, long maxRequestSize) {
-    offlineDeadlineMap.addMaxRequestSize(packageName, maxRequestSize);
-  }
-
   /** Build an ApiDeadlineOracle. */
   public static class Builder {
     private DeadlineMap deadlineMap;
-    private DeadlineMap offlineDeadlineMap;
 
-    public Builder initDeadlineMap(
-        double defaultDeadline,
-        String defaultDeadlineMapString,
-        double maxDeadline,
-        String maxDeadlineMapString) {
+    /** Initializes the default deadline map using standard hardcoded values. */
+    @CanIgnoreReturnValue
+    public Builder initDeadlineMap() {
       deadlineMap =
           new DeadlineMap(
-              defaultDeadline, parseDoubleMap(defaultDeadlineMapString),
-              maxDeadline, parseDoubleMap(maxDeadlineMapString));
+              10.0, ApiDeadlineMap.DEFAULT_DEADLINE_MAP, 10.0, ApiDeadlineMap.MAX_DEADLINE_MAP);
       return this;
     }
 
@@ -103,44 +87,11 @@ public class ApiDeadlineOracle {
       return this;
     }
 
-    public Builder initOfflineDeadlineMap(
-        double defaultDeadline,
-        String defaultDeadlineMapString,
-        double maxDeadline,
-        String maxDeadlineMapString) {
-      offlineDeadlineMap =
-          new DeadlineMap(
-              defaultDeadline,
-              parseDoubleMap(defaultDeadlineMapString),
-              maxDeadline,
-              parseDoubleMap(maxDeadlineMapString));
-      return this;
-    }
-
-    public Builder initOfflineDeadlineMap(DeadlineMap offlineDeadlineMap) {
-      this.offlineDeadlineMap = offlineDeadlineMap;
-      return this;
-    }
-
     public ApiDeadlineOracle build() {
-      if (deadlineMap == null || offlineDeadlineMap == null) {
+      if (deadlineMap == null) {
         throw new IllegalStateException("All deadline maps must be initialized.");
       }
-      return new ApiDeadlineOracle(deadlineMap, offlineDeadlineMap);
-    }
-
-    private static Map<String, Double> parseDoubleMap(String mapString) {
-      Map<String, Double> map = new HashMap<String, Double>();
-      if (mapString.length() > 0) {
-        for (String entry : mapString.split(",")) {
-          int colon = entry.indexOf(':');
-          if (colon == -1) {
-            throw new IllegalArgumentException("Could not parse entry: " + entry);
-          }
-          map.put(entry.substring(0, colon), Double.parseDouble(entry.substring(colon + 1)));
-        }
-      }
-      return map;
+      return new ApiDeadlineOracle(deadlineMap);
     }
   }
 
@@ -159,9 +110,9 @@ public class ApiDeadlineOracle {
         double maxDeadline,
         Map<String, Double> maxDeadlineMap) {
       this.defaultDeadline = defaultDeadline;
-      this.defaultDeadlineMap = defaultDeadlineMap;
+      this.defaultDeadlineMap = new HashMap<>(defaultDeadlineMap);
       this.maxDeadline = maxDeadline;
-      this.maxDeadlineMap = maxDeadlineMap;
+      this.maxDeadlineMap = new HashMap<>(maxDeadlineMap);
       this.minContentSizeForBufferMap = new HashMap<String, Long>();
       this.maxRequestSizeMap = new HashMap<String, Long>();
     }
