@@ -131,10 +131,9 @@ class IndexImpl implements Index {
     if (this == obj) {
       return true;
     }
-    if (!(obj instanceof IndexImpl)) {
+    if (!(obj instanceof IndexImpl other)) {
       return false;
     }
-    IndexImpl other = (IndexImpl) obj;
     return Util.equalObjects(spec, other.spec)
         && Util.equalObjects(schema, other.schema)
         && Util.equalObjects(storageUsage, other.storageUsage)
@@ -146,8 +145,8 @@ class IndexImpl implements Index {
     String storageInfo =
         (storageUsage == null || storageLimit == null)
         ? "(no storage data)"
-        : String.format(" (%d/%d)", storageUsage.longValue(), storageLimit.longValue());
-    return String.format("IndexImpl{namespace: %s, %s, %s%s}", config.getNamespace(), spec,
+        : " (%d/%d)".formatted(storageUsage.longValue(), storageLimit.longValue());
+    return "IndexImpl{namespace: %s, %s, %s%s}".formatted(config.getNamespace(), spec,
         (schema == null ? "(null schema)" : schema), storageInfo);
   }
 
@@ -180,7 +179,7 @@ class IndexImpl implements Index {
           throw new DeleteException(
               new OperationResult(
                   StatusCode.INTERNAL_ERROR,
-                  String.format("Expected 1 removed schema, but got %d",
+                  "Expected 1 removed schema, but got %d".formatted(
                                 response.getStatusList().size())),
               results);
         }
@@ -213,7 +212,7 @@ class IndexImpl implements Index {
     }
     if (size > SearchApiLimits.PUT_MAXIMUM_DOCS_PER_REQUEST) {
       throw new IllegalArgumentException(
-          String.format("number of doc ids, %s, exceeds maximum %s", size,
+          "number of doc ids, %s, exceeds maximum %s".formatted(size,
                         SearchApiLimits.PUT_MAXIMUM_DOCS_PER_REQUEST));
     }
     final int documentIdsSize = size;
@@ -240,7 +239,7 @@ class IndexImpl implements Index {
           throw new DeleteException(
               new OperationResult(
                   StatusCode.INTERNAL_ERROR,
-                  String.format("Expected %d removed documents, but got %d", documentIdsSize,
+                  "Expected %d removed documents, but got %d".formatted(documentIdsSize,
                                 response.getStatusList().size())),
               results);
         }
@@ -291,8 +290,7 @@ class IndexImpl implements Index {
         // add the current one.
         if (!document.isIdenticalTo(other)) {
           throw new IllegalArgumentException(
-              String.format(
-                  "Put request with documents with the same ID \"%s\" but different content",
+              "Put request with documents with the same ID \"%s\" but different content".formatted(
                   document.getId()));
         }
       }
@@ -304,7 +302,7 @@ class IndexImpl implements Index {
     }
     if (size > SearchApiLimits.PUT_MAXIMUM_DOCS_PER_REQUEST) {
       throw new IllegalArgumentException(
-          String.format("number of documents, %s, exceeds maximum %s", size,
+          "number of documents, %s, exceeds maximum %s".formatted(size,
                         SearchApiLimits.PUT_MAXIMUM_DOCS_PER_REQUEST));
     }
     final int documentsSize = size;
@@ -327,7 +325,7 @@ class IndexImpl implements Index {
           throw new PutException(
               new OperationResult(
                   StatusCode.INTERNAL_ERROR,
-                  String.format("Expected %d indexed documents, but got %d", documentsSize,
+                  "Expected %d indexed documents, but got %d".formatted(documentsSize,
                       response.getStatusList().size())), results, response.getDocIdList());
         }
         for (OperationResult result : results) {

@@ -62,8 +62,7 @@ public final class Blob implements Serializable {
   /** Two {@code Blob} objects are considered equal if their contained bytes match exactly. */
   @Override
   public boolean equals(@Nullable Object object) {
-    if (object instanceof Blob) {
-      Blob key = (Blob) object;
+    if (object instanceof Blob key) {
       return Arrays.equals(bytes, key.bytes);
     }
     return false;

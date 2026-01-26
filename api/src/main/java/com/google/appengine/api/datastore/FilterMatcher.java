@@ -175,45 +175,39 @@ class FilterMatcher {
   public void addFilter(Filter filter) {
     Comparable<Object> value = DataTypeTranslator.getComparablePropertyValue(filter.getProperty(0));
     switch (filter.getOp()) {
-      case EQUAL:
-        equalValues.add(value);
-        break;
-      case GREATER_THAN:
+      case EQUAL -> equalValues.add(value);
+      case GREATER_THAN -> {
         if (min == NoValue.INSTANCE
             || EntityProtoComparators.MULTI_TYPE_COMPARATOR.compare(min, value) <= 0) {
           min = value;
           minInclusive = false;
         }
-        break;
-      case GREATER_THAN_OR_EQUAL:
+      }
+      case GREATER_THAN_OR_EQUAL -> {
         if (min == NoValue.INSTANCE
             || EntityProtoComparators.MULTI_TYPE_COMPARATOR.compare(min, value) < 0) {
           min = value;
           minInclusive = true;
         }
-        break;
-      case LESS_THAN:
+      }
+      case LESS_THAN -> {
         if (max == NoValue.INSTANCE
             || EntityProtoComparators.MULTI_TYPE_COMPARATOR.compare(max, value) >= 0) {
           max = value;
           maxInclusive = false;
         }
-        break;
-      case LESS_THAN_OR_EQUAL:
+      }
+      case LESS_THAN_OR_EQUAL -> {
         if (max == NoValue.INSTANCE
             || EntityProtoComparators.MULTI_TYPE_COMPARATOR.compare(max, value) > 0) {
           max = value;
           maxInclusive = true;
         }
-        break;
-      case EXISTS:
-        break;
-      case CONTAINED_IN_REGION:
-        geoRegions.add(fromProto(filter.getGeoRegion()));
-        break;
-      default:
-        throw new IllegalArgumentException(
-            "Unable to perform filter using operator " + filter.getOp());
+      }
+      case EXISTS -> {}
+      case CONTAINED_IN_REGION -> geoRegions.add(fromProto(filter.getGeoRegion()));
+      default -> throw new IllegalArgumentException(
+          "Unable to perform filter using operator " + filter.getOp());
     }
   }
 

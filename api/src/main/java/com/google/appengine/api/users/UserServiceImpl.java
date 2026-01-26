@@ -160,19 +160,17 @@ final class UserServiceImpl implements UserService {
     } catch (ApiProxy.ApplicationException ex) {
       UserServiceError.ErrorCode errorCode =
           UserServiceError.ErrorCode.forNumber(ex.getApplicationError());
-      switch (errorCode) {
-        case REDIRECT_URL_TOO_LONG:
-          throw new IllegalArgumentException("URL too long: " + destinationURL);
-        case NOT_ALLOWED:
-          throw new IllegalArgumentException(
-              "The requested URL was not allowed: " + destinationURL);
-        default:
-          // the python stub just rethrows, but I don't think we should be
-          // letting ApiProxy.ApplicationException propagate above the api
-          // layer.  Also, having an api-specific failure exception is consistent with
-          // the datastore api.
-          throw new UserServiceFailureException(ex.getErrorDetail());
-      }
+      throw switch (errorCode) {
+        case REDIRECT_URL_TOO_LONG -> new IllegalArgumentException("URL too long: " + destinationURL);
+        case NOT_ALLOWED -> new IllegalArgumentException(
+            "The requested URL was not allowed: " + destinationURL);
+        default ->
+            // the python stub just rethrows, but I don't think we should be
+            // letting ApiProxy.ApplicationException propagate above the api
+            // layer.  Also, having an api-specific failure exception is consistent with
+            // the datastore api.
+            new UserServiceFailureException(ex.getErrorDetail());
+      };
     }
 
     return responseBytes;

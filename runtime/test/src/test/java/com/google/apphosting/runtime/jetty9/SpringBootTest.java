@@ -28,7 +28,6 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.stream.Collectors;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -124,7 +123,7 @@ public final class SpringBootTest extends JavaRuntimeViaHttpBase {
 
   private static List<String> readOutput(InputStream inputStream) throws IOException {
     try (BufferedReader output = new BufferedReader(new InputStreamReader(inputStream))) {
-      return output.lines().map(l -> l + "\n").collect(Collectors.toList());
+      return output.lines().map(l -> l + "\n").toList();
     }
   }
 

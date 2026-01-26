@@ -145,12 +145,7 @@ public class CompositeIndexManager {
 
   /** We compare {@link Property Properties} by comparing their names. */
   private static final Comparator<Property> PROPERTY_NAME_COMPARATOR =
-      new Comparator<Property>() {
-        @Override
-        public int compare(Property o1, Property o2) {
-          return o1.getName().compareTo(o2.getName());
-        }
-      };
+      (o1, o2) -> o1.getName().compareTo(o2.getName());
 
   private List<Property> getRecommendedIndexProps(IndexComponentsOnlyQuery query) {
     // Construct the list of index properties

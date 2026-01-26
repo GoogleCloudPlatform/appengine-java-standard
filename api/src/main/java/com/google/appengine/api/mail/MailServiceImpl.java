@@ -120,21 +120,15 @@ class MailServiceImpl implements MailService {
     } catch (ApiProxy.ApplicationException ex) {
       // Pass all the error details straight through (same as python).
       switch (ErrorCode.forNumber(ex.getApplicationError())) {
-        case BAD_REQUEST:
-          throw new IllegalArgumentException("Bad Request: " +
-                                             ex.getErrorDetail());
-        case UNAUTHORIZED_SENDER:
-          throw new IllegalArgumentException("Unauthorized Sender: " +
-                                             ex.getErrorDetail());
-        case INVALID_ATTACHMENT_TYPE:
-          throw new IllegalArgumentException("Invalid Attachment Type: " +
-                                             ex.getErrorDetail());
-        case INVALID_HEADER_NAME:
-          throw new IllegalArgumentException("Invalid Header Name: " +
-                                             ex.getErrorDetail());
-        case INTERNAL_ERROR:
-        default:
-          throw new IOException(ex.getErrorDetail());
+        case BAD_REQUEST -> throw new IllegalArgumentException("Bad Request: " +
+                                           ex.getErrorDetail());
+        case UNAUTHORIZED_SENDER -> throw new IllegalArgumentException("Unauthorized Sender: " +
+                                           ex.getErrorDetail());
+        case INVALID_ATTACHMENT_TYPE -> throw new IllegalArgumentException("Invalid Attachment Type: " +
+                                           ex.getErrorDetail());
+        case INVALID_HEADER_NAME -> throw new IllegalArgumentException("Invalid Header Name: " +
+                                           ex.getErrorDetail());
+        default -> throw new IOException(ex.getErrorDetail());
       }
     }
   }

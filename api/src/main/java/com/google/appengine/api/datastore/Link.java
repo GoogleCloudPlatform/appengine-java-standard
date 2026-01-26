@@ -64,8 +64,7 @@ public final class Link implements Serializable, Comparable<Link> {
   /** Two {@code Link} objects are considered equal if their content strings match exactly. */
   @Override
   public boolean equals(@Nullable Object object) {
-    if (object instanceof Link) {
-      Link key = (Link) object;
+    if (object instanceof Link key) {
       return value.equals(key.value);
     }
     return false;

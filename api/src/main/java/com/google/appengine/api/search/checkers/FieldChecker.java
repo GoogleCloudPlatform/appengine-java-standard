@@ -24,6 +24,7 @@ import com.google.apphosting.api.search.DocumentPb;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import java.util.Date;
+import java.util.IllformedLocaleException;
 import java.util.List;
 import java.util.Locale;
 import org.antlr.runtime.RecognitionException;
@@ -237,8 +238,8 @@ public final class FieldChecker {
     try {
       parser.parse(expression);
     } catch (RecognitionException e) {
-      String message = String.format("Failed to parse %s expression '%s': "
-          + "parse error at line %d position %d",
+      String message = ("Failed to parse %s expression '%s': "
+          + "parse error at line %d position %d").formatted(
           mode, expression, e.line, e.charPositionInLine);
       throw new IllegalArgumentException(message);
     }
@@ -269,37 +270,20 @@ public final class FieldChecker {
     return checkExpressionHelper(expression, "sort");
   }
 
+  @SuppressWarnings("UnnecessaryDefaultInEnumSwitch")
   public static DocumentPb.Field checkValid(DocumentPb.Field field) {
     checkFieldName(field.getName());
     DocumentPb.FieldValue value = field.getValue();
     switch (value.getType()) {
-      case TEXT:
-        checkText(value.getStringValue());
-        break;
-      case HTML:
-        checkHTML(value.getStringValue());
-        break;
-      case DATE:
-        checkDate(DateUtil.deserializeDate(value.getStringValue()));
-        break;
-      case ATOM:
-        checkAtom(value.getStringValue());
-        break;
-      case NUMBER:
-        checkNumber(Double.parseDouble(value.getStringValue()));
-        break;
-      case GEO:
-        GeoPointChecker.checkValid(value.getGeo());
-        break;
-      case UNTOKENIZED_PREFIX:
-      case TOKENIZED_PREFIX:
-        checkPrefix(value.getStringValue());
-        break;
-      case VECTOR:
-        checkVector(value.getVectorValueList());
-        break;
-      default:
-        throw new IllegalArgumentException("Unsupported field type " + value.getType());
+      case TEXT -> checkText(value.getStringValue());
+      case HTML -> checkHTML(value.getStringValue());
+      case DATE -> checkDate(DateUtil.deserializeDate(value.getStringValue()));
+      case ATOM -> checkAtom(value.getStringValue());
+      case NUMBER -> checkNumber(Double.parseDouble(value.getStringValue()));
+      case GEO -> GeoPointChecker.checkValid(value.getGeo());
+      case UNTOKENIZED_PREFIX, TOKENIZED_PREFIX -> checkPrefix(value.getStringValue());
+      case VECTOR -> checkVector(value.getVectorValueList());
+      default -> throw new IllegalArgumentException("Unsupported field type " + value.getType());
     }
     return field;
   }
@@ -319,15 +303,19 @@ public final class FieldChecker {
     // has more than 2 separators, e.g. "en-US-variant-with-hyphen",
     // we want 3 parts: "en", "US", "variant-with-hyphen".
     String[] parts = locale.split("[-_]", 3);
-    if (parts.length == 1) {
-      return new Locale(parts[0]);
+    try {
+      return switch (parts.length) {
+        case 1 -> Locale.forLanguageTag(parts[0].replace('_', '-'));
+        case 2 -> new Locale.Builder().setLanguage(parts[0]).setRegion(parts[1]).build();
+        case 3 -> new Locale.Builder()
+            .setLanguage(parts[0])
+            .setRegion(parts[1])
+            .setVariant(parts[2])
+            .build();
+        default -> throw new IllegalArgumentException("Cannot parse locale " + locale);
+      };
+    } catch (IllformedLocaleException e) {
+      throw new IllegalArgumentException("Cannot parse locale " + locale, e);
     }
-    if (parts.length == 2) {
-      return new Locale(parts[0], parts[1]);
-    }
-    if (parts.length == 3) {
-      return new Locale(parts[0], parts[1], parts[2]);
-    }
-    throw new IllegalArgumentException("Cannot parse locale " + locale);
   }
 }

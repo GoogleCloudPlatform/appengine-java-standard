@@ -65,6 +65,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
@@ -124,18 +125,20 @@ public final class LocalImagesService extends AbstractLocalRpcService {
     String[] outputFormats = {"png", "jpg", "webp"};
     for (String format : inputFormats) {
       if (!ImageIO.getImageReadersByFormatName(format).hasNext()) {
-        log.warning(
-            "No image reader found for format \"" + format + "\"."
-                + " An ImageIO plugin must be installed to use this format"
-                + " with the DevAppServer.");
+        log.log(
+            Level.WARNING,
+            "No image reader found for format \"{0}\". An ImageIO plugin must be installed to use"
+                + " this format with the DevAppServer.",
+            format);
       }
     }
     for (String format : outputFormats) {
       if (!ImageIO.getImageWritersByFormatName(format).hasNext()) {
-        log.warning(
-            "No image writer found for format \"" + format + "\"."
-                + " An ImageIO plugin must be installed to use this format"
-                + " with the DevAppServer.");
+        log.log(
+            Level.WARNING,
+            "No image writer found for format \"{0}\". An ImageIO plugin must be installed to use"
+                + " this format with the DevAppServer.",
+            format);
       }
     }
 
@@ -344,8 +347,8 @@ public final class LocalImagesService extends AbstractLocalRpcService {
               ErrorCode.NOT_IMAGE.getNumber(), "Failed to read image EXIF metadata");
         }
         AbstractImageInfo<?> info = transform.getImageInfo();
-        if (info instanceof Exif) {
-          return (Exif) info;
+        if (info instanceof Exif exif) {
+          return exif;
         }
       } catch (IOException ex) {
         throw new ApiProxy.ApplicationException(
@@ -472,8 +475,7 @@ public final class LocalImagesService extends AbstractLocalRpcService {
   public ImagesGetUrlBaseResponse getUrlBase(
       final Status status, final ImagesGetUrlBaseRequest request) {
     if (request.getCreateSecureUrl()) {
-      log.info(
-          "Secure URLs will not be created using the development " + "application server.");
+      log.info("Secure URLs will not be created using the development application server.");
     }
     // Detect the image mimetype to see if is a valid image.
     ImageData imageData =
@@ -518,25 +520,22 @@ public final class LocalImagesService extends AbstractLocalRpcService {
   BufferedImage correctOrientation(BufferedImage image, Status status, int orientation) {
     Transform.Builder transform = Transform.newBuilder();
     Transform.Builder secondTransform = Transform.newBuilder();
-    switch(orientation) {
-      case 2:
-        return processTransform(image, transform.setHorizontalFlip(true).build(), status);
-      case 3:
-        return processTransform(image, transform.setRotate(180).build(), status);
-      case 4:
-        return processTransform(image, transform.setVerticalFlip(true).build(), status);
-      case 5:
+    return switch (orientation) {
+      case 2 -> processTransform(image, transform.setHorizontalFlip(true).build(), status);
+      case 3 -> processTransform(image, transform.setRotate(180).build(), status);
+      case 4 -> processTransform(image, transform.setVerticalFlip(true).build(), status);
+      case 5 -> {
         image = processTransform(image, transform.setVerticalFlip(true).build(), status);
-        return processTransform(image, secondTransform.setRotate(90).build(), status);
-      case 6:
-        return processTransform(image, transform.setRotate(90).build(), status);
-      case 7:
+        yield processTransform(image, secondTransform.setRotate(90).build(), status);
+      }
+      case 6 -> processTransform(image, transform.setRotate(90).build(), status);
+      case 7 -> {
         image = processTransform(image, transform.setHorizontalFlip(true).build(), status);
-        return processTransform(image, secondTransform.setRotate(90).build(), status);
-      case 8:
-        return processTransform(image, transform.setRotate(270).build(), status);
-    }
-    return image;
+        yield processTransform(image, secondTransform.setRotate(90).build(), status);
+      }
+      case 8 -> processTransform(image, transform.setRotate(270).build(), status);
+      default -> image;
+    };
   }
 
   /**

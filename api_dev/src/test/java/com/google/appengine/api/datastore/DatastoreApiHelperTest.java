@@ -141,6 +141,11 @@ public class DatastoreApiHelperTest {
   }
 
   @Test
+  public void testPermissionDenied() throws InterruptedException, ExecutionException {
+    assertMakeAsyncCallThrows(ErrorCode.PERMISSION_DENIED, DatastoreFailureException.class);
+  }
+
+  @Test
   public void testV1Exceptions() throws Exception {
     assertV1Exception(Code.INVALID_ARGUMENT, "", IllegalArgumentException.class);
     assertV1Exception(Code.ABORTED, "", ConcurrentModificationException.class);

@@ -347,9 +347,13 @@ public class MailServiceImplTest {
       assertThat(iae).hasMessageThat().contains("detail");
     }
 
-    MailService.Message msg = setupSendCallWithApplicationException(ErrorCode.INTERNAL_ERROR);
-    IOException ioe = assertThrows(IOException.class, () -> service.send(msg));
-    assertThat(ioe).hasMessageThat().isEqualTo("detail");
+    MailService.Message msg1 = setupSendCallWithApplicationException(ErrorCode.INTERNAL_ERROR);
+    IOException ioe1 = assertThrows(IOException.class, () -> service.send(msg1));
+    assertThat(ioe1).hasMessageThat().isEqualTo("detail");
+
+    MailService.Message msg2 = setupSendCallWithApplicationException(ErrorCode.INVALID_CONTENT_ID);
+    IOException ioe2 = assertThrows(IOException.class, () -> service.send(msg2));
+    assertThat(ioe2).hasMessageThat().isEqualTo("detail");
   }
 
   /** Tests that a message sent to admins works correctly. */

@@ -176,10 +176,10 @@ public class ApiProxyLocalImpl implements ApiProxyLocal, DevServices {
     } catch (CancellationException ex) {
       throw new ApiProxy.CancelledException(packageName, methodName);
     } catch (ExecutionException ex) {
-      if (ex.getCause() instanceof RuntimeException) {
-        throw (RuntimeException) ex.getCause();
-      } else if (ex.getCause() instanceof Error) {
-        throw (Error) ex.getCause();
+      if (ex.getCause() instanceof RuntimeException runtimeException) {
+        throw runtimeException;
+      } else if (ex.getCause() instanceof Error error) {
+        throw error;
       } else {
         throw new ApiProxy.UnknownException(packageName, methodName, ex.getCause());
       }
@@ -411,8 +411,8 @@ public class ApiProxyLocalImpl implements ApiProxyLocal, DevServices {
         }
         return invokeApiMethodJava(packageName, methodName, requestBytes);
       } catch (InvocationTargetException e) {
-        if (e.getCause() instanceof RuntimeException) {
-          throw (RuntimeException) e.getCause();
+        if (e.getCause() instanceof RuntimeException runtimeException) {
+          throw runtimeException;
         }
         throw new UnknownException(packageName, methodName, e.getCause());
       } catch (ReflectiveOperationException e) {

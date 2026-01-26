@@ -48,6 +48,7 @@ import java.net.URL;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
+import java.util.Locale;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -616,10 +617,10 @@ public class RequestManager implements RequestThreadManager {
    */
   private void attemptThreadPoolShutdown(Collection<Thread> threads) {
     for (Thread t : threads) {
-      if (t instanceof ApiProxyImpl.CurrentRequestThread) {
+      if (t instanceof ApiProxyImpl.CurrentRequestThread currentRequestThread) {
         // This thread was made by ThreadManager.currentRequestThreadFactory. Check what Runnable
         // it was given.
-        Runnable runnable = ((ApiProxyImpl.CurrentRequestThread) t).userRunnable();
+        Runnable runnable = currentRequestThread.userRunnable();
         if (runnable.getClass().getName()
             .equals("java.util.concurrent.ThreadPoolExecutor$Worker")) {
           // This is the class that ThreadPoolExecutor threads use as their Runnable.
@@ -633,8 +634,7 @@ public class RequestManager implements RequestThreadManager {
             Field outerField = runnable.getClass().getDeclaredField("this$0");
             outerField.setAccessible(true);
             Object outer = outerField.get(runnable);
-            if (outer instanceof ThreadPoolExecutor) {
-              ThreadPoolExecutor executor = (ThreadPoolExecutor) outer;
+            if (outer instanceof ThreadPoolExecutor executor) {
               executor.shutdown();
               // We might already have seen this executor via another thread in the loop, but
               // there's no harm in telling it more than once to shut down.

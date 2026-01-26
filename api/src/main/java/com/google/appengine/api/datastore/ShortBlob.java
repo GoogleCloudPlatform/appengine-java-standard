@@ -70,8 +70,7 @@ public final class ShortBlob implements Serializable, Comparable<ShortBlob> {
   /** Two {@code ShortBlob} objects are considered equal if their contained bytes match exactly. */
   @Override
   public boolean equals(@Nullable Object object) {
-    if (object instanceof ShortBlob) {
-      ShortBlob other = (ShortBlob) object;
+    if (object instanceof ShortBlob other) {
       return Arrays.equals(bytes, other.bytes);
     }
     return false;

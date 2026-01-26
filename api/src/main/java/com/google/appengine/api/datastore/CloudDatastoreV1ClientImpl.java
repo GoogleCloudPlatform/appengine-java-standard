@@ -22,8 +22,6 @@ import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.googleapis.compute.ComputeCredential;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
-import com.google.api.client.http.HttpRequest;
-import com.google.api.client.http.HttpRequestInitializer;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.client.util.ExponentialBackOff;
 import com.google.auto.value.AutoValue;
@@ -59,6 +57,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.logging.Level;
+import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import org.jspecify.annotations.Nullable;
 
@@ -126,67 +125,31 @@ final class CloudDatastoreV1ClientImpl implements CloudDatastoreV1Client {
 
   @Override
   public Future<BeginTransactionResponse> beginTransaction(final BeginTransactionRequest req) {
-    return makeCall(
-        new Callable<BeginTransactionResponse>() {
-          @Override
-          public BeginTransactionResponse call() throws DatastoreException {
-            return datastore.beginTransaction(req);
-          }
-        });
+    return makeCall(() -> datastore.beginTransaction(req));
   }
 
   @Override
   public Future<RollbackResponse> rollback(final RollbackRequest req) {
-    return makeCall(
-        new Callable<RollbackResponse>() {
-          @Override
-          public RollbackResponse call() throws DatastoreException {
-            return datastore.rollback(req);
-          }
-        });
+    return makeCall(() -> datastore.rollback(req));
   }
 
   @Override
   public Future<RunQueryResponse> runQuery(final RunQueryRequest req) {
-    return makeCall(
-        new Callable<RunQueryResponse>() {
-          @Override
-          public RunQueryResponse call() throws DatastoreException {
-            return datastore.runQuery(req);
-          }
-        });
+    return makeCall(() -> datastore.runQuery(req));
   }
 
   @Override
   public Future<LookupResponse> lookup(final LookupRequest req) {
-    return makeCall(
-        new Callable<LookupResponse>() {
-          @Override
-          public LookupResponse call() throws DatastoreException {
-            return datastore.lookup(req);
-          }
-        });
+    return makeCall(() -> datastore.lookup(req));
   }
 
   @Override
   public Future<AllocateIdsResponse> allocateIds(final AllocateIdsRequest req) {
-    return makeCall(
-        new Callable<AllocateIdsResponse>() {
-          @Override
-          public AllocateIdsResponse call() throws DatastoreException {
-            return datastore.allocateIds(req);
-          }
-        });
+    return makeCall(() -> datastore.allocateIds(req));
   }
 
   private Future<CommitResponse> commit(final CommitRequest req) {
-    return makeCall(
-        new Callable<CommitResponse>() {
-          @Override
-          public CommitResponse call() throws DatastoreException {
-            return datastore.commit(req);
-          }
-        });
+    return makeCall(() -> datastore.commit(req));
   }
 
   @Override
@@ -222,10 +185,11 @@ final class CloudDatastoreV1ClientImpl implements CloudDatastoreV1Client {
           return callable.call();
         } catch (Exception e) {
           if (isRetryable(e) && remainingTries > 0) {
-            logger.log(
-                Level.FINE,
-                String.format("Caught retryable exception; %d tries remaining", remainingTries),
-                e);
+            LogRecord lr =
+                new LogRecord(Level.FINE, "Caught retryable exception; {0} tries remaining");
+            lr.setParameters(new Object[] {remainingTries});
+            lr.setThrown(e);
+            logger.log(lr);
             Thread.sleep(backoff.nextBackOffMillis());
           } else {
             throw e;
@@ -249,21 +213,17 @@ final class CloudDatastoreV1ClientImpl implements CloudDatastoreV1Client {
             ? new Exception()
             : null;
     return executor.submit(
-        new Callable<T>() {
-          @Override
-          public T call() throws Exception {
-            try {
-              return new RetryingCallable<>(oneAttempt, maxRetries).call();
-            } catch (DatastoreException e) {
-              String message =
-                  stackTraceCapturer != null
-                      ? String.format(
-                          "%s%nstack trace when async call was initiated: <%n%s>",
-                          e.getMessage(), Throwables.getStackTraceAsString(stackTraceCapturer))
-                      : String.format(
-                          "%s%n(stack trace capture for async call is disabled)", e.getMessage());
-              throw DatastoreApiHelper.createV1Exception(e.getCode(), message, e);
-            }
+        () -> {
+          try {
+            return new RetryingCallable<>(oneAttempt, maxRetries).call();
+          } catch (DatastoreException e) {
+            String message =
+                stackTraceCapturer != null
+                    ? e.getMessage()
+                        + "\nstack trace when async call was initiated: <\n"
+                        + Throwables.getStackTraceAsString(stackTraceCapturer)
+                    : e.getMessage() + "\n(stack trace capture for async call is disabled)";
+            throw DatastoreApiHelper.createV1Exception(e.getCode(), message, e);
           }
         });
   }
@@ -275,13 +235,10 @@ final class CloudDatastoreV1ClientImpl implements CloudDatastoreV1Client {
     setProjectEndpoint(projectId, options);
     options.credential(getCredential());
     options.initializer(
-        new HttpRequestInitializer() {
-          @Override
-          public void initialize(HttpRequest request) throws IOException {
-            request.setConnectTimeout(httpConnectTimeoutMillis);
-            if (config.getDeadline() != null) {
-              request.setReadTimeout((int) (config.getDeadline() * 1000));
-            }
+        request -> {
+          request.setConnectTimeout(httpConnectTimeoutMillis);
+          if (config.getDeadline() != null) {
+            request.setReadTimeout((int) (config.getDeadline() * 1000));
           }
         });
     return options.build();
@@ -298,8 +255,7 @@ final class CloudDatastoreV1ClientImpl implements CloudDatastoreV1Client {
       if (privateKeyFile != null) {
         logger.log(
             Level.INFO,
-            "Service account and private key file were provided. "
-                + "Using service account credential.");
+            "Service account and private key file were provided. Using service account credential.");
         return getServiceAccountCredentialBuilder(serviceAccount)
             .setServiceAccountPrivateKeyFromP12File(new File(privateKeyFile))
             .build();
@@ -308,8 +264,7 @@ final class CloudDatastoreV1ClientImpl implements CloudDatastoreV1Client {
       if (privateKey != null) {
         logger.log(
             Level.INFO,
-            "Service account and private key were provided. "
-                + "Using service account credential.");
+            "Service account and private key were provided. Using service account credential.");
         return getServiceAccountCredentialBuilder(serviceAccount)
             .setServiceAccountPrivateKey(privateKey)
             .build();

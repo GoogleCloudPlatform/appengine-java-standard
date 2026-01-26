@@ -446,11 +446,10 @@ public final class Field implements Serializable {
     if (object == this) {
       return true;
     }
-    if (!(object instanceof Field)) {
-      return false;
+    if (object instanceof Field field) {
+      return Util.equalObjects(name, field.name);
     }
-    Field field = (Field) object;
-    return Util.equalObjects(name, field.name);
+    return false;
   }
 
   /**
@@ -463,6 +462,7 @@ public final class Field implements Serializable {
    * @throws IllegalArgumentException if field name, text, HTML, atom,
    * date, untokenizedPrefix, tokenizedPrefix, or vector are invalid
    */
+  @SuppressWarnings("UnnecessaryDefaultInEnumSwitch")
   private Field checkValid() {
     FieldChecker.checkFieldName(name);
     if (type != null) {
@@ -498,6 +498,7 @@ public final class Field implements Serializable {
    * @throws SearchException if the field contains invalid name, text, html,
    * atom, date
    */
+  @SuppressWarnings("UnnecessaryDefaultInEnumSwitch")
   static Builder newBuilder(DocumentPb.Field field) {
     FieldValue value = field.getValue();
     Field.Builder fieldBuilder =
@@ -506,47 +507,32 @@ public final class Field implements Serializable {
       fieldBuilder.setLocale(FieldChecker.parseLocale(value.getLanguage()));
     }
     switch (value.getType()) {
-      case TEXT:
-        fieldBuilder.setText(value.getStringValue());
-        break;
-      case HTML:
-        fieldBuilder.setHTML(value.getStringValue());
-        break;
-      case ATOM:
-        fieldBuilder.setAtom(value.getStringValue());
-        break;
-      case NUMBER:
+      case TEXT -> fieldBuilder.setText(value.getStringValue());
+      case HTML -> fieldBuilder.setHTML(value.getStringValue());
+      case ATOM -> fieldBuilder.setAtom(value.getStringValue());
+      case NUMBER -> {
         try {
           fieldBuilder.setNumber(
               NumberFormat.getNumberInstance().parse(value.getStringValue()).doubleValue());
         } catch (ParseException e) {
           throw new SearchException("Failed to parse double: " + value.getStringValue());
         }
-        break;
-      case GEO:
-        fieldBuilder.setGeoPoint(GeoPoint.newGeoPoint(value.getGeo()));
-        break;
-      case DATE:
+      }
+      case GEO -> fieldBuilder.setGeoPoint(GeoPoint.newGeoPoint(value.getGeo()));
+      case DATE -> {
         String dateString = value.getStringValue();
         if (dateString.isEmpty()) {
           throw new SearchException(
-              String.format("date not specified for field %s", field.getName()));
+              "date not specified for field %s".formatted(field.getName()));
         }
         fieldBuilder.setDate(DateUtil.deserializeDate(dateString));
-        break;
-      case UNTOKENIZED_PREFIX:
-        fieldBuilder.setUntokenizedPrefix(value.getStringValue());
-        break;
-      case TOKENIZED_PREFIX:
-        fieldBuilder.setTokenizedPrefix(value.getStringValue());
-        break;
-      case VECTOR:
-        fieldBuilder.setVector(value.getVectorValueList());
-        break;
-      default:
-        throw new SearchException(
-            String.format("unknown field value type %s for field %s", value.getType(),
-                field.getName()));
+      }
+      case UNTOKENIZED_PREFIX -> fieldBuilder.setUntokenizedPrefix(value.getStringValue());
+      case TOKENIZED_PREFIX -> fieldBuilder.setTokenizedPrefix(value.getStringValue());
+      case VECTOR -> fieldBuilder.setVector(value.getVectorValueList());
+      default -> throw new SearchException(
+          "unknown field value type %s for field %s".formatted(value.getType(),
+              field.getName()));
     }
     return fieldBuilder;
   }
@@ -558,6 +544,7 @@ public final class Field implements Serializable {
    * @return the field protocol buffer copy of this field object
    * @throws IllegalArgumentException if the field value type is unknown
    */
+  @SuppressWarnings("UnnecessaryDefaultInEnumSwitch")
   DocumentPb.Field copyToProtocolBuffer() {
     DocumentPb.FieldValue.Builder fieldValueBuilder = DocumentPb.FieldValue.newBuilder();
     if (locale != null) {
@@ -565,29 +552,29 @@ public final class Field implements Serializable {
     }
     if (type != null) {
       switch (type) {
-        case TEXT:
+        case TEXT -> {
           if (text != null) {
             fieldValueBuilder.setStringValue(text);
           }
           fieldValueBuilder.setType(ContentType.TEXT);
-          break;
-        case HTML:
+        }
+        case HTML -> {
           if (html != null) {
             fieldValueBuilder.setStringValue(html);
           }
           fieldValueBuilder.setType(ContentType.HTML);
-          break;
-        case ATOM:
+        }
+        case ATOM -> {
           if (atom != null) {
             fieldValueBuilder.setStringValue(atom);
           }
           fieldValueBuilder.setType(ContentType.ATOM);
-          break;
-        case DATE:
+        }
+        case DATE -> {
           fieldValueBuilder.setStringValue(DateUtil.serializeDate(date));
           fieldValueBuilder.setType(ContentType.DATE);
-          break;
-        case NUMBER:
+        }
+        case NUMBER -> {
           // TODO: use binary number representation instead
           DecimalFormat format = new DecimalFormat();
           format.setDecimalSeparatorAlwaysShown(false);
@@ -595,29 +582,28 @@ public final class Field implements Serializable {
           format.setMaximumFractionDigits(Integer.MAX_VALUE);
           fieldValueBuilder.setStringValue(format.format(number));
           fieldValueBuilder.setType(ContentType.NUMBER);
-          break;
-        case GEO_POINT:
+        }
+        case GEO_POINT -> {
           fieldValueBuilder.setGeo(geoPoint.copyToProtocolBuffer());
           fieldValueBuilder.setType(ContentType.GEO);
-          break;
-        case UNTOKENIZED_PREFIX:
+        }
+        case UNTOKENIZED_PREFIX -> {
           if (untokenizedPrefix != null) {
             fieldValueBuilder.setStringValue(untokenizedPrefix);
           }
           fieldValueBuilder.setType(ContentType.UNTOKENIZED_PREFIX);
-          break;
-        case TOKENIZED_PREFIX:
+        }
+        case TOKENIZED_PREFIX -> {
           if (tokenizedPrefix != null) {
             fieldValueBuilder.setStringValue(tokenizedPrefix);
           }
           fieldValueBuilder.setType(ContentType.TOKENIZED_PREFIX);
-          break;
-        case VECTOR:
+        }
+        case VECTOR -> {
           fieldValueBuilder.addAllVectorValue(vector);
           fieldValueBuilder.setType(ContentType.VECTOR);
-          break;
-        default:
-          throw new IllegalArgumentException(String.format("unknown field type %s", type));
+        }
+        default -> throw new IllegalArgumentException("unknown field type %s".formatted(type));
       }
     }
 
@@ -637,34 +623,27 @@ public final class Field implements Serializable {
         .finish();
   }
 
+  @SuppressWarnings("UnnecessaryDefaultInEnumSwitch")
   private String valueToString() throws IllegalArgumentException {
     if (type == null) {
       return "null";
     }
-    switch (type) {
-      case TEXT:
-        return text;
-      case HTML:
-        return html;
-      case ATOM:
-        return atom;
-      case DATE:
-        return DateUtil.formatDateTime(date);
-      case GEO_POINT:
-        return geoPoint.toString();
-      case NUMBER:
+    return switch (type) {
+      case TEXT -> text;
+      case HTML -> html;
+      case ATOM -> atom;
+      case DATE -> DateUtil.formatDateTime(date);
+      case GEO_POINT -> geoPoint.toString();
+      case NUMBER -> {
         DecimalFormat format = new DecimalFormat();
         format.setDecimalSeparatorAlwaysShown(false);
         format.setMaximumFractionDigits(Integer.MAX_VALUE);
-        return format.format(number);
-      case UNTOKENIZED_PREFIX:
-        return untokenizedPrefix;
-      case TOKENIZED_PREFIX:
-        return tokenizedPrefix;
-      case VECTOR:
-        return vector.toString();
-      default:
-        throw new IllegalArgumentException(String.format("unknown field type %s", type));
-    }
+        yield format.format(number);
+      }
+      case UNTOKENIZED_PREFIX -> untokenizedPrefix;
+      case TOKENIZED_PREFIX -> tokenizedPrefix;
+      case VECTOR -> vector.toString();
+      default -> throw new IllegalArgumentException("unknown field type %s".formatted(type));
+    };
   }
 }

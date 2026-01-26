@@ -43,10 +43,10 @@ class MemcacheServiceImpl implements MemcacheService {
       throw new MemcacheServiceException("Unexpected failure", e);
     } catch (ExecutionException e) {
       Throwable cause = e.getCause();
-      if (cause instanceof RuntimeException) {
-        throw (RuntimeException) cause;
-      } else if (cause instanceof Error) {
-        throw (Error) cause;
+      if (cause instanceof RuntimeException runtimeException) {
+        throw runtimeException;
+      } else if (cause instanceof Error error) {
+        throw error;
       } else {
         throw new UndeclaredThrowableException(cause);
       }

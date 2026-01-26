@@ -94,8 +94,7 @@ public final class Entity extends PropertyContainer implements Cloneable {
 
     @Override
     public boolean equals(@Nullable Object that) {
-      if (that instanceof WrappedValueImpl) {
-        WrappedValueImpl wv = (WrappedValueImpl) that;
+      if (that instanceof WrappedValueImpl wv) {
         return ((value == null) ? wv.value == null : value.equals(wv.value))
             && indexed == wv.indexed
             && forceIndexedEmbeddedEntity == wv.forceIndexedEmbeddedEntity;
@@ -141,8 +140,7 @@ public final class Entity extends PropertyContainer implements Cloneable {
 
     @Override
     public boolean equals(@Nullable Object that) {
-      if (that instanceof UnindexedValue) {
-        UnindexedValue uv = (UnindexedValue) that;
+      if (that instanceof UnindexedValue uv) {
         return (value == null) ? uv.value == null : value.equals(uv.value);
       }
       return false;
@@ -267,8 +265,7 @@ public final class Entity extends PropertyContainer implements Cloneable {
    */
   @Override
   public boolean equals(@Nullable Object object) {
-    if (object instanceof Entity) {
-      Entity otherEntity = (Entity) object;
+    if (object instanceof Entity otherEntity) {
       return key.equals(otherEntity.key);
     }
     return false;

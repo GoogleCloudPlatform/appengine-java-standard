@@ -1113,7 +1113,6 @@ public final class DataTypeTranslator {
     }
 
     @Override
- @  SuppressWarnings("PatternMatchingInstanceof") 
     public @Nullable Comparable<?> asComparable(Object value) {
       Object value2 = ((RawValue) value).getValue();
       // All possible values except byte[] are already comparable.
@@ -2027,10 +2026,7 @@ public final class DataTypeTranslator {
 
     @Override
     public boolean equals(@Nullable Object obj) {
-      if (obj == null) {
-        return false;
-      }
-      return Arrays.equals(bytes, ((ComparableByteArray) obj).bytes);
+      return obj instanceof ComparableByteArray other && Arrays.equals(bytes, other.bytes);
     }
 
     @Override

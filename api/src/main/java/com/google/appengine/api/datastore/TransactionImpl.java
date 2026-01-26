@@ -122,8 +122,8 @@ class TransactionImpl implements Transaction, CurrentTransactionProvider {
 
   @Override
   public boolean equals(@Nullable Object o) {
-    if (o instanceof TransactionImpl) {
-      return internalTransaction.equals(((TransactionImpl) o).internalTransaction);
+    if (o instanceof TransactionImpl that) {
+      return internalTransaction.equals(that.internalTransaction);
     }
     return false;
   }

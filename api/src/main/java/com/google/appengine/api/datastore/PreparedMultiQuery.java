@@ -281,14 +281,7 @@ class PreparedMultiQuery extends BasePreparedQuery {
         // use a heap iterator to merge the results from multiple sources
         // this may not respect the limit passed to it in fetchOptions
         return makeHeapIterator(
-            Iterables.transform(
-                queries,
-                new Function<PreparedQuery, Iterator<Entity>>() {
-                  @Override
-                  public Iterator<Entity> apply(PreparedQuery input) {
-                    return input.asIterator(fetchOptions);
-                  }
-                }));
+            Iterables.transform(queries, input -> input.asIterator(fetchOptions)));
       }
     }
 

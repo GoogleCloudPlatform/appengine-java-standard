@@ -164,12 +164,10 @@ class BlobstoreServiceImpl implements BlobstoreService {
     try {
       ApiProxy.makeSyncCall(PACKAGE, "DeleteBlob", request.build().toByteArray());
     } catch (ApiProxy.ApplicationException ex) {
-      switch (BlobstoreServiceError.ErrorCode.forNumber(ex.getApplicationError())) {
-        case INTERNAL_ERROR:
-          throw new BlobstoreFailureException("An internal blobstore error occurred.");
-        default:
-          throw new BlobstoreFailureException("An unexpected error occurred.", ex);
-      }
+      throw switch (BlobstoreServiceError.ErrorCode.forNumber(ex.getApplicationError())) {
+        case INTERNAL_ERROR -> new BlobstoreFailureException("An internal blobstore error occurred.");
+        default -> new BlobstoreFailureException("An unexpected error occurred.", ex);
+      };
     }
   }
 

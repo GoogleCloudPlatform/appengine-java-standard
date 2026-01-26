@@ -69,8 +69,7 @@ public final class Text implements Serializable {
   /** Two {@code Text} objects are considered equal if their content strings match exactly. */
   @Override
   public boolean equals(@Nullable Object object) {
-    if (object instanceof Text) {
-      Text key = (Text) object;
+    if (object instanceof Text key) {
       if (value == null) {
         return key.value == null;
       }
