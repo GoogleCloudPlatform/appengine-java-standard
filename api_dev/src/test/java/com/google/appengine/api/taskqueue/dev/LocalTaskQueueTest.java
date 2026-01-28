@@ -601,13 +601,7 @@ public class LocalTaskQueueTest {
     final long now = 100;
     long nowUsec = now * 1000;
     localService = LocalTaskQueueTestConfig.getLocalTaskQueue();
-    Clock clock =
-        new Clock() {
-          @Override
-          public long getCurrentTime() {
-            return now;
-          }
-        };
+    Clock clock = () -> now;
     initLocalTaskQueue(clock);
     localService.start();
 

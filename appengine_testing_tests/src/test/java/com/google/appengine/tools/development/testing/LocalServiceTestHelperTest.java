@@ -115,13 +115,7 @@ public class LocalServiceTestHelperTest {
 
   @Test
   public void testEnvProperlySet_Custom() {
-    Clock alwaysEpoch =
-        new Clock() {
-          @Override
-          public long getCurrentTime() {
-            return 0;
-          }
-        };
+    Clock alwaysEpoch = () -> 0;
     RequestMillisTimer remainingMillis = () -> 666L;
     LocalServiceTestHelper helper =
         new LocalServiceTestHelper()
@@ -209,12 +203,7 @@ public class LocalServiceTestHelperTest {
     try {
       Thread t =
           ThreadManager.createThreadForCurrentRequest(
-              new Runnable() {
-                @Override
-                public void run() {
-                  threadEnv.set(ApiProxy.getCurrentEnvironment());
-                }
-              });
+              () -> threadEnv.set(ApiProxy.getCurrentEnvironment()));
       t.start();
       t.join(JOIN_WAIT);
       assertFalse(t.isAlive());
@@ -233,16 +222,13 @@ public class LocalServiceTestHelperTest {
     try {
       t =
           ThreadManager.createThreadForCurrentRequest(
-              new Runnable() {
-                @Override
-                public void run() {
-                  while (true) {
-                    try {
-                      Thread.sleep(50);
-                    } catch (InterruptedException e) {
-                      interrupted.set(true);
-                      break;
-                    }
+              () -> {
+                while (true) {
+                  try {
+                    Thread.sleep(50);
+                  } catch (InterruptedException e) {
+                    interrupted.set(true);
+                    break;
                   }
                 }
               });

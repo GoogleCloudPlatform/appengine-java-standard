@@ -227,12 +227,7 @@ public class Modules implements ModulesController, ModulesFilterHelper {
   @Override
   public void startModule(final String moduleName, final String version)
       throws ApplicationException {
-    doDynamicConfiguration("startServing", new Runnable(){
-      @Override
-      public void run() {
-        doStartModule(moduleName, version);
-      }
-    });
+    doDynamicConfiguration("startServing", () -> doStartModule(moduleName, version));
   }
 
   private void doStartModule(String moduleName, String version) {
@@ -251,12 +246,7 @@ public class Modules implements ModulesController, ModulesFilterHelper {
   @Override
   public void stopModule(final String moduleName, final String version)
       throws ApplicationException {
-    doDynamicConfiguration("stopServing", new Runnable(){
-      @Override
-      public void run() {
-        doStopModule(moduleName, version);
-      }
-    });
+    doDynamicConfiguration("stopServing", () -> doStopModule(moduleName, version));
   }
 
   /**

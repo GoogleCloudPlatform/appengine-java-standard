@@ -336,22 +336,19 @@ class DatastoreCallbacksImpl implements DatastoreCallbacks {
   }
 
   private Callback allocateCallback(final Object callbackImplementor, final Method callbackMethod) {
-    return new Callback() {
-      @Override
-      public void run(CallbackContext<?> context) {
-        try {
-          callbackMethod.invoke(callbackImplementor, context);
-        } catch (IllegalAccessException e) {
-          // shouldn't happen since we made the method accessible
-          throw new RuntimeException(e);
-        } catch (InvocationTargetException e) {
-          // TODO: Check whether it is possible for this to be null
-          if (e.getCause() != null) {
-            throwIfUnchecked(e.getCause());
-          }
-          // Should not happen since we don't allow checked exceptions.
-          throw new RuntimeException("Callback method threw a checked exception.", e.getCause());
+    return context -> {
+      try {
+        callbackMethod.invoke(callbackImplementor, context);
+      } catch (IllegalAccessException e) {
+        // shouldn't happen since we made the method accessible
+        throw new RuntimeException(e);
+      } catch (InvocationTargetException e) {
+        // TODO: Check whether it is possible for this to be null
+        if (e.getCause() != null) {
+          throwIfUnchecked(e.getCause());
         }
+        // Should not happen since we don't allow checked exceptions.
+        throw new RuntimeException("Callback method threw a checked exception.", e.getCause());
       }
     };
   }

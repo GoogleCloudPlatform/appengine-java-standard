@@ -444,17 +444,14 @@ public class JettyContainerService extends AbstractContainerService implements C
     scanner.setScanInterval(SCAN_INTERVAL_SECONDS);
     scanner.setScanDirs(ImmutableList.of(getScanTarget().toPath()));
     scanner.setFilenameFilter(
-        new FilenameFilter() {
-          @Override
-          public boolean accept(File dir, String name) {
-            try {
-              if (name.equals(getScanTarget().getName())) {
-                return true;
-              }
-              return false;
-            } catch (Exception e) {
-              return false;
+        (dir, name) -> {
+          try {
+            if (name.equals(getScanTarget().getName())) {
+              return true;
             }
+            return false;
+          } catch (Exception e) {
+            return false;
           }
         });
     scanner.addListener(new ScannerListener());

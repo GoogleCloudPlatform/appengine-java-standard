@@ -19,7 +19,6 @@ package com.google.appengine.tools.remoteapi;
 import com.google.apphosting.api.ApiProxy;
 import com.google.apphosting.api.ApiProxy.Delegate;
 import com.google.apphosting.api.ApiProxy.Environment;
-import com.google.apphosting.api.ApiProxy.EnvironmentFactory;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -78,12 +77,14 @@ public class RemoteApiInstaller {
   private static synchronized StreamHandler getStreamHandler() {
     if (remoteMethodHandler == null) {
       remoteMethodHandler = new ConsoleHandler();
-      remoteMethodHandler.setFormatter(new Formatter() {
-        @Override
-        public String format(LogRecord record) {
-          return record.getMessage() + "\n";
-        }
-      });
+      // Cannot use a lambda here because Formatter is abstract.
+      remoteMethodHandler.setFormatter(
+          new Formatter() {
+            @Override
+            public String format(LogRecord record) {
+              return record.getMessage() + "\n";
+            }
+          });
       remoteMethodHandler.setLevel(Level.FINE);
     }
     return remoteMethodHandler;
@@ -142,12 +143,7 @@ public class RemoteApiInstaller {
       // Single-thread install has the ability to leave the existing environment
       // in place and simply override the app id. That functionality is not
       // supported here.
-      ApiProxy.setEnvironmentFactory(new EnvironmentFactory() {
-        @Override
-        public Environment newEnvironment() {
-          return createEnv(finalOptions, client);
-        }
-      });
+      ApiProxy.setEnvironmentFactory(() -> createEnv(finalOptions, client));
     }
   }
 

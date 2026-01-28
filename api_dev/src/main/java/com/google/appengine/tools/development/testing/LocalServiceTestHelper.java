@@ -80,12 +80,7 @@ public class LocalServiceTestHelper {
      * The Timer instance used by local services if no override is provided via
      * {@link LocalServiceTestHelper#setRemainingMillisTimer(RequestMillisTimer)}.
      */
-    RequestMillisTimer DEFAULT = new RequestMillisTimer() {
-      @Override
-      public long getRemainingMillis() {
-        return Long.MAX_VALUE;
-      }
-    };
+    RequestMillisTimer DEFAULT = () -> Long.MAX_VALUE;
   }
 
   // Keep these in sync with other occurrences of

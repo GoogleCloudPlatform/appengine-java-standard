@@ -47,12 +47,7 @@ public abstract class AppengineSdk {
   static boolean isDevAppServerTest;
 
   private static final FileFilter NO_HIDDEN_FILES =
-      new FileFilter() {
-        @Override
-        public boolean accept(File file) {
-          return !file.isHidden();
-        }
-      };
+      file -> !file.isHidden();
 
   AppengineSdk() {
     sdkRoot = findSdkRoot();
