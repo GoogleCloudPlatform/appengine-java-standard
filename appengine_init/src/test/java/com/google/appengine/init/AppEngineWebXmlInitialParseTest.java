@@ -19,12 +19,19 @@ package com.google.appengine.init;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.logging.Handler;
+import java.util.logging.LogRecord;
+import java.util.logging.Logger;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -100,6 +107,43 @@ public class AppEngineWebXmlInitialParseTest {
   }
 
   @Test
+  public void testJava17WithJetty121() throws IOException {
+    createTempAppEngineWebXml(
+        """
+        <appengine-web-app xmlns="http://appengine.google.com/ns/1.0">
+            <runtime>java17</runtime>
+            <system-properties>
+                <property name="appengine.use.jetty121" value="true"/>
+            </system-properties>
+        </appengine-web-app>
+        """);
+    new AppEngineWebXmlInitialParse(tempFile.toFile().getAbsolutePath()).handleRuntimeProperties();
+    assertFalse(Boolean.getBoolean("appengine.use.EE8"));
+    assertFalse(Boolean.getBoolean("appengine.use.EE10"));
+    assertFalse(Boolean.getBoolean("appengine.use.EE11"));
+    assertTrue(Boolean.getBoolean("appengine.use.jetty121"));
+  }
+
+  @Test
+  public void testJava17WithEE8AndJetty121() throws IOException {
+    createTempAppEngineWebXml(
+        """
+        <appengine-web-app xmlns="http://appengine.google.com/ns/1.0">
+            <runtime>java17</runtime>
+            <system-properties>
+                <property name="appengine.use.EE8" value="true"/>
+                <property name="appengine.use.jetty121" value="true"/>
+            </system-properties>
+        </appengine-web-app>
+        """);
+    new AppEngineWebXmlInitialParse(tempFile.toFile().getAbsolutePath()).handleRuntimeProperties();
+    assertTrue(Boolean.getBoolean("appengine.use.EE8"));
+    assertFalse(Boolean.getBoolean("appengine.use.EE10"));
+    assertFalse(Boolean.getBoolean("appengine.use.EE11"));
+    assertTrue(Boolean.getBoolean("appengine.use.jetty121"));
+  }
+
+  @Test
   public void testJava17EE10() throws IOException {
     createTempAppEngineWebXml(
         """
@@ -135,6 +179,43 @@ public class AppEngineWebXmlInitialParseTest {
     assertFalse(Boolean.getBoolean("appengine.use.EE11"));
     assertFalse(Boolean.getBoolean("appengine.use.EE8"));
     assertFalse(Boolean.getBoolean("appengine.use.jetty121"));
+  }
+
+  @Test
+  public void testJava21WithEE10Explicit() throws IOException {
+    createTempAppEngineWebXml(
+        """
+        <appengine-web-app xmlns="http://appengine.google.com/ns/1.0">
+            <runtime>java21</runtime>
+            <system-properties>
+                <property name="appengine.use.EE10" value="true"/>
+            </system-properties>
+        </appengine-web-app>
+        """);
+    new AppEngineWebXmlInitialParse(tempFile.toFile().getAbsolutePath()).handleRuntimeProperties();
+    assertFalse(Boolean.getBoolean("appengine.use.EE8"));
+    assertTrue(Boolean.getBoolean("appengine.use.EE10"));
+    assertFalse(Boolean.getBoolean("appengine.use.EE11"));
+    assertFalse(Boolean.getBoolean("appengine.use.jetty121"));
+  }
+
+  @Test
+  public void testJava21WithEE8AndJetty121() throws IOException {
+    createTempAppEngineWebXml(
+        """
+        <appengine-web-app xmlns="http://appengine.google.com/ns/1.0">
+            <runtime>java21</runtime>
+            <system-properties>
+                <property name="appengine.use.EE8" value="true"/>
+                <property name="appengine.use.jetty121" value="true"/>
+            </system-properties>
+        </appengine-web-app>
+        """);
+    new AppEngineWebXmlInitialParse(tempFile.toFile().getAbsolutePath()).handleRuntimeProperties();
+    assertTrue(Boolean.getBoolean("appengine.use.EE8"));
+    assertFalse(Boolean.getBoolean("appengine.use.EE10"));
+    assertFalse(Boolean.getBoolean("appengine.use.EE11"));
+    assertTrue(Boolean.getBoolean("appengine.use.jetty121"));
   }
 
   @Test
@@ -325,5 +406,437 @@ public class AppEngineWebXmlInitialParseTest {
     assertFalse(Boolean.getBoolean("appengine.use.EE8"));
     assertFalse(Boolean.getBoolean("appengine.use.EE10"));
     assertTrue(Boolean.getBoolean("appengine.use.jetty121"));
+  }
+
+  @Test
+  public void testJava17WithExperimentEnableJetty12() throws IOException {
+    createTempAppEngineWebXml(
+        """
+        <appengine-web-app xmlns="http://appengine.google.com/ns/1.0">
+            <runtime>java17</runtime>
+        </appengine-web-app>
+        """);
+    AppEngineWebXmlInitialParse parser =
+        new AppEngineWebXmlInitialParse(tempFile.toFile().getAbsolutePath());
+    parser.setEnvProvider(
+        key -> {
+          if (Objects.equals(key, "EXPERIMENT_ENABLE_JETTY12_FOR_JAVA")) {
+            return "true";
+          }
+          return null;
+        });
+    parser.handleRuntimeProperties();
+    assertTrue(Boolean.getBoolean("appengine.use.EE8"));
+    assertFalse(Boolean.getBoolean("appengine.use.EE10"));
+    assertFalse(Boolean.getBoolean("appengine.use.EE11"));
+    assertFalse(Boolean.getBoolean("appengine.use.jetty121"));
+  }
+
+  @Test
+  public void testJava17WithWhitespace() throws IOException {
+    createTempAppEngineWebXml(
+        """
+        <appengine-web-app xmlns="http://appengine.google.com/ns/1.0">
+            <runtime>
+              java17
+            </runtime>
+        </appengine-web-app>
+        """);
+    AppEngineWebXmlInitialParse parser =
+        new AppEngineWebXmlInitialParse(tempFile.toFile().getAbsolutePath());
+    parser.setEnvProvider(
+        key -> {
+          if (Objects.equals(key, "EXPERIMENT_ENABLE_JETTY12_FOR_JAVA")) {
+            return "true";
+          }
+          return null;
+        });
+    parser.handleRuntimeProperties();
+    assertTrue(Boolean.getBoolean("appengine.use.EE8"));
+  }
+
+  @Test
+  public void testHttpConnectorExperiment() throws IOException {
+    createTempAppEngineWebXml(
+        """
+        <appengine-web-app xmlns="http://appengine.google.com/ns/1.0">
+            <runtime>java17</runtime>
+        </appengine-web-app>
+        """);
+    AppEngineWebXmlInitialParse parser =
+        new AppEngineWebXmlInitialParse(tempFile.toFile().getAbsolutePath());
+    parser.setEnvProvider(
+        key -> {
+          if (Objects.equals(key, "EXPERIMENT_ENABLE_HTTP_CONNECTOR_FOR_JAVA")) {
+            return "true";
+          }
+          return null;
+        });
+    parser.handleRuntimeProperties();
+    assertTrue(Boolean.getBoolean("appengine.use.HttpConnector"));
+    assertTrue(Boolean.getBoolean("appengine.ignore.cancelerror"));
+  }
+
+  @Test
+  public void testMultipleEEFlags() throws IOException {
+    createTempAppEngineWebXml(
+        """
+        <appengine-web-app xmlns="http://appengine.google.com/ns/1.0">
+            <runtime>java17</runtime>
+            <system-properties>
+                <property name="appengine.use.EE8" value="true"/>
+                <property name="appengine.use.EE10" value="true"/>
+            </system-properties>
+        </appengine-web-app>
+        """);
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new AppEngineWebXmlInitialParse(tempFile.toFile().getAbsolutePath())
+                .handleRuntimeProperties());
+  }
+
+  @Test
+  public void testJava25WithEE10() throws IOException {
+    createTempAppEngineWebXml(
+        """
+        <appengine-web-app xmlns="http://appengine.google.com/ns/1.0">
+            <runtime>java25</runtime>
+            <system-properties>
+                <property name="appengine.use.EE10" value="true"/>
+            </system-properties>
+        </appengine-web-app>
+        """);
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new AppEngineWebXmlInitialParse(tempFile.toFile().getAbsolutePath())
+                .handleRuntimeProperties());
+  }
+
+  @Test
+  public void testJava17EE11() throws IOException {
+    createTempAppEngineWebXml(
+        """
+        <appengine-web-app xmlns="http://appengine.google.com/ns/1.0">
+            <runtime>java17</runtime>
+            <system-properties>
+                <property name="appengine.use.EE11" value="true"/>
+            </system-properties>
+        </appengine-web-app>
+        """);
+    new AppEngineWebXmlInitialParse(tempFile.toFile().getAbsolutePath()).handleRuntimeProperties();
+    assertTrue(Boolean.getBoolean("appengine.use.EE11"));
+    assertFalse(Boolean.getBoolean("appengine.use.EE8"));
+    assertFalse(Boolean.getBoolean("appengine.use.EE10"));
+    assertTrue(Boolean.getBoolean("appengine.use.jetty121"));
+  }
+
+  @Test
+  public void testJava17EE8() throws IOException {
+    createTempAppEngineWebXml(
+        """
+        <appengine-web-app xmlns="http://appengine.google.com/ns/1.0">
+            <runtime>java17</runtime>
+            <system-properties>
+                <property name="appengine.use.EE8" value="true"/>
+            </system-properties>
+        </appengine-web-app>
+        """);
+    new AppEngineWebXmlInitialParse(tempFile.toFile().getAbsolutePath()).handleRuntimeProperties();
+    assertTrue(Boolean.getBoolean("appengine.use.EE8"));
+    assertFalse(Boolean.getBoolean("appengine.use.EE10"));
+    assertFalse(Boolean.getBoolean("appengine.use.EE11"));
+    assertFalse(Boolean.getBoolean("appengine.use.jetty121"));
+  }
+
+  @Test
+  public void testJava25EE11() throws IOException {
+    createTempAppEngineWebXml(
+        """
+        <appengine-web-app xmlns="http://appengine.google.com/ns/1.0">
+            <runtime>java25</runtime>
+            <system-properties>
+                <property name="appengine.use.EE11" value="true"/>
+            </system-properties>
+        </appengine-web-app>
+        """);
+    new AppEngineWebXmlInitialParse(tempFile.toFile().getAbsolutePath()).handleRuntimeProperties();
+    assertTrue(Boolean.getBoolean("appengine.use.EE11"));
+    assertFalse(Boolean.getBoolean("appengine.use.EE8"));
+    assertFalse(Boolean.getBoolean("appengine.use.EE10"));
+    assertTrue(Boolean.getBoolean("appengine.use.jetty121"));
+  }
+
+  @Test
+  public void testSystemPropertyOverrideRuntime() throws IOException {
+    createTempAppEngineWebXml(
+        """
+        <appengine-web-app xmlns="http://appengine.google.com/ns/1.0">
+            <runtime>java17</runtime>
+        </appengine-web-app>
+        """);
+    System.setProperty("GAE_RUNTIME", "java21");
+    new AppEngineWebXmlInitialParse(tempFile.toFile().getAbsolutePath()).handleRuntimeProperties();
+    // Should behave like java21 (EE10=true)
+    assertTrue(Boolean.getBoolean("appengine.use.EE10"));
+  }
+
+  @Test
+  public void testSystemPropertyOverrideRuntimeWithWhitespace() throws IOException {
+    createTempAppEngineWebXml(
+        """
+        <appengine-web-app xmlns="http://appengine.google.com/ns/1.0">
+            <runtime>java17</runtime>
+        </appengine-web-app>
+        """);
+    System.setProperty("GAE_RUNTIME", " java21 ");
+    new AppEngineWebXmlInitialParse(tempFile.toFile().getAbsolutePath()).handleRuntimeProperties();
+    // Should behave like java21
+    assertTrue(Boolean.getBoolean("appengine.use.EE10"));
+  }
+
+  @Test
+  public void testLogEE8() throws IOException {
+    Logger logger = Logger.getLogger(AppEngineWebXmlInitialParse.class.getName());
+    TestHandler handler = new TestHandler();
+    logger.addHandler(handler);
+    try {
+      createTempAppEngineWebXml(
+          """
+          <appengine-web-app xmlns="http://appengine.google.com/ns/1.0">
+              <runtime>java17</runtime>
+              <system-properties>
+                  <property name="appengine.use.EE8" value="true"/>
+              </system-properties>
+          </appengine-web-app>
+          """);
+      new AppEngineWebXmlInitialParse(tempFile.toFile().getAbsolutePath()).handleRuntimeProperties();
+      boolean found = false;
+      for (LogRecord record : handler.records) {
+        if (record.getMessage().contains("appengine.use.EE8=true")) {
+          found = true;
+          break;
+        }
+      }
+      assertTrue("Log message should contain appengine.use.EE8=true", found);
+    } finally {
+      logger.removeHandler(handler);
+    }
+  }
+
+  @Test
+  public void testLogEE10() throws IOException {
+    Logger logger = Logger.getLogger(AppEngineWebXmlInitialParse.class.getName());
+    TestHandler handler = new TestHandler();
+    logger.addHandler(handler);
+    try {
+      createTempAppEngineWebXml(
+          """
+          <appengine-web-app xmlns="http://appengine.google.com/ns/1.0">
+              <runtime>java21</runtime>
+          </appengine-web-app>
+          """);
+      new AppEngineWebXmlInitialParse(tempFile.toFile().getAbsolutePath()).handleRuntimeProperties();
+      boolean found = false;
+      for (LogRecord record : handler.records) {
+        if (record.getMessage().contains("appengine.use.EE10=true")) {
+          found = true;
+          break;
+        }
+      }
+      assertTrue("Log message should contain appengine.use.EE10=true", found);
+    } finally {
+      logger.removeHandler(handler);
+    }
+  }
+
+  @Test
+  public void testLogEE11() throws IOException {
+    Logger logger = Logger.getLogger(AppEngineWebXmlInitialParse.class.getName());
+    TestHandler handler = new TestHandler();
+    logger.addHandler(handler);
+    try {
+      createTempAppEngineWebXml(
+          """
+          <appengine-web-app xmlns="http://appengine.google.com/ns/1.0">
+              <runtime>java25</runtime>
+          </appengine-web-app>
+          """);
+      new AppEngineWebXmlInitialParse(tempFile.toFile().getAbsolutePath()).handleRuntimeProperties();
+      boolean found = false;
+      for (LogRecord record : handler.records) {
+        if (record.getMessage().contains("appengine.use.EE11=true")) {
+          found = true;
+          break;
+        }
+      }
+      assertTrue("Log message should contain appengine.use.EE11=true", found);
+    } finally {
+      logger.removeHandler(handler);
+    }
+  }
+
+  @Test
+  public void testLogJetty121() throws IOException {
+    Logger logger = Logger.getLogger(AppEngineWebXmlInitialParse.class.getName());
+    TestHandler handler = new TestHandler();
+    logger.addHandler(handler);
+    try {
+      createTempAppEngineWebXml(
+          """
+          <appengine-web-app xmlns="http://appengine.google.com/ns/1.0">
+              <runtime>java25</runtime>
+          </appengine-web-app>
+          """);
+      new AppEngineWebXmlInitialParse(tempFile.toFile().getAbsolutePath()).handleRuntimeProperties();
+      boolean found = false;
+      for (LogRecord record : handler.records) {
+        if (record.getMessage().contains("appengine.use.jetty121=true")) {
+          found = true;
+          break;
+        }
+      }
+      assertTrue("Log message should contain appengine.use.jetty121=true", found);
+    } finally {
+      logger.removeHandler(handler);
+    }
+  }
+
+  @Test
+  public void testLogAllFlagsFalse() throws IOException {
+    Logger logger = Logger.getLogger(AppEngineWebXmlInitialParse.class.getName());
+    TestHandler handler = new TestHandler();
+    logger.addHandler(handler);
+    try {
+      createTempAppEngineWebXml(
+          """
+          <appengine-web-app xmlns="http://appengine.google.com/ns/1.0">
+              <runtime>java17</runtime>
+          </appengine-web-app>
+          """);
+      new AppEngineWebXmlInitialParse(tempFile.toFile().getAbsolutePath()).handleRuntimeProperties();
+      boolean found = false;
+      for (LogRecord record : handler.records) {
+        if (record.getMessage().contains(" no extra flag set")) {
+          found = true;
+          break;
+        }
+      }
+      assertTrue("Log message should contain ' no extra flag set'", found);
+    } finally {
+      logger.removeHandler(handler);
+    }
+  }
+
+  @Test
+  public void testLogNotAllFlagsFalseWhenFlagIsSet() throws IOException {
+    Logger logger = Logger.getLogger(AppEngineWebXmlInitialParse.class.getName());
+    TestHandler handler = new TestHandler();
+    logger.addHandler(handler);
+    try {
+      createTempAppEngineWebXml(
+          """
+          <appengine-web-app xmlns="http://appengine.google.com/ns/1.0">
+              <runtime>java21</runtime>
+          </appengine-web-app>
+          """);
+      new AppEngineWebXmlInitialParse(tempFile.toFile().getAbsolutePath()).handleRuntimeProperties();
+      boolean found = false;
+      for (LogRecord record : handler.records) {
+        if (record.getMessage().contains(" no extra flag set")) {
+          found = true;
+          break;
+        }
+      }
+      assertFalse("Log message should NOT contain ' no extra flag set'", found);
+    } finally {
+      logger.removeHandler(handler);
+    }
+  }
+
+  @Test
+  public void testLogExperimentJetty12() throws IOException {
+    Logger logger = Logger.getLogger(AppEngineWebXmlInitialParse.class.getName());
+    TestHandler handler = new TestHandler();
+    logger.addHandler(handler);
+    try {
+      createTempAppEngineWebXml(
+          """
+          <appengine-web-app xmlns="http://appengine.google.com/ns/1.0">
+              <runtime>java17</runtime>
+          </appengine-web-app>
+          """);
+      AppEngineWebXmlInitialParse parser =
+          new AppEngineWebXmlInitialParse(tempFile.toFile().getAbsolutePath());
+      parser.setEnvProvider(
+          key -> {
+            if (Objects.equals(key, "EXPERIMENT_ENABLE_JETTY12_FOR_JAVA")) {
+              return "true";
+            }
+            return null;
+          });
+      parser.handleRuntimeProperties();
+      boolean found = false;
+      for (LogRecord record : handler.records) {
+        if (record.getMessage().contains("with Jetty 12")) {
+          found = true;
+          break;
+        }
+      }
+      assertTrue("Log message should contain with Jetty 12", found);
+    } finally {
+      logger.removeHandler(handler);
+    }
+  }
+
+  @Test
+  public void testLogExperimentHttpConnector() throws IOException {
+    Logger logger = Logger.getLogger(AppEngineWebXmlInitialParse.class.getName());
+    TestHandler handler = new TestHandler();
+    logger.addHandler(handler);
+    try {
+      createTempAppEngineWebXml(
+          """
+          <appengine-web-app xmlns="http://appengine.google.com/ns/1.0">
+              <runtime>java17</runtime>
+          </appengine-web-app>
+          """);
+      AppEngineWebXmlInitialParse parser =
+          new AppEngineWebXmlInitialParse(tempFile.toFile().getAbsolutePath());
+      parser.setEnvProvider(
+          key -> {
+            if (Objects.equals(key, "EXPERIMENT_ENABLE_HTTP_CONNECTOR_FOR_JAVA")) {
+              return "true";
+            }
+            return null;
+          });
+      parser.handleRuntimeProperties();
+      boolean found = false;
+      for (LogRecord record : handler.records) {
+        if (record.getMessage().contains("with HTTP Connector")) {
+          found = true;
+          break;
+        }
+      }
+      assertTrue("Log message should contain with HTTP Connector", found);
+    } finally {
+      logger.removeHandler(handler);
+    }
+  }
+
+  private static class TestHandler extends Handler {
+    final List<LogRecord> records = new ArrayList<>();
+
+    @Override
+    public void publish(LogRecord record) {
+      records.add(record);
+    }
+
+    @Override
+    public void flush() {}
+
+    @Override
+    public void close() throws SecurityException {}
   }
 }
