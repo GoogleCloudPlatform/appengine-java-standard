@@ -817,7 +817,8 @@ public class RequestManager implements RequestThreadManager {
     long[] deadlockedThreadsIds = THREAD_MX.findDeadlockedThreads();
     if (deadlockedThreadsIds != null) {
       StringBuilder builder = new StringBuilder();
-      builder.append("Detected a deadlock across " + deadlockedThreadsIds.length + " threads:");
+      builder.append("Detected a deadlock across ").append(deadlockedThreadsIds.length)
+          .append(" threads:");
       for (ThreadInfo info :
           THREAD_MX.getThreadInfo(deadlockedThreadsIds, MAXIMUM_DEADLOCK_STACK_LENGTH)) {
         builder.append(info);
@@ -839,7 +840,8 @@ public class RequestManager implements RequestThreadManager {
   private void logAllStackTraces() {
     long[] allthreadIds = THREAD_MX.getAllThreadIds();
     StringBuilder builder = new StringBuilder();
-    builder.append("Dumping thread info for all " + allthreadIds.length + " runtime threads:");
+    builder.append("Dumping thread info for all ").append(allthreadIds.length)
+        .append(" runtime threads:");
     for (ThreadInfo info : THREAD_MX.getThreadInfo(allthreadIds, MAXIMUM_DEADLOCK_STACK_LENGTH)) {
       builder.append(info);
       builder.append("\n");
