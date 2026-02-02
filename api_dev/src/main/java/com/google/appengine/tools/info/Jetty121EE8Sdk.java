@@ -233,7 +233,7 @@ class Jetty121EE8Sdk extends AppengineSdk {
     sharedLibs.add(new File(sdkRoot, "lib/shared/jetty12/appengine-local-runtime-shared.jar"));
     File jettyHomeLib = new File(sdkRoot, JETTY121_HOME_LIB_PATH);
 
-    sharedLibs.add(new File(jettyHomeLib, "jetty-servlet-api-4.0.8.jar")); // this is javax.servlet
+    sharedLibs.add(new File(jettyHomeLib, "jetty-servlet-api-4.0.9.jar")); // this is javax.servlet
 
     // We want to match this file: "jetty-util-9.3.8.v20160314.jar"
     // but without hardcoding the Jetty version which is changing from time to time.
