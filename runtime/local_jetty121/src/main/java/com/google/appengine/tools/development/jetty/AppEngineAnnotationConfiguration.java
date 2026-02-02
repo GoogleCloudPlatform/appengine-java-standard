@@ -31,6 +31,9 @@ public class AppEngineAnnotationConfiguration extends AnnotationConfiguration {
   @Override
   public List<ServletContainerInitializer> getNonExcludedInitializers(WebAppContext context)
       throws Exception {
+    // TODO: remove this line when https://github.com/jetty/jetty.project/issues/14431 is resolved.
+    context.getMetaData().orderFragments();
+
     ArrayList<ServletContainerInitializer> nonExcludedInitializers =
         new ArrayList<>(super.getNonExcludedInitializers(context));
     for (ServletContainerInitializer sci : nonExcludedInitializers) {
