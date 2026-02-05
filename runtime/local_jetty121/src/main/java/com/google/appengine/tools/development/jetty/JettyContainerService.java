@@ -357,8 +357,6 @@ public class JettyContainerService extends AbstractContainerService implements C
     } else {
       server = new Server();
     }
-server.setDumpAfterStart(true);
-
     try {
       NetworkTrafficServerConnector connector =
           new NetworkTrafficServerConnector(
