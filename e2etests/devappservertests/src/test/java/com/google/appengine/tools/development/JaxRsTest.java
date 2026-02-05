@@ -62,7 +62,7 @@ return Arrays.asList(
     // App Engine Memcache access.
     executeHttpGet(
         "/hello",
-        "hello\n",
+        "hello",
         RESPONSE_200);
 
   }
