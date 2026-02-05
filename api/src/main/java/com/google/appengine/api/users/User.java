@@ -171,15 +171,13 @@ public final class User implements Serializable, Comparable<User> {
     // We're intentionally ignoring userId here because it is not
     // guaranteed to be present.  This is consistent with the Python
     // API.
-    if (!(object instanceof User)) {
-      return false;
+    if (object instanceof User user) {
+      if ((federatedIdentity != null) && !federatedIdentity.isEmpty()) {
+        return user.federatedIdentity.equals(federatedIdentity);
+      }
+      return user.email.equals(email) && user.authDomain.equals(authDomain);
     }
-
-    User user = (User) object;
-    if ((federatedIdentity != null) && (!federatedIdentity.isEmpty())) {
-      return user.federatedIdentity.equals(federatedIdentity);
-    }
-    return user.email.equals(email) && user.authDomain.equals(authDomain);
+    return false;
   }
 
   @Override

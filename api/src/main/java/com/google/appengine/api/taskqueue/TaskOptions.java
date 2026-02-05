@@ -162,13 +162,10 @@ public final class TaskOptions implements Serializable {
         return true;
       }
 
-      if (!(o instanceof StringValueParam)) {
-        return false;
+      if (o instanceof StringValueParam that) {
+        return value.equals(that.value) && name.equals(that.name);
       }
-
-      StringValueParam that = (StringValueParam) o;
-
-      return value.equals(that.value) && name.equals(that.name);
+      return false;
     }
 
     @Override
@@ -202,13 +199,10 @@ public final class TaskOptions implements Serializable {
         return true;
       }
 
-      if (!(o instanceof ByteArrayValueParam)) {
-        return false;
+      if (o instanceof ByteArrayValueParam that) {
+        return Arrays.equals(value, that.value) && name.equals(that.name);
       }
-
-      ByteArrayValueParam that = (ByteArrayValueParam) o;
-
-      return Arrays.equals(value, that.value) && name.equals(that.name);
+      return false;
     }
 
     /**
@@ -469,11 +463,11 @@ public final class TaskOptions implements Serializable {
   public Map<String, List<String>> getStringParams() {
     LinkedHashMap<String, List<String>> stringParams = new LinkedHashMap<>();
     for (Param param : params) {
-      if (param instanceof StringValueParam) {
+      if (param instanceof StringValueParam stringParam) {
         if (!stringParams.containsKey(param.name)) {
           stringParams.put(param.name, new ArrayList<String>());
         }
-        stringParams.get(param.name).add(((StringValueParam) param).value);
+        stringParams.get(param.name).add(stringParam.value);
       }
     }
     return stringParams;
@@ -486,11 +480,11 @@ public final class TaskOptions implements Serializable {
   public Map<String, List<byte[]>> getByteArrayParams() {
     LinkedHashMap<String, List<byte[]>> byteArrayParams = new LinkedHashMap<>();
     for (Param param : params) {
-      if (param instanceof ByteArrayValueParam) {
+      if (param instanceof ByteArrayValueParam byteArrayParam) {
         if (!byteArrayParams.containsKey(param.name)) {
           byteArrayParams.put(param.name, new ArrayList<byte[]>());
         }
-        byte[] value = ((ByteArrayValueParam) param).value;
+        byte[] value = byteArrayParam.value;
         byteArrayParams.get(param.name).add(Arrays.copyOf(value, value.length));
       }
     }

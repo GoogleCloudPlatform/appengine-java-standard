@@ -153,7 +153,6 @@ public final class RequestRunnerTest {
             .setUpResponse(upResponse)
             .setRequestManager(requestManager)
             .setCoordinator(coordinator)
-            .setCompressResponse(true)
             .setUpRequestHandler(servletEngine)
             .build();
 
@@ -205,7 +204,6 @@ public final class RequestRunnerTest {
             .setUpResponse(upResponse)
             .setRequestManager(requestManager)
             .setCoordinator(coordinator)
-            .setCompressResponse(true)
             .setUpRequestHandler(servletEngine)
             .build();
 
@@ -323,7 +321,6 @@ public final class RequestRunnerTest {
                       .setUpResponse(upResponse)
                       .setRequestManager(requestManager)
                       .setCoordinator(coordinator)
-                      .setCompressResponse(true)
                       .setUpRequestHandler(servletEngine)
                       .build();
 

@@ -27,9 +27,6 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Map;
-import javax.servlet.FilterChain;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import junit.framework.TestCase;
 
@@ -87,21 +84,18 @@ public class ParseBlobUploadFilterTest extends TestCase {
         .doFilter(
             req,
             resp,
-            new FilterChain() {
-              @Override
-              public void doFilter(ServletRequest request, ServletResponse response) {
-                assertEquals("Example string.", request.getParameter("string"));
-                assertEquals(null, request.getParameter("image"));
+            (request, unusedResponse) -> {
+              assertEquals("Example string.", request.getParameter("string"));
+              assertEquals(null, request.getParameter("image"));
 
-                BlobstoreService blobstoreService = BlobstoreServiceFactory.getBlobstoreService();
-                Map<String, List<BlobKey>> blobs =
-                    blobstoreService.getUploads((HttpServletRequest) request);
-                assertEquals(1, blobs.size());
-                List<BlobKey> keys = blobs.get("upload-0");
-                assertEquals(2, keys.size());
-                assertEquals(new BlobKey("blob-0"), keys.get(0));
-                assertEquals(new BlobKey("blob-1"), keys.get(1));
-              }
+              BlobstoreService blobstoreService = BlobstoreServiceFactory.getBlobstoreService();
+              Map<String, List<BlobKey>> blobs =
+                  blobstoreService.getUploads((HttpServletRequest) request);
+              assertEquals(1, blobs.size());
+              List<BlobKey> keys = blobs.get("upload-0");
+              assertEquals(2, keys.size());
+              assertEquals(new BlobKey("blob-0"), keys.get(0));
+              assertEquals(new BlobKey("blob-1"), keys.get(1));
             });
   }
 
@@ -117,44 +111,41 @@ public class ParseBlobUploadFilterTest extends TestCase {
         .doFilter(
             req,
             resp,
-            new FilterChain() {
-              @Override
-              public void doFilter(ServletRequest request, ServletResponse response) {
-                assertEquals("Example string.", request.getParameter("string"));
-                assertEquals(null, request.getParameter("image"));
+            (request, unusedResponse) -> {
+              assertEquals("Example string.", request.getParameter("string"));
+              assertEquals(null, request.getParameter("image"));
 
-                BlobstoreService blobstoreService = BlobstoreServiceFactory.getBlobstoreService();
-                Map<String, List<BlobInfo>> blobs =
-                    blobstoreService.getBlobInfos((HttpServletRequest) request);
-                assertEquals(1, blobs.size());
-                List<BlobInfo> infos = blobs.get("upload-0");
-                assertEquals(2, infos.size());
+              BlobstoreService blobstoreService = BlobstoreServiceFactory.getBlobstoreService();
+              Map<String, List<BlobInfo>> blobs =
+                  blobstoreService.getBlobInfos((HttpServletRequest) request);
+              assertEquals(1, blobs.size());
+              List<BlobInfo> infos = blobs.get("upload-0");
+              assertEquals(2, infos.size());
 
-                @SuppressWarnings("JavaUtilDate")
-                Date expectedCreationDate =
-                    new Date(
-                        new GregorianCalendar(2008, 11 - 1, 12, 10, 40, 00).getTimeInMillis() + 20);
-                BlobInfo expected1 =
-                    new BlobInfo(
-                        new BlobKey("blob-0"),
-                        "image/jpeg",
-                        expectedCreationDate,
-                        "file-0.jpg",
-                        5,
-                        "md5-hash",
-                        "/bucket_name/some_random_filename1");
-                BlobInfo expected2 =
-                    new BlobInfo(
-                        new BlobKey("blob-1"),
-                        "image/jpeg",
-                        expectedCreationDate,
-                        "file-1.jpg",
-                        5,
-                        "md5-hash");
+              @SuppressWarnings("JavaUtilDate")
+              Date expectedCreationDate =
+                  new Date(
+                      new GregorianCalendar(2008, 11 - 1, 12, 10, 40, 00).getTimeInMillis() + 20);
+              BlobInfo expected1 =
+                  new BlobInfo(
+                      new BlobKey("blob-0"),
+                      "image/jpeg",
+                      expectedCreationDate,
+                      "file-0.jpg",
+                      5,
+                      "md5-hash",
+                      "/bucket_name/some_random_filename1");
+              BlobInfo expected2 =
+                  new BlobInfo(
+                      new BlobKey("blob-1"),
+                      "image/jpeg",
+                      expectedCreationDate,
+                      "file-1.jpg",
+                      5,
+                      "md5-hash");
 
-                assertEquals(expected1, infos.get(0));
-                assertEquals(expected2, infos.get(1));
-              }
+              assertEquals(expected1, infos.get(0));
+              assertEquals(expected2, infos.get(1));
             });
   }
 
@@ -170,38 +161,35 @@ public class ParseBlobUploadFilterTest extends TestCase {
         .doFilter(
             req,
             resp,
-            new FilterChain() {
-              @Override
-              public void doFilter(ServletRequest request, ServletResponse response) {
-                assertEquals("Example string.", request.getParameter("string"));
-                assertEquals(null, request.getParameter("image"));
+            (request, unusedResponse) -> {
+              assertEquals("Example string.", request.getParameter("string"));
+              assertEquals(null, request.getParameter("image"));
 
-                BlobstoreService blobstoreService = BlobstoreServiceFactory.getBlobstoreService();
-                Map<String, List<FileInfo>> files =
-                    blobstoreService.getFileInfos((HttpServletRequest) request);
-                assertEquals(1, files.size());
-                List<FileInfo> infos = files.get("upload-0");
-                assertEquals(2, infos.size());
+              BlobstoreService blobstoreService = BlobstoreServiceFactory.getBlobstoreService();
+              Map<String, List<FileInfo>> files =
+                  blobstoreService.getFileInfos((HttpServletRequest) request);
+              assertEquals(1, files.size());
+              List<FileInfo> infos = files.get("upload-0");
+              assertEquals(2, infos.size());
 
-                @SuppressWarnings("JavaUtilDate")
-                Date expectedCreationDate =
-                    new Date(
-                        new GregorianCalendar(2008, 11 - 1, 12, 10, 40, 00).getTimeInMillis() + 20);
-                FileInfo expected1 =
-                    new FileInfo(
-                        "image/jpeg",
-                        expectedCreationDate,
-                        "file-0.jpg",
-                        5,
-                        "md5-hash",
-                        "/bucket_name/some_random_filename1");
-                FileInfo expected2 =
-                    new FileInfo(
-                        "image/jpeg", expectedCreationDate, "file-1.jpg", 5, "md5-hash", null);
+              @SuppressWarnings("JavaUtilDate")
+              Date expectedCreationDate =
+                  new Date(
+                      new GregorianCalendar(2008, 11 - 1, 12, 10, 40, 00).getTimeInMillis() + 20);
+              FileInfo expected1 =
+                  new FileInfo(
+                      "image/jpeg",
+                      expectedCreationDate,
+                      "file-0.jpg",
+                      5,
+                      "md5-hash",
+                      "/bucket_name/some_random_filename1");
+              FileInfo expected2 =
+                  new FileInfo(
+                      "image/jpeg", expectedCreationDate, "file-1.jpg", 5, "md5-hash", null);
 
-                assertEquals(expected1, infos.get(0));
-                assertEquals(expected2, infos.get(1));
-              }
+              assertEquals(expected1, infos.get(0));
+              assertEquals(expected2, infos.get(1));
             });
   }
 }

@@ -22,6 +22,7 @@ import com.google.apphosting.api.search.DocumentPb;
 import com.google.apphosting.api.search.DocumentPb.Document.OrderIdSource;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.SetMultimap;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -64,10 +65,10 @@ import org.jspecify.annotations.Nullable;
  *
  *    for (Field field : document.getFields()) {
  *      switch (field.getType()) {
- *        case TEXT: use(field.getText()); break;
- *        case HTML: use(field.getHtml()); break;
- *        case ATOM: use(field.getAtom()); break;
- *        case DATE: use(field.getDate()); break;
+ *        case TEXT -> use(field.getText());
+ *        case HTML -> use(field.getHtml());
+ *        case ATOM -> use(field.getAtom());
+ *        case DATE -> use(field.getDate());
  *      }
  *    }
  * }</pre>
@@ -78,8 +79,8 @@ import org.jspecify.annotations.Nullable;
  *
  *    for (Facet facet : document.getFacets()) {
  *      switch (facet.getType()) {
- *        case ATOM:   use(facet.getAtom()); break;
- *        case NUMBER: use(facet.getNumber()); break;
+ *        case ATOM -> use(facet.getAtom());
+ *        case NUMBER -> use(facet.getNumber());
  *      }
  *    }
  * }</pre>
@@ -419,11 +420,10 @@ public class Document implements Serializable {
     if (this == object) {
       return true;
     }
-    if (!(object instanceof Document)) {
-      return false;
+    if (object instanceof Document doc) {
+      return documentId.equals(doc.getId());
     }
-    Document doc = (Document) object;
-    return documentId.equals(doc.getId());
+    return false;
   }
 
   /**
@@ -517,6 +517,7 @@ public class Document implements Serializable {
    * @throws IllegalArgumentException if any parts of the document are invalid
    * or the document protocol buffer is too large
    */
+  @SuppressWarnings("UnsafeLocaleUsage")
   DocumentPb.Document copyToProtocolBuffer() {
     DocumentPb.Document.Builder docBuilder = DocumentPb.Document.newBuilder();
     if (documentId != null) {
@@ -573,7 +574,7 @@ public class Document implements Serializable {
         return false;
       }
     }
-    if (!getFacets().equals(other.getFacets())) {
+    if (!Iterables.elementsEqual(getFacets(), other.getFacets())) {
       return false;
     }
     if (locale == null) {

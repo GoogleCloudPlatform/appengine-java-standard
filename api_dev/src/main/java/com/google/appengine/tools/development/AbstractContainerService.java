@@ -36,7 +36,6 @@ import java.net.URL;
 import java.net.UnknownHostException;
 import java.security.Permissions;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.logging.Level;
@@ -118,13 +117,7 @@ public abstract class AbstractContainerService implements ContainerService {
   // mapping is available. The advantage to this approach is that it avoids changing
   // the public ContainerService interface and hence avoids exposing our management
   // of port mappings to users.
-  protected PortMappingProvider portMappingProvider =
-      new PortMappingProvider() {
-        @Override
-        public Map<String, String> getPortMapping() {
-          return Collections.emptyMap();
-        }
-      };
+  protected PortMappingProvider portMappingProvider = () -> ImmutableMap.of();
 
   /**
    * Latch that will open once the module instance is fully initialized. TODO: This is used by some

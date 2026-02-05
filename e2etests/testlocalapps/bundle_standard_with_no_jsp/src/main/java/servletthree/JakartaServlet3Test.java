@@ -47,11 +47,6 @@ public class JakartaServlet3Test extends HttpServlet {
       String prefix = getInitParameter("prefix");
       String suffix = getInitParameter("suffix");
       writer.println(prefix + req.getRequestURI() + suffix);
-      // Check we are not running with a security manager:
-      SecurityManager security = System.getSecurityManager();
-      if (security != null) {
-        throw new RuntimeException("Security manager detected.");
-      }
     }
   }
 }

@@ -82,9 +82,7 @@ public final class JsonLogHandler extends LogHandler {
 
   private static void appendSpanId(StringBuilder json) {
     Environment environment = ApiProxy.getCurrentEnvironment();
-    if (environment instanceof ApiProxy.EnvironmentWithTrace) {
-      ApiProxy.EnvironmentWithTrace environmentWithTrace =
-          (ApiProxy.EnvironmentWithTrace) environment;
+    if (environment instanceof ApiProxy.EnvironmentWithTrace environmentWithTrace) {
       environmentWithTrace
           .getSpanId()
           .ifPresent(id -> json.append(SPAN_KEY).append("\"").append(id).append("\", "));
@@ -113,9 +111,7 @@ public final class JsonLogHandler extends LogHandler {
     }
 
     Environment environment = ApiProxy.getCurrentEnvironment();
-    if (environment instanceof ApiProxy.EnvironmentWithTrace) {
-      ApiProxy.EnvironmentWithTrace environmentWithTrace =
-          (ApiProxy.EnvironmentWithTrace) environment;
+    if (environment instanceof ApiProxy.EnvironmentWithTrace environmentWithTrace) {
       environmentWithTrace
           .getTraceId()
           .ifPresent(
@@ -135,23 +131,16 @@ public final class JsonLogHandler extends LogHandler {
 
   private static String levelToSeverity(Level level) {
     int intLevel = (level == null) ? 0 : level.intValue();
-    switch (intLevel) {
-      case 300: // FINEST
-      case 400: // FINER
-      case 500: // FINE
-        return DEBUG;
-      case 700: // CONFIG
-      case 800: // INFO
-        // Java's CONFIG is lower than its INFO, while Stackdriver's NOTICE is greater than its
-        // INFO. So despite the similarity, we don't try to use NOTICE for CONFIG.
-        return INFO;
-      case 900: // WARNING
-        return WARNING;
-      case 1000: // SEVERE
-        return ERROR;
-      default:
-        return DEFAULT;
-    }
+    return switch (intLevel) {
+      case 300, 400, 500 -> DEBUG; // FINEST, FINER, FINE
+      case 700, 800 ->
+          // Java's CONFIG is lower than its INFO, while Stackdriver's NOTICE is greater than its
+          // INFO. So despite the similarity, we don't try to use NOTICE for CONFIG.
+          INFO; // CONFIG, INFO
+      case 900 -> WARNING; // WARNING
+      case 1000 -> ERROR; // SEVERE
+      default -> DEFAULT;
+    };
   }
 
   @Override

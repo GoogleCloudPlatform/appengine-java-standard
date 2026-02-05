@@ -39,10 +39,5 @@ public interface DatastoreConfig {
    */
   @Deprecated
   DatastoreConfig DEFAULT =
-      new DatastoreConfig() {
-        @Override
-        public ImplicitTransactionManagementPolicy getImplicitTransactionManagementPolicy() {
-          return ImplicitTransactionManagementPolicy.NONE;
-        }
-      };
+      () -> ImplicitTransactionManagementPolicy.NONE;
 }

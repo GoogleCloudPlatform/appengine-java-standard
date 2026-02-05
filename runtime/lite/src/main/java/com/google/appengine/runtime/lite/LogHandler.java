@@ -89,8 +89,7 @@ public class LogHandler extends LoggingHandler {
 
     // Get trace context from the special App Engine SDK location:
     ApiProxy.Environment environment = ApiProxy.getCurrentEnvironment();
-    if (environment instanceof ApiProxy.EnvironmentWithTrace) {
-      ApiProxy.EnvironmentWithTrace environmentImpl = (ApiProxy.EnvironmentWithTrace) environment;
+    if (environment instanceof ApiProxy.EnvironmentWithTrace environmentImpl) {
       environmentImpl
           .getTraceId()
           .ifPresent(x -> builder.setTrace("projects/" + PROJECT_ID + "/traces/" + x));

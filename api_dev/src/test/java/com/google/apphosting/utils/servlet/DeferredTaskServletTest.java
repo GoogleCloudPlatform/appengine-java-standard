@@ -74,51 +74,39 @@ public class DeferredTaskServletTest {
 
   private static void initializeTasks(DeferredTaskServletTest testCase) {
     testCase.deferredSuccess =
-        new DeferredTask() {
-          @Override
-          public void run() {
-            ++getState().runCount;
-            assertEquals(getState().req, DeferredTaskContext.getCurrentRequest());
-            assertEquals(getState().resp, DeferredTaskContext.getCurrentResponse());
-            assertEquals(getState().servlet, DeferredTaskContext.getCurrentServlet());
-          }
+        () -> {
+          ++getState().runCount;
+          assertEquals(getState().req, DeferredTaskContext.getCurrentRequest());
+          assertEquals(getState().resp, DeferredTaskContext.getCurrentResponse());
+          assertEquals(getState().servlet, DeferredTaskContext.getCurrentServlet());
         };
 
     testCase.deferredFail =
-        new DeferredTask() {
-          @Override
-          public void run() {
-            ++getState().runCount;
-            assertEquals(getState().req, DeferredTaskContext.getCurrentRequest());
-            assertEquals(getState().resp, DeferredTaskContext.getCurrentResponse());
-            assertEquals(getState().servlet, DeferredTaskContext.getCurrentServlet());
-            throw new RuntimeException();
-          }
+        () -> {
+          ++getState().runCount;
+          assertEquals(getState().req, DeferredTaskContext.getCurrentRequest());
+          assertEquals(getState().resp, DeferredTaskContext.getCurrentResponse());
+          assertEquals(getState().servlet, DeferredTaskContext.getCurrentServlet());
+          throw new RuntimeException();
         };
 
     testCase.deferredMarkForRetry =
-        new DeferredTask() {
-          @Override
-          public void run() {
-            ++getState().runCount;
-            assertEquals(getState().req, DeferredTaskContext.getCurrentRequest());
-            assertEquals(getState().resp, DeferredTaskContext.getCurrentResponse());
-            assertEquals(getState().servlet, DeferredTaskContext.getCurrentServlet());
-            DeferredTaskContext.markForRetry();
-          }
+        () -> {
+          ++getState().runCount;
+          assertEquals(getState().req, DeferredTaskContext.getCurrentRequest());
+          assertEquals(getState().resp, DeferredTaskContext.getCurrentResponse());
+          assertEquals(getState().servlet, DeferredTaskContext.getCurrentServlet());
+          DeferredTaskContext.markForRetry();
         };
 
     testCase.deferredFailDoNotRetry =
-        new DeferredTask() {
-          @Override
-          public void run() {
-            ++getState().runCount;
-            DeferredTaskContext.setDoNotRetry(true);
-            assertEquals(getState().req, DeferredTaskContext.getCurrentRequest());
-            assertEquals(getState().resp, DeferredTaskContext.getCurrentResponse());
-            assertEquals(getState().servlet, DeferredTaskContext.getCurrentServlet());
-            throw new RuntimeException();
-          }
+        () -> {
+          ++getState().runCount;
+          DeferredTaskContext.setDoNotRetry(true);
+          assertEquals(getState().req, DeferredTaskContext.getCurrentRequest());
+          assertEquals(getState().resp, DeferredTaskContext.getCurrentResponse());
+          assertEquals(getState().servlet, DeferredTaskContext.getCurrentServlet());
+          throw new RuntimeException();
         };
   }
 

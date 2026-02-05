@@ -706,6 +706,7 @@ public class ApiProxy {
    * this interface.  However, callers should not currently assume
    * that all RPCs will.
    */
+  @SuppressWarnings("ShouldNotSubclass")
   public interface ApiResultFuture<T> extends Future<T> {
     /**
      * Returns the amount of CPU time consumed across any backend

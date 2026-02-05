@@ -69,22 +69,24 @@ public class BackendsXml {
     if (!backends.isEmpty()) {
       builder.append("backends:\n");
       for (BackendsXml.Entry entry : backends) {
-        builder.append("- name: " + entry.getName() + "\n");
+        builder.append("- name: ").append(entry.getName()).append("\n");
         if (entry.getInstances() != null) {
-          builder.append("  instances: " + entry.getInstances() + "\n");
+          builder.append("  instances: ").append(entry.getInstances()).append("\n");
         }
         if (entry.getInstanceClass() != null) {
-          builder.append("  class: " + entry.getInstanceClass() + "\n");
+          builder.append("  class: ").append(entry.getInstanceClass()).append("\n");
         }
         if (entry.getMaxConcurrentRequests() != null) {
-          builder.append("  max_concurrent_requests: " + entry.getMaxConcurrentRequests() + "\n");
+          builder.append("  max_concurrent_requests: ").append(entry.getMaxConcurrentRequests())
+              .append("\n");
         }
         List<String> options = new ArrayList<String>();
         for (BackendsXml.Option option : entry.getOptions()) {
           options.add(option.getYamlValue());
         }
         if (!options.isEmpty()) {
-          builder.append("  options: " + Joiner.on(", ").useForNull("null").join(options) + "\n");
+          builder.append("  options: ").append(Joiner.on(", ").useForNull("null").join(options))
+              .append("\n");
         }
       }
     }
@@ -239,19 +241,19 @@ public class BackendsXml {
       builder.append("Backend: ");
       builder.append(name);
       if (instances != null) {
-        builder.append(", instances = " + instances);
+        builder.append(", instances = ").append(instances);
       }
       if (instanceClass != null) {
-        builder.append(", instanceClass = " + instanceClass);
+        builder.append(", instanceClass = ").append(instanceClass);
       }
       if (maxConcurrentRequests != null) {
-        builder.append(", maxConcurrentRequests = " + maxConcurrentRequests);
+        builder.append(", maxConcurrentRequests = ").append(maxConcurrentRequests);
       }
       if (options != null) {
-        builder.append(", options = " + options);
+        builder.append(", options = ").append(options);
       }
       if (state != null) {
-        builder.append(", state = " + state);
+        builder.append(", state = ").append(state);
       }
       return builder.toString();
     }

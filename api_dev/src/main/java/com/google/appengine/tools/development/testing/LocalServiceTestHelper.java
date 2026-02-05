@@ -80,12 +80,7 @@ public class LocalServiceTestHelper {
      * The Timer instance used by local services if no override is provided via
      * {@link LocalServiceTestHelper#setRemainingMillisTimer(RequestMillisTimer)}.
      */
-    RequestMillisTimer DEFAULT = new RequestMillisTimer() {
-      @Override
-      public long getRemainingMillis() {
-        return Long.MAX_VALUE;
-      }
-    };
+    RequestMillisTimer DEFAULT = () -> Long.MAX_VALUE;
   }
 
   // Keep these in sync with other occurrences of
@@ -142,12 +137,12 @@ public class LocalServiceTestHelper {
     ImmutableList.Builder<LocalServiceTestConfig> builder = ImmutableList.builder();
     LocalModulesServiceTestConfig configuredModulesServiceTestConfig = null;
     for (LocalServiceTestConfig config : configs) {
-      if (config instanceof LocalModulesServiceTestConfig) {
+      if (config instanceof LocalModulesServiceTestConfig localModulesServiceTestConfig) {
         if (configuredModulesServiceTestConfig != null) {
           throw new IllegalArgumentException(
               "Multiple LocalModulesServiceTestConfig instances provided");
         }
-        configuredModulesServiceTestConfig = (LocalModulesServiceTestConfig) config;
+        configuredModulesServiceTestConfig = localModulesServiceTestConfig;
       } else {
         builder.add(config);
       }
@@ -201,8 +196,10 @@ public class LocalServiceTestHelper {
    */
   public LocalServiceTestHelper setEnvInstance(String envInstance) {
     int intValue = Integer.parseInt(envInstance);
-    Preconditions.checkArgument(intValue >= LocalModulesServiceTestConfig.MAIN_INSTANCE,
-        "envInstanceId must be >= -1 and envInstanceId=" + envInstance);
+    Preconditions.checkArgument(
+        intValue >= LocalModulesServiceTestConfig.MAIN_INSTANCE,
+        "envInstanceId must be >= -1 and envInstanceId=%s",
+        envInstance);
     this.envInstance = intValue;
     return this;
   }

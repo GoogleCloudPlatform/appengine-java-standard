@@ -574,11 +574,9 @@ public final class Query implements Serializable {
     if (this == o) {
       return true;
     }
-    if (o == null || getClass() != o.getClass()) {
+    if (!(o instanceof Query query)) {
       return false;
     }
-
-    Query query = (Query) o;
 
     if (keysOnly != query.keysOnly) {
       return false;
@@ -739,11 +737,9 @@ public final class Query implements Serializable {
       if (this == o) {
         return true;
       }
-      if (o == null || getClass() != o.getClass()) {
+      if (!(o instanceof SortPredicate that)) {
         return false;
       }
-
-      SortPredicate that = (SortPredicate) o;
 
       if (direction != that.direction) {
         return false;
@@ -864,10 +860,9 @@ public final class Query implements Serializable {
       if (this == obj) {
         return true;
       }
-      if (!(obj instanceof CompositeFilter)) {
+      if (!(obj instanceof CompositeFilter other)) {
         return false;
       }
-      CompositeFilter other = (CompositeFilter) obj;
       if (operator != other.operator) {
         return false;
       }
@@ -942,11 +937,9 @@ public final class Query implements Serializable {
       if (this == o) {
         return true;
       }
-      if (o == null || getClass() != o.getClass()) {
+      if (!(o instanceof FilterPredicate that)) {
         return false;
       }
-
-      FilterPredicate that = (FilterPredicate) o;
 
       if (operator != that.operator) {
         return false;
@@ -1007,11 +1000,9 @@ public final class Query implements Serializable {
       if (this == o) {
         return true;
       }
-      if (o == null || getClass() != o.getClass()) {
+      if (!(o instanceof StContainsFilter that)) {
         return false;
       }
-
-      StContainsFilter that = (StContainsFilter) o;
 
       if (!propertyName.equals(that.propertyName)) {
         return false;
@@ -1034,7 +1025,7 @@ public final class Query implements Serializable {
 
     @Override
     public String toString() {
-      return String.format("StContainsFilter [%s: %s]", propertyName, region);
+      return "StContainsFilter [%s: %s]".formatted(propertyName, region);
     }
   }
 
@@ -1096,11 +1087,9 @@ public final class Query implements Serializable {
           return true;
         }
 
-        if (o == null || getClass() != o.getClass()) {
+        if (!(o instanceof Circle other)) {
           return false;
         }
-
-        Circle other = (Circle) o;
 
         if (!center.equals(other.center)) {
           return false;
@@ -1119,7 +1108,7 @@ public final class Query implements Serializable {
 
       @Override
       public String toString() {
-        return String.format("Circle [(%s),%f]", center, radius);
+        return "Circle [(%s),%f]".formatted(center, radius);
       }
     }
 
@@ -1173,11 +1162,9 @@ public final class Query implements Serializable {
           return true;
         }
 
-        if (o == null || getClass() != o.getClass()) {
+        if (!(o instanceof Rectangle other)) {
           return false;
         }
-
-        Rectangle other = (Rectangle) o;
 
         if (!southwest.equals(other.southwest)) {
           return false;
@@ -1196,7 +1183,7 @@ public final class Query implements Serializable {
 
       @Override
       public String toString() {
-        return String.format("Rectangle [(%s),(%s)]", southwest, northeast);
+        return "Rectangle [(%s),(%s)]".formatted(southwest, northeast);
       }
     }
   }

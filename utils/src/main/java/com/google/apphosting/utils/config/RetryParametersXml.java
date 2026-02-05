@@ -55,14 +55,14 @@ public class RetryParametersXml {
     }
 
     static AgeLimitUnit valueOf(char unit) {
-      switch (unit) {
-        case 's' : return SECOND;
-        case 'm' : return MINUTE;
-        case 'h' : return HOUR;
-        case 'd' : return DAY;
-      }
-      throw new AppEngineConfigException(
-          "Invalid age limit '" + unit + "' was specified.");
+      return switch (unit) {
+        case 's' -> SECOND;
+        case 'm' -> MINUTE;
+        case 'h' -> HOUR;
+        case 'd' -> DAY;
+        default -> throw new AppEngineConfigException(
+            "Invalid age limit '" + unit + "' was specified.");
+      };
     }
 
     public char getIdent() {

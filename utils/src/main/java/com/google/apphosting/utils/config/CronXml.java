@@ -200,13 +200,14 @@ public class CronXml {
     StringBuilder builder = new StringBuilder("cron:\n");
     for (Entry ent : entries) {
       // description may contain YAML special characters.
-      builder.append("- description: '" + ent.getDescription().replace("'", "''") + "'\n");
-      builder.append("  url: " + ent.getUrl() + "\n");
-      builder.append("  schedule: " + ent.getSchedule() + "\n");
-      builder.append("  timezone: " + ent.getTimezone() + "\n");
+      builder.append("- description: '").append(ent.getDescription().replace("'", "''"))
+          .append("'\n");
+      builder.append("  url: ").append(ent.getUrl()).append("\n");
+      builder.append("  schedule: ").append(ent.getSchedule()).append("\n");
+      builder.append("  timezone: ").append(ent.getTimezone()).append("\n");
       String target = ent.getTarget();
       if (target != null) {
-        builder.append("  target: " + target + "\n");
+        builder.append("  target: ").append(target).append("\n");
       }
       RetryParametersXml retryParameters = ent.getRetryParameters();
       if (retryParameters != null) {

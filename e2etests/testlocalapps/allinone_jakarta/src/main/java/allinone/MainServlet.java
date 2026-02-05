@@ -434,14 +434,7 @@ public class MainServlet extends HttpServlet {
    */
   private void performMathMs(int ms, PrintWriter w) {
     emitf(w, "Burning cpu for %d ms", ms);
-    runRepeatedly(
-        ms,
-        new Runnable() {
-          @Override
-          public void run() {
-            performMath(random.nextBoolean());
-          }
-        });
+    runRepeatedly(ms, () -> performMath(random.nextBoolean()));
     logger.info("Cpu burned");
   }
 

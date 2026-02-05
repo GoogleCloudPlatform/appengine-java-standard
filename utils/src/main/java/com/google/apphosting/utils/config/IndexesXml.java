@@ -129,21 +129,21 @@ public class IndexesXml implements Iterable<IndexesXml.Index>{
      */
     private String toLocalStyleYaml(){
       StringBuilder builder = new StringBuilder(50 * (1 + properties.size()));
-      builder.append("- kind: \"" + kind + "\"\n");
+      builder.append("- kind: \"").append(kind).append("\"\n");
       if (Boolean.TRUE.equals(ancestors)) {
         builder.append("  ancestor: yes\n");
       }
       if (!properties.isEmpty()) {
         builder.append("  properties:\n");
         for (PropertySort prop : properties) {
-          builder.append("  - name: \"" + prop.getPropertyName() + "\"\n");
+          builder.append("  - name: \"").append(prop.getPropertyName()).append("\"\n");
 
           if (prop.getDirection() != null) {
-            builder.append("    direction: " + prop.getDirection() + "\n");
+            builder.append("    direction: ").append(prop.getDirection()).append("\n");
           }
 
           if (prop.getMode() != null) {
-            builder.append("    mode: " + prop.getMode() + "\n");
+            builder.append("    mode: ").append(prop.getMode()).append("\n");
           }
         }
       }
@@ -162,7 +162,7 @@ public class IndexesXml implements Iterable<IndexesXml.Index>{
     private String toServerStyleYaml() {
       StringBuilder builder = new StringBuilder(50 * (1 + properties.size()));
       builder.append("- ").append(IndexYamlReader.INDEX_TAG).append("\n");
-      builder.append("  kind: " + kind + "\n");
+      builder.append("  kind: ").append(kind).append("\n");
       if (Boolean.TRUE.equals(ancestors)) {
         builder.append("  ancestor: yes\n");
       }
@@ -186,7 +186,7 @@ public class IndexesXml implements Iterable<IndexesXml.Index>{
           }
 
           builder.append("    ");
-          builder.append("name: " + prop.getPropertyName());
+          builder.append("name: ").append(prop.getPropertyName());
           builder.append("}\n");
         }
       }
@@ -197,16 +197,17 @@ public class IndexesXml implements Iterable<IndexesXml.Index>{
       StringBuilder builder = new StringBuilder(100 * (1 + properties.size()));
       String ancestorAttribute = ancestors == null ? ""
           : String.format(" ancestor=\"%s\"", ancestors);
-      builder.append("<datastore-index kind=\"" + kind + "\"" + ancestorAttribute + ">\n");
+      builder.append("<datastore-index kind=\"").append(kind).append("\"")
+          .append(ancestorAttribute).append(">\n");
       for (PropertySort prop : properties) {
-        builder.append("    <property name=\"" + prop.getPropertyName() + "\"");
+        builder.append("    <property name=\"").append(prop.getPropertyName()).append("\"");
 
         if (prop.getDirection() != null) {
-          builder.append(" direction=\"" + prop.getDirection() + "\"");
+          builder.append(" direction=\"").append(prop.getDirection()).append("\"");
         }
 
         if (prop.getMode() != null) {
-          builder.append(" mode=\"" + prop.getMode() + "\"");
+          builder.append(" mode=\"").append(prop.getMode()).append("\"");
         }
 
         builder.append("/>\n");

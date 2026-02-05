@@ -288,8 +288,7 @@ public final class Key implements Serializable, Comparable<Key> {
    * @return if key is equal to this.
    */
   boolean equals(@Nullable Object object, boolean considerNotAssigned) {
-    if (object instanceof Key) {
-      Key key = (Key) object;
+    if (object instanceof Key key) {
       if (this == key) {
         return true;
       }

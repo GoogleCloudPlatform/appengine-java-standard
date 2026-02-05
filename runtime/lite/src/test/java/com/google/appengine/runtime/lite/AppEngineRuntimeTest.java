@@ -857,11 +857,16 @@ public final class AppEngineRuntimeTest {
   }
 
   private static void validateDeadline(
-      ApiDeadlineOracle oracle, String packageName, double defOnline, double defOffline) {
+      ApiDeadlineOracle oracle,
+      String packageName,
+      double defOnline,
+      double maxOnline,
+      double defOffline,
+      double maxOffline) {
     assertThat(oracle.getDeadline(packageName, false, null)).isEqualTo(defOnline);
-    assertThat(oracle.getDeadline(packageName, false, Double.MAX_VALUE)).isEqualTo(YEAR_SECONDS);
+    assertThat(oracle.getDeadline(packageName, false, Double.MAX_VALUE)).isEqualTo(maxOnline);
     assertThat(oracle.getDeadline(packageName, true, null)).isEqualTo(defOffline);
-    assertThat(oracle.getDeadline(packageName, true, Double.MAX_VALUE)).isEqualTo(YEAR_SECONDS);
+    assertThat(oracle.getDeadline(packageName, true, Double.MAX_VALUE)).isEqualTo(maxOffline);
   }
 
   @Test
@@ -873,26 +878,25 @@ public final class AppEngineRuntimeTest {
         AppEngineRuntime.makeApiProxyImplBuilder(apiHostAddress, dispatcher);
 
     ApiDeadlineOracle oracle = builder.deadlineOracle();
-    validateDeadline(oracle, "app_config_service", 60.0, 60.0);
-    validateDeadline(oracle, "blobstore", 15.0, 15.0);
-    validateDeadline(oracle, "datastore_v3", 60.0, 60.0);
-    validateDeadline(oracle, "datastore_v4", 60.0, 60.0);
-    validateDeadline(oracle, "file", 30.0, 30.0);
-    validateDeadline(oracle, "images", 30.0, 30.0);
-    validateDeadline(oracle, "logservice", 60.0, 60.0);
-    validateDeadline(oracle, "modules", 60.0, 60.0);
-    validateDeadline(oracle, "rdbms", 60.0, 60.0);
-    validateDeadline(oracle, "remote_socket", 60.0, 60.0);
-    validateDeadline(oracle, "search", 10.0, 10.0);
-    validateDeadline(oracle, "stubby", 10.0, 10.0);
-    validateDeadline(oracle, "taskqueue", 10.0, 5.0);
-    validateDeadline(oracle, "urlfetch", 10.0, 5.0);
+    validateDeadline(oracle, "app_config_service", 60.0, YEAR_SECONDS, 60.0, 60.0);
+    validateDeadline(oracle, "blobstore", 15.0, YEAR_SECONDS, 15.0, 30.0);
+    validateDeadline(oracle, "datastore_v3", 60.0, YEAR_SECONDS, 60.0, 270.0);
+    validateDeadline(oracle, "datastore_v4", 60.0, YEAR_SECONDS, 60.0, 270.0);
+    validateDeadline(oracle, "file", 30.0, YEAR_SECONDS, 30.0, 60.0);
+    validateDeadline(oracle, "images", 30.0, YEAR_SECONDS, 30.0, 30.0);
+    validateDeadline(oracle, "logservice", 60.0, YEAR_SECONDS, 60.0, 60.0);
+    validateDeadline(oracle, "modules", 60.0, YEAR_SECONDS, 60.0, 60.0);
+    validateDeadline(oracle, "rdbms", 60.0, YEAR_SECONDS, 60.0, 600.0);
+    validateDeadline(oracle, "remote_socket", 60.0, YEAR_SECONDS, 60.0, 60.0);
+    validateDeadline(oracle, "search", 10.0, YEAR_SECONDS, 10.0, 60.0);
+    validateDeadline(oracle, "stubby", 10.0, YEAR_SECONDS, 10.0, 600.0);
+    validateDeadline(oracle, "taskqueue", 10.0, YEAR_SECONDS, 5.0, 30.0);
+    validateDeadline(oracle, "urlfetch", 10.0, YEAR_SECONDS, 5.0, 600.0);
 
     assertThat(builder.coordinator()).isSameInstanceAs(dispatcher);
     assertThat(builder.externalDatacenterName()).isEqualTo("MARS");
     assertThat(builder.byteCountBeforeFlushing()).isEqualTo(100 * 1024L);
     assertThat(builder.maxLogFlushTime()).isEqualTo(Duration.ofMinutes(1));
-    assertThat(builder.cloudSqlJdbcConnectivityEnabled()).isTrue();
     assertThat(builder.disableApiCallLogging()).isTrue();
   }
 
@@ -936,9 +940,6 @@ public final class AppEngineRuntimeTest {
     assertThat(appEnv.getEnvironmentVariables()).isEmpty();
     assertThat(appEnv.getUseGoogleConnectorJ()).isTrue();
 
-    ApplicationEnvironment.RuntimeConfiguration runtimeConfig = appEnv.getRuntimeConfiguration();
-    assertThat(runtimeConfig.getCloudSqlJdbcConnectivityEnabled()).isTrue();
-    assertThat(runtimeConfig.getUseGoogleConnectorJ()).isTrue();
   }
 
   @Test
@@ -975,10 +976,6 @@ public final class AppEngineRuntimeTest {
     assertThat(appEnv.getVersionId()).isEqualTo("4321");
     assertThat(appEnv.getEnvironmentVariables()).isEmpty();
     assertThat(appEnv.getUseGoogleConnectorJ()).isTrue();
-
-    ApplicationEnvironment.RuntimeConfiguration runtimeConfig = appEnv.getRuntimeConfiguration();
-    assertThat(runtimeConfig.getCloudSqlJdbcConnectivityEnabled()).isTrue();
-    assertThat(runtimeConfig.getUseGoogleConnectorJ()).isTrue();
 
     SessionsConfig sessionsConfig = appVersion.getSessionsConfig();
     assertThat(sessionsConfig.isEnabled()).isFalse();

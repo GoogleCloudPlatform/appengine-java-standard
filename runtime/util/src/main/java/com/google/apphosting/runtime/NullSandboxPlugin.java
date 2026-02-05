@@ -131,13 +131,10 @@ public class NullSandboxPlugin {
       // methods were copied from UserClassLoaderFactory.createClassLoader.
       URL[] prebundledUrls = getClassPathUtils().getPrebundledUrls();
       userUrls = append(userUrls, prebundledUrls);
-      // Add the j-connector class path at the front. Also copied from
-      // UserClassLoaderFactory.createClassLoader.
-      if (environment.getRuntimeConfiguration().getCloudSqlJdbcConnectivityEnabled()
-          && environment.getUseGoogleConnectorJ()) {
-        URL[] urls = getClassPathUtils().getConnectorJUrls();
-        userUrls = append(urls, userUrls);
-    }
+    // Add the j-connector class path at the front. Also copied from
+    // UserClassLoaderFactory.createClassLoader.
+    URL[] urls = getClassPathUtils().getConnectorJUrls();
+    userUrls = append(urls, userUrls);
     boolean alwaysScanClassDirs = "true".equalsIgnoreCase(
         environment.getSystemProperties().get(ALWAYS_SCAN_CLASS_DIRS_PROPERTY));
     return new ApplicationClassLoader(

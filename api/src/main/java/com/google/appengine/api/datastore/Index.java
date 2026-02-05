@@ -85,8 +85,7 @@ public final class Index implements Serializable {
     // manually written
     @Override
     public boolean equals(@Nullable Object obj) {
-      if (obj instanceof Property) {
-        Property other = (Property) obj;
+      if (obj instanceof Property other) {
         return name.equals(other.name) && Objects.equals(direction, other.direction);
       }
       return false;
@@ -158,8 +157,7 @@ public final class Index implements Serializable {
 
   @Override
   public boolean equals(@Nullable Object obj) {
-    if (obj instanceof Index) {
-      Index other = (Index) obj;
+    if (obj instanceof Index other) {
       return id == other.id
           && kind.equals(other.kind)
           && isAncestor == other.isAncestor

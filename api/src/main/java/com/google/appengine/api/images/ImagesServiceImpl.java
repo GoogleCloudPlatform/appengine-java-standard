@@ -140,8 +140,8 @@ final class ImagesServiceImpl implements ImagesService {
 
       @Override
       protected Throwable convertException(Throwable cause) {
-        if (cause instanceof ApiProxy.ApplicationException) {
-          return convertApplicationException(request, (ApiProxy.ApplicationException) cause);
+        if (cause instanceof ApiProxy.ApplicationException applicationException) {
+          return convertApplicationException(request, applicationException);
         }
         return cause;
       }
@@ -400,38 +400,32 @@ final class ImagesServiceImpl implements ImagesService {
   private ImagesServicePb.OutputSettings convertOutputSettings(OutputSettings settings) {
     ImagesServicePb.OutputSettings.Builder pbSettings =
         ImagesServicePb.OutputSettings.newBuilder();
-    switch(settings.getOutputEncoding()) {
-      case PNG:
-        pbSettings.setMimeType(MIME_TYPE.PNG);
-        break;
-      case JPEG:
+    switch (settings.getOutputEncoding()) {
+      case PNG -> pbSettings.setMimeType(MIME_TYPE.PNG);
+      case JPEG -> {
         pbSettings.setMimeType(MIME_TYPE.JPEG);
         if (settings.hasQuality()) {
           pbSettings.setQuality(settings.getQuality());
         }
-        break;
-      case WEBP:
+      }
+      case WEBP -> {
         pbSettings.setMimeType(MIME_TYPE.WEBP);
         if (settings.hasQuality()) {
           pbSettings.setQuality(settings.getQuality());
         }
-        break;
-      default:
-        throw new IllegalArgumentException(
-            "Invalid output encoding requested");
+      }
+      default -> throw new IllegalArgumentException("Invalid output encoding requested");
     }
     return pbSettings.build();
   }
 
   private ImagesServicePb.InputSettings convertInputSettings(InputSettings settings) {
     ImagesServicePb.InputSettings.Builder pbSettings = ImagesServicePb.InputSettings.newBuilder();
-    switch(settings.getOrientationCorrection()) {
-      case UNCHANGED_ORIENTATION:
-        pbSettings.setCorrectExifOrientation(ORIENTATION_CORRECTION_TYPE.UNCHANGED_ORIENTATION);
-        break;
-      case CORRECT_ORIENTATION:
-        pbSettings.setCorrectExifOrientation(ORIENTATION_CORRECTION_TYPE.CORRECT_ORIENTATION);
-        break;
+    switch (settings.getOrientationCorrection()) {
+      case UNCHANGED_ORIENTATION ->
+          pbSettings.setCorrectExifOrientation(ORIENTATION_CORRECTION_TYPE.UNCHANGED_ORIENTATION);
+      case CORRECT_ORIENTATION ->
+          pbSettings.setCorrectExifOrientation(ORIENTATION_CORRECTION_TYPE.CORRECT_ORIENTATION);
     }
     return pbSettings.build();
   }

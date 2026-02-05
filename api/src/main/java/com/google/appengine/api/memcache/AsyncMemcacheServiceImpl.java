@@ -234,35 +234,15 @@ class AsyncMemcacheServiceImpl extends BaseMemcacheServiceImpl implements AsyncM
   private static class DefaultValueProviders {
 
     @SuppressWarnings("rawtypes")
-    private static final Provider NULL_PROVIDER = new Provider() {
-          @Override public Object get() {
-            return null;
-          }
-        };
+    private static final Provider NULL_PROVIDER = () -> null;
 
-    private static final Provider<Boolean> FALSE_PROVIDER = new Provider<Boolean>() {
-          @Override public Boolean get() {
-            return Boolean.FALSE;
-          }
-        };
+    private static final Provider<Boolean> FALSE_PROVIDER = () -> Boolean.FALSE;
 
     @SuppressWarnings("rawtypes")
-    private static final Provider SET_PROVIDER =
-        new Provider<Set<?>>() {
-          @Override
-          public Set<?> get() {
-            return new HashSet<>(0, 1);
-          }
-        };
+    private static final Provider SET_PROVIDER = () -> new HashSet<>(0, 1);
 
     @SuppressWarnings("rawtypes")
-    private static final Provider MAP_PROVIDER =
-        new Provider<Map<?, ?>>() {
-          @Override
-          public Map<?, ?> get() {
-            return new HashMap<>(0, 1);
-          }
-        };
+    private static final Provider MAP_PROVIDER = () -> new HashMap<>(0, 1);
 
     private static final Provider<Stats> STATS_PROVIDER = new Provider<Stats>() {
           final Stats emptyStats =  new AsyncMemcacheServiceImpl.StatsImpl(null);

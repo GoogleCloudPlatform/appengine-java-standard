@@ -253,16 +253,11 @@ class AsyncDatastoreServiceImpl extends BaseAsyncDatastoreServiceImpl {
       }
     }
     if (options.transactionMode() != null) {
-      switch (options.transactionMode()) {
-        case READ_ONLY:
-          request.setMode(TransactionMode.READ_ONLY);
-          break;
-        case READ_WRITE:
-          request.setMode(TransactionMode.READ_WRITE);
-          break;
-        default:
-          throw new AssertionError("Unrecognized transaction mode: " + options.transactionMode());
-      }
+      request.setMode(switch (options.transactionMode()) {
+        case READ_ONLY -> TransactionMode.READ_ONLY;
+        case READ_WRITE -> TransactionMode.READ_WRITE;
+        default -> throw new AssertionError("Unrecognized transaction mode: " + options.transactionMode());
+      });
     }
 
     Future<DatastoreV3Pb.Transaction> future =
@@ -620,21 +615,11 @@ class AsyncDatastoreServiceImpl extends BaseAsyncDatastoreServiceImpl {
         for (CompositeIndex ci : indices.getIndexList()) {
           Index index = IndexTranslator.convertFromPb(ci);
           switch (ci.getState()) {
-            case DELETED:
-              answer.put(index, IndexState.DELETING);
-              break;
-            case ERROR:
-              answer.put(index, IndexState.ERROR);
-              break;
-            case READ_WRITE:
-              answer.put(index, IndexState.SERVING);
-              break;
-            case WRITE_ONLY:
-              answer.put(index, IndexState.BUILDING);
-              break;
-            default:
-              logger.log(Level.WARNING, "Unrecognized index state for " + index);
-              break;
+            case DELETED -> answer.put(index, IndexState.DELETING);
+            case ERROR -> answer.put(index, IndexState.ERROR);
+            case READ_WRITE -> answer.put(index, IndexState.SERVING);
+            case WRITE_ONLY -> answer.put(index, IndexState.BUILDING);
+            default -> logger.log(Level.WARNING, "Unrecognized index state for {0}", index);
           }
         }
         return answer;

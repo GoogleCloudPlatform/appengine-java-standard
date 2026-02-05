@@ -122,39 +122,35 @@ public final class RawValue implements Serializable {
         return asType(User.class);
       }
     } else if (valueV1 != null) {
-      switch (valueV1.getValueTypeCase()) {
-        case BOOLEAN_VALUE:
-          return valueV1.getBooleanValue();
-        case DOUBLE_VALUE:
-          return valueV1.getDoubleValue();
-        case INTEGER_VALUE:
-          return valueV1.getIntegerValue();
-        case ENTITY_VALUE:
+      return switch (valueV1.getValueTypeCase()) {
+        case BOOLEAN_VALUE -> valueV1.getBooleanValue();
+        case DOUBLE_VALUE -> valueV1.getDoubleValue();
+        case INTEGER_VALUE -> valueV1.getIntegerValue();
+        case ENTITY_VALUE -> {
           if (valueV1.getMeaning() == 20) {
-            return asType(User.class);
+            yield asType(User.class);
           }
           throw new IllegalStateException("Raw entity value is not supported.");
-        case KEY_VALUE:
-          return asType(Key.class);
-        case STRING_VALUE:
-          return valueV1.getStringValueBytes().toByteArray();
-        case BLOB_VALUE:
-          // TODO: return a short blob? (not currently possible to get here).
-          return valueV1.getBlobValue().toByteArray();
-        case TIMESTAMP_VALUE:
-          // TODO: return a Date? (not currently possible to get here).
-          return DatastoreHelper.getTimestamp(valueV1);
-        case GEO_POINT_VALUE:
-          if (valueV1.getMeaning() == 0 || valueV1.getMeaning() == Meaning.INDEX_VALUE.getNumber()) {
-            return asType(GeoPt.class);
+        }
+        case KEY_VALUE -> asType(Key.class);
+        case STRING_VALUE -> valueV1.getStringValueBytes().toByteArray();
+        case BLOB_VALUE ->
+            // TODO: return a short blob? (not currently possible to get here).
+            valueV1.getBlobValue().toByteArray();
+        case TIMESTAMP_VALUE ->
+            // TODO: return a Date? (not currently possible to get here).
+            DatastoreHelper.getTimestamp(valueV1);
+        case GEO_POINT_VALUE -> {
+          if (valueV1.getMeaning() == 0
+              || valueV1.getMeaning() == Meaning.INDEX_VALUE.getNumber()) {
+            yield asType(GeoPt.class);
           }
-          break; // GeoPt with meaning becomes null.
-        case ARRAY_VALUE:
-          throw new IllegalStateException("Raw array value is not supported.");
-        case NULL_VALUE:
-        default:
-          return null;
-      }
+          yield null; // GeoPt with meaning becomes null.
+        }
+        case ARRAY_VALUE -> throw new IllegalStateException("Raw array value is not supported.");
+        case NULL_VALUE -> null;
+        default -> null;
+      };
     }
     return null;
   }

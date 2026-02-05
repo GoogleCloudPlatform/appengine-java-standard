@@ -65,43 +65,42 @@ public class RequestThreadFactory implements ThreadFactory {
             super.start();
             final Thread thread = this; // Thread.this doesn't work from an anon subclass
             RequestEndListenerHelper.register(
-                new RequestEndListener() {
-                  @Override
-                  public void onRequestEnd(ApiProxy.Environment environment) {
+                env -> {
+                  if (thread.isAlive()) {
+                    logger.info("Interrupting request thread: " + thread);
+                    // This is one of the few places where it's okay to call thread.interrupt().
+                    @SuppressWarnings("Interruption")
+                    boolean unused1 = true;
+                    thread.interrupt();
+                    logger.info("Waiting up to 100ms for thread to complete: " + thread);
+                    try {
+                      thread.join(100);
+                    } catch (InterruptedException ex) {
+                      logger.info("Interrupted while waiting.");
+                    }
                     if (thread.isAlive()) {
-                      logger.info("Interrupting request thread: " + thread);
+                      logger.info("Interrupting request thread again: " + thread);
+                      @SuppressWarnings("Interruption")
+                      boolean unused2 = true;
                       thread.interrupt();
-                      logger.info("Waiting up to 100ms for thread to complete: " + thread);
+                      long remaining = getRemainingDeadlineMillis(env);
+                      logger.info(
+                          "Waiting up to " + remaining + " ms for thread to complete: " + thread);
                       try {
-                        thread.join(100);
+                        thread.join(remaining);
                       } catch (InterruptedException ex) {
                         logger.info("Interrupted while waiting.");
                       }
                       if (thread.isAlive()) {
-                        logger.info("Interrupting request thread again: " + thread);
-                        thread.interrupt();
-                        long remaining = getRemainingDeadlineMillis(environment);
-                        logger.info(
-                            "Waiting up to "
-                                + remaining
-                                + " ms for thread to complete: "
-                                + thread);
-                        try {
-                          thread.join(remaining);
-                        } catch (InterruptedException ex) {
-                          logger.info("Interrupted while waiting.");
-                        }
-                        if (thread.isAlive()) {
-                          Throwable stack = new Throwable();
-                          stack.setStackTrace(thread.getStackTrace());
-                          logger.log(
-                              Level.SEVERE,
-                              "Thread left running: "
-                                  + thread
-                                  + ".  "
-                                  + "In production this will cause the request to fail.",
-                              stack);
-                        }
+                        Throwable stack = new Throwable();
+                        stack.setStackTrace(thread.getStackTrace());
+                        logger.log(
+                            Level.SEVERE,
+                            "Thread left running: "
+                                + thread
+                                + ".  "
+                                + "In production this will cause the request to fail.",
+                            stack);
                       }
                     }
                   }

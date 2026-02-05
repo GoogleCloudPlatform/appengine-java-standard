@@ -116,9 +116,9 @@ public class GenericScorer extends Scorer implements Comparator<GenericScorer.Re
       sorters.addAll(expression.getSorters(
           spec.getSortDescending() ? 1 : -1,
           numericDefault, spec.getDefaultValueText()));
-      if (expression instanceof NumericExpression) {
+      if (expression instanceof NumericExpression numericExpression) {
         expressions[i] = new NumericDefaultExpression(
-            (NumericExpression) expression, numericDefault);
+            numericExpression, numericDefault);
       } else {
         expressions[i] = new ExpressionBuilder.IntValueExpression(numericDefault);
       }

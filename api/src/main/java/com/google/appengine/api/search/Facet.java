@@ -109,13 +109,12 @@ public final class Facet implements Serializable {
     if (object == this) {
       return true;
     }
-    if (!(object instanceof Facet)) {
-      return false;
+    if (object instanceof Facet facet) {
+      return Util.equalObjects(name, facet.name)
+          && Util.equalObjects(atom, facet.atom)
+          && Util.equalObjects(number, facet.number);
     }
-    Facet facet = (Facet) object;
-    return Util.equalObjects(name, facet.name)
-        && Util.equalObjects(atom, facet.atom)
-        && Util.equalObjects(number, facet.number);
+    return false;
   }
 
   /**
@@ -130,14 +129,14 @@ public final class Facet implements Serializable {
     if (atom != null) {
       if (number != null) {
         throw new IllegalArgumentException(
-            String.format("both atom and number are set for facet %s", name));
+            "both atom and number are set for facet %s".formatted(name));
       }
       FacetChecker.checkAtom(atom);
     } else if (number != null) {
       FacetChecker.checkNumber(number);
     } else {
       throw new IllegalArgumentException(
-          String.format("neither atom nor number is set for facet %s", name));
+          "neither atom nor number is set for facet %s".formatted(name));
     }
   }
 

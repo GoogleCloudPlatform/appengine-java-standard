@@ -148,36 +148,36 @@ public class AppYamlTranslator {
 
   private void translateAppEngineWebXml(StringBuilder builder) {
     if (appEngineWebXml.getAppId() != null) {
-      builder.append("application: '" + appEngineWebXml.getAppId() + "'\n");
+      builder.append("application: '").append(appEngineWebXml.getAppId()).append("'\n");
     }
-    builder.append("runtime: " + runtime + "\n");
+    builder.append("runtime: ").append(runtime).append("\n");
     if (appEngineWebXml.getUseVm()) {
       builder.append("vm: True\n");
     }
 
     if (appEngineWebXml.isFlexible()) {
-      builder.append("env: " + appEngineWebXml.getEnv() + "\n");
+      builder.append("env: ").append(appEngineWebXml.getEnv()).append("\n");
     }
 
     if (appEngineWebXml.getEntrypoint() != null) {
-      builder.append("entrypoint: '" + appEngineWebXml.getEntrypoint() + "'\n");
+      builder.append("entrypoint: '").append(appEngineWebXml.getEntrypoint()).append("'\n");
     }
 
     if (appEngineWebXml.getRuntimeChannel() != null) {
-      builder.append("runtime_channel: " + appEngineWebXml.getRuntimeChannel() + "\n");
+      builder.append("runtime_channel: ").append(appEngineWebXml.getRuntimeChannel()).append("\n");
     }
     if (appEngineWebXml.getMajorVersionId() != null) {
-      builder.append("version: '" + appEngineWebXml.getMajorVersionId() + "'\n");
+      builder.append("version: '").append(appEngineWebXml.getMajorVersionId()).append("'\n");
     }
 
     if (appEngineWebXml.getService() != null) {
-      builder.append("service: '" + appEngineWebXml.getService() + "'\n");
+      builder.append("service: '").append(appEngineWebXml.getService()).append("'\n");
     } else if (appEngineWebXml.getModule() != null) {
-      builder.append("module: '" + appEngineWebXml.getModule() + "'\n");
+      builder.append("module: '").append(appEngineWebXml.getModule()).append("'\n");
     }
 
     if (appEngineWebXml.getInstanceClass() != null) {
-      builder.append("instance_class: " + appEngineWebXml.getInstanceClass() + "\n");
+      builder.append("instance_class: ").append(appEngineWebXml.getInstanceClass()).append("\n");
     }
 
     if (!appEngineWebXml.getAutomaticScaling().isEmpty()) {
@@ -248,14 +248,14 @@ public class AppYamlTranslator {
         }
         builder.append("  custom_metrics:\n");
         for (CustomMetricUtilization metric : settings.getCustomMetrics()) {
-          builder.append("    - metric_name: '" + metric.getMetricName() + "'\n");
-          builder.append("      target_type: '" + metric.getTargetType() + "'\n");
+          builder.append("    - metric_name: '").append(metric.getMetricName()).append("'\n");
+          builder.append("      target_type: '").append(metric.getTargetType()).append("'\n");
           appendIfNotNull(builder, "      target_utilization: ", metric.getTargetUtilization());
           appendIfNotNull(builder,
               "      single_instance_assignment: ",
               metric.getSingleInstanceAssignment());
           if (metric.getFilter() != null) {
-            builder.append("      filter: '" + metric.getFilter() + "'\n");
+            builder.append("      filter: '").append(metric.getFilter()).append("'\n");
           }
         }
       }
@@ -264,13 +264,13 @@ public class AppYamlTranslator {
     if (!appEngineWebXml.getManualScaling().isEmpty()) {
       builder.append("manual_scaling:\n");
       AppEngineWebXml.ManualScaling settings = appEngineWebXml.getManualScaling();
-      builder.append("  instances: " + settings.getInstances() + "\n");
+      builder.append("  instances: ").append(settings.getInstances()).append("\n");
     }
 
     if (!appEngineWebXml.getBasicScaling().isEmpty()) {
       builder.append("basic_scaling:\n");
       AppEngineWebXml.BasicScaling settings = appEngineWebXml.getBasicScaling();
-      builder.append("  max_instances: " + settings.getMaxInstances() + "\n");
+      builder.append("  max_instances: ").append(settings.getMaxInstances()).append("\n");
       appendIfNotNull(builder, "  idle_timeout: ", settings.getIdleTimeout());
     }
 
@@ -278,14 +278,14 @@ public class AppYamlTranslator {
     if (!services.isEmpty()) {
       builder.append("inbound_services:\n");
       for (String service : services) {
-        builder.append("- " + service + "\n");
+        builder.append("- ").append(service).append("\n");
       }
     }
     Collection<String> appEngineBundledServices = appEngineWebXml.getAppEngineBundledServices();
     if (!appEngineBundledServices.isEmpty()) {
       builder.append("app_engine_bundled_services:\n");
       for (String service : appEngineBundledServices) {
-        builder.append("- " + service + "\n");
+        builder.append("- ").append(service).append("\n");
       }
     }
 
@@ -310,7 +310,7 @@ public class AppYamlTranslator {
     }
 
     if (appEngineWebXml.getAutoIdPolicy() != null) {
-      builder.append("auto_id_policy: " + appEngineWebXml.getAutoIdPolicy() + "\n");
+      builder.append("auto_id_policy: ").append(appEngineWebXml.getAutoIdPolicy()).append("\n");
     } else {
       // NOTE: The YAML parsing and validation done in the admin console must
       // set the value for unspecified auto_id_policy to 'legacy' in order to achieve
@@ -327,14 +327,14 @@ public class AppYamlTranslator {
     if (appEngineWebXml.getVpcAccessConnector() != null) {
       VpcAccessConnector connector = appEngineWebXml.getVpcAccessConnector();
       builder.append("vpc_access_connector:\n");
-      builder.append("  name: " + connector.getName() + "\n");
+      builder.append("  name: ").append(connector.getName()).append("\n");
       if (connector.getEgressSetting().isPresent()) {
-        builder.append("  egress_setting: " + connector.getEgressSetting().get() + "\n");
+        builder.append("  egress_setting: ").append(connector.getEgressSetting().get()).append("\n");
       }
     }
 
     if (appEngineWebXml.getServiceAccount() != null) {
-      builder.append("service_account: " + appEngineWebXml.getServiceAccount() + "\n");
+      builder.append("service_account: ").append(appEngineWebXml.getServiceAccount()).append("\n");
     }
 
     List<AdminConsolePage> adminConsolePages = appEngineWebXml.getAdminConsolePages();
@@ -342,8 +342,8 @@ public class AppYamlTranslator {
       builder.append("admin_console:\n");
       builder.append("  pages:\n");
       for (AdminConsolePage page : adminConsolePages) {
-        builder.append("  - name: " + page.getName() + "\n");
-        builder.append("    url: " + page.getUrl() + "\n");
+        builder.append("  - name: ").append(page.getName()).append("\n");
+        builder.append("    url: ").append(page.getUrl()).append("\n");
       }
     }
 
@@ -362,13 +362,13 @@ public class AppYamlTranslator {
               + fileName + ", out of " + staticFiles);
         }
         // error_handlers doesn't want a leading slash here.
-        builder.append("- file: __static__" + fileName + "\n");
+        builder.append("- file: __static__").append(fileName).append("\n");
         if (handler.getErrorCode() != null) {
-          builder.append("  error_code: " + handler.getErrorCode() + "\n");
+          builder.append("  error_code: ").append(handler.getErrorCode()).append("\n");
         }
         String mimeType = webXml.getMimeTypeForPath(handler.getFile());
         if (mimeType != null) {
-          builder.append("  mime_type: " + mimeType + "\n");
+          builder.append("  mime_type: ").append(mimeType).append("\n");
         }
       }
     }
@@ -383,7 +383,7 @@ public class AppYamlTranslator {
     ApiConfig apiConfig = appEngineWebXml.getApiConfig();
     if (apiConfig != null) {
       builder.append("api_config:\n");
-      builder.append("  url: " + apiConfig.getUrl() + "\n");
+      builder.append("  url: ").append(apiConfig.getUrl()).append("\n");
       builder.append("  script: unused\n");
     }
 
@@ -454,8 +454,11 @@ public class AppYamlTranslator {
     if (betaSettings != null && !betaSettings.isEmpty()) {
       builder.append("beta_settings:\n");
       for (Map.Entry<String, String> setting : betaSettings.entrySet()) {
-        builder.append(
-            "  " + yamlQuote(setting.getKey()) + ": " + yamlQuote(setting.getValue()) + "\n");
+        builder.append("  ")
+            .append(yamlQuote(setting.getKey()))
+            .append(": ")
+            .append(yamlQuote(setting.getValue()))
+            .append("\n");
       }
     }
   }
@@ -516,7 +519,7 @@ public class AppYamlTranslator {
       if (!network.getForwardedPorts().isEmpty()) {
         builder.append("  forwarded_ports:\n");
         for (String forwardedPort : network.getForwardedPorts()) {
-          builder.append("  - " + forwardedPort + "\n");
+          builder.append("  - ").append(forwardedPort).append("\n");
         }
       }
       appendIfNotNull(builder, "  name: ", network.getName());
@@ -660,8 +663,9 @@ public class AppYamlTranslator {
           (List<String>) glob.getProperty(WELCOME_FILES, RESOLVER);
       if (welcomeFiles != null) {
         for (String welcomeFile : welcomeFiles) {
-          builder.append("- url: (" + regex + ")\n");
-          builder.append("  static_files: __static__" + root + "\\1" + welcomeFile + "\n");
+          builder.append("- url: (").append(regex).append(")\n");
+          builder.append("  static_files: __static__").append(root).append("\\1").append(welcomeFile)
+              .append("\n");
           builder.append("  upload: __NOT_USED__\n");
           builder.append("  require_matching_file: True\n");
           translateHandlerOptions(builder, glob);
@@ -670,8 +674,8 @@ public class AppYamlTranslator {
       } else {
         Boolean isStatic = (Boolean) glob.getProperty(STATIC_PROPERTY, RESOLVER);
         if (isStatic != null && isStatic.booleanValue()) {
-          builder.append("- url: (" + regex + ")\n");
-          builder.append("  static_files: __static__" + root + "\\1\n");
+          builder.append("- url: (").append(regex).append(")\n");
+          builder.append("  static_files: __static__").append(root).append("\\1\n");
           builder.append("  upload: __NOT_USED__\n");
           builder.append("  require_matching_file: True\n");
           translateHandlerOptions(builder, glob);
@@ -684,7 +688,7 @@ public class AppYamlTranslator {
         throws AppEngineConfigException {
       String expiration = (String) glob.getProperty(EXPIRATION_PROPERTY, RESOLVER);
       if (expiration != null) {
-        builder.append("  expiration: " + expiration + "\n");
+        builder.append("  expiration: ").append(expiration).append("\n");
       }
 
       @SuppressWarnings("unchecked")
@@ -787,7 +791,7 @@ public class AppYamlTranslator {
 
       Boolean isDynamic = (Boolean) glob.getProperty(DYNAMIC_PROPERTY, RESOLVER);
       if (isDynamic != null && isDynamic.booleanValue()) {
-        builder.append("- url: " + regex + "\n");
+        builder.append("- url: ").append(regex).append("\n");
         builder.append("  script: unused\n");
         translateHandlerOptions(builder, glob);
       }

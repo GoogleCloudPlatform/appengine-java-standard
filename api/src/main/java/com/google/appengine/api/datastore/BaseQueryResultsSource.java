@@ -129,13 +129,7 @@ abstract class BaseQueryResultsSource<InitialResultT, NextRequestT, NextResultT>
     this.offset = fetchOptions.getOffset() != null ? fetchOptions.getOffset() : 0;
     this.txn = txn;
     this.query = query;
-    this.currentTransactionProvider =
-        new CurrentTransactionProvider() {
-          @Override
-          public Transaction getCurrentTransaction(Transaction defaultValue) {
-            return txn;
-          }
-        };
+    this.currentTransactionProvider = defaultValue -> txn;
     this.initialQueryResultFuture = initialQueryResultFuture;
     this.skippedResults = 0;
   }

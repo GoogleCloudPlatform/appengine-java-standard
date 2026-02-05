@@ -143,14 +143,11 @@ final class QueryTranslator {
   }
 
   private static Direction getSortOp(Query.SortDirection direction) {
-    switch (direction) {
-      case ASCENDING:
-        return Direction.ASCENDING;
-      case DESCENDING:
-        return Direction.DESCENDING;
-      default:
-        throw new UnsupportedOperationException("direction: " + direction);
-    }
+    return switch (direction) {
+      case ASCENDING -> Direction.ASCENDING;
+      case DESCENDING -> Direction.DESCENDING;
+      default -> throw new UnsupportedOperationException("direction: " + direction);
+    };
   }
 
   /**
@@ -159,16 +156,14 @@ final class QueryTranslator {
    * validated, so we complete the validation here.
    */
   private static void copyGeoFilterToPb(Query.Filter filter, DatastoreV3Pb.Query.Builder proto) {
-    if (filter instanceof Query.CompositeFilter) {
-      Query.CompositeFilter conjunction = (Query.CompositeFilter) filter;
+    if (filter instanceof Query.CompositeFilter conjunction) {
       checkArgument(
           conjunction.getOperator() == Query.CompositeFilterOperator.AND,
           "Geo-spatial filters may only be composed with CompositeFilterOperator.AND");
       for (Query.Filter f : conjunction.getSubFilters()) {
         copyGeoFilterToPb(f, proto);
       }
-    } else if (filter instanceof Query.StContainsFilter) {
-      Query.StContainsFilter containmentFilter = (Query.StContainsFilter) filter;
+    } else if (filter instanceof Query.StContainsFilter containmentFilter) {
       Filter.Builder f = proto.addFilterBuilder();
       f.setOp(Operator.CONTAINED_IN_REGION);
       f.setGeoRegion(convertGeoRegionToPb(containmentFilter.getRegion()));
@@ -180,13 +175,13 @@ final class QueryTranslator {
           .setName(containmentFilter.getPropertyName())
           .setMultiple(false)
           .setValue(PropertyValue.getDefaultInstance());
-    } else {
-      checkArgument(filter instanceof Query.FilterPredicate);
-      Query.FilterPredicate predicate = (Query.FilterPredicate) filter;
+    } else if (filter instanceof Query.FilterPredicate predicate) {
       checkArgument(
           predicate.getOperator() == Query.FilterOperator.EQUAL,
           "Geo-spatial filters may only be combined with equality comparisons");
       proto.addFilterBuilder().mergeFrom(convertFilterPredicateToPb(predicate));
+    } else {
+      checkArgument(false);
     }
   }
 
@@ -217,16 +212,14 @@ final class QueryTranslator {
 
   private static DatastoreV3Pb.GeoRegion convertGeoRegionToPb(Query.GeoRegion region) {
     DatastoreV3Pb.GeoRegion.Builder geoRegion = DatastoreV3Pb.GeoRegion.newBuilder();
-    if (region instanceof Query.GeoRegion.Circle) {
-      Query.GeoRegion.Circle circle = (Query.GeoRegion.Circle) region;
+    if (region instanceof Query.GeoRegion.Circle circle) {
       DatastoreV3Pb.CircleRegion circlePb =
           DatastoreV3Pb.CircleRegion.newBuilder()
               .setCenter(convertGeoPtToPb(circle.getCenter()))
               .setRadiusMeters(circle.getRadius())
               .build();
       geoRegion.setCircle(circlePb);
-    } else if (region instanceof Query.GeoRegion.Rectangle) {
-      Query.GeoRegion.Rectangle rect = (Query.GeoRegion.Rectangle) region;
+    } else if (region instanceof Query.GeoRegion.Rectangle rect) {
       DatastoreV3Pb.RectangleRegion rectPb =
           DatastoreV3Pb.RectangleRegion.newBuilder()
               .setSouthwest(convertGeoPtToPb(rect.getSouthwest()))
@@ -247,22 +240,15 @@ final class QueryTranslator {
   }
 
   private static Operator getFilterOp(Query.FilterOperator operator) {
-    switch (operator) {
-      case LESS_THAN:
-        return Operator.LESS_THAN;
-      case LESS_THAN_OR_EQUAL:
-        return Operator.LESS_THAN_OR_EQUAL;
-      case GREATER_THAN:
-        return Operator.GREATER_THAN;
-      case GREATER_THAN_OR_EQUAL:
-        return Operator.GREATER_THAN_OR_EQUAL;
-      case EQUAL:
-        return Operator.EQUAL;
-      case IN:
-        return Operator.IN;
-      default:
-        throw new UnsupportedOperationException("operator: " + operator);
-    }
+    return switch (operator) {
+      case LESS_THAN -> Operator.LESS_THAN;
+      case LESS_THAN_OR_EQUAL -> Operator.LESS_THAN_OR_EQUAL;
+      case GREATER_THAN -> Operator.GREATER_THAN;
+      case GREATER_THAN_OR_EQUAL -> Operator.GREATER_THAN_OR_EQUAL;
+      case EQUAL -> Operator.EQUAL;
+      case IN -> Operator.IN;
+      default -> throw new UnsupportedOperationException("operator: " + operator);
+    };
   }
 
   // All methods are static.  Do not instantiate.

@@ -161,40 +161,39 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
     }
 
     boolean startJettyHttpProxy = false;
-    if (runtimeOptions.useJettyHttpProxy()) {
-      AppInfoFactory appInfoFactory;
-      AppVersionKey appVersionKey;
-      /* The init actions are not done in the constructor as they are not used when testing */
-      try {
-        String appRoot = runtimeOptions.applicationRoot();
-        String appPath = runtimeOptions.fixedApplicationPath();
-        appInfoFactory = new AppInfoFactory(System.getenv());
-        AppinfoPb.AppInfo appinfo = appInfoFactory.getAppInfoFromFile(appRoot, appPath);
-        // TODO Should we also call ApplyCloneSettings()?
-        LocalRpcContext<EmptyMessage> context = new LocalRpcContext<>(EmptyMessage.class);
-        EvaluationRuntimeServerInterface evaluationRuntimeServerInterface =
-            Objects.requireNonNull(runtimeOptions.evaluationRuntimeServerInterface());
-        evaluationRuntimeServerInterface.addAppVersion(context, appinfo);
-        context.getResponse();
-        appVersionKey = AppVersionKey.fromAppInfo(appinfo);
-      } catch (Exception e) {
-        throw new IllegalStateException(e);
-      }
-      if (isHttpConnectorMode) {
-        logger.atInfo().log("Using HTTP_CONNECTOR_MODE to bypass RPC");
-        server.insertHandler(
-            new JettyHttpHandler(
-                runtimeOptions, appVersionHandler.getAppVersion(), appVersionKey, appInfoFactory));
-        JettyHttpProxy.insertHandlers(server, ignoreResponseSizeLimit);
-        server.addConnector(JettyHttpProxy.newConnector(server, runtimeOptions));
-      } else {
-        server.setAttribute(
-            "com.google.apphosting.runtime.jetty.appYaml",
-            JettyServletEngineAdapter.getAppYaml(runtimeOptions));
-        // Delay start of JettyHttpProxy until after the main server and application is started.
-        startJettyHttpProxy = true;
-      }
+    AppInfoFactory appInfoFactory;
+    AppVersionKey appVersionKey;
+    /* The init actions are not done in the constructor as they are not used when testing */
+    try {
+      String appRoot = runtimeOptions.applicationRoot();
+      String appPath = runtimeOptions.fixedApplicationPath();
+      appInfoFactory = new AppInfoFactory(System.getenv());
+      AppinfoPb.AppInfo appinfo = appInfoFactory.getAppInfoFromFile(appRoot, appPath);
+      // TODO Should we also call ApplyCloneSettings()?
+      LocalRpcContext<EmptyMessage> context = new LocalRpcContext<>(EmptyMessage.class);
+      EvaluationRuntimeServerInterface evaluationRuntimeServerInterface =
+          Objects.requireNonNull(runtimeOptions.evaluationRuntimeServerInterface());
+      evaluationRuntimeServerInterface.addAppVersion(context, appinfo);
+      context.getResponse();
+      appVersionKey = AppVersionKey.fromAppInfo(appinfo);
+    } catch (Exception e) {
+      throw new IllegalStateException(e);
     }
+    if (isHttpConnectorMode) {
+      logger.atInfo().log("Using HTTP_CONNECTOR_MODE to bypass RPC");
+      server.insertHandler(
+          new JettyHttpHandler(
+              runtimeOptions, appVersionHandler.getAppVersion(), appVersionKey, appInfoFactory));
+      JettyHttpProxy.insertHandlers(server, ignoreResponseSizeLimit);
+      server.addConnector(JettyHttpProxy.newConnector(server, runtimeOptions));
+    } else {
+      server.setAttribute(
+          "com.google.apphosting.runtime.jetty.appYaml",
+          JettyServletEngineAdapter.getAppYaml(runtimeOptions));
+      // Delay start of JettyHttpProxy until after the main server and application is started.
+      startJettyHttpProxy = true;
+    }
+
     try {
       server.start();
       if (startJettyHttpProxy) {
@@ -219,11 +218,6 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
   @Override
   public void addAppVersion(AppVersion appVersion) {
     appVersionHandler.addAppVersion(appVersion);
-  }
-
-  @Override
-  public void deleteAppVersion(AppVersion appVersion) {
-    appVersionHandler.removeAppVersion(appVersion.getKey());
   }
 
   @Override

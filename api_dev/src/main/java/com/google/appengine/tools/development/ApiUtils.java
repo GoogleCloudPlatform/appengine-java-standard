@@ -93,8 +93,8 @@ public class ApiUtils {
    * Message} (the open-sourced protocol buffer implementation).
    */
   public static byte[] convertPbToBytes(Object object) {
-    if (object instanceof MessageLite) {
-      return ((MessageLite) object).toByteArray();
+    if (object instanceof MessageLite messageLite) {
+      return messageLite.toByteArray();
     }
     try {
       Class<?> protocolMessageClass = Class.forName("com.google.io.protocol.ProtocolMessage");

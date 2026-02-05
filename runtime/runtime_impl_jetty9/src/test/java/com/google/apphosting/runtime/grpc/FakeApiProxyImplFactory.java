@@ -41,10 +41,7 @@ public class FakeApiProxyImplFactory {
     return ApiProxyImpl.builder()
         .setApiHost(apiHostClient)
         .setDeadlineOracle(
-            new ApiDeadlineOracle.Builder()
-                .initDeadlineMap(30, "", 30, "")
-                .initOfflineDeadlineMap(30, "", 30, "")
-                .build())
+            new ApiDeadlineOracle.Builder().initDeadlineMap().build())
         .setByteCountBeforeFlushing(8192)
         .setMaxLogFlushTime(Duration.ofSeconds(5))
         .build();

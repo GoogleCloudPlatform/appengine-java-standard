@@ -127,8 +127,7 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
 
     try {
       boolean startJettyHttpProxy = false;
-      if (runtimeOptions.useJettyHttpProxy()) {
-        AppVersionKey appVersionKey;
+      AppVersionKey appVersionKey;
         /* The init actions are not done in the constructor as they are not used when testing */
         String appRoot = runtimeOptions.applicationRoot();
         String appPath = runtimeOptions.fixedApplicationPath();
@@ -157,7 +156,6 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
           // Delay start of JettyHttpProxy until after the main server and application is started.
           startJettyHttpProxy = true;
         }
-      }
 
       ClassLoader oldContextClassLoader = Thread.currentThread().getContextClassLoader();
       Thread.currentThread()
@@ -190,11 +188,6 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
   @Override
   public void addAppVersion(AppVersion appVersion) {
     appVersionHandlerMap.addAppVersion(appVersion);
-  }
-
-  @Override
-  public void deleteAppVersion(AppVersion appVersion) {
-    appVersionHandlerMap.removeAppVersion(appVersion.getKey());
   }
 
   @Override

@@ -25,6 +25,7 @@ import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.lucene.analysis.LetterTokenizer;
@@ -43,7 +44,9 @@ final class PrefixFieldAnalyzerUtil {
 
   static String normalizePrefixField(String value) {
     String normalizedString = Normalizer.normalize(value, Normalizer.Form.NFKC);
-    return CharMatcher.whitespace().trimAndCollapseFrom(normalizedString, ' ').toLowerCase();
+    return CharMatcher.whitespace()
+        .trimAndCollapseFrom(normalizedString, ' ')
+        .toLowerCase(Locale.ROOT);
   }
   
   static List<String> createUntokenizedPrefixes(String value) {
@@ -83,7 +86,7 @@ final class PrefixFieldAnalyzerUtil {
      */
     @Override
     protected boolean isTokenChar(char c) {
-      return !LuceneUtils.WORD_SEPARATORS.contains(new Character(c));
+      return !LuceneUtils.WORD_SEPARATORS.contains(Character.valueOf(c));
     }
   }
   

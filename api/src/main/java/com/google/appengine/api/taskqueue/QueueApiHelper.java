@@ -66,8 +66,8 @@ class QueueApiHelper {
     return new FutureWrapper<byte[], T>(response) {
       @Override
       protected Throwable convertException(Throwable cause) {
-        if (cause instanceof ApiProxy.ApplicationException) {
-          return translateError((ApiProxy.ApplicationException) cause);
+        if (cause instanceof ApiProxy.ApplicationException appException) {
+          return translateError(appException);
         }
         return cause;
       }
@@ -105,10 +105,10 @@ class QueueApiHelper {
           ErrorCode.TRANSIENT_ERROR_VALUE, "Interrupted while waiting for RPC response.");
     } catch (ExecutionException e) {
       Throwable cause = e.getCause();
-      if (cause instanceof RuntimeException) {
-        throw (RuntimeException) cause;
-      } else if (cause instanceof Error) {
-        throw (Error) cause;
+      if (cause instanceof RuntimeException runtimeException) {
+        throw runtimeException;
+      } else if (cause instanceof Error error) {
+        throw error;
       } else {
         throw new RuntimeException(cause);
       }
@@ -133,66 +133,52 @@ class QueueApiHelper {
       return taskqueueException;
     }
 
-    switch (errorCode) {
-      case UNKNOWN_QUEUE:
-        return new IllegalStateException("The specified queue is unknown : " + detail);
-      case TRANSIENT_ERROR:
-        return new TransientFailureException(detail);
-      case INTERNAL_ERROR:
-        return new InternalFailureException(detail);
-      case TASK_TOO_LARGE:
-        return new IllegalArgumentException("Task size is too large : " + detail);
-      case INVALID_TASK_NAME:
-        return new IllegalArgumentException("Invalid task name : " + detail);
-      case INVALID_QUEUE_NAME:
-        return new IllegalArgumentException("Invalid queue name : " + detail);
-      case INVALID_URL:
-        return new IllegalArgumentException("Invalid URL : " + detail);
-      case INVALID_QUEUE_RATE:
-        return new IllegalArgumentException("Invalid queue rate : " + detail);
-      case PERMISSION_DENIED:
-        return new SecurityException("Permission for requested operation is denied : " + detail);
-      case TASK_ALREADY_EXISTS:
-        return new TaskAlreadyExistsException("Task name already exists : " + detail);
-      case TOMBSTONED_TASK:
-        // TODO It may be more interesting to throw a
-        // "TombstonedTaskException" instead, however the semantics are currently
-        // not useful. (i.e. Race condition between attempt to execute task
-        // and when state of task is changed to TOMBSTONED_TASK means that
-        // TASK_ALREADY_EXISTS does not indicate that the task will be
-        // guaranteed to execute after the add request is initiated.  This guarantee
-        // is required if TOMBSTONED_TASK is a useful state.)
-        // It may be nice to have 3 states (TaskInRunQueue, TaskRunning, TaskRetired).
-        // TaskInRunQueue and TaskRunning indicate the current TASK_ALREADY_EXISTS
-        // state.
-        return new TaskAlreadyExistsException("Task name is tombstoned : " + detail);
-      case INVALID_ETA:
-        return new IllegalArgumentException("ETA is invalid : " + detail);
-      case INVALID_REQUEST:
-        return new IllegalArgumentException("Invalid request : " + detail);
-      case UNKNOWN_TASK:
-        return new TaskNotFoundException("Task does not exist : " + detail);
-      case TOMBSTONED_QUEUE:
-        // TODO: Return a different exception when the Java API is able to provoke this
-        // exception e.g. if the ability to delete queues is added.
-        return new IllegalStateException(
-            "The queue has been marked for deletion and is no longer usable : " + detail);
-      case DUPLICATE_TASK_NAME:
-        return new IllegalArgumentException("Identical task names in request : " + detail);
-        // SKIPPED will never be translated into an exception.
-      case TOO_MANY_TASKS:
-        return new IllegalArgumentException("Request contains too many tasks : " + detail);
-      case INVALID_QUEUE_MODE:
-        return new InvalidQueueModeException(
-            "Target queue mode does not support this operation : " + detail);
-      case TASK_LEASE_EXPIRED:
-        return new IllegalStateException("The task lease has expired : " + detail);
-      case QUEUE_PAUSED:
-        return new IllegalStateException(
-            "The queue is paused and cannot process the request : " + detail);
-      default:
-        return new QueueFailureException("Unspecified error (" + errorCode + ") : " + detail);
-    }
+    return switch (errorCode) {
+      case UNKNOWN_QUEUE -> new IllegalStateException(
+          "The specified queue is unknown : " + detail);
+      case TRANSIENT_ERROR -> new TransientFailureException(detail);
+      case INTERNAL_ERROR -> new InternalFailureException(detail);
+      case TASK_TOO_LARGE -> new IllegalArgumentException("Task size is too large : " + detail);
+      case INVALID_TASK_NAME -> new IllegalArgumentException("Invalid task name : " + detail);
+      case INVALID_QUEUE_NAME -> new IllegalArgumentException("Invalid queue name : " + detail);
+      case INVALID_URL -> new IllegalArgumentException("Invalid URL : " + detail);
+      case INVALID_QUEUE_RATE -> new IllegalArgumentException("Invalid queue rate : " + detail);
+      case PERMISSION_DENIED -> new SecurityException(
+          "Permission for requested operation is denied : " + detail);
+      case TASK_ALREADY_EXISTS -> new TaskAlreadyExistsException(
+          "Task name already exists : " + detail);
+      case TOMBSTONED_TASK ->
+          // TODO It may be more interesting to throw a
+          // "TombstonedTaskException" instead, however the semantics are currently
+          // not useful. (i.e. Race condition between attempt to execute task
+          // and when state of task is changed to TOMBSTONED_TASK means that
+          // TASK_ALREADY_EXISTS does not indicate that the task will be
+          // guaranteed to execute after the add request is initiated.  This guarantee
+          // is required if TOMBSTONED_TASK is a useful state.)
+          // It may be nice to have 3 states (TaskInRunQueue, TaskRunning, TaskRetired).
+          // TaskInRunQueue and TaskRunning indicate the current TASK_ALREADY_EXISTS
+          // state.
+          new TaskAlreadyExistsException("Task name is tombstoned : " + detail);
+      case INVALID_ETA -> new IllegalArgumentException("ETA is invalid : " + detail);
+      case INVALID_REQUEST -> new IllegalArgumentException("Invalid request : " + detail);
+      case UNKNOWN_TASK -> new TaskNotFoundException("Task does not exist : " + detail);
+      case TOMBSTONED_QUEUE ->
+          // TODO: Return a different exception when the Java API is able to provoke this
+          // exception e.g. if the ability to delete queues is added.
+          new IllegalStateException(
+              "The queue has been marked for deletion and is no longer usable : " + detail);
+      case DUPLICATE_TASK_NAME -> new IllegalArgumentException(
+          "Identical task names in request : " + detail);
+      // SKIPPED will never be translated into an exception.
+      case TOO_MANY_TASKS -> new IllegalArgumentException(
+          "Request contains too many tasks : " + detail);
+      case INVALID_QUEUE_MODE -> new InvalidQueueModeException(
+          "Target queue mode does not support this operation : " + detail);
+      case TASK_LEASE_EXPIRED -> new IllegalStateException("The task lease has expired : " + detail);
+      case QUEUE_PAUSED -> new IllegalStateException(
+          "The queue is paused and cannot process the request : " + detail);
+      default -> new QueueFailureException("Unspecified error (" + errorCode + ") : " + detail);
+    };
   }
 
   static RuntimeException translateError(ApiProxy.ApplicationException exception) {

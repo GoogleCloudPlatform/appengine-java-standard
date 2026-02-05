@@ -63,59 +63,41 @@ public final class DatastoreApiHelper {
     if (errorCode == null) {
       return new DatastoreFailureException(exception.getErrorDetail());
     }
-    switch (errorCode) {
-      case BAD_REQUEST:
-        return new IllegalArgumentException(exception.getErrorDetail());
-
-      case CONCURRENT_TRANSACTION:
-        return new ConcurrentModificationException(exception.getErrorDetail());
-
-      case NEED_INDEX:
-        return new DatastoreNeedIndexException(exception.getErrorDetail());
-
-      case TIMEOUT:
-      case BIGTABLE_ERROR:
-        return new DatastoreTimeoutException(exception.getErrorDetail());
-
-      case COMMITTED_BUT_STILL_APPLYING:
-        return new CommittedButStillApplyingException(exception.getErrorDetail());
-
-      case RESOURCE_EXHAUSTED:
-        return new ApiProxy.OverQuotaException(exception.getErrorDetail(), (Throwable) null);
-
-      case INTERNAL_ERROR:
-      default:
-        return new DatastoreFailureException(exception.getErrorDetail());
-    }
+    return switch (errorCode) {
+      case BAD_REQUEST -> new IllegalArgumentException(exception.getErrorDetail());
+      case CONCURRENT_TRANSACTION -> new ConcurrentModificationException(exception.getErrorDetail());
+      case NEED_INDEX -> new DatastoreNeedIndexException(exception.getErrorDetail());
+      case TIMEOUT, BIGTABLE_ERROR -> new DatastoreTimeoutException(exception.getErrorDetail());
+      case COMMITTED_BUT_STILL_APPLYING -> new CommittedButStillApplyingException(
+          exception.getErrorDetail());
+      case RESOURCE_EXHAUSTED -> new ApiProxy.OverQuotaException(
+          exception.getErrorDetail(), (Throwable) null);
+      default -> new DatastoreFailureException(exception.getErrorDetail());
+    };
   }
 
   static RuntimeException createV1Exception(Code code, String message, Throwable cause) {
     if (code == null) {
       return new DatastoreFailureException(message, cause);
     }
-    switch (code) {
-      case ABORTED:
-        return new ConcurrentModificationException(message, cause);
-      case FAILED_PRECONDITION:
+    return switch (code) {
+      case ABORTED -> new ConcurrentModificationException(message, cause);
+      case FAILED_PRECONDITION -> {
         if (message.contains("The Cloud Datastore API is not enabled for the project")) {
-          return new DatastoreFailureException(message, cause);
+          yield new DatastoreFailureException(message, cause);
         }
         // Could also indicate ErrorCode.SAFE_TIME_TOO_OLD.
-        return new DatastoreNeedIndexException(message, cause);
-      case DEADLINE_EXCEEDED:
-        return new DatastoreTimeoutException(message, cause);
-      case INVALID_ARGUMENT:
-      case PERMISSION_DENIED:
-        return new IllegalArgumentException(message, cause);
-      case UNAVAILABLE:
-        return new ApiProxy.RPCFailedException(message, cause);
-      case RESOURCE_EXHAUSTED:
-        return new ApiProxy.OverQuotaException(message, cause);
-      case INTERNAL:
-        // Could also indicate ErrorCode.COMMITTED_BUT_STILL_APPLYING.
-      default:
-        return new DatastoreFailureException(message, cause);
-    }
+        yield new DatastoreNeedIndexException(message, cause);
+      }
+      case DEADLINE_EXCEEDED -> new DatastoreTimeoutException(message, cause);
+      case INVALID_ARGUMENT, PERMISSION_DENIED -> new IllegalArgumentException(message, cause);
+      case UNAVAILABLE -> new ApiProxy.RPCFailedException(message, cause);
+      case RESOURCE_EXHAUSTED -> new ApiProxy.OverQuotaException(message, cause);
+      case INTERNAL ->
+          // Could also indicate ErrorCode.COMMITTED_BUT_STILL_APPLYING.
+          new DatastoreFailureException(message, cause);
+      default -> new DatastoreFailureException(message, cause);
+    };
   }
 
   static <T extends Message, S extends Message.Builder> Future<T> makeAsyncCall(
@@ -162,8 +144,8 @@ public final class DatastoreApiHelper {
 
       @Override
       protected Throwable convertException(Throwable cause) {
-        if (cause instanceof ApiProxy.ApplicationException) {
-          return translateError((ApiProxy.ApplicationException) cause);
+        if (cause instanceof ApiProxy.ApplicationException applicationException) {
+          return translateError(applicationException);
         }
         return cause;
       }

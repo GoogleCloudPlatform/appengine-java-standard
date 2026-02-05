@@ -17,9 +17,7 @@
 package com.google.apphosting.runtime;
 
 import com.google.apphosting.api.ApiProxy;
-import com.google.apphosting.runtime.anyrpc.AnyRpcPlugin;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.VerifyException;
 import com.google.common.flogger.GoogleLogger;
 import com.google.common.net.HostAndPort;
 import java.io.File;
@@ -78,39 +76,20 @@ public class JavaRuntimeFactory {
       System.setProperty("appengine.urlfetch.deriveResponseMessage", "true");
     }
 
-    if (params.getMailSupportExtendedAttachmentEncodings()) {
-      // This system property is checked by GMTransport, which is directly
-      // registered with JavaMail and cannot take additional constructor arguments.
-      System.setProperty("appengine.mail.supportExtendedAttachmentEncodings", "true");
-    }
+    // This system property is checked by GMTransport, which is directly
+    // registered with JavaMail and cannot take additional constructor arguments.
+    System.setProperty("appengine.mail.supportExtendedAttachmentEncodings", "true");
 
-    if (params.getForceReadaheadOnCloudsqlSocket()) {
-      System.setProperty("appengine.jdbc.forceReadaheadOnCloudsqlSocket", "true");
-    }
+    System.setProperty("appengine.jdbc.forceReadaheadOnCloudsqlSocket", "true");
 
-    if (params.getMailFilenamePreventsInlining()) {
-      // This system property is checked by GMTransport, which is directly
-      // registered with JavaMail and cannot take additional constructor arguments.
-      System.setProperty("appengine.mail.filenamePreventsInlining", "true");
-    }
+    // This system property is checked by GMTransport, which is directly
+    // registered with JavaMail and cannot take additional constructor arguments.
+    System.setProperty("appengine.mail.filenamePreventsInlining", "true");
 
     ServletEngineAdapter servletEngine = createServletEngine(params);
     ApiDeadlineOracle deadlineOracle =
-        new ApiDeadlineOracle.Builder()
-            .initDeadlineMap(
-                params.getApiCallDeadline(),
-                params.getApiCallDeadlineMap(),
-                params.getMaxApiCallDeadline(),
-                params.getMaxApiCallDeadlineMap())
-            .initOfflineDeadlineMap(
-                params.getOfflineApiCallDeadline(),
-                params.getOfflineApiCallDeadlineMap(),
-                params.getMaxOfflineApiCallDeadline(),
-                params.getMaxOfflineApiCallDeadlineMap())
-            .build();
+        new ApiDeadlineOracle.Builder().initDeadlineMap().build();
 
-    AnyRpcPlugin rpcPlugin = loadRpcPlugin(params);
-    rpcPlugin.initialize(params.getPort());
     ApiHostClientFactory apiHostFactory = new ApiHostClientFactory();
 
     BackgroundRequestCoordinator coordinator = new BackgroundRequestCoordinator();
@@ -122,68 +101,52 @@ public class JavaRuntimeFactory {
                     params.getTrustedHost(),
                     OptionalInt.of(params.getCloneMaxOutstandingApiRpcs())))
             .setDeadlineOracle(deadlineOracle)
-            .setExternalDatacenterName(params.getExternalDatacenterName())
+            .setExternalDatacenterName("MARS")
             .setByteCountBeforeFlushing(params.getByteCountBeforeFlushing())
             .setMaxLogLineSize(params.getMaxLogLineSize())
             .setMaxLogFlushTime(Duration.ofSeconds(params.getMaxLogFlushSeconds()))
             .setCoordinator(coordinator)
-            .setCloudSqlJdbcConnectivityEnabled(params.getEnableGaeCloudSqlJdbcConnectivity())
             .setDisableApiCallLogging(params.getDisableApiCallLogging())
             .build();
 
     RequestManager.Builder requestManagerBuilder =
         RequestManager.builder()
-            .setSoftDeadlineDelay(params.getJavaSoftDeadlineMs())
+            .setSoftDeadlineDelay(AppEngineConstants.SOFT_DEADLINE_DELAY_MS)
             .setRuntimeLogSink(Optional.of(logSink))
             .setApiProxyImpl(apiProxyImpl)
             .setMaxOutstandingApiRpcs(params.getCloneMaxOutstandingApiRpcs())
             .setThreadStopTerminatesClone(params.getThreadStopTerminatesClone())
-            .setInterruptFirstOnSoftDeadline(params.getInterruptThreadsFirstOnSoftDeadline())
-            .setCyclesPerSecond(params.getCyclesPerSecond())
-            .setWaitForDaemonRequestThreads(params.getWaitForDaemonRequestThreads());
+            .setCyclesPerSecond(AppEngineConstants.CYCLES_PER_SECOND);
 
     RequestManager requestManager = makeRequestManager(requestManagerBuilder);
     apiProxyImpl.setRequestManager(requestManager);
 
     ApplicationEnvironment.RuntimeConfiguration configuration =
-        ApplicationEnvironment.RuntimeConfiguration.builder()
-            .setCloudSqlJdbcConnectivityEnabled(params.getEnableGaeCloudSqlJdbcConnectivity())
-            .setUseGoogleConnectorJ(params.getDefaultUseGoogleConnectorj())
-            .build();
+        ApplicationEnvironment.RuntimeConfiguration.builder().build();
 
     JavaRuntime.Builder runtimeBuilder =
         JavaRuntime.builder()
             .setServletEngine(servletEngine)
             .setSandboxPlugin(sandboxPlugin)
-            .setRpcPlugin(rpcPlugin)
-            .setSharedDirectory(new File(params.getApplicationRoot()))
+            .setSharedDirectory(new File("notused"))
             .setRequestManager(requestManager)
-            .setRuntimeVersion("Google App Engine/" + params.getAppengineReleaseName())
+            .setRuntimeVersion("Google App Engine/" + "mainwithdefaults")
             .setConfiguration(configuration)
             .setDeadlineOracle(deadlineOracle)
             .setCoordinator(coordinator)
-            .setCompressResponse(params.getRuntimeHttpCompression())
-            .setEnableHotspotPerformanceMetrics(params.getEnableHotspotPerformanceMetrics())
-            .setPollForNetwork(params.getPollForNetwork())
-            .setDefaultToNativeUrlStreamHandler(params.getDefaultToNativeUrlStreamHandler())
             .setForceUrlfetchUrlStreamHandler(params.getForceUrlfetchUrlStreamHandler())
-            .setIgnoreDaemonThreads(!params.getWaitForDaemonRequestThreads())
-            .setUseEnvVarsFromAppInfo(params.getUseEnvVarsFromAppInfo())
-            .setFixedApplicationPath(params.getFixedApplicationPath())
-            .setRedirectStdoutStderr(!params.getUseJettyHttpProxy())
-            .setLogJsonToFile(params.getLogJsonToVarLog());
+            .setFixedApplicationPath(params.getFixedApplicationPath());
 
     JavaRuntime runtime = makeRuntime(runtimeBuilder);
 
     ApiProxy.setDelegate(apiProxyImpl);
     ServletEngineAdapter.Config runtimeOptions =
         ServletEngineAdapter.Config.builder()
-            .setUseJettyHttpProxy(params.getUseJettyHttpProxy())
-            .setApplicationRoot(params.getApplicationRoot())
+            .setApplicationRoot("notused")
             .setFixedApplicationPath(params.getFixedApplicationPath())
             .setJettyHttpAddress(HostAndPort.fromParts("0.0.0.0", params.getJettyHttpPort()))
-            .setJettyRequestHeaderSize(params.getJettyRequestHeaderSize())
-            .setJettyResponseHeaderSize(params.getJettyResponseHeaderSize())
+            .setJettyRequestHeaderSize(AppEngineConstants.JETTY_REQUEST_HEADER_SIZE)
+            .setJettyResponseHeaderSize(AppEngineConstants.JETTY_RESPONSE_HEADER_SIZE)
             .setEvaluationRuntimeServerInterface(runtime)
             .build();
     try {
@@ -205,14 +168,6 @@ public class JavaRuntimeFactory {
 
   public RequestManager makeRequestManager(RequestManager.Builder builder) {
     return builder.build();
-  }
-
-  private static AnyRpcPlugin loadRpcPlugin(JavaRuntimeParams params) {
-    if (params.getUseJettyHttpProxy()) {
-      return new NullRpcPlugin();
-    }else {
-      throw new VerifyException("Sorry, the gen1 GrpcPlugin is not supported anymore.");
-    }
   }
 
   /** Creates the ServletEngineAdapter specifies by the --servlet_engine flag. */

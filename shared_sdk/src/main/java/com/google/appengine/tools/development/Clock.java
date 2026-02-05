@@ -31,10 +31,5 @@ public interface Clock {
    * The Clock instance used by local services if no override is
    * provided via {@link ApiProxyLocal#setClock(Clock)}
    */
-  Clock DEFAULT = new Clock() {
-    @Override
-    public long getCurrentTime() {
-      return System.currentTimeMillis();
-    }
-  };
+  Clock DEFAULT = System::currentTimeMillis;
 }

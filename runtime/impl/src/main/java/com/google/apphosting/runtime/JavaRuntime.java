@@ -16,35 +16,21 @@
 
 package com.google.apphosting.runtime;
 
-import static com.google.common.base.StandardSystemProperty.JAVA_SPECIFICATION_VERSION;
-
 import com.google.apphosting.base.AppVersionKey;
 import com.google.apphosting.base.protos.AppinfoPb.AppInfo;
 import com.google.apphosting.base.protos.EmptyMessage;
 import com.google.apphosting.base.protos.RuntimePb.UPAddDelete;
 import com.google.apphosting.base.protos.RuntimePb.UPRequest;
 import com.google.apphosting.base.protos.RuntimePb.UPResponse;
-import com.google.apphosting.runtime.anyrpc.AnyRpcPlugin;
 import com.google.apphosting.runtime.anyrpc.AnyRpcServerContext;
 import com.google.apphosting.runtime.anyrpc.EvaluationRuntimeServerInterface;
 import com.google.apphosting.utils.config.AppEngineWebXml;
 import com.google.auto.value.AutoBuilder;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.flogger.GoogleLogger;
 import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.SynchronousQueue;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -61,9 +47,6 @@ import org.jspecify.annotations.Nullable;
 public class JavaRuntime implements EvaluationRuntimeServerInterface {
 
   private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
-
-  /** Environment Variable for logging messages to /var/log. */
-  private static final String VAR_LOG_ENV_VAR = "WRITE_LOGS_TO_VAR_LOG";
 
   /** Environment variable for the GCP project. */
   private static final String GOOGLE_CLOUD_PROJECT_ENV_VAR = "GOOGLE_CLOUD_PROJECT";
@@ -83,9 +66,6 @@ public class JavaRuntime implements EvaluationRuntimeServerInterface {
   /** Sandbox-agnostic plugin. */
   private final NullSandboxPlugin sandboxPlugin;
 
-  /** RPC-agnostic plugin. */
-  private final AnyRpcPlugin rpcPlugin;
-
   /** {@code AppVersionFactory} can construct {@link AppVersion} instances. */
   private final AppVersionFactory appVersionFactory;
 
@@ -98,33 +78,13 @@ public class JavaRuntime implements EvaluationRuntimeServerInterface {
   /** A template runtime configuration for applications. */
   private final ApplicationEnvironment.RuntimeConfiguration templateConfiguration;
 
-  /** The object responsible for choosing API call deadlines. */
-  private final ApiDeadlineOracle deadlineOracle;
-
   private final Logging logging = new Logging();
 
   private final BackgroundRequestCoordinator coordinator;
 
-  private final boolean compressResponse;
-
-  private final boolean enableHotspotPerformanceMetrics;
-
-  private final boolean pollForNetwork;
-
-  private final boolean redirectStdoutStderr;
-
-  private final boolean logJsonToFile;
-
   private final boolean clearLogHandlers;
 
   private final Path jsonLogDir;
-
-  /**
-   * This will contain a reference to the ByteBuffer containing Hotspot performance data, exported
-   * by the sun.misc.Perf api in Java 8 and by jdk.internal.perf.Perf in Java 9. It's set once and
-   * for all when start() is called.
-   */
-  private ByteBuffer hotspotPerformanceData = null;
 
   /**
    * The app version that has been received by this runtime, or null if no version has been received
@@ -135,16 +95,8 @@ public class JavaRuntime implements EvaluationRuntimeServerInterface {
   /** Get a partly-initialized builder. */
   public static Builder builder() {
     return new AutoBuilder_JavaRuntime_Builder()
-        .setCompressResponse(true)
-        .setEnableHotspotPerformanceMetrics(true)
-        .setPollForNetwork(false)
-        .setDefaultToNativeUrlStreamHandler(false)
         .setForceUrlfetchUrlStreamHandler(false)
-        .setIgnoreDaemonThreads(true)
-        .setUseEnvVarsFromAppInfo(false)
         .setFixedApplicationPath(null)
-        .setRedirectStdoutStderr(true)
-        .setLogJsonToFile(false)
         .setClearLogHandlers(true)
         .setJsonLogDir(DEFAULT_JSON_LOG_OUTPUT_DIR);
   }
@@ -159,10 +111,6 @@ public class JavaRuntime implements EvaluationRuntimeServerInterface {
     public abstract ServletEngineAdapter servletEngine();
 
     public abstract Builder setSandboxPlugin(NullSandboxPlugin sandboxPlugin);
-
-    public abstract Builder setRpcPlugin(AnyRpcPlugin rpcPlugin);
-
-    public abstract AnyRpcPlugin rpcPlugin();
 
     public abstract Builder setSharedDirectory(File sharedDirectory);
 
@@ -185,47 +133,13 @@ public class JavaRuntime implements EvaluationRuntimeServerInterface {
 
     public abstract Builder setCoordinator(BackgroundRequestCoordinator coordinator);
 
-    public abstract Builder setCompressResponse(boolean compressResponse);
-
-    public abstract boolean compressResponse();
-
-    public abstract Builder setEnableHotspotPerformanceMetrics(
-        boolean enableHotspotPerformanceMetrics);
-
-    public abstract boolean enableHotspotPerformanceMetrics();
-
-    public abstract Builder setPollForNetwork(boolean pollForNetwork);
-
-    public abstract boolean pollForNetwork();
-
-    public abstract Builder setDefaultToNativeUrlStreamHandler(
-        boolean defaultToNativeUrlStreamHandler);
-
-    public abstract boolean defaultToNativeUrlStreamHandler();
-
     public abstract Builder setForceUrlfetchUrlStreamHandler(boolean forceUrlfetchUrlStreamHandler);
 
     public abstract boolean forceUrlfetchUrlStreamHandler();
 
-    public abstract Builder setIgnoreDaemonThreads(boolean ignoreDaemonThreads);
-
-    public abstract boolean ignoreDaemonThreads();
-
-    public abstract Builder setUseEnvVarsFromAppInfo(boolean useEnvVarsFromAppInfo);
-
-    public abstract boolean useEnvVarsFromAppInfo();
-
     public abstract Builder setFixedApplicationPath(String fixedApplicationPath);
 
     public abstract String fixedApplicationPath();
-
-    public abstract Builder setRedirectStdoutStderr(boolean redirect);
-
-    public abstract boolean redirectStdoutStderr();
-
-    public abstract Builder setLogJsonToFile(boolean log);
-
-    public abstract boolean logJsonToFile();
 
     public abstract Builder setClearLogHandlers(boolean log);
 
@@ -239,49 +153,30 @@ public class JavaRuntime implements EvaluationRuntimeServerInterface {
   JavaRuntime(
       ServletEngineAdapter servletEngine,
       NullSandboxPlugin sandboxPlugin,
-      AnyRpcPlugin rpcPlugin,
       File sharedDirectory,
       RequestManager requestManager,
       String runtimeVersion,
       ApplicationEnvironment.RuntimeConfiguration configuration,
       ApiDeadlineOracle deadlineOracle,
       BackgroundRequestCoordinator coordinator,
-      boolean compressResponse,
-      boolean enableHotspotPerformanceMetrics,
-      boolean pollForNetwork,
-      boolean defaultToNativeUrlStreamHandler,
       boolean forceUrlfetchUrlStreamHandler,
-      boolean ignoreDaemonThreads,
-      boolean useEnvVarsFromAppInfo,
       @Nullable String fixedApplicationPath,
-      boolean redirectStdoutStderr,
-      boolean logJsonToFile,
       boolean clearLogHandlers,
       Path jsonLogDir) {
     this.servletEngine = servletEngine;
     this.sandboxPlugin = sandboxPlugin;
-    this.rpcPlugin = rpcPlugin;
     this.requestManager = requestManager;
     this.appVersionFactory =
         AppVersionFactory.builder()
             .setSandboxPlugin(sandboxPlugin)
             .setSharedDirectory(sharedDirectory)
             .setRuntimeVersion(runtimeVersion)
-            .setDefaultToNativeUrlStreamHandler(defaultToNativeUrlStreamHandler)
             .setForceUrlfetchUrlStreamHandler(forceUrlfetchUrlStreamHandler)
-            .setIgnoreDaemonThreads(ignoreDaemonThreads)
-            .setUseEnvVarsFromAppInfo(useEnvVarsFromAppInfo)
             .setFixedApplicationPath(fixedApplicationPath)
             .build();
     this.runtimeVersion = runtimeVersion;
     this.templateConfiguration = configuration;
-    this.deadlineOracle = deadlineOracle;
     this.coordinator = coordinator;
-    this.compressResponse = compressResponse;
-    this.enableHotspotPerformanceMetrics = enableHotspotPerformanceMetrics;
-    this.pollForNetwork = pollForNetwork;
-    this.redirectStdoutStderr = redirectStdoutStderr;
-    this.logJsonToFile = logJsonToFile;
     this.clearLogHandlers = clearLogHandlers;
     this.jsonLogDir = jsonLogDir;
   }
@@ -293,69 +188,12 @@ public class JavaRuntime implements EvaluationRuntimeServerInterface {
   public void start(ServletEngineAdapter.Config runtimeOptions) {
     logger.atInfo().log("JavaRuntime starting...");
 
-    if (enableHotspotPerformanceMetrics) {
-      try {
-        // The Perf class is in different packages in Java 8 and Java 9.
-        try {
-          hotspotPerformanceData = getPerformanceDataByteBuffer("sun.misc.Perf");
-        } catch (ClassNotFoundException e) {
-          hotspotPerformanceData = getPerformanceDataByteBuffer("jdk.internal.perf.Perf");
-        }
-      } catch (Exception e) {
-        logger.atWarning().withCause(e).log("Failed to access Hotspot performance data");
-      }
-    }
-
-    SynchronousQueue<Object> rpcStarted = new SynchronousQueue<>();
-
-    new Thread(new RpcRunnable(rpcStarted), "Runtime Network Thread").start();
-
     // Wait for the servlet engine to start up.
     servletEngine.start("Google App Engine/" + runtimeVersion, runtimeOptions);
-
-    // Wait for our rpc service to start up.
-    Object response;
-    try {
-      response = rpcStarted.take();
-    } catch (InterruptedException ex) {
-      throw new RuntimeException("Interrupted while starting runtime", ex);
-    }
-    if (response instanceof Error) {
-      throw (Error) response;
-    } else if (response instanceof RuntimeException) {
-      throw (RuntimeException) response;
-    } else if (response instanceof Throwable) {
-      throw new RuntimeException(((Throwable) response));
-    } else if (response instanceof AnyRpcPlugin) {
-      // Success. Ignore the result. When it comes time to stop the server,
-      // we'll use the rpcPlugin we have
-    } else {
-      throw new RuntimeException("Unknown response: " + response);
-    }
-  }
-
-  private ByteBuffer getPerformanceDataByteBuffer(String perfClassName)
-      throws ReflectiveOperationException {
-    // Attaching to the current process (lvmid == 0) returns a shared buffer valid
-    // for the entire life of the JVM.
-    // The following code is equivalent to:
-    //   ByteBuffer buffer = Perf.getPerf().attach(0, "r");
-    // We invoke it reflectively because this class has been renamed in Java 9.
-    Class<?> perfClass = Class.forName(perfClassName);
-    Method getPerfMethod = perfClass.getMethod("getPerf");
-    Object perf = getPerfMethod.invoke(null);
-    Method attachMethod = perf.getClass().getMethod("attach", int.class, String.class);
-    ByteBuffer buffer = (ByteBuffer) attachMethod.invoke(perf, 0, "r");
-    if (buffer.capacity() == 0) {
-      throw new RuntimeException("JVM does not export Hotspot performance data");
-    }
-    return buffer;
   }
 
   /** Perform a graceful shutdown of our RPC service, and then shut down our servlet engine. */
   public void stop() {
-    logger.atInfo().log("JavaRuntime stopping...");
-    rpcPlugin.stopServer();
     logger.atInfo().log("JavaRuntime stopped.");
     servletEngine.stop();
   }
@@ -395,14 +233,13 @@ public class JavaRuntime implements EvaluationRuntimeServerInterface {
                 .setUpResponse(upResponse)
                 .setRequestManager(requestManager)
                 .setCoordinator(coordinator)
-                .setCompressResponse(compressResponse)
                 .setUpRequestHandler(servletEngine)
                 .build();
         appVersion
             .getThreadGroupPool()
             .start(
                 "Request" + upRequest.getEventIdHash(),
-                rpcPlugin.traceContextPropagating(requestRunner));
+                requestRunner);
       } catch (InterruptedException ex) {
         RequestRunner.setFailure(
             upResponse,
@@ -443,32 +280,19 @@ public class JavaRuntime implements EvaluationRuntimeServerInterface {
 
       ApplicationEnvironment env = appVersion.getEnvironment();
 
-      if ("1.8".equals(JAVA_SPECIFICATION_VERSION.value())) {
-        setEnvironmentVariables(env.getEnvironmentVariables());
-      }
       System.getProperties().putAll(env.getSystemProperties());
       // NOTE: This string should be kept in sync with the one used by the
       // Logger_.getPrivateContextName(String) method.
-      String identifier = env.getAppId() + "/" + env.getVersionId();
       String userLogConfigFilePath = env.getSystemProperties().get("java.util.logging.config.file");
       if (userLogConfigFilePath != null) {
         userLogConfigFilePath =
             env.getRootDirectory().getAbsolutePath() + "/" + userLogConfigFilePath;
       }
       System.setIn(new ByteArrayInputStream(new byte[0]));
-      if (logJsonToFile || "1".equals(System.getenv(VAR_LOG_ENV_VAR))) {
-        logging.logJsonToFile(
-            System.getenv(GOOGLE_CLOUD_PROJECT_ENV_VAR),
-            jsonLogDir.resolve(JSON_LOG_OUTPUT_FILE),
-            clearLogHandlers);
-      } else {
-        sandboxPlugin.startCapturingApplicationLogs();
-      }
-      if (redirectStdoutStderr) {
-        // Reassign the standard streams so that e.g. System.out.println works as intended,
-        // i.e. it sends output to the application log.
-        logging.redirectStdoutStderr(identifier);
-      }
+      logging.logJsonToFile(
+          System.getenv(GOOGLE_CLOUD_PROJECT_ENV_VAR),
+          jsonLogDir.resolve(JSON_LOG_OUTPUT_FILE),
+          clearLogHandlers);
       logging.applyLogProperties(userLogConfigFilePath, sandboxPlugin.getApplicationClassLoader());
       // Now notify the servlet engine, so it can do any setup it
       // has to do.
@@ -481,15 +305,6 @@ public class JavaRuntime implements EvaluationRuntimeServerInterface {
     // Do not put this in a finally block.  If we propagate an
     // exception the callback will be invoked automatically.
     rpc.finishWithResponse(EmptyMessage.getDefaultInstance());
-  }
-
-  /**
-   * Obsolete operation. Deleting app versions has always been theoretically possible but never
-   * actually implemented in App Engine.
-   */
-  @Override
-  public synchronized void deleteAppVersion(AnyRpcServerContext rpc, AppInfo appInfo) {
-    rpc.finishWithAppError(UPAddDelete.ERROR.FAILURE_VALUE, "Version deletion is unimplemented");
   }
 
   synchronized AppVersion findAppVersion(String appId, String versionId) {
@@ -511,130 +326,6 @@ public class JavaRuntime implements EvaluationRuntimeServerInterface {
       } finally {
         System.exit(1);
       }
-    }
-  }
-
-  private static void setEnvironmentVariables(Map<String, String> vars) {
-    // Setting the environment variables after the JVM has started requires a bit of a hack:
-    // we reach into the package-private java.lang.ProcessEnvironment class, which incidentally
-    // is platform-specific, and replace the map held in a static final field there,
-    // using yet more reflection.
-    Map<String, String> allVars = new HashMap<>(System.getenv());
-    vars.forEach(
-        (k, v) -> {
-          if (v == null) {
-            logger.atWarning().log("Null value for $%s", k);
-          }
-          allVars.put(k, v);
-        });
-    try {
-      Class<?> pe = Class.forName("java.lang.ProcessEnvironment", true, null);
-      Field f = pe.getDeclaredField("theUnmodifiableEnvironment");
-      f.setAccessible(true);
-      Field m = Field.class.getDeclaredField("modifiers");
-      m.setAccessible(true);
-      m.setInt(f, m.getInt(f) & ~Modifier.FINAL);
-      f.set(null, Collections.unmodifiableMap(allVars));
-    } catch (ReflectiveOperationException e) {
-      throw new RuntimeException("failed to set the environment variables", e);
-    }
-  }
-
-  private class RpcRunnable implements Runnable {
-    private final SynchronousQueue<Object> rpcStarted;
-
-    RpcRunnable(SynchronousQueue<Object> rpcStarted) {
-      this.rpcStarted = rpcStarted;
-    }
-
-    @Override
-    public void run() {
-      try {
-        // NOTE: This method never returns -- this thread is now the
-        // network thread and will be responsible for accepting socket
-        // connections in a loop and handing off control to the
-        // Executor created above.
-        startServer();
-      } catch (Throwable ex) {
-        logger.atSevere().withCause(ex).log("JavaRuntime server could not start");
-        try {
-          // Something went wrong.  Pass the exception back.
-          rpcStarted.put(ex);
-        } catch (InterruptedException ex2) {
-          throw new RuntimeException(ex2);
-        }
-      }
-    }
-
-    @SuppressWarnings("SystemExitOutsideMain")
-    private void startServer() throws Exception {
-      CloneControllerImplCallback callback = new CloneControllerImplCallback();
-      CloneControllerImpl controller =
-          new CloneControllerImpl(
-              callback, deadlineOracle, requestManager, hotspotPerformanceData);
-      rpcPlugin.startServer(JavaRuntime.this, controller);
-
-      rpcStarted.put(rpcPlugin);
-
-      try {
-        logger.atInfo().log("Beginning accept loop.");
-        // This must run in the same thread that created the EventDispatcher.
-        rpcPlugin.blockUntilShutdown();
-      } catch (Throwable ex) {
-        // We've already called rpcStarted.put() so there's no
-        // sense trying to pass the exception -- no one is waiting any
-        // longer.  Instead, just print what we can and kill the
-        // server.  Without a network thread we cannot send a response
-        // back to the AppServer anyway.
-        ex.printStackTrace();
-        System.exit(1);
-      }
-    }
-  }
-
-  @VisibleForTesting
-  class CloneControllerImplCallback implements CloneControllerImpl.Callback {
-    @Override
-    public void divertNetworkServices() {
-      if (pollForNetwork) {
-        pollNetworkingReady();
-      }
-    }
-
-    @Override
-    public AppVersion getAppVersion(String appId, String versionId) {
-      return findAppVersion(appId, versionId);
-    }
-
-    // Swallow the checked exception that Thread.sleep() has.
-    private void sleep(int time) {
-      try {
-        Thread.sleep(time);
-      } catch (InterruptedException e) {
-        throw new RuntimeException(e);
-      }
-    }
-
-    private void pollNetworkingReady() {
-      logger.atInfo().log("Polling for if networking is ready.");
-      long start = System.nanoTime();
-      // TODO(b/33757746): The gateway client seems to require multiple seconds to be ready.
-      for (int i = 0; i < 100; i++) {
-        try {
-          InetAddress.getByName("google.com");
-          long finish = System.nanoTime();
-          // If networking is NOT ready, then getByName should throw an exception.
-          logger.atInfo().log("Networking ready. Polled for %.3f s.", (finish - start) / 1e9);
-          return;
-        } catch (UnknownHostException e) {
-          // We expect to get exceptions when the gateway client is still
-          // starting up.
-          logger.atInfo().withCause(e).log("Couldn't connect");
-          sleep(100);
-        }
-      }
-      logger.atSevere().log("Could not verify that networking is ready.");
-      throw new RuntimeException("Cannot verify that networking is ready");
     }
   }
 }

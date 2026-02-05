@@ -25,37 +25,33 @@ final class DeadlineOracleFactory {
   private static final double YEAR_SECONDS = 31536000.0;
 
   interface DeadlineSetter {
-    void set(String pkg, double defOnline, double defOffline);
+    void set(String pkg, double defOnline);
   }
 
   static ApiDeadlineOracle create() {
     Map<String, Double> defaultOnlineDeadlineMap = new HashMap<>();
     Map<String, Double> maxOnlineDeadlineMap = new HashMap<>();
-    Map<String, Double> defaultOfflineDeadlineMap = new HashMap<>();
-    Map<String, Double> maxOfflineDeadlineMap = new HashMap<>();
 
     DeadlineSetter setter =
-        (String pkg, double defOnline, double defOffline) -> {
+        (String pkg, double defOnline) -> {
           defaultOnlineDeadlineMap.put(pkg, defOnline);
           maxOnlineDeadlineMap.put(pkg, YEAR_SECONDS);
-          defaultOfflineDeadlineMap.put(pkg, defOffline);
-          maxOfflineDeadlineMap.put(pkg, YEAR_SECONDS);
         };
 
-    setter.set("app_config_service", 60.0, 60.0);
-    setter.set("blobstore", 15.0, 15.0);
-    setter.set("datastore_v3", 60.0, 60.0);
-    setter.set("datastore_v4", 60.0, 60.0);
-    setter.set("file", 30.0, 30.0);
-    setter.set("images", 30.0, 30.0);
-    setter.set("logservice", 60.0, 60.0);
-    setter.set("modules", 60.0, 60.0);
-    setter.set("rdbms", 60.0, 60.0);
-    setter.set("remote_socket", 60.0, 60.0);
-    setter.set("search", 10.0, 10.0);
-    setter.set("stubby", 10.0, 10.0);
-    setter.set("taskqueue", 10.0, 5.0);
-    setter.set("urlfetch", 10.0, 5.0);
+    setter.set("app_config_service", 60.0);
+    setter.set("blobstore", 15.0);
+    setter.set("datastore_v3", 60.0);
+    setter.set("datastore_v4", 60.0);
+    setter.set("file", 30.0);
+    setter.set("images", 30.0);
+    setter.set("logservice", 60.0);
+    setter.set("modules", 60.0);
+    setter.set("rdbms", 60.0);
+    setter.set("remote_socket", 60.0);
+    setter.set("search", 10.0);
+    setter.set("stubby", 10.0);
+    setter.set("taskqueue", 10.0);
+    setter.set("urlfetch", 10.0);
 
     return new ApiDeadlineOracle.Builder()
         .initDeadlineMap(
@@ -64,12 +60,6 @@ final class DeadlineOracleFactory {
                 defaultOnlineDeadlineMap,
                 /*maxDeadline=*/ YEAR_SECONDS,
                 maxOnlineDeadlineMap))
-        .initOfflineDeadlineMap(
-            new ApiDeadlineOracle.DeadlineMap(
-                /*defaultDeadline=*/ YEAR_SECONDS,
-                defaultOfflineDeadlineMap,
-                /*maxDeadline=*/ YEAR_SECONDS,
-                maxOfflineDeadlineMap))
         .build();
   }
 

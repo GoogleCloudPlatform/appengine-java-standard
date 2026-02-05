@@ -42,6 +42,7 @@ public class SystemProperty {
    * {@code "com.google.appengine.runtime.environment"}.
    * Has the values {@code "Production"} and {@code "Development"}.
    */
+  @SuppressWarnings("ClassInitializationDeadlock")
   public static final Environment environment = new Environment();
 
   /**

@@ -600,59 +600,68 @@ public class QueueXml {
   public String toYaml() {
     StringBuilder builder = new StringBuilder();
     if (getTotalStorageLimit().length() > 0) {
-      builder.append("total_storage_limit: " + getTotalStorageLimit() + "\n\n");
+      builder.append("total_storage_limit: ").append(getTotalStorageLimit()).append("\n\n");
     }
     builder.append("queue:\n");
     for (Entry ent : getEntries()) {
-      builder.append("- name: " + ent.getName() + "\n");
+      builder.append("- name: ").append(ent.getName()).append("\n");
       Double rate = ent.getRate();
       if (rate != null) {
-        builder.append(
-            "  rate: " + rate + '/' + ent.getRateUnit().getIdent() + "\n");
+        builder
+            .append("  rate: ")
+            .append(rate)
+            .append('/')
+            .append(ent.getRateUnit().getIdent())
+            .append("\n");
       }
       Integer bucketSize = ent.getBucketSize();
       if (bucketSize != null) {
-        builder.append("  bucket_size: " + bucketSize + "\n");
+        builder.append("  bucket_size: ").append(bucketSize).append("\n");
       }
       Integer maxConcurrentRequests = ent.getMaxConcurrentRequests();
       if (maxConcurrentRequests != null) {
-        builder.append("  max_concurrent_requests: " + maxConcurrentRequests + "\n");
+        builder.append("  max_concurrent_requests: ").append(maxConcurrentRequests).append("\n");
       }
       RetryParameters retryParameters = ent.getRetryParameters();
       if (retryParameters != null) {
         builder.append("  retry_parameters:\n");
         if (retryParameters.getRetryLimit() != null) {
-          builder.append("    task_retry_limit: " + retryParameters.getRetryLimit() + "\n");
+          builder.append("    task_retry_limit: ").append(retryParameters.getRetryLimit())
+              .append("\n");
         }
         if (retryParameters.getAgeLimitSec() != null) {
-          builder.append("    task_age_limit: " + retryParameters.getAgeLimitSec() + "s\n");
+          builder.append("    task_age_limit: ").append(retryParameters.getAgeLimitSec())
+              .append("s\n");
         }
         if (retryParameters.getMinBackoffSec() != null) {
-          builder.append("    min_backoff_seconds: " + retryParameters.getMinBackoffSec() + "\n");
+          builder.append("    min_backoff_seconds: ").append(retryParameters.getMinBackoffSec())
+              .append("\n");
         }
         if (retryParameters.getMaxBackoffSec() != null) {
-          builder.append("    max_backoff_seconds: " + retryParameters.getMaxBackoffSec() + "\n");
+          builder.append("    max_backoff_seconds: ").append(retryParameters.getMaxBackoffSec())
+              .append("\n");
         }
         if (retryParameters.getMaxDoublings() != null) {
-          builder.append("    max_doublings: " + retryParameters.getMaxDoublings() + "\n");
+          builder.append("    max_doublings: ").append(retryParameters.getMaxDoublings())
+              .append("\n");
         }
       }
       String target = ent.getTarget();
       if (target != null) {
-        builder.append("  target: " + target + "\n");
+        builder.append("  target: ").append(target).append("\n");
       }
       String mode = ent.getMode();
       if (mode != null) {
-        builder.append("  mode: " + mode + "\n");
+        builder.append("  mode: ").append(mode).append("\n");
       }
       List<AclEntry> acl = ent.getAcl();
       if (acl != null) {
         builder.append("  acl:\n");
         for (AclEntry aclEntry : acl) {
           if (aclEntry.getUserEmail() != null) {
-            builder.append("  - user_email: " + aclEntry.getUserEmail() + "\n");
+            builder.append("  - user_email: ").append(aclEntry.getUserEmail()).append("\n");
           } else if (aclEntry.getWriterEmail() != null) {
-            builder.append("  - writer_email: " + aclEntry.getWriterEmail() + "\n");
+            builder.append("  - writer_email: ").append(aclEntry.getWriterEmail()).append("\n");
           }
         }
       }

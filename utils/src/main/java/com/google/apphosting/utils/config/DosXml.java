@@ -138,9 +138,9 @@ public class DosXml {
   public String toYaml() {
     StringBuilder builder = new StringBuilder("blacklist:\n");
     for (BlacklistEntry ent : blacklistEntries) {
-      builder.append("- subnet: " + ent.getSubnet() + "\n");
+      builder.append("- subnet: ").append(ent.getSubnet()).append("\n");
       if (!ent.getDescription().equals("")) {
-        builder.append("  description: " + ent.getDescription() + "\n");
+        builder.append("  description: ").append(ent.getDescription()).append("\n");
       }
     }
     return builder.toString();

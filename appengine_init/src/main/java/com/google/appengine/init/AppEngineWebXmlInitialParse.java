@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Objects;
 import java.util.Properties;
+import java.util.function.UnaryOperator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.xml.namespace.QName;
@@ -34,6 +35,10 @@ public final class AppEngineWebXmlInitialParse {
 
   private static final Logger logger =
       Logger.getLogger(AppEngineWebXmlInitialParse.class.getName());
+
+  /** Provider for environment variables, allowing for substitution in tests. */
+  private UnaryOperator<String> envProvider = System::getenv;
+
   private String runtimeId = "";
   private final String appEngineWebXmlFile;
 
@@ -128,7 +133,7 @@ public final class AppEngineWebXmlInitialParse {
   public void handleRuntimeProperties() {
 
     // See if the Mendel experiment to enable HttpConnector is set automatically via env var:
-    if (Objects.equals(System.getenv("EXPERIMENT_ENABLE_HTTP_CONNECTOR_FOR_JAVA"), "true")) {
+    if (Objects.equals(envProvider.apply("EXPERIMENT_ENABLE_HTTP_CONNECTOR_FOR_JAVA"), "true")) {
       System.setProperty("appengine.ignore.cancelerror", "true");
       System.setProperty("appengine.use.HttpConnector", "true");
     }
@@ -144,7 +149,7 @@ public final class AppEngineWebXmlInitialParse {
             && event.asStartElement().getName().getLocalPart().equals(RUNTIME)) {
           XMLEvent runtime = reader.nextEvent();
           if (runtime.isCharacters()) {
-            runtimeId = runtime.asCharacters().getData();
+            runtimeId = runtime.asCharacters().getData().trim();
             appEngineWebXmlProperties.setProperty("GAE_RUNTIME", runtimeId);
           }
         }
@@ -170,7 +175,10 @@ public final class AppEngineWebXmlInitialParse {
       }
     }
     // reset runtimeId to the value possibly overridden by system properties
-    runtimeId = systemProps.getProperty("GAE_RUNTIME");
+    runtimeId = System.getProperty("GAE_RUNTIME");
+    if (runtimeId != null) {
+      runtimeId = runtimeId.trim();
+    }
 
     if ((Objects.equals(runtimeId, "java17") || Objects.equals(runtimeId, "java21"))
         && Boolean.parseBoolean(System.getProperty("appengine.use.EE10", "false"))
@@ -208,7 +216,7 @@ public final class AppEngineWebXmlInitialParse {
         System.setProperty(
             "appengine.use.EE8",
             String.valueOf(
-                Objects.equals(System.getenv("EXPERIMENT_ENABLE_JETTY12_FOR_JAVA"), "true")));
+                Objects.equals(envProvider.apply("EXPERIMENT_ENABLE_JETTY12_FOR_JAVA"), "true")));
       } else if (Objects.equals(runtimeId, "java21")) {
         if (Boolean.parseBoolean(System.getProperty("appengine.use.jetty121", "false"))) {
           System.setProperty("appengine.use.EE11", "true");
@@ -233,6 +241,33 @@ public final class AppEngineWebXmlInitialParse {
     if (Objects.equals(runtimeId, "java25") && Boolean.getBoolean("appengine.use.EE10")) {
       throw new IllegalArgumentException("appengine.use.EE10 is not supported in Jetty121");
     }
+
+    // Log the runtime configuration so we can see it in the app logs.
+    StringBuilder configLog =
+        new StringBuilder("AppEngine runtime configuration: runtimeId=").append(runtimeId);
+    if (Objects.equals(envProvider.apply("EXPERIMENT_ENABLE_JETTY12_FOR_JAVA"), "true")) {
+      configLog.append(", with Jetty 12");
+    }
+    if (Objects.equals(envProvider.apply("EXPERIMENT_ENABLE_HTTP_CONNECTOR_FOR_JAVA"), "true")) {
+      configLog.append(", with HTTP Connector");
+    }
+    int initialLength = configLog.length();
+    if (Boolean.getBoolean("appengine.use.EE8")) {
+      configLog.append(", appengine.use.EE8=true");
+    }
+    if (Boolean.getBoolean("appengine.use.EE10")) {
+      configLog.append(", appengine.use.EE10=true");
+    }
+    if (Boolean.getBoolean("appengine.use.EE11")) {
+      configLog.append(", appengine.use.EE11=true");
+    }
+    if (Boolean.getBoolean("appengine.use.jetty121")) {
+      configLog.append(", appengine.use.jetty121=true");
+    }
+    if (configLog.length() == initialLength) {
+      configLog.append(" no extra flag set");
+    }
+    logger.info(configLog.toString());
   }
 
   /**
@@ -282,5 +317,9 @@ public final class AppEngineWebXmlInitialParse {
           "appengine runtime jars built on {0} from commit {1}, version {2}",
           new Object[] {BUILD_TIMESTAMP, GIT_HASH, BUILD_VERSION});
     }
+  }
+
+  void setEnvProvider(UnaryOperator<String> envProvider) {
+    this.envProvider = envProvider;
   }
 }

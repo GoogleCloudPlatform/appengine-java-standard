@@ -61,17 +61,14 @@ public class RequestThreadFactory implements ThreadFactory {
     public Thread newThread(final Runnable runnable) {
         checkState(requestEnvironment != null,
                 "Request threads can only be created within the context of a running request.");
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                if (runnable == null) {
-                    return;
-                }
-                checkState(allowNewRequestThreadCreation,
-                        "Cannot start new threads after the request thread stops.");
-                ApiProxy.setEnvironmentForCurrentThread(requestEnvironment);
-                runnable.run();
+        Thread thread = new Thread(() -> {
+            if (runnable == null) {
+                return;
             }
+            checkState(allowNewRequestThreadCreation,
+                    "Cannot start new threads after the request thread stops.");
+            ApiProxy.setEnvironmentForCurrentThread(requestEnvironment);
+            runnable.run();
         });
         checkState(
                 allowNewRequestThreadCreation, "Cannot create new threads after the request thread stops.");

@@ -97,8 +97,8 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class ApiProxyImplTest {
 
-  private static final double DEFAULT_API_DEADLINE = 5.0;
-  private static final double DEFAULT_OFFLINE_API_DEADLINE = 7.0;
+  private static final double DEFAULT_API_DEADLINE = 10.0;
+  private static final double DEFAULT_OFFLINE_API_DEADLINE = 5.0;
   private static final double MAX_API_DEADLINE = 10.0;
   private static final String APP_ID = "app123";
   private static final String ENGINE_ID = "non-default";
@@ -138,14 +138,7 @@ public class ApiProxyImplTest {
     rootDirectory = temporaryFolder.newFolder("appengine" + System.nanoTime());
     maxConcurrentApiCalls = 10;
     oracle =
-        new ApiDeadlineOracle.Builder()
-            .initDeadlineMap(
-                DEFAULT_API_DEADLINE, "",
-                MAX_API_DEADLINE, "")
-            .initOfflineDeadlineMap(
-                DEFAULT_OFFLINE_API_DEADLINE, "",
-                MAX_API_DEADLINE, "")
-            .build();
+        new ApiDeadlineOracle.Builder().initDeadlineMap().build();
     sleepSemaphore = new Semaphore(0);
     APIHostClientInterface apiHost = createAPIHost();
     delegate =
@@ -363,39 +356,8 @@ public class ApiProxyImplTest {
     assertThat(environment.getAttributes().get(ApiProxyImpl.APPSERVER_TASK_BNS)).isEqualTo(null);
     assertThat(
             environment.getAttributes().get(ApiProxyImpl.CLOUD_SQL_JDBC_CONNECTIVITY_ENABLED_KEY))
-        .isEqualTo(false);
-    assertThat(environment.getTraceId()).isEmpty();
-  }
-
-  @Test
-  public void testCloudSqlJdbcConnectivityEnabled() {
-    APIHostClientInterface apiHost = createAPIHost();
-    delegate =
-        ApiProxyImpl.builder()
-            .setApiHost(apiHost)
-            .setDeadlineOracle(oracle)
-            .setByteCountBeforeFlushing(BYTE_COUNT_BEFORE_FLUSHING)
-            .setMaxLogLineSize(MAX_LOG_LINE_SIZE)
-            .setCloudSqlJdbcConnectivityEnabled(true)
-            .build();
-    assertThat(
-            createEnvironment()
-                .getAttributes()
-                .get(ApiProxyImpl.CLOUD_SQL_JDBC_CONNECTIVITY_ENABLED_KEY))
         .isEqualTo(true);
-
-    delegate =
-        ApiProxyImpl.builder()
-            .setApiHost(apiHost)
-            .setDeadlineOracle(oracle)
-            .setByteCountBeforeFlushing(BYTE_COUNT_BEFORE_FLUSHING)
-            .setMaxLogLineSize(MAX_LOG_LINE_SIZE)
-            .build();
-    assertThat(
-            createEnvironment()
-                .getAttributes()
-                .get(ApiProxyImpl.CLOUD_SQL_JDBC_CONNECTIVITY_ENABLED_KEY))
-        .isEqualTo(false);
+    assertThat(environment.getTraceId()).isEmpty();
   }
 
   @Test
@@ -1348,7 +1310,7 @@ public class ApiProxyImplTest {
     // seconds while the first API call was using that slot. So if elapsed time is < 2 seconds then
     // that didn't happen.
     Instant asyncCallEnd = Instant.now();
-    assertThat(Duration.between(asyncCallStart, asyncCallEnd).getSeconds()).isLessThan(2);
+    assertThat(Duration.between(asyncCallStart, asyncCallEnd).toSeconds()).isLessThan(2);
 
     // Give it a couple of seconds to time out. If we don't respect the timeout while waiting for
     // the API slot, then we won't succeed in timing out.

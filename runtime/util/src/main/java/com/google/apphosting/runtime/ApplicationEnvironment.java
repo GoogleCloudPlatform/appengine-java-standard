@@ -70,14 +70,7 @@ public class ApplicationEnvironment {
    */
   @AutoValue
   public abstract static class RuntimeConfiguration {
-    public static final RuntimeConfiguration DEFAULT_FOR_TEST = builder()
-        .setCloudSqlJdbcConnectivityEnabled(false)
-        .setUseGoogleConnectorJ(false)
-        .build();
-
-    public abstract boolean getCloudSqlJdbcConnectivityEnabled();
-
-    public abstract boolean getUseGoogleConnectorJ();
+    public static final RuntimeConfiguration DEFAULT_FOR_TEST = builder().build();
 
     public static Builder builder() {
       return new AutoValue_ApplicationEnvironment_RuntimeConfiguration.Builder();
@@ -88,11 +81,6 @@ public class ApplicationEnvironment {
     /** Builder for RuntimeConfiguration. */
     @AutoValue.Builder
     public abstract static class Builder {
-      public abstract Builder setCloudSqlJdbcConnectivityEnabled(
-          boolean cloudSqlJdbcConnectivityEnabled);
-
-      public abstract Builder setUseGoogleConnectorJ(boolean useGoogleConnectorJ);
-
       public abstract RuntimeConfiguration build();
     }
   }
@@ -171,6 +159,6 @@ public class ApplicationEnvironment {
 
   public boolean getUseGoogleConnectorJ() {
     return Optional.ofNullable(useGoogleConnectorJ)
-        .orElse(runtimeConfiguration.getUseGoogleConnectorJ());
+        .orElse(true);
   }
 }
