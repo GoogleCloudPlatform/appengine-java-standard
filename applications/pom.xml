@@ -38,5 +38,6 @@
     <module>guestbook_jakarta</module>
     <module>servletasyncapp</module>
     <module>servletasyncappjakarta</module>
+    <module>jaxrs</module>
   </modules>
 </project>

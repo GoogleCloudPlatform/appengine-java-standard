@@ -29,6 +29,8 @@ import org.eclipse.jetty.ee11.apache.jsp.JettyJasperInitializer;
 public class AppEngineAnnotationConfiguration extends AnnotationConfiguration {
   @Override
   protected List<ServletContainerInitializer> getNonExcludedInitializers(State state) {
+    // TODO: remove this line when https://github.com/jetty/jetty.project/issues/14431 is resolved.
+    state._context.getMetaData().orderFragments();
 
     List<ServletContainerInitializer> initializers = super.getNonExcludedInitializers(state);
     for (ServletContainerInitializer sci : initializers) {
