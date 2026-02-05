@@ -33,10 +33,10 @@ public class JaxRsTest extends DevAppServerTestBase {
       // Only EE8 app.
 return Arrays.asList(
         new Object[][] {
-      //       {"java17", "9.4", "EE6"},
+              {"java17", "9.4", "EE6"},
               {"java17", "12.0", "EE8"},
-      //        {"java21", "12.0", "EE8"},
-     //         {"java25", "12.1", "EE8"},
+              {"java21", "12.0", "EE8"},
+              {"java25", "12.1", "EE8"},
 
         });
   
