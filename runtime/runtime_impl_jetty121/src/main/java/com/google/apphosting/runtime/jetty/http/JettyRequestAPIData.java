@@ -55,9 +55,9 @@ import static com.google.apphosting.runtime.AppEngineConstants.X_GOOGLE_INTERNAL
 import com.google.apphosting.base.protos.HttpPb;
 import com.google.apphosting.base.protos.RuntimePb;
 import com.google.apphosting.base.protos.TracePb;
+import com.google.apphosting.runtime.AppInfoFactory;
 import com.google.apphosting.runtime.RequestAPIData;
 import com.google.apphosting.runtime.TraceContextHelper;
-import com.google.apphosting.runtime.jetty.AppInfoFactory;
 import com.google.common.base.Strings;
 import com.google.common.flogger.GoogleLogger;
 import java.net.InetSocketAddress;

@@ -17,9 +17,9 @@
 package com.google.appengine.runtime.lite;
 
 import com.google.apphosting.runtime.AppVersion;
+import com.google.apphosting.runtime.AppInfoFactory;
 import com.google.apphosting.runtime.MutableUpResponse;
 import com.google.apphosting.runtime.anyrpc.AnyRpcServerContext;
-import com.google.apphosting.runtime.jetty9.AppInfoFactory;
 import com.google.apphosting.runtime.jetty9.AppVersionHandlerFactory;
 import com.google.apphosting.runtime.jetty9.UPRequestTranslator;
 import com.google.common.flogger.GoogleLogger;

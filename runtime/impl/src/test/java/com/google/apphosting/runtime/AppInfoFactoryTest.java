@@ -14,24 +14,18 @@
  * limitations under the License.
  */
 
-package com.google.apphosting.runtime.jetty9;
+package com.google.apphosting.runtime;
 
 import static com.google.common.base.StandardSystemProperty.USER_DIR;
 import static com.google.common.truth.Truth.assertThat;
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertThrows;
 
 import com.google.appengine.tools.development.resource.ResourceExtractor;
 import com.google.apphosting.base.protos.AppinfoPb;
-import com.google.apphosting.utils.config.AppYaml;
 import com.google.common.collect.ImmutableMap;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -53,16 +47,15 @@ public final class AppInfoFactoryTest {
 
   @Before
   public void setUp() throws IOException {
-    Path projPath = Paths.get(temporaryFolder.newFolder(PROJECT_RESOURCE_NAME).getPath());
+    Path projPath = Path.of(temporaryFolder.newFolder(PROJECT_RESOURCE_NAME).getPath());
     appRoot = projPath.getParent().toString();
-    fixedAppDir = Paths.get(projPath.toString(), "100.mydeployment").toString();
+    fixedAppDir = Path.of(projPath.toString(), "100.mydeployment").toString();
     ResourceExtractor.toFile(PROJECT_RESOURCE_NAME, projPath.toString());
   }
 
   @Test
   public void getGaeService_nonDefault() throws Exception {
-    AppInfoFactory factory =
-        new AppInfoFactory(ImmutableMap.of("GAE_SERVICE", "mytestservice"));
+    AppInfoFactory factory = new AppInfoFactory(ImmutableMap.of("GAE_SERVICE", "mytestservice"));
     assertThat(factory.getGaeService()).isEqualTo("mytestservice");
   }
 
@@ -140,7 +133,6 @@ public final class AppInfoFactoryTest {
 
     assertThat(appInfo.getAppId()).isEqualTo("s~myapp");
     assertThat(appInfo.getVersionId()).isEqualTo("mytestservice:100.mydeployment");
-    assertThat(appInfo.getRuntimeId()).isEqualTo("java8");
   }
 
   @Test
@@ -157,7 +149,6 @@ public final class AppInfoFactoryTest {
 
     assertThat(appInfo.getAppId()).isEqualTo("s~myapp");
     assertThat(appInfo.getVersionId()).isEqualTo("mytestservice:100.mydeployment");
-    assertThat(appInfo.getRuntimeId()).isEqualTo("java8");
   }
 
   @Test
@@ -179,7 +170,7 @@ public final class AppInfoFactoryTest {
 
     assertThat(appInfo.getAppId()).isEqualTo("s~myapp");
     assertThat(appInfo.getVersionId()).isEqualTo("mytestservice:100.mydeployment");
-    assertThat(appInfo.getRuntimeId()).isEqualTo("java8");
+    assertThat(appInfo.getApiVersion()).isEmpty();
   }
 
   @Test
@@ -208,14 +199,10 @@ public final class AppInfoFactoryTest {
                 "GAE_APPLICATION", "s~myapp",
                 "GOOGLE_CLOUD_PROJECT", "mytestproject"));
 
-    File appYamlFile = new File(fixedAppDir + "/WEB-INF/appengine-generated/app.yaml");
-    AppYaml appYaml = AppYaml.parse(new InputStreamReader(new FileInputStream(appYamlFile), UTF_8));
-
-    AppinfoPb.AppInfo appInfo = factory.getAppInfoFromAppYaml(appYaml);
+    AppinfoPb.AppInfo appInfo = factory.getAppInfo();
 
     assertThat(appInfo.getAppId()).isEqualTo("s~myapp");
     assertThat(appInfo.getVersionId()).isEqualTo("mytestservice:100.mydeployment");
-    assertThat(appInfo.getRuntimeId()).isEqualTo("java8");
   }
 
   @Test
@@ -233,6 +220,5 @@ public final class AppInfoFactoryTest {
 
     assertThat(appInfo.getAppId()).isEqualTo("s~myapp");
     assertThat(appInfo.getVersionId()).isEqualTo("mytestservice:100.mydeployment");
-    assertThat(appInfo.getRuntimeId()).isEqualTo("java8");
   }
 }

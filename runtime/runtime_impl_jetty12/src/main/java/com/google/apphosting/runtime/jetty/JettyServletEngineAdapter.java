@@ -28,6 +28,7 @@ import com.google.apphosting.base.protos.EmptyMessage;
 import com.google.apphosting.base.protos.RuntimePb.UPRequest;
 import com.google.apphosting.base.protos.RuntimePb.UPResponse;
 import com.google.apphosting.runtime.AppEngineConstants;
+import com.google.apphosting.runtime.AppInfoFactory;
 import com.google.apphosting.runtime.AppVersion;
 import com.google.apphosting.runtime.LocalRpcContext;
 import com.google.apphosting.runtime.MutableUpResponse;

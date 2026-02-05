@@ -32,9 +32,9 @@ import com.google.apphosting.runtime.RequestManager;
 import com.google.apphosting.runtime.RequestRunner;
 import com.google.apphosting.runtime.RequestRunner.EagerRunner;
 import com.google.apphosting.runtime.ResponseAPIData;
+import com.google.apphosting.runtime.AppInfoFactory;
 import com.google.apphosting.runtime.ServletEngineAdapter;
 import com.google.apphosting.runtime.anyrpc.AnyRpcServerContext;
-import com.google.apphosting.runtime.jetty.AppInfoFactory;
 import com.google.common.flogger.GoogleLogger;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -170,7 +170,7 @@ public class JettyHttpHandler extends Handler.Wrapper {
         requestManager.shutdownRequests(requestToken);
         return true;
       case BACKGROUND:
-        dispatchBackgroundRequest(request, response);
+        dispatchBackgroundRequest(request);
         return true;
       case OTHER:
         return dispatchServletRequest(request, response);
@@ -194,7 +194,7 @@ public class JettyHttpHandler extends Handler.Wrapper {
     }
   }
 
-  private void dispatchBackgroundRequest(JettyRequestAPIData request, JettyResponseAPIData response)
+  private void dispatchBackgroundRequest(JettyRequestAPIData request)
       throws InterruptedException, TimeoutException {
     String requestId = getBackgroundRequestId(request);
     // The interface of coordinator.waitForUserRunnable() requires us to provide the app code with a

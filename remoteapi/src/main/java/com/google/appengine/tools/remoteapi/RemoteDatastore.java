@@ -23,7 +23,6 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
 import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -195,12 +194,11 @@ class RemoteDatastore {
       reserialize = true;
       query.getAncestorBuilder().setApp(remoteAppId);
     }
-    for (DatastoreV3Pb.Query.Filter filter : query.getFilterList()) {
-      for (OnestoreEntity.Property prop : filter.getPropertyList()) {
-        OnestoreEntity.PropertyValue propValue = prop.getValue();
-        if (propValue.hasReferenceValue()) {
+    for (DatastoreV3Pb.Query.Filter.Builder filter : query.getFilterBuilderList()) {
+      for (OnestoreEntity.Property.Builder prop : filter.getPropertyBuilderList()) {
+        if (prop.getValue().hasReferenceValue()) {
           OnestoreEntity.PropertyValue.ReferenceValue.Builder ref =
-              propValue.getReferenceValue().toBuilder();
+              prop.getValueBuilder().getReferenceValueBuilder();
           if (!ref.getApp().equals(remoteAppId)) {
             reserialize = true;
             ref.setApp(remoteAppId);
@@ -268,7 +266,7 @@ class RemoteDatastore {
     mergeFromBytes(rewrittenReq, originalRequestBytes);
 
     // Update the Request so that all References have the remoteAppId.
-    boolean reserialize = rewriteRequestReferences(rewrittenReq.getKeyList(), remoteAppId);
+    boolean reserialize = rewriteRequestReferences(rewrittenReq.getKeyBuilderList(), remoteAppId);
     if (rewrittenReq.hasTransaction()) {
       return handleGetWithTransaction(rewrittenReq.build());
     } else {
@@ -326,7 +324,7 @@ class RemoteDatastore {
     DatastoreV3Pb.DeleteRequest.Builder request = DatastoreV3Pb.DeleteRequest.newBuilder();
     mergeFromBytes(request, requestBytes);
 
-    boolean reserialize = rewriteRequestReferences(request.getKeyList(), remoteAppId);
+    boolean reserialize = rewriteRequestReferences(request.getKeyBuilderList(), remoteAppId);
     if (reserialize) {
       // The request was mutated, so we need to reserialize it.
       requestBytes = request.build().toByteArray();
@@ -348,12 +346,12 @@ class RemoteDatastore {
    */
   /* @VisibleForTesting */
   static boolean rewriteRequestReferences(
-      Collection<OnestoreEntity.Reference> references, String remoteAppId) {
+      List<OnestoreEntity.Reference.Builder> references, String remoteAppId) {
 
     boolean reserialize = false;
-    for (OnestoreEntity.Reference refToCheck : references) {
+    for (OnestoreEntity.Reference.Builder refToCheck : references) {
       if (!refToCheck.getApp().equals(remoteAppId)) {
-        refToCheck = refToCheck.toBuilder().setApp(remoteAppId).build();
+        refToCheck.setApp(remoteAppId);
         reserialize = true;
       }
     }
