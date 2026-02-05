@@ -32,6 +32,7 @@ import com.google.apphosting.base.protos.HttpPb.ParsedHttpHeader;
 import com.google.apphosting.base.protos.RuntimePb;
 import com.google.apphosting.base.protos.TraceId.TraceIdProto;
 import com.google.apphosting.base.protos.TracePb.TraceContextProto;
+import com.google.apphosting.runtime.AppInfoFactory;
 import com.google.common.base.Ascii;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -58,6 +59,7 @@ import org.junit.runners.JUnit4;
 import org.mockito.stubbing.Answer;
 
 @RunWith(JUnit4.class)
+@SuppressWarnings("GoogleHttpHeaderConstants")
 public final class UPRequestTranslatorTest {
   private static final String X_APPENGINE_HTTPS = "X-AppEngine-Https";
   private static final String X_APPENGINE_USER_IP = "X-AppEngine-User-IP";

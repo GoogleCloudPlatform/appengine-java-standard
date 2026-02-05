@@ -55,6 +55,7 @@ import com.google.apphosting.base.protos.HttpPb.ParsedHttpHeader;
 import com.google.apphosting.base.protos.RuntimePb;
 import com.google.apphosting.base.protos.RuntimePb.UPRequest;
 import com.google.apphosting.base.protos.TracePb.TraceContextProto;
+import com.google.apphosting.runtime.AppInfoFactory;
 import com.google.apphosting.runtime.TraceContextHelper;
 import com.google.common.base.Ascii;
 import com.google.common.base.Strings;

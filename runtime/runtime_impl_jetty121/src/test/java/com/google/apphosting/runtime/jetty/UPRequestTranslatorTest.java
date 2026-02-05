@@ -32,24 +32,19 @@ import com.google.apphosting.base.protos.HttpPb.ParsedHttpHeader;
 import com.google.apphosting.base.protos.RuntimePb;
 import com.google.apphosting.base.protos.TraceId.TraceIdProto;
 import com.google.apphosting.base.protos.TracePb.TraceContextProto;
+import com.google.apphosting.runtime.AppInfoFactory;
 import com.google.apphosting.runtime.jetty.proxy.UPRequestTranslator;
 import com.google.common.base.Ascii;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.protobuf.ExtensionRegistry;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
 import java.net.SocketAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
-import javax.servlet.ReadListener;
-import javax.servlet.ServletInputStream;
-import javax.servlet.ServletOutputStream;
-import javax.servlet.WriteListener;
 import javax.servlet.http.HttpServletResponse;
 import org.eclipse.jetty.http.HttpFields;
 import org.eclipse.jetty.http.HttpURI;
@@ -68,6 +63,7 @@ import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
 
 @RunWith(JUnit4.class)
+@SuppressWarnings("GoogleHttpHeaderConstants")
 public final class UPRequestTranslatorTest {
   private static final String X_APPENGINE_HTTPS = "X-AppEngine-Https";
   private static final String X_APPENGINE_USER_IP = "X-AppEngine-User-IP";
@@ -463,46 +459,4 @@ public final class UPRequestTranslatorTest {
     return httpRequest;
   }
 
-  private static ServletInputStream emptyInputStream() {
-    return new ServletInputStream() {
-      @Override
-      public int read() {
-        return -1;
-      }
-
-      @Override
-      public void setReadListener(ReadListener listener) {
-        throw new UnsupportedOperationException();
-      }
-
-      @Override
-      public boolean isReady() {
-        return true;
-      }
-
-      @Override
-      public boolean isFinished() {
-        return true;
-      }
-    };
-  }
-
-  private static ServletOutputStream copyingOutputStream(OutputStream out) {
-    return new ServletOutputStream() {
-      @Override
-      public void write(int b) throws IOException {
-        out.write(b);
-      }
-
-      @Override
-      public void setWriteListener(WriteListener listener) {
-        throw new UnsupportedOperationException();
-      }
-
-      @Override
-      public boolean isReady() {
-        return true;
-      }
-    };
-  }
 }

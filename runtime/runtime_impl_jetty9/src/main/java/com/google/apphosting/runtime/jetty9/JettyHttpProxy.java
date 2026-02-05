@@ -24,6 +24,7 @@ import com.google.apphosting.base.protos.RuntimePb;
 import com.google.apphosting.base.protos.RuntimePb.UPRequest;
 import com.google.apphosting.base.protos.RuntimePb.UPResponse;
 import com.google.apphosting.runtime.LocalRpcContext;
+import com.google.apphosting.runtime.AppInfoFactory;
 import com.google.apphosting.runtime.ServletEngineAdapter;
 import com.google.apphosting.runtime.anyrpc.EvaluationRuntimeServerInterface;
 import com.google.common.base.Ascii;

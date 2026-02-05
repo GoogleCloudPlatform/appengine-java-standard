@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package com.google.apphosting.runtime.jetty9;
+package com.google.apphosting.runtime;
+
 
 import com.google.apphosting.base.protos.AppinfoPb;
-import com.google.apphosting.utils.config.AppYaml;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.NoSuchFileException;
@@ -84,17 +84,9 @@ public class AppInfoFactory {
     return getAppInfo();
   }
 
-  public AppinfoPb.AppInfo getAppInfoFromAppYaml(AppYaml unused) throws IOException {
-    return getAppInfo();
-  }
+
 
   public AppinfoPb.AppInfo getAppInfo() {
-    final AppinfoPb.AppInfo.Builder appInfoBuilder =
-        AppinfoPb.AppInfo.newBuilder()
-            .setAppId(gaeApplication)
-            .setVersionId(gaeVersion)
-            .setRuntimeId("java8");
-
-    return appInfoBuilder.build();
+    return AppinfoPb.AppInfo.newBuilder().setAppId(gaeApplication).setVersionId(gaeVersion).build();
   }
 }
