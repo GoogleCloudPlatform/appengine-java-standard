@@ -49,7 +49,7 @@ top of your web application and change the entrypoint to boot with these jars in
  ./mvnw clean install
 ```
 
-Let's assume the current build version is `4.0.1-SNAPSHOT`.
+Let's assume the current build version is `4.0.2-SNAPSHOT`.
 
 See the output of the runtime deployment module which contains all the jars needed by the runtime:
 
@@ -70,7 +70,7 @@ Add the dependency for the GAE runtime jars in your application pom.xml file:
 
 ```
  <properties>
-        <appengine.runtime.version>4.0.1-SNAPSHOT</appengine.runtime.version>
+        <appengine.runtime.version>4.0.2-SNAPSHOT</appengine.runtime.version>
         <appengine.runtime.location>target/${project.artifactId}-${project.version}</appengine.runtime.location>
  <properties>
  ...
@@ -171,4 +171,110 @@ In the appengine-web.xml, modify the entrypoint to use the bundled runtime jars 
 
 You have now a GAE Web App project which is configured to use at runtime the jars that were just built locally via github.
 You can deploy the application the way do and see it running in prod with the latest runtime jars.
+
+## Automation Script
+
+Here is a script to automate the `pom.xml` changes described above. 
+Save it as `update_pom.sh` and run it with your `pom.xml` path as an argument.
+
+```bash
+#!/bin/bash
+
+POM_FILE=$1
+
+if [ -z "$POM_FILE" ]; then
+  echo "Usage: $0 <path-to-pom.xml>"
+  exit 1
+fi
+
+if [ ! -f "$POM_FILE" ]; then
+  echo "File not found: $POM_FILE"
+  exit 1
+fi
+
+# Add Properties
+if grep -q "<properties>" "$POM_FILE"; then
+    # Inserts the properties before the closing </properties> tag
+    sed -i '/<\/properties>/i \
+            <appengine.runtime.version>4.0.2-SNAPSHOT<\/appengine.runtime.version>\
+            <appengine.runtime.location>target/${project.artifactId}-${project.version}<\/appengine.runtime.location>' "$POM_FILE"
+else
+    # If no properties tag exists, insert it before dependencies
+    sed -i '/<dependencies>/i \
+    <properties>\
+        <appengine.runtime.version>4.0.2-SNAPSHOT<\/appengine.runtime.version>\
+        <appengine.runtime.location>target/${project.artifactId}-${project.version}<\/appengine.runtime.location>\
+    <\/properties>' "$POM_FILE"
+fi
+
+# Add Dependency
+# Inserts the dependency before the closing </dependencies> tag
+sed -i '/<\/dependencies>/i \
+    <dependency>\
+        <groupId>com.google.appengine</groupId>\
+        <artifactId>runtime-deployment</artifactId>\
+        <version>${appengine.runtime.version}</version>\
+        <type>zip</type>\
+    </dependency>' "$POM_FILE"
+
+# Add Plugin
+# Inserts the plugin before the closing </plugins> tag
+sed -i '/<\/plugins>/i \
+            <plugin>\
+                <groupId>com.coderplus.maven.plugins</groupId>\
+                <artifactId>copy-rename-maven-plugin</artifactId>\
+                <version>1.0</version>\
+                <executions>\
+                    <execution>\
+                        <id>rename-file</id>\
+                        <phase>pre-integration-test</phase>\
+                        <goals>\
+                            <goal>rename</goal>\
+                        </goals>\
+                        <configuration>\
+                            <fileSets>\
+                                <fileSet>\
+                                    <sourceFile>${appengine.runtime.location}/WEB-INF/lib/runtime-impl-jetty9-${appengine.runtime.version}.jar</sourceFile>\
+                                    <destinationFile>${appengine.runtime.location}/runtime-impl-jetty9.jar</destinationFile>\
+                                </fileSet>\
+                                <fileSet>\
+                                    <sourceFile>${appengine.runtime.location}/WEB-INF/lib/runtime-shared-jetty9-${appengine.runtime.version}.jar</sourceFile>\
+                                    <destinationFile>${appengine.runtime.location}/runtime-shared-jetty9.jar</destinationFile>\
+                                </fileSet>\
+                                <fileSet>\
+                                    <sourceFile>${appengine.runtime.location}/WEB-INF/lib/runtime-impl-jetty12-${appengine.runtime.version}.jar</sourceFile>\
+                                    <destinationFile>${appengine.runtime.location}/runtime-impl-jetty12.jar</destinationFile>\
+                                </fileSet>\
+                                <fileSet>\
+                                    <sourceFile>${appengine.runtime.location}/WEB-INF/lib/runtime-impl-jetty121-${appengine.runtime.version}.jar</sourceFile>\
+                                    <destinationFile>${appengine.runtime.location}/runtime-impl-jetty121.jar</destinationFile>\
+                                </fileSet>\
+                                <fileSet>\
+                                    <sourceFile>${appengine.runtime.location}/WEB-INF/lib/runtime-shared-jetty12-${appengine.runtime.version}.jar</sourceFile>\
+                                    <destinationFile>${appengine.runtime.location}/runtime-shared-jetty12.jar</destinationFile>\
+                                </fileSet>\
+                                <fileSet>\
+                                    <sourceFile>${appengine.runtime.location}/WEB-INF/lib/runtime-shared-jetty12-ee10-${appengine.runtime.version}.jar</sourceFile>\
+                                    <destinationFile>${appengine.runtime.location}/runtime-shared-jetty12-ee10.jar</destinationFile>\
+                                </fileSet>\
+                                <fileSet>\
+                                    <sourceFile>${appengine.runtime.location}/WEB-INF/lib/runtime-shared-jetty121-ee8-${appengine.runtime.version}.jar</sourceFile>\
+                                    <destinationFile>${appengine.runtime.location}/runtime-shared-jetty121-ee8.jar</destinationFile>\
+                                </fileSet>\
+                                <fileSet>\
+                                    <sourceFile>${appengine.runtime.location}/WEB-INF/lib/runtime-shared-jetty121-ee11-${appengine.runtime.version}.jar</sourceFile>\
+                                    <destinationFile>${appengine.runtime.location}/runtime-shared-jetty121-ee11.jar</destinationFile>\
+                                </fileSet>\
+                                <fileSet>\
+                                    <sourceFile>${appengine.runtime.location}/WEB-INF/lib/runtime-main-${appengine.runtime.version}.jar</sourceFile>\
+                                    <destinationFile>${appengine.runtime.location}/runtime-main.jar</destinationFile>\
+                                </fileSet>\
+                            </fileSets>\
+                        </configuration>\
+                    </execution>\
+                </executions>\
+            </plugin>' "$POM_FILE"
+
+echo "Updated $POM_FILE"
+```
 

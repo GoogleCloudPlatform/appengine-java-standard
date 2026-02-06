@@ -23,7 +23,7 @@
     <parent>
       <groupId>com.google.appengine</groupId>
       <artifactId>runtime-parent</artifactId>
-      <version>4.0.1-SNAPSHOT</version>
+      <version>4.0.2-SNAPSHOT</version>
     </parent>
     <groupId>com.google.appengine.demos</groupId>
     <artifactId>nogaeapiswebapp</artifactId>
