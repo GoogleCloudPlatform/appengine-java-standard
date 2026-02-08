@@ -300,7 +300,6 @@ public abstract class JavaRuntimeViaHttpBase {
               .add(
                   "com.google.apphosting.runtime.JavaRuntimeMainWithDefaults",
                   "--jetty_http_port=" + jettyPort,
-                  "--port=" + apiPort,
                   "--trusted_host=" + HostAndPort.fromParts(apiHost, apiPortNum),
                   runtimeDir.getAbsolutePath())
               .addAll(config.launcherFlags())
