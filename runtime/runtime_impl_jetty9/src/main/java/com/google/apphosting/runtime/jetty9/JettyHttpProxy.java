@@ -17,7 +17,9 @@
 package com.google.apphosting.runtime.jetty9;
 
 import static com.google.apphosting.runtime.AppEngineConstants.HTTP_CONNECTOR_MODE;
-import static com.google.apphosting.runtime.AppEngineConstants.LEGACY_MODE;
+import static com.google.apphosting.runtime.AppEngineConstants.MAX_REQUEST_SIZE;
+import static com.google.apphosting.runtime.AppEngineConstants.MAX_RESPONSE_SIZE;
+import static com.google.apphosting.runtime.AppEngineConstants.isLegacyMode;
 
 import com.google.apphosting.base.protos.AppLogsPb;
 import com.google.apphosting.base.protos.RuntimePb;
@@ -71,8 +73,6 @@ public class JettyHttpProxy {
   private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
   private static final String JETTY_LOG_CLASS = "org.eclipse.jetty.util.log.class";
   private static final String JETTY_STDERRLOG = "org.eclipse.jetty.util.log.StdErrLog";
-  private static final long MAX_REQUEST_SIZE = 32 * 1024 * 1024;
-  private static final long MAX_RESPONSE_SIZE = 32 * 1024 * 1024;
 
   /**
    * Based on the adapter configuration, this will start a new Jetty server in charge of proxying
@@ -98,7 +98,8 @@ public class JettyHttpProxy {
     connector.setPort(runtimeOptions.jettyHttpAddress().getPort());
 
     HttpConnectionFactory factory = connector.getConnectionFactory(HttpConnectionFactory.class);
-    factory.setHttpCompliance(LEGACY_MODE ? HttpCompliance.RFC7230_LEGACY : HttpCompliance.RFC7230);
+    factory.setHttpCompliance(
+        isLegacyMode() ? HttpCompliance.RFC7230_LEGACY : HttpCompliance.RFC7230);
 
     HttpConfiguration config = factory.getHttpConfiguration();
     config.setRequestHeaderSize(runtimeOptions.jettyRequestHeaderSize());
@@ -107,7 +108,7 @@ public class JettyHttpProxy {
     config.setSendServerVersion(false);
     config.setSendXPoweredBy(false);
 
-    if (LEGACY_MODE && Boolean.getBoolean(HTTP_CONNECTOR_MODE)) {
+    if (isLegacyMode() && Boolean.getBoolean(HTTP_CONNECTOR_MODE)) {
       config.setRequestCookieCompliance(CookieCompliance.RFC2965);
       config.setResponseCookieCompliance(CookieCompliance.RFC2965);
       config.setMultiPartFormDataCompliance(MultiPartFormDataCompliance.LEGACY);

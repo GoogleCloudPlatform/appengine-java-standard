@@ -17,6 +17,8 @@
 package com.google.apphosting.runtime.jetty9;
 
 import static com.google.apphosting.runtime.AppEngineConstants.GAE_RUNTIME;
+import static com.google.apphosting.runtime.AppEngineConstants.MAX_RESPONSE_SIZE;
+import static com.google.apphosting.runtime.AppEngineConstants.isAsyncMode;
 import static com.google.common.base.StandardSystemProperty.JAVA_IO_TMPDIR;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -74,12 +76,7 @@ import org.eclipse.jetty.webapp.WebAppContext;
 // declaratively in webdefault.xml.
 public class AppEngineWebAppContext extends WebAppContext {
 
-  // TODO: This should be some sort of Prometheus-wide
-  // constant.  If it's much larger than this we may need to
-  // restructure the code a bit.
-  private static final int MAX_RESPONSE_SIZE = 32 * 1024 * 1024;
-  private static final boolean APP_IS_ASYNC =
-      Boolean.getBoolean(RpcConnection.ASYNC_ENABLE_PPROPERTY);
+  private static final boolean APP_IS_ASYNC = isAsyncMode();
   private static final boolean IS_JAVA_8_RUNTIME = Objects.equals(GAE_RUNTIME, "java8");
   private static final ImmutableSet<HolderMatcher> EMPTY_SET =
       ImmutableSet.<HolderMatcher>builder().build();

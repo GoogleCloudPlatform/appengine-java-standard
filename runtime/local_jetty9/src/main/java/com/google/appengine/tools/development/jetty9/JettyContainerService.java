@@ -83,7 +83,8 @@ public class JettyContainerService extends AbstractContainerService implements C
   public static final String WEB_DEFAULTS_XML =
       "com/google/appengine/tools/development/jetty9/webdefault.xml";
 
-  // This should match the value of the --clone_max_outstanding_api_rpcs flag.
+  // This should match the value of the --clone_max_outstanding_api_rpcs flag (now known as
+  // DEFAULT_MAX_OUTSTANDING_API_RPCS in the runtime).
   private static final int MAX_SIMULTANEOUS_API_CALLS = 100;
 
   // The soft deadline for requests.  It is defined here, as the normal way to

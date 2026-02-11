@@ -16,7 +16,9 @@
 
 package com.google.apphosting.runtime.jetty.delegate.impl;
 
-import static com.google.apphosting.runtime.AppEngineConstants.LEGACY_MODE;
+import static com.google.apphosting.runtime.AppEngineConstants.SKIP_ADMIN_CHECK_ATTR;
+import static com.google.apphosting.runtime.AppEngineConstants.X_GOOGLE_INTERNAL_SKIPADMINCHECK;
+import static com.google.apphosting.runtime.AppEngineConstants.isLegacyMode;
 
 import com.google.apphosting.base.protos.HttpPb;
 import com.google.apphosting.base.protos.HttpPb.ParsedHttpHeader;
@@ -40,9 +42,6 @@ import org.eclipse.jetty.util.Callback;
 
 public class DelegateRpcExchange implements DelegateExchange {
   private static final Content.Chunk EOF = Content.Chunk.EOF;
-  private static final String X_GOOGLE_INTERNAL_SKIPADMINCHECK = "x-google-internal-skipadmincheck";
-  private static final String SKIP_ADMIN_CHECK_ATTR =
-      "com.google.apphosting.internal.SkipAdminCheck";
 
   private final HttpPb.HttpRequest _request;
   private final AtomicReference<Content.Chunk> _content = new AtomicReference<>();
@@ -61,7 +60,7 @@ public class DelegateRpcExchange implements DelegateExchange {
 
     String protocol = _request.getProtocol();
     HttpMethod method =
-        LEGACY_MODE ? HttpMethod.INSENSITIVE_CACHE.get(protocol) : HttpMethod.CACHE.get(protocol);
+        isLegacyMode() ? HttpMethod.INSENSITIVE_CACHE.get(protocol) : HttpMethod.CACHE.get(protocol);
     _httpMethod = method != null ? method.asString() : protocol;
 
     final boolean skipAdmin = hasSkipAdminCheck(request);

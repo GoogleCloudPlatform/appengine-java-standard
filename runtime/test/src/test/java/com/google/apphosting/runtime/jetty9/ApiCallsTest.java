@@ -42,7 +42,6 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import org.junit.rules.TestName;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
@@ -51,7 +50,6 @@ import org.junit.runners.Parameterized.Parameters;
 @RunWith(Parameterized.class)
 public class ApiCallsTest extends JavaRuntimeViaHttpBase {
   @Rule public TemporaryFolder temporaryFolder = new TemporaryFolder();
-  @Rule public TestName testName = new TestName();
   @Rule public Expect expect = Expect.create();
 
   private Path appPath;
@@ -84,8 +82,8 @@ public class ApiCallsTest extends JavaRuntimeViaHttpBase {
 
   /**
    * Tests that we can make N API calls concurrently, where N is the value specified by the {@code
-   * --clone_max_outstanding_api_rpcs} flag. If the runtime is imposing some limit other than N,
-   * whether lower or higher, the test will fail.
+   * --clone_max_outstanding_api_rpcs} flag (now known as DEFAULT_MAX_OUTSTANDING_API_RPCS). If the
+   * runtime is imposing some limit other than N, whether lower or higher, the test will fail.
    */
   @Test
   public void canMakeSpecifiedNumberOfConcurrentApiCalls() throws Exception {
@@ -168,7 +166,7 @@ public class ApiCallsTest extends JavaRuntimeViaHttpBase {
   @Test
   public void featureNotEnabledExceptionMessage() throws Exception {
     ApiServerFactory<ErrorApiServer> apiServerFactory =
-        (apiPort, runtimePort) ->
+        (apiPort, unusedRuntimePort) ->
             ErrorApiServer.create(apiPort, RemoteApiPb.RpcError.ErrorCode.FEATURE_DISABLED);
     try (RuntimeContext<ErrorApiServer> context = startApp(apiServerFactory)) {
       // The servlet should get a FeatureNotEnabledException, which it should translate into an
@@ -193,7 +191,7 @@ public class ApiCallsTest extends JavaRuntimeViaHttpBase {
 
   private RuntimeContext<ApiServer> startApp() throws IOException, InterruptedException {
     ApiServerFactory<ApiServer> apiServerFactory =
-        (apiPort, runtimePort) -> ApiServer.create(apiPort);
+        (apiPort, unusedRuntimePort) -> ApiServer.create(apiPort);
     return startApp(apiServerFactory);
   }
 
@@ -229,7 +227,7 @@ public class ApiCallsTest extends JavaRuntimeViaHttpBase {
     private final AtomicInteger totalRequestCount = new AtomicInteger();
 
     private ApiServer(HttpServer httpServer) {
-      super(httpServer, method -> (bytes -> ByteString.EMPTY));
+      super(httpServer, unusedMethod -> (unusedBytes -> ByteString.EMPTY));
     }
 
     /**
@@ -288,7 +286,7 @@ public class ApiCallsTest extends JavaRuntimeViaHttpBase {
     private final RemoteApiPb.RpcError.ErrorCode error;
 
     private ErrorApiServer(HttpServer httpServer, RemoteApiPb.RpcError.ErrorCode error) {
-      super(httpServer, method -> (bytes -> ByteString.EMPTY));
+      super(httpServer, unusedMethod -> (unusedBytes -> ByteString.EMPTY));
       this.error = error;
     }
 

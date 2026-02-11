@@ -16,6 +16,7 @@
 
 package com.google.apphosting.runtime.jetty.ee8;
 
+import static com.google.apphosting.runtime.AppEngineConstants.MAX_RESPONSE_SIZE;
 import static com.google.common.base.StandardSystemProperty.JAVA_IO_TMPDIR;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -76,11 +77,7 @@ import org.eclipse.jetty.util.resource.ResourceFactory;
 public class AppEngineWebAppContext extends WebAppContext {
   private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
 
-  // TODO: This should be some sort of Prometheus-wide
-  // constant.  If it's much larger than this we may need to
-  // restructure the code a bit.
-  private static final int MAX_RESPONSE_SIZE = 32 * 1024 * 1024;
-  private static final boolean APP_IS_ASYNC = AppEngineConstants.ASYNC_MODE;
+  private static final boolean APP_IS_ASYNC = AppEngineConstants.isAsyncMode();
 
   private static final String JETTY_PACKAGE = "org.eclipse.jetty.";
 

@@ -102,7 +102,7 @@ public class JettyHttpProxy {
       config.setUriCompliance(UriCompliance.LEGACY);
     }
 
-    if (AppEngineConstants.LEGACY_MODE) {
+    if (AppEngineConstants.isLegacyMode()) {
       config.setUriCompliance(UriCompliance.LEGACY);
       config.setHttpCompliance(HttpCompliance.RFC7230_LEGACY);
       config.setRequestCookieCompliance(CookieCompliance.RFC2965);

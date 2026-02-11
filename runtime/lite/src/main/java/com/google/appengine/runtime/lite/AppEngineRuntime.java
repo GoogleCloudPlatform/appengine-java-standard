@@ -16,6 +16,14 @@
 
 package com.google.appengine.runtime.lite;
 
+import static com.google.apphosting.runtime.AppEngineConstants.BYTE_COUNT_BEFORE_FLUSHING;
+import static com.google.apphosting.runtime.AppEngineConstants.CYCLES_PER_SECOND;
+import static com.google.apphosting.runtime.AppEngineConstants.DEFAULT_MAX_OUTSTANDING_API_RPCS;
+import static com.google.apphosting.runtime.AppEngineConstants.JETTY_REQUEST_HEADER_SIZE;
+import static com.google.apphosting.runtime.AppEngineConstants.JETTY_RESPONSE_HEADER_SIZE;
+import static com.google.apphosting.runtime.AppEngineConstants.MAX_LOG_FLUSH_TIME;
+import static com.google.apphosting.runtime.AppEngineConstants.SOFT_DEADLINE_DELAY_MS;
+
 import com.google.appengine.api.utils.SystemProperty;
 import com.google.apphosting.api.ApiProxy;
 import com.google.apphosting.base.AppId;
@@ -41,7 +49,6 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.time.Duration;
 import java.util.EventListener;
 import java.util.HashMap;
 import java.util.Map;
@@ -69,15 +76,8 @@ public class AppEngineRuntime {
   private static final String ENV_API_HOST = "API_HOST";
   private static final String ENV_API_PORT = "API_PORT";
   private static final String RUNTIME_VERSION = "lite";
-  private static final int JETTY_HTTP_REQUEST_HEADER_SIZE = 262144;
-  private static final int JETTY_HTTP_RESPONSE_HEADER_SIZE = 262144;
   private static final int HARD_DEADLINE_MS = 10200;
-  private static final int SOFT_DEADLINE_MS = 10600;
   private static final String EXTERNAL_DATACENTER_NAME = "MARS";
-  private static final int CLONE_MAX_OUTSTANDING_API_RPCS = 100;
-  private static final long DEFAULT_FLUSH_APP_LOGS_EVERY_BYTE_COUNT = 100 * 1024L;
-  private static final Duration MAX_LOG_FLUSH_TIME = Duration.ofMinutes(1);
-  private static final long CYCLES_PER_SECOND = 1000000000L;
 
   private final ApiProxyImpl apiProxyImpl;
 
@@ -221,8 +221,8 @@ public class AppEngineRuntime {
 
     HttpConfiguration config =
         c.getConnectionFactory(HttpConnectionFactory.class).getHttpConfiguration();
-    config.setRequestHeaderSize(JETTY_HTTP_REQUEST_HEADER_SIZE);
-    config.setResponseHeaderSize(JETTY_HTTP_RESPONSE_HEADER_SIZE);
+    config.setRequestHeaderSize(JETTY_REQUEST_HEADER_SIZE);
+    config.setResponseHeaderSize(JETTY_RESPONSE_HEADER_SIZE);
     config.setSendServerVersion(false);
 
     GzipHandler gzip = new GzipHandler();
@@ -326,12 +326,12 @@ public class AppEngineRuntime {
 
     APIHostClientInterface apiHost =
         HttpApiHostClientFactory.create(
-            apiHostAddress, OptionalInt.of(CLONE_MAX_OUTSTANDING_API_RPCS));
+            apiHostAddress, OptionalInt.of(DEFAULT_MAX_OUTSTANDING_API_RPCS));
 
     return ApiProxyImpl.builder()
         .setDeadlineOracle(deadlineOracle)
         .setExternalDatacenterName(EXTERNAL_DATACENTER_NAME)
-        .setByteCountBeforeFlushing(DEFAULT_FLUSH_APP_LOGS_EVERY_BYTE_COUNT)
+        .setByteCountBeforeFlushing(BYTE_COUNT_BEFORE_FLUSHING)
         .setMaxLogFlushTime(MAX_LOG_FLUSH_TIME)
         .setCoordinator(dispatcher)
         .setLogToLogservice(false)
@@ -341,11 +341,11 @@ public class AppEngineRuntime {
 
   static RequestManager.Builder makeRequestManagerBuilder(ApiProxyImpl apiProxyImpl) {
     return RequestManager.builder()
-        .setSoftDeadlineDelay(SOFT_DEADLINE_MS)
+        .setSoftDeadlineDelay(SOFT_DEADLINE_DELAY_MS)
         .setHardDeadlineDelay(HARD_DEADLINE_MS)
         .setDisableDeadlineTimers(true)
         .setApiProxyImpl(apiProxyImpl)
-        .setMaxOutstandingApiRpcs(CLONE_MAX_OUTSTANDING_API_RPCS)
+        .setMaxOutstandingApiRpcs(DEFAULT_MAX_OUTSTANDING_API_RPCS)
         .setInterruptFirstOnSoftDeadline(true)
         .setCyclesPerSecond(CYCLES_PER_SECOND);
   }

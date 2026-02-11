@@ -16,6 +16,9 @@
 
 package com.google.appengine.runtime.lite;
 
+import static com.google.apphosting.runtime.AppEngineConstants.SKIP_ADMIN_CHECK_ATTR;
+import static com.google.apphosting.runtime.AppEngineConstants.X_GOOGLE_INTERNAL_SKIPADMINCHECK;
+
 import com.google.apphosting.runtime.AppVersion;
 import com.google.apphosting.runtime.AppInfoFactory;
 import com.google.apphosting.runtime.MutableUpResponse;
@@ -52,10 +55,7 @@ class RequestHandler extends AbstractHandler {
   private static final String X_APPENGINE_HTTPS = "x-appengine-https";
   private static final String X_APPENGINE_USER_IP = "x-appengine-user-ip";
   private static final String X_APPENGINE_TIMEOUT_MS = "x-appengine-timeout-ms";
-  private static final String X_GOOGLE_INTERNAL_SKIPADMINCHECK = "x-google-internal-skipadmincheck";
   private static final String X_APPENGINE_QUEUENAME = "x-appengine-queuename";
-  private static final String SKIP_ADMIN_CHECK_ATTR =
-      "com.google.apphosting.internal.SkipAdminCheck";
 
   private final AppVersion appVersion;
 

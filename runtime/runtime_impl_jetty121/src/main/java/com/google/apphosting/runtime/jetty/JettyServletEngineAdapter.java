@@ -15,10 +15,13 @@
  */
 package com.google.apphosting.runtime.jetty;
 
+import static com.google.apphosting.runtime.AppEngineConstants.APP_VERSION_KEY_REQUEST_ATTR;
+import static com.google.apphosting.runtime.AppEngineConstants.ENVIRONMENT_ATTR;
 import static com.google.apphosting.runtime.AppEngineConstants.GAE_RUNTIME;
 import static com.google.apphosting.runtime.AppEngineConstants.HTTP_CONNECTOR_MODE;
 import static com.google.apphosting.runtime.AppEngineConstants.IGNORE_RESPONSE_SIZE_LIMIT;
-import static com.google.apphosting.runtime.AppEngineConstants.LEGACY_MODE;
+import static com.google.apphosting.runtime.AppEngineConstants.MAX_RESPONSE_SIZE;
+import static com.google.apphosting.runtime.AppEngineConstants.isLegacyMode;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.apphosting.api.ApiProxy;
@@ -27,7 +30,6 @@ import com.google.apphosting.base.protos.AppinfoPb;
 import com.google.apphosting.base.protos.EmptyMessage;
 import com.google.apphosting.base.protos.RuntimePb.UPRequest;
 import com.google.apphosting.base.protos.RuntimePb.UPResponse;
-import com.google.apphosting.runtime.AppEngineConstants;
 import com.google.apphosting.runtime.AppInfoFactory;
 import com.google.apphosting.runtime.AppVersion;
 import com.google.apphosting.runtime.LocalRpcContext;
@@ -65,7 +67,6 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
   private static final String DEFAULT_APP_YAML_PATH = "/WEB-INF/appengine-generated/app.yaml";
   private static final int MIN_THREAD_POOL_THREADS = 0;
   private static final int MAX_THREAD_POOL_THREADS = 100;
-  private static final long MAX_RESPONSE_SIZE = 32 * 1024 * 1024;
 
   private AppVersionKey lastAppVersionKey;
 
@@ -140,7 +141,7 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
         httpConfiguration.setUriCompliance(UriCompliance.LEGACY);
       }
 
-      if (LEGACY_MODE) {
+      if (isLegacyMode()) {
         httpConfiguration.setUriCompliance(UriCompliance.LEGACY);
         httpConfiguration.setHttpCompliance(HttpCompliance.RFC7230_LEGACY);
         httpConfiguration.setRequestCookieCompliance(CookieCompliance.RFC2965);
@@ -260,10 +261,10 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
 
     DelegateRpcExchange rpcExchange = new DelegateRpcExchange(upRequest, upResponse);
     var unusedApiVersionKey =
-        rpcExchange.setAttribute(AppEngineConstants.APP_VERSION_KEY_REQUEST_ATTR, appVersionKey);
+        rpcExchange.setAttribute(APP_VERSION_KEY_REQUEST_ATTR, appVersionKey);
     var unusedEnvironment =
         rpcExchange.setAttribute(
-            AppEngineConstants.ENVIRONMENT_ATTR, ApiProxy.getCurrentEnvironment());
+            ENVIRONMENT_ATTR, ApiProxy.getCurrentEnvironment());
     rpcConnector.service(rpcExchange);
     try {
       rpcExchange.awaitResponse();

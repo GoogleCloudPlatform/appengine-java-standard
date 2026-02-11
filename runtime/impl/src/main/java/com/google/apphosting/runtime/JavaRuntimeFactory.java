@@ -16,13 +16,23 @@
 
 package com.google.apphosting.runtime;
 
+import static com.google.apphosting.runtime.AppEngineConstants.BYTE_COUNT_BEFORE_FLUSHING;
+import static com.google.apphosting.runtime.AppEngineConstants.CYCLES_PER_SECOND;
+import static com.google.apphosting.runtime.AppEngineConstants.FORCE_URLFETCH_URL_STREAM_HANDLER;
+import static com.google.apphosting.runtime.AppEngineConstants.JETTY_REQUEST_HEADER_SIZE;
+import static com.google.apphosting.runtime.AppEngineConstants.JETTY_RESPONSE_HEADER_SIZE;
+import static com.google.apphosting.runtime.AppEngineConstants.MAX_LOG_FLUSH_TIME;
+import static com.google.apphosting.runtime.AppEngineConstants.MAX_LOG_LINE_SIZE;
+import static com.google.apphosting.runtime.AppEngineConstants.MAX_RUNTIME_LOG_PER_REQUEST;
+import static com.google.apphosting.runtime.AppEngineConstants.SOFT_DEADLINE_DELAY_MS;
+import static com.google.apphosting.runtime.AppEngineConstants.THREAD_STOP_TERMINATES_CLONE;
+
 import com.google.apphosting.api.ApiProxy;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.VerifyException;
 import com.google.common.flogger.GoogleLogger;
 import com.google.common.net.HostAndPort;
 import java.io.File;
-import java.lang.reflect.Method;
-import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 import java.util.OptionalInt;
@@ -54,27 +64,24 @@ public class JavaRuntimeFactory {
       logger.atWarning().log("Unknown command line arguments: %s", unknownParams);
     }
 
-    RuntimeLogSink logSink = new RuntimeLogSink(params.getMaxRuntimeLogPerRequest());
+    RuntimeLogSink logSink = new RuntimeLogSink(MAX_RUNTIME_LOG_PER_REQUEST);
     logSink.addHandlerToRootLogger();
 
-    maybeConfigureProfiler(params);
+    // Cloud Profiler is now set up externally, typically at the application entry point.
+    // See:
+    // https://github.com/GoogleCloudPlatform/appengine-java-standard?tab=readme-ov-file#entry-point-features
 
-    if (params.getLogJettyExceptionsToAppLogs()) {
-      // This system property is checked by JettyLogger, which is
-      // instantiated via reflection by Jetty and therefore we cannot
-      // pass options into it directly.
-      //
-      // TODO: This logic should really move down to
-      // JettyServletAdapter.
-      System.setProperty("appengine.jetty.also_log_to_apiproxy", "true");
-    }
+    // This system property is checked by JettyLogger, which is
+    // instantiated via reflection by Jetty and therefore we cannot
+    // pass options into it directly.
+    //
+    // TODO: This logic should really move down to
+    // JettyServletAdapter.
+    System.setProperty("appengine.jetty.also_log_to_apiproxy", "true");
 
-    if (params.getUrlfetchDeriveResponseMessage()) {
-      // This system property is checked by URLFetch's Connection class, which
-      // is directly instantiated by the Java API and cannot take constructor
-      // arguments.
-      System.setProperty("appengine.urlfetch.deriveResponseMessage", "true");
-    }
+    // This system property is always set to true and is checked by URLFetch's Connection class,
+    // which is directly instantiated by the Java API and cannot take constructor arguments.
+    System.setProperty("appengine.urlfetch.deriveResponseMessage", "true");
 
     // This system property is checked by GMTransport, which is directly
     // registered with JavaMail and cannot take additional constructor arguments.
@@ -86,37 +93,41 @@ public class JavaRuntimeFactory {
     // registered with JavaMail and cannot take additional constructor arguments.
     System.setProperty("appengine.mail.filenamePreventsInlining", "true");
 
-    ServletEngineAdapter servletEngine = createServletEngine(params);
-    ApiDeadlineOracle deadlineOracle =
-        new ApiDeadlineOracle.Builder().initDeadlineMap().build();
+    ServletEngineAdapter servletEngine = createServletEngine();
+    ApiDeadlineOracle deadlineOracle = new ApiDeadlineOracle.Builder().initDeadlineMap().build();
 
     ApiHostClientFactory apiHostFactory = new ApiHostClientFactory();
 
     BackgroundRequestCoordinator coordinator = new BackgroundRequestCoordinator();
 
+    // The disableApiCallLogging setting is controlled by a system property,
+    // which is consistent with other runtime settings configured via system properties.
+    // If command-line parameter control is also needed, this logic should be updated
+    // to potentially check a value parsed from 'args' via JavaRuntimeParams.
+    boolean disableApiCallLogging = Boolean.getBoolean("disable_api_call_logging_in_apiproxy");
+
     ApiProxyImpl apiProxyImpl =
         ApiProxyImpl.builder()
             .setApiHost(
                 apiHostFactory.newAPIHost(
-                    params.getTrustedHost(),
-                    OptionalInt.of(params.getCloneMaxOutstandingApiRpcs())))
+                    params.getTrustedHost(), OptionalInt.of(params.getMaxOutstandingApiRpcs())))
             .setDeadlineOracle(deadlineOracle)
             .setExternalDatacenterName("MARS")
-            .setByteCountBeforeFlushing(params.getByteCountBeforeFlushing())
-            .setMaxLogLineSize(params.getMaxLogLineSize())
-            .setMaxLogFlushTime(Duration.ofSeconds(params.getMaxLogFlushSeconds()))
+            .setByteCountBeforeFlushing(BYTE_COUNT_BEFORE_FLUSHING)
+            .setMaxLogLineSize(MAX_LOG_LINE_SIZE)
+            .setMaxLogFlushTime(MAX_LOG_FLUSH_TIME)
             .setCoordinator(coordinator)
-            .setDisableApiCallLogging(params.getDisableApiCallLogging())
+            .setDisableApiCallLogging(disableApiCallLogging)
             .build();
 
     RequestManager.Builder requestManagerBuilder =
         RequestManager.builder()
-            .setSoftDeadlineDelay(AppEngineConstants.SOFT_DEADLINE_DELAY_MS)
+            .setSoftDeadlineDelay(SOFT_DEADLINE_DELAY_MS)
             .setRuntimeLogSink(Optional.of(logSink))
             .setApiProxyImpl(apiProxyImpl)
-            .setMaxOutstandingApiRpcs(params.getCloneMaxOutstandingApiRpcs())
-            .setThreadStopTerminatesClone(params.getThreadStopTerminatesClone())
-            .setCyclesPerSecond(AppEngineConstants.CYCLES_PER_SECOND);
+            .setMaxOutstandingApiRpcs(params.getMaxOutstandingApiRpcs())
+            .setThreadStopTerminatesClone(THREAD_STOP_TERMINATES_CLONE)
+            .setCyclesPerSecond(CYCLES_PER_SECOND);
 
     RequestManager requestManager = makeRequestManager(requestManagerBuilder);
     apiProxyImpl.setRequestManager(requestManager);
@@ -134,7 +145,7 @@ public class JavaRuntimeFactory {
             .setConfiguration(configuration)
             .setDeadlineOracle(deadlineOracle)
             .setCoordinator(coordinator)
-            .setForceUrlfetchUrlStreamHandler(params.getForceUrlfetchUrlStreamHandler())
+            .setForceUrlfetchUrlStreamHandler(FORCE_URLFETCH_URL_STREAM_HANDLER)
             .setFixedApplicationPath(params.getFixedApplicationPath());
 
     JavaRuntime runtime = makeRuntime(runtimeBuilder);
@@ -145,8 +156,8 @@ public class JavaRuntimeFactory {
             .setApplicationRoot("notused")
             .setFixedApplicationPath(params.getFixedApplicationPath())
             .setJettyHttpAddress(HostAndPort.fromParts("0.0.0.0", params.getJettyHttpPort()))
-            .setJettyRequestHeaderSize(AppEngineConstants.JETTY_REQUEST_HEADER_SIZE)
-            .setJettyResponseHeaderSize(AppEngineConstants.JETTY_RESPONSE_HEADER_SIZE)
+            .setJettyRequestHeaderSize(JETTY_REQUEST_HEADER_SIZE)
+            .setJettyResponseHeaderSize(JETTY_RESPONSE_HEADER_SIZE)
             .setEvaluationRuntimeServerInterface(runtime)
             .build();
     try {
@@ -170,37 +181,23 @@ public class JavaRuntimeFactory {
     return builder.build();
   }
 
-  /** Creates the ServletEngineAdapter specifies by the --servlet_engine flag. */
-  private static ServletEngineAdapter createServletEngine(JavaRuntimeParams params) {
-    Class<? extends ServletEngineAdapter> engineClazz = params.getServletEngine();
-    if (engineClazz == null) {
-      throw new RuntimeException("No servlet engine (--servlet_engine) defined in the parameters.");
+  /** Creates the ServletEngineAdapter. */
+  private static ServletEngineAdapter createServletEngine() {
+    String servletEngine;
+    if (Boolean.getBoolean("appengine.use.EE8")
+        || Boolean.getBoolean("appengine.use.EE10")
+        || Boolean.getBoolean("appengine.use.EE11")) {
+      servletEngine = "com.google.apphosting.runtime.jetty.JettyServletEngineAdapter";
+    } else {
+      servletEngine = "com.google.apphosting.runtime.jetty9.JettyServletEngineAdapter";
     }
+
     try {
+      Class<? extends ServletEngineAdapter> engineClazz =
+          Class.forName(servletEngine).asSubclass(ServletEngineAdapter.class);
       return engineClazz.getConstructor().newInstance();
     } catch (ReflectiveOperationException ex) {
-      throw new RuntimeException("Failed to instantiate " + engineClazz, ex);
-    }
-  }
-
-  private static void maybeConfigureProfiler(JavaRuntimeParams params) {
-    if (params.getEnableCloudCpuProfiler() || params.getEnableCloudHeapProfiler()) {
-      try {
-        Class<?> profilerClass = Class.forName("com.google.cloud.profiler.agent.Profiler");
-        Class<?> profilerConfigClass =
-            Class.forName("com.google.cloud.profiler.agent.Profiler$Config");
-        Object profilerConfig = profilerConfigClass.getConstructor().newInstance();
-        Method setCpuProfilerEnabled =
-            profilerConfigClass.getMethod("setCpuProfilerEnabled", boolean.class);
-        Method setHeapProfilerEnabled =
-            profilerConfigClass.getMethod("setHeapProfilerEnabled", boolean.class);
-        setCpuProfilerEnabled.invoke(profilerConfig, params.getEnableCloudCpuProfiler());
-        setHeapProfilerEnabled.invoke(profilerConfig, params.getEnableCloudHeapProfiler());
-        Method start = profilerClass.getMethod("start", profilerConfigClass);
-        start.invoke(null, profilerConfig);
-      } catch (Exception e) {
-        logger.atWarning().withCause(e).log("Failed to start the profiler");
-      }
+      throw new VerifyException("Failed to instantiate " + servletEngine, ex);
     }
   }
 }

@@ -19,6 +19,7 @@ package com.google.apphosting.runtime.jetty9;
 import static com.google.apphosting.runtime.AppEngineConstants.GAE_RUNTIME;
 import static com.google.apphosting.runtime.AppEngineConstants.HTTP_CONNECTOR_MODE;
 import static com.google.apphosting.runtime.AppEngineConstants.IGNORE_RESPONSE_SIZE_LIMIT;
+import static com.google.apphosting.runtime.AppEngineConstants.MAX_RESPONSE_SIZE;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.apphosting.base.AppVersionKey;
@@ -57,7 +58,6 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
   private static final String DEFAULT_APP_YAML_PATH = "/WEB-INF/appengine-generated/app.yaml";
   private static final int MIN_THREAD_POOL_THREADS = 0;
   private static final int MAX_THREAD_POOL_THREADS = 100;
-  private static final long MAX_RESPONSE_SIZE = 32 * 1024 * 1024;
   private AppVersionKey lastAppVersionKey;
 
   static {

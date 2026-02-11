@@ -16,6 +16,9 @@
 
 package com.google.apphosting.runtime.jetty.proxy;
 
+import static com.google.apphosting.runtime.AppEngineConstants.MAX_REQUEST_SIZE;
+import static com.google.apphosting.runtime.AppEngineConstants.MAX_RESPONSE_SIZE;
+
 import com.google.apphosting.base.protos.AppLogsPb;
 import com.google.apphosting.base.protos.RuntimePb;
 import com.google.apphosting.base.protos.RuntimePb.UPRequest;
@@ -70,8 +73,6 @@ import org.eclipse.jetty.util.Callback;
  */
 public class JettyHttpProxy {
   private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
-  private static final long MAX_REQUEST_SIZE = 32 * 1024 * 1024;
-  private static final long MAX_RESPONSE_SIZE = 32 * 1024 * 1024;
 
   /**
    * Based on the adapter configuration, this will start a new Jetty server in charge of proxying
@@ -103,7 +104,7 @@ public class JettyHttpProxy {
       config.setUriCompliance(UriCompliance.LEGACY);
     }
 
-    if (AppEngineConstants.LEGACY_MODE) {
+    if (AppEngineConstants.isLegacyMode()) {
       config.setUriCompliance(UriCompliance.LEGACY);
       config.setHttpCompliance(HttpCompliance.RFC7230_LEGACY);
       config.setRequestCookieCompliance(CookieCompliance.RFC2965);
@@ -126,7 +127,8 @@ public class JettyHttpProxy {
     if (!ignoreResponseSizeLimit) {
       responseLimit = MAX_RESPONSE_SIZE;
     }
-    SizeLimitHandler sizeLimitHandler = new SizeLimitHandler(MAX_REQUEST_SIZE, responseLimit);
+    SizeLimitHandler sizeLimitHandler =
+        new SizeLimitHandler(MAX_REQUEST_SIZE, responseLimit);
     server.insertHandler(sizeLimitHandler);
 
     GzipHandler gzip = new GzipHandler();

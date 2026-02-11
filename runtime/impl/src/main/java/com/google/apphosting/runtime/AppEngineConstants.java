@@ -17,19 +17,55 @@
 package com.google.apphosting.runtime;
 
 import com.google.common.collect.ImmutableSet;
+import java.time.Duration;
 
 /** {@code AppEngineConstants} centralizes some constants that are specific to our use of Jetty. */
 public final class AppEngineConstants {
+
+  // We need these system properties based value to be static methods as now used
+  // in the pre boostrap of the runtime, before these system properties are changed based on 
+  // app settings in appengine-web.xml, so they might change after the system properties are
+  // initialized.
 
   /**
    * If Legacy Mode is turned on, then Jetty is configured to be more forgiving of bad requests and
    * to act more in the style of Jetty-9.3
    */
-  public static final boolean LEGACY_MODE =
-          Boolean.getBoolean("com.google.apphosting.runtime.jetty94.LEGACY_MODE");
+  public static boolean isLegacyMode() {
+    return Boolean.getBoolean("com.google.apphosting.runtime.jetty94.LEGACY_MODE");
+  }
 
   /** Set the Jetty request with Async mode. */
-  public static final boolean ASYNC_MODE = Boolean.getBoolean("com.google.appengine.enable_async");
+  public static boolean isAsyncMode() {
+    return Boolean.getBoolean("com.google.appengine.enable_async");
+  }
+
+  /** The maximum allowed size in bytes of the Runtime Log per request, returned in the UPResponse. */
+  public static final long MAX_RUNTIME_LOG_PER_REQUEST = 3000L * 1024L;
+
+  /** The maximum number of simultaneous APIHost RPCs. */
+  public static final int DEFAULT_MAX_OUTSTANDING_API_RPCS = 100;
+
+  /** Flush application logs when they grow to this size. */
+  public static final long BYTE_COUNT_BEFORE_FLUSHING = 100 * 1024L;
+
+  /** Maximum application log line size. */
+  public static final int MAX_LOG_LINE_SIZE = 16 * 1024;
+
+  /**
+   * Maximum time a log record should be allowed to to be cached in the runtime before being flushed
+   * to the appserver (only applies to non-frontend requests).
+   */
+  public static final Duration MAX_LOG_FLUSH_TIME = Duration.ofSeconds(60);
+
+  /** Always terminate the clone when Thread.stop() is used. */
+  public static final boolean THREAD_STOP_TERMINATES_CLONE = true;
+
+  /**
+   * Force url-stream-handler to 'urlfetch' irrespective of the contents of the appengine-web.xml
+   * descriptor.
+   */
+  public static final boolean FORCE_URLFETCH_URL_STREAM_HANDLER = false;
 
   public static final String GAE_RUNTIME = System.getenv("GAE_RUNTIME");
 
@@ -80,6 +116,8 @@ public final class AppEngineConstants {
   public static final String X_APPENGINE_QUEUENAME = "x-appengine-queuename";
   public static final String X_APPENGINE_TIMEOUT_MS = "x-appengine-timeout-ms";
   public static final String X_GOOGLE_INTERNAL_SKIPADMINCHECK = "x-google-internal-skipadmincheck";
+  // This is the same as X_GOOGLE_INTERNAL_SKIPADMINCHECK, but in upper case. This is used for
+  // case-insensitive comparisons.
   public static final String X_GOOGLE_INTERNAL_SKIPADMINCHECK_UC =
       "X-Google-Internal-SkipAdminCheck";
   public static final String X_GOOGLE_INTERNAL_PROFILER = "x-google-internal-profiler";
@@ -151,6 +189,12 @@ public final class AppEngineConstants {
    * The Jetty response header size in bytes (256K).
    */
   public static final int JETTY_RESPONSE_HEADER_SIZE = 262144;
+
+  /** The maximum request size in bytes (32M). */
+  public static final int MAX_REQUEST_SIZE = 32 * 1024 * 1024;
+
+  /** The maximum response size in bytes (32M). */
+  public static final int MAX_RESPONSE_SIZE = 32 * 1024 * 1024;
 
   private AppEngineConstants() {}
 }

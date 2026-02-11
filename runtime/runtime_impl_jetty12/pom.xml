@@ -32,11 +32,7 @@
     <description>App Engine runtime implementation for Jetty 12.</description>
 
     <dependencies>
-        <dependency>
-            <groupId>com.beust</groupId>
-            <artifactId>jcommander</artifactId>
-            <optional>true</optional>
-        </dependency>
+
         <dependency>
             <groupId>com.contrastsecurity</groupId>
             <artifactId>yamlbeans</artifactId>
@@ -421,7 +417,6 @@
                                     <include>com.google.cloud.datastore:datastore-v1-proto-client</include>
                                     <include>javax.activation:activation</include>
                                     <include>org.apache.tomcat:juli</include>
-                                    <include>com.beust:jcommander</include>
                                     <include>com.contrastsecurity:yamlbeans</include>
                                     <include>com.fasterxml.jackson.core:jackson-core</include>
                                     <include>com.google.android:annotations</include>

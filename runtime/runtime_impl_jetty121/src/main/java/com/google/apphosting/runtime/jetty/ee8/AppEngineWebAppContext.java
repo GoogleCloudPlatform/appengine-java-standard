@@ -16,6 +16,8 @@
 
 package com.google.apphosting.runtime.jetty.ee8;
 
+import static com.google.apphosting.runtime.AppEngineConstants.MAX_RESPONSE_SIZE;
+import static com.google.apphosting.runtime.AppEngineConstants.isAsyncMode;
 import static com.google.common.base.StandardSystemProperty.JAVA_IO_TMPDIR;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -74,13 +76,6 @@ import org.eclipse.jetty.util.resource.ResourceFactory;
 // declaratively in webdefault.xml.
 public class AppEngineWebAppContext extends WebAppContext {
   private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
-
-  // TODO: This should be some sort of Prometheus-wide
-  // constant.  If it's much larger than this we may need to
-  // restructure the code a bit.
-  private static final int MAX_RESPONSE_SIZE = 32 * 1024 * 1024;
-  private static final String ASYNC_ENABLE_PROPERTY = "com.google.appengine.enable_async";
-  private static final boolean APP_IS_ASYNC = Boolean.getBoolean(ASYNC_ENABLE_PROPERTY);
 
   private static final String JETTY_PACKAGE = "org.eclipse.jetty.";
 
@@ -436,7 +431,7 @@ public class AppEngineWebAppContext extends WebAppContext {
           }
         }
 
-        h.setAsyncSupported(APP_IS_ASYNC);
+        h.setAsyncSupported(isAsyncMode());
         this.holders.put(h.getName(), h);
       }
       this.mappings.addAll(Arrays.asList(mappings));
@@ -461,7 +456,7 @@ public class AppEngineWebAppContext extends WebAppContext {
       for (ServletHolder h : holders.values()) {
         if (servlet.getName().equals(h.getClassName())) {
           h.setServlet(servlet.getConstructor().newInstance());
-          h.setAsyncSupported(APP_IS_ASYNC);
+          h.setAsyncSupported(isAsyncMode());
         }
       }
 
@@ -471,7 +466,7 @@ public class AppEngineWebAppContext extends WebAppContext {
         holder = new ServletHolder(servlet.getConstructor().newInstance());
         holder.setInitOrder(1);
         holder.setName(name);
-        holder.setAsyncSupported(APP_IS_ASYNC);
+        holder.setAsyncSupported(isAsyncMode());
         holders.put(name, holder);
       }
     }
@@ -569,7 +564,7 @@ public class AppEngineWebAppContext extends WebAppContext {
           }
         }
 
-        h.setAsyncSupported(APP_IS_ASYNC);
+        h.setAsyncSupported(isAsyncMode());
         this.holders.put(h.getName(), h);
       }
       this.mappings.addAll(Arrays.asList(mappings));
@@ -598,7 +593,7 @@ public class AppEngineWebAppContext extends WebAppContext {
       for (FilterHolder h : holders.values()) {
         if (filter.getName().equals(h.getClassName())) {
           h.setFilter(filter.getConstructor().newInstance());
-          h.setAsyncSupported(APP_IS_ASYNC);
+          h.setAsyncSupported(isAsyncMode());
         }
       }
 
@@ -608,7 +603,7 @@ public class AppEngineWebAppContext extends WebAppContext {
         holder = new FilterHolder(filter.getConstructor().newInstance());
         holder.setName(name);
         holders.put(name, holder);
-        holder.setAsyncSupported(APP_IS_ASYNC);
+        holder.setAsyncSupported(isAsyncMode());
       }
 
       // Ensure mapping

@@ -16,15 +16,18 @@
 
 package com.google.apphosting.runtime.jetty9;
 
+import static com.google.apphosting.runtime.AppEngineConstants.APP_VERSION_KEY_REQUEST_ATTR;
 import static com.google.apphosting.runtime.AppEngineConstants.GAE_RUNTIME;
-import static com.google.apphosting.runtime.AppEngineConstants.LEGACY_MODE;
+import static com.google.apphosting.runtime.AppEngineConstants.SKIP_ADMIN_CHECK_ATTR;
+import static com.google.apphosting.runtime.AppEngineConstants.X_GOOGLE_INTERNAL_SKIPADMINCHECK;
+import static com.google.apphosting.runtime.AppEngineConstants.isAsyncMode;
+import static com.google.apphosting.runtime.AppEngineConstants.isLegacyMode;
 
 import com.google.apphosting.base.AppVersionKey;
 import com.google.apphosting.base.protos.HttpPb.HttpRequest;
 import com.google.apphosting.base.protos.HttpPb.ParsedHttpHeader;
 import com.google.apphosting.base.protos.RuntimePb.UPRequest;
 import com.google.apphosting.base.protos.RuntimePb.UPResponse;
-import com.google.apphosting.runtime.AppEngineConstants;
 import com.google.apphosting.runtime.MutableUpResponse;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Ascii;
@@ -61,14 +64,8 @@ import org.eclipse.jetty.webapp.WebAppContext;
  */
 public class RpcConnection implements Connection, HttpTransport {
 
-  // This should be kept in sync with HTTPProto::X_GOOGLE_INTERNAL_SKIPADMINCHECK.
-  private static final String X_GOOGLE_INTERNAL_SKIPADMINCHECK = "X-Google-Internal-SkipAdminCheck";
 
-  // Keep in sync with com.google.apphosting.utils.jetty.AppEngineAuthentication.
-  private static final String SKIP_ADMIN_CHECK_ATTR =
-      "com.google.apphosting.internal.SkipAdminCheck";
 
-  static final String ASYNC_ENABLE_PPROPERTY = "com.google.appengine.enable_async";
   static final boolean NORMALIZE_INET_ADDR =
       Boolean.parseBoolean(
           System.getProperty(
@@ -178,12 +175,13 @@ public class RpcConnection implements Connection, HttpTransport {
     Request request = channel.getRequest();
 
     // Enable async via a property
-    request.setAsyncSupported(Boolean.getBoolean(ASYNC_ENABLE_PPROPERTY), null);
+    request.setAsyncSupported(isAsyncMode(), null);
 
     // pretend to parse the request line
 
     // LEGACY_MODE is case insensitive for known methods
-    HttpMethod method = LEGACY_MODE
+    HttpMethod method =
+        isLegacyMode()
             ? HttpMethod.INSENSITIVE_CACHE.get(rpc.getProtocol())
             : HttpMethod.CACHE.get(rpc.getProtocol());
     String methodS = method != null ? method.asString() : rpc.getProtocol();
@@ -204,7 +202,7 @@ public class RpcConnection implements Connection, HttpTransport {
         HttpField field = getField(header);
 
         // Handle LegacyMode Headers
-        if (LEGACY_MODE && field.getHeader() != null) {
+        if (isLegacyMode() && field.getHeader() != null) {
           switch (field.getHeader()) {
             case CONTENT_ENCODING:
               continue;
@@ -248,7 +246,7 @@ public class RpcConnection implements Connection, HttpTransport {
 
     // Tell AppVersionHandlerMap which app version should handle this
     // request.
-    request.setAttribute(AppEngineConstants.APP_VERSION_KEY_REQUEST_ATTR, appVersionKey);
+    request.setAttribute(APP_VERSION_KEY_REQUEST_ATTR, appVersionKey);
 
     final boolean skipAdmin = hasSkipAdminCheck(endPoint.getUpRequest());
     // Translate the X-Google-Internal-SkipAdminCheck to a servlet attribute.
@@ -323,7 +321,7 @@ public class RpcConnection implements Connection, HttpTransport {
   }
 
   private static void waitforAsyncDone(CountDownLatch blockEndRequest) {
-    if (Boolean.getBoolean(ASYNC_ENABLE_PPROPERTY)) {
+    if (isAsyncMode()) {
       try {
         /**
          * Note: such a wait means that the container is not really running in asynchronous mode as

@@ -16,7 +16,7 @@
 
 package com.google.apphosting.runtime.jetty9;
 
-import static com.google.apphosting.runtime.AppEngineConstants.LEGACY_MODE;
+import static com.google.apphosting.runtime.AppEngineConstants.isLegacyMode;
 
 import com.google.apphosting.base.AppVersionKey;
 import com.google.apphosting.base.protos.RuntimePb.UPRequest;
@@ -55,7 +55,7 @@ public class RpcConnector extends AbstractConnector {
     super(server, null, null, null, 0, new RpcConnectionFactory());
 
     addBean(HttpCompliance.RFC7230);
-    if (LEGACY_MODE) {
+    if (isLegacyMode()) {
       httpConfiguration.setRequestCookieCompliance(CookieCompliance.RFC2965);
       httpConfiguration.setResponseCookieCompliance(CookieCompliance.RFC2965);
       httpConfiguration.setMultiPartFormDataCompliance(MultiPartFormDataCompliance.LEGACY);
