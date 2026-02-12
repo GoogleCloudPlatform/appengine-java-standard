@@ -379,7 +379,6 @@ public class AppEngineAuthentication {
     @Override
     public boolean isUserInRole(String role) {
       UserService userService = UserServiceFactory.getUserService();
-      logger.atFine().log("Checking if principal %s is in role %s", userPrincipal, role);
       if (userPrincipal == null) {
         logger.atInfo().log("isUserInRole() called with null principal.");
         return false;
