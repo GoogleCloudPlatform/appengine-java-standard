@@ -89,14 +89,6 @@
                   <pattern>org.antlr.runtime</pattern>
                   <shadedPattern>com.google.appengine.repackaged.org.antlr.runtime</shadedPattern>
                 </relocation>
-                 <relocation>
-                  <pattern>com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb</pattern>
-                  <shadedPattern>com.google.apphosting.api_bytes.proto2api.DatastorePb</shadedPattern>
-                </relocation>
-                <relocation>
-                  <pattern>com.google.apphosting.datastore.DatastoreV3Pb</pattern>
-                  <shadedPattern>com.google.apphosting.api.DatastorePb</shadedPattern>
-                </relocation>
                 <relocation>
                   <!-- Apache commons codec is repackaged via one of the 'android' dependencies
                        into com.google.api.client.repackaged. -->

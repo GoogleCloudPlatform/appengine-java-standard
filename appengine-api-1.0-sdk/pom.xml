@@ -58,10 +58,6 @@
               <createSourcesJar>true</createSourcesJar>
               <relocations>
                 <relocation>
-                  <pattern>com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb</pattern>
-                  <shadedPattern>com.google.apphosting.api_bytes.proto2api.DatastorePb</shadedPattern>
-                </relocation>
-                <relocation>
                   <!-- Apache commons codec is repackaged via one of the 'android' dependencies                       into com.google.api.client.repackaged. -->
                   <pattern>com.google.api.client.repackaged.org.apache.commons.codec</pattern>
                   <shadedPattern>com.google.appengine.repackaged.android.org.apache.commons.codec</shadedPattern>
