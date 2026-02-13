@@ -19,7 +19,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.google.appengine</groupId>
   <artifactId>parent</artifactId>
-  <version>4.0.2-SNAPSHOT</version>
+  <version>4.0.3-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>AppEngine :: Parent project</name>
   <url>https://github.com/GoogleCloudPlatform/appengine-java-standard/</url>
@@ -685,7 +685,7 @@
       <dependency>
         <groupId>com.google.cloud</groupId>
         <artifactId>google-cloud-logging</artifactId>
-        <version>3.24.0</version>
+        <version>3.25.0</version>
       </dependency>
       <dependency>
         <groupId>org.apache.commons</groupId>

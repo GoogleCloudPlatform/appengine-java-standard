@@ -75,7 +75,7 @@ public final class GuestBookTest extends JavaRuntimeViaHttpBase {
     System.setProperty("appengine.sdk.root", "../../sdk_assembly/target/appengine-java-sdk");
     String[] args = {
       "stage",
-      appRootTarget.getAbsolutePath() + "/target/" + appName + "-4.0.2-SNAPSHOT",
+      appRootTarget.getAbsolutePath() + "/target/" + appName + "-4.0.3-SNAPSHOT",
       appRootTarget.getAbsolutePath() + "/target/appengine-staging"
     };
     AppCfg.main(args);

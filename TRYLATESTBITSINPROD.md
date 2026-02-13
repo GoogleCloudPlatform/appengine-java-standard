@@ -49,7 +49,7 @@ top of your web application and change the entrypoint to boot with these jars in
  ./mvnw clean install
 ```
 
-Let's assume the current build version is `4.0.2-SNAPSHOT`.
+Let's assume the current build version is `4.0.3-SNAPSHOT`.
 
 See the output of the runtime deployment module which contains all the jars needed by the runtime:
 
@@ -70,7 +70,7 @@ Add the dependency for the GAE runtime jars in your application pom.xml file:
 
 ```
  <properties>
-        <appengine.runtime.version>4.0.2-SNAPSHOT</appengine.runtime.version>
+        <appengine.runtime.version>4.0.3-SNAPSHOT</appengine.runtime.version>
         <appengine.runtime.location>target/${project.artifactId}-${project.version}</appengine.runtime.location>
  <properties>
  ...
@@ -196,13 +196,13 @@ fi
 if grep -q "<properties>" "$POM_FILE"; then
     # Inserts the properties before the closing </properties> tag
     sed -i '/<\/properties>/i \
-            <appengine.runtime.version>4.0.2-SNAPSHOT<\/appengine.runtime.version>\
+            <appengine.runtime.version>4.0.3-SNAPSHOT<\/appengine.runtime.version>\
             <appengine.runtime.location>target/${project.artifactId}-${project.version}<\/appengine.runtime.location>' "$POM_FILE"
 else
     # If no properties tag exists, insert it before dependencies
     sed -i '/<dependencies>/i \
     <properties>\
-        <appengine.runtime.version>4.0.2-SNAPSHOT<\/appengine.runtime.version>\
+        <appengine.runtime.version>4.0.3-SNAPSHOT<\/appengine.runtime.version>\
         <appengine.runtime.location>target/${project.artifactId}-${project.version}<\/appengine.runtime.location>\
     <\/properties>' "$POM_FILE"
 fi
