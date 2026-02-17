@@ -74,6 +74,11 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <version>3.2.5</version>
+        <configuration>
+          <systemPropertyVariables>
+            <appengine.projectversion>${project.version}</appengine.projectversion>
+          </systemPropertyVariables>
+        </configuration>
       </plugin>
       <plugin>
         <groupId>com.jcabi</groupId>
