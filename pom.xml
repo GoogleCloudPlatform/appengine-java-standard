@@ -134,6 +134,12 @@
           <url>${distributionManagement.snapshot.url}</url>
       </snapshotRepository>
   </distributionManagement>
+  <repositories>
+    <repository>
+      <id>webtide-harbor</id>
+      <url>https://harbor.webtide.com/releases</url>
+    </repository>
+  </repositories>
   <profiles>
       <profile>
           <id>sonatype-release</id>
@@ -203,6 +209,10 @@
           <activeByDefault>false</activeByDefault>
     </activation>
       <repositories>
+        <repository>
+            <id>webtide-harbor</id>
+            <url>https://harbor.webtide.com/releases</url>
+        </repository>
         <repository>
           <id>aoss-artifact-registry</id>
           <name>AOSS Repository</name>
