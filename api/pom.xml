@@ -32,6 +32,10 @@
   <description>API for Google App Engine standard environment</description>
   <dependencies>
     <dependency>
+      <groupId>com.google.flogger</groupId>
+      <artifactId>google-extensions</artifactId>
+    </dependency>
+    <dependency>
       <groupId>com.google.appengine</groupId>
       <artifactId>protos</artifactId>
     </dependency>

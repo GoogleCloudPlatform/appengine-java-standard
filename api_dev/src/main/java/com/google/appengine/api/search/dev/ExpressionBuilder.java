@@ -22,12 +22,12 @@ import com.google.appengine.api.search.query.ExpressionParser;
 import com.google.apphosting.api.search.DocumentPb.FieldValue;
 import com.google.apphosting.api.search.DocumentPb.FieldValue.ContentType;
 import com.google.common.collect.ImmutableList;
+import com.google.common.flogger.GoogleLogger;
 import com.google.common.geometry.S2LatLng;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Logger;
 import org.antlr.runtime.ANTLRStringStream;
 import org.antlr.runtime.RecognitionException;
 import org.antlr.runtime.TokenRewriteStream;
@@ -37,7 +37,7 @@ import org.apache.lucene.document.Field;
 
 /** Builder class for construction Expression objects used to evaluate expressions per document. */
 public class ExpressionBuilder {
-  private static final Logger log = Logger.getLogger(ExpressionBuilder.class.getName());
+  private static final GoogleLogger log = GoogleLogger.forEnclosingClass();
 
   private final Map<String, Set<ContentType>> fieldTypes;
 
@@ -511,8 +511,7 @@ public class ExpressionBuilder {
       case ExpressionLexer.MIN:
         return makeMinFunction(tree);
       case ExpressionLexer.SWITCH:
-        log.warning(
-            String.format("Function %s not implemented. Using dummy expression.", tree.getText()));
+        log.atWarning().log("Function %s not implemented. Using dummy expression.", tree.getText());
         return new EmptyExpression();
       case ExpressionLexer.TIMES:
       case ExpressionLexer.DIV:

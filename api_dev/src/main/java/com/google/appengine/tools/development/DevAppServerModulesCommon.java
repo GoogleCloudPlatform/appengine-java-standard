@@ -23,9 +23,8 @@ import com.google.appengine.api.modules.ModulesService;
 import com.google.appengine.api.modules.ModulesServiceFactory;
 import com.google.apphosting.api.ApiProxy;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.flogger.GoogleLogger;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * This filter intercepts all request sent to all module instances.
@@ -78,7 +77,7 @@ public class DevAppServerModulesCommon {
   protected final BackendServersBase backendServersManager;
   protected final ModulesService modulesService;
 
-  protected final Logger logger = Logger.getLogger(DevAppServerModulesFilter.class.getName());
+  private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
 
   @VisibleForTesting
   protected DevAppServerModulesCommon(
@@ -121,7 +120,8 @@ public class DevAppServerModulesCommon {
     try {
       instance = modulesService.getCurrentInstanceId();
     } catch (ModulesException me) {
-      logger.log(Level.FINEST, "Ignoring Exception getting module instance and continuing", me);
+      logger.atFinest().withCause(me).log(
+          "Ignoring Exception getting module instance and continuing");
     }
     return Integer.parseInt(instance);
   }

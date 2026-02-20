@@ -27,6 +27,7 @@ import com.google.apphosting.base.protos.api_bytes.RemoteApiPb;
 import com.google.apphosting.base.protos.api_bytes.RemoteApiPb.RpcError;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Ascii;
+import com.google.common.flogger.GoogleLogger;
 import com.google.common.primitives.Doubles;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.ExtensionRegistry;
@@ -54,8 +55,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * Servlet handling POST requests to serve App Engine Standard API calls implemented by the API stub
@@ -66,7 +65,7 @@ import java.util.logging.Logger;
  * Java clones in production to make API calls.
  */
 public class ApiServlet extends HttpServlet {
-  private static final Logger logger = Logger.getLogger(ApiServlet.class.getName());
+  private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
 
   private static final String RPC_ENDPOINT_HEADER = "X-Google-RPC-Service-Endpoint";
   private static final String RPC_ENDPOINT_VALUE = "app-engine-apis";
@@ -137,7 +136,7 @@ public class ApiServlet extends HttpServlet {
         out.write(responsePb.toByteArray());
       }
     } catch (RuntimeException e) {
-      logger.log(Level.WARNING, "bad request:", e);
+      logger.atWarning().withCause(e).log("bad request:");
       response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
     }
   }
@@ -252,12 +251,9 @@ public class ApiServlet extends HttpServlet {
               request.getMethod(),
               request.getRequest().toByteArray());
     } catch (InvocationTargetException ex) {
-      logger.log(
-          Level.INFO,
-          "Exception calling service"
-          + request.getServiceName()
-          + " and method: "
-          + request.getMethod(), ex);
+      logger.atInfo().withCause(ex).log(
+          "Exception calling service%s and method: %s",
+          request.getServiceName(), request.getMethod());
       throw new ApiProxyException(
           "API invocation error for service: "
               + request.getServiceName()
@@ -265,12 +261,9 @@ public class ApiServlet extends HttpServlet {
               + request.getMethod(),
           ex.getCause());
     } catch (ReflectiveOperationException | RuntimeException | Error ex) {
-      logger.log(
-          Level.INFO,
-          "Exception calling service"
-          + request.getServiceName()
-          + " and method: "
-          + request.getMethod(), ex);
+      logger.atInfo().withCause(ex).log(
+          "Exception calling service%s and method: %s",
+          request.getServiceName(), request.getMethod());
       throw new CallNotFoundException(request.getServiceName(), request.getMethod());
     }
     return RemoteApiPb.Response.newBuilder().setResponse(ByteString.copyFrom(resp)).build();
@@ -296,7 +289,7 @@ public class ApiServlet extends HttpServlet {
     try (ObjectOutput out = new ObjectOutputStream(byteStream)) {
       out.writeObject(exception);
     } catch (IOException e) {
-      logger.log(Level.SEVERE, "Cannot serialize the exception: ", e);
+      logger.atSevere().withCause(e).log("Cannot serialize the exception: ");
     }
     byte[] serializedException = byteStream.toByteArray();
     response.setJavaException(ByteString.copyFrom(serializedException));

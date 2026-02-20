@@ -24,7 +24,6 @@ import com.google.apphosting.utils.config.QueueXml.Entry;
 import com.google.apphosting.utils.config.QueueXml.RetryParameters;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.Logger;
 
 /**
  * Base class for dev server task queue.
@@ -35,7 +34,6 @@ import java.util.logging.Logger;
  *
  */
 abstract class DevQueue {
-  protected static final Logger logger = Logger.getLogger(DevQueue.class.getName());
 
   protected final Entry queueXmlEntry;
   // Only for testing.

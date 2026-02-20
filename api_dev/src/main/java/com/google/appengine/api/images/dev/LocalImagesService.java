@@ -50,6 +50,7 @@ import com.google.appengine.tools.development.LocalServerEnvironment;
 import com.google.appengine.tools.development.LocalServiceContext;
 import com.google.apphosting.api.ApiProxy;
 import com.google.auto.service.AutoService;
+import com.google.common.flogger.GoogleLogger;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.protobuf.ByteString;
 import java.awt.AlphaComposite;
@@ -65,8 +66,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
 import javax.imageio.ImageTypeSpecifier;
@@ -86,7 +85,7 @@ import mediautil.image.jpeg.LLJTranException;
 @AutoService(LocalRpcService.class)
 public final class LocalImagesService extends AbstractLocalRpcService {
 
-  private static final Logger log = Logger.getLogger(LocalImagesService.class.getCanonicalName());
+  private static final GoogleLogger log = GoogleLogger.forEnclosingClass();
   private String hostPrefix;
 
   /**
@@ -125,18 +124,16 @@ public final class LocalImagesService extends AbstractLocalRpcService {
     String[] outputFormats = {"png", "jpg", "webp"};
     for (String format : inputFormats) {
       if (!ImageIO.getImageReadersByFormatName(format).hasNext()) {
-        log.log(
-            Level.WARNING,
-            "No image reader found for format \"{0}\". An ImageIO plugin must be installed to use"
+        log.atWarning().log(
+            "No image reader found for format \"%s\". An ImageIO plugin must be installed to use"
                 + " this format with the DevAppServer.",
             format);
       }
     }
     for (String format : outputFormats) {
       if (!ImageIO.getImageWritersByFormatName(format).hasNext()) {
-        log.log(
-            Level.WARNING,
-            "No image writer found for format \"{0}\". An ImageIO plugin must be installed to use"
+        log.atWarning().log(
+            "No image writer found for format \"%s\". An ImageIO plugin must be installed to use"
                 + " this format with the DevAppServer.",
             format);
       }
@@ -475,7 +472,7 @@ public final class LocalImagesService extends AbstractLocalRpcService {
   public ImagesGetUrlBaseResponse getUrlBase(
       final Status status, final ImagesGetUrlBaseRequest request) {
     if (request.getCreateSecureUrl()) {
-      log.info("Secure URLs will not be created using the development application server.");
+      log.atInfo().log("Secure URLs will not be created using the development application server.");
     }
     // Detect the image mimetype to see if is a valid image.
     ImageData imageData =
@@ -657,7 +654,7 @@ public final class LocalImagesService extends AbstractLocalRpcService {
           image.getHeight() - startY);
       return image.getSubimage(startX, startY, width, height);
     } else if (transform.hasAutolevels()) {
-      log.warning("I'm Feeling Lucky is not available in the SDK.");
+      log.atWarning().log("I'm Feeling Lucky is not available in the SDK.");
     } else {
       status.setSuccessful(false);
       status.setErrorCode(ErrorCode.BAD_TRANSFORM_DATA.getNumber());

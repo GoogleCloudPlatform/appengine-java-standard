@@ -28,12 +28,12 @@ import com.google.apphosting.utils.config.EarInfo;
 import com.google.apphosting.utils.config.WebModule;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
+import com.google.common.flogger.GoogleLogger;
 import java.io.File;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.logging.Logger;
 import javax.annotation.concurrent.GuardedBy;
 
 /**
@@ -43,8 +43,7 @@ import javax.annotation.concurrent.GuardedBy;
  * <p>
  */
 public class ApplicationConfigurationManager {
-  private static final Logger logger =
-      Logger.getLogger(ApplicationConfigurationManager.class.getName());
+  private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
 
   // Configuration root directory. Either an EAR or a WAR.
   private final File configurationRoot;
@@ -73,7 +72,7 @@ public class ApplicationConfigurationManager {
       String message = String.format(
           "ApplicationConfigurationManager.newEarConfigurationManager passed an invalid EAR: %s",
           earRoot.getAbsolutePath());
-      logger.severe(message);
+      logger.atSevere().log("%s", message);
       throw new AppEngineConfigException(message);
     }
     return new ApplicationConfigurationManager(earRoot, null, null, null, sdkVersion,
@@ -108,7 +107,7 @@ public class ApplicationConfigurationManager {
       String message = String.format(
           "ApplicationConfigurationManager.newWarConfigurationManager passed an EAR: %s",
           warRoot.getAbsolutePath());
-      logger.severe(message);
+      logger.atSevere().log("%s", message);
       throw new AppEngineConfigException(message);
     }
     return new ApplicationConfigurationManager(warRoot,
@@ -210,7 +209,7 @@ public class ApplicationConfigurationManager {
     if (!EarHelper.isEar(configurationRoot.getAbsolutePath())) {
       String message = String.format("Unsupported update from EAR to WAR for: %s",
           configurationRoot.getAbsolutePath());
-      logger.severe(message);
+      logger.atSevere().log("%s", message);
       throw new AppEngineConfigException(message);
     }
     EarInfo earInfo = EarHelper.readEarInfo(configurationRoot.getAbsolutePath(),
@@ -425,7 +424,7 @@ public class ApplicationConfigurationManager {
         if (EarHelper.isEar(configurationRoot.getAbsolutePath())) {
           String message = String.format("Unsupported update from WAR to EAR for: %s",
               configurationRoot.getAbsolutePath());
-          logger.severe(message);
+          logger.atSevere().log("%s", message);
           throw new AppEngineConfigException(message);
         }
         WebModule updatedWebModule = EarHelper.readWebModule(null, configurationRoot,
@@ -580,7 +579,7 @@ public class ApplicationConfigurationManager {
         String message = String.format(
             "Unsupported configuration change of war directories from '%s' to '%s'",
             currentWarDirectories, updatedWarDirectories);
-        logger.severe(message);
+        logger.atSevere().log("%s", message);
         throw new AppEngineConfigException(message);
       }
     }
@@ -615,7 +614,7 @@ public class ApplicationConfigurationManager {
       String message = String.format(
           "Unsupported configuration change of module name from '%s' to '%s' in '%s'",
           currentModuleName, updatedModuleName, currentModule.getAppEngineWebXmlFile());
-      logger.severe(message);
+      logger.atSevere().log("%s", message);
       throw new AppEngineConfigException(message);
     }
   }
@@ -628,7 +627,7 @@ public class ApplicationConfigurationManager {
       String message = String.format(
           "Unsupported configuration change of scaling from '%s' to '%s' in '%s'",
           currentScalingType, updatedScalingType, currentModule.getAppEngineWebXmlFile());
-      logger.severe(message);
+      logger.atSevere().log("%s", message);
       throw new AppEngineConfigException(message);
     }
   }
@@ -652,7 +651,7 @@ public class ApplicationConfigurationManager {
                   currentManualInstances,
                   updatedManualInstances,
                   currentModule.getAppEngineWebXmlFile());
-          logger.severe(message);
+          logger.atSevere().log("%s", message);
           throw new AppEngineConfigException(message);
         }
         break;
@@ -672,7 +671,7 @@ public class ApplicationConfigurationManager {
                   currentBasicMaxInstances,
                   updatedBasicMaxInstances,
                   currentModule.getAppEngineWebXmlFile());
-          logger.severe(message);
+          logger.atSevere().log("%s", message);
         }
         break;
 

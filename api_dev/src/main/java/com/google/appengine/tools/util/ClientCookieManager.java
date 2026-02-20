@@ -16,6 +16,7 @@
 
 package com.google.appengine.tools.util;
 
+import com.google.common.flogger.GoogleLogger;
 import java.io.Serializable;
 import java.net.URL;
 import java.net.URLConnection;
@@ -23,7 +24,6 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.ListIterator;
-import java.util.logging.Logger;
 
 /**
  * Client-side cookie manager.
@@ -70,8 +70,7 @@ import java.util.logging.Logger;
 // TODO: add RFC&nbsp;2965 (V2) support.
 public class ClientCookieManager implements Serializable {
 
-  private static Logger logger =
-      Logger.getLogger(ClientCookieManager.class.getName());
+  private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
 
   /**
    * Maximum number of cookies in the list.
@@ -153,16 +152,18 @@ public class ClientCookieManager implements Serializable {
                 cookie.getEffectiveDomain().length() <= maxCookieSize_ &&
                 cookie.getEffectivePath().length() <= maxCookieSize_) {
               cookies_.addFirst(cookie);
-              logger.fine("stored cookie: " + cookie.getName() + "=" +
-                cookie.getValue() + "; domain = " +
-                cookie.getEffectiveDomain() + "; path=" +
-                cookie.getEffectivePath() +
-                "; expires=" + cookie.getExpirationTime());
+              logger.atFine().log(
+                  "stored cookie: %s=%s; domain = %s; path=%s; expires=%s",
+                  cookie.getName(),
+                  cookie.getValue(),
+                  cookie.getEffectiveDomain(),
+                  cookie.getEffectivePath(),
+                  cookie.getExpirationTime());
             }
           }
 
         } catch (HttpHeaderParseException e) {
-          logger.info(e.getMessage());
+          logger.atInfo().log("%s", e.getMessage());
         }
       }
     }
@@ -174,7 +175,7 @@ public class ClientCookieManager implements Serializable {
     while (li.hasNext()) {
       final ClientCookie cookie = li.next();
       if (cookie.getExpirationTime() <= currentTime || pos >= maxCookies_) {
-        logger.fine("removed cookie: " + cookie.getName());
+        logger.atFine().log("removed cookie: %s", cookie.getName());
         li.remove();
       } else {
         pos++;
@@ -214,7 +215,7 @@ public class ClientCookieManager implements Serializable {
     if (!requestCookies.isEmpty()) {
 
       // make the cookie string
-      final StringBuffer sb = new StringBuffer();
+      final StringBuilder sb = new StringBuilder();
       // see RFC 2109, section 4.3.4
       Collections.sort(requestCookies);
       final ListIterator<ClientCookie> cookies = requestCookies.listIterator();
@@ -229,7 +230,7 @@ public class ClientCookieManager implements Serializable {
       }
 
       // set the header field
-      logger.fine("sent cookie: " + sb);
+      logger.atFine().log("sent cookie: %s", sb);
       conn.setRequestProperty("Cookie", sb.toString());
     }
   }

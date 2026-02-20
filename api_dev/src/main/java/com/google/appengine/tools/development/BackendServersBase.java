@@ -26,6 +26,7 @@ import com.google.apphosting.api.ApiProxy;
 import com.google.apphosting.utils.config.BackendsXml;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
+import com.google.common.flogger.GoogleLogger;
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
@@ -35,8 +36,6 @@ import java.util.Map.Entry;
 import java.util.TreeMap;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * Controls backend servers configured in appengine-web.xml. Each server is started on a separate
@@ -69,7 +68,7 @@ public class BackendServersBase
   private Map<String, String> portMapping =
       ImmutableMap.copyOf(new HashMap<>());
   // Should not be used until startup() is called.
-  protected Logger logger = Logger.getLogger(BackendServersBase.class.getName());
+  private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
 
   private Map<String, String> serviceProperties = new HashMap<>();
 
@@ -98,7 +97,7 @@ public class BackendServersBase
           | NoSuchMethodException
           | SecurityException
           | InvocationTargetException ex) {
-        Logger.getLogger(BackendServersBase.class.getName()).log(Level.SEVERE, null, ex);
+        logger.atSevere().withCause(ex).log();
       }
     }
     return instance;
@@ -123,7 +122,7 @@ public class BackendServersBase
   @Override
   public void shutdownAll() throws Exception {
     for (ServerWrapper server : backendServers.values()) {
-      logger.finer("server shutdown: " + server);
+      logger.atFiner().log("server shutdown: %s", server);
       server.shutdown();
     }
     backendServers = ImmutableMap.copyOf(new HashMap<ServerInstanceEntry, ServerWrapper>());
@@ -165,7 +164,7 @@ public class BackendServersBase
   public synchronized void startBackend(String serverToStart) throws IllegalStateException {
     if (!checkServerExists(serverToStart)) {
       String message = String.format("Tried to start unknown server %s", serverToStart);
-      logger.warning(message);
+      logger.atWarning().log("%s", message);
       throw new IllegalStateException(message);
     }
     // When instances are put in STOPPED state they are restarted to a fresh
@@ -194,7 +193,7 @@ public class BackendServersBase
   public synchronized void stopBackend(String serverToStop) throws Exception {
     if (!checkServerExists(serverToStop)) {
       String message = String.format("Tried to stop unknown server %s", serverToStop);
-      logger.warning(message);
+      logger.atWarning().log("%s", message);
       throw new IllegalStateException(message);
     }
     // For each instance: first shut it down (to stop any running requests and
@@ -214,7 +213,7 @@ public class BackendServersBase
               InstanceState.RUNNING);
           continue;
         }
-        logger.fine("Stopping server: " + server.getDnsPrefix());
+        logger.atFine().log("Stopping server: %s", server.getDnsPrefix());
         server.shutdown();
         server.createConnection();
         server.startup(true);
@@ -226,19 +225,19 @@ public class BackendServersBase
     this.apiProxyLocal = local;
     BackendsXml backendsXml = moduleConfigurationHandle.getBackendsXml();
     if (backendsXml == null) {
-      logger.fine("Got null backendsXml config.");
+      logger.atFine().log("Got null backendsXml config.");
       return;
     }
     List<BackendsXml.Entry> servers = backendsXml.getBackends();
     if (servers.isEmpty()) {
-      logger.fine("No backends configured.");
+      logger.atFine().log("No backends configured.");
       return;
     }
 
     if (!backendServers.isEmpty()) {
       throw new Exception("Tried to start backend servers but some are already running.");
     }
-    logger.finer("Found " + servers.size() + " configured backends.");
+    logger.atFiner().log("Found %d configured backends.", servers.size());
 
     Map<BackendServersBase.ServerInstanceEntry, ServerWrapper> serverMap = Maps.newHashMap();
     for (BackendsXml.Entry entry : servers) {
@@ -266,9 +265,9 @@ public class BackendServersBase
 
     Map<String, String> portMap = Maps.newHashMap();
     for (ServerWrapper serverWrapper : backendServers.values()) {
-      logger.finer(
-          "starting server: " + serverWrapper.serverInstance + "." + serverWrapper.getName()
-              + " on " + address + ":" + serverWrapper.port);
+      logger.atFiner().log(
+          "starting server: %s.%s on %s:%d",
+          serverWrapper.serverInstance, serverWrapper.getName(), address, serverWrapper.port);
       // A servlet or a servlet filter may install its own Delegate during initialization, so make
       // sure that the ApiProxyLocal that we originally installed is available as each container
       // initializes.
@@ -289,9 +288,9 @@ public class BackendServersBase
   @Override
   public void startupAll() throws Exception {
     for (ServerWrapper serverWrapper : backendServers.values()) {
-      logger.finer(
-          "starting server: " + serverWrapper.serverInstance + "." + serverWrapper.getName()
-              + " on " + address + ":" + serverWrapper.port);
+      logger.atFiner().log(
+          "starting server: %s.%s on %s:%d",
+          serverWrapper.serverInstance, serverWrapper.getName(), address, serverWrapper.port);
       // A servlet or a servlet filter may install its own Delegate during initialization, so make
       // sure that the ApiProxyLocal that we originally installed is available as each container
       // initializes.
@@ -339,23 +338,23 @@ public class BackendServersBase
    */
   public boolean acquireServingPermit(
       String serverName, int instanceNumber, boolean allowQueueOnBackends) {
-    logger.finest(
-        String.format("trying to get serving permit for server %d.%s", instanceNumber, serverName));
+    logger.atFinest().log(
+        "trying to get serving permit for server %d.%s", instanceNumber, serverName);
     try {
       ServerWrapper server = getServerWrapper(serverName, instanceNumber);
       int maxQueueTime = 0;
 
       synchronized (server.getStateHolder()) {
         if (!server.getStateHolder().acceptsConnections()) {
-          logger.finest(server + ": got request but server is not in a serving state");
+          logger.atFinest().log("%s: got request but server is not in a serving state", server);
           return false;
         }
         if (server.getApproximateQueueLength() > MAX_PENDING_QUEUE_LENGTH) {
-          logger.finest(server + ": server queue is full");
+          logger.atFinest().log("%s: server queue is full", server);
           return false;
         }
         if (server.getStateHolder().test(InstanceState.SLEEPING)) {
-          logger.finest(server + ": waking up sleeping server");
+          logger.atFinest().log("%s: waking up sleeping server", server);
           server.sendStartRequest();
         }
 
@@ -369,12 +368,12 @@ public class BackendServersBase
       }
 
       boolean gotPermit = server.acquireServingPermit(maxQueueTime);
-      logger.finest(server + ": tried to get server permit, timeout=" + maxQueueTime + " success="
-          + gotPermit);
+      logger.atFinest().log(
+          "%s: tried to get server permit, timeout=%d success=%s", server, maxQueueTime, gotPermit);
       return gotPermit;
     } catch (InterruptedException e) {
-      logger.finest(
-          instanceNumber + "." + serverName + ": got interrupted while waiting for serving permit");
+      logger.atFinest().log(
+          "%d.%s: got interrupted while waiting for serving permit", instanceNumber, serverName);
       return false;
     }
   }
@@ -390,7 +389,7 @@ public class BackendServersBase
    *         instance is available.
    */
   public int getAndReserveFreeInstance(String requestedServer) {
-    logger.finest("trying to get serving permit for server " + requestedServer);
+    logger.atFinest().log("trying to get serving permit for server %s", requestedServer);
 
     ServerWrapper server = getServerWrapper(requestedServer, -1);
     if (server == null) {
@@ -409,7 +408,7 @@ public class BackendServersBase
     if (server.getMaxPendingQueueSize() > 0) {
       return addToShortestInstanceQueue(requestedServer);
     } else {
-      logger.finest("no servers free");
+      logger.atFinest().log("no servers free");
       return -1;
     }
   }
@@ -424,7 +423,7 @@ public class BackendServersBase
    *         instance queues are full
    */
   int addToShortestInstanceQueue(String requestedServer) {
-    logger.finest(requestedServer + ": no instances free, trying to find a queue");
+    logger.atFinest().log("%s: no instances free, trying to find a queue", requestedServer);
     int shortestQueue = MAX_PENDING_QUEUE_LENGTH;
     ServerWrapper instanceWithShortestQueue = null;
     for (ServerWrapper server : backendServers.values()) {
@@ -441,14 +440,15 @@ public class BackendServersBase
     // add ourselves to the serving queue of this instance (blocking)
     try {
       if (shortestQueue < MAX_PENDING_QUEUE_LENGTH) {
-        logger.finest("adding request to queue on instance: " + instanceWithShortestQueue);
+        logger.atFinest().log("adding request to queue on instance: %s", instanceWithShortestQueue);
         if (instanceWithShortestQueue.acquireServingPermit(MAX_PENDING_QUEUE_TIME_MS)) {
-          logger.finest("ready to serve request on instance: " + instanceWithShortestQueue);
+          logger.atFinest().log(
+              "ready to serve request on instance: %s", instanceWithShortestQueue);
           return instanceWithShortestQueue.serverInstance;
         }
       }
     } catch (InterruptedException e) {
-      logger.finer("interrupted while queued at server " + instanceWithShortestQueue);
+      logger.atFiner().log("interrupted while queued at server %s", instanceWithShortestQueue);
     }
     return -1;
   }
@@ -753,9 +753,9 @@ public class BackendServersBase
       if (setStateToStopped) {
         getStateHolder().testAndSet(InstanceState.STOPPED, InstanceState.INITIALIZING);
       } else {
-        logger.info(
-            "server: " + serverInstance + "." + serverEntry.getName() + " is running on port "
-                + this.port);
+        logger.atInfo().log(
+            "server: %s.%s is running on port %d",
+            serverInstance, serverEntry.getName(), this.port);
         if (isLoadBalanceServer()) {
           getStateHolder().testAndSet(InstanceState.RUNNING, InstanceState.INITIALIZING);
         } else {
@@ -783,8 +783,8 @@ public class BackendServersBase
      * @throws InterruptedException If the thread was interrupted while waiting.
      */
     boolean acquireServingPermit(int maxWaitTimeInMs) throws InterruptedException {
-      logger.finest(
-          this + ": acquiring serving permit, available: " + servingQueue.availablePermits());
+      logger.atFinest().log(
+          "%s: acquiring serving permit, available: %d", this, servingQueue.availablePermits());
       return servingQueue.tryAcquire(maxWaitTimeInMs, TimeUnit.MILLISECONDS);
     }
 
@@ -793,8 +793,8 @@ public class BackendServersBase
      */
     void releaseServingPermit() {
       servingQueue.release();
-      logger.finest(
-          this + ": returned serving permit, available: " + servingQueue.availablePermits());
+      logger.atFinest().log(
+          "%s: returned serving permit, available: %d", this, servingQueue.availablePermits());
     }
 
     /**

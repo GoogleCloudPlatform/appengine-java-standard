@@ -20,7 +20,8 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.google.appengine.api.urlfetch.URLFetchServicePb.URLFetchRequest;
 import com.google.appengine.api.urlfetch.URLFetchServicePb.URLFetchRequest.RequestMethod;
-import java.util.logging.Level;
+import java.util.logging.Handler;
+import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
@@ -99,23 +100,30 @@ public class LocalURLFetchServiceTest {
   @Test
   public void testNonstandardPortLogsWarning() {
     final StringBuilder sb = new StringBuilder();
-    lufs.logger =
-        new Logger("test", null) {
+    Logger logger = Logger.getLogger(LocalURLFetchService.class.getName());
+    Handler handler =
+        new Handler() {
           @Override
-          public void log(Level level, String msg) {
-            sb.append(msg);
+          public void publish(LogRecord record) {
+            sb.append(record.getMessage());
           }
 
           @Override
-          public void logp(Level level, String className, String methodName, String msg) {
-            sb.append(msg);
-          }
+          public void flush() {}
+
+          @Override
+          public void close() {}
         };
-    lufs.hasValidURL(
-        URLFetchRequest.newBuilder()
-            .setUrl("https://google.com:25")
-            .setMethod(RequestMethod.GET)
-            .build());
+    logger.addHandler(handler);
+    try {
+      lufs.hasValidURL(
+          URLFetchRequest.newBuilder()
+              .setUrl("https://google.com:25")
+              .setMethod(RequestMethod.GET)
+              .build());
+    } finally {
+      logger.removeHandler(handler);
+    }
     assertThat(sb.toString())
         .isEqualTo(
             "urlfetch received https://google.com:25 ; port 25 is not allowed in production!");

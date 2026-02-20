@@ -17,6 +17,7 @@
 package com.google.appengine.tools.development;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.flogger.GoogleLogger;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -28,7 +29,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
-import java.util.logging.Logger;
 
 /**
  * Manager for a web application's logging configurations.
@@ -39,8 +39,7 @@ import java.util.logging.Logger;
  * more verbose level applies.
  */
 class LoggingConfigurationManager {
-  @VisibleForTesting
-  static final Logger LOGGER = Logger.getLogger(LoggingConfigurationManager.class.getName());
+  private static final GoogleLogger LOGGER = GoogleLogger.forEnclosingClass();
   public static final String LOGGING_CONFIG_FILE = "java.util.logging.config.file";
   private final Properties readProperties = new Properties();
 
@@ -124,7 +123,7 @@ class LoggingConfigurationManager {
       readProperties.store(out, null);
       LogManager.getLogManager().readConfiguration(new ByteArrayInputStream(out.toByteArray()));
     } catch (IOException e) {
-      LOGGER.log(Level.WARNING, "Unable to configure logging properties.", e);
+      LOGGER.atWarning().withCause(e).log("Unable to configure logging properties.");
     }
   }
 
@@ -188,7 +187,8 @@ class LoggingConfigurationManager {
       return props;
     } catch (IOException e) {
       if (logWarning) {
-        LOGGER.log(Level.WARNING, "Unable to load properties file, " + f.getAbsolutePath(), e);
+        LOGGER.atWarning().withCause(e).log(
+            "Unable to load properties file, %s", f.getAbsolutePath());
       }
       return null;
     } finally {
@@ -196,7 +196,7 @@ class LoggingConfigurationManager {
         try {
           inputStream.close();
         } catch (IOException e) {
-          LOGGER.log(Level.WARNING, "Stream close failure", e);
+          LOGGER.atWarning().withCause(e).log("Stream close failure");
         }
       }
     }

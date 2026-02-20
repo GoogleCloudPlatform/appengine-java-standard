@@ -37,6 +37,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.google.common.flogger.GoogleLogger;
 import com.google.common.io.Closeables;
 import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.Index;
 import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.Index.Property;
@@ -64,8 +65,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.jspecify.annotations.Nullable;
 import org.w3c.dom.Element;
 
@@ -554,7 +553,6 @@ class LocalCompositeIndexManager extends CompositeIndexManager {
         sawAutoGenerateLine = splitYamlFile(indexFileInputStream, manualYaml, generatedYaml);
       } catch (IOException e) {
         String message = "Received IOException parsing the input stream.";
-        logger.log(Level.SEVERE, message, e);
         throw new AppEngineConfigException(message, e);
       }
 
@@ -585,7 +583,6 @@ class LocalCompositeIndexManager extends CompositeIndexManager {
           splitYamlFile(indexFileInputStream, manualYaml, new StringBuilder());
         } catch (IOException e) {
           String message = "Received IOException parsing the input stream.";
-          logger.log(Level.SEVERE, message, e);
           throw new AppEngineConfigException(message, e);
         }
       }
@@ -688,7 +685,7 @@ class LocalCompositeIndexManager extends CompositeIndexManager {
     }
   }
 
-  private static final Logger logger = Logger.getLogger(LocalCompositeIndexManager.class.getName());
+  private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
 
   // These fields are only set once.
   private static IndexConfigurationFormat indexConfigurationFormat;
@@ -828,7 +825,7 @@ class LocalCompositeIndexManager extends CompositeIndexManager {
       // TODO check file mod timestamp so that we can pick up
       // manual indexes that were added while the server was running.
       indexCache.verifyIndexExistsForQuery(query, compositeIndexes);
-      logger.fine("Skipping index file update because auto generation is disabled.");
+      logger.atFine().log("Skipping index file update because auto generation is disabled.");
       return;
     }
     // User might have explicitly disabled storing the index configuration.
@@ -879,7 +876,8 @@ class LocalCompositeIndexManager extends CompositeIndexManager {
       // now we need to write it out
       fileManager.write(indexMap);
     } catch (IOException e) {
-      logger.log(Level.SEVERE, "Unable to write " + fileManager.getGeneratedIndexFilename(), e);
+      logger.atSevere().withCause(e).log(
+          "Unable to write %s", fileManager.getGeneratedIndexFilename());
     }
   }
 

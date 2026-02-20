@@ -51,6 +51,7 @@ import com.google.apphosting.utils.config.QueueXml;
 import com.google.apphosting.utils.config.QueueXmlReader;
 import com.google.apphosting.utils.config.QueueYamlReader;
 import com.google.auto.service.AutoService;
+import com.google.common.flogger.GoogleLogger;
 import com.google.protobuf.ByteString;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -64,8 +65,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
 import java.util.TreeMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.jspecify.annotations.Nullable;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
@@ -80,7 +79,7 @@ import org.quartz.impl.StdSchedulerFactory;
  */
 @AutoService(LocalRpcService.class)
 public final class LocalTaskQueue extends AbstractLocalRpcService {
-  private static final Logger logger = Logger.getLogger(LocalTaskQueue.class.getName());
+  private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
   private static final String DOC_LINK =
       "https://cloud.google.com/appengine/docs/standard/java/config/queueref-yaml";
 
@@ -139,10 +138,10 @@ public final class LocalTaskQueue extends AbstractLocalRpcService {
             properties.get(QUEUE_XML_PATH_PROP),
             properties.get(QUEUE_YAML_PATH_PROP));
 
-    logger.log(Level.INFO, "LocalTaskQueue is initialized");
+    logger.atInfo().log("LocalTaskQueue is initialized");
     if (Boolean.parseBoolean(properties.get(DISABLE_AUTO_TASK_EXEC_PROP))) {
       disableAutoTaskExecution = true;
-      logger.log(Level.INFO, "Automatic task execution is disabled.");
+      logger.atInfo().log("Automatic task execution is disabled.");
     }
 
     fetchService = new LocalURLFetchService();
@@ -212,8 +211,8 @@ public final class LocalTaskQueue extends AbstractLocalRpcService {
 
     // When promoting yaml, given proper messages if queue.xml is present.
     if (resultFromXml != null && resultFromYaml == null) {
-      logger.warning(
-          "Using queue.xml. Please migrate to queue.yaml. For more information: " + DOC_LINK);
+      logger.atWarning().log(
+          "Using queue.xml. Please migrate to queue.yaml. For more information: %s", DOC_LINK);
     }
     return (resultFromYaml != null) ? resultFromYaml : resultFromXml;
   }
@@ -314,7 +313,7 @@ public final class LocalTaskQueue extends AbstractLocalRpcService {
       QueueXml.Entry entry = QueueXml.defaultEntry();
       queues.put(entry.getName(), new DevPushQueue(entry, scheduler, baseUrl, clock, callback));
     }
-    logger.info("Local task queue initialized with base url " + baseUrl);
+    logger.atInfo().log("Local task queue initialized with base url %s", baseUrl);
   }
 
   static String getBaseUrl(LocalServerEnvironment localServerEnvironment) {

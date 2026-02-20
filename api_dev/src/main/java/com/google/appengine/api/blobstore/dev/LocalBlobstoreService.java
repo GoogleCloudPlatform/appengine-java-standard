@@ -21,7 +21,7 @@ import static com.google.common.io.BaseEncoding.base64Url;
 import com.google.appengine.api.blobstore.BlobInfo;
 import com.google.appengine.api.blobstore.BlobKey;
 import com.google.appengine.api.blobstore.BlobstoreService;
-import com.google.appengine.api.blobstore.BlobstoreServicePb.BlobstoreServiceError;
+import com.google.appengine.api.blobstore.BlobstoreServicePb.BlobstoreServiceError.ErrorCode;
 import com.google.appengine.api.blobstore.BlobstoreServicePb.CreateEncodedGoogleStorageKeyRequest;
 import com.google.appengine.api.blobstore.BlobstoreServicePb.CreateEncodedGoogleStorageKeyResponse;
 import com.google.appengine.api.blobstore.BlobstoreServicePb.CreateUploadURLRequest;
@@ -36,6 +36,7 @@ import com.google.apphosting.api.ApiProxy;
 import com.google.apphosting.api.proto2api.ApiBasePb.VoidProto;
 import com.google.apphosting.utils.config.GenerationDirectory;
 import com.google.auto.service.AutoService;
+import com.google.common.flogger.GoogleLogger;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Closeables;
 import com.google.common.io.Files;
@@ -44,8 +45,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * Implementation of local blobstore service.
@@ -58,8 +57,7 @@ public final class LocalBlobstoreService extends AbstractLocalRpcService {
   // cannot access that definition due to packaging for unit tests.
   private static final String PORT_ID_ENV_ATTRIBUTE = "com.google.appengine.instance.port";
 
-  private static final Logger logger = Logger.getLogger(
-      LocalBlobstoreService.class.getName());
+  private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
 
   /**
    * Where to read/store the blobs from/to.
@@ -104,7 +102,7 @@ public final class LocalBlobstoreService extends AbstractLocalRpcService {
       String filePath = properties.get(BACKING_STORE_PROPERTY);
       File file;
       if (filePath != null) {
-        logger.log(Level.INFO, "Creating blobstore backing store at " + filePath);
+        logger.atInfo().log("Creating blobstore backing store at %s", filePath);
         file = new File(filePath);
       } else {
         file = GenerationDirectory.getGenerationDirectory(
@@ -112,8 +110,9 @@ public final class LocalBlobstoreService extends AbstractLocalRpcService {
       }
       file.mkdirs();
       if (!file.canWrite()) {
-        logger.log(Level.WARNING, "Default blobstore file location is not writable, " +
-            "creating a temporary directory. State will not be persisted between restarts.");
+        logger.atWarning().log(
+            "Default blobstore file location is not writable, "
+                + "creating a temporary directory. State will not be persisted between restarts.");
         file = Files.createTempDir();
       }
       BlobStorageFactory.setFileBlobStorage(file);
@@ -161,9 +160,8 @@ public final class LocalBlobstoreService extends AbstractLocalRpcService {
         try {
           blobStorage.deleteBlob(blobKey);
         } catch (IOException ex) {
-          logger.log(Level.WARNING, "Could not delete blob: " + blobKey, ex);
           throw new ApiProxy.ApplicationException(
-              BlobstoreServiceError.ErrorCode.INTERNAL_ERROR_VALUE, ex.toString());
+              ErrorCode.INTERNAL_ERROR_VALUE, "Could not delete blob: " + blobKey + ": " + ex);
         }
       }
     }
@@ -174,21 +172,18 @@ public final class LocalBlobstoreService extends AbstractLocalRpcService {
   public FetchDataResponse fetchData(Status status, final FetchDataRequest request) {
     if (request.getStartIndex() < 0) {
       throw new ApiProxy.ApplicationException(
-          BlobstoreServiceError.ErrorCode.DATA_INDEX_OUT_OF_RANGE_VALUE,
-          "Start index must be >= 0.");
+          ErrorCode.DATA_INDEX_OUT_OF_RANGE_VALUE, "Start index must be >= 0.");
     }
 
     if (request.getEndIndex() < request.getStartIndex()) {
       throw new ApiProxy.ApplicationException(
-          BlobstoreServiceError.ErrorCode.DATA_INDEX_OUT_OF_RANGE_VALUE,
-          "End index must be >= startIndex.");
+          ErrorCode.DATA_INDEX_OUT_OF_RANGE_VALUE, "End index must be >= startIndex.");
     }
 
     long fetchSize = request.getEndIndex() - request.getStartIndex() + 1;
     if (fetchSize > BlobstoreService.MAX_BLOB_FETCH_SIZE) {
       throw new ApiProxy.ApplicationException(
-          BlobstoreServiceError.ErrorCode.BLOB_FETCH_SIZE_TOO_LARGE_VALUE,
-          "Blob fetch size too large.");
+          ErrorCode.BLOB_FETCH_SIZE_TOO_LARGE_VALUE, "Blob fetch size too large.");
     }
 
     final FetchDataResponse.Builder response = FetchDataResponse.newBuilder();
@@ -199,8 +194,7 @@ public final class LocalBlobstoreService extends AbstractLocalRpcService {
       blobInfo = blobInfoStorage.loadGsFileInfo(blobKey);
     }
     if (blobInfo == null) {
-      throw new ApiProxy.ApplicationException(
-          BlobstoreServiceError.ErrorCode.BLOB_NOT_FOUND_VALUE, "Blob not found.");
+      throw new ApiProxy.ApplicationException(ErrorCode.BLOB_NOT_FOUND_VALUE, "Blob not found.");
     }
 
     final long endIndex;
@@ -226,9 +220,8 @@ public final class LocalBlobstoreService extends AbstractLocalRpcService {
           Closeables.close(stream, swallowDueToThrow);
         }
       } catch (IOException ex) {
-        logger.log(Level.WARNING, "Could not fetch data: " + blobKey, ex);
         throw new ApiProxy.ApplicationException(
-            BlobstoreServiceError.ErrorCode.INTERNAL_ERROR_VALUE, ex.toString());
+            ErrorCode.INTERNAL_ERROR_VALUE, "Could not fetch data: " + blobKey + ": " + ex);
       }
 
       response.setData(ByteString.copyFrom(data));

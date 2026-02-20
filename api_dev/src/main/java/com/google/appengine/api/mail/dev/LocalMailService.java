@@ -29,12 +29,12 @@ import com.google.apphosting.api.proto2api.ApiBasePb;
 import com.google.auto.service.AutoService;
 import com.google.common.base.Ascii;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.flogger.GoogleLogger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * Stub implementation of the Google App Engine mail api.
@@ -90,8 +90,8 @@ public final class LocalMailService extends AbstractLocalRpcService {
   boolean logMailBody = DEFAULT_LOG_MAIL_BODY;
   // Visible for testing
   Level logMailLevel = DEFAULT_LOG_MAIL_LEVEL;
-  // Visible for testing
-  Logger logger = Logger.getLogger(getClass().getName());
+
+  private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
 
   // Visible for testing
   static final ImmutableSet<String> DENYLIST =
@@ -203,8 +203,9 @@ public final class LocalMailService extends AbstractLocalRpcService {
     }
   }
 
+
   private void log(String logMsg) {
-    logger.log(logMailLevel, logMsg);
+    logger.at(logMailLevel).log("%s", logMsg);
   }
 
   // Visible for testing

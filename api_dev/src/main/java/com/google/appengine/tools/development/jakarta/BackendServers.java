@@ -17,6 +17,7 @@
 package com.google.appengine.tools.development.jakarta;
 
 import com.google.appengine.tools.development.BackendServersBase;
+import com.google.common.flogger.GoogleLogger;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -29,6 +30,8 @@ import java.io.IOException;
  */
 public class BackendServers extends BackendServersBase {
 
+  private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
+
   /**
    * Forward a request to a specific server and instance. This will call the specified instance
    * request dispatcher so the request is handled in the right server context.
@@ -40,7 +43,7 @@ public class BackendServers extends BackendServersBase {
       HttpServletResponse hresponse)
       throws IOException, ServletException {
     ServerWrapper server = getServerWrapper(requestedServer, instance);
-    logger.finest("forwarding request to server: " + server);
+    logger.atFinest().log("forwarding request to server: " + server);
     ((ContainerService) server.getContainer()).forwardToServer(hrequest, hresponse);
   }
 }

@@ -82,6 +82,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.MultimapBuilder;
 import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Sets;
+import com.google.common.flogger.GoogleLogger;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.ExtensionRegistry;
@@ -138,8 +139,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import org.jspecify.annotations.Nullable;
 
@@ -157,7 +156,7 @@ public abstract class LocalDatastoreService {
   //  something like Derby, which is bundled with the JDK, perhaps in
   //  "iteration 2".
 
-  private static final Logger logger = Logger.getLogger(LocalDatastoreService.class.getName());
+  private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
 
   static final double DEFAULT_DEADLINE_SECONDS = 30.0;
   static final double MAX_DEADLINE_SECONDS = DEFAULT_DEADLINE_SECONDS;
@@ -525,11 +524,9 @@ public abstract class LocalDatastoreService {
 
     costAnalysis = new LocalDatastoreCostAnalysis(LocalCompositeIndexManager.getInstance());
 
-    logger.info(
-        String.format(
-            "Local Datastore initialized: " + "Type: %s " + "Storage: %s",
-            spannerBacked() ? "VNext" : "High Replication",
-            noStorage ? "In-memory" : backingStore));
+    logger.atInfo().log(
+        "Local Datastore initialized: Type: %s Storage: %s",
+        spannerBacked() ? "VNext" : "High Replication", noStorage ? "In-memory" : backingStore);
   }
 
   private static <T extends Enum<T>> T getEnumProperty(
@@ -605,13 +602,10 @@ public abstract class LocalDatastoreService {
       try {
         return Integer.parseInt(valStr);
       } catch (NumberFormatException e) {
-        logger.log(
-            Level.WARNING,
-            "Expected a numeric value for property "
-                + propName
-                + "but received, "
-                + valStr
-                + ". Resetting property to the default.");
+        logger.atWarning().withCause(e).log(
+            "Expected a numeric value for property %s but received, %s. Resetting property to the"
+                + " default.",
+            propName, valStr);
       }
     }
     return defaultVal;
@@ -910,7 +904,7 @@ public abstract class LocalDatastoreService {
     }
 
     if (!request.hasTransaction()) {
-      logger.fine("put: " + request.getEntityCount() + " entities");
+      logger.atFine().log("put: %d entities", request.getEntityCount());
       // Fill the version numbers, in the same order
       for (Reference key : response.getKeyList()) {
         response.addVersion(writtenVersions.get(key));
@@ -1639,7 +1633,7 @@ public abstract class LocalDatastoreService {
         try {
           addActionImpl(action);
         } catch (ApplicationException e) {
-          logger.log(Level.WARNING, "Transactional task: " + action + " has been dropped.", e);
+          logger.atWarning().withCause(e).log("Transactional task: %s has been dropped.", action);
         }
       }
     }
@@ -1690,14 +1684,9 @@ public abstract class LocalDatastoreService {
             .setVersion(job.getMutationTimestamp(deletedKey));
       }
     }
-    logger.fine(
-        "committed: "
-            + written
-            + " puts, "
-            + deleted
-            + " deletes in "
-            + liveTxn.getAllTrackers().size()
-            + " entity groups");
+    logger.atFine().log(
+        "committed: %d puts, %d deletes in %d entity groups",
+        written, deleted, liveTxn.getAllTrackers().size());
     response.setCost(totalCost);
 
     return response;
@@ -1833,8 +1822,7 @@ public abstract class LocalDatastoreService {
     File backingStoreFile = new File(backingStore);
     String path = backingStoreFile.getAbsolutePath();
     if (!backingStoreFile.exists()) {
-      logger.log(
-          Level.INFO, "The backing store, " + path + ", does not exist. " + "It will be created.");
+      logger.atInfo().log("The backing store, %s, does not exist. It will be created.", path);
       backingStoreFile.getParentFile().mkdirs();
       return;
     }
@@ -1863,12 +1851,12 @@ public abstract class LocalDatastoreService {
       }
       long end = clock.getCurrentTime();
 
-      logger.log(Level.INFO, "Time to load datastore: " + (end - start) + " ms");
+      logger.atInfo().log("Time to load datastore: %d ms", (end - start));
     } catch (FileNotFoundException e) {
       // Should never happen, because we just checked for it
-      logger.log(Level.SEVERE, "Failed to find the backing store, " + path);
+      logger.atSevere().withCause(e).log("Failed to find the backing store, %s", path);
     } catch (IOException | ClassNotFoundException e) {
-      logger.log(Level.INFO, "Failed to load from the backing store, " + path, e);
+      logger.atInfo().withCause(e).log("Failed to load from the backing store, %s", path);
     }
   }
 
@@ -2021,7 +2009,7 @@ public abstract class LocalDatastoreService {
           }
           unappliedJobs.clear();
           getGroupsWithUnappliedJobs().remove(path);
-          logger.fine("Rolled forward unapplied jobs for " + path);
+          logger.atFine().log("Rolled forward unapplied jobs for %s", path);
         }
       }
 
@@ -2032,8 +2020,7 @@ public abstract class LocalDatastoreService {
        */
       public void maybeRollForwardUnappliedJobs() {
         int jobsAtStart = unappliedJobs.size();
-        logger.fine(
-            String.format("Maybe rolling forward %d unapplied jobs for %s.", jobsAtStart, path));
+        logger.atFine().log("Maybe rolling forward %d unapplied jobs for %s.", jobsAtStart, path);
         int applied = 0;
         for (Iterator<LocalDatastoreJob> iter = unappliedJobs.iterator(); iter.hasNext(); ) {
           if (iter.next().tryApply()) {
@@ -2048,8 +2035,7 @@ public abstract class LocalDatastoreService {
         if (unappliedJobs.isEmpty()) {
           getGroupsWithUnappliedJobs().remove(path);
         }
-        logger.fine(
-            String.format("Rolled forward %d of %d jobs for %s", applied, jobsAtStart, path));
+        logger.atFine().log("Rolled forward %d of %d jobs for %s", applied, jobsAtStart, path);
       }
 
       public Key pathAsKey() {
@@ -3125,9 +3111,7 @@ public abstract class LocalDatastoreService {
                 .build();
           }
         } catch (NoSuchAlgorithmException ex) {
-          Logger logger = Logger.getLogger(SpecialProperty.class.getName());
-          logger.log(
-              Level.WARNING,
+          logger.atWarning().withCause(ex).log(
               "Your JDK doesn't have an MD5 implementation, which is required for scatter "
                   + " property support.");
         }
@@ -3229,12 +3213,12 @@ public abstract class LocalDatastoreService {
       dirty = false;
       long end = clock.getCurrentTime();
 
-      logger.log(Level.INFO, "Time to persist datastore: " + (end - start) + " ms");
+      logger.atInfo().log("Time to persist datastore: %d ms", (end - start));
 
     } catch (Exception e) {
       Throwable t = e.getCause();
       if (t instanceof IOException) {
-        logger.log(Level.SEVERE, "Unable to save the datastore", e);
+        logger.atSevere().withCause(e).log("Unable to save the datastore");
       } else {
         throw new RuntimeException(e);
       }
@@ -3308,13 +3292,13 @@ public abstract class LocalDatastoreService {
   // @VisibleForTesting
   static int cleanupActiveServices() {
     int cleanedUpServices = 0;
-    logger.info("scheduler shutting down.");
+    logger.atInfo().log("scheduler shutting down.");
     for (LocalDatastoreService service : activeServices) {
       cleanedUpServices++;
       service.stop();
     }
     scheduler.shutdownNow();
-    logger.info("scheduler finished shutting down.");
+    logger.atInfo().log("scheduler finished shutting down.");
     return cleanedUpServices;
   }
 

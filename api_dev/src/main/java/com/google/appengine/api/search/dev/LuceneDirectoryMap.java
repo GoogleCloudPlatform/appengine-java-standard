@@ -24,6 +24,7 @@ import com.google.auto.value.AutoValue;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ComparisonChain;
+import com.google.common.flogger.GoogleLogger;
 import com.google.protobuf.TextFormat;
 import java.io.File;
 import java.io.IOException;
@@ -37,15 +38,16 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.RAMDirectory;
 import org.apache.lucene.store.SimpleFSDirectory;
 
 /** Maintains a map from app ID and index name, to a directory. */
 abstract class LuceneDirectoryMap {
-  private static final Logger LOG = LocalSearchService.LOG;
+
+  private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
+
+  private static final GoogleLogger LOG = logger;
   private static final char APP_ID_NAMESPACE_DELIMETER = '/';
 
   private static SearchServicePb.IndexSpec normalize(SearchServicePb.IndexSpec indexSpec) {
@@ -99,7 +101,7 @@ abstract class LuceneDirectoryMap {
 
       File[] appDirs = rootDir.listFiles();
       if (appDirs == null) {
-        LOG.log(Level.SEVERE, "File base storage: root directory doesn't exist");
+        LOG.atSevere().log("File base storage: root directory doesn't exist");
         return;
       }
 
@@ -108,16 +110,15 @@ abstract class LuceneDirectoryMap {
         try {
           appId = decode(appDir.getName());
         } catch (DecodingException e) {
-          LOG.log(Level.SEVERE,
-                  "File base storage: ignoring app dir:" + appDir.getName(), e);
+          LOG.atSevere().withCause(e).log(
+              "File base storage: ignoring app dir: %s", appDir.getName());
           continue;
         }
 
         try {
           File[] indexDirs = appDir.listFiles();
           if (indexDirs == null) {
-            LOG.log(Level.SEVERE,
-                "File base storage: failed to read app dir:" + appDir.getName());
+            LOG.atSevere().log("File base storage: failed to read app dir: %s", appDir.getName());
             continue;
           }
           for (File indexDir : indexDirs) {
@@ -126,8 +127,8 @@ abstract class LuceneDirectoryMap {
             try {
               indexSpec = decodeIndexSpec(indexDir.getName());
             } catch (DecodingException e) {
-              LOG.log(Level.SEVERE,
-                      "File base storage: ignoring index dir:" + indexDir.getName(), e);
+              LOG.atSevere().withCause(e).log(
+                  "File base storage: ignoring index dir: %s", indexDir.getName());
               continue;
             }
 
@@ -142,8 +143,8 @@ abstract class LuceneDirectoryMap {
                 new LuceneIndexSpec(new SimpleFSDirectory(indexDir), indexSpec));
           }
         } catch (IOException e) {
-          LOG.log(Level.SEVERE,
-                  "File base storage: failed to initialize storage for appId: " + appId, e);
+          LOG.atSevere().withCause(e).log(
+              "File base storage: failed to initialize storage for appId: %s", appId);
         }
       }
     }
@@ -156,10 +157,8 @@ abstract class LuceneDirectoryMap {
       indexDir.mkdirs();
       // TODO: persist index params; otherwise user can alter them in
       // subsequent local server runs.
-      LOG.fine(
-          String.format(
-              "For %s.%s returning FS directory %s",
-              appId, indexSpec.getName(), indexDir.getPath()));
+      LOG.atFine().log(
+          "For %s.%s returning FS directory %s", appId, indexSpec.getName(), indexDir.getPath());
       return new LuceneIndexSpec(new SimpleFSDirectory(indexDir), indexSpec);
     }
 

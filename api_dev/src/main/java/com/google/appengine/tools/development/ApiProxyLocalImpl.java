@@ -24,6 +24,7 @@ import com.google.apphosting.api.ApiProxy.Environment;
 import com.google.apphosting.api.ApiProxy.LogRecord;
 import com.google.apphosting.api.ApiProxy.RequestTooLargeException;
 import com.google.apphosting.api.ApiProxy.UnknownException;
+import com.google.common.flogger.GoogleLogger;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -41,7 +42,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadFactory;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -103,7 +103,7 @@ public class ApiProxyLocalImpl implements ApiProxyLocal, DevServices {
     }
   }
 
-  private static final Logger logger = Logger.getLogger(ApiProxyLocalImpl.class.getName());
+  private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
 
   private final Map<String, LocalRpcService> serviceCache = new ConcurrentHashMap<>();
 
@@ -144,7 +144,8 @@ public class ApiProxyLocalImpl implements ApiProxyLocal, DevServices {
 
   @Override
   public void log(Environment environment, LogRecord record) {
-    logger.log(toJavaLevel(record.getLevel()), record.getMessage());
+    Level level = toJavaLevel(record.getLevel());
+    logger.at(level).log("%s", record.getMessage());
   }
 
   @Override
@@ -434,9 +435,8 @@ public class ApiProxyLocalImpl implements ApiProxyLocal, DevServices {
     public byte[] invokeApiMethodJava(String packageName, String methodName, byte[] requestBytes)
         throws IllegalAccessException, InstantiationException, InvocationTargetException,
             NoSuchMethodException, ClassNotFoundException {
-      logger.log(
-          Level.FINE,
-          "Making an API call to a Java implementation: " + packageName + "." + methodName);
+      logger.atFine().log(
+          "Making an API call to a Java implementation: %s.%s", packageName, methodName);
       LocalRpcService service = getService(packageName);
       if (service == null) {
         throw new CallNotFoundException(packageName, methodName);

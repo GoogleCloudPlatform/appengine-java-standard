@@ -21,6 +21,7 @@ import static java.nio.charset.StandardCharsets.US_ASCII;
 import com.google.appengine.api.NamespaceManager;
 import com.google.apphosting.api.ApiProxy;
 import com.google.apphosting.utils.config.WebModule;
+import com.google.common.flogger.GoogleLogger;
 // <internal24>
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
@@ -32,8 +33,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.jspecify.annotations.Nullable;
@@ -46,7 +45,7 @@ import org.jspecify.annotations.Nullable;
  *
  */
 abstract public class LocalEnvironment implements ApiProxy.Environment {
-  private static final Logger logger = Logger.getLogger(LocalEnvironment.class.getName());
+  private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
   static final Pattern APP_ID_PATTERN = Pattern.compile("([^:.]*)(:([^:.]*))?(.*)?");
 
   // Keep this in sync with other strings.
@@ -310,9 +309,8 @@ abstract public class LocalEnvironment implements ApiProxy.Environment {
       try {
         listener.onRequestEnd(this);
       } catch (Exception ex) {
-        logger.log(Level.WARNING,
-                   "Exception while attempting to invoke RequestEndListener " + listener.getClass()
-                   + ": ", ex);
+        logger.atWarning().withCause(ex).log(
+            "Exception while attempting to invoke RequestEndListener %s: ", listener.getClass());
       }
     }
     // Clear the end listeners to allow unit tests to call this manually but not

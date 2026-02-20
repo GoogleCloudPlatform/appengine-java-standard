@@ -20,10 +20,10 @@ import com.google.apphosting.api.ApiProxy;
 import com.google.apphosting.utils.config.AppEngineWebXml;
 import com.google.apphosting.utils.config.AppEngineWebXmlReader;
 import com.google.apphosting.utils.config.WebModule;
+import com.google.common.flogger.GoogleLogger;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.logging.Logger;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -65,7 +65,7 @@ import javax.servlet.http.HttpServletRequest;
  */
 @Deprecated
 public class LocalApiProxyServletFilter implements Filter {
-  private static final Logger logger = Logger.getLogger(LocalApiProxyServletFilter.class.getName());
+  private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
   private static final String AE_WEB_XML = "/WEB-INF/appengine-web.xml";
 
   private AppEngineWebXml appEngineWebXml;
@@ -78,18 +78,18 @@ public class LocalApiProxyServletFilter implements Filter {
     // We want to use local (stub) implementations of any API.  This
     // will search our classpath for services that contain the
     // @AutoService annotation and register them.
-    logger.info("Filter initialization invoked -- registering ApiProxy delegate.");
+    logger.atInfo().log("Filter initialization invoked -- registering ApiProxy delegate.");
     ApiProxyLocalFactory factory = new ApiProxyLocalFactory();
-    ApiProxy.setDelegate(factory.create(getLocalServerEnvironment(config)));
+    ApiProxy.setDelegate(factory.create(getLocalServerEnvironment()));
 
-    logger.info("Parsing custom deployment descriptor (" + AE_WEB_XML + ").");
+    logger.atInfo().log("Parsing custom deployment descriptor (%s).", AE_WEB_XML);
     ServletAppEngineWebXmlReader reader =
         new ServletAppEngineWebXmlReader(config.getServletContext());
     appEngineWebXml = reader.readAppEngineWebXml();
-    logger.info("Application identifier is: " + appEngineWebXml.getAppId());
+    logger.atInfo().log("Application identifier is: %s", appEngineWebXml.getAppId());
   }
 
-  private LocalServerEnvironment getLocalServerEnvironment(final FilterConfig config) {
+  private LocalServerEnvironment getLocalServerEnvironment() {
     return new LocalServerEnvironment() {
 
       @Override
@@ -132,7 +132,7 @@ public class LocalApiProxyServletFilter implements Filter {
    */
   @Override
   public void destroy() {
-    logger.info("Filter destruction invoked -- removing delegate.");
+    logger.atInfo().log("Filter destruction invoked -- removing delegate.");
     ApiProxy.setDelegate(null);
   }
 
@@ -146,7 +146,7 @@ public class LocalApiProxyServletFilter implements Filter {
     // We depend on cookies for authentication, so upcast the request.
     HttpServletRequest httpRequest = (HttpServletRequest) request;
 
-    logger.fine("Filter received a request, setting environment ThreadLocal.");
+    logger.atFine().log("Filter received a request, setting environment ThreadLocal.");
     ApiProxy.setEnvironmentForCurrentThread(new LocalHttpRequestEnvironment(
         appEngineWebXml.getAppId(), WebModule.getModuleName(appEngineWebXml),
         appEngineWebXml.getMajorVersionId(), LocalEnvironment.MAIN_INSTANCE,
@@ -154,7 +154,7 @@ public class LocalApiProxyServletFilter implements Filter {
     try {
       chain.doFilter(request, response);
     } finally {
-      logger.fine("Request has completed.  Removing environment ThreadLocal.");
+      logger.atFine().log("Request has completed.  Removing environment ThreadLocal.");
       ApiProxy.clearEnvironmentForCurrentThread();
     }
   }

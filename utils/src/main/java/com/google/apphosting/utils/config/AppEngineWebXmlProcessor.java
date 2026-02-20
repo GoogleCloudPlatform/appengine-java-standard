@@ -33,12 +33,12 @@ import com.google.apphosting.utils.config.AppEngineWebXml.ReadinessCheck;
 import com.google.apphosting.utils.config.AppEngineWebXml.Resources;
 import com.google.apphosting.utils.config.AppEngineWebXml.VpcAccessConnector;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.flogger.GoogleLogger;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.logging.Logger;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -52,7 +52,7 @@ class AppEngineWebXmlProcessor {
 
   enum FileType { STATIC, RESOURCE }
 
-  private static final Logger logger = Logger.getLogger(AppEngineWebXmlProcessor.class.getName());
+  private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
   // Error handling to disallow having both module and service entries.
   private boolean moduleNodeFound;
   private boolean serviceNodeFound;
@@ -152,7 +152,8 @@ class AppEngineWebXmlProcessor {
       case "runtime" -> processRuntimeNode(elt, appEngineWebXml);
       case "version" -> processVersionNode(elt, appEngineWebXml);
       case "source-language" ->
-          logger.warning("The element <source-language> in appengine-web.xml file was ignored.");
+          logger.atWarning().log(
+              "The element <source-language> in appengine-web.xml file was ignored.");
       case "module" -> {
         moduleNodeFound = true;
         processModuleNode(elt, appEngineWebXml);
@@ -191,10 +192,9 @@ class AppEngineWebXmlProcessor {
       case "url-stream-handler" -> processUrlStreamHandler(elt, appEngineWebXml);
       case "use-google-connector-j" -> processUseGoogleConnectorJNode(elt, appEngineWebXml);
       case "pagespeed" ->
-          logger.warning(
-              "app_id "
-                  + appEngineWebXml.getAppId()
-                  + " has <pagespeed> in appengine-web.xml file, ignored.");
+          logger.atWarning().log(
+              "app_id %s has <pagespeed> in appengine-web.xml file, ignored.",
+              appEngineWebXml.getAppId());
       case "staging" -> processStagingNode(elt, appEngineWebXml);
       case "vpc-access-connector" -> processVpcAccessConnector(elt, appEngineWebXml);
       case "service-account" -> processServiceAccountNode(elt, appEngineWebXml);

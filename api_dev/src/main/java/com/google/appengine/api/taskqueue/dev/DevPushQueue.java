@@ -16,23 +16,23 @@
 
 package com.google.appengine.api.taskqueue.dev;
 
+import com.google.appengine.api.taskqueue.dev.QueueStateInfo.TaskStateInfo;
 import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueAddRequest;
 import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueAddRequest.Header;
 import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueAddResponse;
 import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueMode.Mode;
 import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueRetryParameters;
 import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueServiceError.ErrorCode;
-import com.google.appengine.api.taskqueue.dev.QueueStateInfo.TaskStateInfo;
 import com.google.appengine.tools.development.Clock;
 import com.google.apphosting.api.ApiProxy;
 import com.google.apphosting.utils.config.QueueXml;
+import com.google.common.flogger.GoogleLogger;
 import com.google.protobuf.ByteString;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import java.util.logging.Level;
 import org.quartz.Job;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
@@ -56,6 +56,8 @@ class DevPushQueue extends DevQueue {
   // If unspecified use this bucket size.
   // The XML specification may not specify a bucket size.
   static final int DEFAULT_BUCKET_SIZE = 5;
+
+  private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
 
   private final Scheduler scheduler;
   private final String baseUrl;
@@ -283,13 +285,11 @@ class DevPushQueue extends DevQueue {
     try {
       job.execute(context);
     } catch (JobExecutionException e) {
-      logger.log(
-          Level.SEVERE, "Exception executing task " + taskName + " on queue " + getQueueName(), e);
+      logger.atSevere().withCause(e).log(
+          "Exception executing task %s on queue %s", taskName, getQueueName());
     } catch (RuntimeException rte) {
-      logger.log(
-          Level.SEVERE,
-          "Exception executing task " + taskName + " on queue " + getQueueName(),
-          rte);
+      logger.atSevere().withCause(rte).log(
+          "Exception executing task %s on queue %s", taskName, getQueueName());
     }
 
     // job.execute() above unschedules the task if it's successful

@@ -26,6 +26,7 @@ import com.google.apphosting.utils.servlet.MultipartMimeUtils;
 import com.google.common.base.Ascii;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
+import com.google.common.flogger.GoogleLogger;
 import com.google.common.io.Closeables;
 // <internal24>
 import java.io.BufferedReader;
@@ -47,8 +48,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.activation.DataHandler;
 import javax.activation.DataSource;
 import javax.mail.BodyPart;
@@ -84,8 +83,7 @@ import javax.servlet.http.HttpServletResponse;
  */
 public final class UploadBlobServlet extends HttpServlet {
   private static final long serialVersionUID = -813190429684600745L;
-  private static final Logger logger =
-      Logger.getLogger(UploadBlobServlet.class.getName());
+  private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
 
   static final String UPLOAD_HEADER = "X-AppEngine-BlobUpload";
 
@@ -186,10 +184,10 @@ public final class UploadBlobServlet extends HttpServlet {
               totalSize += size;
               largestBlobSize = Math.max(size, largestBlobSize);
             } else {
-              logger.log(Level.WARNING,
-                         "Unable to determine size of upload part named " +
-                         part.getFileName() + "." +
-                         " Upload limit checks may not be accurate.");
+              logger.atWarning().log(
+                  "Unable to determine size of upload part named %s. Upload limit checks may not be"
+                      + " accurate.",
+                  part.getFileName());
             }
           }
         }

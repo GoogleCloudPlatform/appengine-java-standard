@@ -23,7 +23,6 @@ import com.google.appengine.api.log.dev.LocalLogService;
 import com.google.appengine.tools.development.AbstractContainerService;
 import com.google.appengine.tools.development.ApiProxyLocal;
 import com.google.appengine.tools.development.AppContext;
-import com.google.appengine.tools.development.ContainerService;
 import com.google.appengine.tools.development.ContainerServiceEE8;
 import com.google.appengine.tools.development.DevAppServer;
 import com.google.appengine.tools.development.DevAppServerModulesFilter;
@@ -38,9 +37,9 @@ import com.google.apphosting.utils.config.WebModule;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.flogger.GoogleLogger;
 import com.google.common.io.Files;
 import java.io.File;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Path;
@@ -52,8 +51,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Semaphore;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
@@ -63,8 +60,6 @@ import javax.servlet.http.HttpServletResponse;
 import org.eclipse.jetty.ee8.nested.ContextHandler;
 import org.eclipse.jetty.ee8.nested.Request;
 import org.eclipse.jetty.ee8.servlet.ServletHolder;
-import org.eclipse.jetty.ee8.webapp.Configuration;
-import org.eclipse.jetty.ee8.webapp.JettyWebXmlConfiguration;
 import org.eclipse.jetty.ee8.webapp.WebAppContext;
 import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.HttpConnectionFactory;
@@ -79,7 +74,7 @@ import org.eclipse.jetty.util.thread.QueuedThreadPool;
 /** Implements a Jetty backed {@link ContainerService}. */
 public class JettyContainerService extends AbstractContainerService implements ContainerServiceEE8 {
 
-  private static final Logger log = Logger.getLogger(JettyContainerService.class.getName());
+  private static final GoogleLogger log = GoogleLogger.forEnclosingClass();
 
   private static final String JETTY_TAG_LIB_JAR_PREFIX = "org.apache.taglibs.taglibs-";
   private static final Pattern JSP_REGEX = Pattern.compile(".*\\.jspx?");
@@ -240,20 +235,15 @@ public class JettyContainerService extends AbstractContainerService implements C
                         + "/WEB-INF/lib/"
                         + file.getName().substring(JETTY_TAG_LIB_JAR_PREFIX.length()));
             if (!mavenProvidedDestination.exists()) {
-              log.log(
-                  Level.WARNING,
-                  "Adding jar "
-                      + file.getName()
-                      + " to WEB-INF/lib."
-                      + " You might want to add a dependency in your project build system to avoid"
-                      + " this warning.");
+              log.atWarning().log(
+                  "Adding jar %s to WEB-INF/lib. You might want to add a dependency in your project"
+                      + " build system to avoid this warning.",
+                  file.getName());
               try {
                 Files.copy(file, jettyProvidedDestination);
               } catch (IOException e) {
-                log.log(
-                    Level.WARNING,
-                    "Cannot copy org.apache.taglibs.taglibs jar file to WEB-INF/lib.",
-                    e);
+                log.atWarning().withCause(e).log(
+                    "Cannot copy org.apache.taglibs.taglibs jar file to WEB-INF/lib.");
               }
             }
           }
@@ -432,15 +422,15 @@ public class JettyContainerService extends AbstractContainerService implements C
       try {
         int interval = Integer.parseInt(fullScanInterval);
         if (interval < 1) {
-          log.info("Full scan of the web app for changes is disabled.");
+          log.atInfo().log("Full scan of the web app for changes is disabled.");
           return;
         }
-        log.info("Full scan of the web app in place every " + interval + "s.");
+        log.atInfo().log("Full scan of the web app in place every " + interval + "s.");
         fullWebAppScanner(interval);
         return;
       } catch (NumberFormatException ex) {
-        log.log(Level.WARNING, "appengine.fullscan.seconds property is not an integer:", ex);
-        log.log(Level.WARNING, "Using the default scanning method.");
+        log.atWarning().withCause(ex).log("appengine.fullscan.seconds property is not an integer:");
+        log.atWarning().log("Using the default scanning method.");
       }
     }
     scanner = new Scanner();
@@ -479,7 +469,7 @@ public class JettyContainerService extends AbstractContainerService implements C
 
     @Override
     public void fileChanged(String filename) throws Exception {
-      log.info(filename + " updated, reloading the webapp!");
+      log.atInfo().log("%s updated, reloading the webapp!", filename);
       reloadWebApp();
     }
 
@@ -521,7 +511,7 @@ public class JettyContainerService extends AbstractContainerService implements C
         new Scanner.BulkListener() {
           @Override
           public void pathsChanged(Map<Path, Scanner.Notification> changeSet) throws Exception {
-            log.info("A file has changed, reloading the web application.");
+            log.atInfo().log("A file has changed, reloading the web application.");
             reloadWebApp();
           }
         });
@@ -580,7 +570,8 @@ public class JettyContainerService extends AbstractContainerService implements C
   @Override
   public void forwardToServer(HttpServletRequest hrequest, HttpServletResponse hresponse)
       throws IOException, ServletException {
-    log.finest("forwarding request to module: " + appEngineWebXml.getModule() + "." + instance);
+    log.atFinest().log(
+        "forwarding request to module: %s.%s", appEngineWebXml.getModule(), instance);
     RequestDispatcher requestDispatcher =
         context.getServletContext().getRequestDispatcher(hrequest.getRequestURI());
     requestDispatcher.forward(hrequest, hresponse);
@@ -612,9 +603,9 @@ public class JettyContainerService extends AbstractContainerService implements C
             if (request.getRequestURI().startsWith(AH_URL_RELOAD)) {
               try {
                 reloadWebApp();
-                log.info("Reloaded the webapp context: " + request.getParameter("info"));
+                log.atInfo().log("Reloaded the webapp context: %s", request.getParameter("info"));
               } catch (Exception ex) {
-                log.log(Level.WARNING, "Failed to reload the current webapp context.", ex);
+                log.atWarning().withCause(ex).log("Failed to reload the current webapp context.");
               }
             }
           } finally {
@@ -631,7 +622,8 @@ public class JettyContainerService extends AbstractContainerService implements C
                 semaphore.acquire(MAX_SIMULTANEOUS_API_CALLS);
               } catch (InterruptedException ex) {
                 Thread.currentThread().interrupt();
-                log.log(Level.WARNING, "Interrupted while waiting for API calls to complete:", ex);
+                log.atWarning().withCause(ex).log(
+                    "Interrupted while waiting for API calls to complete:");
               }
 
               try {

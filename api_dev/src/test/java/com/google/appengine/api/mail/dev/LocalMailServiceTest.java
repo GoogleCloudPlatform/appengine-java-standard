@@ -30,7 +30,9 @@ import com.google.appengine.tools.development.testing.LocalServiceTestHelper;
 import com.google.apphosting.api.ApiProxy;
 import com.google.protobuf.ByteString;
 import java.io.IOException;
+import java.util.logging.Handler;
 import java.util.logging.Level;
+import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import org.junit.After;
 import org.junit.Before;
@@ -154,18 +156,22 @@ public class LocalMailServiceTest {
   public void testLogMsg() {
     final StringBuilder sb = new StringBuilder();
     LocalMailService localMailService = getLocalMailService();
-    localMailService.logger =
-        new Logger("test", null) {
+    Logger rootLogger = Logger.getLogger(LocalMailService.class.getName());
+    Handler handler =
+        new Handler() {
           @Override
-          public void log(Level level, String msg) {
-            sb.append(msg);
+          public void publish(LogRecord record) {
+            sb.append(record.getMessage());
           }
 
           @Override
-          public void logp(Level level, String className, String methodName, String msg) {
-            sb.append(msg);
-          }
+          public void flush() {}
+
+          @Override
+          public void close() throws SecurityException {}
         };
+    rootLogger.addHandler(handler);
+    try {
     localMailService.logMailBody = true;
     MailServicePb.MailMessage msg =
         MailServicePb.MailMessage.newBuilder()
@@ -216,6 +222,9 @@ public class LocalMailServiceTest {
                 + "  Attachment:"
                 + "    File name: filename 2"
                 + "    Data length: 11");
+    } finally {
+      rootLogger.removeHandler(handler);
+    }
   }
 
   private LocalMailService getLocalMailService() {

@@ -37,6 +37,7 @@ import com.google.appengine.tools.development.LocalServiceContext;
 import com.google.apphosting.api.ApiProxy;
 import com.google.auto.service.AutoService;
 import com.google.common.base.CharMatcher;
+import com.google.common.flogger.GoogleLogger;
 import com.google.common.io.BaseEncoding;
 import com.google.protobuf.ByteString;
 // <internal24>
@@ -49,8 +50,6 @@ import java.security.interfaces.RSAPrivateKey;
 import java.security.spec.EncodedKeySpec;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * Stub implementation of the app identity service.
@@ -59,7 +58,7 @@ import java.util.logging.Logger;
 @AutoService(LocalRpcService.class)
 public class LocalAppIdentityService extends AbstractLocalRpcService {
 
-  private static final Logger log = Logger.getLogger(LocalAppIdentityService.class.getName());
+  private static final GoogleLogger log = GoogleLogger.forEnclosingClass();
   public static final String PACKAGE = "app_identity_service";
 
   public static final String PRIVATE_KEY_PATH =
@@ -183,11 +182,9 @@ public class LocalAppIdentityService extends AbstractLocalRpcService {
     }
     // Return an invalid token. There is no application default and dev_appserver does not have
     // access to an actual service account.
-    log.log(
-        Level.WARNING,
-        "No Application Default credential, using an invalid token. "
-            + " If needed, you may want to call the gcloud command: "
-            + "`gcloud auth application-default login`");
+    log.atWarning().log(
+        "No Application Default credential, using an invalid token.  If needed, you may want to"
+            + " call the gcloud command: `gcloud auth application-default login`");
 
     StringBuilder builder = new StringBuilder();
     builder.append("InvalidToken");

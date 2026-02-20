@@ -17,9 +17,8 @@
 package com.google.appengine.tools.development;
 
 import com.google.apphosting.api.ApiProxy;
+import com.google.common.flogger.GoogleLogger;
 import java.util.concurrent.ThreadFactory;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * This {@link ThreadFactory} creates {@link Thread} objects that
@@ -29,7 +28,7 @@ import java.util.logging.Logger;
  *
  */
 public class BackgroundThreadFactory implements ThreadFactory {
-  private static final Logger logger = Logger.getLogger(BackgroundThreadFactory.class.getName());
+  private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
 
   private static final int API_CALL_LATENCY_MS = 20;
   private static final int THREAD_STARTUP_LATENCY_MS = 20;
@@ -81,7 +80,7 @@ public class BackgroundThreadFactory implements ThreadFactory {
     } catch (InterruptedException ex) {
       // We can't propagate the exception from here so
       // just log, reset the bit, and continue.
-      logger.log(Level.INFO, "Interrupted simulating latency:", ex);
+      logger.atInfo().withCause(ex).log("Interrupted simulating latency:");
       Thread.currentThread().interrupt();
     }
   }

@@ -18,6 +18,7 @@ package com.google.appengine.tools.development.jetty.ee11;
 
 import com.google.apphosting.utils.config.AppEngineWebXml;
 import com.google.apphosting.utils.config.WebXml;
+import com.google.common.flogger.GoogleLogger;
 import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletException;
@@ -27,8 +28,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.Objects;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.eclipse.jetty.ee11.servlet.ServletContextHandler;
 import org.eclipse.jetty.ee11.servlet.ServletHandler;
 import org.eclipse.jetty.ee11.servlet.ServletMapping;
@@ -50,7 +49,7 @@ import org.eclipse.jetty.util.resource.ResourceFactory;
  * jakarta.servlet.ServletContext#getResource(String)} instead.
  */
 public class LocalResourceFileServlet extends HttpServlet {
-  private static final Logger logger = Logger.getLogger(LocalResourceFileServlet.class.getName());
+  private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
 
   private StaticFileUtils staticFileUtils;
   private Resource resourceBase;
@@ -95,7 +94,7 @@ public class LocalResourceFileServlet extends HttpServlet {
       // In Jetty 9 "//public" is not seen as "/public" .
       resourceBase = ResourceFactory.root().newResource(servletContext.getResource(base));
     } catch (MalformedURLException ex) {
-      logger.log(Level.WARNING, "Could not initialize:", ex);
+      logger.atWarning().withCause(ex).log("Could not initialize:");
       throw new ServletException(ex);
     }
   }
@@ -158,7 +157,7 @@ public class LocalResourceFileServlet extends HttpServlet {
         }
       } else {
         if (resource == null || !resource.exists()) {
-          logger.warning("No file found for: " + pathInContext);
+          logger.atWarning().log("No file found for: %s", pathInContext);
           response.sendError(HttpServletResponse.SC_NOT_FOUND);
         } else {
           boolean isStatic = appEngineWebXml.includesStatic(resourceRoot + pathInContext);
@@ -172,21 +171,17 @@ public class LocalResourceFileServlet extends HttpServlet {
           }
 
           if (!isStatic && !usesRuntime && !(included || forwarded)) {
-            logger.warning(
-                "Can not serve "
-                    + pathInContext
-                    + " directly.  "
-                    + "You need to include it in <static-files> in your "
-                    + "appengine-web.xml.");
+            logger.atWarning().log(
+                "Can not serve %s directly.  You need to include it in <static-files> in your"
+                    + " appengine-web.xml.",
+                pathInContext);
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
           } else if (!isResource && !isWelcomeFile && (included || forwarded)) {
-            logger.warning(
-                "Could not serve "
-                    + pathInContext
-                    + " from a forward or "
-                    + "include.  You need to include it in <resource-files> in "
-                    + "your appengine-web.xml.");
+            logger.atWarning().log(
+                "Could not serve %s from a forward or include.  You need to include it in"
+                    + " <resource-files> in your appengine-web.xml.",
+                pathInContext);
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
           }
@@ -223,7 +218,7 @@ public class LocalResourceFileServlet extends HttpServlet {
         return resourceBase.resolve(pathInContext);
       }
     } catch (Throwable t) {
-      logger.log(Level.WARNING, "Could not find: " + pathInContext, t);
+      logger.atWarning().withCause(t).log("Could not find: %s", pathInContext);
     }
     return null;
   }

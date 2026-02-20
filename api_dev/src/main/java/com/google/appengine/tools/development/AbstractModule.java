@@ -18,11 +18,11 @@ package com.google.appengine.tools.development;
 
 import com.google.appengine.tools.development.ApplicationConfigurationManager.ModuleConfigurationHandle;
 import com.google.apphosting.api.ApiProxy;
+import com.google.common.flogger.GoogleLogger;
 import java.io.File;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.logging.Logger;
 
 /**
  * Abstract super class for {@link Module} implementations.
@@ -33,7 +33,7 @@ import java.util.logging.Logger;
 public abstract class AbstractModule<I extends InstanceHolder> implements Module {
   // Should not be used until ContainerService.startup() is called.
   // TODO: Verify above comment is no longer needed and hopefully remove it.
-  static final Logger LOGGER = Logger.getLogger(AbstractModule.class.getName());
+  private static final GoogleLogger LOGGER = GoogleLogger.forEnclosingClass();
 
   //Set during construction
   private final ModuleConfigurationHandle moduleConfigurationHandle;
@@ -42,9 +42,8 @@ public abstract class AbstractModule<I extends InstanceHolder> implements Module
   private final String address;
   private final DevAppServer devAppServer;
   private final List<I> instanceHolders;
-  private ApiProxy.Delegate<?> apiProxyDelegate;
 
-  //Set by configure
+  // Set by configure
   private LocalServerEnvironment localServerEnvironment;
 
   protected AbstractModule(ModuleConfigurationHandle moduleConfigurationHandle,
@@ -106,13 +105,15 @@ public abstract class AbstractModule<I extends InstanceHolder> implements Module
       // j/c/g/corp/common/testing/appengine/DevAppServer.java (cl/48377962)
       // and PORT_PATTERN in j/c/g/publicalerts/testing/integration/DevAppServer.java. (cl/49496967)
       if (instanceHolder.isMainInstance()) {
-        LOGGER.info(String.format("Module instance %s is running at http://%s/", getModuleName(),
-            listeningHostAndPort));
+        LOGGER.atInfo().log(
+            "Module instance %s is running at http://%s/", getModuleName(), listeningHostAndPort);
       } else {
-        LOGGER.info(String.format("Module instance %s instance %s is running at http://%s/",
-            getModuleName(), instanceHolder.getInstance(), listeningHostAndPort));
+        LOGGER.atInfo().log(
+            "Module instance %s instance %s is running at http://%s/",
+            getModuleName(), instanceHolder.getInstance(), listeningHostAndPort);
       }
-      LOGGER.info("The admin console is running at http://" + listeningHostAndPort + "/_ah/admin");
+      LOGGER.atInfo().log(
+          "The admin console is running at http://%s/_ah/admin", listeningHostAndPort);
     }
   }
 
@@ -150,10 +151,11 @@ public abstract class AbstractModule<I extends InstanceHolder> implements Module
     for (I instanceHolder : instanceHolders) {
       instanceHolder.getContainerService().shutdown();
       if (instanceHolder.isMainInstance()) {
-        LOGGER.info("Shutting down module instance " + getModuleName());
+        LOGGER.atInfo().log("Shutting down module instance %s", getModuleName());
       } else {
-        LOGGER.info("Shutting down module instance " + getModuleName() + " instance "
-            + instanceHolder.getInstance());
+        LOGGER.atInfo().log(
+            "Shutting down module instance %s instance %s",
+            getModuleName(), instanceHolder.getInstance());
       }
     }
   }

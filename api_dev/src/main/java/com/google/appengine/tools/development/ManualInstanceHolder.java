@@ -18,11 +18,11 @@ package com.google.appengine.tools.development;
 
 import com.google.appengine.tools.development.ApplicationConfigurationManager.ModuleConfigurationHandle;
 import com.google.appengine.tools.development.InstanceStateHolder.InstanceState;
+import com.google.common.flogger.GoogleLogger;
 import java.io.File;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Logger;
 
 /**
  * {@link InstanceHolder} for a {@link ManualModule}.
@@ -30,7 +30,7 @@ import java.util.logging.Logger;
 class ManualInstanceHolder extends AbstractInstanceHolder  {
   // maximum time a request can wait for a start request to complete
   private static final int MAX_START_QUEUE_TIME_MS = 30 * 1000;
-  private static final Logger LOGGER = Logger.getLogger(ManualInstanceHolder.class.getName());
+  private static final GoogleLogger LOGGER = GoogleLogger.forEnclosingClass();
 
   private final String moduleName;
   private final InstanceStateHolder stateHolder;
@@ -182,17 +182,16 @@ class ManualInstanceHolder extends AbstractInstanceHolder  {
 
   @Override
   public boolean acquireServingPermit() {
-    LOGGER.finest(String.format("trying to get serving permit for %d.%s", getInstance(),
-        moduleName));
+    LOGGER.atFinest().log("trying to get serving permit for %d.%s", getInstance(), moduleName);
     int maxWaitTime = 0;
     synchronized (stateHolder) {
       if (!stateHolder.acceptsConnections()) {
-        LOGGER.finest(moduleName + ": got request but instance is not in a serving state");
+        LOGGER.atFinest().log("%s: got request but instance is not in a serving state", moduleName);
         return false;
       }
 
       if (stateHolder.test(InstanceState.SLEEPING)) {
-        LOGGER.finest(moduleName + ": waking up sleeping instance");
+        LOGGER.atFinest().log("%s: waking up sleeping instance", moduleName);
         sendStartRequest();
       }
 
@@ -203,12 +202,13 @@ class ManualInstanceHolder extends AbstractInstanceHolder  {
     }
     try {
       boolean gotPermit = startRequestLatch.await(maxWaitTime, TimeUnit.MILLISECONDS);
-      LOGGER.finest(getInstance() + "." + moduleName + ": tried to get serving permit, timeout="
-          + maxWaitTime  + " success=" + gotPermit);
+      LOGGER.atFinest().log(
+          "%s.%s: tried to get serving permit, timeout=%d success=%s",
+          getInstance(), moduleName, maxWaitTime, gotPermit);
       return gotPermit;
     } catch (InterruptedException e) {
-      LOGGER.finest(
-          getInstance() + "." + moduleName + ": got interrupted while waiting for serving permit");
+      LOGGER.atFinest().log(
+          "%s.%s: got interrupted while waiting for serving permit", getInstance(), moduleName);
       return false;
     }
   }

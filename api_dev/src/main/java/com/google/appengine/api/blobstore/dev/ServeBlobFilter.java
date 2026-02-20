@@ -21,11 +21,11 @@ import com.google.appengine.api.blobstore.BlobKey;
 import com.google.appengine.api.blobstore.ByteRange;
 import com.google.appengine.api.blobstore.RangeFormatException;
 import com.google.appengine.tools.development.ApiProxyLocal;
+import com.google.common.flogger.GoogleLogger;
 import com.google.common.io.Closeables;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.logging.Logger;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -45,8 +45,7 @@ import javax.servlet.http.HttpServletResponseWrapper;
  *
  */
 public final class ServeBlobFilter implements Filter {
-  private static final Logger logger = Logger.getLogger(
-      ServeBlobFilter.class.getName());
+  private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
 
   static final String SERVE_HEADER = "X-AppEngine-BlobKey";
   static final String BLOB_RANGE_HEADER = "X-AppEngine-BlobRange";
@@ -152,7 +151,7 @@ public final class ServeBlobFilter implements Filter {
                          HttpServletResponse response)
       throws IOException {
     if (response.isCommitted()) {
-      logger.severe("Asked to send blob " + blobKey + " but response was already committed.");
+      logger.atSevere().log("Asked to send blob %s but response was already committed.", blobKey);
       return;
     }
 
@@ -163,7 +162,7 @@ public final class ServeBlobFilter implements Filter {
       blobInfo = blobInfoStorage.loadGsFileInfo(blobKey);
     }
     if (blobInfo == null) {
-      logger.severe("Could not find blob: " + blobKey);
+      logger.atSevere().log("Could not find blob: %s", blobKey);
       response.sendError(HttpServletResponse.SC_NOT_FOUND);
       return;
     }
@@ -171,7 +170,7 @@ public final class ServeBlobFilter implements Filter {
     // And the blob missing from storage is redundant (although for file
     // storage could happen if the file was deleted).
     if (!getBlobStorage().hasBlob(blobKey)) {
-      logger.severe("Blob " + blobKey + " missing. Did you delete the file?");
+      logger.atSevere().log("Blob %s missing. Did you delete the file?", blobKey);
       response.sendError(HttpServletResponse.SC_NOT_FOUND);
       return;
     }

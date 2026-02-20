@@ -16,6 +16,7 @@
 
 package com.google.appengine.tools.development;
 
+import com.google.common.flogger.GoogleLogger;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -26,20 +27,18 @@ import java.net.URLStreamHandlerFactory;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Logger;
 import org.jspecify.annotations.Nullable;
 
 /**
- * A {@link URLStreamHandlerFactory} which installs
- * {@link URLStreamHandler URLStreamHandlers} that App Engine needs to support.
- * (For example, the "http" and "https" protocols).  This factory returns
- * handlers that delegate to the
- * {@link com.google.appengine.api.urlfetch.URLFetchService} when running in an
- * App Engine container, and returns the default handlers when running outside
- * an App Engine container.
- *
+ * A {@link URLStreamHandlerFactory} which installs {@link URLStreamHandler URLStreamHandlers} that
+ * App Engine needs to support. (For example, the "http" and "https" protocols). This factory
+ * returns handlers that delegate to the {@link com.google.appengine.api.urlfetch.URLFetchService}
+ * when running in an App Engine container, and returns the default handlers when running outside an
+ * App Engine container.
  */
 public class StreamHandlerFactory implements URLStreamHandlerFactory {
+
+  private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
 
   private static boolean factoryIsInstalled;
 
@@ -64,7 +63,7 @@ public class StreamHandlerFactory implements URLStreamHandlerFactory {
     } catch (NoSuchMethodException e) {
       // Don't want to completely hose people if the jvm they're running
       // locally doesn't have this method.
-      Logger.getLogger(StreamHandlerFactory.class.getName()).info(
+      logger.atInfo().log(
           "Unable to register default URLStreamHandlers.  You will be unable to "
               + "access http and https URLs outside the App Engine environment.");
     }

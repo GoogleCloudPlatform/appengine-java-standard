@@ -24,6 +24,7 @@ import com.google.apphosting.utils.config.AppEngineWebXml;
 import com.google.apphosting.utils.config.AppEngineWebXml.ManualScaling;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.flogger.GoogleLogger;
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
@@ -32,8 +33,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * Manager for {@link DevAppServer} servers.
@@ -43,7 +42,7 @@ public class Modules implements ModulesController, ModulesFilterHelper {
 
   // TODO: Explore wiring this into ApiProxy.Environment
   private static final AtomicReference<Modules> instance = new AtomicReference<Modules>();
-  private static final Logger LOGGER = Logger.getLogger(Modules.class.getName());
+  private static final GoogleLogger LOGGER = GoogleLogger.forEnclosingClass();
 
   private final List<Module> modules;
   private final Map<String, Module> moduleNameToModuleMap;
@@ -96,7 +95,7 @@ public class Modules implements ModulesController, ModulesFilterHelper {
         | NoSuchMethodException
         | SecurityException
         | InvocationTargetException ex) {
-      Logger.getLogger(Modules.class.getName()).log(Level.SEVERE, null, ex);
+      LOGGER.atSevere().withCause(ex).log();
     }
     return null;
   }
@@ -237,7 +236,6 @@ public class Modules implements ModulesController, ModulesFilterHelper {
     try {
       module.startServing();
     } catch (Exception e) {
-      LOGGER.log(Level.SEVERE, "startServing failed", e);
       throw new ApplicationException(ModulesServiceError.ErrorCode.UNEXPECTED_STATE_VALUE,
           "startServing failed with error " + e.getMessage());
     }
@@ -275,12 +273,10 @@ public class Modules implements ModulesController, ModulesFilterHelper {
           dynamicConfigurationLock.unlock();
         }
       } else {
-        LOGGER.log(Level.SEVERE, "stopServing timed out");
         throw new ApplicationException(ModulesServiceError.ErrorCode.UNEXPECTED_STATE_VALUE,
             operation + " timed out");
       }
     } catch (InterruptedException ie) {
-      LOGGER.log(Level.SEVERE, "stopServing interrupted", ie);
       throw new ApplicationException(ModulesServiceError.ErrorCode.UNEXPECTED_STATE_VALUE,
           operation + " interrupted " + ie.getMessage());
     }
@@ -293,7 +289,6 @@ public class Modules implements ModulesController, ModulesFilterHelper {
     try {
       module.stopServing();
     } catch (Exception e) {
-      LOGGER.log(Level.SEVERE, "stopServing failed", e);
       throw new ApplicationException(ModulesServiceError.ErrorCode.UNEXPECTED_STATE_VALUE,
           "stopServing failed with error " + e.getMessage());
     }
@@ -312,7 +307,7 @@ public class Modules implements ModulesController, ModulesFilterHelper {
     if (module.getMainContainer().getAppEngineWebXmlConfig().getManualScaling().isEmpty() &&
         module.getMainContainer().getAppEngineWebXmlConfig().getBasicScaling().isEmpty()) {
       // Logged because this exception redacted by the ModulesService.
-      LOGGER.warning("Module " + module.getModuleName() + " cannot be a dynamic module");
+      LOGGER.atWarning().log("Module %s cannot be a dynamic module", module.getModuleName());
       throw new ApplicationException(ModulesServiceError.ErrorCode.INVALID_VERSION_VALUE,
           "This operation is not supported on Dynamic modules.");
     }
@@ -323,7 +318,7 @@ public class Modules implements ModulesController, ModulesFilterHelper {
         module.getMainContainer().getAppEngineWebXmlConfig().getManualScaling();
     if (manualScaling.isEmpty()) {
       // Logged because this exception redacted by the ModulesService.
-      LOGGER.warning("Module " + module.getModuleName() + " must be a manual scaling module");
+      LOGGER.atWarning().log("Module %s must be a manual scaling module", module.getModuleName());
       throw new ApplicationException(ModulesServiceError.ErrorCode.INVALID_VERSION_VALUE,
           "Manual scaling is required.");
     }

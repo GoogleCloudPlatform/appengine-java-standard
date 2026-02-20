@@ -16,9 +16,9 @@
 
 package com.google.appengine.api.search.dev;
 
+import com.google.common.flogger.GoogleLogger;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Logger;
 import org.apache.lucene.document.Document;
 
 /** Expression which evaluates to the score of a document.
@@ -28,7 +28,7 @@ import org.apache.lucene.document.Document;
  * expression evaluation in the dev server, which may come later.
  */
 class ScoreExpression extends NumericExpression {
-  static final Logger LOG = Logger.getLogger(ScoreExpression.class.getCanonicalName());
+  private static final GoogleLogger LOG = GoogleLogger.forEnclosingClass();
 
   ScoreExpression() {
   }
@@ -39,9 +39,9 @@ class ScoreExpression extends NumericExpression {
 
   @Override
   public double evalDouble(Document doc) throws EvaluationException {
-    LOG.info(
-        "Score expressions are not supported on the Java dev server; " +
-        "_score in expressions will evaluate to zero.");
+    LOG.atInfo().log(
+        "Score expressions are not supported on the Java dev server; _score in expressions will "
+            + "evaluate to zero.");
     return 0.;
   }
 

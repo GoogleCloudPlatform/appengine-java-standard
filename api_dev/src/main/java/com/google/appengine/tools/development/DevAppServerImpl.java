@@ -27,6 +27,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.VerifyException;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.flogger.GoogleLogger;
 import java.io.File;
 import java.net.BindException;
 import java.util.HashMap;
@@ -54,7 +55,7 @@ public class DevAppServerImpl implements DevAppServer {
   //     .MODULES_FILTER_HELPER_PROPERTY.
   public static final String MODULES_FILTER_HELPER_PROPERTY =
       "com.google.appengine.tools.development.modules_filter_helper";
-  private static final Logger logger = Logger.getLogger(DevAppServerImpl.class.getName());
+  private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
 
   private final ApplicationConfigurationManager applicationConfigurationManager;
   private final Modules modules;
@@ -141,7 +142,7 @@ public class DevAppServerImpl implements DevAppServer {
        String contextRootWarning =
             "Ignoring application.xml context-root element, for details see "
              + "https://developers.google.com/appengine/docs/java/modules/#config";
-        logger.info(contextRootWarning);
+        logger.atInfo().log("%s", contextRootWarning);
       } else {
         tempManager =
             ApplicationConfigurationManager.newWarConfigurationManager(
@@ -291,7 +292,7 @@ public class DevAppServerImpl implements DevAppServer {
     serverState = ServerState.RUNNING;
     // If you change this please also update
     // com.google.watr.client.deployment.DevAppServerDeployment.DevAppServerMonitor.
-    logger.info("Dev App Server is now running");
+    logger.atInfo().log("Dev App Server is now running");
     return shutdownLatch;
   }
 

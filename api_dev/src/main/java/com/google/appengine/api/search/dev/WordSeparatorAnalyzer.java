@@ -17,14 +17,13 @@
 package com.google.appengine.api.search.dev;
 
 import com.google.apphosting.api.AppEngineInternal;
+import com.google.common.flogger.GoogleLogger;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.LetterTokenizer;
@@ -49,8 +48,7 @@ import org.apache.lucene.analysis.tokenattributes.TermAttribute;
 @AppEngineInternal
 public class WordSeparatorAnalyzer extends Analyzer {
 
-  static final Logger LOG = Logger.getLogger(WordSeparatorAnalyzer.class.getCanonicalName());
-
+  private static final GoogleLogger LOG = GoogleLogger.forEnclosingClass();
 
   /**
    * A letter tokenizer that splits on a set of word separators.
@@ -120,7 +118,7 @@ public class WordSeparatorAnalyzer extends Analyzer {
       } catch (IOException e) {
         /* As the reader is a view to an in-memory document, IOExceptions shouldn't happen. If they
          * do, log and return an empty stream. */
-        LOG.log(Level.SEVERE, "Failed to read stream for tokenization.", e);
+        LOG.atSevere().withCause(e).log("Failed to read stream for tokenization.");
         return new EmptyTokenStream();
       }
 

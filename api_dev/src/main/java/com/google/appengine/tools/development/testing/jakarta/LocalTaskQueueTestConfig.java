@@ -29,6 +29,7 @@ import com.google.appengine.tools.development.testing.EnvSettingTaskqueueCallbac
 import com.google.appengine.tools.development.testing.LocalServiceTestConfig;
 import com.google.appengine.tools.development.testing.LocalServiceTestHelper;
 import com.google.common.collect.Maps;
+import com.google.common.flogger.GoogleLogger;
 import com.google.protobuf.ByteString;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletResponse;
@@ -41,8 +42,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * Config for accessing the local task queue in tests. Default behavior is to
@@ -61,7 +60,7 @@ import java.util.logging.Logger;
  *
  */
 public final class LocalTaskQueueTestConfig implements LocalServiceTestConfig {
-  private static final Logger logger = Logger.getLogger(LocalTaskQueueTestConfig.class.getName());
+  private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
   private Boolean disableAutoTaskExecution = true;
   private String queueXmlPath;
   private String queueYamlPath;
@@ -289,7 +288,7 @@ public final class LocalTaskQueueTestConfig implements LocalServiceTestConfig {
             deferredTask.run();
             return 200;
           } catch (Exception e) {
-            logger.log(Level.WARNING, e.getMessage(), e);
+            logger.atWarning().withCause(e).log("%s", e.getMessage());
             return 500;
           }
         }
@@ -393,7 +392,7 @@ public final class LocalTaskQueueTestConfig implements LocalServiceTestConfig {
         int result = response.getStatus();
         return result;
       } catch (Exception ex) {
-        logger.log(Level.WARNING, ex.getMessage(), ex);
+        logger.atWarning().withCause(ex).log("%s", ex.getMessage());
         return HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
       }
     }

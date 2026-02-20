@@ -23,10 +23,9 @@ import com.google.appengine.api.urlfetch.dev.LocalURLFetchService;
 import com.google.appengine.tools.development.Clock;
 import com.google.appengine.tools.development.LocalServerEnvironment;
 import com.google.apphosting.utils.config.QueueXml;
+import com.google.common.flogger.GoogleLogger;
 import java.text.DecimalFormat;
 import java.util.Date;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
@@ -47,7 +46,7 @@ import org.quartz.Trigger;
  */
 public class UrlFetchJob implements Job {
 
-  private static final Logger logger = Logger.getLogger(UrlFetchJob.class.getName());
+  private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
 
   // This should be kept in sync with
   // com.google.apphosting.utils.jetty.DevAppEngineWebAppContext
@@ -103,19 +102,14 @@ public class UrlFetchJob implements Job {
     int status = jd.getCallback().execute(fetchReq);
     // Anything other than [200,299] is a failure
     if ((status < 200 || status > 299) && canRetry(jd, firstTryMs)) {
-      logger.info(
-          String.format(
-              "Web hook at %s returned status code %d.  Rescheduling...",
-              fetchReq.getUrl(), status));
+      logger.atInfo().log(
+          "Web hook at %s returned status code %d.  Rescheduling...", fetchReq.getUrl(), status);
       reschedule(context.getScheduler(), trigger, jd, firstTryMs, status);
     } else {
       try {
         context.getScheduler().unscheduleJob(trigger.getName(), trigger.getGroup());
       } catch (SchedulerException e) {
-        logger.log(
-            Level.SEVERE,
-            String.format("Unsubscription of task %s failed.", jd.getAddRequest()),
-            e);
+        logger.atSevere().withCause(e).log("Unsubscription of task %s failed.", jd.getAddRequest());
       }
     }
   }
@@ -158,8 +152,7 @@ public class UrlFetchJob implements Job {
       scheduler.unscheduleJob(trigger.getName(), trigger.getGroup());
       scheduler.scheduleJob(newJobDetail, newTrigger);
     } catch (SchedulerException e) {
-      logger.log(
-          Level.SEVERE, String.format("Reschedule of task %s failed.", jd.getAddRequest()), e);
+      logger.atSevere().withCause(e).log("Reschedule of task %s failed.", jd.getAddRequest());
     }
   }
 

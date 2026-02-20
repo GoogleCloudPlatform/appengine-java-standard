@@ -21,6 +21,7 @@ import com.google.apphosting.api.search.DocumentPb;
 import com.google.apphosting.api.search.DocumentPb.FacetValue;
 import com.google.apphosting.api.search.DocumentPb.FieldValue.ContentType;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.flogger.GoogleLogger;
 import com.google.protobuf.InvalidProtocolBufferException;
 import java.io.IOException;
 import java.io.Reader;
@@ -33,7 +34,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
-import java.util.logging.Logger;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.document.AbstractField;
 import org.apache.lucene.document.Document;
@@ -90,7 +90,7 @@ public final class LuceneUtils {
   /** The field that stores order ID. */
   static final String ORDER_ID_FIELD_NAME = "_rank";
 
-  private static final Logger log = Logger.getLogger(LuceneUtils.class.getName());
+  private static final GoogleLogger log = GoogleLogger.forEnclosingClass();
 
   static final String CONVERTED_HTML_TYPE = "HTML2TEXT";
 
@@ -232,7 +232,8 @@ public final class LuceneUtils {
         numericField.setDoubleValue(stringValueToDouble(value));
         yield numericField;
       }
-      default -> throw new IllegalArgumentException("Facet type " + facetValue.getType() + " not handled");
+      default ->
+          throw new IllegalArgumentException("Facet type " + facetValue.getType() + " not handled");
     };
   }
 
@@ -299,7 +300,7 @@ public final class LuceneUtils {
           value = Long.toString(days);
           dateField.setLongValue(days);
         } catch (ParseException e) {
-          log.warning("Failed to parse date for " + fieldName + ": " + value);
+          log.atWarning().log("Failed to parse date for %s: %s", fieldName, value);
           dateField.setLongValue(0L);
         }
         output.add(dateField);

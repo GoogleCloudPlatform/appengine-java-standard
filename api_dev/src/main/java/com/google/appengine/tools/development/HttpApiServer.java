@@ -16,10 +16,10 @@
 
 package com.google.appengine.tools.development;
 
+import com.google.common.flogger.GoogleLogger;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.util.logging.Logger;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.HandlerList;
 import org.eclipse.jetty.server.handler.ShutdownHandler;
@@ -32,7 +32,7 @@ import org.eclipse.jetty.servlet.ServletHolder;
  *
  */
 public class HttpApiServer implements Closeable {
-  private static final Logger logger = Logger.getLogger(HttpApiServer.class.getName());
+  private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
 
   private static final String API_SERVER_PORT = "--api_server_port=";
   private static final String HELP = "--help";
@@ -67,10 +67,10 @@ public class HttpApiServer implements Closeable {
       } else if (element.startsWith(RUNTIME_SERVER_HOST)) {
         appEngineServerHost = extractStringValue(element, RUNTIME_PORT_HOST_ERROR_MESSAGE);
       } else if (element.startsWith(HELP)) {
-        logger.info(HELP_MESSAGE);
+        logger.atInfo().log("%s", HELP_MESSAGE);
         System.exit(0);
       } else {
-        logger.info(HELP_MESSAGE);
+        logger.atInfo().log("%s", HELP_MESSAGE);
         System.exit(1);
       }
     }
@@ -141,7 +141,7 @@ public class HttpApiServer implements Closeable {
   private static String extractStringValue(String argument, String errorMessage) {
     int indexOfEqualSign = argument.indexOf('=');
     if (indexOfEqualSign == -1) {
-      logger.severe(errorMessage);
+      logger.atSevere().log("%s", errorMessage);
       throw new IllegalArgumentException(errorMessage);
     }
     return argument.substring(indexOfEqualSign + 1);

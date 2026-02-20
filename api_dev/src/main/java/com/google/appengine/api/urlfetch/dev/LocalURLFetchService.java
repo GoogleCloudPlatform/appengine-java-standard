@@ -27,6 +27,7 @@ import com.google.appengine.tools.development.LocalServiceContext;
 import com.google.apphosting.api.ApiProxy.ApplicationException;
 import com.google.auto.service.AutoService;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.flogger.GoogleLogger;
 import com.google.protobuf.ByteString;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -43,8 +44,6 @@ import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.Arrays;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
@@ -113,7 +112,7 @@ public class LocalURLFetchService extends AbstractLocalRpcService {
   int maxRedirects = DEFAULT_MAX_REDIRECTS;
 
   // exposed for testing
-  Logger logger = Logger.getLogger(LocalURLFetchService.class.getName());
+  private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
 
   // HttpClient instances for making requests that validate SSL certs or not,
   // respectively. Both clients can be used for normal HTTP requests. Clients
@@ -267,11 +266,9 @@ public class LocalURLFetchService extends AbstractLocalRpcService {
         urlfetchHttps = createValidatingScheme();
       } catch (Exception e) {
         validateHttps = false;
-        logger.log(
-            Level.WARNING,
+        logger.atWarning().withCause(e).log(
             "Encountered exception trying to initialize SSL. SSL certificate validation will be "
-                + "disabled",
-            e);
+                + "disabled");
       }
     }
 
@@ -279,16 +276,12 @@ public class LocalURLFetchService extends AbstractLocalRpcService {
       try {
         urlfetchHttps = createNonvalidatingScheme();
       } catch (KeyManagementException kme) {
-        logger.log(
-            Level.WARNING,
-            "Encountered exception trying to initialize SSL. All HTTPS fetches will be disabled.",
-            kme);
+        logger.atWarning().withCause(kme).log(
+            "Encountered exception trying to initialize SSL. All HTTPS fetches will be disabled.");
         urlfetchHttps = null;
       } catch (NoSuchAlgorithmException nsae) {
-        logger.log(
-            Level.WARNING,
-            "Encountered exception trying to initialize SSL. All HTTPS fetches will be disabled.",
-            nsae);
+        logger.atWarning().withCause(nsae).log(
+            "Encountered exception trying to initialize SSL. All HTTPS fetches will be disabled.");
         urlfetchHttps = null;
       }
     }
@@ -508,10 +501,8 @@ public class LocalURLFetchService extends AbstractLocalRpcService {
       return false;
     }
     if (!isAllowedPort(url.getPort())) {
-      logger.log(
-          Level.WARNING,
-          String.format(
-              "urlfetch received %s ; port %s is not allowed in production!", url, url.getPort()));
+      logger.atWarning().log(
+          "urlfetch received %s ; port %s is not allowed in production!", url, url.getPort());
       // fall through here, as the developer should be allowed to make any
       // connection they wish within their own environment.
     }

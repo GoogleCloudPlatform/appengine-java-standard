@@ -20,12 +20,12 @@ import com.google.appengine.api.utils.SystemProperty;
 import com.google.apphosting.utils.config.AppEngineConfigException;
 import com.google.apphosting.utils.config.AppEngineWebXml;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.flogger.GoogleLogger;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
-import java.util.logging.Logger;
 import javax.annotation.concurrent.GuardedBy;
 
 /**
@@ -42,7 +42,7 @@ import javax.annotation.concurrent.GuardedBy;
  *
  */
 public class SystemPropertiesManager {
-  private static final Logger logger = Logger.getLogger(SystemPropertiesManager.class.getName());
+  private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
 
   /*
    * Map property name to the appengine-web.xml file where the property is defined.
@@ -124,7 +124,7 @@ public class SystemPropertiesManager {
             + "Currently Java Development Server requires matching values.";
         String message = String.format(template, entry.getKey(),
             appengineWebXmlFile.getAbsolutePath(), propertyNameToFileMap.get(entry.getKey()));
-        logger.severe(message);
+        logger.atSevere().log("%s", message);
         throw new AppEngineConfigException(message);
       }
       if (originalSystemProperties.containsKey(entry.getKey())) {
@@ -132,7 +132,7 @@ public class SystemPropertiesManager {
             "Overwriting system property key '%s', value '%s' with value '%s' from '%s'",
             entry.getKey(), originalSystemProperties.get(entry.getKey()),
                 entry.getValue(), appengineWebXmlFile.getAbsolutePath());
-        logger.info(message);
+        logger.atInfo().log("%s", message);
       }
     }
 

@@ -28,13 +28,12 @@ import com.google.apphosting.api.ApiProxy.Environment;
 import com.google.apphosting.utils.config.WebModule;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.flogger.GoogleLogger;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * Helper class for testing against local app engine services.
@@ -98,7 +97,7 @@ public class LocalServiceTestHelper {
   static final String DEFAULT_APP_ID = "test";
   static final String DEFAULT_VERSION_ID = "1.0";
 
-  private final Logger logger = Logger.getLogger(getClass().getName());
+  private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
   private final List<LocalServiceTestConfig> configs;
   private String envAppId = DEFAULT_APP_ID;
   // envModuleId, envVersionId and envInstance are copied to the environments returned by
@@ -561,7 +560,7 @@ public class LocalServiceTestHelper {
       try {
         apiProxyLocal.stop();
       } catch (Throwable t) {
-        logger.log(Level.SEVERE, "Could not shut down ApiProxy", t);
+        logger.atSevere().withCause(t).log("Could not shut down ApiProxy");
       }
       // not strictly necessary to null these out but there's no harm either
       ApiProxy.setDelegate(null);
@@ -583,10 +582,8 @@ public class LocalServiceTestHelper {
         firstException = rte;
       } else {
         // log everything else so at least there's a record of it
-        logger.log(
-            Level.SEVERE,
-            "Caught exception tearing down config of type " + config.getClass().getName(),
-            rte);
+        logger.atSevere().withCause(rte).log(
+            "Caught exception tearing down config of type %s", config.getClass().getName());
       }
     }
     return firstException;

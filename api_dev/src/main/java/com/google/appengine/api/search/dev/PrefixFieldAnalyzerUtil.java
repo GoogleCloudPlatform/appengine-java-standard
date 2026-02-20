@@ -18,6 +18,7 @@ package com.google.appengine.api.search.dev;
 
 import com.google.apphosting.api.AppEngineInternal;
 import com.google.common.base.CharMatcher;
+import com.google.common.flogger.GoogleLogger;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
@@ -26,8 +27,6 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.apache.lucene.analysis.LetterTokenizer;
 import org.apache.lucene.analysis.TokenFilter;
 import org.apache.lucene.analysis.TokenStream;
@@ -40,7 +39,7 @@ import org.apache.lucene.analysis.tokenattributes.TermAttribute;
 @AppEngineInternal
 final class PrefixFieldAnalyzerUtil {
 
-  static final Logger LOG = Logger.getLogger(PrefixFieldAnalyzerUtil.class.getCanonicalName());
+  private static final GoogleLogger LOG = GoogleLogger.forEnclosingClass();
 
   static String normalizePrefixField(String value) {
     String normalizedString = Normalizer.normalize(value, Normalizer.Form.NFKC);
@@ -155,7 +154,7 @@ final class PrefixFieldAnalyzerUtil {
     try { 
       isCjk = LuceneUtils.isProbablyCjk(reader, readerContents);
     } catch (IOException e) {
-      LOG.log(Level.SEVERE, "Failed to read stream for tokenization.", e);
+      LOG.atSevere().withCause(e).log("Failed to read stream for tokenization.");
       return new EmptyTokenStream();
     }
     reader = new StringReader(normalizePrefixField(readerContents.toString()));

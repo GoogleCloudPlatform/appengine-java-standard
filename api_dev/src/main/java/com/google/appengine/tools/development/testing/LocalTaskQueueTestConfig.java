@@ -26,6 +26,7 @@ import com.google.appengine.api.urlfetch.URLFetchServicePb;
 import com.google.appengine.api.urlfetch.URLFetchServicePb.URLFetchRequest.Header;
 import com.google.appengine.tools.development.ApiProxyLocal;
 import com.google.common.collect.Maps;
+import com.google.common.flogger.GoogleLogger;
 import com.google.protobuf.ByteString;
 import java.io.ByteArrayInputStream;
 import java.io.ObjectInputStream;
@@ -36,8 +37,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletResponse;
 
@@ -58,7 +57,7 @@ import javax.servlet.http.HttpServletResponse;
  *
  */
 public final class LocalTaskQueueTestConfig implements LocalServiceTestConfig {
-  private static final Logger logger = Logger.getLogger(LocalTaskQueueTestConfig.class.getName());
+  private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
   private Boolean disableAutoTaskExecution = true;
   private String queueXmlPath;
   private String queueYamlPath;
@@ -286,7 +285,7 @@ public final class LocalTaskQueueTestConfig implements LocalServiceTestConfig {
             deferredTask.run();
             return 200;
           } catch (Exception e) {
-            logger.log(Level.WARNING, e.getMessage(), e);
+            logger.atWarning().withCause(e).log("%s", e.getMessage());
             return 500;
           }
         }
@@ -390,7 +389,7 @@ public final class LocalTaskQueueTestConfig implements LocalServiceTestConfig {
         int result = response.getStatus();
         return result;
       } catch (Exception ex) {
-        logger.log(Level.WARNING, ex.getMessage(), ex);
+        logger.atWarning().withCause(ex).log("%s", ex.getMessage());
         return HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
       }
     }

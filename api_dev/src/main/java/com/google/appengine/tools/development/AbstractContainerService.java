@@ -29,6 +29,7 @@ import com.google.apphosting.utils.config.WebModule;
 import com.google.apphosting.utils.config.WebXml;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.flogger.GoogleLogger;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
@@ -38,8 +39,6 @@ import java.security.Permissions;
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * Common implementation for the {@link ContainerService} interface.
@@ -49,7 +48,7 @@ import java.util.logging.Logger;
  */
 public abstract class AbstractContainerService implements ContainerService {
 
-  private static final Logger log = Logger.getLogger(AbstractContainerService.class.getName());
+  private static final GoogleLogger log = GoogleLogger.forEnclosingClass();
 
   protected static final String AH_URL_RELOAD = "/_ah/reloadwebapp";
 
@@ -153,7 +152,7 @@ public abstract class AbstractContainerService implements ContainerService {
         InetAddress localhost = InetAddress.getLocalHost();
         this.hostName = localhost.getHostName();
       } catch (UnknownHostException ex) {
-        log.log(Level.WARNING,
+        log.atWarning().withCause(ex).log(
             "Unable to determine hostname - defaulting to localhost.");
       }
     }
@@ -170,8 +169,8 @@ public abstract class AbstractContainerService implements ContainerService {
     PortMappingProvider callersPortMappingProvider =
         (PortMappingProvider) containerConfigProperties.get(PORT_MAPPING_PROVIDER_PROP);
     if (callersPortMappingProvider == null) {
-      log.warning("Null value for containerConfigProperties.get("
-          + PORT_MAPPING_PROVIDER_PROP + ")");
+      log.atWarning().log(
+          "Null value for containerConfigProperties.get(%s)", PORT_MAPPING_PROVIDER_PROP);
     } else {
       this.portMappingProvider = callersPortMappingProvider;
     }
@@ -427,7 +426,7 @@ public abstract class AbstractContainerService implements ContainerService {
     URL[] urls = classPathBuilder.getUrls();
     String message = classPathBuilder.getLogMessage();
     if (!message.isEmpty()) {
-      log.warning(message);
+      log.atWarning().log("%s", message);
     }
     return urls;
   }

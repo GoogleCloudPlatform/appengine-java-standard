@@ -16,13 +16,13 @@
 
 package com.google.appengine.tools.util;
 
-import com.google.common.base.Objects;
+import com.google.common.flogger.GoogleLogger;
 import java.io.Serializable;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.logging.Logger;
+import java.util.Objects;
 
 /**
  * A client-side cookie.
@@ -31,160 +31,204 @@ public class ClientCookie implements Comparable<ClientCookie>, Serializable {
 
   private static final long serialVersionUID = 1L;
 
-  private static final Logger logger = Logger.getLogger(
-      ClientCookie.class.getName());
+  private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
 
   /**
    * Cookie name (never null).
+   *
    * @serial
    */
-  private String name_ = null;
+  private String name = null;
+
   /**
    * Cookie value (never null).
+   *
    * @serial
    */
-  private String value_ = null;
+  private String value = null;
+
   /**
    * Cookie comment (always null for V0 cookies).
+   *
    * @serial
    */
-  private String comment_ = null;
+  private String comment = null;
+
   /**
    * Cookie domain, as seen in the HTTP header (can be null).
+   *
    * @serial
    */
-  private String domain_ = null;
+  private String domain = null;
+
   /**
    * Effective cookie domain, used in matches (never null).
+   *
    * @serial
    */
-  private String effectiveDomain_ = null;
+  private String effectiveDomain = null;
+
   /**
    * Cookie path, as seen in the HTTP header (can be null).
+   *
    * @serial
    */
-  private String path_ = null;
+  private String path = null;
+
   /**
    * Effective cookie path, used in matches (never null).
+   *
    * @serial
    */
-  private String effectivePath_ = null;
+  private String effectivePath = null;
+
   /**
-   * Is this cookie secure?  This field is set but currently unused.
+   * Is this cookie secure? This field is set but currently unused.
+   *
    * @serial
    */
-  private boolean secure_ = false;
+  private boolean secure = false;
+
   /**
    * Absolute cookie expiration time, in milliseconds since the epoch.
+   *
    * @serial
    */
-  private long expires_ = Long.MAX_VALUE;
+  private long expires = Long.MAX_VALUE;
+
   /**
    * Cookie version, as seen in the HTTP header (zero if not in header).
+   *
    * @serial
    */
-  private int version_ = 0;
+  private int version = 0;
+
   /**
    * Effective cookie version, as determined by the parser.
+   *
    * @serial
    */
-  private int effectiveVersion_ = 0;
-  /**
-   * Is this cookie only available via HTTP?  This field is set but currently unused.
-   * @serial
-   */
-  private boolean httponly_ = false;
+  private int effectiveVersion = 0;
 
+  /**
+   * Is this cookie only available via HTTP? This field is set but currently unused.
+   *
+   * @serial
+   */
+  private boolean httpOnly = false;
 
   // Special domains for V0 cookies.
   private static final String[] SPECIAL_DOMAINS = {
     ".com", ".edu", ".net", ".org", ".gov", ".mil", ".int"
   };
 
-
   /**
    * Get cookie name.
+   *
    * @return cookie name, never null.
    */
-  public String getName() { return name_; }
-
+  public String getName() {
+    return name;
+  }
 
   /**
    * Get cookie value.
+   *
    * @return cookie value, never null.
    */
-  public String getValue() { return value_; }
-
+  public String getValue() {
+    return value;
+  }
 
   /**
    * Get cookie comment (RFC 2109 and RFC 2965 cookies only).
+   *
    * @return cookie comment, or null if not specified in the header.
    */
-  public String getComment() { return comment_; }
-
+  public String getComment() {
+    return comment;
+  }
 
   /**
    * Get cookie domain.
+   *
    * @return cookie domain, or null if not specified in the header.
    */
-  public String getDomain() { return domain_; }
-
+  public String getDomain() {
+    return domain;
+  }
 
   /**
    * Get effective cookie domain.
+   *
    * @return effective domain, never null.
    */
-  public String getEffectiveDomain() { return effectiveDomain_; }
-
+  public String getEffectiveDomain() {
+    return effectiveDomain;
+  }
 
   /**
    * Get cookie path.
+   *
    * @return cookie path, or null if not specified in the header.
    */
-  public String getPath() { return path_; }
-
+  public String getPath() {
+    return path;
+  }
 
   /**
    * Get effective cookie path.
+   *
    * @return effective path, never null.
    */
-  public String getEffectivePath() { return effectivePath_; }
-
+  public String getEffectivePath() {
+    return effectivePath;
+  }
 
   /**
    * Is this cookie secure?
+   *
    * @return true if the cookie is secure, false if not.
    */
-  public boolean isSecure() { return secure_; }
-
+  public boolean isSecure() {
+    return secure;
+  }
 
   /**
    * Is this cookie only available via HTTP?
+   *
    * @return true if the cookie is only available via HTTP, false if not.
    */
-  public boolean isHttpOnly() { return httponly_; }
-
+  public boolean isHttpOnly() {
+    return httpOnly;
+  }
 
   /**
    * Get cookie expiration time.
+   *
    * @return absolute expiration time, in milliseconds, or large value if none.
    */
-  public long getExpirationTime() { return expires_; }
-
+  public long getExpirationTime() {
+    return expires;
+  }
 
   /**
    * Get cookie version.
+   *
    * @return cookie version, or zero if not in the header.
    */
-  public int getVersion() { return version_; }
-
+  public int getVersion() {
+    return version;
+  }
 
   /**
    * Get effective cookie version.
+   *
    * @return effective version: 0, 1, or 2.
    */
-  public int getEffectiveVersion() { return effectiveVersion_; }
-
+  public int getEffectiveVersion() {
+    return effectiveVersion;
+  }
 
   /**
    * Match the cookie against a request.
@@ -197,49 +241,46 @@ public class ClientCookie implements Comparable<ClientCookie>, Serializable {
   public boolean match(URL url) {
     final String requestHost = url.getHost().toLowerCase(Locale.ROOT);
     final String requestPath = url.getPath();
-    if (effectiveDomain_.startsWith(".")) {
-      if (!requestHost.endsWith(effectiveDomain_) &&
-          !requestHost.equals(effectiveDomain_.substring(1))) {
+    if (effectiveDomain.startsWith(".")) {
+      if (!requestHost.endsWith(effectiveDomain)
+          && !requestHost.equals(effectiveDomain.substring(1))) {
         return false;
       }
     } else {
-      if (!requestHost.equals(effectiveDomain_)) {
+      if (!requestHost.equals(effectiveDomain)) {
         return false;
       }
     }
-    if (!requestPath.startsWith(effectivePath_)) {
+    if (!requestPath.startsWith(effectivePath)) {
       return false;
     }
-    // TODO: we are disregarding secure_ and ports
+    // TODO: we are disregarding secure and ports
     return true;
   }
 
-
   /**
    * Encode the cookie for transmission to the server.
-   * 
+   *
    * <p>See V0, RFC 2109 sec. 4.3.4, RFC 2965 sec. 3.3.4.
-   * 
+   *
    * @return properly encoded cookie.
    */
-  public StringBuffer encode() {
-    if (effectiveVersion_ == 0) {
+  public StringBuilder encode() {
+    if (effectiveVersion == 0) {
       // V0 does not allow quoting
-      final StringBuffer result = new StringBuffer(name_);
+      final StringBuilder result = new StringBuilder(name);
       result.append('=');
-      result.append(value_);
+      result.append(value);
       return result;
     } else {
-      final StringBuffer result =
-        HttpHeaderParser.makeAttributeValuePair(name_, value_);
-      if (path_ != null) {
+      final StringBuilder result = HttpHeaderParser.makeAttributeValuePair(name, value);
+      if (path != null) {
         result.append("; ");
-        result.append(HttpHeaderParser.makeAttributeValuePair("$Path", path_));
+        result.append(HttpHeaderParser.makeAttributeValuePair("$Path", path));
       }
-      if (domain_ != null) {
+      if (domain != null) {
         result.append("; ");
-        result.append(
-          HttpHeaderParser.makeAttributeValuePair("$Domain", domain_));
+        result.append(HttpHeaderParser.makeAttributeValuePair("$Domain", domain));
       }
       return result;
     }
@@ -260,15 +301,15 @@ public class ClientCookie implements Comparable<ClientCookie>, Serializable {
       return false;
     } else {
       ClientCookie cookie = (ClientCookie)o;
-      return cookie.name_.equals(name_) &&
-             cookie.effectiveDomain_.equals(effectiveDomain_) &&
-             cookie.effectivePath_.equals(effectivePath_);
+      return cookie.name.equals(name)
+          && cookie.effectiveDomain.equals(effectiveDomain)
+          && cookie.effectivePath.equals(effectivePath);
     }
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(name_, effectiveDomain_, effectivePath_);
+    return Objects.hash(name, effectiveDomain, effectivePath);
   }
 
   /**
@@ -281,20 +322,20 @@ public class ClientCookie implements Comparable<ClientCookie>, Serializable {
    */
   @Override
   public int compareTo(ClientCookie cookie) {
-    int result = cookie.effectivePath_.length() - effectivePath_.length();
+    int result = cookie.effectivePath.length() - effectivePath.length();
     if (result != 0) {
       return result;
     }
     // tie breaking is arbitrary but consistent with equals()
-    result = cookie.effectivePath_.compareTo(effectivePath_);
+    result = cookie.effectivePath.compareTo(effectivePath);
     if (result != 0) {
       return result;
     }
-    result = cookie.effectiveDomain_.compareTo(effectiveDomain_);
+    result = cookie.effectiveDomain.compareTo(effectiveDomain);
     if (result != 0) {
       return result;
     }
-    return cookie.name_.compareTo(name_);
+    return cookie.name.compareTo(name);
   }
 
   /**
@@ -360,12 +401,12 @@ public class ClientCookie implements Comparable<ClientCookie>, Serializable {
     while (true) {
       // read name=value
       final ClientCookie cookie = new ClientCookie();
-      cookie.effectiveVersion_ = 1;
-      cookie.name_ = parser.eatToken();
+      cookie.effectiveVersion = 1;
+      cookie.name = parser.eatToken();
       parser.eatLWS();
       parser.eatChar('=');
       parser.eatLWS();
-      cookie.value_ = parser.eatTokenOrQuotedString();
+      cookie.value = parser.eatTokenOrQuotedString();
       parser.eatLWS();
 
       // read cookie attributes
@@ -375,17 +416,17 @@ public class ClientCookie implements Comparable<ClientCookie>, Serializable {
         final String name = parser.eatToken().toLowerCase(Locale.ROOT);
         parser.eatLWS();
         if (name.equals("secure")) {
-          cookie.secure_ = true;
+          cookie.secure = true;
         } else if (name.equals("httponly")) {
-          cookie.httponly_ = true;
+          cookie.httpOnly = true;
         } else {
           parser.eatChar('=');
           parser.eatLWS();
           final String value = parser.eatTokenOrQuotedString();
           if (name.equals("comment")) {
-            cookie.comment_ = value;
+            cookie.comment = value;
           } else if (name.equals("domain")) {
-            cookie.domain_ = value.toLowerCase(Locale.ROOT);
+            cookie.domain = value.toLowerCase(Locale.ROOT);
           } else if (name.equals("max-age")) {
             final int maxAge;
             try {
@@ -397,13 +438,13 @@ public class ClientCookie implements Comparable<ClientCookie>, Serializable {
               throw new HttpHeaderParseException("invalid max-age: " +
                 setCookie1Header);
             }
-            cookie.expires_ = System.currentTimeMillis() + 1000L * maxAge;
+            cookie.expires = System.currentTimeMillis() + 1000L * maxAge;
           } else if (name.equals("path")) {
-            cookie.path_ = value;
+            cookie.path = value;
           } else if (name.equals("version")) {
             try {
-              cookie.version_ = Integer.parseInt(value);
-              if (cookie.version_ <= 0) {
+              cookie.version = Integer.parseInt(value);
+              if (cookie.version <= 0) {
                 throw new NumberFormatException(value);
               }
             } catch (NumberFormatException e) {
@@ -413,8 +454,7 @@ public class ClientCookie implements Comparable<ClientCookie>, Serializable {
           } else if (name.equals("expires")) {
             throw new HttpHeaderParseException("this is a v0 cookie");
           } else {
-            logger.info("unrecognized v1 cookie attribute: " +
-              name + "=" + value);
+            logger.atInfo().log("unrecognized v1 cookie attribute: %s=%s", name, value);
           }
         }
         parser.eatLWS();
@@ -424,44 +464,42 @@ public class ClientCookie implements Comparable<ClientCookie>, Serializable {
       boolean valid = true;
       final String requestHost = url.getHost().toLowerCase(Locale.ROOT);
       final String requestPath = url.getPath();
-      if (cookie.domain_ == null) {
-        cookie.effectiveDomain_ = requestHost;
+      if (cookie.domain == null) {
+        cookie.effectiveDomain = requestHost;
       } else {
-        if (!cookie.domain_.startsWith(".") ||
-            cookie.domain_.substring(1, cookie.domain_.length() - 1)
-                  .indexOf('.') < 0) {
-          logger.info("rejecting v1 cookie [bad domain - no periods]: " +
-            setCookie1Header);
+        if (!cookie.domain.startsWith(".")
+            || cookie.domain.substring(1, cookie.domain.length() - 1).indexOf('.') < 0) {
+          logger.atInfo().log(
+              "rejecting v1 cookie [bad domain - no periods]: %s", setCookie1Header);
           valid = false;
-        } else if (!requestHost.endsWith(cookie.domain_)) {
-          logger.info("rejecting v1 cookie [bad domain - no match]: " +
-            setCookie1Header);
+        } else if (!requestHost.endsWith(cookie.domain)) {
+          logger.atInfo().log("rejecting v1 cookie [bad domain - no match]: %s", setCookie1Header);
           valid = false;
         } else if (requestHost
-                   .substring(0, requestHost.length() - cookie.domain_.length())
-                   .indexOf('.') >= 0) {
-          logger.info("rejecting v1 cookie [bad domain - extra periods]: " +
-            setCookie1Header);
+                .substring(0, requestHost.length() - cookie.domain.length())
+                .indexOf('.')
+            >= 0) {
+          logger.atInfo().log(
+              "rejecting v1 cookie [bad domain - extra periods]: %s", setCookie1Header);
           valid = false;
         } else {
-          cookie.effectiveDomain_ = cookie.domain_;
+          cookie.effectiveDomain = cookie.domain;
         }
       }
-      if (cookie.path_ == null) {
+      if (cookie.path == null) {
         int index = requestPath.lastIndexOf('/');
         if (index < 0) {
-          cookie.effectivePath_ = requestPath;
+          cookie.effectivePath = requestPath;
         } else {
           // trailing slash not included
-          cookie.effectivePath_ = requestPath.substring(0, index);
+          cookie.effectivePath = requestPath.substring(0, index);
         }
       } else {
-        if (!requestPath.startsWith(cookie.path_)) {
-          logger.info("rejecting v1 cookie [bad path]: " +
-            setCookie1Header);
+        if (!requestPath.startsWith(cookie.path)) {
+          logger.atInfo().log("rejecting v1 cookie [bad path]: %s", setCookie1Header);
           valid = false;
         } else {
-          cookie.effectivePath_ = cookie.path_;
+          cookie.effectivePath = cookie.path;
         }
       }
       if (valid) {
@@ -495,12 +533,12 @@ public class ClientCookie implements Comparable<ClientCookie>, Serializable {
     // read name=value
     parser.eatLWS();
     final ClientCookie cookie = new ClientCookie();
-    cookie.effectiveVersion_ = 0;
-    cookie.name_ = parser.eatV0CookieToken();
+    cookie.effectiveVersion = 0;
+    cookie.name = parser.eatV0CookieToken();
     parser.eatLWS();
     parser.eatChar('=');
     parser.eatLWS();
-    cookie.value_ = parser.eatV0CookieValue();
+    cookie.value = parser.eatV0CookieValue();
     parser.eatLWS();
 
     // read attributes
@@ -508,25 +546,24 @@ public class ClientCookie implements Comparable<ClientCookie>, Serializable {
       parser.eatChar(';');
       parser.eatLWS();
       final String name = parser.eatV0CookieToken().toLowerCase(Locale.ROOT);
-      if (name.equals("secure")) {
-        cookie.secure_ = true;
-      } else if (name.equals("httponly")) {
-        cookie.httponly_ = true;
-      } else {
-        parser.eatLWS();
-        parser.eatChar('=');
-        parser.eatLWS();
-        if (name.equals("expires")) {
-          cookie.expires_ = parser.eatV0CookieDate().getTime();
-        } else {
+      switch (name) {
+        case "secure" -> cookie.secure = true;
+        case "httponly" -> cookie.httpOnly = true;
+        case "expires" -> {
+          parser.eatLWS();
+          parser.eatChar('=');
+          parser.eatLWS();
+          cookie.expires = parser.eatV0CookieDate().toEpochMilli();
+        }
+        default -> {
+          parser.eatLWS();
+          parser.eatChar('=');
+          parser.eatLWS();
           final String value = parser.eatV0CookieValue();
-          if (name.equals("domain")) {
-            cookie.domain_ = value.toLowerCase(Locale.ROOT);
-          } else if (name.equals("path")) {
-            cookie.path_ = value;
-          } else {
-            logger.info("unrecognized v0 cookie attribute: " +
-              name + "=" + value);
+          switch (name) {
+            case "domain" -> cookie.domain = value.toLowerCase(Locale.ROOT);
+            case "path" -> cookie.path = value;
+            default -> logger.atInfo().log("unrecognized v0 cookie attribute: %s=%s", name, value);
           }
         }
       }
@@ -537,44 +574,42 @@ public class ClientCookie implements Comparable<ClientCookie>, Serializable {
     final String requestHost = url.getHost().toLowerCase(Locale.ROOT);
     final String requestPath = url.getPath();
     boolean valid = true;
-    if (cookie.domain_ == null) {
-      cookie.effectiveDomain_ = '.' + requestHost;
+    if (cookie.domain == null) {
+      cookie.effectiveDomain = '.' + requestHost;
     } else {
-      if (!requestHost.equals(cookie.domain_)) {
-        if (!cookie.domain_.startsWith(".")) {
-          cookie.effectiveDomain_ = '.' + cookie.domain_;
+      if (!requestHost.equals(cookie.domain)) {
+        if (!cookie.domain.startsWith(".")) {
+          cookie.effectiveDomain = '.' + cookie.domain;
         } else {
-          cookie.effectiveDomain_ = cookie.domain_;
+          cookie.effectiveDomain = cookie.domain;
         }
-        if (!requestHost.endsWith(cookie.effectiveDomain_)) {
-          logger.info("rejecting v0 cookie [bad domain - no match]: " +
-            setCookie0Header);
+        if (!requestHost.endsWith(cookie.effectiveDomain)) {
+          logger.atInfo().log("rejecting v0 cookie [bad domain - no match]: %s", setCookie0Header);
           valid = false;
         } else {
-          final int numPeriods =
-            countOccurrences(cookie.effectiveDomain_, '.');
+          final int numPeriods = countOccurrences(cookie.effectiveDomain, '.');
           boolean special = false;
           for (int i = 0; i < SPECIAL_DOMAINS.length; i++) {
-            if (cookie.effectiveDomain_.endsWith(SPECIAL_DOMAINS[i])) {
+            if (cookie.effectiveDomain.endsWith(SPECIAL_DOMAINS[i])) {
               special = true;
               break;
             }
           }
           if (special ? (numPeriods < 2) : (numPeriods < 3)) {
-            logger.info("rejecting v0 cookie [bad domain - no periods]: " +
-              setCookie0Header);
+            logger.atInfo().log(
+                "rejecting v0 cookie [bad domain - no periods]: %s", setCookie0Header);
             valid = false;
           }
         }
       } else {
-        cookie.effectiveDomain_ = '.' + cookie.domain_;
+        cookie.effectiveDomain = '.' + cookie.domain;
       }
     }
-    if (cookie.path_ == null) {
-      cookie.effectivePath_ = requestPath;
+    if (cookie.path == null) {
+      cookie.effectivePath = requestPath;
     } else {
       // no path prefix check here - see the spec
-      cookie.effectivePath_ = cookie.path_;
+      cookie.effectivePath = cookie.path;
     }
     if (valid) {
       results.add(cookie);

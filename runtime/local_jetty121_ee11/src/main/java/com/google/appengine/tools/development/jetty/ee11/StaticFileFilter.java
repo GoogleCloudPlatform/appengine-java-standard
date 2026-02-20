@@ -17,6 +17,7 @@
 package com.google.appengine.tools.development.jetty.ee11;
 
 import com.google.apphosting.utils.config.AppEngineWebXml;
+import com.google.common.flogger.GoogleLogger;
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.FilterConfig;
@@ -31,8 +32,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.nio.file.InvalidPathException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.eclipse.jetty.ee11.servlet.ServletContextHandler;
 import org.eclipse.jetty.util.URIUtil;
 import org.eclipse.jetty.util.resource.Resource;
@@ -45,7 +44,7 @@ import org.eclipse.jetty.util.resource.ResourceFactory;
  * servlets and filters.
  */
 public class StaticFileFilter implements Filter {
-  private static final Logger logger = Logger.getLogger(StaticFileFilter.class.getName());
+  private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
 
   private StaticFileUtils staticFileUtils;
   private AppEngineWebXml appEngineWebXml;
@@ -80,8 +79,7 @@ public class StaticFileFilter implements Filter {
       // in Jetty 9 "//public" is not seen as "/public".
       resourceBase = ResourceFactory.root().newResource(servletContext.getResource(base));
     } catch (MalformedURLException ex) {
-      logger.log(Level.WARNING, "Could not initialize:", ex);
-      throw new ServletException(ex);
+      throw new ServletException("Could not initialize:", ex);
     }
   }
 
@@ -157,10 +155,10 @@ public class StaticFileFilter implements Filter {
       // "hello/po:tato/index.html" that gives a InvalidPathException: Illegal char <:> error.
       // This is definitely not a static resource.
       if (!System.getProperty("os.name").toLowerCase().contains("windows")) {
-        logger.log(Level.WARNING, "Could not find: " + pathInContext, ex);
+        logger.atWarning().withCause(ex).log("Could not find: %s", pathInContext);
       }
     } catch (Throwable t) {
-      logger.log(Level.WARNING, "Could not find: " + pathInContext, t);
+      logger.atWarning().withCause(t).log("Could not find: %s", pathInContext);
     }
     return null;
   }

@@ -16,14 +16,13 @@
 
 package com.google.appengine.tools.development;
 
+import com.google.common.flogger.GoogleLogger;
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * {@link UserCodeClasspathManager} that derives the classpath from a WEB-INF
@@ -32,8 +31,7 @@ import java.util.logging.Logger;
  */
 class WebAppUserCodeClasspathManager implements UserCodeClasspathManager {
 
-  private static final Logger log =
-      Logger.getLogger(WebAppUserCodeClasspathManager.class.getName());
+  private static final GoogleLogger log = GoogleLogger.forEnclosingClass();
 
   @Override
   public Collection<URL> getUserCodeClasspath(File root) {
@@ -48,7 +46,7 @@ class WebAppUserCodeClasspathManager implements UserCodeClasspathManager {
         appUrls.add(classes.toURI().toURL());
       }
     } catch (MalformedURLException ex) {
-      log.log(Level.WARNING, "Could not add WEB-INF/classes", ex);
+      log.atWarning().withCause(ex).log("Could not add WEB-INF/classes");
     }
 
     File libDir = new File(new File(root, "WEB-INF"), "lib");
@@ -57,7 +55,7 @@ class WebAppUserCodeClasspathManager implements UserCodeClasspathManager {
         try {
           appUrls.add(file.toURI().toURL());
         } catch (MalformedURLException ex) {
-          log.log(Level.WARNING, "Could not get URL for file: " + file, ex);
+          log.atWarning().withCause(ex).log("Could not get URL for file: %s", file);
         }
       }
     }

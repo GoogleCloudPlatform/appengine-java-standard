@@ -20,6 +20,7 @@ import com.google.appengine.tools.info.AppengineSdk;
 import com.google.apphosting.utils.config.XmlUtils;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.flogger.GoogleLogger;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -29,8 +30,6 @@ import java.net.URLClassLoader;
 import java.security.CodeSource;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
@@ -42,7 +41,7 @@ import org.w3c.dom.NodeList;
  */
 public class IsolatedAppClassLoader extends URLClassLoader {
 
-  private static final Logger logger = Logger.getLogger(IsolatedAppClassLoader.class.getName());
+  private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
 
   // Session Data class must be loaded by the runtime classloader, as it is only used by the runtime
   // servlet session management. For Jetty9.4, the newer session management has a cleaner
@@ -100,7 +99,7 @@ public class IsolatedAppClassLoader extends URLClassLoader {
         canonicalExternalResourceDir = externalResourceDir.getCanonicalPath();
       }
     } catch (IOException e) {
-      logger.log(Level.FINE, "Unable to compare the working directory and app root.", e);
+      logger.atFine().withCause(e).log("Unable to compare the working directory and app root.");
     }
 
     if (canonicalWorkingDir != null && !canonicalWorkingDir.equals(canonicalAppRoot)) {
@@ -115,7 +114,7 @@ public class IsolatedAppClassLoader extends URLClassLoader {
           + "web application root (" + appDir + ")" + newLine
           + "You will not be able to access files from your working directory on the "
           + "production server." + newLine;
-      logger.warning(msg);
+      logger.atWarning().log("%s", msg);
     }
   }
 
@@ -136,7 +135,7 @@ public class IsolatedAppClassLoader extends URLClassLoader {
               return resource;
             }
           } catch (MalformedURLException ex) {
-            logger.log(Level.WARNING, "Unexpected exception while loading " + name, ex);
+            logger.atWarning().withCause(ex).log("Unexpected exception while loading %s", name);
           }
         }
       }

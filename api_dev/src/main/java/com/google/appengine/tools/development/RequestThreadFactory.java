@@ -17,11 +17,10 @@
 package com.google.appengine.tools.development;
 
 import com.google.apphosting.api.ApiProxy;
+import com.google.common.flogger.GoogleLogger;
 import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ThreadFactory;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * This {@link ThreadFactory} creates {@link Thread} objects that
@@ -30,7 +29,7 @@ import java.util.logging.Logger;
  *
  */
 public class RequestThreadFactory implements ThreadFactory {
-  private static final Logger logger = Logger.getLogger(RequestThreadFactory.class.getName());
+  private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
 
   private static final int THREAD_STARTUP_LATENCY_MS = 20;
 
@@ -47,19 +46,20 @@ public class RequestThreadFactory implements ThreadFactory {
     Thread thread =
         new Thread() {
           /**
-           * If the thread is started, install a {@link RequestEndListener} to interrupt the
-           * thread at the end of the request. We don't yet enforce request deadlines in the
-           * DevAppServer so we don't need to handle other interrupt cases yet.
+           * If the thread is started, install a {@link RequestEndListener} to interrupt the thread
+           * at the end of the request. We don't yet enforce request deadlines in the DevAppServer
+           * so we don't need to handle other interrupt cases yet.
            */
           @Override
+          @SuppressWarnings("Interruption")
           public synchronized void start() {
             try {
               Thread.sleep(THREAD_STARTUP_LATENCY_MS);
             } catch (InterruptedException ex) {
               // We can't propagate the exception from here so
               // just log, reset the bit, and continue.
-              logger.log(
-                  Level.INFO, "Interrupted while simulating thread startup latency", ex);
+              logger.atInfo().withCause(ex).log(
+                  "Interrupted while simulating thread startup latency");
               Thread.currentThread().interrupt();
             }
             super.start();
@@ -67,40 +67,33 @@ public class RequestThreadFactory implements ThreadFactory {
             RequestEndListenerHelper.register(
                 env -> {
                   if (thread.isAlive()) {
-                    logger.info("Interrupting request thread: " + thread);
+                    logger.atInfo().log("Interrupting request thread: %s", thread);
                     // This is one of the few places where it's okay to call thread.interrupt().
-                    @SuppressWarnings("Interruption")
-                    boolean unused1 = true;
                     thread.interrupt();
-                    logger.info("Waiting up to 100ms for thread to complete: " + thread);
+                    logger.atInfo().log("Waiting up to 100ms for thread to complete: %s", thread);
                     try {
                       thread.join(100);
                     } catch (InterruptedException ex) {
-                      logger.info("Interrupted while waiting.");
+                      logger.atInfo().log("Interrupted while waiting.");
                     }
                     if (thread.isAlive()) {
-                      logger.info("Interrupting request thread again: " + thread);
-                      @SuppressWarnings("Interruption")
-                      boolean unused2 = true;
+                      logger.atInfo().log("Interrupting request thread again: %s", thread);
                       thread.interrupt();
                       long remaining = getRemainingDeadlineMillis(env);
-                      logger.info(
-                          "Waiting up to " + remaining + " ms for thread to complete: " + thread);
+                      logger.atInfo().log(
+                          "Waiting up to %s ms for thread to complete: %s", remaining, thread);
                       try {
                         thread.join(remaining);
                       } catch (InterruptedException ex) {
-                        logger.info("Interrupted while waiting.");
+                        logger.atInfo().log("Interrupted while waiting.");
                       }
                       if (thread.isAlive()) {
                         Throwable stack = new Throwable();
                         stack.setStackTrace(thread.getStackTrace());
-                        logger.log(
-                            Level.SEVERE,
-                            "Thread left running: "
-                                + thread
-                                + ".  "
-                                + "In production this will cause the request to fail.",
-                            stack);
+                        logger.atSevere().withCause(stack).log(
+                            "Thread left running: %s.  In production this will cause the request to"
+                                + " fail.",
+                            thread);
                       }
                     }
                   }

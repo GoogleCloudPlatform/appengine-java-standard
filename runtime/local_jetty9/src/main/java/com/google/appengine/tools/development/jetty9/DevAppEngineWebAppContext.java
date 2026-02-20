@@ -20,11 +20,11 @@ import com.google.appengine.tools.development.DevAppServer;
 import com.google.appengine.tools.info.AppengineSdk;
 import com.google.apphosting.api.ApiProxy;
 import com.google.apphosting.utils.io.IoUtil;
+import com.google.common.flogger.GoogleLogger;
 import java.io.File;
 import java.io.IOException;
 import java.util.Enumeration;
 import java.util.List;
-import java.util.logging.Logger;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -39,8 +39,7 @@ import org.eclipse.jetty.util.resource.Resource;
  */
 public class DevAppEngineWebAppContext extends AppEngineWebAppContext {
 
-  private static final Logger logger =
-      Logger.getLogger(DevAppEngineWebAppContext.class.getName());
+  private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
 
   // Copied from org.apache.jasper.Constants.SERVLET_CLASSPATH
   // to remove compile-time dependency on Jasper
@@ -173,11 +172,10 @@ public class DevAppEngineWebAppContext extends AppEngineWebAppContext {
         if (mappings != null) {
           for (ConstraintMapping mapping : mappings) {
             if (mapping.getConstraint().getDataConstraint() > 0) {
-              logger.info(
-                  "Ignoring <transport-guarantee> for "
-                      + mapping.getPathSpec()
-                      + " as the SDK does not support HTTPS.  It will still be used"
-                      + " when you upload your application.");
+              logger.atInfo().log(
+                  "Ignoring <transport-guarantee> for %s as the SDK does not support HTTPS.  It"
+                      + " will still be used when you upload your application.",
+                  mapping.getPathSpec());
               mapping.getConstraint().setDataConstraint(0);
             }
           }

@@ -18,6 +18,7 @@ package com.google.appengine.tools.util;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.util.Date;
 import java.util.Locale;
 
@@ -31,10 +32,19 @@ public class HttpHeaderParser {
   private int start_;
   private String header_;  // for debug messages only
 
-  /** Expiration date format for Netscape V0 cookies. */
-  private static final SimpleDateFormat COOKIE_DATE_FORMAT =
-    new SimpleDateFormat("EEE, dd-MMM-yyyy HH:mm:ss zzz", Locale.US);
-
+  /**
+   * Expiration date format for Netscape V0 cookies.
+   *
+   * <p>SimpleDateFormat is not thread-safe, so we use ThreadLocal to ensure each thread gets its
+   * own instance.
+   */
+  private static final ThreadLocal<SimpleDateFormat> COOKIE_DATE_FORMAT =
+      new ThreadLocal<SimpleDateFormat>() {
+        @Override
+        protected SimpleDateFormat initialValue() {
+          return new SimpleDateFormat("EEE, dd-MMM-yyyy HH:mm:ss zzz", Locale.US);
+        }
+      };
 
   /**
    * Create a parser.
@@ -216,14 +226,13 @@ public class HttpHeaderParser {
     return new String(chars_, mark, start_ - mark);
   }
 
-
   /**
    * Eat a Netscape V0 cookie date.
+   *
    * @return date, never null.
    * @exception HttpHeaderParseException if input does not start with a date.
    */
-  public Date eatV0CookieDate()
-    throws HttpHeaderParseException {
+  public Instant eatV0CookieDate() throws HttpHeaderParseException {
     // caveat: this is more forgiving than it should be; e.g., it allows
     // non-UTF time zones
     final int mark = start_;
@@ -232,31 +241,30 @@ public class HttpHeaderParser {
     }
     final String value = (new String(chars_, mark, start_ - mark)).trim();
     try {
-      final Date result = COOKIE_DATE_FORMAT.parse(value);
+      final Date result = COOKIE_DATE_FORMAT.get().parse(value);
       if (result == null) {
-	throw new ParseException(value, 0);
+        throw new ParseException(value, 0);
       }
-      return result;
+      return result.toInstant();
     } catch (ParseException e) {
       throw new HttpHeaderParseException("invalid v0 cookie http header: " +
 	"date expected: " + header_ + "[" + mark + "]");
     }
   }
 
-
   /**
    * HTTP-encode an attribute=value pair.
+   *
    * @param attribute the attribute, must be an HTTP token.
    * @param value attribute value, must not contain CR or LF.
    * @return properly encoded attribute=value pair.
    * @exception IllegalArgumentException if either argument is illegal.
    */
-  public static StringBuffer makeAttributeValuePair(String attribute,
-                                                    String value) {
+  public static StringBuilder makeAttributeValuePair(String attribute, String value) {
     if (!isToken(attribute)) {
       throw new IllegalArgumentException("not an http token: " + attribute);
     }
-    final StringBuffer result = new StringBuffer(attribute);
+    final StringBuilder result = new StringBuilder(attribute);
     result.append('=');
     if (isToken(value)) {
       result.append(value);

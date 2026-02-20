@@ -37,6 +37,7 @@ import com.google.auto.service.AutoService;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.common.flogger.GoogleLogger;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -59,8 +60,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.IndexReader;
@@ -90,8 +89,8 @@ public class LocalSearchService extends AbstractLocalRpcService {
   public static final String USE_RAM_DIRECTORY = "LocalSearchService.useRamDirectory";
   public static final String USE_DIRECTORY = "LocalSearchService.useDirectory";
 
-  static final Logger LOG = Logger.getLogger(LocalSearchService.class.getCanonicalName());
-  
+  private static final GoogleLogger log = GoogleLogger.forEnclosingClass();
+
   /** Hash function for adding query fingerprints to cursors. */
   private static final HashFunction CURSOR_HASH = Hashing.murmur3_32(1729);
 
@@ -108,27 +107,20 @@ public class LocalSearchService extends AbstractLocalRpcService {
   private static int decodeCursor(SearchServicePb.SearchParams params, String cursorStr) {
     String expectedPrefix = getCursorPrefix(params);
     if (!cursorStr.startsWith(expectedPrefix)) {
-      LOG.severe("Cursor is incompatible with query: " + cursorStr);
+      log.atSevere().log("Cursor is incompatible with query: %s", cursorStr);
       return -1;
     }
     try {
       return Integer.parseInt(cursorStr.substring(expectedPrefix.length()));
     } catch (NumberFormatException nfe) {
-      LOG.log(Level.SEVERE, "Invalid cursor value: " + cursorStr);
+      log.atSevere().log("Invalid cursor value: %s", cursorStr);
       return -1;
     }
   }
 
-  /**
-   * Init property that specifies the {@link Level} at which we log mail
-   * messages.  Value must be a string representation of a {@link Level}
-   * (calling {@link Level#parse(String)} with the value as the arg should
-   * return a valid instance).
-   */
-  public static final String SEARCH_LOG_LEVEL_PROPERTY = "LocalSearchService.LogLevel";
 
-  // The default logging level, if one is not specified in properties.
-  private static final Level DEFAULT_LOG_LEVEL = Level.INFO;
+
+
 
   // Increment this number every time we make an incompatible change to how the document map is
   // persisted. Changing this number will invalidate all persisted indexes.
@@ -153,7 +145,7 @@ public class LocalSearchService extends AbstractLocalRpcService {
 
   public LocalSearchService() {
     analyzer = new WordSeparatorAnalyzer();
-    LOG.info("Local search service created");
+    log.atInfo().log("Local search service created");
   }
 
   // --- Local RPC service ---
@@ -165,17 +157,11 @@ public class LocalSearchService extends AbstractLocalRpcService {
 
   @Override
   public void init(LocalServiceContext context, Map<String, String> properties) {
-    String logLevelStr = properties.get(SEARCH_LOG_LEVEL_PROPERTY);
-    if (logLevelStr != null) {
-      LOG.setLevel(Level.parse(logLevelStr));
-    } else {
-      LOG.setLevel(DEFAULT_LOG_LEVEL);
-    }
 
     documentsById = new LinkedHashMap<>();
 
     if ("true".equals(properties.get(USE_RAM_DIRECTORY))) {
-      LOG.warning("Using RAM directory; results are not preserved");
+      log.atWarning().log("Using RAM directory; results are not preserved");
       dirMap = new LuceneDirectoryMap.RamBased();
       documentsFile = null;
     } else {
@@ -204,17 +190,15 @@ public class LocalSearchService extends AbstractLocalRpcService {
         // to delete indexes.
         dirMap = new LuceneDirectoryMap.FileBased(indexDirectory);
       } else {
-        if (LOG.isLoggable(Level.WARNING)) {
-          String message = String.format(
-              "Failed to create data directory %s, using RAM directory instead;"
-              + " results are not preserved", dir.getAbsolutePath());
-          LOG.warning(message);
-        }
+        log.atWarning().log(
+            "Failed to create data directory %s, using RAM directory instead; results are not"
+                + " preserved",
+            dir.getAbsolutePath());
         dirMap = new LuceneDirectoryMap.RamBased();
         documentsFile = null;
       }
     }
-    LOG.info(getPackage() + " initialized");
+    log.atInfo().log("%s initialized", getPackage());
   }
 
   // <internal23>
@@ -238,19 +222,16 @@ public class LocalSearchService extends AbstractLocalRpcService {
       objectIn.close();
     } catch (FileNotFoundException e) {
       // Should never happen, because we just checked for it
-      LOG.severe("Failed to find search document storage, " + path);
-    } catch (IOException e) {
-      LOG.log(Level.INFO, "Failed to load from search document storage, " + path, e);
-      clearIndexes(indexDirectory);
-    } catch (ClassNotFoundException e) {
-      LOG.log(Level.INFO, "Failed to load from search document storage, " + path, e);
+      log.atSevere().withCause(e).log("Failed to find search document storage, %s", path);
+    } catch (IOException | ClassNotFoundException e) {
+      log.atInfo().withCause(e).log("Failed to load from search document storage, %s", path);
       clearIndexes(indexDirectory);
     }
   }
 
   @Override
   public void start() {
-    LOG.info(getPackage() + " started");
+    log.atInfo().log("%s started", getPackage());
   }
 
   private void closeIndexWriters() {
@@ -258,14 +239,14 @@ public class LocalSearchService extends AbstractLocalRpcService {
       try {
         writer.close();
       } catch (IOException e) {
-        LOG.log(Level.SEVERE, "Failed to close index writer", e);
+        log.atSevere().withCause(e).log("Failed to close index writer");
       }
     }
     if (dirMap != null) {
       try {
         dirMap.close();
       } catch (IOException e) {
-        LOG.log(Level.SEVERE, "Failed to close local directory", e);
+        log.atSevere().withCause(e).log("Failed to close local directory");
       }
     }
   }
@@ -273,7 +254,7 @@ public class LocalSearchService extends AbstractLocalRpcService {
   @Override
   public void stop() {
     closeIndexWriters();
-    LOG.info(getPackage() + " stopped");
+    log.atInfo().log("%s stopped", getPackage());
   }
 
   // --- Stubby interface ---
@@ -296,7 +277,7 @@ public class LocalSearchService extends AbstractLocalRpcService {
         SearchServicePb.IndexDocumentResponse.newBuilder();
     int docsToIndex = docList.size();
     if (dirMap == null) {
-      LOG.severe("Index documents called before local search service was initialized");
+      log.atSevere().log("Index documents called before local search service was initialized");
       return respBuilder.addAllStatus(newRepeatedStatus(docsToIndex,
           SearchServicePb.SearchServiceError.ErrorCode.INVALID_REQUEST)).build();
     }
@@ -304,7 +285,7 @@ public class LocalSearchService extends AbstractLocalRpcService {
     try {
       indexWriter = getIndexWriter(dirMap.getDirectory(appId, indexSpec), true);
     } catch (IOException e) {
-      LOG.log(Level.SEVERE, "Unable to access index", e);
+      log.atSevere().withCause(e).log("Unable to access index");
       return respBuilder.addAllStatus(newRepeatedStatus(docsToIndex,
           SearchServicePb.SearchServiceError.ErrorCode.INTERNAL_ERROR)).build();
     }
@@ -337,13 +318,12 @@ public class LocalSearchService extends AbstractLocalRpcService {
       respBuilder.addStatus(RequestStatusUtil.newStatus(
           SearchServicePb.SearchServiceError.ErrorCode.OK));
     }
-    if (LOG.isLoggable(Level.FINE)) {
-      try {
-        LOG.fine(String.format("Added %d documents. Index %s holds %d documents",
-            docList.size(), indexSpec.getName(), indexWriter.numDocs()));
-      } catch (IOException e) {
-        // Ignored; this is an exception in a debug level log message.
-      }
+    try {
+      log.atFine().log(
+          "Added %d documents. Index %s holds %d documents",
+          docList.size(), indexSpec.getName(), indexWriter.numDocs());
+    } catch (IOException e) {
+      // Ignored; this is an exception in a debug level log message.
     }
     commitChangesToIndexWriter(indexWriter);
     return respBuilder.build();
@@ -367,24 +347,24 @@ public class LocalSearchService extends AbstractLocalRpcService {
         SearchServicePb.DeleteDocumentResponse.newBuilder();
     int docsToDelete = docIdList.size();
     if (dirMap == null) {
-      LOG.severe("Delete documents called before local search service was initialized");
+      log.atSevere().log("Delete documents called before local search service was initialized");
       return respBuilder.addAllStatus(newRepeatedStatus(docsToDelete,
           SearchServicePb.SearchServiceError.ErrorCode.INVALID_REQUEST)).build();
     }
     if (docsToDelete <= 0) {
-      LOG.info("Request to delete 0 documents; ignoring");
+      log.atInfo().log("Request to delete 0 documents; ignoring");
       return respBuilder.build();
     }
     IndexWriter indexWriter = null;
     try {
       indexWriter = getIndexWriter(dirMap.getDirectory(appId, indexSpec), false);
     } catch (IOException e) {
-      LOG.log(Level.SEVERE, "Failed to access index directory", e);
+      log.atSevere().withCause(e).log("Failed to access index directory");
       return respBuilder.addAllStatus(newRepeatedStatus(docsToDelete,
           SearchServicePb.SearchServiceError.ErrorCode.INTERNAL_ERROR)).build();
     }
     if (indexWriter == null) {
-      LOG.info("Request to delete documents from non-existing index; ignoring");
+      log.atInfo().log("Request to delete documents from non-existing index; ignoring");
       return respBuilder.addAllStatus(newRepeatedStatus(docsToDelete,
           SearchServicePb.SearchServiceError.ErrorCode.OK, "Not found")).build();
     }
@@ -397,7 +377,7 @@ public class LocalSearchService extends AbstractLocalRpcService {
       try {
         docExists = getDocuments(appId, indexSpec, docId, true, 1).iterator().hasNext();
       } catch (IOException e) {
-        LOG.log(Level.SEVERE, "Failed to check existance of document " + docId, e);
+        log.atSevere().withCause(e).log("Failed to check existance of document %s", docId);
         docExists = false;
       }
       docStatusList.add(RequestStatusUtil.newStatus(SearchServicePb.SearchServiceError.ErrorCode.OK,
@@ -407,7 +387,7 @@ public class LocalSearchService extends AbstractLocalRpcService {
       indexWriter.deleteDocuments(deleteTerms);
       return respBuilder.addAllStatus(docStatusList).build();
     } catch (IOException e) {
-      LOG.log(Level.SEVERE, "Failed to delete documents", e);
+      log.atSevere().withCause(e).log("Failed to delete documents");
       return respBuilder.addAllStatus(newRepeatedStatus(docsToDelete,
           SearchServicePb.SearchServiceError.ErrorCode.INTERNAL_ERROR)).build();
     } finally {
@@ -427,7 +407,7 @@ public class LocalSearchService extends AbstractLocalRpcService {
     SearchServicePb.RequestStatus requestStatus =
         RequestStatusUtil.newStatus(SearchServicePb.SearchServiceError.ErrorCode.OK);
     if (dirMap == null) {
-      LOG.severe("List indexes called before local search service was initialized");
+      log.atSevere().log("List indexes called before local search service was initialized");
       return respBuilder.setStatus(
           RequestStatusUtil.newStatus(SearchServicePb.SearchServiceError.ErrorCode.INVALID_REQUEST))
           .build();
@@ -457,7 +437,7 @@ public class LocalSearchService extends AbstractLocalRpcService {
             SearchServicePb.IndexMetadata.Storage.newBuilder()
             .setAmountUsed(amountUsed).setLimit(MAX_STORAGE));
       } catch (IOException e) {
-        LOG.log(Level.SEVERE, "Failed to list indexes", e);
+        log.atSevere().withCause(e).log("Failed to list indexes");
         requestStatus = RequestStatusUtil.newStatus(
             SearchServicePb.SearchServiceError.ErrorCode.INTERNAL_ERROR, e.getMessage());
       }
@@ -509,7 +489,6 @@ public class LocalSearchService extends AbstractLocalRpcService {
         try {
           docs.add(indexSearcher.doc(scoreDoc.doc));
         } catch (IOException e) {
-          LOG.log(Level.SEVERE, e.getMessage(), e);
           throw new SearchException(e.toString());
         }
       }
@@ -539,7 +518,7 @@ public class LocalSearchService extends AbstractLocalRpcService {
     SearchServicePb.ListDocumentsResponse.Builder respBuilder =
         SearchServicePb.ListDocumentsResponse.newBuilder();
     if (dirMap == null) {
-      LOG.severe("listDocuments called before local search service was initialized");
+      log.atSevere().log("listDocuments called before local search service was initialized");
       return respBuilder.setStatus(RequestStatusUtil.newStatus(
           SearchServicePb.SearchServiceError.ErrorCode.INVALID_REQUEST)).build();
     }
@@ -563,11 +542,11 @@ public class LocalSearchService extends AbstractLocalRpcService {
     } catch (FileNotFoundException e) {
       // This is thrown if the index is undefined. We should return an empty list response in this
       // case.
-      LOG.info("List request for empty or non-existing index; ignoring");
+      log.atInfo().log("List request for empty or non-existing index; ignoring");
       return respBuilder.setStatus(RequestStatusUtil.newStatus(
           SearchServicePb.SearchServiceError.ErrorCode.OK)).build();
     } catch (IOException e) {
-      LOG.log(Level.SEVERE, "Failed to list documents", e);
+      log.atSevere().withCause(e).log("Failed to list documents");
       return respBuilder.setStatus(RequestStatusUtil.newStatus(
           SearchServicePb.SearchServiceError.ErrorCode.INTERNAL_ERROR)).build();
     }
@@ -590,7 +569,7 @@ public class LocalSearchService extends AbstractLocalRpcService {
           respBuilder);
     }
     if (dirMap == null) {
-      LOG.severe("Search called before local search service was initialized");
+      log.atSevere().log("Search called before local search service was initialized");
       return replyWith(SearchServicePb.SearchServiceError.ErrorCode.INVALID_REQUEST, respBuilder);
     }
     SearchServicePb.SearchParams searchParams = req.getParams();
@@ -604,25 +583,24 @@ public class LocalSearchService extends AbstractLocalRpcService {
         indexSearcher.setDefaultFieldSortScoring(true, false);
       }
     } catch (IOException e) {
-      LOG.log(Level.SEVERE, "Failed to access index", e);
-      return replyWith(SearchServicePb.SearchServiceError.ErrorCode.INTERNAL_ERROR, respBuilder);
+      return replyWith(
+          SearchServicePb.SearchServiceError.ErrorCode.INTERNAL_ERROR,
+          "Failed to write updated index file: " + e,
+          respBuilder);
     }
     if (indexSearcher == null) {
-      LOG.info("Search on an empty or non-existing index; ignoring");
+      log.atInfo().log("Search on an empty or non-existing index; ignoring");
       String message = String.format("Index '%s' in namespace '%s' does not exist",
           searchParams.getIndexSpec().getName(),
           searchParams.getIndexSpec().getNamespace());
       return replyWith(SearchServicePb.SearchServiceError.ErrorCode.OK, message, respBuilder);
     }
-    if (LOG.isLoggable(Level.FINE)) {
-      LOG.fine(String.format("Index %s holds %d documents", searchParams.getIndexSpec()
-          .getName(), indexSearcher.getIndexReader().numDocs()));
-    }
+    log.atFine().log(
+        "Index %s holds %d documents",
+        searchParams.getIndexSpec().getName(), indexSearcher.getIndexReader().numDocs());
     try {
       Query q = new LuceneQueryBuilder(fieldTypes).parse(searchParams);
-      if (LOG.isLoggable(Level.FINE)) {
-        LOG.fine("Query " + searchParams.getQuery() + " translated to " + q);
-      }
+      log.atFine().log("Query %s translated to %s", searchParams.getQuery(), q);
       int offset = getOffset(searchParams);
       if (offset == -1) {
         // An error message has already been logged.
@@ -680,15 +658,15 @@ public class LocalSearchService extends AbstractLocalRpcService {
       respBuilder.addAllFacetResult(Arrays.asList(results.facetResults));
       return respBuilder.build();
     } catch (SearchException e) {
-      LOG.log(Level.SEVERE, "Failed to execute search", e);
+      log.atSevere().withCause(e).log("Failed to execute search");
       return replyWith(SearchServicePb.SearchServiceError.ErrorCode.INVALID_REQUEST,
           e.getMessage(), respBuilder);
     } catch (SearchQueryException e) {
-      LOG.log(Level.SEVERE, "Failed to parse query", e);
+      log.atSevere().withCause(e).log("Failed to parse query");
       return replyWith(SearchServicePb.SearchServiceError.ErrorCode.INVALID_REQUEST,
           String.format("%s in query '%s'", e.getMessage(), searchParams.getQuery()), respBuilder);
     } catch (IOException e) {
-      LOG.log(Level.SEVERE, "Failed to execute search", e);
+      log.atSevere().withCause(e).log("Failed to execute search");
       return replyWith(SearchServicePb.SearchServiceError.ErrorCode.INTERNAL_ERROR, respBuilder);
     } finally {
       closeIndexSearcher(indexSearcher);
@@ -734,7 +712,7 @@ public class LocalSearchService extends AbstractLocalRpcService {
       try {
         indexSearcher.close();
       } catch (IOException e) {
-        LOG.log(Level.SEVERE, "Failed to close index searcher", e);
+        log.atSevere().withCause(e).log("Failed to close index searcher");
       }
     }
   }
@@ -861,7 +839,7 @@ public class LocalSearchService extends AbstractLocalRpcService {
       try {
         indexWriter.commit();
       } catch (IOException e) {
-        LOG.log(Level.SEVERE, "Failed to commit changes to an index", e);
+        log.atSevere().withCause(e).log("Failed to commit changes to an index");
       }
     }
   }
@@ -872,7 +850,7 @@ public class LocalSearchService extends AbstractLocalRpcService {
    */
   private static int getOffset(SearchServicePb.SearchParams searchParams) {
     if (searchParams.hasOffset() && searchParams.hasCursor()) {
-      LOG.severe("Both offset and cursor are set");
+      log.atSevere().log("Both offset and cursor are set");
       return -1;
     }
     if (searchParams.hasOffset()) {
@@ -945,12 +923,12 @@ public class LocalSearchService extends AbstractLocalRpcService {
   private static String getAppId() {
     ApiProxy.Environment environment = ApiProxy.getCurrentEnvironment();
     if (environment == null) {
-      LOG.severe("Unable to retrieve information about the calling application. Aborting!");
+      log.atSevere().log("Unable to retrieve information about the calling application. Aborting!");
       throw new ApiProxy.ApiProxyException("Failed to access application environment");
     }
     String appId = environment.getAppId();
     if (appId == null) {
-      LOG.severe("Unable to read application ID. Aborting!");
+      log.atSevere().log("Unable to read application ID. Aborting!");
       throw new ApiProxy.ApplicationException(
           SearchServicePb.SearchServiceError.ErrorCode.INTERNAL_ERROR_VALUE,
           "Failed to retrieve application ID");

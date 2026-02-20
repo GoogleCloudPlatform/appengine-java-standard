@@ -16,7 +16,9 @@
 
 package com.google.apphosting.runtime;
 
-import org.jspecify.annotations.Nullable;
+import static java.nio.charset.StandardCharsets.UTF_8;
+
+import com.google.common.flogger.GoogleLogger;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
@@ -39,12 +41,11 @@ import java.util.logging.LogManager;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
-
-import static java.nio.charset.StandardCharsets.UTF_8;
+import org.jspecify.annotations.Nullable;
 
 /** Configures logging for the GAE Java Runtime. */
 public final class Logging {
-  private static final Logger logger = Logger.getLogger(Logging.class.getName());
+  private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
 
   private final Logger rootLogger;
 
@@ -63,7 +64,8 @@ public final class Logging {
           new InputStreamReader(new FileInputStream(userLogConfigFilePath), UTF_8))) {
         configProps.load(br);
       } catch (IllegalArgumentException | IOException e) {
-        logger.log(Level.WARNING, "Unable to read the java.util.logging configuration file.", e);
+        logger.atWarning().withCause(e).log(
+            "Unable to read the java.util.logging configuration file.");
       }
     }
     return configProps;
@@ -80,7 +82,7 @@ public final class Logging {
         Class<?> configType = appClassLoader.loadClass(configClass);
         configType.getConstructor().newInstance();
       } catch (Exception e) {
-        logger.log(Level.WARNING, "Unable to instantiate config object: " + configClass, e);
+        logger.atWarning().withCause(e).log("Unable to instantiate config object: %s", configClass);
       }
     }
     // Clear config section otherwise LogManager will use system classloader
@@ -99,7 +101,7 @@ public final class Logging {
       propsField.setAccessible(true);
       logManagerProperties = (Properties) propsField.get(LogManager.getLogManager());
     } catch (Exception e) {
-      logger.log(Level.SEVERE, "Unable to access the LogManager properties.", e);
+      logger.atSevere().withCause(e).log("Unable to access the LogManager properties.");
       return;
     }
 
@@ -167,11 +169,11 @@ public final class Logging {
     try {
       printStream = new PrintStream(logPath.toFile());
     } catch (FileNotFoundException e) {
-      if (logger.isLoggable(Level.FINE)) {
-        logger.log(Level.WARNING, "Unable to create log handler to " + logPath, e);
+      if (logger.atFine().isEnabled()) {
+        logger.atWarning().withCause(e).log("Unable to create log handler to %s", logPath);
       }
       else {
-        logger.log(Level.WARNING, "Unable to create log handler to " + logPath);
+        logger.atWarning().log("Unable to create log handler to %s", logPath);
       }
       return;
     }

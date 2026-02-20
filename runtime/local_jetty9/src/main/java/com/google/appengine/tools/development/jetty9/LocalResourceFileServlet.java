@@ -18,11 +18,10 @@ package com.google.appengine.tools.development.jetty9;
 
 import com.google.apphosting.utils.config.AppEngineWebXml;
 import com.google.apphosting.utils.config.WebXml;
+import com.google.common.flogger.GoogleLogger;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.Objects;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -54,8 +53,7 @@ import org.eclipse.jetty.webapp.WebAppContext;
  *
  */
 public class LocalResourceFileServlet extends HttpServlet {
-  private static final Logger logger =
-      Logger.getLogger(LocalResourceFileServlet.class.getName());
+  private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
 
   private StaticFileUtils staticFileUtils;
   private Resource resourceBase;
@@ -90,7 +88,6 @@ public class LocalResourceFileServlet extends HttpServlet {
       // In Jetty 9 "//public" is not seen as "/public" .
       resourceBase = Resource.newResource(context.getResource(base));
     } catch (MalformedURLException ex) {
-      logger.log(Level.WARNING, "Could not initialize:", ex);
       throw new ServletException(ex);
     }
   }
@@ -154,7 +151,7 @@ public class LocalResourceFileServlet extends HttpServlet {
         }
       } else {
         if (resource == null || !resource.exists()) {
-          logger.warning("No file found for: " + pathInContext);
+          logger.atWarning().log("No file found for: %s", pathInContext);
           response.sendError(HttpServletResponse.SC_NOT_FOUND);
         } else {
           boolean isStatic = appEngineWebXml.includesStatic(resourceRoot + pathInContext);
@@ -168,21 +165,17 @@ public class LocalResourceFileServlet extends HttpServlet {
           }
 
           if (!isStatic && !usesRuntime && !(included || forwarded)) {
-            logger.warning(
-                "Can not serve "
-                    + pathInContext
-                    + " directly.  "
-                    + "You need to include it in <static-files> in your "
-                    + "appengine-web.xml.");
+            logger.atWarning().log(
+                "Can not serve %s directly.  You need to include it in <static-files> in your"
+                    + " appengine-web.xml.",
+                pathInContext);
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
           } else if (!isResource && !isWelcomeFile && (included || forwarded)) {
-            logger.warning(
-                "Could not serve "
-                    + pathInContext
-                    + " from a forward or "
-                    + "include.  You need to include it in <resource-files> in "
-                    + "your appengine-web.xml.");
+            logger.atWarning().log(
+                "Could not serve %s from a forward or include.  You need to include it in"
+                    + " <resource-files> in your appengine-web.xml.",
+                pathInContext);
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
           }
@@ -216,8 +209,8 @@ public class LocalResourceFileServlet extends HttpServlet {
       if (resourceBase != null) {
         return resourceBase.addPath(pathInContext);
       }
-    } catch (IOException ex) {
-      logger.log(Level.WARNING, "Could not find: " + pathInContext, ex);
+    } catch (Throwable t) {
+      logger.atWarning().withCause(t).log("Could not find: %s", pathInContext);
     }
     return null;
   }

@@ -21,6 +21,7 @@ import com.google.appengine.api.modules.ModulesService;
 import com.google.appengine.api.modules.ModulesServiceFactory;
 import com.google.apphosting.api.ApiProxy;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.flogger.GoogleLogger;
 import java.io.IOException;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -69,6 +70,8 @@ import javax.servlet.http.HttpServletResponse;
  * handler without obtaining a serving permit.
  */
 public class DevAppServerModulesFilter extends DevAppServerModulesCommon implements Filter {
+
+  private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
 
   // In prod instances return 500 (Internal Server Error) when busy
   static final int INSTANCE_BUSY_ERROR_CODE = HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
@@ -175,7 +178,7 @@ public class DevAppServerModulesFilter extends DevAppServerModulesCommon impleme
       String msg =
           String.format("Got request to non-configured instance: %d.%s", instance,
               moduleOrBackendName);
-      logger.warning(msg);
+      logger.atWarning().log("%s", msg);
       hresponse.sendError(HttpServletResponse.SC_BAD_GATEWAY, msg);
       return false;
     }
@@ -183,7 +186,7 @@ public class DevAppServerModulesFilter extends DevAppServerModulesCommon impleme
     if (modulesFilterHelper.checkInstanceStopped(moduleOrBackendName, instance)) {
       String msg =
           String.format("Got request to stopped instance: %d.%s", instance, moduleOrBackendName);
-      logger.warning(msg);
+      logger.atWarning().log("%s", msg);
       hresponse.sendError(MODULE_STOPPED_ERROR_CODE, msg);
       return false;
     }
@@ -192,7 +195,7 @@ public class DevAppServerModulesFilter extends DevAppServerModulesCommon impleme
     if (!modulesFilterHelper.acquireServingPermit(moduleOrBackendName, instance, true)) {
       String msg = String.format(
           "Got request to module %d.%s but the instance is busy.", instance, moduleOrBackendName);
-      logger.finer(msg);
+      logger.atFiner().log("%s", msg);
       hresponse.sendError(INSTANCE_BUSY_ERROR_CODE, msg);
       return false;
     }
@@ -228,8 +231,7 @@ public class DevAppServerModulesFilter extends DevAppServerModulesCommon impleme
     }
     ModulesFilterHelperEE8 modulesFilterHelper = (ModulesFilterHelperEE8) getModulesFilterHelper();
     int instance = getInstanceIdFromRequest(hrequest);
-    logger.finest(String.format("redirect request to module: %d.%s", instance,
-        moduleOrBackendName));
+    logger.atFinest().log("redirect request to module: %d.%s", instance, moduleOrBackendName);
     if (instance != -1) {
       if (!tryToAcquireServingPermit(moduleOrBackendName, instance, hresponse)) {
         // instanceAcceptsConnections acquired a permit when it returned true.
@@ -239,14 +241,14 @@ public class DevAppServerModulesFilter extends DevAppServerModulesCommon impleme
       // Backend or module specified, check if exists
       if (!modulesFilterHelper.checkModuleExists(moduleOrBackendName)) {
         String msg = String.format("Got request to non-configured module: %s", moduleOrBackendName);
-        logger.warning(msg);
+        logger.atWarning().log("%s", msg);
         hresponse.sendError(HttpServletResponse.SC_BAD_GATEWAY, msg);
         return;
       }
       // check if this Backend or module is stopped
       if (modulesFilterHelper.checkModuleStopped(moduleOrBackendName)) {
         String msg = String.format("Got request to stopped module: %s", moduleOrBackendName);
-        logger.warning(msg);
+        logger.atWarning().log("%s", msg);
         hresponse.sendError(MODULE_STOPPED_ERROR_CODE, msg);
         return;
       }
@@ -254,7 +256,7 @@ public class DevAppServerModulesFilter extends DevAppServerModulesCommon impleme
       instance = modulesFilterHelper.getAndReserveFreeInstance(moduleOrBackendName);
       if (instance == -1) {
         String msg = String.format("all instances of module %s are busy", moduleOrBackendName);
-        logger.finest(msg);
+        logger.atFinest().log("%s", msg);
         hresponse.sendError(INSTANCE_BUSY_ERROR_CODE, msg);
         return;
       }
@@ -263,12 +265,10 @@ public class DevAppServerModulesFilter extends DevAppServerModulesCommon impleme
     // if we make it down here we have a module or backend name and a reserved instance
     try {
       if (isLoadBalancingModuleInstance) {
-        logger.finer(String.format("forwarding request to module: %d.%s", instance,
-            moduleOrBackendName));
+        logger.atFiner().log("forwarding request to module: %d.%s", instance, moduleOrBackendName);
         hrequest.setAttribute(MODULE_INSTANCE_REDIRECT_ATTRIBUTE, Integer.valueOf(instance));
       } else {
-        logger.finer(String.format("forwarding request to backend: %d.%s", instance,
-            moduleOrBackendName));
+        logger.atFiner().log("forwarding request to backend: %d.%s", instance, moduleOrBackendName);
         hrequest.setAttribute(BACKEND_REDIRECT_ATTRIBUTE, moduleOrBackendName);
         hrequest.setAttribute(BACKEND_INSTANCE_REDIRECT_ATTRIBUTE, Integer.valueOf(instance));
       }
@@ -302,15 +302,14 @@ public class DevAppServerModulesFilter extends DevAppServerModulesCommon impleme
   private void doDirectRequest(String moduleOrBackendName, int instance,
       HttpServletRequest hrequest, HttpServletResponse hresponse, FilterChain chain)
       throws IOException, ServletException {
-    logger.finest("request to specific module instance: " + instance
-        + "." + moduleOrBackendName);
+    logger.atFinest().log(
+        "request to specific module instance: %d.%s", instance, moduleOrBackendName);
 
     if (!tryToAcquireServingPermit(moduleOrBackendName, instance, hresponse)) {
       return;
     }
     try {
-      logger.finest("Acquired serving permit for: " + instance + "."
-          + moduleOrBackendName);
+      logger.atFinest().log("Acquired serving permit for: %d.%s", instance, moduleOrBackendName);
       // add thread local information required for the ModulesService
       injectApiInfo(null, -1);
       chain.doFilter(hrequest, hresponse);
@@ -337,8 +336,8 @@ public class DevAppServerModulesFilter extends DevAppServerModulesCommon impleme
     int port = modulesFilterHelper.getPort(backendServer, instance);
     LocalEnvironment.setPort(ApiProxy.getCurrentEnvironment().getAttributes(), port);
     injectApiInfo(backendServer, instance);
-    logger.finest("redirected request to backend server instance: " + instance + "."
-        + backendServer);
+    logger.atFinest().log(
+        "redirected request to backend server instance: %d.%s", instance, backendServer);
     chain.doFilter(hrequest, hresponse);
   }
 
@@ -359,8 +358,10 @@ public class DevAppServerModulesFilter extends DevAppServerModulesCommon impleme
     LocalEnvironment.setInstance(ApiProxy.getCurrentEnvironment().getAttributes(), instance);
     LocalEnvironment.setPort(ApiProxy.getCurrentEnvironment().getAttributes(), port);
     injectApiInfo(null, -1);
-    logger.finest("redirected request to module instance: " + instance + "." +
-        ApiProxy.getCurrentEnvironment().getModuleId() + " " +
+    logger.atFinest().log(
+        "redirected request to module instance: %d.%s %s",
+        instance,
+        ApiProxy.getCurrentEnvironment().getModuleId(),
         ApiProxy.getCurrentEnvironment().getVersionId());
     chain.doFilter(hrequest, hresponse);
   }
@@ -375,7 +376,7 @@ public class DevAppServerModulesFilter extends DevAppServerModulesCommon impleme
     int instancePort = hrequest.getServerPort();
     String backendServer = backendServersManager.getServerNameFromPort(instancePort);
     int instance = backendServersManager.getServerInstanceFromPort(instancePort);
-    logger.finest("startup request to: " + instance + "." + backendServer);
+    logger.atFinest().log("startup request to: %d.%s", instance, backendServer);
     injectApiInfo(backendServer, instance);
     chain.doFilter(hrequest, hresponse);
   }

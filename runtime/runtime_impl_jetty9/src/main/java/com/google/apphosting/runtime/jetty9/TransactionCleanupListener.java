@@ -16,10 +16,10 @@
 
 package com.google.apphosting.runtime.jetty9;
 
+import com.google.common.flogger.GoogleLogger;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Collection;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.webapp.WebAppContext;
@@ -43,8 +43,7 @@ public class TransactionCleanupListener implements RequestListener {
   // request. Once async handling is implemented, this listener will need to be modified
   // to collect active transactions on every dispatch to the context for the request
   // and to test and rollback any incompleted transactions on completion.
-
-  private static final Logger logger = Logger.getLogger(TransactionCleanupListener.class.getName());
+  private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
 
   private Object contextDatastoreService;
   private Method getActiveTransactions;
@@ -67,8 +66,8 @@ public class TransactionCleanupListener implements RequestListener {
         transactionGetId = transaction.getMethod("getId");
       }
     } catch (Exception ex) {
-      logger.info("No datastore service found in webapp");
-      logger.log(Level.FINE, "No context datastore service", ex);
+      logger.atInfo().log("No datastore service found in webapp");
+      logger.atFine().withCause(ex).log("No context datastore service");
     }
   }
 
@@ -96,17 +95,15 @@ public class TransactionCleanupListener implements RequestListener {
                         + ".  Transaction will be rolled back.");
             transactionRollback.invoke(tx);
           } catch (InvocationTargetException ex) {
-            logger.log(
-                Level.WARNING,
-                "Failed to rollback abandoned transaction " + id,
-                ex.getTargetException());
+            logger.atWarning().withCause(ex.getTargetException()).log(
+                "Failed to rollback abandoned transaction %s", id);
           } catch (Exception ex) {
-            logger.log(Level.WARNING, "Failed to rollback abandoned transaction " + id, ex);
+            logger.atWarning().withCause(ex).log("Failed to rollback abandoned transaction %s", id);
           }
         }
       }
     } catch (Exception ex) {
-      logger.log(Level.WARNING, "Failed to rollback abandoned transaction", ex);
+      logger.atWarning().withCause(ex).log("Failed to rollback abandoned transaction");
     }
   }
 }

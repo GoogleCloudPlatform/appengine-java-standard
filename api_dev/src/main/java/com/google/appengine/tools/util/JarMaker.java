@@ -16,6 +16,7 @@
 
 package com.google.appengine.tools.util;
 
+import com.google.common.flogger.GoogleLogger;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -27,7 +28,6 @@ import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
-import java.util.logging.Logger;
 
 /**
  * A utility for building multiple jar files, each of size less than a specified maximum, from a
@@ -48,7 +48,7 @@ abstract  class JarMaker {
   private static final int READ_BUFFER_SIZE_BYTES = 8 * 1024;
   private static final int FILE_BUFFER_INITIAL_SIZE_BYTES = 512 * 1024;
 
-  private static Logger logger = Logger.getLogger(JarSplitter.class.getName());
+  private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
 
   private final String baseName;
   private final File outputDirectory;
@@ -159,7 +159,7 @@ abstract  class JarMaker {
             beginNewOutputStream(manifest, manifestSize);
           }
 
-          logger.fine("Copying entry: " + name + " (" + size + " bytes)");
+          logger.atFine().log("Copying entry: %s (%d bytes)", name, size);
           currentStream.putNextEntry(entry);
           fileBuffer.writeTo(currentStream);
           currentSize += size;
@@ -176,7 +176,7 @@ abstract  class JarMaker {
     }
     for (String suffix : excludes) {
       if (fileName.endsWith(suffix)) {
-        logger.fine("Skipping file matching excluded suffix '" + suffix + "': " + fileName);
+        logger.atFine().log("Skipping file matching excluded suffix '%s': %s", suffix, fileName);
         return false;
       }
     }
@@ -226,7 +226,7 @@ abstract  class JarMaker {
     String formatString = "%s-%0" + outputDigits + "d%s";
     String newName = String.format(formatString, baseName, index, EXT);
     File newFile = new File(outputDirectory, newName);
-    logger.fine("Opening new file: " + newFile);
+    logger.atFine().log("Opening new file: %s", newFile);
     return new BufferedOutputStream(new FileOutputStream(newFile));
   }
 

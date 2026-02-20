@@ -30,12 +30,12 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.flogger.GoogleLogger;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.Logger;
 
 /**
  *  Config for accessing the {@link LocalModulesService} in tests.
@@ -148,8 +148,7 @@ public class LocalModulesServiceTestConfig implements LocalServiceTestConfig {
   private static final String INSTANCE_ID_ENV_ATTRIBUTE = "com.google.appengine.instance.id";
   public static final String DEFAULT_MODULE_NAME = "default";
   static final String DEFAULT_VERSION = "1";
-  private static final Logger logger =
-      Logger.getLogger(LocalModulesServiceTestConfig.class.getName());
+  private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
   // Keep this in sync with LocalEnvironment.MAIN_INSTANCE
   static final int MAIN_INSTANCE = -1;
   static final int DYNAMIC_INSTANCE_COUNT = -1;
@@ -394,8 +393,8 @@ public class LocalModulesServiceTestConfig implements LocalServiceTestConfig {
       if (versions.containsKey(moduleName)) {
         return versions.get(moduleName);
       } else {
-        logger.info("Operation getVersions failed because module=" + moduleName
-            + " is not defined.");
+        logger.atInfo().log(
+            "Operation getVersions failed because module=%s is not defined.", moduleName);
         throw new ApplicationException(ModulesServiceError.ErrorCode.INVALID_MODULE_VALUE,
             "The specified module does not exist.");
       }
@@ -406,8 +405,8 @@ public class LocalModulesServiceTestConfig implements LocalServiceTestConfig {
       if (defaultVersions.containsKey(moduleName)) {
         return defaultVersions.get(moduleName);
       } else {
-        logger.info("Operation getDefaultVersion failed because module=" + moduleName
-            + " is not defined.");
+        logger.atInfo().log(
+            "Operation getDefaultVersion failed because module=%s is not defined.", moduleName);
         throw new ApplicationException(ModulesServiceError.ErrorCode.INVALID_MODULE_VALUE,
             "Invalid module name.");
       }
@@ -433,8 +432,8 @@ public class LocalModulesServiceTestConfig implements LocalServiceTestConfig {
         throws ApplicationException {
       String operation = instance == MAIN_INSTANCE ? "getHostName" : "getInstanceHostname";
       if (!versions.containsKey(moduleName)) {
-        logger.warning("Operation " + operation + " could not find the requested module "
-            + " Module " + moduleName);
+        logger.atWarning().log(
+            "Operation %s could not find the requested module Module %s", operation, moduleName);
         throw new ApplicationException(ModulesServiceError.ErrorCode.INVALID_MODULE_VALUE,
             "The specified module does not exist.");
       }
@@ -489,9 +488,9 @@ public class LocalModulesServiceTestConfig implements LocalServiceTestConfig {
       AbstractModuleVersionState moduleVersionState =
           moduleVersionStateMap.get(new ModuleVersionKey(module, version));
       if (moduleVersionState == null) {
-        logger.warning("Operation " + operation + " could not find the requested module version "
-            + " Module " + module
-            + " version " + version);
+        logger.atWarning().log(
+            "Operation %s could not find the requested module version Module %s version %s",
+            operation, module, version);
         throw new ApplicationException(ModulesServiceError.ErrorCode.INVALID_VERSION_VALUE,
               "Could not find the given version.");
       }
@@ -640,10 +639,10 @@ public class LocalModulesServiceTestConfig implements LocalServiceTestConfig {
     }
 
     int getNumInstances() {
-      logger.warning("Operation getNumInstances requires a manually scaling module version but "
-          + " Module " + moduleVersion.getModule()
-          + " version " + moduleVersion.getVersion()
-          + " is not manual scaling.");
+      logger.atWarning().log(
+          "Operation getNumInstances requires a manually scaling module version but Module %s"
+              + " version %s is not manual scaling.",
+          moduleVersion.getModule(), moduleVersion.getVersion());
       throw new ApplicationException(ModulesServiceError.ErrorCode.INVALID_VERSION_VALUE,
           "Could not find the given version.");
     }
@@ -653,10 +652,10 @@ public class LocalModulesServiceTestConfig implements LocalServiceTestConfig {
     }
 
     void setNumInstances(@SuppressWarnings("unused") int numInstances) {
-      logger.warning("Operation setNumInstances requires a manually scaling version but "
-          + " Module " + moduleVersion.getModule()
-          + " version " + moduleVersion.getVersion()
-          + " is not manual scaling.");
+      logger.atWarning().log(
+          "Operation setNumInstances requires a manually scaling version but Module %s version %s"
+              + " is not manual scaling.",
+          moduleVersion.getModule(), moduleVersion.getVersion());
       throw new ApplicationException(ModulesServiceError.ErrorCode.INVALID_VERSION_VALUE,
           "Cannot set the number of instances for a module that has automatic scaling.");
     }
@@ -666,20 +665,21 @@ public class LocalModulesServiceTestConfig implements LocalServiceTestConfig {
     }
 
     void start()  {
-      logger.info("Stopped  Module " + moduleVersion.getModule()
-          + " version " + moduleVersion.getVersion());
+      logger.atInfo().log(
+          "Stopped  Module %s version %s", moduleVersion.getModule(), moduleVersion.getVersion());
     }
 
     void stop() {
-      logger.info("Started  Module " + moduleVersion.getModule()
-          + " version " + moduleVersion.getVersion());
+      logger.atInfo().log(
+          "Started  Module %s version %s", moduleVersion.getModule(), moduleVersion.getVersion());
     }
 
     String getInstanceDot(int instance) {
       if (instance >= numInstances.get()) {
-      logger.warning("Operation getInstanceHostname failed because instances value "
-          + instance + " is out of range for module " + moduleVersion.getModule()
-          + " version " + moduleVersion.getVersion() + " numInstances " + numInstances.get());
+        logger.atWarning().log(
+            "Operation getInstanceHostname failed because instances value %d is out of range for"
+                + " module %s version %s numInstances %d",
+            instance, moduleVersion.getModule(), moduleVersion.getVersion(), numInstances.get());
       throw new ApplicationException(ModulesServiceError.ErrorCode.INVALID_INSTANCES_VALUE,
           "The specified instance does not exist for this module/version.");
       }
@@ -711,19 +711,18 @@ public class LocalModulesServiceTestConfig implements LocalServiceTestConfig {
 
     @Override
     String getInstanceDot(int instance) {
-      logger.warning("Operation getInstanceHostname not allowed for dynamic module version "
-      + " module " + moduleVersion.getModule()
-      + " version " + moduleVersion.getVersion());
+      logger.atWarning().log(
+          "Operation getInstanceHostname not allowed for dynamic module version module %s version"
+              + " %s",
+          moduleVersion.getModule(), moduleVersion.getVersion());
       throw new ApplicationException(ModulesServiceError.ErrorCode.INVALID_VERSION_VALUE,
           "The specified instance does not exist for this module/version.");
     }
 
     private void reportStartStop(String operation) {
-      logger.warning("Automatic scaling module "
-          + " module " + moduleVersion.getModule()
-          + " version " + moduleVersion.getVersion()
-          + " does not support "
-          + operation);
+      logger.atWarning().log(
+          "Automatic scaling module module %s version %s does not support %s",
+          moduleVersion.getModule(), moduleVersion.getVersion(), operation);
       throw new ApplicationException(ModulesServiceError.ErrorCode.INVALID_VERSION_VALUE,
           "Could not find the specified version.");
     }
@@ -743,10 +742,10 @@ public class LocalModulesServiceTestConfig implements LocalServiceTestConfig {
     @Override
     void setNumInstances(int numInstances) {
       if (numInstances <= 0) {
-        logger.warning("Operation setNumInstances failed with invalid instances value "
-            + numInstances
-            + " for module " + moduleVersion.getModule()
-            + " version " + moduleVersion.getVersion());
+        logger.atWarning().log(
+            "Operation setNumInstances failed with invalid instances value %d for module %s version"
+                + " %s",
+            numInstances, moduleVersion.getModule(), moduleVersion.getVersion());
         throw new ApplicationException(ModulesServiceError.ErrorCode.INVALID_INSTANCES_VALUE,
             "The number of instances must be greater than 0.");
       }
@@ -787,14 +786,16 @@ public class LocalModulesServiceTestConfig implements LocalServiceTestConfig {
       if (scalingType == ScalingType.AUTOMATIC) {
         checkArgument(
             initialNumInstances == DYNAMIC_INSTANCE_COUNT,
-            "Automatic scaling module version module %s version %s must have initialNumInstances %s",
+            "Automatic scaling module version module %s version %s must have initialNumInstances"
+                + " %s",
             module,
             version,
             DYNAMIC_INSTANCE_COUNT);
       } else {
         checkArgument(
             initialNumInstances != DYNAMIC_INSTANCE_COUNT,
-            "Automatic scaling module version module %s version %s must not have initialNumInstances %s",
+            "Automatic scaling module version module %s version %s must not have"
+                + " initialNumInstances %s",
             module,
             version,
             DYNAMIC_INSTANCE_COUNT);

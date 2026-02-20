@@ -22,11 +22,10 @@ import com.google.apphosting.api.ApiProxy;
 import com.google.apphosting.api.ApiProxy.Environment;
 import com.google.apphosting.utils.config.AppEngineWebXml;
 import com.google.apphosting.utils.config.WebModule;
+import com.google.common.flogger.GoogleLogger;
 import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.RequestConfig;
@@ -44,7 +43,7 @@ public class InstanceHelper {
   private static final int AH_REQUEST_INFINITE_TIMEOUT = 0;
   private static final int AH_REQUEST_DEFAULT_TIMEOUT = 30 * 1000;
 
-  private static final Logger LOGGER = Logger.getLogger(InstanceHelper.class.getName());
+  private static final GoogleLogger LOGGER = GoogleLogger.forEnclosingClass();
 
   private final String serverOrBackendName;
   private final int instance;
@@ -76,11 +75,9 @@ public class InstanceHelper {
    * @param runOnSuccess {@link Runnable#run} invoked when the startup request succeeds.
    */
   public void sendStartRequest(final Runnable runOnSuccess) {
-    if (LOGGER.isLoggable(Level.FINER)) {
-      LOGGER.log(Level.FINER, "Entering send start request for serverOrBackendName="
-          + serverOrBackendName + " instance=" + instance,
-          new Exception("Start sendStartRequest"));
-    }
+    LOGGER.atFiner().withCause(new Exception("Start sendStartRequest")).log(
+        "Entering send start request for serverOrBackendName=%s instance=%s",
+        serverOrBackendName, instance);
 
     if (instance < 0) {
       throw new IllegalStateException("Attempt to send a start request to server/backend "
@@ -132,7 +129,7 @@ public class InstanceHelper {
       // use http as http is used in prod
       String urlString = String.format("http://%s:%d/_ah/start", containerService.getAddress(),
           containerService.getPort());
-      LOGGER.finer("sending start request to: " + urlString);
+      LOGGER.atFiner().log("sending start request to: %s", urlString);
 
       // need to use HttpClient as the URL stream handler is using the
       // URLFetch API
@@ -159,16 +156,16 @@ public class InstanceHelper {
           // drop to make sure we don't end up loading it into ram.
         }
         if ((returnCode >= 200 && returnCode < 300) || returnCode == 404) {
-          LOGGER.fine(
-              String.format("backend server %d.%s request to /_ah/start completed, code=%d",
-                  instance, serverOrBackendName, returnCode));
+          LOGGER.atFine().log(
+              "backend server %d.%s request to /_ah/start completed, code=%d",
+              instance, serverOrBackendName, returnCode);
           instanceStateHolder.testAndSet(InstanceState.RUNNING,
               InstanceState.RUNNING_START_REQUEST);
           runOnSuccess.run();
         } else {
-          LOGGER.warning("Start request to /_ah/start on server " + instance + "."
-              + serverOrBackendName + " failed (HTTP status=" + response.getStatusLine()
-              + "). Retrying...");
+          LOGGER.atWarning().log(
+              "Start request to /_ah/start on server %d.%s failed (HTTP status=%s). Retrying...",
+              instance, serverOrBackendName, response.getStatusLine());
           // in prod the server will retry start requests until a 2xx or 404
           // return code is received. Sleep here to rate limit retries.
           Thread.sleep(1000);
@@ -178,13 +175,13 @@ public class InstanceHelper {
         request.releaseConnection();
       }
     } catch (MalformedURLException e) {
-      LOGGER.severe(String.format(
-          "Unable to send start request to server: %d.%s, " + "MalformedURLException: %s",
-          instance, serverOrBackendName, e.getMessage()));
+      LOGGER.atSevere().log(
+          "Unable to send start request to server: %d.%s, MalformedURLException: %s",
+          instance, serverOrBackendName, e.getMessage());
     } catch (Exception e) {
-      LOGGER.warning(String.format(
-          "Got exception while performing /_ah/start " + "request on server: %d.%s, %s: %s",
-          instance, serverOrBackendName, e.getClass().getName(), e.getMessage()));
+      LOGGER.atWarning().log(
+          "Got exception while performing /_ah/start request on server: %d.%s, %s: %s",
+          instance, serverOrBackendName, e.getClass().getName(), e.getMessage());
     }
   }
 
@@ -234,17 +231,17 @@ public class InstanceHelper {
       try {
         beginShutdown.invoke(userThreadLifeCycleManager, AH_REQUEST_DEFAULT_TIMEOUT);
       } catch (Exception e) {
-        LOGGER.warning(
-            String.format("got exception when running shutdown hook on server %d.%s",
-                instance, serverOrBackendName));
+        LOGGER.atWarning().log(
+            "got exception when running shutdown hook on server %d.%s",
+            instance, serverOrBackendName);
         // print the stack trace to help the user debug
         e.printStackTrace();
       }
     } catch (Exception e) {
-      LOGGER.severe(
-          String.format("Exception during reflective call to "
-              + "LifecycleManager.beginShutdown on server %d.%s, got %s: %s", instance,
-              serverOrBackendName, e.getClass().getName(), e.getMessage()));
+      LOGGER.atSevere().log(
+          "Exception during reflective call to LifecycleManager.beginShutdown on server %d.%s, "
+              + "got %s: %s",
+          instance, serverOrBackendName, e.getClass().getName(), e.getMessage());
     } finally {
       // restore the environment
       ApiProxy.setEnvironmentForCurrentThread(prevEnvironment);
