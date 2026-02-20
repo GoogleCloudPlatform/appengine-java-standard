@@ -152,12 +152,12 @@ public class EE11AppVersionHandlerFactory implements AppVersionHandlerFactory {
       context.setThrowUnavailableOnStartupException(true);
       SessionsConfig sessionsConfig = appVersion.getSessionsConfig();
       EE11SessionManagerHandler.Config.Builder builder = EE11SessionManagerHandler.Config.builder();
-      if (sessionsConfig.getAsyncPersistenceQueueName() != null) {
-        builder.setAsyncPersistenceQueueName(sessionsConfig.getAsyncPersistenceQueueName());
+      if (sessionsConfig.asyncPersistenceQueueName() != null) {
+        builder.setAsyncPersistenceQueueName(sessionsConfig.asyncPersistenceQueueName());
       }
       builder
-          .setEnableSession(sessionsConfig.isEnabled())
-          .setAsyncPersistence(sessionsConfig.isAsyncPersistence())
+          .setEnableSession(sessionsConfig.enabled())
+          .setAsyncPersistence(sessionsConfig.asyncPersistence())
           .setServletContextHandler(context);
       EE11SessionManagerHandler.create(builder.build());
       // Pass the AppVersion on to any of our servlets (e.g. ResourceFileServlet).

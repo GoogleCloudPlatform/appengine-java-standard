@@ -16,17 +16,20 @@
 
 package com.google.apphosting.base;
 
-import com.google.auto.value.AutoValue;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.jspecify.annotations.Nullable;
 
 /**
  * A parsed Version Id.
- *
  */
-@AutoValue
-public abstract class VersionId {
+public record VersionId(
+    @Nullable String versionId,
+    String majorVersion,
+    String engineId,
+    String engineVersionId,
+    @Nullable String minorVersion) {
+
   // These must be kept in sync with the corresponding constants in
   // apphosting/base/constants.h
   public static final String DEFAULT_ENGINE_ID = "default";
@@ -68,38 +71,42 @@ public abstract class VersionId {
       throw new IllegalArgumentException("Malformed versionId: " + versionId);
     }
     String engineId = matcher.group(2) == null ? DEFAULT_ENGINE_ID : matcher.group(2);
-    return new AutoValue_VersionId(
+    return new VersionId(
         versionId, matcher.group(1), engineId, matcher.group(3), matcher.group(5));
   }
 
-  /**
-   * Returns the versionId.
-   */
-  @Nullable
-  public abstract String getVersionId();
+  public static VersionId parse(String versionId) {
+    return from(versionId);
+  }
+
+  /** Returns the versionId. */
+  public @Nullable String getVersionId() {
+    return versionId;
+  }
 
   /**
    * Returns the majorVersion.
    */
-  public abstract String getMajorVersion();
+  public String getMajorVersion() {
+    return majorVersion;
+  }
 
   /**
    * Returns the serverId.
    */
-  public abstract String getEngineId();
+  public String getEngineId() {
+    return engineId;
+  }
 
   /**
    * Returns the server version id.
    */
-  public abstract String getEngineVersionId();
+  public String getEngineVersionId() {
+    return engineVersionId;
+  }
 
-  /**
-   * Returns the minorVersion or {@code null} if no minor version was present.
-   */
-  @Nullable
-  public abstract String getMinorVersion();
-
-  public static VersionId parse(String versionId) {
-    return from(versionId);
+  /** Returns the minorVersion or {@code null} if no minor version was present. */
+  public @Nullable String getMinorVersion() {
+    return minorVersion;
   }
 }

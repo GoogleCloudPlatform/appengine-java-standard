@@ -33,21 +33,21 @@ public class JavaRuntimeParamsTest {
   public void testUnknownArgumentsAllowed() {
     String[] args = {"--xyz=abc"};
     JavaRuntimeParams params = JavaRuntimeParams.parseArgs(args);
-    assertThat(params.getUnknownParams()).containsExactly("--xyz=abc");
+    assertThat(params.unknownParams()).containsExactly("--xyz=abc");
   }
   @Test
   public void testDefaults() {
     JavaRuntimeParams params = JavaRuntimeParams.parseArgs();
-    assertThat(params.getTrustedHost()).isEmpty();
-    assertThat(params.getFixedApplicationPath()).isNull();
-    assertThat(params.getJettyHttpPort()).isEqualTo(8080);
+    assertThat(params.trustedHost()).isEmpty();
+    assertThat(params.fixedApplicationPath()).isNull();
+    assertThat(params.jettyHttpPort()).isEqualTo(8080);
   }
 
   @Test
   public void testGetUnknownParams() {
     String[] args = {"--unknown1=xyz", "--trusted_host=abc", "--unknown2=xyz"};
     JavaRuntimeParams params = JavaRuntimeParams.parseArgs(args);
-    assertThat(params.getUnknownParams())
+    assertThat(params.unknownParams())
         .containsExactly("--unknown1=xyz", "--unknown2=xyz")
         .inOrder();
   }
@@ -55,13 +55,13 @@ public class JavaRuntimeParamsTest {
   @Test
   public void testTrustedHost() {
     JavaRuntimeParams params = JavaRuntimeParams.parseArgs("--trusted_host=foo");
-    assertThat(params.getTrustedHost()).isEqualTo("foo");
+    assertThat(params.trustedHost()).isEqualTo("foo");
   }
 
   @Test
   public void testFixedApplicationPath() {
     JavaRuntimeParams params = JavaRuntimeParams.parseArgs("--fixed_application_path=bar");
-    assertThat(params.getFixedApplicationPath()).isEqualTo("bar");
+    assertThat(params.fixedApplicationPath()).isEqualTo("bar");
   }
 
   @Test
@@ -76,7 +76,7 @@ public class JavaRuntimeParamsTest {
   @Test
   public void testJettyHttpPort() {
     JavaRuntimeParams params = JavaRuntimeParams.parseArgs("--jetty_http_port=1234");
-    assertThat(params.getJettyHttpPort()).isEqualTo(1234);
+    assertThat(params.jettyHttpPort()).isEqualTo(1234);
   }
 
   @Test
@@ -100,7 +100,7 @@ public class JavaRuntimeParamsTest {
   @Test
   public void testCloneMaxOutstandingApiRpcs() {
     JavaRuntimeParams params = JavaRuntimeParams.parseArgs("--clone_max_outstanding_api_rpcs=50");
-    assertThat(params.getMaxOutstandingApiRpcs()).isEqualTo(50);
+    assertThat(params.maxOutstandingApiRpcs()).isEqualTo(50);
   }
 
   @Test

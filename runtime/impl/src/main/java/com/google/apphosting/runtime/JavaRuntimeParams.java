@@ -20,23 +20,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 /** Command line parameters for Java runtime, and its dependencies. */
-final class JavaRuntimeParams {
-
-  /** Default trusted host is empty string. */
-  private String trustedHost = "";
-
-  /** Default application path is null. */
-  private String fixedApplicationPath = null;
-
-  /** Default Jetty HTTP port is 8080. */
-  private int jettyHttpPort = 8080;
-
-  /** Default value from {@link AppEngineConstants#DEFAULT_MAX_OUTSTANDING_API_RPCS}. */
-  private int maxOutstandingApiRpcs = AppEngineConstants.DEFAULT_MAX_OUTSTANDING_API_RPCS;
-
-  private List<String> unknownParams;
-
-  private JavaRuntimeParams() {}
+record JavaRuntimeParams(
+    String trustedHost,
+    String fixedApplicationPath,
+    int jettyHttpPort,
+    int maxOutstandingApiRpcs,
+    List<String> unknownParams) {
 
   /**
    * Creates {@code JavaRuntimeParams} from command line arguments.
@@ -57,8 +46,12 @@ final class JavaRuntimeParams {
    * @return an instance of {@code JavaRuntimeParams} with parsed values from command line
    */
   public static JavaRuntimeParams parseArgs(String... args) {
-    JavaRuntimeParams params = new JavaRuntimeParams();
-    params.unknownParams = new ArrayList<>();
+    String trustedHost = "";
+    String fixedApplicationPath = null;
+    int jettyHttpPort = 8080;
+    int maxOutstandingApiRpcs = AppEngineConstants.DEFAULT_MAX_OUTSTANDING_API_RPCS;
+    List<String> unknownParams = new ArrayList<>();
+
     for (String arg : args) {
       String key = arg;
       String value = null;
@@ -70,14 +63,14 @@ final class JavaRuntimeParams {
       switch (key) {
         case "--trusted_host" -> {
           if (value != null) {
-            params.trustedHost = value;
+            trustedHost = value;
           } else {
             throw new IllegalArgumentException("Missing value for " + arg);
           }
         }
         case "--fixed_application_path" -> {
           if (value != null) {
-            params.fixedApplicationPath = value;
+            fixedApplicationPath = value;
           } else {
             throw new IllegalArgumentException("Missing value for " + arg);
           }
@@ -85,7 +78,7 @@ final class JavaRuntimeParams {
         case "--jetty_http_port" -> {
           if (value != null) {
             try {
-              params.jettyHttpPort = Integer.parseInt(value);
+              jettyHttpPort = Integer.parseInt(value);
             } catch (NumberFormatException e) {
               // If the value is not a valid integer throw an exception.
               throw new IllegalArgumentException("Invalid value for " + arg, e);
@@ -97,7 +90,7 @@ final class JavaRuntimeParams {
         case "--clone_max_outstanding_api_rpcs" -> {
           if (value != null) {
             try {
-              params.maxOutstandingApiRpcs = Integer.parseInt(value);
+              maxOutstandingApiRpcs = Integer.parseInt(value);
             } catch (NumberFormatException e) {
               // If the value is not a valid integer throw an exception.
               throw new IllegalArgumentException("Invalid value for " + arg, e);
@@ -106,36 +99,10 @@ final class JavaRuntimeParams {
             throw new IllegalArgumentException("Missing value for " + arg);
           }
         }
-        default -> params.unknownParams.add(arg);
+        default -> unknownParams.add(arg);
       }
     }
-    return params;
-  }
-
-  /** Specification used for connecting back to the appserver. */
-  String getTrustedHost() {
-    return trustedHost;
-  }
-
-  /** Jetty HTTP Port number to use for http access to the runtime. */
-  int getJettyHttpPort() {
-    return jettyHttpPort;
-  }
-
-  /** Maximum number of outstanding API RPCs. */
-  int getMaxOutstandingApiRpcs() {
-    return maxOutstandingApiRpcs;
-  }
-
-  /**
-   * Fixed path to use for the application root directory, irrespective of the application id and
-   * version. Ignored if empty.
-   */
-  String getFixedApplicationPath() {
-    return fixedApplicationPath;
-  }
-
-  List<String> getUnknownParams() {
-    return unknownParams;
+    return new JavaRuntimeParams(
+        trustedHost, fixedApplicationPath, jettyHttpPort, maxOutstandingApiRpcs, unknownParams);
   }
 }

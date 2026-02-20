@@ -18,7 +18,7 @@ package com.google.apphosting.base;
 
 import com.google.apphosting.base.protos.AppinfoPb.AppInfo;
 import com.google.apphosting.base.protos.RuntimePb.UPRequest;
-import com.google.auto.value.AutoValue;
+import javax.annotation.concurrent.Immutable;
 
 /**
  * A simple immutable data container class that identifies a single
@@ -28,8 +28,8 @@ import com.google.auto.value.AutoValue;
  * AppInfo and UPRequests.
  *
  */
-@AutoValue
-public abstract class AppVersionKey {
+@Immutable
+public record AppVersionKey(String appId, String versionId) {
   public static AppVersionKey fromAppInfo(AppInfo appInfo) {
     return of(appInfo.getAppId(), appInfo.getVersionId());
   }
@@ -39,15 +39,19 @@ public abstract class AppVersionKey {
   }
 
   public static AppVersionKey of(String appId, String versionId) {
-    return new AutoValue_AppVersionKey(appId, versionId);
+    return new AppVersionKey(appId, versionId);
   }
 
-  public abstract String getAppId();
+  public String getAppId() {
+    return appId();
+  }
 
-  public abstract String getVersionId();
+  public String getVersionId() {
+    return versionId();
+  }
 
   @Override
   public final String toString() {
-    return getAppId() + "/" + getVersionId();
+    return appId() + "/" + versionId();
   }
 }

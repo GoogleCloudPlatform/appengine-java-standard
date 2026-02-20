@@ -978,8 +978,8 @@ public final class AppEngineRuntimeTest {
     assertThat(appEnv.getUseGoogleConnectorJ()).isTrue();
 
     SessionsConfig sessionsConfig = appVersion.getSessionsConfig();
-    assertThat(sessionsConfig.isEnabled()).isFalse();
-    assertThat(sessionsConfig.isAsyncPersistence()).isFalse();
-    assertThat(sessionsConfig.getAsyncPersistenceQueueName()).isNull();
+    assertThat(sessionsConfig.enabled()).isFalse();
+    assertThat(sessionsConfig.asyncPersistence()).isFalse();
+    assertThat(sessionsConfig.asyncPersistenceQueueName()).isNull();
   }
 }

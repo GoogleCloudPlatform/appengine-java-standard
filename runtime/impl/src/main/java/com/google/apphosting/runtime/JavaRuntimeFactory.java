@@ -59,7 +59,7 @@ public class JavaRuntimeFactory {
 
   public JavaRuntime getStartedRuntime(NullSandboxPlugin sandboxPlugin, String[] args) {
     JavaRuntimeParams params = JavaRuntimeParams.parseArgs(args);
-    List<String> unknownParams = params.getUnknownParams();
+    List<String> unknownParams = params.unknownParams();
     if (!unknownParams.isEmpty()) {
       logger.atWarning().log("Unknown command line arguments: %s", unknownParams);
     }
@@ -110,7 +110,7 @@ public class JavaRuntimeFactory {
         ApiProxyImpl.builder()
             .setApiHost(
                 apiHostFactory.newAPIHost(
-                    params.getTrustedHost(), OptionalInt.of(params.getMaxOutstandingApiRpcs())))
+                    params.trustedHost(), OptionalInt.of(params.maxOutstandingApiRpcs())))
             .setDeadlineOracle(deadlineOracle)
             .setExternalDatacenterName("MARS")
             .setByteCountBeforeFlushing(BYTE_COUNT_BEFORE_FLUSHING)
@@ -125,7 +125,7 @@ public class JavaRuntimeFactory {
             .setSoftDeadlineDelay(SOFT_DEADLINE_DELAY_MS)
             .setRuntimeLogSink(Optional.of(logSink))
             .setApiProxyImpl(apiProxyImpl)
-            .setMaxOutstandingApiRpcs(params.getMaxOutstandingApiRpcs())
+            .setMaxOutstandingApiRpcs(params.maxOutstandingApiRpcs())
             .setThreadStopTerminatesClone(THREAD_STOP_TERMINATES_CLONE)
             .setCyclesPerSecond(CYCLES_PER_SECOND);
 
@@ -146,7 +146,7 @@ public class JavaRuntimeFactory {
             .setDeadlineOracle(deadlineOracle)
             .setCoordinator(coordinator)
             .setForceUrlfetchUrlStreamHandler(FORCE_URLFETCH_URL_STREAM_HANDLER)
-            .setFixedApplicationPath(params.getFixedApplicationPath());
+            .setFixedApplicationPath(params.fixedApplicationPath());
 
     JavaRuntime runtime = makeRuntime(runtimeBuilder);
 
@@ -154,8 +154,8 @@ public class JavaRuntimeFactory {
     ServletEngineAdapter.Config runtimeOptions =
         ServletEngineAdapter.Config.builder()
             .setApplicationRoot("notused")
-            .setFixedApplicationPath(params.getFixedApplicationPath())
-            .setJettyHttpAddress(HostAndPort.fromParts("0.0.0.0", params.getJettyHttpPort()))
+            .setFixedApplicationPath(params.fixedApplicationPath())
+            .setJettyHttpAddress(HostAndPort.fromParts("0.0.0.0", params.jettyHttpPort()))
             .setJettyRequestHeaderSize(JETTY_REQUEST_HEADER_SIZE)
             .setJettyResponseHeaderSize(JETTY_RESPONSE_HEADER_SIZE)
             .setEvaluationRuntimeServerInterface(runtime)

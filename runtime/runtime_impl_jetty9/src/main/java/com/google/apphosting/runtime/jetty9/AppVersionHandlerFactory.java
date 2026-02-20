@@ -189,12 +189,12 @@ public class AppVersionHandlerFactory {
 
       SessionsConfig sessionsConfig = appVersion.getSessionsConfig();
       SessionManagerHandler.Config.Builder builder = SessionManagerHandler.Config.builder();
-      if (sessionsConfig.getAsyncPersistenceQueueName() != null) {
-        builder.setAsyncPersistenceQueueName(sessionsConfig.getAsyncPersistenceQueueName());
+      if (sessionsConfig.asyncPersistenceQueueName() != null) {
+        builder.setAsyncPersistenceQueueName(sessionsConfig.asyncPersistenceQueueName());
       }
       builder
-          .setEnableSession(sessionsConfig.isEnabled())
-          .setAsyncPersistence(sessionsConfig.isAsyncPersistence())
+          .setEnableSession(sessionsConfig.enabled())
+          .setAsyncPersistence(sessionsConfig.asyncPersistence())
           .setServletContextHandler(context);
 
       SessionManagerHandler ignored = SessionManagerHandler.create(builder.build());

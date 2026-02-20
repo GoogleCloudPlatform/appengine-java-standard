@@ -170,12 +170,12 @@ public class EE10AppVersionHandlerFactory implements AppVersionHandlerFactory {
 
       SessionsConfig sessionsConfig = appVersion.getSessionsConfig();
       EE10SessionManagerHandler.Config.Builder builder = EE10SessionManagerHandler.Config.builder();
-      if (sessionsConfig.getAsyncPersistenceQueueName() != null) {
-        builder.setAsyncPersistenceQueueName(sessionsConfig.getAsyncPersistenceQueueName());
+      if (sessionsConfig.asyncPersistenceQueueName() != null) {
+        builder.setAsyncPersistenceQueueName(sessionsConfig.asyncPersistenceQueueName());
       }
       builder
-          .setEnableSession(sessionsConfig.isEnabled())
-          .setAsyncPersistence(sessionsConfig.isAsyncPersistence())
+          .setEnableSession(sessionsConfig.enabled())
+          .setAsyncPersistence(sessionsConfig.asyncPersistence())
           .setServletContextHandler(context);
       EE10SessionManagerHandler.create(builder.build());
       // Pass the AppVersion on to any of our servlets (e.g. ResourceFileServlet).

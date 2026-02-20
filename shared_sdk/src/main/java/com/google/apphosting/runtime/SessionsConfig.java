@@ -21,18 +21,14 @@ import org.jspecify.annotations.Nullable;
 /**
  * Http Sessions config options.
  *
+ * @param enabled Returns true if sessions are enabled. Otherwise, for JSPs which always use
+ *     getSessions(), we'll make a dummy session object, but not allow real operations on it.
+ * @param asyncPersistence Returns true if sessions are asynchronously written to the datastore.
+ * @param asyncPersistenceQueueName Returns the name of the queue to use for async session
+ *     persistence. If {@code null}, the default queue will be used.
  */
-public class SessionsConfig {
-  private final boolean enabled;
-  private final boolean asyncPersistence;
-  @Nullable private final String asyncPersistenceQueueName;
-
-  public SessionsConfig(
-      boolean enabled, boolean asyncPersistence, @Nullable String asyncPersistenceQueueName) {
-    this.enabled = enabled;
-    this.asyncPersistence = asyncPersistence;
-    this.asyncPersistenceQueueName = asyncPersistenceQueueName;
-  }
+public record SessionsConfig(
+    boolean enabled, boolean asyncPersistence, @Nullable String asyncPersistenceQueueName) {
 
   /**
    * Returns true if sessions are enabled.  Otherwise, for JSPs which always
@@ -40,21 +36,21 @@ public class SessionsConfig {
    * operations on it.
    */
   public boolean isEnabled() {
-    return enabled;
+    return enabled();
   }
 
   /**
    * Returns true if sessions are asynchronously written to the datastore.
    */
   public boolean isAsyncPersistence() {
-    return asyncPersistence;
+    return asyncPersistence();
   }
 
   /**
    * Returns the name of the queue to use for async session persistence.  If
    * {@code null}, the default queue will be used.
    */
-  public String getAsyncPersistenceQueueName() {
-    return asyncPersistenceQueueName;
+  public @Nullable String getAsyncPersistenceQueueName() {
+    return asyncPersistenceQueueName();
   }
 }
