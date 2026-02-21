@@ -249,8 +249,7 @@ class ModulesServiceImpl implements ModulesService {
 
       @Override
       protected Void wrap(byte[] key) throws InvalidProtocolBufferException {
-        SetNumInstancesResponse.Builder responseBuilder = SetNumInstancesResponse.newBuilder();
-        responseBuilder.mergeFrom(key);
+        SetNumInstancesResponse unused = SetNumInstancesResponse.parseFrom(key);
         return null;
       }
     };
@@ -272,8 +271,7 @@ class ModulesServiceImpl implements ModulesService {
 
       @Override
       protected Void wrap(byte[] key) throws InvalidProtocolBufferException {
-        StartModuleResponse.Builder responseBuilder = StartModuleResponse.newBuilder();
-        responseBuilder.mergeFrom(key);
+        StartModuleResponse unused = StartModuleResponse.parseFrom(key);
         return null;
       }
     };
@@ -300,8 +298,7 @@ class ModulesServiceImpl implements ModulesService {
 
       @Override
       protected Void wrap(byte[] key) throws InvalidProtocolBufferException {
-        StopModuleResponse.Builder responseBuilder = StopModuleResponse.newBuilder();
-        responseBuilder.mergeFrom(key);
+        StopModuleResponse unused = StopModuleResponse.parseFrom(key);
         return null;
       }
     };
