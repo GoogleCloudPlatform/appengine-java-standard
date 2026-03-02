@@ -17,17 +17,16 @@
 package com.google.apphosting.runtime.jetty9;
 
 import static com.google.apphosting.runtime.jetty9.JavaRuntimeViaHttpBase.allVersions;
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import org.eclipse.jetty.client.HttpClient;
-import org.eclipse.jetty.client.Result;
+import org.eclipse.jetty.client.api.Result;
 import org.eclipse.jetty.http.HttpStatus;
-import org.eclipse.jetty.util.BufferUtil;
+import org.eclipse.jetty.util.Utf8StringBuilder;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -85,22 +84,17 @@ public class ServletContextListenerTest extends JavaRuntimeViaHttpBase {
   public void testServletContextListener() throws Exception {
     String url = runtime.jettyUrl("/");
     CompletableFuture<Result> completionListener = new CompletableFuture<>();
-    StringBuilder contentReceived = new StringBuilder();
+    Utf8StringBuilder contentReceived = new Utf8StringBuilder();
     httpClient
         .newRequest(url)
         .onResponseContentAsync(
-            (response, chunk, callback) -> {
-              // 1. Process the chunk (get the ByteBuffer)
-              // chunk.getByteBuffer() gives you the data
-              contentReceived.append(BufferUtil.toString(chunk.getByteBuffer(), UTF_8));
-
-              // 2. Signal that you have consumed this chunk and are ready for the next
-              // In Jetty 12, 'callback' is a java.lang.Runnable
-              callback.run();
+            (response, content, callback) -> {
+              contentReceived.append(content);
+              callback.succeeded();
             })
         .send(completionListener::complete);
 
-    Result result = completionListener.get(5, SECONDS);
+    Result result = completionListener.get(5, TimeUnit.SECONDS);
     assertThat(result.getResponse().getStatus(), equalTo(HttpStatus.OK_200));
     assertThat(contentReceived.toString(), equalTo("ServletContextListenerAttribute: true"));
   }

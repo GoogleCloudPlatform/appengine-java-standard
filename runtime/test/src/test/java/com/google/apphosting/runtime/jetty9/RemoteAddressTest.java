@@ -22,9 +22,8 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.util.List;
-import org.eclipse.jetty.client.ContentResponse;
 import org.eclipse.jetty.client.HttpClient;
-import org.eclipse.jetty.client.Request;
+import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpStatus;
 import org.eclipse.jetty.http.HttpVersion;
@@ -82,11 +81,8 @@ public class RemoteAddressTest extends JavaRuntimeViaHttpBase {
     ContentResponse response =
         httpClient
             .newRequest(url)
-            .headers(
-                headers ->
-                    headers
-                        .put(HttpHeader.HOST, "foobar:1234")
-                        .put("X-AppEngine-User-IP", "203.0.113.1"))
+            .header("Host", "foobar:1234")
+            .header("X-AppEngine-User-IP", "203.0.113.1")
             .send();
 
     assertThat(response.getStatus(), equalTo(HttpStatus.OK_200));
@@ -107,10 +103,8 @@ public class RemoteAddressTest extends JavaRuntimeViaHttpBase {
     ContentResponse response =
         httpClient
             .newRequest(url)
-            .headers(
-                h ->
-                    h.put(HttpHeader.HOST, "[2001:db8:85a3:8d3:1319:8a2e:370:7348]:1234")
-                        .put("X-AppEngine-User-IP", "203.0.113.1"))
+            .header("Host", "[2001:db8:85a3:8d3:1319:8a2e:370:7348]:1234")
+            .header("X-AppEngine-User-IP", "203.0.113.1")
             .send();
     assertThat(response.getStatus(), equalTo(HttpStatus.OK_200));
     String contentReceived = response.getContentAsString();
@@ -128,10 +122,8 @@ public class RemoteAddressTest extends JavaRuntimeViaHttpBase {
     response =
         httpClient
             .newRequest(url)
-            .headers(
-                h ->
-                    h.put(HttpHeader.HOST, "203.0.113.1:1234")
-                        .put("X-AppEngine-User-IP", "2001:db8:85a3:8d3:1319:8a2e:370:7348"))
+            .header("Host", "203.0.113.1:1234")
+            .header("X-AppEngine-User-IP", "2001:db8:85a3:8d3:1319:8a2e:370:7348")
             .send();
     assertThat(response.getStatus(), equalTo(HttpStatus.OK_200));
     contentReceived = response.getContentAsString();
@@ -158,16 +150,13 @@ public class RemoteAddressTest extends JavaRuntimeViaHttpBase {
 
   @Test
   public void testWithoutHostHeader() throws Exception {
-    Request request =
+    ContentResponse response =
         httpClient
             .newRequest(url)
             .version(HttpVersion.HTTP_1_0)
-            .headers(
-                h ->
-                    h.put("X-AppEngine-User-IP", "203.0.113.1")
-                        .remove(HttpHeader.HOST) // Cleaner way to handle the null/removal intent
-                );
-    ContentResponse response = request.send();
+            .header("X-AppEngine-User-IP", "203.0.113.1")
+            .onRequestHeaders(request -> request.getHeaders().remove("Host"))
+            .send();
 
     assertThat(response.getStatus(), equalTo(HttpStatus.OK_200));
     String contentReceived = response.getContentAsString();
@@ -186,15 +175,13 @@ public class RemoteAddressTest extends JavaRuntimeViaHttpBase {
     ContentResponse response =
         httpClient
             .newRequest(url)
-            .headers(
-                h ->
-                    h.put(HttpHeader.HOST, "foobar:1234")
-                        .put("X-AppEngine-User-IP", "203.0.113.1")
-                        .put(HttpHeader.X_FORWARDED_FOR, "test1:2221")
-                        .put(HttpHeader.X_FORWARDED_PROTO, "test2:2222")
-                        .put(HttpHeader.X_FORWARDED_HOST, "test3:2223")
-                        .put(HttpHeader.X_FORWARDED_PORT, "test4:2224")
-                        .put(HttpHeader.FORWARDED, "test5:2225"))
+            .header("Host", "foobar:1234")
+            .header("X-AppEngine-User-IP", "203.0.113.1")
+            .header(HttpHeader.X_FORWARDED_FOR, "test1:2221")
+            .header(HttpHeader.X_FORWARDED_PROTO, "test2:2222")
+            .header(HttpHeader.X_FORWARDED_HOST, "test3:2223")
+            .header(HttpHeader.X_FORWARDED_PORT, "test4:2224")
+            .header(HttpHeader.FORWARDED, "test5:2225")
             .send();
 
     assertThat(response.getStatus(), equalTo(HttpStatus.OK_200));

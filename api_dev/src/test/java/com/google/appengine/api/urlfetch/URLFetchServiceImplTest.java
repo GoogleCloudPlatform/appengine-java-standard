@@ -58,9 +58,9 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.eclipse.jetty.ee8.servlet.ServletContextHandler;
-import org.eclipse.jetty.ee8.servlet.ServletHolder;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.servlet.ServletHandler;
+import org.eclipse.jetty.servlet.ServletHolder;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -1040,7 +1040,7 @@ public class URLFetchServiceImplTest {
 
     int port = PortPicker.create().pickUnusedPort();
     Server server = new Server(port);
-    ServletContextHandler handler = new ServletContextHandler();
+    ServletHandler handler = new ServletHandler();
     server.setHandler(handler);
 
     HttpServlet setCookieServlet = new HttpServlet() {
@@ -1052,7 +1052,7 @@ public class URLFetchServiceImplTest {
         resp.setStatus(200);
       }
     };
-    handler.addServlet(new ServletHolder(setCookieServlet), "/setcookie");
+    handler.addServletWithMapping(new ServletHolder(setCookieServlet), "/setcookie");
 
     HttpServlet getCookieServlet = new HttpServlet() {
       @Override
@@ -1067,7 +1067,7 @@ public class URLFetchServiceImplTest {
         resp.setHeader("Content-Type", "text/txt");
       }
     };
-    handler.addServlet(new ServletHolder(getCookieServlet), "/getcookie");
+    handler.addServletWithMapping(new ServletHolder(getCookieServlet), "/getcookie");
     server.start();
 
     try {

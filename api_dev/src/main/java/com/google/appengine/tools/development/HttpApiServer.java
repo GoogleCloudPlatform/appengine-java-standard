@@ -16,14 +16,16 @@
 
 package com.google.appengine.tools.development;
 
-import com.google.common.base.VerifyException;
 import com.google.common.flogger.GoogleLogger;
 import java.io.Closeable;
 import java.io.IOException;
-import org.eclipse.jetty.ee8.servlet.ErrorPageErrorHandler;
-import org.eclipse.jetty.ee8.servlet.ServletContextHandler;
-import org.eclipse.jetty.ee8.servlet.ServletHolder;
+import java.io.UncheckedIOException;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.handler.HandlerList;
+import org.eclipse.jetty.server.handler.ShutdownHandler;
+import org.eclipse.jetty.servlet.ErrorPageErrorHandler;
+import org.eclipse.jetty.servlet.ServletHandler;
+import org.eclipse.jetty.servlet.ServletHolder;
 
 /**
  * Google App Engine API HTTP server, using the SDK API stubs for local testing of API calls.
@@ -44,6 +46,7 @@ public class HttpApiServer implements Closeable {
       "Incorrect --runtime_server_port or --runtime_server_host value";
   private static final String REQUEST_ENDPOINT = "/rpc_http";
   private final Server server;
+  private final ShutdownHandler shutdownHandler;
 
   /**
    * Simple command line interface to start an API server locally.
@@ -86,17 +89,23 @@ public class HttpApiServer implements Closeable {
    */
   public HttpApiServer(int apiServerPort, String appEngineServerHost, int appEngineServerPort) {
     server = new Server(apiServerPort);
-    ServletContextHandler context = new ServletContextHandler();
-    context.setContextPath("/");
-    ServletHolder servletHolder = new ServletHolder(ApiServlet.class);
+
+    HandlerList handlers = new HandlerList();
+    ServletHandler handler = new ServletHandler();
+    ServletHolder servletHolder = handler.addServletWithMapping(ApiServlet.class, REQUEST_ENDPOINT);
     servletHolder.setInitParameter("java_runtime_port", Integer.toString(appEngineServerPort));
     servletHolder.setInitParameter("java_runtime_host", appEngineServerHost);
-    context.addServlet(servletHolder, REQUEST_ENDPOINT);
+
     ErrorPageErrorHandler error = new ErrorPageErrorHandler();
     // Make debugging of config issues easy.
     error.setShowStacks(true);
-    context.setErrorHandler(error);
-    server.setHandler(context);
+    error.setServer(server);
+    server.addBean(error);
+    server.setHandler(handler);
+    handlers.addHandler(handler);
+    shutdownHandler = new ShutdownHandler("stop", false, true);
+    handlers.addHandler(shutdownHandler);
+    server.setHandler(handlers);
   }
 
   /**
@@ -119,9 +128,9 @@ public class HttpApiServer implements Closeable {
   @Override
   public void close() {
     try {
-      server.stop();
-    } catch (Exception e) {
-      throw new VerifyException(e);
+      shutdownHandler.sendShutdown();
+    } catch (IOException e) {
+      throw new UncheckedIOException(e);
     }
   }
 

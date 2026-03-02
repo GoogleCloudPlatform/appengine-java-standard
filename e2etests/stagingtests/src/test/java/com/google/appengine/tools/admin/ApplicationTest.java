@@ -1692,8 +1692,7 @@ public class ApplicationTest {
     assertThat(Application.guessContentTypeFromName("foo.class")).isEqualTo("application/java-vm");
     assertThat(Application.guessContentTypeFromName("foo.css")).isEqualTo("text/css");
     assertThat(Application.guessContentTypeFromName("foo.gif")).isEqualTo("image/gif");
-    assertThat(Application.guessContentTypeFromName("foo.ico"))
-        .isIn(Arrays.asList("image/vnd.microsoft.icon", "image/x-icon"));
+    assertThat(Application.guessContentTypeFromName("foo.ico")).isEqualTo("image/x-icon");
     assertThat(Application.guessContentTypeFromName("foo.java")).isEqualTo("text/plain");
     assertThat(Application.guessContentTypeFromName("foo.jar"))
         .isEqualTo("application/java-archive");
