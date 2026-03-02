@@ -303,7 +303,7 @@
                   <include>org.apache.ant:ant</include>
                   <include>org.apache.httpcomponents:httpclient</include>
                   <include>org.apache.httpcomponents:httpcore:*</include>
-                  <!-- Jetty here for mimetype only, can be either 9 or 12.-->
+                  <!-- Jetty here for mimetype only, can be 12.1.x -->
                   <include>org.eclipse.jetty:jetty-http</include>
                   <include>org.eclipse.jetty:jetty-util</include>
                   <include>org.slf4j:slf4j-api</include>

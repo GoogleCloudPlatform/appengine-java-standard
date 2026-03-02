@@ -43,14 +43,25 @@
       <artifactId>appengine-api-stubs</artifactId>
     </dependency>
     <dependency>
-       <groupId>org.eclipse.jetty</groupId>
-       <artifactId>jetty-server</artifactId>
-      <version>${jetty.version}</version>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-server</artifactId>
+      <version>${jetty121.version}</version>
     </dependency>
-     <dependency>
-        <groupId>org.eclipse.jetty</groupId>
-        <artifactId>jetty-servlet</artifactId>
-        <version>${jetty.version}</version>
+    <dependency>
+      <groupId>org.eclipse.jetty.ee8</groupId>
+      <artifactId>jetty-ee8-servlet</artifactId>
+      <version>${jetty121.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-util</artifactId>
+      <version>${jetty121.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-client</artifactId>
+      <version>${jetty121.version}</version>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>com.google.appengine</groupId>
@@ -79,8 +90,8 @@
       <scope>runtime</scope>
     </dependency>
     <dependency>
-       <groupId>javax.activation</groupId>
-       <artifactId>activation</artifactId>
+      <groupId>javax.activation</groupId>
+      <artifactId>activation</artifactId>
     </dependency>
     <dependency>
       <groupId>com.google.flogger</groupId>
@@ -113,22 +124,16 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.eclipse.jetty</groupId>
-      <artifactId>jetty-client</artifactId>
-      <version>${jetty.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
       <groupId>org.awaitility</groupId>
       <artifactId>awaitility</artifactId>
       <version>4.3.0</version>
       <scope>test</scope>
     </dependency>
-     <dependency>
+    <dependency>
       <groupId>com.google.appengine</groupId>
       <artifactId>appengine-tools-sdk</artifactId>
       <scope>test</scope>
-     </dependency>
+    </dependency>
   </dependencies>
 
   <build>

@@ -17,6 +17,8 @@
 package com.google.apphosting.runtime.jetty9;
 
 import static com.google.apphosting.runtime.jetty9.JavaRuntimeViaHttpBase.allVersions;
+import static com.google.common.base.StandardSystemProperty.OS_NAME;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.not;
@@ -26,20 +28,21 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
+import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 import org.eclipse.jetty.client.HttpClient;
-import org.eclipse.jetty.client.api.ContentProvider;
-import org.eclipse.jetty.client.api.Result;
-import org.eclipse.jetty.client.util.InputStreamContentProvider;
+import org.eclipse.jetty.client.InputStreamRequestContent;
+import org.eclipse.jetty.client.Request;
+import org.eclipse.jetty.client.Result;
 import org.eclipse.jetty.http.HttpFields;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpStatus;
-import org.eclipse.jetty.util.Utf8StringBuilder;
+import org.eclipse.jetty.util.BufferUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -63,8 +66,6 @@ public class GzipHandlerTest extends JavaRuntimeViaHttpBase {
   public GzipHandlerTest(
       String runtimeVersion, String jettyVersion, String jakartaVersion, boolean useHttpConnector) {
     super(runtimeVersion, jettyVersion, jakartaVersion, useHttpConnector);
-    // this.httpMode = httpMode;
-    // System.setProperty("appengine.use.HttpConnector", Boolean.toString(httpMode));
   }
 
   @Before
@@ -83,7 +84,9 @@ public class GzipHandlerTest extends JavaRuntimeViaHttpBase {
   @After
   public void after() throws Exception {
     httpClient.stop();
-    runtime.close();
+    if (runtime != null) {
+      runtime.close();
+    }
   }
 
   @Test
@@ -93,44 +96,66 @@ public class GzipHandlerTest extends JavaRuntimeViaHttpBase {
     CompletableFuture<Result> completionListener = new CompletableFuture<>();
     byte[] data = new byte[contentLength];
     Arrays.fill(data, (byte) 'X');
-    Utf8StringBuilder received = new Utf8StringBuilder();
-    ContentProvider content = new InputStreamContentProvider(gzip(data));
 
+    // In Jetty 12, use InputStreamRequestContent
+    Request.Content content = new InputStreamRequestContent(gzip(data));
+    
+    // Clear factories so the client receives raw compressed bytes for manual verification
+    httpClient.getContentDecoderFactories().clear();
+
+    ByteArrayOutputStream receivedBytes = new ByteArrayOutputStream();
     String url = runtime.jettyUrl("/");
+    
     httpClient
         .newRequest(url)
-        .content(content)
+        .body(content)
         .onResponseContentAsync(
-            (response, content1, callback) -> {
-              received.append(content1);
-              callback.succeeded();
+            (response, chunk, callback) -> {
+              try {
+                // BufferUtil.writeTo is the efficient way to drain the chunk's ByteBuffer
+                BufferUtil.writeTo(chunk.getByteBuffer(), receivedBytes);
+                callback.run();
+              } catch (IOException e) {
+                // If writing fails, we still need to run the callback to avoid hanging the client
+                callback.run();
+                completionListener.completeExceptionally(e);
+              }
             })
-        .header(HttpHeader.CONTENT_ENCODING, "gzip")
+        .headers(headers -> {
+            // Tell the server we are sending gzip
+            headers.put(HttpHeader.CONTENT_ENCODING, "gzip");
+            // Tell the server we want gzip back (Crucial for Jetty 12 tests)
+            headers.put(HttpHeader.ACCEPT_ENCODING, "gzip");
+        })
         .send(completionListener::complete);
 
     // The request was successfully decoded by the GzipHandler.
-    Result response = completionListener.get(5, TimeUnit.SECONDS);
-    assertThat(response.getResponse().getStatus(), equalTo(HttpStatus.OK_200));
-    String contentReceived = received.toString();
-    if (!System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("windows")) {
-      // Linux
-      assertThat(contentReceived, containsString("\nX-Content-Encoding: gzip\n"));
-      assertThat(contentReceived, not(containsString("\nContent-Encoding: gzip\n")));
-      assertThat(contentReceived, containsString("\nAccept-Encoding: gzip\n"));
-    } else { // Windows
-      assertThat(contentReceived, containsString("\r\nX-Content-Encoding: gzip\r\n"));
-      assertThat(contentReceived, not(containsString("\r\nContent-Encoding: gzip\r\n")));
-      assertThat(contentReceived, containsString("\r\nAccept-Encoding: gzip\r\n"));
-    }
+    Result result = completionListener.get(5, SECONDS);
+    assertThat(result.getResponse().getStatus(), equalTo(HttpStatus.OK_200));
 
-    // Server correctly echoed content of request.
-    String expectedData = new String(data);
+    // Verify response was gzip encoded
+    HttpFields responseHeaders = result.getResponse().getHeaders();
+    assertThat(responseHeaders.get(HttpHeader.CONTENT_ENCODING), equalTo("gzip"));
+
+    // Manually decompress the received bytes
+    String contentReceived;
+    try (InputStream in =
+        new GZIPInputStream(new ByteArrayInputStream(receivedBytes.toByteArray()))) {
+      contentReceived = new String(in.readAllBytes(), StandardCharsets.UTF_8);
+    }
+    
+    boolean isWindows = OS_NAME.value().toLowerCase(Locale.ROOT).contains("windows");
+    String nl = isWindows ? "\r\n" : "\n";
+
+    // Verify headers that were echoed back in the response body by the test app
+    assertThat(contentReceived, containsString(nl + "X-Content-Encoding: gzip" + nl));
+    assertThat(contentReceived, not(containsString(nl + "Content-Encoding: gzip" + nl)));
+    assertThat(contentReceived, containsString(nl + "Accept-Encoding: gzip" + nl));
+
+    // Verify the actual payload data integrity
+    String expectedData = new String(data, StandardCharsets.UTF_8);
     String actualData = contentReceived.substring(contentReceived.length() - contentLength);
     assertThat(actualData, equalTo(expectedData));
-
-    // Response was gzip encoded.
-    HttpFields responseHeaders = response.getResponse().getHeaders();
-    assertThat(responseHeaders.get(HttpHeader.CONTENT_ENCODING), equalTo("gzip"));
   }
 
   private RuntimeContext<?> runtimeContext() throws Exception {

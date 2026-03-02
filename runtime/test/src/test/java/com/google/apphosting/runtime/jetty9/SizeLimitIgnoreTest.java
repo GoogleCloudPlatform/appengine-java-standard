@@ -26,9 +26,9 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
+import org.eclipse.jetty.client.ContentResponse;
 import org.eclipse.jetty.client.HttpClient;
-import org.eclipse.jetty.client.api.ContentResponse;
-import org.eclipse.jetty.client.api.Result;
+import org.eclipse.jetty.client.Result;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.After;
@@ -89,11 +89,13 @@ public class SizeLimitIgnoreTest extends JavaRuntimeViaHttpBase {
     httpClient
         .newRequest(url)
         .onResponseContentAsync(
-            (response, content, callback) -> {
-              contentReceived.addAndGet(content.remaining());
-              callback.succeeded();
+            (response, chunk, callback) -> {
+              // In Jetty 12, use chunk.getByteBuffer() to access data
+              contentReceived.addAndGet(chunk.getByteBuffer().remaining());
+              // Use run() instead of succeeded()
+              callback.run();
             })
-        .header("setCustomHeader", "true")
+        .headers(h -> h.put("setCustomHeader", "true"))
         .send(completionListener::complete);
 
     Result result = completionListener.get(5, TimeUnit.SECONDS);
@@ -112,11 +114,11 @@ public class SizeLimitIgnoreTest extends JavaRuntimeViaHttpBase {
     httpClient
         .newRequest(url)
         .onResponseContentAsync(
-            (response, content, callback) -> {
-              contentReceived.addAndGet(content.remaining());
-              callback.succeeded();
+            (response, chunk, callback) -> {
+              contentReceived.addAndGet(chunk.getByteBuffer().remaining());
+              callback.run();
             })
-        .header(HttpHeader.ACCEPT_ENCODING, "gzip")
+        .headers(h -> h.put(HttpHeader.ACCEPT_ENCODING, "gzip"))
         .send(completionListener::complete);
 
     Result result = completionListener.get(5, TimeUnit.SECONDS);
