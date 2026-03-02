@@ -380,12 +380,19 @@ For example, if your application code needs more `-add-opens` flags, you can use
 
 | Flag(s) Set in `appengine-web.xml` or System Properties | Resulting Jetty | Support | Resulting EE Version | Notes |
 | :--- | :--- | :--- | :--- | :--- |
-| _None (default)_ | 9.4 | GA | 6 | |
+| _None (default)_* | 9.4 | GA | 6 | |
 | `appengine.use.EE8=true` | 12.0 | GA | 8 | |
 | `appengine.use.EE10=true` | 12.0 | GA | 10 | |
 | `appengine.use.EE8=true`, `appengine.use.jetty121=true` | 12.1 | Early Access | 8 | |
 | `appengine.use.EE10=true`, `appengine.use.jetty121=true` | 12.1 | Early Access | 11 | **Upgraded**: EE10 is upgraded to EE11 on Jetty 12.1 |
 | `appengine.use.EE11=true` | 12.1 | Early Access | 11 | `appengine.use.jetty121=true` is used automatically |
+
+**Note:** * We are gradually rolling out an update that switches Java 17
+applications from Jetty 9.4 to Jetty 12.0 with EE8.
+If your application has been updated, you will see the following message
+in your logs:
+
+`AppEngine runtime configuration: runtimeId=java17, with Jetty 12, with HTTP Connector, appengine.use.EE8=true`.
 
 ##
 
