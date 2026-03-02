@@ -102,7 +102,7 @@ public class GAEInfoServlet extends HttpServlet {
     if (cookies != null && cookies.length != 0) {
       c = "";
       for (Cookie co : cookies) {
-        c += tr(td(co.getName()) + td(co.getValue()) + td(co.getComment())
+        c += tr(td(co.getName()) + td(co.getValue())
             + td(co.getPath()) + td(Integer.toString(co.getMaxAge())));
       }
       table(p, "Cookies", c);

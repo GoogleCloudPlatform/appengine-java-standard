@@ -26,8 +26,6 @@
   <groupId>com.google.appengine.setup.testapps</groupId>
   <artifactId>jetty12_testapp</artifactId>
   <properties>
-    <jetty.version>12.0.31</jetty.version>
-    <jetty121.version>12.1.5</jetty121.version>
     <aspectj.version>1.9.25.1</aspectj.version>
   </properties>
   <dependencies>
@@ -39,45 +37,40 @@
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-server</artifactId>
-      <version>${jetty.version}</version>
+      <version>${jetty121.version}</version>
     </dependency>
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-util</artifactId>
-      <version>${jetty.version}</version>
+      <version>${jetty121.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.eclipse.jetty.ee10</groupId>
-      <artifactId>jetty-ee10-servlet</artifactId>
-      <version>${jetty.version}</version>
+      <groupId>org.eclipse.jetty.ee11</groupId>
+      <artifactId>jetty-ee11-servlet</artifactId>
+      <version>${jetty121.version}</version>
     </dependency>
     <dependency>
       <groupId>jakarta.servlet</groupId>
       <artifactId>jakarta.servlet-api</artifactId>
-      <version>6.0.0</version>
       <scope>provided</scope>
     </dependency>
-
     <dependency>
       <groupId>com.jcabi</groupId>
       <artifactId>jcabi-aspects</artifactId>
       <version>0.26.0</version>
     </dependency>
-
     <dependency>
       <groupId>org.aspectj</groupId>
       <artifactId>aspectjrt</artifactId>
       <version>${aspectj.version}</version>
       <scope>runtime</scope>
     </dependency>
-
   </dependencies>
   <build>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-assembly-plugin</artifactId>
-        <version>3.8.0</version>
         <configuration>
           <descriptorRefs>
             <descriptorRef>jar-with-dependencies</descriptorRef>
@@ -98,11 +91,9 @@
           </execution>
         </executions>
       </plugin>
-
       <plugin>
         <groupId>com.google.cloud.tools</groupId>
         <artifactId>appengine-maven-plugin</artifactId>
-        <version>2.8.6</version>
         <configuration>
           <projectId>srirammahavadi-dev</projectId>
           <version>GCLOUD_CONFIG</version>
@@ -110,7 +101,6 @@
           <artifact>${project.build.directory}/jetty11_testapp-5.0.1-SNAPSHOT-jar-with-dependencies.jar</artifact>
         </configuration>
       </plugin>
-
       <plugin>
         <groupId>com.jcabi</groupId>
         <artifactId>jcabi-maven-plugin</artifactId>
@@ -135,7 +125,6 @@
           </dependency>
         </dependencies>
       </plugin>
-
     </plugins>
   </build>
 </project>
