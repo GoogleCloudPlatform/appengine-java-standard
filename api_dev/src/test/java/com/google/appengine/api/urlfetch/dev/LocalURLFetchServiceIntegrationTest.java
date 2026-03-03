@@ -41,8 +41,8 @@ import com.google.common.base.Ascii;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.io.CharStreams;
 import com.google.common.flogger.GoogleLogger;
+import com.google.common.io.CharStreams;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -60,9 +60,9 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.eclipse.jetty.ee8.servlet.ServletContextHandler;
+import org.eclipse.jetty.ee8.servlet.ServletHolder;
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.servlet.ServletHandler;
-import org.eclipse.jetty.servlet.ServletHolder;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -88,7 +88,7 @@ public class LocalURLFetchServiceIntegrationTest {
 
   private URLFetchService fetchService;
   private Server server;
-  private ServletHandler servletHandler;
+  private ServletContextHandler servletHandler;
   private int port;
 
   @Before
@@ -100,7 +100,7 @@ public class LocalURLFetchServiceIntegrationTest {
     fetchService = URLFetchServiceFactory.getURLFetchService();
     port = portPicker.pickUnusedPort();
     server = new Server(port);
-    servletHandler = new ServletHandler();
+    servletHandler = new ServletContextHandler();
     server.setHandler(servletHandler);
   }
 
@@ -768,7 +768,7 @@ public class LocalURLFetchServiceIntegrationTest {
   }
 
   private void addServlet(String servletPath, HttpServlet servlet) {
-    servletHandler.addServletWithMapping(new ServletHolder(servlet), servletPath);
+    servletHandler.addServlet(new ServletHolder(servlet), servletPath);
   }
 
   private static final class TestServlet extends HttpServlet {

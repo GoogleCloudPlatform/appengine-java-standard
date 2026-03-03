@@ -24,8 +24,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import com.google.common.flogger.GoogleLogger;
 import java.util.List;
 import java.util.Objects;
+import org.eclipse.jetty.client.ContentResponse;
 import org.eclipse.jetty.client.HttpClient;
-import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.http.HttpStatus;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.junit.After;
@@ -71,8 +71,9 @@ public class TransportGuaranteeTest extends JavaRuntimeViaHttpBase {
     }
     copyAppToDir(app, temp.getRoot().toPath());
 
-    SslContextFactory ssl = new SslContextFactory.Client(true);
-    httpClient = new HttpClient(ssl);
+    SslContextFactory.Client ssl = new SslContextFactory.Client(true);
+    httpClient = new HttpClient();
+    httpClient.setSslContextFactory(ssl);
     httpClient.start();
     runtime = runtimeContext();
     logger.atInfo().log(
@@ -95,7 +96,11 @@ public class TransportGuaranteeTest extends JavaRuntimeViaHttpBase {
     String url = runtime.jettyUrl("/");
     assertThat(url, startsWith("http://"));
 
-    ContentResponse response = httpClient.newRequest(url).header("x-appengine-https", "on").send();
+    ContentResponse response =
+        httpClient
+            .newRequest(url)
+            .headers(headers -> headers.add("x-appengine-https", "on"))
+            .send();
     assertThat(response.getStatus(), equalTo(HttpStatus.OK_200));
     String expectedUrl = url.replace("http://", "https://");
     assertThat(response.getContentAsString(), containsString("requestURL=" + expectedUrl));

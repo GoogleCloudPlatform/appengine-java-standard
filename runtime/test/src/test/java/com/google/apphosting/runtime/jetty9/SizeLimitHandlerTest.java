@@ -29,6 +29,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.List;
@@ -38,17 +39,16 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.zip.GZIPOutputStream;
+import org.eclipse.jetty.client.BytesRequestContent;
+import org.eclipse.jetty.client.ContentResponse;
 import org.eclipse.jetty.client.HttpClient;
-import org.eclipse.jetty.client.api.ContentProvider;
-import org.eclipse.jetty.client.api.ContentResponse;
-import org.eclipse.jetty.client.api.Response;
-import org.eclipse.jetty.client.api.Result;
-import org.eclipse.jetty.client.util.ByteBufferContentProvider;
-import org.eclipse.jetty.client.util.DeferredContentProvider;
-import org.eclipse.jetty.client.util.InputStreamContentProvider;
+import org.eclipse.jetty.client.InputStreamRequestContent;
+import org.eclipse.jetty.client.OutputStreamRequestContent;
+import org.eclipse.jetty.client.Request;
+import org.eclipse.jetty.client.Response;
+import org.eclipse.jetty.client.Result;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpStatus;
-import org.eclipse.jetty.util.BufferUtil;
 import org.eclipse.jetty.util.Utf8StringBuilder;
 import org.junit.After;
 import org.junit.Before;
@@ -107,11 +107,11 @@ public class SizeLimitHandlerTest extends JavaRuntimeViaHttpBase {
     httpClient
         .newRequest(url)
         .onResponseContentAsync(
-            (response, content, callback) -> {
-              contentReceived.addAndGet(content.remaining());
-              callback.succeeded();
+            (response, chunk, callback) -> {
+              contentReceived.addAndGet(chunk.getByteBuffer().remaining());
+              callback.run();
             })
-        .header("setCustomHeader", "true")
+        .headers(h -> h.put("setCustomHeader", "true"))
         .send(completionListener::complete);
 
     Result result = completionListener.get(5, TimeUnit.SECONDS);
@@ -130,17 +130,15 @@ public class SizeLimitHandlerTest extends JavaRuntimeViaHttpBase {
     httpClient
         .newRequest(url)
         .onResponseContentAsync(
-            (r, c, cb) -> {
-              received.append(c);
-              cb.succeeded();
+            (r, chunk, cb) -> {
+              received.append(chunk.getByteBuffer());
+              cb.run();
             })
         .send(completionListener::complete);
 
     Result result = completionListener.get(5, TimeUnit.MINUTES);
 
     if (useHttpConnector) {
-      // In this mode the response will already be committed with a 200 status code then aborted
-      // when it exceeds limit.
       assertNull(result.getRequestFailure());
       assertNotNull(result.getResponseFailure());
     } else {
@@ -148,7 +146,6 @@ public class SizeLimitHandlerTest extends JavaRuntimeViaHttpBase {
     }
     assertThat(received.length(), lessThanOrEqualTo(MAX_SIZE));
 
-    // No content is sent on the Jetty 9.4 runtime.
     if (!Objects.equals(jettyVersion, "9.4") && !useHttpConnector) {
       assertThat(received.toString(), containsString("Response body is too large"));
     }
@@ -164,11 +161,11 @@ public class SizeLimitHandlerTest extends JavaRuntimeViaHttpBase {
     httpClient
         .newRequest(url)
         .onResponseContentAsync(
-            (response, content, callback) -> {
-              contentReceived.addAndGet(content.remaining());
-              callback.succeeded();
+            (response, chunk, callback) -> {
+              contentReceived.addAndGet(chunk.getByteBuffer().remaining());
+              callback.run();
             })
-        .header(HttpHeader.ACCEPT_ENCODING, "gzip")
+        .headers(h -> h.put(HttpHeader.ACCEPT_ENCODING, "gzip"))
         .send(completionListener::complete);
 
     Result result = completionListener.get(5, TimeUnit.SECONDS);
@@ -188,22 +185,21 @@ public class SizeLimitHandlerTest extends JavaRuntimeViaHttpBase {
     AtomicInteger receivedCount = new AtomicInteger();
     httpClient
         .newRequest(url)
-        .header(HttpHeader.ACCEPT_ENCODING, "gzip")
+        .headers(h -> h.put(HttpHeader.ACCEPT_ENCODING, "gzip"))
         .onResponseContentAsync(
-            (r, c, cb) -> {
-              receivedCount.addAndGet(c.remaining());
+            (r, chunk, cb) -> {
+              ByteBuffer b = chunk.getByteBuffer();
+              receivedCount.addAndGet(b.remaining());
               if (!useHttpConnector) {
-                received.append(c);
+                received.append(b);
               }
-              cb.succeeded();
+              cb.run();
             })
         .send(completionListener::complete);
 
     Result result = completionListener.get(5, TimeUnit.SECONDS);
 
     if (useHttpConnector) {
-      // In this mode the response will already be committed with a 200 status code then aborted
-      // when it exceeds limit.
       assertNull(result.getRequestFailure());
       assertNotNull(result.getResponseFailure());
     } else {
@@ -211,7 +207,6 @@ public class SizeLimitHandlerTest extends JavaRuntimeViaHttpBase {
     }
     assertThat(received.length(), lessThanOrEqualTo(MAX_SIZE));
 
-    // No content is sent on the Jetty 9.4 runtime.
     if (!Objects.equals(jettyVersion, "9.4") && !useHttpConnector) {
       assertThat(received.toString(), containsString("Response body is too large"));
     }
@@ -223,9 +218,9 @@ public class SizeLimitHandlerTest extends JavaRuntimeViaHttpBase {
 
     byte[] data = new byte[contentLength];
     Arrays.fill(data, (byte) 'X');
-    ContentProvider content = new ByteBufferContentProvider(BufferUtil.toBuffer(data));
+    Request.Content content = new BytesRequestContent(data);
     String url = runtime.jettyUrl("/");
-    ContentResponse response = httpClient.newRequest(url).content(content).send();
+    ContentResponse response = httpClient.newRequest(url).body(content).send();
 
     assertThat(response.getStatus(), equalTo(HttpStatus.OK_200));
     assertThat(
@@ -240,22 +235,22 @@ public class SizeLimitHandlerTest extends JavaRuntimeViaHttpBase {
     byte[] data = new byte[contentLength];
     Arrays.fill(data, (byte) 'X');
     Utf8StringBuilder received = new Utf8StringBuilder();
-    ContentProvider content = new ByteBufferContentProvider(BufferUtil.toBuffer(data));
+    Request.Content content = new BytesRequestContent(data);
     String url = runtime.jettyUrl("/");
     httpClient
         .newRequest(url)
-        .content(content)
+        .body(content)
         .onResponseContentAsync(
-            (response, content1, callback) -> {
-              received.append(content1);
-              callback.succeeded();
+            (response, chunk, callback) -> {
+              received.append(chunk.getByteBuffer());
+              callback.run();
             })
         .send(completionListener::complete);
 
     Result result = completionListener.get(5, TimeUnit.SECONDS);
     assertThat(result.getResponse().getStatus(), equalTo(HttpStatus.PAYLOAD_TOO_LARGE_413));
 
-    // If there is no Content-Length header the SizeLimitHandler fails the response as well.
+    // If the request was not aborted, then we expect to see the error message in the response body.
     if (result.getResponseFailure() == null) {
       assertThat(received.toString(), containsString("Request body is too large"));
     }
@@ -269,18 +264,18 @@ public class SizeLimitHandlerTest extends JavaRuntimeViaHttpBase {
     byte[] data = new byte[contentLength];
     Arrays.fill(data, (byte) 'X');
     Utf8StringBuilder received = new Utf8StringBuilder();
-    ContentProvider content = new InputStreamContentProvider(gzip(data));
+    Request.Content content = new InputStreamRequestContent(gzip(data));
 
     String url = runtime.jettyUrl("/");
     httpClient
         .newRequest(url)
-        .content(content)
+        .body(content)
         .onResponseContentAsync(
-            (response, content1, callback) -> {
-              received.append(content1);
-              callback.succeeded();
+            (response, chunk, callback) -> {
+              received.append(chunk.getByteBuffer());
+              callback.run();
             })
-        .header(HttpHeader.CONTENT_ENCODING, "gzip")
+        .headers(h -> h.put(HttpHeader.CONTENT_ENCODING, "gzip"))
         .send(completionListener::complete);
 
     Result result = completionListener.get(5, TimeUnit.SECONDS);
@@ -296,24 +291,24 @@ public class SizeLimitHandlerTest extends JavaRuntimeViaHttpBase {
     byte[] data = new byte[contentLength];
     Arrays.fill(data, (byte) 'X');
     Utf8StringBuilder received = new Utf8StringBuilder();
-    ContentProvider content = new InputStreamContentProvider(gzip(data));
+    Request.Content content = new InputStreamRequestContent(gzip(data));
 
     String url = runtime.jettyUrl("/");
     httpClient
         .newRequest(url)
-        .content(content)
+        .body(content)
         .onResponseContentAsync(
-            (response, content1, callback) -> {
-              received.append(content1);
-              callback.succeeded();
+            (response, chunk, callback) -> {
+              received.append(chunk.getByteBuffer());
+              callback.run();
             })
-        .header(HttpHeader.CONTENT_ENCODING, "gzip")
+        .headers(h -> h.put(HttpHeader.CONTENT_ENCODING, "gzip"))
         .send(completionListener::complete);
 
     Result result = completionListener.get(5, TimeUnit.SECONDS);
     assertThat(result.getResponse().getStatus(), equalTo(HttpStatus.PAYLOAD_TOO_LARGE_413));
 
-    // If there is no Content-Length header the SizeLimitHandler fails the response as well.
+    // If the request was not aborted, then we expect to see the error message in the response body.
     if (result.getResponseFailure() == null) {
       assertThat(received.toString(), containsString("Request body is too large"));
     }
@@ -328,7 +323,6 @@ public class SizeLimitHandlerTest extends JavaRuntimeViaHttpBase {
 
     assertThat(response.getStatus(), equalTo(HttpStatus.INTERNAL_SERVER_ERROR_500));
 
-    // No content is sent on the Jetty 9.4 runtime when using HttpConnector.
     if (jettyVersion.equals("9.4") && useHttpConnector) {
       assertThat(response.getContentAsString(), containsString("Response body is too large"));
     }
@@ -337,28 +331,39 @@ public class SizeLimitHandlerTest extends JavaRuntimeViaHttpBase {
   @Test
   public void testRequestContentLengthHeader() throws Exception {
     CompletableFuture<Result> completionListener = new CompletableFuture<>();
-    DeferredContentProvider provider = new DeferredContentProvider(ByteBuffer.allocate(1));
+    // DeferredContentProvider is replaced by OutputStreamRequestContent in Jetty 12 for similar
+    // 'deferred' patterns
+    OutputStreamRequestContent content = new OutputStreamRequestContent();
     int contentLength = MAX_SIZE + 1;
     String url = runtime.jettyUrl("/");
     Utf8StringBuilder received = new Utf8StringBuilder();
     httpClient
         .newRequest(url)
-        .header(HttpHeader.CONTENT_LENGTH, Long.toString(contentLength))
-        .header("foo", "bar")
-        .content(provider)
+        .headers(
+            h -> {
+              h.put(HttpHeader.CONTENT_LENGTH, Long.toString(contentLength));
+              h.put("foo", "bar");
+            })
+        .body(content)
         .onResponseContentAsync(
-            (response, content, callback) -> {
-              received.append(content);
-              callback.succeeded();
-              provider.close();
+            (response, chunk, callback) -> {
+              received.append(chunk.getByteBuffer());
+              callback.run();
+              // In Jetty 12, we close the content specifically
+              content.close();
             })
         .send(completionListener::complete);
+
+    // Provide the single byte needed to start the request
+    try (OutputStream os = content.getOutputStream()) {
+      os.write(1);
+    }
 
     Result result = completionListener.get(5, TimeUnit.SECONDS);
     Response response = result.getResponse();
     assertThat(response.getStatus(), equalTo(HttpStatus.PAYLOAD_TOO_LARGE_413));
 
-    // If there is no Content-Length header the SizeLimitHandler fails the response as well.
+    // If the request was not aborted, then we expect to see the error message in the response body.
     if (result.getResponseFailure() == null) {
       assertThat(received.toString(), containsString("Request body is too large"));
     }
