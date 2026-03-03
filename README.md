@@ -414,9 +414,9 @@ in your logs:
 
 | Flag(s) Set in `appengine-web.xml` or System Properties | Resulting Jetty | Support | Resulting EE Version | Notes |
 | :--- | :--- | :--- | :--- | :--- |
-| _None (default)_ | 12.1 | Early Access | 11 | `appengine.use.jetty121=true` is used |
-| `appengine.use.EE8=true` | 12.1 | Early Access | 8 | `appengine.use.jetty121=true` is used |
-| `appengine.use.EE11=true` | 12.1 | Early Access | 11 | `appengine.use.jetty121=true` is used |
+| _None (default)_ | 12.1 | GA | 11 | `appengine.use.jetty121=true` is used |
+| `appengine.use.EE8=true` | 12.1 | GA | 8 | `appengine.use.jetty121=true` is used |
+| `appengine.use.EE11=true` | 12.1 | GA | 11 | `appengine.use.jetty121=true` is used |
 | `appengine.use.EE10=true` | **ERROR** | Unsupported | **ERROR** | EE10 is not supported, use compatible version EE11 instead|
 
 ##
