@@ -30,6 +30,7 @@ import java.util.List;
  */
 abstract class BaseCallbackContext<T> implements CallbackContext<T> {
   private final CurrentTransactionProvider currentTxnProvider;
+  private final Transaction txn;
 
   /** All elements provided to the operation that triggered the callback. */
   private final List<T> elements;
@@ -41,8 +42,10 @@ abstract class BaseCallbackContext<T> implements CallbackContext<T> {
    * @param currentTxnProvider Provides the current transaction
    * @param elements All elements involved in the operation that triggered the callback.
    */
-  BaseCallbackContext(CurrentTransactionProvider currentTxnProvider, List<T> elements) {
+  BaseCallbackContext(
+      CurrentTransactionProvider currentTxnProvider, Transaction txn, List<T> elements) {
     this.currentTxnProvider = Preconditions.checkNotNull(currentTxnProvider);
+    this.txn = txn;
     this.elements = Collections.unmodifiableList(Preconditions.checkNotNull(elements));
   }
 
@@ -53,7 +56,7 @@ abstract class BaseCallbackContext<T> implements CallbackContext<T> {
 
   @Override
   public Transaction getCurrentTransaction() {
-    return currentTxnProvider.getCurrentTransaction(null);
+    return currentTxnProvider.getCurrentTransaction(txn);
   }
 
   @Override

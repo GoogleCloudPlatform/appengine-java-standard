@@ -24,8 +24,8 @@ import java.util.List;
  */
 public final class PutContext extends BaseCallbackContext<Entity> {
 
-  PutContext(CurrentTransactionProvider currentTxnProvider, List<Entity> entities) {
-    super(currentTxnProvider, entities);
+  PutContext(CurrentTransactionProvider currentTxnProvider, Transaction txn, List<Entity> entities) {
+    super(currentTxnProvider, txn, entities);
   }
 
   @Override

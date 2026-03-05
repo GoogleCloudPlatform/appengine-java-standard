@@ -291,7 +291,8 @@ abstract class BaseQueryResultsSource<InitialResultT, NextRequestT, NextResultT>
     for (Entity entity : entityList) {
       // Since results are streamed back over time we just create one context
       // per result and execute postLoad callbacks within that context.
-      callbacks.executePostLoadCallbacks(new PostLoadContext(currentTransactionProvider, entity));
+      callbacks.executePostLoadCallbacks(
+          new PostLoadContext(currentTransactionProvider, txn, entity));
     }
     totalResults += entityList.size();
     // If the user has pulled back a large number of results without setting

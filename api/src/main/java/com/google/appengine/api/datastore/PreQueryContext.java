@@ -29,10 +29,11 @@ import org.jspecify.annotations.Nullable;
 // in as the results are streamed back.
 public final class PreQueryContext extends BaseCallbackContext<Query> {
 
-  PreQueryContext(CurrentTransactionProvider currentTransactionProvider, Query query) {
+  PreQueryContext(
+      CurrentTransactionProvider currentTransactionProvider, Transaction txn, Query query) {
     // Pass in a copy of the provided query so that hooks can mutate without
     // side effects.
-    super(currentTransactionProvider, Arrays.asList(new Query(query)));
+    super(currentTransactionProvider, txn, Arrays.asList(new Query(query)));
   }
 
   @Override

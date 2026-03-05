@@ -59,10 +59,7 @@ import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import org.mockito.stubbing.Answer;
 
-/**
- * Tests for {@link DatastoreCallbacks}.
- *
- */
+/** Tests for {@link DatastoreCallbacks}. */
 @RunWith(JUnit4.class)
 public class DatastoreCallbacksTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
@@ -233,6 +230,7 @@ public class DatastoreCallbacksTest {
       assertThat(actualContext.getClass()).isEqualTo(expectedContext.getClass());
       assertThat(actualContext.getElements())
           .containsExactlyElementsIn(expectedContext.getElements());
+
       return null;
     };
   }
@@ -259,7 +257,8 @@ public class DatastoreCallbacksTest {
     setCallbacksConfig("yar.PrePut", HAS_CALLBACKS + ":prePut");
     AsyncDatastoreService datastore = DatastoreServiceFactory.getAsyncDatastoreService();
     Future<Key> result = datastore.put(yar);
-    verify(mock, times(1)).prePut(eqContext(new PutContext(txnProvider, ImmutableList.of(yar))));
+    verify(mock, times(1))
+        .prePut(eqContext(new PutContext(txnProvider, null, ImmutableList.of(yar))));
     result.get();
     result.get();
     result = datastore.put(notYar);
@@ -275,14 +274,15 @@ public class DatastoreCallbacksTest {
     setCallbacksConfig("yar.PrePut", HAS_CALLBACKS + ":prePut");
     AsyncDatastoreService datastore = DatastoreServiceFactory.getAsyncDatastoreService();
     Transaction txn = datastore.beginTransaction().get();
-    doAnswer(checkContext(new PutContext(txnProvider, ImmutableList.of(yar))))
+    doAnswer(checkContext(new PutContext(txnProvider, txn, ImmutableList.of(yar))))
         .when(mock)
         .prePut(any());
     Future<Key> result = datastore.put(yar);
     verify(mock).prePut(any());
     verifyNoMoreInteractions(mock);
     result.get();
-    verify(mock, times(1)).prePut(eqContext(new PutContext(txnProvider, ImmutableList.of(yar))));
+    verify(mock, times(1))
+        .prePut(eqContext(new PutContext(txnProvider, txn, ImmutableList.of(yar))));
     result.get();
     result = datastore.put(yarChild);
     result.get();
@@ -299,7 +299,7 @@ public class DatastoreCallbacksTest {
     Transaction txn = datastore.beginTransaction().get();
     Future<List<Key>> result = datastore.put(ImmutableList.of(yar, yarChild));
     verify(mock, times(1))
-        .prePut(eqContext(new PutContext(txnProvider, ImmutableList.of(yar, yarChild))));
+        .prePut(eqContext(new PutContext(txnProvider, txn, ImmutableList.of(yar, yarChild))));
     result.get();
     result.get();
     txn.commit();
@@ -315,7 +315,8 @@ public class DatastoreCallbacksTest {
     Transaction txn = datastore.beginTransaction().get();
     Future<Key> result = datastore.put(yar);
     result.get();
-    verify(mock, times(1)).prePut(eqContext(new PutContext(txnProvider, ImmutableList.of(yar))));
+    verify(mock, times(1))
+        .prePut(eqContext(new PutContext(txnProvider, txn, ImmutableList.of(yar))));
     result.get();
     result = datastore.put(yarChild);
     result.get();
@@ -334,7 +335,7 @@ public class DatastoreCallbacksTest {
     Future<List<Key>> result = datastore.put(ImmutableList.of(yar, yarChild));
     result.get();
     verify(mock, times(1))
-        .prePut(eqContext(new PutContext(txnProvider, ImmutableList.of(yar, yarChild))));
+        .prePut(eqContext(new PutContext(txnProvider, txn, ImmutableList.of(yar, yarChild))));
     result.get();
     txn.rollback();
     // make sure the data was not actually written
@@ -347,7 +348,7 @@ public class DatastoreCallbacksTest {
     setCallbacksConfig("yar.PrePut", HAS_CALLBACKS + ":explosivePrePut");
     doThrow(new RuntimeException("boom"))
         .when(mock)
-        .explosivePrePut(eqContext(new PutContext(txnProvider, ImmutableList.of(yar))));
+        .explosivePrePut(eqContext(new PutContext(txnProvider, null, ImmutableList.of(yar))));
     AsyncDatastoreService datastore = DatastoreServiceFactory.getAsyncDatastoreService();
     RuntimeException e = assertThrows(RuntimeException.class, () -> datastore.put(yar));
     assertThat(e).hasMessageThat().isEqualTo("boom");
@@ -362,11 +363,11 @@ public class DatastoreCallbacksTest {
   @Test
   public void testPrePut_FailureInCallback_Txn() throws Exception {
     setCallbacksConfig("yar.PrePut", HAS_CALLBACKS + ":explosivePrePut");
-    doThrow(new RuntimeException("boom"))
-        .when(mock)
-        .explosivePrePut(eqContext(new PutContext(txnProvider, ImmutableList.of(yar))));
     AsyncDatastoreService datastore = DatastoreServiceFactory.getAsyncDatastoreService();
     Transaction txn = datastore.beginTransaction().get();
+    doThrow(new RuntimeException("boom"))
+        .when(mock)
+        .explosivePrePut(eqContext(new PutContext(txnProvider, txn, ImmutableList.of(yar))));
     RuntimeException e = assertThrows(RuntimeException.class, () -> datastore.put(yar));
     assertThat(e).hasMessageThat().isEqualTo("boom");
     // no preput callback defined for this kind so no exception
@@ -381,11 +382,12 @@ public class DatastoreCallbacksTest {
   @Test
   public void testPrePut_FailureInCallback_Batch_Txn() throws Exception {
     setCallbacksConfig("yar.PrePut", HAS_CALLBACKS + ":explosivePrePut");
-    doThrow(new RuntimeException("boom"))
-        .when(mock)
-        .explosivePrePut(eqContext(new PutContext(txnProvider, ImmutableList.of(yar, notYar))));
     AsyncDatastoreService datastore = DatastoreServiceFactory.getAsyncDatastoreService();
     Transaction txn = datastore.beginTransaction().get();
+    doThrow(new RuntimeException("boom"))
+        .when(mock)
+        .explosivePrePut(
+            eqContext(new PutContext(txnProvider, txn, ImmutableList.of(yar, notYar))));
     RuntimeException e =
         assertThrows(RuntimeException.class, () -> datastore.put(ImmutableList.of(yar, notYar)));
     assertThat(e).hasMessageThat().isEqualTo("boom");
@@ -403,7 +405,8 @@ public class DatastoreCallbacksTest {
     // future so don't expect any calls until that point.
     verifyNoMoreInteractions(mock);
     result.get();
-    verify(mock, times(1)).postPut(eqContext(new PutContext(txnProvider, ImmutableList.of(yar))));
+    verify(mock, times(1))
+        .postPut(eqContext(new PutContext(txnProvider, null, ImmutableList.of(yar))));
     result.get();
     result = datastore.put(notYar);
     result.get();
@@ -430,7 +433,7 @@ public class DatastoreCallbacksTest {
     verifyNoMoreInteractions(mock);
     commitResult.get();
     verify(mock, times(1))
-        .postPut(eqContext(new PutContext(txnProvider, ImmutableList.of(yar, yarChild))));
+        .postPut(eqContext(new PutContext(txnProvider, txn, ImmutableList.of(yar, yarChild))));
     // make sure the data was actually written
     assertThat(datastore.get(ImmutableList.of(yar.getKey(), yarChild.getKey())).get()).hasSize(2);
   }
@@ -449,7 +452,7 @@ public class DatastoreCallbacksTest {
     verifyNoMoreInteractions(mock);
     commitResult.get();
     verify(mock, times(1))
-        .postPut(eqContext(new PutContext(txnProvider, ImmutableList.of(yar, yarChild))));
+        .postPut(eqContext(new PutContext(txnProvider, txn, ImmutableList.of(yar, yarChild))));
     // make sure the data was actually written
     assertThat(datastore.get(ImmutableList.of(yar.getKey(), yarChild.getKey())).get()).hasSize(2);
   }
@@ -529,12 +532,12 @@ public class DatastoreCallbacksTest {
     // future so don't expect any calls until that point.
     doThrow(new RuntimeException("boom"))
         .when(mock)
-        .explosivePostPut(eqContext(new PutContext(txnProvider, ImmutableList.of(yar))));
+        .explosivePostPut(eqContext(new PutContext(txnProvider, null, ImmutableList.of(yar))));
     // We fail the first time because the callback throws an exception.
     ExecutionException e1 = assertThrows(ExecutionException.class, result1::get);
     assertThat(e1).hasCauseThat().hasMessageThat().isEqualTo("boom");
     verify(mock, times(1))
-        .explosivePostPut(eqContext(new PutContext(txnProvider, ImmutableList.of(yar))));
+        .explosivePostPut(eqContext(new PutContext(txnProvider, null, ImmutableList.of(yar))));
     // We fail the second time because we cache the exception result.
     ExecutionException e2 = assertThrows(ExecutionException.class, result1::get);
     assertThat(e2).hasCauseThat().hasMessageThat().isEqualTo("boom");
@@ -560,12 +563,14 @@ public class DatastoreCallbacksTest {
     // commit future so don't expect any calls until that point.
     doThrow(new RuntimeException("boom"))
         .when(mock)
-        .explosivePostPut(eqContext(new PutContext(txnProvider, ImmutableList.of(yar, yarChild))));
+        .explosivePostPut(
+            eqContext(new PutContext(txnProvider, txn, ImmutableList.of(yar, yarChild))));
     // We fail the first time because the callback throws an exception.
     ExecutionException e1 = assertThrows(ExecutionException.class, commitResult::get);
     assertThat(e1).hasCauseThat().hasMessageThat().isEqualTo("boom");
     verify(mock, times(1))
-        .explosivePostPut(eqContext(new PutContext(txnProvider, ImmutableList.of(yar, yarChild))));
+        .explosivePostPut(
+            eqContext(new PutContext(txnProvider, txn, ImmutableList.of(yar, yarChild))));
     // We fail the second time because we cache the exception result.
     ExecutionException e2 = assertThrows(ExecutionException.class, commitResult::get);
     assertThat(e2).hasCauseThat().hasMessageThat().isEqualTo("boom");
@@ -586,12 +591,14 @@ public class DatastoreCallbacksTest {
     // commit future so don't expect any calls until that point.
     doThrow(new RuntimeException("boom"))
         .when(mock)
-        .explosivePostPut(eqContext(new PutContext(txnProvider, ImmutableList.of(yar, yarChild))));
+        .explosivePostPut(
+            eqContext(new PutContext(txnProvider, txn, ImmutableList.of(yar, yarChild))));
     // We fail the first time because the callback throws an exception.
     ExecutionException e1 = assertThrows(ExecutionException.class, commitResult::get);
     assertThat(e1).hasCauseThat().hasMessageThat().isEqualTo("boom");
     verify(mock, times(1))
-        .explosivePostPut(eqContext(new PutContext(txnProvider, ImmutableList.of(yar, yarChild))));
+        .explosivePostPut(
+            eqContext(new PutContext(txnProvider, txn, ImmutableList.of(yar, yarChild))));
     // We fail the second time because we cache the exception result.
     ExecutionException e2 = assertThrows(ExecutionException.class, commitResult::get);
     assertThat(e2).hasCauseThat().hasMessageThat().isEqualTo("boom");
@@ -613,7 +620,7 @@ public class DatastoreCallbacksTest {
     result.get();
     result.get();
     verify(mock, times(1))
-        .preDelete(eqContext(new DeleteContext(txnProvider, ImmutableList.of(yar.getKey()))));
+        .preDelete(eqContext(new DeleteContext(txnProvider, null, ImmutableList.of(yar.getKey()))));
     // make sure the data was actually deleted
     assertThat(datastore.get(ImmutableList.of(yar.getKey(), notYar.getKey())).get()).isEmpty();
   }
@@ -632,7 +639,7 @@ public class DatastoreCallbacksTest {
     result.get();
     txn.commit();
     verify(mock, times(1))
-        .preDelete(eqContext(new DeleteContext(txnProvider, ImmutableList.of(yar.getKey()))));
+        .preDelete(eqContext(new DeleteContext(txnProvider, txn, ImmutableList.of(yar.getKey()))));
 
     // make sure the data was actually deleted
     assertThat(datastore.get(ImmutableList.of(yar.getKey(), yarChild.getKey())).get()).isEmpty();
@@ -650,7 +657,8 @@ public class DatastoreCallbacksTest {
     verify(mock, times(1))
         .preDelete(
             eqContext(
-                new DeleteContext(txnProvider, ImmutableList.of(yar.getKey(), yarChild.getKey()))));
+                new DeleteContext(
+                    txnProvider, txn, ImmutableList.of(yar.getKey(), yarChild.getKey()))));
     txn.commit();
     // make sure the data was actually deleted
     assertThat(datastore.get(ImmutableList.of(yar.getKey(), yarChild.getKey())).get()).isEmpty();
@@ -672,7 +680,7 @@ public class DatastoreCallbacksTest {
     // make sure the data was not actually deleted
     assertThat(datastore.get(ImmutableList.of(yar.getKey(), yarChild.getKey())).get()).hasSize(2);
     verify(mock, times(1))
-        .preDelete(eqContext(new DeleteContext(txnProvider, ImmutableList.of(yar.getKey()))));
+        .preDelete(eqContext(new DeleteContext(txnProvider, txn, ImmutableList.of(yar.getKey()))));
   }
 
   @Test
@@ -687,7 +695,8 @@ public class DatastoreCallbacksTest {
     verify(mock, times(1))
         .preDelete(
             eqContext(
-                new DeleteContext(txnProvider, ImmutableList.of(yar.getKey(), yarChild.getKey()))));
+                new DeleteContext(
+                    txnProvider, txn, ImmutableList.of(yar.getKey(), yarChild.getKey()))));
     txn.rollback();
     // make sure the data was not actually deleted
     assertThat(datastore.get(ImmutableList.of(yar.getKey(), yarChild.getKey())).get()).hasSize(2);
@@ -702,13 +711,13 @@ public class DatastoreCallbacksTest {
     doThrow(new RuntimeException("boom"))
         .when(mock)
         .explosivePreDelete(
-            eqContext(new DeleteContext(txnProvider, ImmutableList.of(yar.getKey()))));
+            eqContext(new DeleteContext(txnProvider, null, ImmutableList.of(yar.getKey()))));
 
     RuntimeException e = assertThrows(RuntimeException.class, () -> datastore.delete(yar.getKey()));
     assertThat(e).hasMessageThat().isEqualTo("boom");
     verify(mock, times(1))
         .explosivePreDelete(
-            eqContext(new DeleteContext(txnProvider, ImmutableList.of(yar.getKey()))));
+            eqContext(new DeleteContext(txnProvider, null, ImmutableList.of(yar.getKey()))));
     // no predelete callback defined for this kind so no exception
     datastore.delete(notYar.getKey()).get();
     verifyNoMoreInteractions(mock);
@@ -723,11 +732,11 @@ public class DatastoreCallbacksTest {
     setCallbacksConfig("yar.PreDelete", HAS_CALLBACKS + ":explosivePreDelete");
     AsyncDatastoreService datastore = DatastoreServiceFactory.getAsyncDatastoreService();
     datastore.put(ImmutableList.of(yar, notYar)).get();
+    Transaction txn = datastore.beginTransaction().get();
     doThrow(new RuntimeException("boom"))
         .when(mock)
         .explosivePreDelete(
-            eqContext(new DeleteContext(txnProvider, ImmutableList.of(yar.getKey()))));
-    Transaction txn = datastore.beginTransaction().get();
+            eqContext(new DeleteContext(txnProvider, txn, ImmutableList.of(yar.getKey()))));
     RuntimeException e = assertThrows(RuntimeException.class, () -> datastore.delete(yar.getKey()));
     assertThat(e).hasMessageThat().isEqualTo("boom");
     // no predelete callback defined for this kind so no exception
@@ -746,12 +755,13 @@ public class DatastoreCallbacksTest {
     setCallbacksConfig("yar.PreDelete", HAS_CALLBACKS + ":explosivePreDelete");
     AsyncDatastoreService datastore = DatastoreServiceFactory.getAsyncDatastoreService();
     datastore.put(ImmutableList.of(yar, notYar)).get();
+    Transaction txn = datastore.beginTransaction().get();
     doThrow(new RuntimeException("boom"))
         .when(mock)
         .explosivePreDelete(
             eqContext(
-                new DeleteContext(txnProvider, ImmutableList.of(yar.getKey(), notYar.getKey()))));
-    Transaction txn = datastore.beginTransaction().get();
+                new DeleteContext(
+                    txnProvider, txn, ImmutableList.of(yar.getKey(), notYar.getKey()))));
     RuntimeException e =
         assertThrows(
             RuntimeException.class,
@@ -760,7 +770,8 @@ public class DatastoreCallbacksTest {
     verify(mock, times(1))
         .explosivePreDelete(
             eqContext(
-                new DeleteContext(txnProvider, ImmutableList.of(yar.getKey(), notYar.getKey()))));
+                new DeleteContext(
+                    txnProvider, txn, ImmutableList.of(yar.getKey(), notYar.getKey()))));
 
     txn.commit();
     // make sure neither entity was deleted
@@ -779,7 +790,8 @@ public class DatastoreCallbacksTest {
     verifyNoMoreInteractions(mock);
     result.get();
     verify(mock, times(1))
-        .postDelete(eqContext(new DeleteContext(txnProvider, ImmutableList.of(yar.getKey()))));
+        .postDelete(
+            eqContext(new DeleteContext(txnProvider, null, ImmutableList.of(yar.getKey()))));
     result.get();
     result = datastore.delete(notYar.getKey());
     result.get();
@@ -809,7 +821,8 @@ public class DatastoreCallbacksTest {
     verify(mock, times(1))
         .postDelete(
             eqContext(
-                new DeleteContext(txnProvider, ImmutableList.of(yar.getKey(), yarChild.getKey()))));
+                new DeleteContext(
+                    txnProvider, txn, ImmutableList.of(yar.getKey(), yarChild.getKey()))));
     // make sure the data was actually deleted
     assertThat(datastore.get(ImmutableList.of(yar.getKey(), yarChild.getKey())).get()).isEmpty();
   }
@@ -831,7 +844,8 @@ public class DatastoreCallbacksTest {
     verify(mock, times(1))
         .postDelete(
             eqContext(
-                new DeleteContext(txnProvider, ImmutableList.of(yar.getKey(), yarChild.getKey()))));
+                new DeleteContext(
+                    txnProvider, txn, ImmutableList.of(yar.getKey(), yarChild.getKey()))));
 
     // make sure the data was actually deleted
     assertThat(datastore.get(ImmutableList.of(yar.getKey(), yarChild.getKey())).get()).isEmpty();
@@ -923,13 +937,13 @@ public class DatastoreCallbacksTest {
     doThrow(new RuntimeException("boom"))
         .when(mock)
         .explosivePostDelete(
-            eqContext(new DeleteContext(txnProvider, ImmutableList.of(yar.getKey()))));
+            eqContext(new DeleteContext(txnProvider, null, ImmutableList.of(yar.getKey()))));
     // We fail the first time because the callback throws an exception.
     ExecutionException e1 = assertThrows(ExecutionException.class, result1::get);
     assertThat(e1).hasCauseThat().hasMessageThat().isEqualTo("boom");
     verify(mock, times(1))
         .explosivePostDelete(
-            eqContext(new DeleteContext(txnProvider, ImmutableList.of(yar.getKey()))));
+            eqContext(new DeleteContext(txnProvider, null, ImmutableList.of(yar.getKey()))));
     // We fail the second time because we cache the exception result.
     ExecutionException e2 = assertThrows(ExecutionException.class, result1::get);
     assertThat(e2).hasCauseThat().hasMessageThat().isEqualTo("boom");
@@ -958,14 +972,16 @@ public class DatastoreCallbacksTest {
         .when(mock)
         .explosivePostDelete(
             eqContext(
-                new DeleteContext(txnProvider, ImmutableList.of(yar.getKey(), yarChild.getKey()))));
+                new DeleteContext(
+                    txnProvider, txn, ImmutableList.of(yar.getKey(), yarChild.getKey()))));
     // We fail the first time because the callback throws an exception.
     ExecutionException e1 = assertThrows(ExecutionException.class, commitResult::get);
     assertThat(e1).hasCauseThat().hasMessageThat().isEqualTo("boom");
     verify(mock, times(1))
         .explosivePostDelete(
             eqContext(
-                new DeleteContext(txnProvider, ImmutableList.of(yar.getKey(), yarChild.getKey()))));
+                new DeleteContext(
+                    txnProvider, txn, ImmutableList.of(yar.getKey(), yarChild.getKey()))));
     // We fail the second time because we cache the exception result.
     ExecutionException e2 = assertThrows(ExecutionException.class, commitResult::get);
     assertThat(e2).hasCauseThat().hasMessageThat().isEqualTo("boom");
@@ -990,7 +1006,8 @@ public class DatastoreCallbacksTest {
         .when(mock)
         .explosivePostDelete(
             eqContext(
-                new DeleteContext(txnProvider, ImmutableList.of(yar.getKey(), yarChild.getKey()))));
+                new DeleteContext(
+                    txnProvider, txn, ImmutableList.of(yar.getKey(), yarChild.getKey()))));
     // We fail the first time because the callback throws an exception.
     ExecutionException e1 = assertThrows(ExecutionException.class, commitResult::get);
     assertThat(e1).hasCauseThat().hasMessageThat().isEqualTo("boom");
@@ -1013,7 +1030,8 @@ public class DatastoreCallbacksTest {
     verify(mock, times(1))
         .preGet(
             eqContext(
-                new PreGetContext(txnProvider, ImmutableList.of(yar.getKey()), ImmutableMap.of())));
+                new PreGetContext(
+                    txnProvider, null, ImmutableList.of(yar.getKey()), ImmutableMap.of())));
     assertThat(result.get()).isEqualTo(yar);
     assertThat(result.get()).isEqualTo(yar);
     result = datastore.get(notYar.getKey());
@@ -1032,7 +1050,8 @@ public class DatastoreCallbacksTest {
     verify(mock, times(1))
         .preGet(
             eqContext(
-                new PreGetContext(txnProvider, ImmutableList.of(yar.getKey()), ImmutableMap.of())));
+                new PreGetContext(
+                    txnProvider, txn, ImmutableList.of(yar.getKey()), ImmutableMap.of())));
     assertThat(result.get()).isEqualTo(yar);
     assertThat(result.get()).isEqualTo(yar);
     result = datastore.get(yarChild.getKey());
@@ -1055,6 +1074,7 @@ public class DatastoreCallbacksTest {
             eqContext(
                 new PreGetContext(
                     txnProvider,
+                    null,
                     ImmutableList.of(yar.getKey(), yarChild.getKey()),
                     ImmutableMap.of())));
     assertThat(result.get()).containsExactly(yar.getKey(), yar, yarChild.getKey(), yarChild);
@@ -1074,7 +1094,8 @@ public class DatastoreCallbacksTest {
     verify(mock, times(1))
         .preGet(
             eqContext(
-                new PreGetContext(txnProvider, ImmutableList.of(yar.getKey()), ImmutableMap.of())));
+                new PreGetContext(
+                    txnProvider, txn, ImmutableList.of(yar.getKey()), ImmutableMap.of())));
     assertThat(result.get()).isEqualTo(yar);
     verifyNoMoreInteractions(mock);
     result = datastore.get(yarChild.getKey());
@@ -1097,6 +1118,7 @@ public class DatastoreCallbacksTest {
             eqContext(
                 new PreGetContext(
                     txnProvider,
+                    null,
                     ImmutableList.of(yar.getKey(), yarChild.getKey()),
                     ImmutableMap.of())));
     assertThat(result.get()).containsExactly(yar.getKey(), yar, yarChild.getKey(), yarChild);
@@ -1114,7 +1136,8 @@ public class DatastoreCallbacksTest {
         .when(mock)
         .explosivePreGet(
             eqContext(
-                new PreGetContext(txnProvider, ImmutableList.of(yar.getKey()), ImmutableMap.of())));
+                new PreGetContext(
+                    txnProvider, null, ImmutableList.of(yar.getKey()), ImmutableMap.of())));
     RuntimeException e = assertThrows(RuntimeException.class, () -> datastore.get(yar.getKey()));
     assertThat(e).hasMessageThat().isEqualTo("boom");
     // no preGet callback defined for this kind so no exception
@@ -1132,7 +1155,8 @@ public class DatastoreCallbacksTest {
         .when(mock)
         .explosivePreGet(
             eqContext(
-                new PreGetContext(txnProvider, ImmutableList.of(yar.getKey()), ImmutableMap.of())));
+                new PreGetContext(
+                    txnProvider, txn, ImmutableList.of(yar.getKey()), ImmutableMap.of())));
     RuntimeException e = assertThrows(RuntimeException.class, () -> datastore.get(yar.getKey()));
     assertThat(e).hasMessageThat().isEqualTo("boom");
     // no preGet callback defined for this kind so no exception
@@ -1153,6 +1177,7 @@ public class DatastoreCallbacksTest {
             eqContext(
                 new PreGetContext(
                     txnProvider,
+                    null,
                     ImmutableList.of(yar.getKey(), notYar.getKey()),
                     ImmutableMap.of())));
     RuntimeException e =
@@ -1177,7 +1202,7 @@ public class DatastoreCallbacksTest {
     AsyncDatastoreService datastore = DatastoreServiceFactory.getAsyncDatastoreService();
     datastore.put(ImmutableList.of(yar)).get();
     // preGet callback runs as soon as we execute the fetch
-    PreGetContext context = new PreGetContext(txnProvider, keyList, ImmutableMap.of());
+    PreGetContext context = new PreGetContext(txnProvider, null, keyList, ImmutableMap.of());
     doAnswer(checkContext(context)).when(mock).preGet(any());
     Future<Map<Key, Entity>> result = datastore.get(keyList);
     assertThat(result.get().get(yar.getKey())).isEqualTo(yar);
@@ -1213,7 +1238,7 @@ public class DatastoreCallbacksTest {
     Key cbOnlyEntityKey = KeyFactory.createKey("cbOnlyEntity", 24);
     // preGet callback runs as soon as we execute the fetch
     PreGetContext context =
-        new PreGetContext(txnProvider, ImmutableList.of(cbOnlyEntityKey), ImmutableMap.of());
+        new PreGetContext(txnProvider, null, ImmutableList.of(cbOnlyEntityKey), ImmutableMap.of());
     doAnswer(checkContext(context)).when(mock).preGet(any());
     Future<Entity> result = datastore.get(cbOnlyEntityKey);
     verify(mock).preGet(any());
@@ -1231,7 +1256,10 @@ public class DatastoreCallbacksTest {
     // preGet callback runs as soon as we execute the fetch
     PreGetContext context =
         new PreGetContext(
-            txnProvider, ImmutableList.of(cbOnlyEntityKey1, cbOnlyEntityKey2), ImmutableMap.of());
+            txnProvider,
+            null,
+            ImmutableList.of(cbOnlyEntityKey1, cbOnlyEntityKey2),
+            ImmutableMap.of());
     doAnswer(checkContext(context)).when(mock).preGet(any());
     Future<Map<Key, Entity>> resultFuture =
         datastore.get(ImmutableList.of(cbOnlyEntityKey1, cbOnlyEntityKey2));
@@ -1258,7 +1286,7 @@ public class DatastoreCallbacksTest {
     DatastoreServiceConfig.CALLBACKS = null;
     setCallbacksConfig(".PreGet", HAS_CALLBACKS + ":preGet");
     PreGetContext context =
-        new PreGetContext(txnProvider, ImmutableList.of(notYar.getKey()), ImmutableMap.of());
+        new PreGetContext(txnProvider, null, ImmutableList.of(notYar.getKey()), ImmutableMap.of());
     doAnswer(checkContext(context)).when(mock).preGet(any());
     notYarFetched = datastore.get(notYar.getKey()).get();
     verify(mock, times(1)).preGet(any());
@@ -1275,7 +1303,8 @@ public class DatastoreCallbacksTest {
     // preGet callback runs as soon as we execute the fetch
     assertThrows(NullPointerException.class, () -> datastore.get(fakeResult.getKey()));
     PreGetContext context =
-        new PreGetContext(txnProvider, ImmutableList.of(fakeResult.getKey()), ImmutableMap.of());
+        new PreGetContext(
+            txnProvider, null, ImmutableList.of(fakeResult.getKey()), ImmutableMap.of());
     verify(mock, times(1)).preGet(eqContext(context));
   }
 
@@ -1288,7 +1317,8 @@ public class DatastoreCallbacksTest {
     KeyFactory.createKey("putEntityOfWrongKing", 24);
     assertThrows(NullPointerException.class, () -> datastore.get(fakeResult.getKey()));
     PreGetContext context =
-        new PreGetContext(txnProvider, ImmutableList.of(fakeResult.getKey()), ImmutableMap.of());
+        new PreGetContext(
+            txnProvider, null, ImmutableList.of(fakeResult.getKey()), ImmutableMap.of());
     verify(mock, times(1)).preGet(eqContext(context));
   }
 
@@ -1307,7 +1337,7 @@ public class DatastoreCallbacksTest {
     assertThat(result.get()).isEqualTo(notYar);
     assertThat(result.get()).isEqualTo(notYar);
     verify(mock, times(1))
-        .postLoad(eqContext(new PostLoadContext(txnProvider, ImmutableList.of(yar))));
+        .postLoad(eqContext(new PostLoadContext(txnProvider, null, ImmutableList.of(yar))));
   }
 
   @Test
@@ -1327,7 +1357,7 @@ public class DatastoreCallbacksTest {
     Future<Void> commitResult = txn.commitAsync();
     commitResult.get();
     verify(mock, times(1))
-        .postLoad(eqContext(new PostLoadContext(txnProvider, ImmutableList.of(yar))));
+        .postLoad(eqContext(new PostLoadContext(txnProvider, txn, ImmutableList.of(yar))));
   }
 
   @Test
@@ -1341,7 +1371,7 @@ public class DatastoreCallbacksTest {
     // postLoad callback doesn't run until we call get() on the future.
     verifyNoMoreInteractions(mock);
 
-    doAnswer(checkContext(new PostLoadContext(txnProvider, ImmutableList.of(yar, yarChild))))
+    doAnswer(checkContext(new PostLoadContext(txnProvider, txn, ImmutableList.of(yar, yarChild))))
         .when(mock)
         .postLoad(any());
     assertThat(result.get()).containsExactly(yar.getKey(), yar, yarChild.getKey(), yarChild);
@@ -1369,7 +1399,7 @@ public class DatastoreCallbacksTest {
     Future<Void> rollbackResult = txn.rollbackAsync();
     rollbackResult.get();
     verify(mock, times(1))
-        .postLoad(eqContext(new PostLoadContext(txnProvider, ImmutableList.of(yar))));
+        .postLoad(eqContext(new PostLoadContext(txnProvider, txn, ImmutableList.of(yar))));
   }
 
   @Test
@@ -1383,7 +1413,7 @@ public class DatastoreCallbacksTest {
     verifyNoMoreInteractions(mock);
     // postLoad callback doesn't run until we call get() on the future.
     assertThat(result.get()).containsExactly(yar.getKey(), yar, yarChild.getKey(), yarChild);
-    doAnswer(checkContext(new PostLoadContext(txnProvider, ImmutableList.of(yar, yarChild))))
+    doAnswer(checkContext(new PostLoadContext(txnProvider, txn, ImmutableList.of(yar, yarChild))))
         .when(mock)
         .postLoad(any());
     assertThat(result.get()).containsExactly(yar.getKey(), yar, yarChild.getKey(), yarChild);
@@ -1402,7 +1432,8 @@ public class DatastoreCallbacksTest {
     verifyNoMoreInteractions(mock);
     doThrow(new RuntimeException("boom"))
         .when(mock)
-        .explosivePostLoad(eqContext(new PostLoadContext(txnProvider, ImmutableList.of(yar))));
+        .explosivePostLoad(
+            eqContext(new PostLoadContext(txnProvider, null, ImmutableList.of(yar))));
     // We fail the first time because the callback throws an exception.
     ExecutionException e1 = assertThrows(ExecutionException.class, result1::get);
     assertThat(e1).hasCauseThat().hasMessageThat().isEqualTo("boom");
@@ -1427,7 +1458,7 @@ public class DatastoreCallbacksTest {
     verifyNoMoreInteractions(mock);
     doThrow(new RuntimeException("boom"))
         .when(mock)
-        .explosivePostLoad(eqContext(new PostLoadContext(txnProvider, ImmutableList.of(yar))));
+        .explosivePostLoad(eqContext(new PostLoadContext(txnProvider, txn, ImmutableList.of(yar))));
     // We fail the first time because the callback throws an exception.
     ExecutionException e1 = assertThrows(ExecutionException.class, result::get);
     assertThat(e1).hasCauseThat().hasMessageThat().isEqualTo("boom");
@@ -1451,7 +1482,7 @@ public class DatastoreCallbacksTest {
     doThrow(new RuntimeException("boom"))
         .when(mock)
         .explosivePostLoad(
-            eqContext(new PostLoadContext(txnProvider, ImmutableList.of(yar, yarChild))));
+            eqContext(new PostLoadContext(txnProvider, txn, ImmutableList.of(yar, yarChild))));
     // We fail the first time because the callback throws an exception.
     ExecutionException e1 = assertThrows(ExecutionException.class, result::get);
     assertThat(e1).hasCauseThat().hasMessageThat().isEqualTo("boom");
@@ -1472,7 +1503,7 @@ public class DatastoreCallbacksTest {
     // make sure the query hasn't changed.
     assertThat(yarQuery).isEqualTo(copy);
     // preQuery callback runs as soon as we prepare the query
-    verify(mock).preQuery(eqContext(new PreQueryContext(txnProvider, yarQuery)));
+    verify(mock).preQuery(eqContext(new PreQueryContext(txnProvider, null, yarQuery)));
   }
 
   @Test
@@ -1481,7 +1512,7 @@ public class DatastoreCallbacksTest {
     AsyncDatastoreService datastore = DatastoreServiceFactory.getAsyncDatastoreService();
     datastore.put(ImmutableList.of(decorateMe1, decorateMe2, decorateMe3)).get();
     // preQuery callback runs as soon as we prepare the query
-    doAnswer(checkContext(new PreQueryContext(txnProvider, decorateMeQuery)))
+    doAnswer(checkContext(new PreQueryContext(txnProvider, null, decorateMeQuery)))
         .when(mock)
         .preQuery(any());
     Query copy = new Query(decorateMeQuery);
@@ -1499,7 +1530,7 @@ public class DatastoreCallbacksTest {
     // preQuery callback runs as soon as we prepare the query
     doThrow(new RuntimeException("boom"))
         .when(mock)
-        .explosivePreQuery(eqContext(new PreQueryContext(txnProvider, yarQuery)));
+        .explosivePreQuery(eqContext(new PreQueryContext(txnProvider, null, yarQuery)));
     Query copy = new Query(yarQuery);
     // We fail because the callback throws an exception.
     RuntimeException e = assertThrows(RuntimeException.class, () -> datastore.prepare(yarQuery));
@@ -1518,7 +1549,7 @@ public class DatastoreCallbacksTest {
     yarCopy.setProperty("timestamp", 3333333);
     assertThat(datastore.prepare(yarQuery).asSingleEntity()).isEqualTo(yarCopy);
     // postLoad callback runs when query results come back
-    verify(mock).postLoad(eqContext(new PostLoadContext(txnProvider, yar)));
+    verify(mock).postLoad(eqContext(new PostLoadContext(txnProvider, null, yar)));
   }
 
   @Test
@@ -1532,8 +1563,8 @@ public class DatastoreCallbacksTest {
         .containsExactly(yar, yarChild)
         .inOrder();
     // postLoad callback runs when query results come back, once per result
-    verify(mock).postLoad(eqContext(new PostLoadContext(txnProvider, yar)));
-    verify(mock).postLoad(eqContext(new PostLoadContext(txnProvider, yarChild)));
+    verify(mock).postLoad(eqContext(new PostLoadContext(txnProvider, null, yar)));
+    verify(mock).postLoad(eqContext(new PostLoadContext(txnProvider, null, yarChild)));
   }
 
   @Test
@@ -1544,7 +1575,8 @@ public class DatastoreCallbacksTest {
     // postLoad callback runs when query results come back
     doThrow(new RuntimeException("boom"))
         .when(mock)
-        .explosivePostLoad(eqContext(new PostLoadContext(txnProvider, ImmutableList.of(yar))));
+        .explosivePostLoad(
+            eqContext(new PostLoadContext(txnProvider, null, ImmutableList.of(yar))));
     // We fail because the callback throws an exception.
     RuntimeException e =
         assertThrows(RuntimeException.class, () -> datastore.prepare(yarQuery).asSingleEntity());

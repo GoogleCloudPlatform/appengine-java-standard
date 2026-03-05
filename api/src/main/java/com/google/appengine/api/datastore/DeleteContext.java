@@ -24,8 +24,8 @@ import java.util.List;
  */
 public final class DeleteContext extends BaseCallbackContext<Key> {
 
-  DeleteContext(CurrentTransactionProvider currentTxnProvider, List<Key> keys) {
-    super(currentTxnProvider, keys);
+  DeleteContext(CurrentTransactionProvider currentTxnProvider, Transaction txn, List<Key> keys) {
+    super(currentTxnProvider, txn, keys);
   }
 
   @Override

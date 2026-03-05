@@ -588,10 +588,10 @@ public class DatastoreCallbacksImplTest {
   }
 
   private PutContext newPutContext(Entity... entities) {
-    return new PutContext(currentTransactionProvider, ImmutableList.copyOf(entities));
+    return new PutContext(currentTransactionProvider, null, ImmutableList.copyOf(entities));
   }
 
   private DeleteContext newDeleteContext(Key... keys) {
-    return new DeleteContext(currentTransactionProvider, ImmutableList.copyOf(keys));
+    return new DeleteContext(currentTransactionProvider, null, ImmutableList.copyOf(keys));
   }
 }

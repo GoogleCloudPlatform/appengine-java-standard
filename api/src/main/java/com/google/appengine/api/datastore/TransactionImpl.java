@@ -95,9 +95,10 @@ class TransactionImpl implements Transaction, CurrentTransactionProvider {
 
     @Override
     void executeCallbacks(Void ignoreMe) {
-      PutContext putContext = new PutContext(TransactionImpl.this, putEntities);
+      PutContext putContext = new PutContext(TransactionImpl.this, TransactionImpl.this, putEntities);
       callbacks.executePostPutCallbacks(putContext);
-      DeleteContext deleteContext = new DeleteContext(TransactionImpl.this, deletedKeys);
+      DeleteContext deleteContext =
+          new DeleteContext(TransactionImpl.this, TransactionImpl.this, deletedKeys);
       callbacks.executePostDeleteCallbacks(deleteContext);
     }
   }

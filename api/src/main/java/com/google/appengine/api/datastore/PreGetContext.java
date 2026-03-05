@@ -34,9 +34,10 @@ public final class PreGetContext extends BaseCallbackContext<Key> {
 
   PreGetContext(
       CurrentTransactionProvider currentTransactionProvider,
+      Transaction txn,
       List<Key> keys,
       Map<Key, Entity> resultMap) {
-    super(currentTransactionProvider, keys);
+    super(currentTransactionProvider, txn, keys);
     this.resultMap = resultMap;
   }
 

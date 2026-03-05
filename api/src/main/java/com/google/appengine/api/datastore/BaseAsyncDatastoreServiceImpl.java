@@ -212,7 +212,7 @@ abstract class BaseAsyncDatastoreServiceImpl
     // Allocate the Map that will receive the result of the RPC here so that PreGet callbacks can
     // add results.
     Map<Key, Entity> resultMap = new HashMap<Key, Entity>();
-    PreGetContext preGetContext = new PreGetContext(this, keyList, resultMap);
+    PreGetContext preGetContext = new PreGetContext(this, txn, keyList, resultMap);
     datastoreServiceConfig.getDatastoreCallbacks().executePreGetCallbacks(preGetContext);
 
     // Don't fetch anything from datastore that was provided by the preGet hooks.
@@ -222,7 +222,7 @@ abstract class BaseAsyncDatastoreServiceImpl
     Future<Map<Key, Entity>> result = doBatchGet(txn, Sets.newLinkedHashSet(keyList), resultMap);
 
     // Invoke the user post-get callbacks.
-    return new PostLoadFuture(result, datastoreServiceConfig.getDatastoreCallbacks(), this);
+    return new PostLoadFuture(result, datastoreServiceConfig.getDatastoreCallbacks(), this, txn);
   }
 
   private Future<Entity> wrapSingleGet(final Key key, Future<Map<Key, Entity>> futureEntities) {
@@ -268,7 +268,7 @@ abstract class BaseAsyncDatastoreServiceImpl
     // Invoke the pre-put callbacks.
     List<Entity> entityList =
         entities instanceof List ? (List<Entity>) entities : Lists.newArrayList(entities);
-    PutContext prePutContext = new PutContext(this, entityList);
+    PutContext prePutContext = new PutContext(this, txn, entityList);
     datastoreServiceConfig.getDatastoreCallbacks().executePrePutCallbacks(prePutContext);
 
     // Do the datastore put RPC on the remaining entities.
@@ -277,7 +277,7 @@ abstract class BaseAsyncDatastoreServiceImpl
     if (txn == null) {
       // We're not in a txn so make sure we execute post-put callbacks when
       // the user asks for the result of the future.
-      PutContext postPutContext = new PutContext(this, entityList);
+      PutContext postPutContext = new PutContext(this, txn, entityList);
       result =
           new PostPutFuture(result, datastoreServiceConfig.getDatastoreCallbacks(), postPutContext);
     } else {
@@ -326,7 +326,7 @@ abstract class BaseAsyncDatastoreServiceImpl
   @Override
   public Future<Void> delete(@Nullable Transaction txn, Iterable<Key> keys) {
     List<Key> allKeys = keys instanceof List ? (List<Key>) keys : ImmutableList.copyOf(keys);
-    DeleteContext preDeleteContext = new DeleteContext(this, allKeys);
+    DeleteContext preDeleteContext = new DeleteContext(this, txn, allKeys);
     datastoreServiceConfig.getDatastoreCallbacks().executePreDeleteCallbacks(preDeleteContext);
     // NOTE: We are reusing the user's list here, we can do this because
     // we do not hold on to this list after this function returns.
@@ -339,7 +339,7 @@ abstract class BaseAsyncDatastoreServiceImpl
           new PostDeleteFuture(
               result,
               datastoreServiceConfig.getDatastoreCallbacks(),
-              new DeleteContext(this, allKeys));
+              new DeleteContext(this, txn, allKeys));
     } else {
       // We are in a txn so register the entities that have been deleted with
       // the txn so that we execute the appropriate post delete callbacks when
@@ -434,7 +434,7 @@ abstract class BaseAsyncDatastoreServiceImpl
   @SuppressWarnings("deprecation")
   @Override
   public PreparedQuery prepare(Transaction txn, Query query) {
-    PreQueryContext context = new PreQueryContext(this, query);
+    PreQueryContext context = new PreQueryContext(this, txn, query);
     datastoreServiceConfig.getDatastoreCallbacks().executePreQueryCallbacks(context);
     // Make sure we get the query off the context in case the interceptor has
     // modified it.

@@ -26,19 +26,22 @@ import java.util.concurrent.Future;
  */
 class PostLoadFuture extends PostOpFuture<Map<Key, Entity>> {
   private final CurrentTransactionProvider txnProvider;
+  private final Transaction txn;
 
   PostLoadFuture(
       Future<Map<Key, Entity>> delegate,
       DatastoreCallbacks callbacks,
-      CurrentTransactionProvider txnProvider) {
+      CurrentTransactionProvider txnProvider,
+      Transaction txn) {
     super(delegate, callbacks);
     this.txnProvider = txnProvider;
+    this.txn = txn;
   }
 
   @Override
   void executeCallbacks(Map<Key, Entity> result) {
     PostLoadContext postGetContext =
-        new PostLoadContext(txnProvider, Lists.newArrayList(result.values()));
+        new PostLoadContext(txnProvider, txn, Lists.newArrayList(result.values()));
     datastoreCallbacks.executePostLoadCallbacks(postGetContext);
   }
 }

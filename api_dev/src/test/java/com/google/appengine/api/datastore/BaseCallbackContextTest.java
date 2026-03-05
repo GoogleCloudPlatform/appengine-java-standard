@@ -45,7 +45,7 @@ public class BaseCallbackContextTest {
   @Test
   public void testExecuteCallbacks() {
     BaseCallbackContext<String> context =
-        new BaseCallbackContext<String>(txnProvider, Arrays.asList("kind1", "kind2")) {
+        new BaseCallbackContext<String>(txnProvider, null, Arrays.asList("kind1", "kind2")) {
           @Override
           String getKind(String ele) {
             return ele;
@@ -85,7 +85,7 @@ public class BaseCallbackContextTest {
   public void testElementsUnmodifiable() {
     List<String> strings = Arrays.asList("a", "b", "c");
     BaseCallbackContext<String> bic =
-        new BaseCallbackContext<String>(txnProvider, strings) {
+        new BaseCallbackContext<String>(txnProvider, null, strings) {
           @Override
           String getKind(String ele) {
             return null;

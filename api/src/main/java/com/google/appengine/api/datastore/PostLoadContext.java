@@ -31,12 +31,14 @@ import java.util.List;
  */
 public final class PostLoadContext extends BaseCallbackContext<Entity> {
 
-  PostLoadContext(CurrentTransactionProvider currentTransactionProvider, List<Entity> results) {
-    super(currentTransactionProvider, results);
+  PostLoadContext(
+      CurrentTransactionProvider currentTransactionProvider, Transaction txn, List<Entity> results) {
+    super(currentTransactionProvider, txn, results);
   }
 
-  PostLoadContext(CurrentTransactionProvider currentTransactionProvider, Entity result) {
-    this(currentTransactionProvider, Arrays.asList(result));
+  PostLoadContext(
+      CurrentTransactionProvider currentTransactionProvider, Transaction txn, Entity result) {
+    this(currentTransactionProvider, txn, Arrays.asList(result));
   }
 
   @Override
