@@ -165,6 +165,7 @@ public class KickStartTest {
     ImmutableList<String> args =
         ImmutableList.of(
             javaBinary,
+            "-Djacoco-agent.output=none",
             "-classpath",
             classpath,
             "--add-opens",
@@ -174,6 +175,7 @@ public class KickStartTest {
             "--add-opens",
             "java.base/sun.net.www.protocol.https=ALL-UNNAMED",
             KickStart.class.getName(),
+            "--jvm_flag=-Djacoco-agent.output=none",
             "--test_mode",
             "com.google.appengine.tools.PrintDefaultCharset",
             webInfDir.getPath());

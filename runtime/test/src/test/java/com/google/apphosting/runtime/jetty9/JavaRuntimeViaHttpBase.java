@@ -263,6 +263,7 @@ public abstract class JavaRuntimeViaHttpBase {
     }
     baseArgsBuilder
         .add(
+            "-Djacoco-agent.output=none",
             "-Dcom.google.apphosting.runtime.jetty94.LEGACY_MODE=" + legacyMode,
             "-Dappengine.use.EE8=" + jakartaVersion.equals("EE8"),
             "-Dappengine.use.EE10=" + jakartaVersion.equals("EE10"),

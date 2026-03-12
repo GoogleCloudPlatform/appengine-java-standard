@@ -100,7 +100,7 @@ public class XmlValidatorTest {
   @Before
   public void setUp() throws Exception {
     xmlValidatorJar = getLibXmlValidatorJarFile();
-    assertWithMessage(xmlValidatorJar.toString() + " error, cannot read the jar.")
+    assertWithMessage("%s error, cannot read the jar.", xmlValidatorJar.toString())
         .that(xmlValidatorJar.canRead())
         .isTrue();
   }
@@ -153,6 +153,7 @@ public class XmlValidatorTest {
     String javaBin = JAVA_HOME.value() + "/bin/java";
     List<String> args = new ArrayList<>();
     args.add(javaBin);
+    args.add("-Djacoco-agent.output=none");
     args.add("-verbose:class");
     args.add("-classpath");
     args.add(xmlValidatorJar.getAbsolutePath());
