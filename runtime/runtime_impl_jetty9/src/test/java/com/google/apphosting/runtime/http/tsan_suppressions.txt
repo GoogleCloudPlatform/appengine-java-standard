@@ -1,0 +1,5 @@
+# Suppress known ThreadSanitizer data race in Jetty's SelectableChannelEndPoint
+# This is caused by logging the endpoint string concurrently with updateKey().
+race:org.eclipse.jetty.io.SelectableChannelEndPoint
+race:org.eclipse.jetty.io.ChannelEndPoint
+race:org.eclipse.jetty.server.AbstractConnector

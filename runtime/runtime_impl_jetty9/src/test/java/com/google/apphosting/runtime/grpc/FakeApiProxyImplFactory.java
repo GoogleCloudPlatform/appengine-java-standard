@@ -28,6 +28,7 @@ import com.google.apphosting.runtime.timer.CpuRatioTimer;
 import com.google.apphosting.runtime.timer.TimerFactory;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Future;
 import java.util.concurrent.Semaphore;
@@ -68,7 +69,7 @@ public class FakeApiProxyImplFactory {
   public static ApiProxyImpl.EnvironmentImpl fakeEnvironment(
       ApiProxyImpl apiProxyImpl, String securityTicket, TraceWriter traceWriter) {
     Semaphore outstandingApiRpcSemaphore = new Semaphore(1);
-    List<Future<?>> asyncFutures = new ArrayList<>();
+    List<Future<?>> asyncFutures = Collections.synchronizedList(new ArrayList<>());
     RuntimePb.UPRequest request =
         RuntimePb.UPRequest.newBuilder().setSecurityTicket(securityTicket).buildPartial();
     return apiProxyImpl.createEnvironment(
