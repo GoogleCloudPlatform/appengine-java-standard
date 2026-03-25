@@ -40,16 +40,21 @@ public class InterruptedApiCallTest extends HttpApiProxyImplTestBase {
    * it only gets expected exceptions.
    */
   @Test
-  public void interruptedApiCall() {
+  public void interruptedApiCall() throws InterruptedException {
     AtomicBoolean stop = new AtomicBoolean();
+    Thread apiClientThread = null;
     try {
-      interruptedApiCall(stop);
+      apiClientThread = interruptedApiCall(stop);
     } finally {
       stop.set(true);
+      if (apiClientThread != null) {
+        apiClientThread.interrupt(); // Ensure it wakes up from any blocking call
+        apiClientThread.join();
+      }
     }
   }
 
-  private void interruptedApiCall(AtomicBoolean stop) {
+  private Thread interruptedApiCall(AtomicBoolean stop) {
     HttpApiHostClient.Config interruptibleConfig =
         config.toBuilder()
             // With the Jetty client, this test occasionally gets ClosedChannelException. Since
@@ -77,6 +82,7 @@ public class InterruptedApiCallTest extends HttpApiProxyImplTestBase {
     }
     assertThat(apiClientTask.exceptionInMakeAsyncCall.get()).isNull();
     assertThat(apiClientTask.exceptionInFutureGet.get()).isNull();
+    return apiClientThread;
   }
 
   private static class ApiClientTask implements Runnable {
