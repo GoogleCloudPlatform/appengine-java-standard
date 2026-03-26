@@ -327,9 +327,9 @@ public class TaskQueueTest {
                   if (DEFAULT_NAMESPACE_HEADER.equals(header.getKey())
                       || CURRENT_NAMESPACE_HEADER.equals(header.getKey())) {
                     return 1; // Sort namespace headers after user-specified headers.
-                  } else if ("content-type".equals(header.getKey().toStringUtf8())
+                  } else if ("content-type".equalsIgnoreCase(header.getKey().toStringUtf8())
                       && "application/x-www-form-urlencoded"
-                          .equals(header.getValue().toStringUtf8())) {
+                          .equalsIgnoreCase(header.getValue().toStringUtf8())) {
                     return 2; // Sort default content-type header last.
                   } else {
                     return 0; // Let everything else remain in the original order (given a stable

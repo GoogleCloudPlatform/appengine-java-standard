@@ -264,10 +264,10 @@ public final class LocalTaskQueueTestConfig implements LocalServiceTestConfig {
       ByteString payload = null;
       for (URLFetchServicePb.URLFetchRequest.Header header : req.getHeaderList()) {
         // See if this is a DeferredTask.
-        if (header.getKey().equals("content-type") &&
+        if (header.getKey().equalsIgnoreCase("content-type") &&
             DeferredTaskContext.RUNNABLE_TASK_CONTENT_TYPE.equals(header.getValue())) {
           payload = req.getPayload();
-        } else if (CURRENT_NAMESPACE_HEADER.equals(header.getKey())) {
+        } else if (CURRENT_NAMESPACE_HEADER.equalsIgnoreCase(header.getKey())) {
           requestNamespace = header.getValue();
         }
       }

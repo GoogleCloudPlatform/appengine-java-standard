@@ -973,9 +973,9 @@ public class ApiProxyImpl implements ApiProxy.Delegate<ApiProxyImpl.EnvironmentI
           .getHeadersList()
           .forEach(
               header -> {
-                if (header.getKey().equals(DEFAULT_NAMESPACE_HEADER)) {
+                if (header.getKey().equalsIgnoreCase(DEFAULT_NAMESPACE_HEADER)) {
                   attributes.put(APPS_NAMESPACE_KEY, header.getValue());
-                } else if (header.getKey().equals(CURRENT_NAMESPACE_HEADER)) {
+                } else if (header.getKey().equalsIgnoreCase(CURRENT_NAMESPACE_HEADER)) {
                   attributes.put(CURRENT_NAMESPACE_KEY, header.getValue());
                 }
               });
