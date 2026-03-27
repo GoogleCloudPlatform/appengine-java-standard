@@ -17,6 +17,7 @@
 package com.google.apphosting.runtime.http;
 
 import static java.lang.Math.max;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 import com.google.apphosting.base.protos.RuntimePb.APIResponse;
 import com.google.apphosting.runtime.anyrpc.AnyRpcCallback;
@@ -32,16 +33,21 @@ import java.net.MalformedURLException;
 import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * An alternative API client that uses the JDK's built-in HTTP client. This is likely to be much
  * less performant than {@link JettyHttpApiHostClient} but should allow us to determine whether
  * communications problems we are seeing are due to the Jetty client.
+ *
+ * <p>By default, this client uses a bounded thread pool to execute API calls, with the maximum
+ * number of threads determined by configuration. If the system property {@code
+ * appengine.api.use.virtualthreads} is set to {@code true}, it will instead use virtual threads via
+ * {@link Executors#newVirtualThreadPerTaskExecutor()}.
  */
 class JdkHttpApiHostClient extends HttpApiHostClient {
   private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
@@ -59,31 +65,51 @@ class JdkHttpApiHostClient extends HttpApiHostClient {
     this.executor = executor;
   }
 
+  /**
+   * Creates a {@link JdkHttpApiHostClient}.
+   *
+   * <p>If the system property {@code appengine.api.use.virtualthreads} is set to {@code true}, a
+   * virtual thread executor is used to run requests, and {@code
+   * config.maxConnectionsPerDestination()} is ignored. Otherwise, a bounded {@link
+   * ThreadPoolExecutor} is created, with {@code maxThreads} derived from {@code
+   * config.maxConnectionsPerDestination()}.
+   *
+   * @param url The URL of the API host.
+   * @param config Configuration for the client, including connection limits.
+   * @return A new {@link JdkHttpApiHostClient}.
+   */
+  @SuppressWarnings("AllowVirtualThreads")
   static JdkHttpApiHostClient create(String url, Config config) {
     try {
-      ThreadFactory factory =
-          runnable -> {
-            Thread t = new Thread(rootThreadGroup(), runnable);
-            t.setName("JdkHttp-" + threadCount.incrementAndGet());
-            t.setDaemon(true);
-            return t;
-          };
-      /*
-       * Thread Pool Configuration & Bug Analysis:
-       *
-       * Similar to the JettyHttpApiHostClient, we explicitly bound the thread pool.
-       * We cap the threads at `maxConnectionsPerDestination` (which defaults to 100) 
-       * instead of a hardcoded 200 to prevent severe memory pressure (Thread Stack sizes)
-       * on smaller AppEngine instance classes like F1 (256MB) or F2 (512MB).
-       * An unbounded thread pool allows a failing RPC to rapidly spin up thousands 
-       * of threads under retry, which overwhelms the JVM and the internal Datastore 
-       * Appserver connection, forcing it to respond with masking INTERNAL_ERROR fallbacks.
-       */
-      int maxThreads = config.maxConnectionsPerDestination().orElse(100);
-      ThreadPoolExecutor executor =
-          new ThreadPoolExecutor(
-              maxThreads, maxThreads, 60L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(), factory);
-      executor.allowCoreThreadTimeOut(true);
+      Executor executor;
+      if (Boolean.getBoolean("appengine.api.use.virtualthreads")) {
+        executor = Executors.newVirtualThreadPerTaskExecutor();
+      } else {
+        ThreadFactory factory =
+            runnable -> {
+              Thread t = new Thread(rootThreadGroup(), runnable);
+              t.setName("JdkHttp-" + threadCount.incrementAndGet());
+              t.setDaemon(true);
+              return t;
+            };
+        /*
+         * Thread Pool Configuration & Bug Analysis:
+         *
+         * Similar to the JettyHttpApiHostClient, we explicitly bound the thread pool.
+         * We cap the threads at `maxConnectionsPerDestination` (which defaults to 100)
+         * instead of a hardcoded 200 to prevent severe memory pressure (Thread Stack sizes)
+         * on smaller AppEngine instance classes like F1 (256MB) or F2 (512MB).
+         * An unbounded thread pool allows a failing RPC to rapidly spin up thousands
+         * of threads under retry, which overwhelms the JVM and the internal Datastore
+         * Appserver connection, forcing it to respond with masking INTERNAL_ERROR fallbacks.
+         */
+        int maxThreads = config.maxConnectionsPerDestination().orElse(100);
+        ThreadPoolExecutor tpe =
+            new ThreadPoolExecutor(
+                maxThreads, maxThreads, 60L, SECONDS, new LinkedBlockingQueue<>(), factory);
+        tpe.allowCoreThreadTimeOut(true);
+        executor = tpe;
+      }
       return new JdkHttpApiHostClient(config, new URL(url), executor);
     } catch (MalformedURLException e) {
       throw new UncheckedIOException(e);
@@ -99,6 +125,13 @@ class JdkHttpApiHostClient extends HttpApiHostClient {
     return group;
   }
 
+  /**
+   * Asynchronously sends an API request to the API host using a thread pool.
+   *
+   * @param requestBytes The serialized API request.
+   * @param context The context for the request, including deadline information.
+   * @param callback Callback to be invoked with the API response or failure.
+   */
   @Override
   void send(
       byte[] requestBytes,
@@ -150,11 +183,21 @@ class JdkHttpApiHostClient extends HttpApiHostClient {
     }
   }
 
+  /**
+   * This operation is not supported by JdkHttpApiHostClient.
+   *
+   * @throws UnsupportedOperationException always.
+   */
   @Override
   public void enable() {
     throw new UnsupportedOperationException();
   }
 
+  /**
+   * This operation is not supported by JdkHttpApiHostClient.
+   *
+   * @throws UnsupportedOperationException always.
+   */
   @Override
   public void disable() {
     throw new UnsupportedOperationException();

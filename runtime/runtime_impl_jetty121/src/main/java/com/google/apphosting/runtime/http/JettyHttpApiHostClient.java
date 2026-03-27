@@ -34,7 +34,6 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicInteger;
 import org.eclipse.jetty.client.BytesRequestContent;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.HttpResponseException;
@@ -54,8 +53,6 @@ import org.eclipse.jetty.util.thread.Scheduler;
 class JettyHttpApiHostClient extends HttpApiHostClient {
   private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
 
-  private static final AtomicInteger threadCount = new AtomicInteger();
-
   private final String url;
   private final HttpClient httpClient;
 
@@ -65,6 +62,17 @@ class JettyHttpApiHostClient extends HttpApiHostClient {
     this.httpClient = httpClient;
   }
 
+  /**
+   * Creates and starts a {@link JettyHttpApiHostClient}.
+   *
+   * <p>The {@code config.maxConnectionsPerDestination()} parameter is used to configure both
+   * {@link HttpClient#setMaxConnectionsPerDestination(int)} and the maximum number of threads in
+   * the {@link QueuedThreadPool}.
+   *
+   * @param url The URL of the API host.
+   * @param config Configuration for the client.
+   * @return A new, started {@link JettyHttpApiHostClient}.
+   */
   static JettyHttpApiHostClient create(String url, Config config) {
     Preconditions.checkNotNull(url);
     HttpClient httpClient = new HttpClient();
@@ -237,6 +245,13 @@ class JettyHttpApiHostClient extends HttpApiHostClient {
     }
   }
 
+  /**
+   * Asynchronously sends an API request to the API host.
+   *
+   * @param requestBytes The serialized API request.
+   * @param context The context for the request, including deadline information.
+   * @param callback Callback to be invoked with the API response or failure.
+   */
   @Override
   void send(
       byte[] requestBytes,
@@ -277,6 +292,10 @@ class JettyHttpApiHostClient extends HttpApiHostClient {
     request.send(completeListener);
   }
 
+  /**
+   * Disables the client by stopping the underlying {@link HttpClient}. Subsequent calls to {@link
+   * #send} may fail until {@link #enable()} is called.
+   */
   @Override
   public synchronized void disable() {
     try {
@@ -288,6 +307,7 @@ class JettyHttpApiHostClient extends HttpApiHostClient {
     }
   }
 
+  /** Enables the client by starting the underlying {@link HttpClient}. */
   @Override
   public synchronized void enable() {
     try {
