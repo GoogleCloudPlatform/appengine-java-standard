@@ -278,3 +278,87 @@ sed -i '/<\/plugins>/i \
 echo "Updated $POM_FILE"
 ```
 
+
+## For the Gradle build system
+
+If you are using the Gradle build system, you can apply the following changes to your build script.
+
+These instructions configure the `war` task to do two important things:
+1. **Move the jars to the top of the WAR directory:** The `into("")` (or `into('.')`) block combined with `eachFile { path = name }` extracts the jars and flattens the directory structure, placing them directly in the root of the generated WAR.
+2. **Rename the jars:** The `rename` block strips the version string (e.g., `-5.0.1-SNAPSHOT`) from the extracted jars so their names exactly match the `-Djava.class.path=runtime-main.jar` argument specified in the `appengine-web.xml` entrypoint.
+
+### Kotlin
+```
+import org.gradle.api.tasks.bundling.War
+
+// 1. Define the target runtime version
+val gaeRuntimeVersion = "5.0.1-SNAPSHOT" // Change this to your desired version
+
+// 2. Create a custom configuration for the runtime zip
+val gaeRuntimeZip by configurations.creating
+
+dependencies {
+    // 3. Declare the dependency on the App Engine runtime deployment zip
+    gaeRuntimeZip("com.google.appengine:runtime-deployment:$gaeRuntimeVersion@zip")
+
+    // ... your other standard dependencies (e.g., implementation(...)) ...
+}
+
+// 4. Configure the WAR task to unpack and rename the jars
+tasks.named<War>("war") {
+    into("") {
+        // Extract the contents of the zip file
+        from(gaeRuntimeZip.map { zipTree(it) }) {
+            // Flatten the directory structure
+            eachFile {
+                path = name
+            }
+            includeEmptyDirs = false
+        }
+
+        // Strip the version number from the jar files
+        rename { fileName: String ->
+            fileName.replace("-$gaeRuntimeVersion", "")
+        }
+    }
+}
+```
+
+### Groovy
+
+```
+// 1. Define the target runtime version
+def gaeRuntimeVersion = "5.0.1-SNAPSHOT" // Change this to your desired version
+
+// 2. Create a custom configuration for the runtime zip
+configurations {
+    gaeRuntimeZip
+}
+
+dependencies {
+    // 3. Declare the dependency on the App Engine runtime deployment zip
+    gaeRuntimeZip "com.google.appengine:runtime-deployment:${gaeRuntimeVersion}@zip"
+
+    // ... your other standard dependencies ...
+}
+
+// 4. Configure the WAR task to unpack and rename the jars
+war {
+    into('.') {
+        // Extract the contents of the zip file
+        from({ configurations.gaeRuntimeZip.collect { zipTree(it) } }) {
+            // Flatten the directory structure just in case the zip has a root folder
+            eachFile { file ->
+                file.path = file.name
+            }
+            includeEmptyDirs = false
+        }
+
+        // Strip the version number from the jar files
+        // (e.g., 'runtime-main-5.0.1-SNAPSHOT.jar' becomes 'runtime-main.jar')
+        rename { String fileName ->
+            fileName.replace("-${gaeRuntimeVersion}", "")
+        }
+    }
+}
+```
