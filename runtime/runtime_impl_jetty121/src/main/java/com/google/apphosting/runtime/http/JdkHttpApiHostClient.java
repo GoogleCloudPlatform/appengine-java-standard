@@ -32,8 +32,10 @@ import java.net.MalformedURLException;
 import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -66,7 +68,22 @@ class JdkHttpApiHostClient extends HttpApiHostClient {
             t.setDaemon(true);
             return t;
           };
-      Executor executor = Executors.newCachedThreadPool(factory);
+      /*
+       * Thread Pool Configuration & Bug Analysis:
+       *
+       * Similar to the JettyHttpApiHostClient, we explicitly bound the thread pool.
+       * We cap the threads at `maxConnectionsPerDestination` (which defaults to 100) 
+       * instead of a hardcoded 200 to prevent severe memory pressure (Thread Stack sizes)
+       * on smaller AppEngine instance classes like F1 (256MB) or F2 (512MB).
+       * An unbounded thread pool allows a failing RPC to rapidly spin up thousands 
+       * of threads under retry, which overwhelms the JVM and the internal Datastore 
+       * Appserver connection, forcing it to respond with masking INTERNAL_ERROR fallbacks.
+       */
+      int maxThreads = config.maxConnectionsPerDestination().orElse(100);
+      ThreadPoolExecutor executor =
+          new ThreadPoolExecutor(
+              maxThreads, maxThreads, 60L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(), factory);
+      executor.allowCoreThreadTimeOut(true);
       return new JdkHttpApiHostClient(config, new URL(url), executor);
     } catch (MalformedURLException e) {
       throw new UncheckedIOException(e);

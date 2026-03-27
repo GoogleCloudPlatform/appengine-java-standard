@@ -32,9 +32,7 @@ import java.nio.channels.ClosedChannelException;
 import java.nio.channels.ClosedSelectorException;
 import java.util.Arrays;
 import java.util.Map;
-import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.eclipse.jetty.client.BytesRequestContent;
@@ -48,6 +46,7 @@ import org.eclipse.jetty.http.HttpFields;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.io.EofException;
+import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.eclipse.jetty.util.thread.ScheduledExecutorScheduler;
 import org.eclipse.jetty.util.thread.Scheduler;
 
@@ -86,20 +85,38 @@ class JettyHttpApiHostClient extends HttpApiHostClient {
     boolean daemon = false;
     Scheduler scheduler =
         new ScheduledExecutorScheduler(schedulerName, daemon, myLoader, myThreadGroup);
-    ThreadFactory factory =
-        runnable -> {
-          Thread t = new Thread(myThreadGroup, runnable);
-          t.setName("JettyHttpApiHostClient-" + threadCount.incrementAndGet());
-          t.setDaemon(true);
-          return t;
-        };
-    // By default HttpClient will use a QueuedThreadPool with minThreads=8 and maxThreads=200.
-    // 8 threads is probably too much for most apps, especially since asynchronous I/O means that
-    // 8 concurrent API requests probably don't need that many threads. It's also not clear
-    // what advantage we'd get from using a QueuedThreadPool with a smaller minThreads value, versus
-    // just one of the standard java.util.concurrent pools. Here we have minThreads=1, maxThreads=∞,
-    // and idleTime=60 seconds. maxThreads=200 and maxThreads=∞ are probably equivalent in practice.
-    httpClient.setExecutor(Executors.newCachedThreadPool(factory));
+    /*
+     * Thread Pool Configuration & Bug Analysis:
+     *
+     * In previous versions of the runtime, an unbounded CachedThreadPool was used here:
+     * `httpClient.setExecutor(Executors.newCachedThreadPool(factory));`
+     *
+     * Under high load (e.g., when a customer's custom retry logic aggressively retries failing
+     * RPCs like `BeginTransaction`), an unbounded thread pool creates thousands of threads instantly.
+     * This leads to a system collapse:
+     * 1. JVM Overload: The Java container becomes severely memory and CPU constrained.
+     * 2. Appserver Flooded: The avalanche of concurrent requests from the Java container floods the
+     *    C++ Appserver proxy.
+     * 3. Triggering the C++ Bug Mask: Under massive load, the C++ Appserver's gRPC calls to the
+     *    Datastore fail with UNAVAILABLE or RESOURCE_EXHAUSTED errors.
+     * 4. The Response: Because these aren't standard application errors, the C++ code
+     *    (DatastoreClientHelper::DoneImpl) masks them as `Error::INTERNAL_ERROR` and returns the
+     *    message "Internal Datastore Error" to the Java client to prevent leaking internal
+     *    infrastructure details.
+     * 5. The Java client throws DatastoreFailureException, triggering the customer's loop again.
+     *
+     * To prevent this "retry storm", we explicitly use a bounded QueuedThreadPool.
+     * We cap the threads at `maxConnectionsPerDestination` (which defaults to 100)
+     * instead of a hardcoded 200 to prevent severe memory pressure (Thread Stack sizes)
+     * on smaller AppEngine instance classes like F1 (256MB) or F2 (512MB).
+     * If the system experiences a spike, Jetty will safely queue the outgoing RPCs, preventing the
+     * JVM and the Appserver from being overwhelmed and eliminating the INTERNAL_ERROR fallback loop.
+     */
+    int maxThreads = config.maxConnectionsPerDestination().orElse(100);
+    QueuedThreadPool threadPool = new QueuedThreadPool(maxThreads, 10, 60000, null, myThreadGroup);
+    threadPool.setName("JettyHttpApiHostClient");
+    threadPool.setDaemon(true);
+    httpClient.setExecutor(threadPool);
     httpClient.setScheduler(scheduler);
     config.maxConnectionsPerDestination().ifPresent(httpClient::setMaxConnectionsPerDestination);
     try {
