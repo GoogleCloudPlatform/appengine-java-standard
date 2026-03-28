@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UncheckedIOException;
+import java.lang.reflect.Method;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.SocketTimeoutException;
@@ -81,10 +82,20 @@ class JdkHttpApiHostClient extends HttpApiHostClient {
   @SuppressWarnings("AllowVirtualThreads")
   static JdkHttpApiHostClient create(String url, Config config) {
     try {
-      Executor executor;
+      Executor executor = null;
       if (Boolean.getBoolean("appengine.api.use.virtualthreads")) {
-        executor = Executors.newVirtualThreadPerTaskExecutor();
-      } else {
+        try {
+          Method newVirtualThreadPerTaskExecutor =
+              Executors.class.getMethod("newVirtualThreadPerTaskExecutor");
+          executor = (Executor) newVirtualThreadPerTaskExecutor.invoke(null);
+          logger.atInfo().log("Using virtual threads for JdkHttpApiHostClient.");
+        } catch (ReflectiveOperationException e) {
+          logger.atInfo().log(
+              "appengine.api.use.virtualthreads is true, but virtual threads are not available on"
+                  + " this JDK. Falling back to thread pool for JdkHttpApiHostClient.");
+        }
+      }
+      if (executor == null) {
         ThreadFactory factory =
             runnable -> {
               Thread t = new Thread(rootThreadGroup(), runnable);
