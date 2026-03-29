@@ -24,16 +24,17 @@ requests are queued until a connection becomes available.
 
 ### Configuration
 
-You can configure the Jetty client using the following environment variables:
+You can configure the Jetty client using the following environment variables
+and system properties:
 
-*   **`APPENGINE_API_MAX_CONNECTIONS`**: Sets the maximum number of concurrent
-    connections for API calls. If you observe API call latency or
-    connection-related errors under high load, you might consider adjusting this
-    value.
+*   **`APPENGINE_API_MAX_CONNECTIONS`** (Environment Variable): Sets the
+    maximum number of concurrent connections for API calls. If you observe API
+    call latency or connection-related errors under high load, you might
+    consider adjusting this value.
     *   Default: `100`
-*   **`APPENGINE_API_CALLS_IDLE_TIMEOUT_MS`**: Sets the idle timeout in
-    milliseconds for connections in the connection pool. Connections that are
-    idle for longer than this duration may be closed.
+*   **`APPENGINE_API_CALLS_IDLE_TIMEOUT_MS`** (Environment Variable): Sets
+    the idle timeout in milliseconds for connections in the connection pool.
+    Connections that are idle for longer than this duration may be closed.
     *   Default: `58000` (58 seconds)
 
 ## JDK HTTP Client
@@ -50,7 +51,8 @@ To use the JDK client instead of the Jetty client, set the
 
 ### Configuration
 
-When using the JDK client, you can configure its threading behavior:
+When using the JDK client, you can configure its behavior with the following
+settings:
 
 *   **`appengine.api.use.virtualthreads`** (Java System Property): If set to `true`,
     the JDK client will use Java Virtual Threads (when available on the JVM) to
@@ -63,28 +65,58 @@ If `appengine.api.use.virtualthreads` is `false` or not set, the JDK client uses
 traditional thread pool model. In this mode, you can control the thread pool
 size using an environment variable:
 
-*   **`APPENGINE_API_MAX_CONNECTIONS`**: Sets the maximum number of threads in
-    the pool for handling API calls. This limits the number of concurrent API
-    calls, similar to how it works for the Jetty client. This variable is
-    **ignored** if `appengine.api.use.virtualthreads` is set to `true`.
+*   **`APPENGINE_API_MAX_CONNECTIONS`** (Environment Variable): Sets the
+    maximum number of threads in the pool for handling API calls. This limits
+    the number of concurrent API calls, similar to how it works for the Jetty
+    client. This variable is **ignored** if `appengine.api.use.virtualthreads`
+    is set to `true`.
     *   Default: `100`
 
+## Datastore-Specific Configuration
+
+### `beginTransaction` Retries
+
+In addition to the HTTP client settings, the Datastore client library includes
+specific retry logic for `beginTransaction()` calls. These calls can fail with
+transient errors such as `DatastoreFailureException`, `DatastoreTimeoutException`,
+or `ApiProxy.RPCFailedException`, especially under high contention when
+multiple transactions attempt to access the same entity group simultaneously.
+
+To handle this, `DatastoreService.beginTransaction()` automatically retries
+failed attempts with exponential backoff, starting at 100ms. You can
+configure the number of retry attempts using a system property:
+
+*   **`appengine.datastore.retries`** (Java System Property): The maximum
+    number of times to retry a `beginTransaction` call if it fails with
+    `DatastoreFailureException`, `DatastoreTimeoutException`, or
+    `ApiProxy.RPCFailedException`. This retry logic applies only to
+    `beginTransaction` calls; other Datastore operations are not retried
+    by this mechanism.
+    *   Default: `1`
 
 
-### Example
+```xml
+<system-properties>
+  <property name="appengine.datastore.retries" value="3" />
+</system-properties>
+```
 
-To change the API call path to use the JDK client instead of the Jetty client,
-and to enable virtual threads for this client, add the following environment
-variable and system property to `appengine-web.xml` and redeploy your
-application:
+## Configuring via `appengine-web.xml`
+
+You can set these options by adding `<env-variables>` and
+`<system-properties>` sections to your `appengine-web.xml` file.
+
+For example, to switch to the JDK client, enable virtual threads, increase
+the connection limit to 200, and set Datastore `beginTransaction` retries to 3,
+you would add:
 
 ```xml
 <env-variables>
   <env-var name="APPENGINE_API_CALLS_USING_JDK_CLIENT" value="true" />
-  <env-var name="APPENGINE_API_MAX_CONNECTIONS" value="100" />
-  <env-var name="APPENGINE_API_CALLS_IDLE_TIMEOUT_MS" value="58" />
+  <env-var name="APPENGINE_API_MAX_CONNECTIONS" value="200" />
 </env-variables>
 <system-properties>
   <property name="appengine.api.use.virtualthreads" value="true" />
+  <property name="appengine.datastore.retries" value="3" />
 </system-properties>
 ```
