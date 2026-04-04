@@ -129,6 +129,24 @@ abstract class HttpApiHostClient implements APIHostClientInterface {
     return config;
   }
 
+  static int getMaxThreads(Config config) {
+    int maxThreads = config.maxConnectionsPerDestination().orElse(100);
+    String maxThreadsEnv = System.getenv("APPENGINE_API_MAX_THREADS");
+    if (maxThreadsEnv != null) {
+      try {
+        int envMaxThreads = Integer.parseInt(maxThreadsEnv);
+        logger.atInfo().log(
+            "Overriding API max threads to %d from environment variable.", envMaxThreads);
+        return envMaxThreads;
+      } catch (NumberFormatException e) {
+        logger.atWarning().withCause(e).log(
+            "Invalid value for APPENGINE_API_MAX_THREADS: %s, using default %d",
+            maxThreadsEnv, maxThreads);
+      }
+    }
+    return maxThreads;
+  }
+
   static HttpApiHostClient create(String url, Config config) {
     if (System.getenv("APPENGINE_API_CALLS_USING_JDK_CLIENT") != null) {
       logger.atInfo().log("Using JDK HTTP client for API calls");

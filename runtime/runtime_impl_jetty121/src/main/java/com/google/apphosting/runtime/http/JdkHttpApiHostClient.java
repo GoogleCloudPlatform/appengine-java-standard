@@ -114,7 +114,7 @@ class JdkHttpApiHostClient extends HttpApiHostClient {
          * of threads under retry, which overwhelms the JVM and the internal Datastore
          * Appserver connection, forcing it to respond with masking INTERNAL_ERROR fallbacks.
          */
-        int maxThreads = config.maxConnectionsPerDestination().orElse(100);
+        int maxThreads = getMaxThreads(config);
         ThreadPoolExecutor tpe =
             new ThreadPoolExecutor(
                 maxThreads, maxThreads, 60L, SECONDS, new LinkedBlockingQueue<>(), factory);

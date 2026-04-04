@@ -120,7 +120,7 @@ class JettyHttpApiHostClient extends HttpApiHostClient {
      * If the system experiences a spike, Jetty will safely queue the outgoing RPCs, preventing the
      * JVM and the Appserver from being overwhelmed and eliminating the INTERNAL_ERROR fallback loop.
      */
-    int maxThreads = config.maxConnectionsPerDestination().orElse(100);
+    int maxThreads = getMaxThreads(config);
     QueuedThreadPool threadPool = new QueuedThreadPool(maxThreads, 10, 60000, null, myThreadGroup);
     threadPool.setName("JettyHttpApiHostClient");
     threadPool.setDaemon(true);
