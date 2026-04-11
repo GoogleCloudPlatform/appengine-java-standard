@@ -211,6 +211,25 @@
       </repositories>
       </profile>
       <profile>
+          <id>jdk17</id>
+          <properties>
+              <maven.compiler.release>17</maven.compiler.release>
+              <maven.compiler.source>17</maven.compiler.source>
+              <maven.compiler.target>17</maven.compiler.target>
+          </properties>
+          <build>
+              <plugins>
+                  <plugin>
+                      <groupId>org.apache.maven.plugins</groupId>
+                      <artifactId>maven-compiler-plugin</artifactId>
+                      <configuration>
+                          <executable>${env.JAVA_HOME_17}/bin/javac</executable>
+                      </configuration>
+                  </plugin>
+              </plugins>
+          </build>
+      </profile>
+      <profile>
           <id>jdk21</id>
           <properties>
               <maven.compiler.release>21</maven.compiler.release>
