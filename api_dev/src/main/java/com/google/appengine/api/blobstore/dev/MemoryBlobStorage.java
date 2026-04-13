@@ -23,8 +23,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * A version of {@link BlobStorage} that stores all data in memory.
@@ -35,7 +35,7 @@ class MemoryBlobStorage implements BlobStorage {
   private final BlobInfoStorage blobInfoStorage;
 
   MemoryBlobStorage(BlobInfoStorage blobInfoStorage) {
-    this.blobContents = new HashMap<BlobKey, byte[]>();
+    this.blobContents = new ConcurrentHashMap<>();
     this.blobInfoStorage = blobInfoStorage;
   }
 
