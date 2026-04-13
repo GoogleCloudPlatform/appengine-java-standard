@@ -22,6 +22,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static junit.framework.TestCase.assertFalse;
 import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.mock;
+import static org.quartz.TriggerBuilder.newTrigger;
 
 import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueAddRequest;
 import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueAddRequest.Header;
@@ -52,7 +53,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
-import org.quartz.SimpleTrigger;
+import org.quartz.Trigger;
 
 /**
  * Integration tests for local dev queue. These tests use a real Quartz {@link Scheduler}.
@@ -307,8 +308,11 @@ public class DevQueueIntegrationTest {
       String taskName = "task" + i;
       addRequest.setTaskName(ByteString.copyFromUtf8(taskName));
       jobNames.add(taskName);
-      SimpleTrigger trig =
-          new SimpleTrigger(taskName, "default", new Date(addRequest.getEtaUsec() / 1000));
+      Trigger trig =
+          newTrigger()
+              .withIdentity(taskName, "default")
+              .startAt(new Date(addRequest.getEtaUsec() / 1000))
+              .build();
       etas.add(trig.getStartTime().getTime());
       var unused = queue.add(addRequest);
 

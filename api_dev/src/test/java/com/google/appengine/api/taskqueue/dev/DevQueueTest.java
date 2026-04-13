@@ -19,12 +19,14 @@ package com.google.appengine.api.taskqueue.dev;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.quartz.JobBuilder.newJob;
+import static org.quartz.JobKey.jobKey;
+import static org.quartz.TriggerBuilder.newTrigger;
 
 import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueAddRequest;
 import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueAddResponse;
@@ -33,28 +35,32 @@ import com.google.appengine.tools.development.Clock;
 import com.google.apphosting.api.ApiProxy;
 import com.google.apphosting.utils.config.QueueXml;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.protobuf.ByteString;
+import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.mockito.ArgumentCaptor;
 import org.quartz.Job;
+import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
+import org.quartz.JobKey;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
-import org.quartz.SimpleTrigger;
 import org.quartz.Trigger;
+import org.quartz.impl.matchers.GroupMatcher;
 
-/**
- * Tests for local dev queue. These tests mock out all calls to the Quartz {@link Scheduler}.
- *
- */
+/** Tests for local dev queue. These tests mock out all calls to the Quartz {@link Scheduler}. */
 @RunWith(JUnit4.class)
 public class DevQueueTest {
 
@@ -88,9 +94,9 @@ public class DevQueueTest {
     TaskQueueAddRequest.Builder add =
         newAddRequest(1000).setTaskName(ByteString.copyFromUtf8("the name"));
 
-    when(schedulerMock.getJobDetail("the name", "default")).thenReturn(null);
-    when(schedulerMock.scheduleJob(isA(JobDetail.class), isA(SimpleTrigger.class)))
-        .thenReturn(null);
+    when(schedulerMock.checkExists(jobKey("the name", "default"))).thenReturn(false);
+    when(schedulerMock.scheduleJob(isA(JobDetail.class), isA(Trigger.class)))
+        .thenReturn(Date.from(Instant.now()));
     TaskQueueAddResponse resp = queue.add(add);
     assertThat(resp.getChosenTaskName().toStringUtf8()).isEmpty();
   }
@@ -99,13 +105,17 @@ public class DevQueueTest {
   public void testAdd_UnnamedTask() throws Exception {
     TaskQueueAddRequest.Builder add = newAddRequest(1000);
 
-    when(schedulerMock.getJobDetail(any(), eq("default"))).thenReturn(null);
-    when(schedulerMock.scheduleJob(isA(JobDetail.class), isA(SimpleTrigger.class)))
-        .thenReturn(null);
+    when(schedulerMock.checkExists(any(JobKey.class))).thenReturn(false);
+    when(schedulerMock.scheduleJob(isA(JobDetail.class), isA(Trigger.class)))
+        .thenReturn(Date.from(Instant.now()));
     TaskQueueAddResponse resp = queue.add(add);
-    ArgumentCaptor<String> taskName = ArgumentCaptor.forClass(String.class);
-    verify(schedulerMock).getJobDetail(taskName.capture(), eq("default"));
-    assertThat(resp.getChosenTaskName().toStringUtf8()).isEqualTo(taskName.getValue());
+    // GenTaskName is static and uses UUID, so we can't easily predict it,
+    // but we can capture what was passed to scheduleJob
+    ArgumentCaptor<JobDetail> jobDetailCaptor = ArgumentCaptor.forClass(JobDetail.class);
+    verify(schedulerMock).scheduleJob(jobDetailCaptor.capture(), any(Trigger.class));
+
+    assertThat(resp.getChosenTaskName().toStringUtf8())
+        .isEqualTo(jobDetailCaptor.getValue().getKey().getName());
   }
 
   @Test
@@ -113,8 +123,7 @@ public class DevQueueTest {
     TaskQueueAddRequest.Builder addRequest =
         newAddRequest(1000).setTaskName(ByteString.copyFromUtf8("task1"));
 
-    when(schedulerMock.getJobDetail("task1", "default"))
-        .thenReturn(new JobDetail("name", "group", UrlFetchJob.class));
+    when(schedulerMock.checkExists(jobKey("task1", "default"))).thenReturn(true);
 
     ApiProxy.ApplicationException exception =
         assertThrows(ApiProxy.ApplicationException.class, () -> queue.add(addRequest));
@@ -123,19 +132,20 @@ public class DevQueueTest {
 
   @Test
   public void testDelete() throws Exception {
-    when(schedulerMock.deleteJob("task1", "default")).thenReturn(true).thenReturn(false);
+    when(schedulerMock.deleteJob(jobKey("task1", "default"))).thenReturn(true).thenReturn(false);
 
     boolean deleted = queue.deleteTask("task1");
     assertThat(deleted).isTrue();
     deleted = queue.deleteTask("task1");
     assertThat(deleted).isFalse();
-    verify(schedulerMock, times(2)).deleteJob("task1", "default");
+    verify(schedulerMock, times(2)).deleteJob(jobKey("task1", "default"));
   }
 
   @Test
   public void testGetStateInfo() throws Exception {
     List<JobDetail> jobDetails = Lists.newArrayList();
-    List<SimpleTrigger> triggers = Lists.newArrayList();
+    List<Trigger> triggers = Lists.newArrayList();
+    Set<JobKey> jobKeys = new HashSet<>();
     List<String> jobNames = Lists.newArrayList();
     long eta = 1000000;
     for (int i = 0; i < 10; i++) {
@@ -143,28 +153,42 @@ public class DevQueueTest {
       String taskName = "task" + i;
       addRequest.setTaskName(ByteString.copyFromUtf8(taskName));
       jobNames.add(taskName);
-      JobDetail jd =
+      jobKeys.add(jobKey(taskName, "default"));
+
+      JobDataMap jobDataMap =
           new UrlFetchJobDetail(
-              taskName,
-              "default",
-              addRequest,
-              "http://localhost:8080",
-              callbackMock,
-              QueueXml.defaultEntry(),
-              null);
+                  taskName,
+                  "default",
+                  addRequest,
+                  "http://localhost:8080",
+                  callbackMock,
+                  QueueXml.defaultEntry(),
+                  null)
+              .getJobDataMap();
+
+      JobDetail jd =
+          newJob(UrlFetchJob.class)
+              .withIdentity(taskName, "default")
+              .usingJobData(jobDataMap)
+              .build();
+
       jobDetails.add(jd);
-      SimpleTrigger trig =
-          new SimpleTrigger(taskName, "default", new Date(addRequest.getEtaUsec() / 1000));
+      Trigger trig =
+          newTrigger()
+              .withIdentity(taskName, "default")
+              .startAt(new Date(addRequest.getEtaUsec() / 1000))
+              .build();
       triggers.add(trig);
     }
-    when(schedulerMock.getJobNames("default"))
-        .thenReturn(jobNames.toArray(new String[jobNames.size()]));
+
+    when(schedulerMock.getJobKeys(GroupMatcher.jobGroupEquals("default"))).thenReturn(jobKeys);
+
     Iterator<JobDetail> jdIter = jobDetails.iterator();
-    Iterator<SimpleTrigger> trigIter = triggers.iterator();
+    Iterator<Trigger> trigIter = triggers.iterator();
     for (String jobName : jobNames) {
-      when(schedulerMock.getJobDetail(jobName, "default")).thenReturn(jdIter.next());
-      when(schedulerMock.getTriggersOfJob(jobName, "default"))
-          .thenReturn(new Trigger[] {trigIter.next()});
+      when(schedulerMock.getJobDetail(jobKey(jobName, "default"))).thenReturn(jdIter.next());
+      List<Trigger> jobTriggers = Lists.newArrayList(trigIter.next());
+      when(schedulerMock.getTriggersOfJob(jobKey(jobName, "default"))).thenAnswer(i -> jobTriggers);
     }
 
     QueueStateInfo info = queue.getStateInfo();
@@ -177,13 +201,11 @@ public class DevQueueTest {
 
   @Test
   public void testFlush() throws SchedulerException {
-    when(schedulerMock.getJobNames("default")).thenReturn(new String[] {"job1", "job2"});
-    when(schedulerMock.deleteJob("job1", "default")).thenReturn(true);
-    when(schedulerMock.deleteJob("job2", "default")).thenReturn(true);
+    Set<JobKey> jobKeys = Sets.newHashSet(jobKey("job1", "default"), jobKey("job2", "default"));
+    when(schedulerMock.getJobKeys(GroupMatcher.jobGroupEquals("default"))).thenReturn(jobKeys);
 
     queue.flush();
-    verify(schedulerMock).deleteJob("job1", "default");
-    verify(schedulerMock).deleteJob("job2", "default");
+    verify(schedulerMock).deleteJobs(new ArrayList<>(jobKeys));
   }
 
   public static final class MyJob implements Job {
@@ -198,38 +220,45 @@ public class DevQueueTest {
   @Test
   public void testRunTask_Success() throws Exception {
     MyJob.calledWith = null;
-    TaskQueueAddRequest.Builder addRequest = newAddRequest(1000);
-    JobDetail jd =
-        new UrlFetchJobDetail(
-            "task1",
-            "default",
-            addRequest,
-            "http://localhost:8080",
-            callbackMock,
-            QueueXml.defaultEntry(),
-            null) {
-          @Override
-          public Class<?> getJobClass() {
-            return MyJob.class;
-          }
-        };
+    TaskQueueAddRequest.Builder addRequest =
+        newAddRequest(1000).setTaskName(ByteString.copyFromUtf8("task1"));
 
-    when(schedulerMock.getJobDetail("task1", "default")).thenReturn(jd);
+    JobDataMap jobDataMap =
+        new UrlFetchJobDetail(
+                "task1",
+                "default",
+                addRequest,
+                "http://localhost:8080",
+                callbackMock,
+                QueueXml.defaultEntry(),
+                null)
+            .getJobDataMap();
+
+    JobDetail jd =
+        newJob(MyJob.class) // changed to MyJob
+            .withIdentity("task1", "default")
+            .usingJobData(jobDataMap)
+            .build();
+
+    when(schedulerMock.getJobDetail(jobKey("task1", "default"))).thenReturn(jd);
 
     assertThat(queue.runTask("task1")).isTrue();
-    verify(schedulerMock).getJobDetail("task1", "default");
-    UrlFetchJobDetail jobDetail = (UrlFetchJobDetail) MyJob.calledWith.getJobDetail();
-    assertThat(addRequest).isSameInstanceAs(jobDetail.getAddRequest());
+    verify(schedulerMock).getJobDetail(jobKey("task1", "default"));
+    assertThat(MyJob.calledWith).isNotNull();
+    UrlFetchJobDetail jobData =
+        new UrlFetchJobDetail(MyJob.calledWith.getJobDetail().getJobDataMap());
+    assertThat(jobData.getAddRequest().build()).isEqualTo(addRequest.build());
   }
 
   @Test
   public void testRunTask_Failure() throws Exception {
     MyJob.calledWith = null;
 
-    when(schedulerMock.getJobDetail("task1", "default")).thenThrow(new SchedulerException("boom"));
+    when(schedulerMock.getJobDetail(jobKey("task1", "default")))
+        .thenThrow(new SchedulerException("boom"));
 
     assertThat(queue.runTask("task1")).isFalse();
-    verify(schedulerMock).getJobDetail("task1", "default");
+    verify(schedulerMock).getJobDetail(jobKey("task1", "default"));
     assertThat(MyJob.calledWith).isNull();
   }
 }

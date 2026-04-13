@@ -19,6 +19,7 @@ package com.google.appengine.api.taskqueue.dev;
 import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.Mockito.mock;
 
+import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueAddRequest;
 import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueRetryParameters;
 import com.google.apphosting.utils.config.QueueXml;
 import org.junit.Test;
@@ -28,68 +29,98 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class UrlFetchJobDetailTest {
 
+  private UrlFetchJobDetail createJobData(TaskQueueRetryParameters retryParams) {
+    LocalTaskQueueCallback callback = mock(LocalTaskQueueCallback.class);
+    TaskQueueAddRequest.Builder addRequest = TaskQueueAddRequest.newBuilder();
+    if (retryParams != null) {
+      addRequest.setRetryParameters(retryParams);
+    }
+
+    return new UrlFetchJobDetail(
+        "task 1",
+        "queue 1",
+        addRequest,
+        "http://localhost:8080",
+        callback,
+        QueueXml.defaultEntry(),
+        retryParams);
+  }
+
   @Test
   public void testIncrementRetryDelay() {
-    LocalTaskQueueCallback callback = mock(LocalTaskQueueCallback.class);
-    UrlFetchJobDetail jd =
-        new UrlFetchJobDetail(
-            "task 1", "queue 1", null, null, callback, QueueXml.defaultEntry(), null);
-    assertThat(jd.incrementRetryDelayMs()).isEqualTo(100);
-    assertThat(jd.incrementRetryDelayMs()).isEqualTo(200);
-    assertThat(jd.incrementRetryDelayMs()).isEqualTo(400);
-    assertThat(jd.incrementRetryDelayMs()).isEqualTo(800);
-    assertThat(jd.incrementRetryDelayMs()).isEqualTo(1600);
-    assertThat(jd.incrementRetryDelayMs()).isEqualTo(3200);
-    assertThat(jd.incrementRetryDelayMs()).isEqualTo(6400);
+    UrlFetchJobDetail jd = createJobData(null);
+    jd.incrementRetryDelayMs();
+    assertThat(jd.getRetryDelayMs()).isEqualTo(100);
+    jd.incrementRetryDelayMs();
+    assertThat(jd.getRetryDelayMs()).isEqualTo(200);
+    jd.incrementRetryDelayMs();
+    assertThat(jd.getRetryDelayMs()).isEqualTo(400);
+    jd.incrementRetryDelayMs();
+    assertThat(jd.getRetryDelayMs()).isEqualTo(800);
+    jd.incrementRetryDelayMs();
+    assertThat(jd.getRetryDelayMs()).isEqualTo(1600);
+    jd.incrementRetryDelayMs();
+    assertThat(jd.getRetryDelayMs()).isEqualTo(3200);
+    jd.incrementRetryDelayMs();
+    assertThat(jd.getRetryDelayMs()).isEqualTo(6400);
   }
 
   @Test
   public void testIncrementRetryDelayWithMaxBackoff() {
-    LocalTaskQueueCallback callback = mock(LocalTaskQueueCallback.class);
     TaskQueueRetryParameters retryParams =
         TaskQueueRetryParameters.newBuilder().setMaxBackoffSec(2).build();
-    UrlFetchJobDetail jd =
-        new UrlFetchJobDetail(
-            "task 1", "queue 1", null, null, callback, QueueXml.defaultEntry(), retryParams);
-    assertThat(jd.incrementRetryDelayMs()).isEqualTo(100);
-    assertThat(jd.incrementRetryDelayMs()).isEqualTo(200);
-    assertThat(jd.incrementRetryDelayMs()).isEqualTo(400);
-    assertThat(jd.incrementRetryDelayMs()).isEqualTo(800);
-    assertThat(jd.incrementRetryDelayMs()).isEqualTo(1600);
-    assertThat(jd.incrementRetryDelayMs()).isEqualTo(2000);
-    assertThat(jd.incrementRetryDelayMs()).isEqualTo(2000);
+    UrlFetchJobDetail jd = createJobData(retryParams);
+    jd.incrementRetryDelayMs();
+    assertThat(jd.getRetryDelayMs()).isEqualTo(100);
+    jd.incrementRetryDelayMs();
+    assertThat(jd.getRetryDelayMs()).isEqualTo(200);
+    jd.incrementRetryDelayMs();
+    assertThat(jd.getRetryDelayMs()).isEqualTo(400);
+    jd.incrementRetryDelayMs();
+    assertThat(jd.getRetryDelayMs()).isEqualTo(800);
+    jd.incrementRetryDelayMs();
+    assertThat(jd.getRetryDelayMs()).isEqualTo(1600);
+    jd.incrementRetryDelayMs();
+    assertThat(jd.getRetryDelayMs()).isEqualTo(2000);
+    jd.incrementRetryDelayMs();
+    assertThat(jd.getRetryDelayMs()).isEqualTo(2000);
   }
 
   @Test
   public void testIncrementRetryDelayWithMinBackoff() {
-    LocalTaskQueueCallback callback = mock(LocalTaskQueueCallback.class);
     TaskQueueRetryParameters retryParams =
         TaskQueueRetryParameters.newBuilder().setMinBackoffSec(1).build();
-    UrlFetchJobDetail jd =
-        new UrlFetchJobDetail(
-            "task 1", "queue 1", null, null, callback, QueueXml.defaultEntry(), retryParams);
-    assertThat(jd.incrementRetryDelayMs()).isEqualTo(1000);
-    assertThat(jd.incrementRetryDelayMs()).isEqualTo(2000);
-    assertThat(jd.incrementRetryDelayMs()).isEqualTo(4000);
-    assertThat(jd.incrementRetryDelayMs()).isEqualTo(8000);
+    UrlFetchJobDetail jd = createJobData(retryParams);
+    jd.incrementRetryDelayMs();
+    assertThat(jd.getRetryDelayMs()).isEqualTo(1000);
+    jd.incrementRetryDelayMs();
+    assertThat(jd.getRetryDelayMs()).isEqualTo(2000);
+    jd.incrementRetryDelayMs();
+    assertThat(jd.getRetryDelayMs()).isEqualTo(4000);
+    jd.incrementRetryDelayMs();
+    assertThat(jd.getRetryDelayMs()).isEqualTo(8000);
   }
 
   @Test
   public void testIncrementRetryDelayWithMaxDoublings() {
-    LocalTaskQueueCallback callback = mock(LocalTaskQueueCallback.class);
     TaskQueueRetryParameters retryParams =
         TaskQueueRetryParameters.newBuilder().setMaxDoublings(3).build();
-    UrlFetchJobDetail jd =
-        new UrlFetchJobDetail(
-            "task 1", "queue 1", null, null, callback, QueueXml.defaultEntry(), retryParams);
-    assertThat(jd.incrementRetryDelayMs()).isEqualTo(100);
+    UrlFetchJobDetail jd = createJobData(retryParams);
+    jd.incrementRetryDelayMs();
+    assertThat(jd.getRetryDelayMs()).isEqualTo(100);
     // 3 doublings follow.
-    assertThat(jd.incrementRetryDelayMs()).isEqualTo(200);
-    assertThat(jd.incrementRetryDelayMs()).isEqualTo(400);
-    assertThat(jd.incrementRetryDelayMs()).isEqualTo(800);
+    jd.incrementRetryDelayMs();
+    assertThat(jd.getRetryDelayMs()).isEqualTo(200);
+    jd.incrementRetryDelayMs();
+    assertThat(jd.getRetryDelayMs()).isEqualTo(400);
+    jd.incrementRetryDelayMs();
+    assertThat(jd.getRetryDelayMs()).isEqualTo(800);
     // From now on it's linear, so always adding 800.
-    assertThat(jd.incrementRetryDelayMs()).isEqualTo(1600);
-    assertThat(jd.incrementRetryDelayMs()).isEqualTo(2400);
-    assertThat(jd.incrementRetryDelayMs()).isEqualTo(3200);
+    jd.incrementRetryDelayMs();
+    assertThat(jd.getRetryDelayMs()).isEqualTo(1600);
+    jd.incrementRetryDelayMs();
+    assertThat(jd.getRetryDelayMs()).isEqualTo(2400);
+    jd.incrementRetryDelayMs();
+    assertThat(jd.getRetryDelayMs()).isEqualTo(3200);
   }
 }

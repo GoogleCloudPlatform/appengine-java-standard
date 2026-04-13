@@ -19,14 +19,12 @@ package com.google.appengine.api.taskqueue.dev;
 import com.google.appengine.api.taskqueue_bytes.TaskQueuePb;
 import com.google.apphosting.utils.config.QueueXml;
 import org.quartz.JobDataMap;
-import org.quartz.JobDetail;
 
 /**
- * An extension to {@link JobDetail} that adds some type-safety around required job attributes and
- * hard-codes the Job implementation to be {@link UrlFetchJob}.
- *
+ * A JobDataMap wrapper that adds some type-safety around required job attributes for {@link
+ * UrlFetchJob}.
  */
-class UrlFetchJobDetail extends JobDetail {
+class UrlFetchJobDetail {
 
   private static final String TASK_NAME_PROP = "taskName";
   private static final String QUEUE_NAME_PROP = "queueName";
@@ -43,6 +41,12 @@ class UrlFetchJobDetail extends JobDetail {
   private static final TaskQueuePb.TaskQueueRetryParameters DEFAULT_RETRY_PARAMETERS =
       TaskQueuePb.TaskQueueRetryParameters.getDefaultInstance();
 
+  private final JobDataMap jobDataMap;
+
+  UrlFetchJobDetail(JobDataMap jobDataMap) {
+    this.jobDataMap = jobDataMap;
+  }
+
   UrlFetchJobDetail(
       String taskName,
       String queueName,
@@ -51,21 +55,28 @@ class UrlFetchJobDetail extends JobDetail {
       LocalTaskQueueCallback callback,
       QueueXml.Entry queueXmlEntry,
       TaskQueuePb.TaskQueueRetryParameters retryParameters) {
-    super(taskName, queueName, UrlFetchJob.class);
-    JobDataMap dataMap = getJobDataMap();
-    dataMap.put(TASK_NAME_PROP, taskName);
-    dataMap.put(QUEUE_NAME_PROP, queueName);
-    dataMap.put(ADD_REQUEST_PROP, addRequest);
-    dataMap.put(SERVER_URL, url);
-    dataMap.put(CALLBACK, callback);
-    dataMap.put(RETRY_COUNT, 0);
-    dataMap.put(QUEUE_XML_ENTRY, queueXmlEntry);
+    this();
+    jobDataMap.put(TASK_NAME_PROP, taskName);
+    jobDataMap.put(QUEUE_NAME_PROP, queueName);
+    jobDataMap.put(ADD_REQUEST_PROP, addRequest);
+    jobDataMap.put(SERVER_URL, url);
+    jobDataMap.put(CALLBACK, callback);
+    jobDataMap.put(RETRY_COUNT, 0);
+    jobDataMap.put(QUEUE_XML_ENTRY, queueXmlEntry);
     if (retryParameters == null) {
       retryParameters = DEFAULT_RETRY_PARAMETERS;
     }
-    dataMap.put(RETRY_PARAMETERS, retryParameters);
-    dataMap.put(FIRST_TRY_MS, 0L);
-    dataMap.put(PREVIOUS_RESPONSE, 0);
+    jobDataMap.put(RETRY_PARAMETERS, retryParameters);
+    jobDataMap.put(FIRST_TRY_MS, 0L);
+    jobDataMap.put(PREVIOUS_RESPONSE, 0);
+  }
+
+  private UrlFetchJobDetail() {
+    this.jobDataMap = new JobDataMap();
+  }
+
+  JobDataMap getJobDataMap() {
+    return jobDataMap;
   }
 
   String getTaskName() {
@@ -109,7 +120,7 @@ class UrlFetchJobDetail extends JobDetail {
   }
 
   UrlFetchJobDetail retry(long firstTryMs, int previousResponseCode) {
-    UrlFetchJobDetail newJob =
+    UrlFetchJobDetail newJobData =
         new UrlFetchJobDetail(
             getTaskName(),
             getQueueName(),
@@ -118,21 +129,21 @@ class UrlFetchJobDetail extends JobDetail {
             getCallback(),
             getQueueXmlEntry(),
             getRetryParameters());
-    JobDataMap newDataMap = newJob.getJobDataMap();
+    JobDataMap newDataMap = newJobData.getJobDataMap();
     newDataMap.put(RETRY_COUNT, getRetryCount());
     newDataMap.put(FIRST_TRY_MS, firstTryMs);
     newDataMap.put(PREVIOUS_RESPONSE, previousResponseCode);
 
-    newJob.incrementRetryDelayMs();
+    newJobData.incrementRetryDelayMs();
 
-    return newJob;
+    return newJobData;
   }
 
   /**
    * Increment retry count, and update and return the next retry delay. Not threadsafe! Doesn't need
    * to be!
    */
-  int incrementRetryDelayMs() {
+  void incrementRetryDelayMs() {
     int retryCount = getRetryCount() + 1;
     getJobDataMap().put(RETRY_COUNT, retryCount);
 
@@ -151,7 +162,6 @@ class UrlFetchJobDetail extends JobDetail {
     }
     backoffMs = Math.min(maxBackoffMs, backoffMs);
     getJobDataMap().put(RETRY_DELAY_MS, backoffMs);
-    return backoffMs;
   }
 
   LocalTaskQueueCallback getCallback() {
