@@ -347,7 +347,7 @@
                   </includes>
                 </filter>
                 <filter>
-                  <artifact>org.quartz-scheduler:quartz</artifact>
+                  <artifact>quartz:quartz</artifact>
                   <includes>
                     <include>org/quartz/**</include>
                   </includes>
@@ -363,7 +363,7 @@
                    <include>org.apache.lucene:lucene-analyzers</include>
                   <include>org.apache.lucene:lucene-core</include>
                   <include>org.jsoup:jsoup</include>
-                 <include>org.quartz-scheduler:quartz</include>
+                  <include>quartz:quartz</include>
                 </includes>
               </artifactSet>
             </configuration>

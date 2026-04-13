@@ -63,7 +63,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Properties;
 import java.util.Random;
 import java.util.TreeMap;
 import org.jspecify.annotations.Nullable;
@@ -691,13 +690,7 @@ public final class LocalTaskQueue extends AbstractLocalRpcService {
     // TODO: Investigate config options for the scheduler like
     // threadpool size.
     try {
-      StdSchedulerFactory factory = new StdSchedulerFactory();
-      Properties props = new Properties();
-      props.setProperty("org.quartz.scheduler.instanceName", "AppEngineLocalTaskQueue");
-      props.setProperty("org.quartz.threadPool.class", "org.quartz.simpl.SimpleThreadPool");
-      props.setProperty("org.quartz.threadPool.threadCount", "10");
-      factory.initialize(props);
-      Scheduler scheduler = factory.getScheduler();
+      Scheduler scheduler = StdSchedulerFactory.getDefaultScheduler();
       // When a scheduler is first created it is in standby mode, which means
       // it will accept and schedule tasks but won't ever run them.
       if (!disableAutoTaskExecution) {
