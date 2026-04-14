@@ -30,6 +30,18 @@
   <properties>
        <maven.deploy.skip>true</maven.deploy.skip>
   </properties>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+      </plugin>
+    </plugins>
+    <pluginManagement>
+      <plugins>
+      </plugins>
+    </pluginManagement>
+  </build>
   <modules>
     <module>proberapp</module>
     <module>proberapp_jakarta</module>
