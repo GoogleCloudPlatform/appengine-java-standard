@@ -88,7 +88,7 @@ public final class AppEngineWebXmlInitialParse {
    * appengine.use.EE11} are set to true, defaults are applied as follows:
    *
    * <ul>
-   *   <li>{@code runtime="java17"}: Defaults to Jetty 9.4 based environment (EE6 / Servlet 3.1).
+   *   <li>{@code runtime="java17"}: Defaults to Jetty 12.0 based environment (EE8).
    *   <li>{@code runtime="java21"}: Defaults to Jetty 12.0 / EE10, unless {@code
    *       appengine.use.jetty121=true}, in which case it defaults to Jetty 12.1 / EE11.
    *   <li>{@code runtime="java25"}: Defaults to Jetty 12.1 / EE11.
@@ -99,9 +99,7 @@ public final class AppEngineWebXmlInitialParse {
    * <ul>
    *   <li>{@code <runtime>java17</runtime>}:
    *       <ul>
-   *         <li>No flags set: Jetty 9.4 (EE6) unless env variable
-   *             EXPERIMENT_ENABLE_JETTY12_FOR_JAVA is set to true, in which case Jetty 12.0 (EE8)
-   *             is used.
+   *         <li>No flags set: Jetty 12.0 (EE8)
    *         <li>{@code appengine.use.EE8=true}: Jetty 12.0 (EE8)
    *         <li>{@code appengine.use.EE10=true}: Jetty 12.0 (EE10)
    *         <li>{@code appengine.use.EE10=true} and {@code appengine.use.jetty121=true}: Jetty 12.1
@@ -213,10 +211,7 @@ public final class AppEngineWebXmlInitialParse {
     if (trueCount == 0) {
       // Apply defaults based on javaVersion
       if (Objects.equals(runtimeId, "java17")) {
-        System.setProperty(
-            "appengine.use.EE8",
-            String.valueOf(
-                Objects.equals(envProvider.apply("EXPERIMENT_ENABLE_JETTY12_FOR_JAVA"), "true")));
+        System.setProperty("appengine.use.EE8", "true");
       } else if (Objects.equals(runtimeId, "java21")) {
         if (Boolean.parseBoolean(System.getProperty("appengine.use.jetty121", "false"))) {
           System.setProperty("appengine.use.EE11", "true");
@@ -245,9 +240,7 @@ public final class AppEngineWebXmlInitialParse {
     // Log the runtime configuration so we can see it in the app logs.
     StringBuilder configLog =
         new StringBuilder("AppEngine runtime configuration: runtimeId=").append(runtimeId);
-    if (Objects.equals(envProvider.apply("EXPERIMENT_ENABLE_JETTY12_FOR_JAVA"), "true")) {
-      configLog.append(", with Jetty 12");
-    }
+    configLog.append(", with Jetty 12");
     if (Objects.equals(envProvider.apply("EXPERIMENT_ENABLE_HTTP_CONNECTOR_FOR_JAVA"), "true")) {
       configLog.append(", with HTTP Connector");
     }

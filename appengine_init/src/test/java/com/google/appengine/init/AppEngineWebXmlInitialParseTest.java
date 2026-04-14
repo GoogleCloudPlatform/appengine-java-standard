@@ -99,10 +99,9 @@ public class AppEngineWebXmlInitialParseTest {
         </appengine-web-app>
         """);
     new AppEngineWebXmlInitialParse(tempFile.toFile().getAbsolutePath()).handleRuntimeProperties();
-    assertFalse(Boolean.getBoolean("appengine.use.EE8")); // Default to jetty 9.4 which is EE6
+    assertTrue(Boolean.getBoolean("appengine.use.EE8")); // Default to jetty 12.0 which is EE8
     assertFalse(Boolean.getBoolean("appengine.use.EE10"));
     assertFalse(Boolean.getBoolean("appengine.use.EE11"));
-    assertFalse(Boolean.getBoolean("appengine.use.EE8"));
     assertFalse(Boolean.getBoolean("appengine.use.jetty121"));
   }
 
@@ -118,7 +117,7 @@ public class AppEngineWebXmlInitialParseTest {
         </appengine-web-app>
         """);
     new AppEngineWebXmlInitialParse(tempFile.toFile().getAbsolutePath()).handleRuntimeProperties();
-    assertFalse(Boolean.getBoolean("appengine.use.EE8"));
+    assertTrue(Boolean.getBoolean("appengine.use.EE8")); // Default to jetty 12.0 which is EE8
     assertFalse(Boolean.getBoolean("appengine.use.EE10"));
     assertFalse(Boolean.getBoolean("appengine.use.EE11"));
     assertTrue(Boolean.getBoolean("appengine.use.jetty121"));
@@ -409,7 +408,7 @@ public class AppEngineWebXmlInitialParseTest {
   }
 
   @Test
-  public void testJava17WithExperimentEnableJetty12() throws IOException {
+  public void testJava17WithJetty12() throws IOException {
     createTempAppEngineWebXml(
         """
         <appengine-web-app xmlns="http://appengine.google.com/ns/1.0">
@@ -418,13 +417,7 @@ public class AppEngineWebXmlInitialParseTest {
         """);
     AppEngineWebXmlInitialParse parser =
         new AppEngineWebXmlInitialParse(tempFile.toFile().getAbsolutePath());
-    parser.setEnvProvider(
-        key -> {
-          if (Objects.equals(key, "EXPERIMENT_ENABLE_JETTY12_FOR_JAVA")) {
-            return "true";
-          }
-          return null;
-        });
+
     parser.handleRuntimeProperties();
     assertTrue(Boolean.getBoolean("appengine.use.EE8"));
     assertFalse(Boolean.getBoolean("appengine.use.EE10"));
@@ -444,13 +437,6 @@ public class AppEngineWebXmlInitialParseTest {
         """);
     AppEngineWebXmlInitialParse parser =
         new AppEngineWebXmlInitialParse(tempFile.toFile().getAbsolutePath());
-    parser.setEnvProvider(
-        key -> {
-          if (Objects.equals(key, "EXPERIMENT_ENABLE_JETTY12_FOR_JAVA")) {
-            return "true";
-          }
-          return null;
-        });
     parser.handleRuntimeProperties();
     assertTrue(Boolean.getBoolean("appengine.use.EE8"));
   }
@@ -712,7 +698,7 @@ public class AppEngineWebXmlInitialParseTest {
       createTempAppEngineWebXml(
           """
           <appengine-web-app xmlns="http://appengine.google.com/ns/1.0">
-              <runtime>java17</runtime>
+              <runtime>java11</runtime>
           </appengine-web-app>
           """);
       new AppEngineWebXmlInitialParse(tempFile.toFile().getAbsolutePath()).handleRuntimeProperties();
@@ -756,7 +742,7 @@ public class AppEngineWebXmlInitialParseTest {
   }
 
   @Test
-  public void testLogExperimentJetty12() throws IOException {
+  public void testLogJetty12() throws IOException {
     Logger logger = Logger.getLogger(AppEngineWebXmlInitialParse.class.getName());
     TestHandler handler = new TestHandler();
     logger.addHandler(handler);
@@ -769,13 +755,7 @@ public class AppEngineWebXmlInitialParseTest {
           """);
       AppEngineWebXmlInitialParse parser =
           new AppEngineWebXmlInitialParse(tempFile.toFile().getAbsolutePath());
-      parser.setEnvProvider(
-          key -> {
-            if (Objects.equals(key, "EXPERIMENT_ENABLE_JETTY12_FOR_JAVA")) {
-              return "true";
-            }
-            return null;
-          });
+
       parser.handleRuntimeProperties();
       boolean found = false;
       for (LogRecord record : handler.records) {
