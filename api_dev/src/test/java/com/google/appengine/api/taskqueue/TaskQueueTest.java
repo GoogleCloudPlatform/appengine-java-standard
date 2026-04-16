@@ -72,6 +72,7 @@ import com.google.apphosting.api.ApiProxy;
 import com.google.apphosting.api.ApiProxy.ApiConfig;
 import com.google.apphosting.api.ApiProxy.Environment;
 import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb;
+import com.google.common.base.Ascii;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
 import com.google.common.truth.Correspondence;
@@ -324,12 +325,14 @@ public class TaskQueueTest {
         Ordering.natural()
             .onResultOf(
                 header -> {
-                  if (DEFAULT_NAMESPACE_HEADER.equals(header.getKey())
-                      || CURRENT_NAMESPACE_HEADER.equals(header.getKey())) {
+                  if (Ascii.equalsIgnoreCase(
+                          QueueImpl.DEFAULT_NAMESPACE_HEADER, header.getKey().toStringUtf8())
+                      || Ascii.equalsIgnoreCase(
+                          QueueImpl.CURRENT_NAMESPACE_HEADER, header.getKey().toStringUtf8())) {
                     return 1; // Sort namespace headers after user-specified headers.
-                  } else if ("content-type".equalsIgnoreCase(header.getKey().toStringUtf8())
-                      && "application/x-www-form-urlencoded"
-                          .equalsIgnoreCase(header.getValue().toStringUtf8())) {
+                  } else if (Ascii.equalsIgnoreCase("content-type", header.getKey().toStringUtf8())
+                      && Ascii.equalsIgnoreCase(
+                          "application/x-www-form-urlencoded", header.getValue().toStringUtf8())) {
                     return 2; // Sort default content-type header last.
                   } else {
                     return 0; // Let everything else remain in the original order (given a stable
