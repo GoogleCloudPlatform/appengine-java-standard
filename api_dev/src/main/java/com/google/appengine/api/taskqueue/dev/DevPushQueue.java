@@ -16,6 +16,12 @@
 
 package com.google.appengine.api.taskqueue.dev;
 
+import static org.quartz.JobBuilder.newJob;
+import static org.quartz.JobKey.jobKey;
+import static org.quartz.TriggerBuilder.newTrigger;
+import static org.quartz.impl.matchers.GroupMatcher.jobGroupEquals;
+import static org.quartz.impl.matchers.GroupMatcher.triggerGroupEquals;
+
 import com.google.appengine.api.taskqueue.dev.QueueStateInfo.TaskStateInfo;
 import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueAddRequest;
 import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueAddRequest.Header;
@@ -28,19 +34,24 @@ import com.google.apphosting.api.ApiProxy;
 import com.google.apphosting.utils.config.QueueXml;
 import com.google.common.flogger.GoogleLogger;
 import com.google.protobuf.ByteString;
+import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 import org.quartz.Job;
+import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
+import org.quartz.JobKey;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.SimpleTrigger;
 import org.quartz.Trigger;
+import org.quartz.impl.JobExecutionContextImpl;
+import org.quartz.spi.OperableTrigger;
 import org.quartz.spi.TriggerFiredBundle;
 
 /**
@@ -89,7 +100,7 @@ class DevPushQueue extends DevQueue {
           // to the contrary, pausing a job group only pauses jobs that already
           // exist.  We need to make sure all future jobs are paused, and that
           // works if we pause the trigger group.
-          scheduler.pauseTriggerGroup(getQueueName());
+          scheduler.pauseTriggers(triggerGroupEquals(getQueueName()));
         } catch (SchedulerException e) {
           throw new ApiProxy.ApplicationException(ErrorCode.INTERNAL_ERROR_VALUE, e.getMessage());
         }
@@ -112,7 +123,7 @@ class DevPushQueue extends DevQueue {
       taskName = genTaskName();
     }
     try {
-      if (scheduler.getJobDetail(taskName, getQueueName()) != null) {
+      if (scheduler.checkExists(jobKey(taskName, getQueueName()))) {
         throw new ApiProxy.ApplicationException(ErrorCode.TASK_ALREADY_EXISTS_VALUE);
       }
     } catch (SchedulerException e) {
@@ -121,11 +132,24 @@ class DevPushQueue extends DevQueue {
 
     TaskQueueRetryParameters retryParams = getRetryParameters(addRequest);
     long etaMillis = addRequest.getEtaUsec() / 1000L;
-    SimpleTrigger trigger = new SimpleTrigger(taskName, getQueueName());
-    trigger.setStartTime(new Date(etaMillis));
-    JobDetail jd = newUrlFetchJobDetail(taskName, getQueueName(), addRequest, retryParams);
+
+    JobDataMap jobDataMap =
+        newUrlFetchJobDataMap(taskName, getQueueName(), addRequest, retryParams);
+
+    JobDetail job =
+        newJob(UrlFetchJob.class)
+            .withIdentity(taskName, getQueueName())
+            .usingJobData(jobDataMap)
+            .build();
+
+    Trigger trigger =
+        newTrigger()
+            .withIdentity(taskName, getQueueName())
+            .startAt(Date.from(Instant.ofEpochMilli(etaMillis)))
+            .build();
+
     try {
-      scheduler.scheduleJob(jd, trigger);
+      scheduler.scheduleJob(job, trigger);
     } catch (SchedulerException e) {
       throw new ApiProxy.ApplicationException(ErrorCode.INTERNAL_ERROR_VALUE, e.getMessage());
     }
@@ -133,7 +157,7 @@ class DevPushQueue extends DevQueue {
   }
 
   // broken out to support testing
-  JobDetail newUrlFetchJobDetail(
+  JobDataMap newUrlFetchJobDataMap(
       String taskName,
       String queueName,
       TaskQueueAddRequest.Builder addRequest,
@@ -143,18 +167,20 @@ class DevPushQueue extends DevQueue {
         String host = header.getValue().toStringUtf8();
         if (host.startsWith("localhost:")) {
           return new UrlFetchJobDetail(
-              taskName,
-              queueName,
-              addRequest,
-              "http://" + host,
-              callback,
-              queueXmlEntry,
-              retryParams);
+                  taskName,
+                  queueName,
+                  addRequest,
+                  "http://" + host,
+                  callback,
+                  queueXmlEntry,
+                  retryParams)
+              .getJobDataMap();
         }
       }
     }
     return new UrlFetchJobDetail(
-        taskName, queueName, addRequest, baseUrl, callback, queueXmlEntry, retryParams);
+            taskName, queueName, addRequest, baseUrl, callback, queueXmlEntry, retryParams)
+        .getJobDataMap();
   }
 
   @Override
@@ -177,8 +203,11 @@ class DevPushQueue extends DevQueue {
   }
 
   List<String> getSortedJobNames() throws SchedulerException {
-    String[] jobNames = scheduler.getJobNames(getQueueName());
-    List<String> jobNameList = Arrays.asList(jobNames);
+    Set<JobKey> jobKeys = scheduler.getJobKeys(jobGroupEquals(getQueueName()));
+    List<String> jobNameList = new ArrayList<>();
+    for (JobKey jobKey : jobKeys) {
+      jobNameList.add(jobKey.getName());
+    }
     Collections.sort(jobNameList);
     return jobNameList;
   }
@@ -191,23 +220,27 @@ class DevPushQueue extends DevQueue {
       // Get the names of all jobs belonging to this queue (group).
       for (String jobName : getSortedJobNames()) {
         // Now get job details
-        UrlFetchJobDetail jd = (UrlFetchJobDetail) scheduler.getJobDetail(jobName, getQueueName());
-        if (jd == null) {
+        JobDetail jobDetail = scheduler.getJobDetail(jobKey(jobName, getQueueName()));
+        if (jobDetail == null) {
           // oops, gone, must have already run
           continue;
         }
-        Trigger[] triggers = scheduler.getTriggersOfJob(jobName, getQueueName());
-        if (triggers.length == 0) {
+
+        UrlFetchJobDetail jd = new UrlFetchJobDetail(jobDetail.getJobDataMap());
+
+        List<? extends Trigger> triggers =
+            scheduler.getTriggersOfJob(jobKey(jobName, getQueueName()));
+        if (triggers.isEmpty()) {
           // must have run in between the time we fetched the job detail and the time we fetched the
           // trigger
           continue;
         }
-        if (triggers.length != 1) {
+        if (triggers.size() != 1) {
           throw new IllegalStateException(
               "Multiple triggers for task " + jobName + " in queue " + getQueueName());
         }
-        long execTime = triggers[0].getStartTime().getTime();
-        taskInfoList.add(new TaskStateInfo(jd.getName(), execTime, jd.getAddRequest(), clock));
+        long execTime = triggers.get(0).getStartTime().toInstant().toEpochMilli();
+        taskInfoList.add(new TaskStateInfo(jd.getTaskName(), execTime, jd.getAddRequest(), clock));
       }
     } catch (SchedulerException e) {
       throw new ApiProxy.ApplicationException(ErrorCode.INTERNAL_ERROR_VALUE);
@@ -231,7 +264,7 @@ class DevPushQueue extends DevQueue {
   @Override
   boolean deleteTask(String taskName) {
     try {
-      return scheduler.deleteJob(taskName, getQueueName());
+      return scheduler.deleteJob(jobKey(taskName, getQueueName()));
     } catch (SchedulerException e) {
       throw new ApiProxy.ApplicationException(ErrorCode.INTERNAL_ERROR_VALUE);
     }
@@ -241,20 +274,18 @@ class DevPushQueue extends DevQueue {
   @Override
   void flush() {
     try {
-      for (String name : scheduler.getJobNames(getQueueName())) {
-        scheduler.deleteJob(name, getQueueName());
-      }
+      Set<JobKey> jobKeys = scheduler.getJobKeys(jobGroupEquals(getQueueName()));
+      scheduler.deleteJobs(new ArrayList<>(jobKeys));
     } catch (SchedulerException e) {
       throw new ApiProxy.ApplicationException(ErrorCode.INTERNAL_ERROR_VALUE);
     }
   }
 
-  private JobExecutionContext getExecutionContext(UrlFetchJobDetail jobDetail) {
-    Trigger trigger = new SimpleTrigger(jobDetail.getTaskName(), jobDetail.getQueueName());
-    trigger.setJobDataMap(jobDetail.getJobDataMap());
+  private JobExecutionContext getExecutionContext(JobDetail jobDetail, SimpleTrigger trigger) {
     TriggerFiredBundle bundle =
-        new TriggerFiredBundle(jobDetail, trigger, null, false, null, null, null, null);
-    return new JobExecutionContext(scheduler, bundle, null);
+        new TriggerFiredBundle(
+            jobDetail, (OperableTrigger) trigger, null, false, null, null, null, null);
+    return new JobExecutionContextImpl(scheduler, bundle, null);
   }
 
   /**
@@ -269,11 +300,19 @@ class DevPushQueue extends DevQueue {
     Job job;
     JobExecutionContext context;
     try {
-      UrlFetchJobDetail jd = (UrlFetchJobDetail) scheduler.getJobDetail(taskName, getQueueName());
+      JobDetail jd = scheduler.getJobDetail(jobKey(taskName, getQueueName()));
       if (jd == null) {
         return false;
       }
-      context = getExecutionContext(jd);
+      // Reconstruct trigger for execution context - just needs to hold data map
+      SimpleTrigger trigger =
+          (SimpleTrigger)
+              newTrigger()
+                  .withIdentity(taskName, getQueueName())
+                  .usingJobData(jd.getJobDataMap())
+                  .build();
+
+      context = getExecutionContext(jd, trigger);
       job = (Job) jd.getJobClass().newInstance();
     } catch (SchedulerException e) {
       return false;

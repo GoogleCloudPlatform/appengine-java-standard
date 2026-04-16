@@ -16,23 +16,29 @@
 
 package com.google.appengine.api.taskqueue.dev;
 
+import static org.quartz.JobBuilder.newJob;
+import static org.quartz.TriggerBuilder.newTrigger;
+
 import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueAddRequest;
 import com.google.appengine.api.taskqueue_bytes.TaskQueuePb.TaskQueueRetryParameters;
 import com.google.appengine.api.urlfetch.URLFetchServicePb.URLFetchRequest;
-import com.google.appengine.api.urlfetch.dev.LocalURLFetchService;
 import com.google.appengine.tools.development.Clock;
 import com.google.appengine.tools.development.LocalServerEnvironment;
 import com.google.apphosting.utils.config.QueueXml;
 import com.google.common.flogger.GoogleLogger;
 import java.text.DecimalFormat;
+import java.time.Instant;
 import java.util.Date;
 import org.quartz.Job;
+import org.quartz.JobDataMap;
+import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.SimpleTrigger;
 import org.quartz.Trigger;
+import org.quartz.TriggerKey;
 
 /**
  * Quartz {@link Job} implementation that hits a url. The url to hit, the http method to invoke,
@@ -85,8 +91,9 @@ public class UrlFetchJob implements Job {
       throw new JobExecutionException(
           "Interrupted while waiting for server to initialize.", e, false);
     }
-    Trigger trigger = context.getTrigger();
-    UrlFetchJobDetail jd = (UrlFetchJobDetail) context.getJobDetail();
+
+    UrlFetchJobDetail jd = new UrlFetchJobDetail(context.getJobDetail().getJobDataMap());
+
     URLFetchRequest fetchReq =
         newFetchRequest(
             jd.getTaskName(),
@@ -104,10 +111,11 @@ public class UrlFetchJob implements Job {
     if ((status < 200 || status > 299) && canRetry(jd, firstTryMs)) {
       logger.atInfo().log(
           "Web hook at %s returned status code %d.  Rescheduling...", fetchReq.getUrl(), status);
-      reschedule(context.getScheduler(), trigger, jd, firstTryMs, status);
+      reschedule(context.getScheduler(), context.getTrigger(), jd, firstTryMs, status);
     } else {
       try {
-        context.getScheduler().unscheduleJob(trigger.getName(), trigger.getGroup());
+        Trigger trigger = context.getTrigger();
+        context.getScheduler().unscheduleJob(trigger.getKey());
       } catch (SchedulerException e) {
         logger.atSevere().withCause(e).log("Unsubscription of task %s failed.", jd.getAddRequest());
       }
@@ -141,16 +149,29 @@ public class UrlFetchJob implements Job {
       long firstTryMs,
       int previousResponse) {
     // Builds a new job.
-    UrlFetchJobDetail newJobDetail = jd.retry(firstTryMs, previousResponse);
+    UrlFetchJobDetail newJobData = jd.retry(firstTryMs, previousResponse);
+    JobDataMap newJobDataMap = newJobData.getJobDataMap();
 
     // Build the new trigger from the old trigger
-    SimpleTrigger newTrigger = new SimpleTrigger(trigger.getName(), trigger.getGroup());
-    newTrigger.setStartTime(new Date(clock.getCurrentTime() + newJobDetail.getRetryDelayMs()));
+    TriggerKey triggerKey = trigger.getKey();
+    Instant newStartTime =
+        Instant.ofEpochMilli(clock.getCurrentTime() + newJobData.getRetryDelayMs());
+
+    SimpleTrigger newTrigger =
+        (SimpleTrigger)
+            newTrigger().withIdentity(triggerKey).startAt(Date.from(newStartTime)).build();
+
+    JobDetail newJob =
+        newJob(UrlFetchJob.class)
+            .withIdentity(jd.getTaskName(), jd.getQueueName())
+            .usingJobData(newJobDataMap)
+            .build();
+
     try {
-      // Quartz doesn't allow 2 jobs with the same name so we need to first
+      // Quartz 2.x doesn't allow 2 jobs with the same name so we need to first
       // unschedule the currently executing job before we reschedule
-      scheduler.unscheduleJob(trigger.getName(), trigger.getGroup());
-      scheduler.scheduleJob(newJobDetail, newTrigger);
+      scheduler.unscheduleJob(triggerKey);
+      scheduler.scheduleJob(newJob, newTrigger);
     } catch (SchedulerException e) {
       logger.atSevere().withCause(e).log("Reschedule of task %s failed.", jd.getAddRequest());
     }
