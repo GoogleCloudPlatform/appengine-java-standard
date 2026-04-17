@@ -378,11 +378,7 @@ public class SizeLimitHandlerTest extends JavaRuntimeViaHttpBase {
   private void assertEnvironment() throws Exception {
     String match =
         switch (jakartaVersion) {
-          case "EE6" ->
-              useHttpConnector
-                  ? "com.google.apphosting.runtime.jetty9.JettyRequestAPIData"
-                  : "org.eclipse.jetty.server.Request";
-          case "EE8" -> "org.eclipse.jetty.ee8";
+          case "EE6", "EE8" -> "org.eclipse.jetty.ee8"; // EE6 is now running on EE8.
           case "EE10" -> "org.eclipse.jetty.ee1"; // EE10 could be upgraded to EE11!
           case "EE11" -> "org.eclipse.jetty.ee11";
           default -> throw new IllegalArgumentException(jakartaVersion);
