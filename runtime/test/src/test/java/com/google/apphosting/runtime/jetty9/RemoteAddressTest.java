@@ -135,19 +135,14 @@ public class RemoteAddressTest extends JavaRuntimeViaHttpBase {
             .send();
     assertThat(response.getStatus(), equalTo(HttpStatus.OK_200));
     contentReceived = response.getContentAsString();
-    if (jettyVersion.equals("9.4")) {
-      assertThat(
-          contentReceived, containsString("getRemoteAddr: [2001:db8:85a3:8d3:1319:8a2e:370:7348]"));
-      assertThat(
-          contentReceived, containsString("getRemoteHost: [2001:db8:85a3:8d3:1319:8a2e:370:7348]"));
-    } else {
-      // The correct behaviour for getRemoteAddr and getRemoteHost is to not include []
-      // because they return raw IP/hostname and not URI-formatted addresses.
-      assertThat(
-          contentReceived, containsString("getRemoteAddr: 2001:db8:85a3:8d3:1319:8a2e:370:7348"));
-      assertThat(
-          contentReceived, containsString("getRemoteHost: 2001:db8:85a3:8d3:1319:8a2e:370:7348"));
-    }
+
+    // The correct behaviour for getRemoteAddr and getRemoteHost is to not include []
+    // because they return raw IP/hostname and not URI-formatted addresses.
+    assertThat(
+        contentReceived, containsString("getRemoteAddr: 2001:db8:85a3:8d3:1319:8a2e:370:7348"));
+    assertThat(
+        contentReceived, containsString("getRemoteHost: 2001:db8:85a3:8d3:1319:8a2e:370:7348"));
+
     assertThat(contentReceived, containsString("getRemotePort: 0"));
     assertThat(contentReceived, containsString("getLocalAddr: 0.0.0.0"));
     assertThat(contentReceived, containsString("getLocalName: 0.0.0.0"));
