@@ -59,7 +59,7 @@
         <dependency>
             <groupId>com.google.cloud</groupId>
             <artifactId>google-cloud-spanner</artifactId>
-            <version>6.116.0</version>
+            <version>6.116.1</version>
         </dependency>
         <dependency>
             <groupId>com.google.appengine</groupId>
@@ -169,7 +169,7 @@
         <dependency>
             <groupId>com.mysql</groupId>
             <artifactId>mysql-connector-j</artifactId>
-            <version>9.6.0</version>
+            <version>9.7.0</version>
         </dependency>
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
