@@ -461,6 +461,8 @@ public class JettyContainerService extends AbstractContainerService implements C
   }
 
   private class ScannerListener implements Scanner.DiscreteListener {
+    private boolean firstChange = true;
+
     @Override
     public void fileAdded(String filename) throws Exception {
       // trigger a reload
@@ -469,6 +471,12 @@ public class JettyContainerService extends AbstractContainerService implements C
 
     @Override
     public void fileChanged(String filename) throws Exception {
+      if (firstChange) {
+        firstChange = false;
+        log.atInfo().log(
+            "Ignoring first change to %s to avoid spurious reload on startup.", filename);
+        return;
+      }
       log.atInfo().log("%s updated, reloading the webapp!", filename);
       reloadWebApp();
     }
@@ -505,7 +513,7 @@ public class JettyContainerService extends AbstractContainerService implements C
     scanner.setScanInterval(interval);
     scanner.setScanDirs(scanList);
     scanner.setReportExistingFilesOnStartup(false);
-    scanner.setScanDepth(3);
+    scanner.setScanDepth(-1); // -1 means unlimited depth.
 
     scanner.addListener(
         new Scanner.BulkListener() {
