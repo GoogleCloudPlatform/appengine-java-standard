@@ -40,7 +40,7 @@
         <DB_REGION>us-central1</DB_REGION>
         <DB_USER>prober-user</DB_USER>
         <DB_PASSOWRD>prober_connectivity_test_database</DB_PASSOWRD>
-        <gax.version>2.79.0</gax.version>
+        <gax.version>2.80.0</gax.version>
         <appengine.target.version>${project.version}</appengine.target.version>
         <appengine.runtime.location>target/${project.artifactId}-${project.version}</appengine.runtime.location>
     </properties>
@@ -59,7 +59,7 @@
         <dependency>
             <groupId>com.google.cloud</groupId>
             <artifactId>google-cloud-spanner</artifactId>
-            <version>6.116.1</version>
+            <version>6.117.0</version>
         </dependency>
         <dependency>
             <groupId>com.google.appengine</groupId>
@@ -117,17 +117,17 @@
         <dependency>
             <groupId>com.google.cloud</groupId>
             <artifactId>google-cloud-bigquery</artifactId>
-            <version>2.65.0</version>
+            <version>2.66.0</version>
         </dependency>
         <dependency>
             <groupId>com.google.cloud</groupId>
             <artifactId>google-cloud-core</artifactId>
-            <version>2.69.0</version>
+            <version>2.70.0</version>
         </dependency>
         <dependency>
             <groupId>com.google.cloud</groupId>
             <artifactId>google-cloud-datastore</artifactId>
-            <version>2.40.0</version>
+            <version>2.41.0</version>
         </dependency>
         <dependency>
             <groupId>com.google.cloud</groupId>
@@ -136,7 +136,7 @@
         <dependency>
             <groupId>com.google.cloud</groupId>
             <artifactId>google-cloud-storage</artifactId>
-            <version>2.67.0</version>
+            <version>2.68.0</version>
         </dependency>
         <dependency>
             <groupId>com.google.cloud.sql</groupId>
