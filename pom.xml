@@ -473,7 +473,7 @@
       <dependency>
         <groupId>com.google.api.grpc</groupId>
         <artifactId>proto-google-cloud-datastore-v1</artifactId>
-        <version>0.126.0</version>
+        <version>0.128.0</version>
       </dependency>
       <dependency>
         <groupId>com.google.api.grpc</groupId>
