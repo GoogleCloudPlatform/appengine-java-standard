@@ -31,7 +31,6 @@
     <module>sessiondata</module>
     <module>appengine_init</module>
     <module>shared_sdk</module>
-    <module>shared_sdk_jetty9</module>
     <module>shared_sdk_jetty12</module>
     <module>shared_sdk_jetty121</module>
     <module>appengine_resources</module>
@@ -46,7 +45,6 @@
     <module>remoteapi</module>
     <module>runtime</module>
     <module>runtime_shared</module>
-    <module>runtime_shared_jetty9</module>
     <module>runtime_shared_jetty12</module>
     <module>runtime_shared_jetty12_ee10</module>
     <module>runtime_shared_jetty121_ee8</module>

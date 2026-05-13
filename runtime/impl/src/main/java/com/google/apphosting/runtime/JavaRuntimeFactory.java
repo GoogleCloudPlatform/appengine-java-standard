@@ -183,14 +183,7 @@ public class JavaRuntimeFactory {
 
   /** Creates the ServletEngineAdapter. */
   private static ServletEngineAdapter createServletEngine() {
-    String servletEngine;
-    if (Boolean.getBoolean("appengine.use.EE8")
-        || Boolean.getBoolean("appengine.use.EE10")
-        || Boolean.getBoolean("appengine.use.EE11")) {
-      servletEngine = "com.google.apphosting.runtime.jetty.JettyServletEngineAdapter";
-    } else {
-      servletEngine = "com.google.apphosting.runtime.jetty9.JettyServletEngineAdapter";
-    }
+    String servletEngine = "com.google.apphosting.runtime.jetty.JettyServletEngineAdapter";
 
     try {
       Class<? extends ServletEngineAdapter> engineClazz =

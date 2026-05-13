@@ -12,50 +12,81 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Can be rendered via https://dreampuf.github.io/GraphvizOnline
+# Can be rendered via http://graphviz/ or https://dreampuf.github.io/GraphvizOnline
+# For more styling options, see go/graphviz-ref
 
 digraph {
+  rankdir=LR;
+  splines=ortho;
+  nodesep=0.8;
+node [margin=0 fontcolor=black fontsize=32 width=0.5 shape=ovale style=filled];
 {
-node [margin=0 fontcolor=black fontsize=32 width=0.5 shape=ovale style=filled]
-appengine_resources [fillcolor=yellow label="appengine-resources"]
-appengine_utils [fillcolor=yellow label="appengine-utils"]
-protos [fillcolor=yellow label="protos"]
-sessiondata [fillcolor=yellow label="sessiondata"]
-runtime_shared_jetty9 [fillcolor=orange label="runtime-shared-jetty *"]
-runtime_shared_jetty12 [fillcolor=orange label="runtime-shared-jetty *"]
-appengine_apis [fillcolor=yellow label="appengine-apis"]
-appengine_apis_dev [fillcolor=yellow label="appengine-apis-dev"]
-shared_sdk [fillcolor=yellow label="shared-sdk"]
-appengine_local_runtime [fillcolor=orange label="appengine-local-runtime"]
-appengine_api_legacy [fillcolor=orange label="appengine-api-legacy"]
-appengine_testing [fillcolor=orange label="appengine-testing"]
-appengine_local_runtime_shared [fillcolor=orange label="appengine-local-runtime-shared"]
-appengine_remoteapi [fillcolor=orange label="appengine-remoteapi"]
-appengine_tools_sdk [fillcolor=orange label="appengine-tools-sdk"]
-runtime_main [fillcolor=orange label="runtime-main * "]
-runtime_impl_jetty9 [fillcolor=orange label="runtime-impl-jetty9 *"]
-runtime_impl_jetty12 [fillcolor=orange label="runtime-impl-jetty12 *"]
-runtime_util [fillcolor=yellow label="runtime-util"]
-appengine_api_1_0_sdk [fillcolor=orange label="appengine-api-1_0-sdk"]
-appengine_api_stubs [fillcolor=orange label="appengine-api-stubs"]
-runtime_util -> {}
-runtime_impl -> {}
-runtime_shared -> {}
-jetty9 ->{}
-jetty12 ->{}
-quickstartgenerator ->{}
-quickstartgenerator_jetty12 ->{}
-appengine_local_runtime_jetty9 ->{}
-appengine_local_runtime_jetty12 ->{}
+appengine_resources [fillcolor=grey label="appengine-resources"];
+appengine_utils [fillcolor=grey label="appengine-utils"];
+protos [fillcolor=grey label="protos"];
+sessiondata [fillcolor=grey label="sessiondata"];
+appengine_apis [fillcolor=grey label="appengine-apis"];
+appengine_apis_dev [fillcolor=grey label="appengine-apis-dev"];
+shared_sdk [fillcolor=grey label="shared-sdk"];
+appengine_local_runtime [fillcolor=grey label="appengine-local-runtime"];
+appengine_local_runtime_shared [fillcolor=grey label="appengine-local-runtime-shared"];
+runtime_util [fillcolor=grey label="runtime-util"];
+runtime_impl [fillcolor=grey label="runtime-impl"];
+runtime_shared [fillcolor=grey label="runtime-shared"];
 }
 
-runtime_shared -> {runtime_shared,jetty9}
+subgraph cluster_user_visible {
+label = "User Visible";
+appengine_api_legacy [fillcolor=green label="appengine-api-legacy"];
+appengine_testing [fillcolor=green label="appengine-testing"];
+appengine_remoteapi [fillcolor=green label="appengine-remoteapi"];
+appengine_tools_sdk [fillcolor=green label="appengine-tools-sdk"];
+appengine_api_1_0_sdk [fillcolor=green label="appengine-api-1_0-sdk"];
+appengine_api_stubs [fillcolor=green label="appengine-api-stubs"];
+appengine_jsr107 [fillcolor=green label="appengine-jsr107"];
+}
+
+subgraph cluster_jetty12 {
+label = "Jetty 12";
+shared_sdk_jetty12 [fillcolor=orange label="shared-sdk-jetty12"];
+jetty12 [fillcolor=orange label="jetty12"];
+local_runtime_shared_jetty12 [fillcolor=orange label="local-runtime-shared-jetty12"];
+appengine_local_runtime_jetty12 [fillcolor=orange label="appengine_local_runtime_jetty12"];
+}
+
+subgraph cluster_jetty121 {
+label = "Jetty 12.1";
+shared_sdk_jetty121 [fillcolor=yellow label="shared-sdk-jetty121"];
+jetty121 [fillcolor=yellow label="jetty121"];
+quickstartgenerator_jetty121_ee8 [fillcolor=yellow label="quickstartgenerator_jetty121_ee8"];
+quickstartgenerator_jetty121_ee11 [fillcolor=yellow label="quickstartgenerator_jetty121_ee11"];
+appengine_local_runtime_jetty121 [fillcolor=yellow label="appengine_local_runtime_jetty121"];
+}
+
+subgraph cluster_runtime_jars {
+label = "Runtime Jars";
+runtime_main [fillcolor=grey label="runtime-main"];
+runtime_shared_jetty12 [fillcolor=orange label="runtime-shared-jetty12"];
+runtime_shared_jetty12_ee10 [fillcolor=orange label="runtime-shared-jetty12-ee10"];
+runtime_impl_jetty12 [fillcolor=orange label="runtime-impl-jetty12"];
+runtime_shared_jetty121_ee8 [fillcolor=yellow label="runtime-shared-jetty121-ee8"];
+runtime_shared_jetty121_ee11 [fillcolor=yellow label="runtime-shared-jetty121-ee11"];
+runtime_impl_jetty121 [fillcolor=yellow label="runtime-impl-jetty121"];
+}
+
 runtime_shared_jetty12 -> {runtime_shared,jetty12}
+runtime_shared_jetty12_ee10 -> {runtime_shared,jetty12}
+runtime_shared_jetty121_ee8 -> {runtime_shared,jetty121}
+runtime_shared_jetty121_ee11 -> {runtime_shared,jetty121}
 appengine_apis -> {protos, runtime_shared}
 appengine_apis_dev -> {appengine_apis,protos,appengine_utils, shared_sdk, appengine_resources}
 appengine_api_1_0_sdk -> {appengine_apis}
 appengine_api_stubs -> {appengine_apis_dev, shared_sdk}
 shared_sdk -> {appengine_api_1_0_sdk ,sessiondata}
+shared_sdk_jetty12 -> {shared_sdk, jetty12}
+shared_sdk_jetty121 -> {shared_sdk, jetty121}
+appengine_jsr107 -> {appengine_api_1_0_sdk}
+local_runtime_shared_jetty12 -> {appengine_api_stubs}
 appengine_api_legacy -> {appengine_api_1_0_sdk}
 appengine_testing -> {appengine_apis,appengine_apis_dev}
 appengine_local_runtime_shared -> {appengine_apis_dev,runtime_shared}
@@ -63,11 +94,75 @@ appengine_remoteapi -> {appengine_apis}
 appengine_tools_sdk -> {appengine_apis_dev, appengine_remoteapi,appengine_utils}
 runtime_main -> {runtime_util }
 runtime_impl -> {appengine_utils,protos,appengine_api_1_0_sdk, runtime_util}
-runtime_impl_jetty9 -> {runtime_impl,appengine_utils,protos,appengine_api_1_0_sdk, runtime_util,jetty9}
 runtime_impl_jetty12 -> {runtime_impl,appengine_utils,protos,appengine_api_1_0_sdk, runtime_util,jetty12}
+runtime_impl_jetty121 -> {runtime_impl,appengine_utils,protos,appengine_api_1_0_sdk, runtime_util,jetty121}
 appengine_local_runtime -> {appengine_remoteapi,appengine_apis_dev,runtime_shared,appengine_tools_sdk,shared_sdk,appengine_utils}
-appengine_local_runtime_jetty9 -> {appengine_local_runtime,jetty9}
 appengine_local_runtime_jetty12 -> {appengine_local_runtime,jetty12}
+appengine_local_runtime_jetty121 -> {appengine_local_runtime,jetty121}
+quickstartgenerator_jetty121_ee8 -> {jetty121}
+quickstartgenerator_jetty121_ee11 -> {jetty121}
 runtime_util -> {}
+
+{
+rank=sink;
+Legend [shape=none, margin=0, label=<
+<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+ <TR>
+  <TD COLSPAN="2" ALIGN="LEFT"><B>Legend</B></TD>
+ </TR>
+ <TR>
+  <TD ALIGN="LEFT">User Visible</TD>
+  <TD BGCOLOR="green"></TD>
+ </TR>
+ <TR>
+  <TD ALIGN="LEFT">Jetty 12</TD>
+  <TD BGCOLOR="orange"></TD>
+ </TR>
+  <TR>
+  <TD ALIGN="LEFT">Jetty 12.1</TD>
+  <TD BGCOLOR="yellow"></TD>
+ </TR>
+ <TR>
+  <TD ALIGN="LEFT">Utility</TD>
+  <TD BGCOLOR="grey"></TD>
+ </TR>
+</TABLE>
+>];
+
+Modules [shape=none, margin=0, label=<
+<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+<TR><TD COLSPAN="2" ALIGN="LEFT"><B>Modules</B></TD></TR>
+<TR><TD ALIGN="LEFT">appengine-api-1.0-sdk</TD><TD ALIGN="LEFT">API for Google App Engine standard environment with some of the dependencies shaded (repackaged)</TD></TR>
+<TR><TD ALIGN="LEFT">appengine-api-legacy</TD><TD ALIGN="LEFT">Legacy appengine API's that have been removed from appengine-api-sdk-1.0</TD></TR>
+<TR><TD ALIGN="LEFT">appengine-api-stubs</TD><TD ALIGN="LEFT">SDK for dev_appserver (local development) with some of the dependencies shaded (repackaged)</TD></TR>
+<TR><TD ALIGN="LEFT">appengine-apis</TD><TD ALIGN="LEFT">API for Google App Engine standard environment</TD></TR>
+<TR><TD ALIGN="LEFT">appengine-apis-dev</TD><TD ALIGN="LEFT">SDK for dev_appserver (local development)</TD></TR>
+<TR><TD ALIGN="LEFT">appengine-jsr107</TD><TD ALIGN="LEFT">App Engine JSR-107 (JCache) integration.</TD></TR>
+<TR><TD ALIGN="LEFT">appengine-local-runtime-shared-jetty12</TD><TD ALIGN="LEFT">App Engine local runtime shared components for Jetty 12.</TD></TR>
+<TR><TD ALIGN="LEFT">appengine-remote-api</TD><TD ALIGN="LEFT">App Engine remote API.</TD></TR>
+<TR><TD ALIGN="LEFT">appengine-resources</TD><TD ALIGN="LEFT">App Engine resources.</TD></TR>
+<TR><TD ALIGN="LEFT">appengine-testing</TD><TD ALIGN="LEFT">Testing support for Google App Engine standard environment application code</TD></TR>
+<TR><TD ALIGN="LEFT">appengine-utils</TD><TD ALIGN="LEFT">App Engine utilities.</TD></TR>
+<TR><TD ALIGN="LEFT">protos</TD><TD ALIGN="LEFT">Protocol buffers.</TD></TR>
+<TR><TD ALIGN="LEFT">quickstartgenerator-jetty121-ee11</TD><TD ALIGN="LEFT">Quickstart generator for Jetty 12.1 EE11.</TD></TR>
+<TR><TD ALIGN="LEFT">quickstartgenerator-jetty121-ee8</TD><TD ALIGN="LEFT">Quickstart generator for Jetty 12.1 EE8.</TD></TR>
+<TR><TD ALIGN="LEFT">runtime-impl</TD><TD ALIGN="LEFT">App Engine runtime implementation.</TD></TR>
+<TR><TD ALIGN="LEFT">runtime-impl-jetty12</TD><TD ALIGN="LEFT">App Engine runtime implementation for Jetty 12.</TD></TR>
+<TR><TD ALIGN="LEFT">runtime-impl-jetty121</TD><TD ALIGN="LEFT">App Engine runtime implementation for Jetty 12.1.</TD></TR>
+<TR><TD ALIGN="LEFT">runtime-main</TD><TD ALIGN="LEFT">App Engine runtime main.</TD></TR>
+<TR><TD ALIGN="LEFT">runtime-shared</TD><TD ALIGN="LEFT">App Engine runtime shared components.</TD></TR>
+<TR><TD ALIGN="LEFT">runtime-shared-jetty12</TD><TD ALIGN="LEFT">App Engine runtime shared components for Jetty 12 EE8.</TD></TR>
+<TR><TD ALIGN="LEFT">runtime-shared-jetty12-ee10</TD><TD ALIGN="LEFT">App Engine runtime shared components for Jetty 12 and EE10.</TD></TR>
+<TR><TD ALIGN="LEFT">runtime-shared-jetty121-ee11</TD><TD ALIGN="LEFT">App Engine runtime shared components for Jetty 121 EE11.</TD></TR>
+<TR><TD ALIGN="LEFT">runtime-shared-jetty121-ee8</TD><TD ALIGN="LEFT">App Engine runtime shared components for Jetty 12.1 EE8.</TD></TR>
+<TR><TD ALIGN="LEFT">runtime-util</TD><TD ALIGN="LEFT">App Engine runtime utilities.</TD></TR>
+<TR><TD ALIGN="LEFT">sessiondata</TD><TD ALIGN="LEFT">App Engine session data.</TD></TR>
+<TR><TD ALIGN="LEFT">shared-sdk</TD><TD ALIGN="LEFT">Shared SDK.</TD></TR>
+<TR><TD ALIGN="LEFT">shared-sdk-jetty12</TD><TD ALIGN="LEFT">Shared SDK for Jetty 12.</TD></TR>
+<TR><TD ALIGN="LEFT">shared-sdk-jetty121</TD><TD ALIGN="LEFT">Shared SDK for Jetty 12.1.</TD></TR>
+</TABLE>
+>];
+}
+
 }
 

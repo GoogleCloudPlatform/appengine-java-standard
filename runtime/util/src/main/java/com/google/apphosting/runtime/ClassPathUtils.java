@@ -65,12 +65,12 @@ public class ClassPathUtils {
    *       runtime-shared-jetty121-ee11.jar} is selected.
    * </ul>
    *
-   * <p>If {@code appengine.use.jetty121} is false, Jetty 12.0 or 9.4 is used:
+   * <p>If {@code appengine.use.jetty121} is false, Jetty 12.0 is used:
    *
    * <ul>
    *   <li>If EE10 is active, Jetty 12.0 is used with {@code runtime-shared-jetty12-ee10.jar}.
    *   <li>If EE8 is active, Jetty 12.0 is used with {@code runtime-shared-jetty12.jar}.
-   *   <li>If EE6 is active (default), Jetty 9.4 is used with {@code runtime-shared-jetty9.jar}.
+   *   <li>If EE6 is active (default), Jetty 12 is used with {@code runtime-shared-jetty12.jar}.
    * </ul>
    *
    */
@@ -85,11 +85,9 @@ public class ClassPathUtils {
     /*
         New content is very simple now (from maven jars):
         ls blaze-bin/java/com/google/apphosting/runtime_java11/deployment_java11
-        runtime-impl-jetty9.jar for Jetty9
-        runtime-impl-jetty12.jar for EE8 and EE10
+        runtime-impl-jetty12.jar for EE6, EE8 and EE10
         runtime-impl-jetty121.jar for EE8 and EE11
         runtime-main.jar shared bootstrap main
-        runtime-shared-jetty9.jar (for Jetty9)
         runtime-shared-jetty12.jar for EE8
         runtime-shared-jetty12-ee10.jar for EE10
         runtime-shared-jetty121-ee8.jar for Jetty 12.1 EE8
@@ -109,6 +107,11 @@ public class ClassPathUtils {
     if (Boolean.getBoolean("appengine.use.jetty121")) { // Jetty121 case (EE8 and EE11)
       runtimeImplJar = "runtime-impl-jetty121.jar";
       switch (eeVersion) {
+        case "EE6" -> {
+          // Default to EE8 shared for EE6 with Jetty 12.1, similar to Jetty 12.0.
+          profileMessage = "AppEngine is using Jetty 12.1 EE8 profile for EE6.";
+          runtimeSharedJar = "runtime-shared-jetty121-ee8.jar";
+        }
         case "EE8" -> {
           profileMessage = "AppEngine is using Jetty 12.1 EE8 profile.";
           runtimeSharedJar = "runtime-shared-jetty121-ee8.jar";
@@ -141,10 +144,10 @@ public class ClassPathUtils {
           profileMessage = "AppEngine is using jetty 12. EE8 profile.";
           runtimeSharedJar = "runtime-shared-jetty12.jar";
         }
-        case "EE6" -> { // Default to jetty9
-          runtimeImplJar = "runtime-impl-jetty9.jar";
-          runtimeSharedJar = "runtime-shared-jetty9.jar";
-          profileMessage = null;
+        case "EE6" -> { // Default to jetty12
+          runtimeImplJar = "runtime-impl-jetty12.jar";
+          runtimeSharedJar = "runtime-shared-jetty12.jar";
+          profileMessage = "AppEngine is using jetty 12. EE6 profile (default).";
         }
         default -> throw new IllegalArgumentException(
             "Invalid Jetty12 configuration for eeVersion=" + eeVersion);

@@ -43,17 +43,10 @@ public final class ClassPathUtilsTest {
   public void verifyJava11PropertiesAreConfigured() throws Exception {
     ClassPathUtils cpu = new ClassPathUtils();
     assertThat(cpu.getConnectorJUrls()).hasLength(0);
-    if (Boolean.getBoolean("appengine.use.EE8")|| Boolean.getBoolean("appengine.use.EE10")) {
-        assertThat(System.getProperty("classpath.runtime-impl"))
-                .isEqualTo(runtimeLocation + "/runtime-impl-jetty12.jar");
-        assertThat(System.getProperty("classpath.runtime-shared"))
-                .isEqualTo(runtimeLocation + "/runtime-shared-jetty12.jar");
-    } else {
-        assertThat(System.getProperty("classpath.runtime-impl"))
-                .isEqualTo(runtimeLocation + "/runtime-impl-jetty9.jar");
-        assertThat(System.getProperty("classpath.runtime-shared"))
-                .isEqualTo(runtimeLocation + "/runtime-shared-jetty9.jar");
-    }
+    assertThat(System.getProperty("classpath.runtime-impl"))
+        .isEqualTo(runtimeLocation + "/runtime-impl-jetty12.jar");
+    assertThat(System.getProperty("classpath.runtime-shared"))
+        .isEqualTo(runtimeLocation + "/runtime-shared-jetty12.jar");
     assertThat(System.getProperty("classpath.connector-j")).isNull();
   }
 }

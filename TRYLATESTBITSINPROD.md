@@ -26,20 +26,18 @@ without being impacted with a scheduled new runtime push.
 Well, it is possible, by changing just a little bit your application configuration and your
 pom.xml file.
 
-First, you need to decide which App Engine Java runtime jars version you want to use. There are 6 runtime jars that
+First, you need to decide which App Engine Java runtime jars version you want to use. There are 7 runtime jars that
 are bundled as a Maven assembly under `<artifactId>runtime-deployment</artifactId>`:
 
-  * runtime-impl-jetty9.jar
   * runtime-impl-jetty12.jar
   * runtime-impl-jetty121.jar
-  * runtime-shared-jetty9.jar
   * runtime-shared-jetty12.jar
   * runtime-shared-jetty121-ee8.jar
   * runtime-shared-jetty12-ee10.jar
   * runtime-shared-jetty121-ee11.jar
   * runtime-main.jar
 
-Let's say you want the latest from head in this github repository. You could built the 9 jars, add them at the
+Let's say you want the latest from head in this github repository. You could build the 7 jars, add them at the
 top of your web application and change the entrypoint to boot with these jars instead of the one maintained in production.
 
 
@@ -56,9 +54,8 @@ See the output of the runtime deployment module which contains all the jars need
 
 ```
 ls  runtime/deployment/target/runtime-deployment-*/
-runtime-impl-jetty12.jar	runtime-impl-jetty121.jar	runtime-main.jar		runtime-shared-jetty12.jar
-runtime-shared-jetty121-ee8.jar  runtime-shared-jetty121-ee11.jar
-runtime-impl-jetty9.jar		runtime-shared-jetty12-ee10.jar	runtime-shared-jetty9.jar
+runtime-impl-jetty12.jar  runtime-impl-jetty121.jar  runtime-main.jar  runtime-shared-jetty12.jar
+runtime-shared-jetty121-ee8.jar  runtime-shared-jetty121-ee11.jar  runtime-shared-jetty12-ee10.jar
 ```
 
 These jars are pushed in Maven Central as well under artifact com.google.appengine:runtime-deployment.
@@ -99,14 +96,6 @@ deployed web application.
             </goals>
             <configuration>
                 <fileSets>
-                    <fileSet>
-                        <sourceFile>${appengine.runtime.location}/WEB-INF/lib/runtime-impl-jetty9-${appengine.runtime.version}.jar</sourceFile>
-                        <destinationFile>${appengine.runtime.location}/runtime-impl-jetty9.jar</destinationFile>
-                    </fileSet>
-                    <fileSet>
-                        <sourceFile>${appengine.runtime.location}/WEB-INF/lib/runtime-shared-jetty9-${appengine.runtime.version}.jar</sourceFile>
-                        <destinationFile>${appengine.runtime.location}/runtime-shared-jetty9.jar</destinationFile>
-                    </fileSet>
                     <fileSet>
                         <sourceFile>${appengine.runtime.location}/WEB-INF/lib/runtime-impl-jetty12-${appengine.runtime.version}.jar</sourceFile>
                         <destinationFile>${appengine.runtime.location}/runtime-impl-jetty12.jar</destinationFile>
@@ -233,14 +222,6 @@ sed -i '/<\/plugins>/i \
                         </goals>\
                         <configuration>\
                             <fileSets>\
-                                <fileSet>\
-                                    <sourceFile>${appengine.runtime.location}/WEB-INF/lib/runtime-impl-jetty9-${appengine.runtime.version}.jar</sourceFile>\
-                                    <destinationFile>${appengine.runtime.location}/runtime-impl-jetty9.jar</destinationFile>\
-                                </fileSet>\
-                                <fileSet>\
-                                    <sourceFile>${appengine.runtime.location}/WEB-INF/lib/runtime-shared-jetty9-${appengine.runtime.version}.jar</sourceFile>\
-                                    <destinationFile>${appengine.runtime.location}/runtime-shared-jetty9.jar</destinationFile>\
-                                </fileSet>\
                                 <fileSet>\
                                     <sourceFile>${appengine.runtime.location}/WEB-INF/lib/runtime-impl-jetty12-${appengine.runtime.version}.jar</sourceFile>\
                                     <destinationFile>${appengine.runtime.location}/runtime-impl-jetty12.jar</destinationFile>\

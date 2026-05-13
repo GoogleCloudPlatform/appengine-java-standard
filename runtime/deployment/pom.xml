@@ -33,11 +33,6 @@
   <dependencies>
     <dependency>
       <groupId>com.google.appengine</groupId>
-      <artifactId>runtime-impl-jetty9</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.google.appengine</groupId>
       <artifactId>runtime-impl-jetty12</artifactId>
       <version>${project.version}</version>
     </dependency>
@@ -49,11 +44,6 @@
     <dependency>
       <groupId>com.google.appengine</groupId>
       <artifactId>runtime-main</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.google.appengine</groupId>
-      <artifactId>runtime-shared-jetty9</artifactId>
-       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>com.google.appengine</groupId>

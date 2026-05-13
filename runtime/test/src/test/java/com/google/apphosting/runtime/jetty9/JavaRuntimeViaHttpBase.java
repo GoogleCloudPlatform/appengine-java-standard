@@ -119,7 +119,6 @@ public abstract class JavaRuntimeViaHttpBase {
     List<Object[]> allVersions =
         Arrays.asList(
             new Object[][] {
-              {"java17", "9.4", "EE6", true},
           {"java17", "12.0", "EE8", true},
           {"java17", "12.0", "EE10", true},
           {"java17", "12.1", "EE11", true},
@@ -129,7 +128,6 @@ public abstract class JavaRuntimeViaHttpBase {
           {"java25", "12.1", "EE8", true},
           {"java25", "12.1", "EE11", true},
           // with RPC connector ancient mode, obsolete soon...
-          {"java17", "9.4", "EE6", false},
           {"java17", "12.0", "EE8", false},
           {"java17", "12.0", "EE10", false},
           {"java17", "12.1", "EE11", false},

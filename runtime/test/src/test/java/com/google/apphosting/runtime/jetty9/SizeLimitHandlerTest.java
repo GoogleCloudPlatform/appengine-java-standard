@@ -33,7 +33,6 @@ import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -146,7 +145,7 @@ public class SizeLimitHandlerTest extends JavaRuntimeViaHttpBase {
     }
     assertThat(received.length(), lessThanOrEqualTo(MAX_SIZE));
 
-    if (!Objects.equals(jettyVersion, "9.4") && !useHttpConnector) {
+    if (!useHttpConnector) {
       assertThat(received.toString(), containsString("Response body is too large"));
     }
   }
@@ -207,7 +206,7 @@ public class SizeLimitHandlerTest extends JavaRuntimeViaHttpBase {
     }
     assertThat(received.length(), lessThanOrEqualTo(MAX_SIZE));
 
-    if (!Objects.equals(jettyVersion, "9.4") && !useHttpConnector) {
+    if (!useHttpConnector) {
       assertThat(received.toString(), containsString("Response body is too large"));
     }
   }
@@ -322,10 +321,6 @@ public class SizeLimitHandlerTest extends JavaRuntimeViaHttpBase {
     ContentResponse response = httpClient.newRequest(url).send();
 
     assertThat(response.getStatus(), equalTo(HttpStatus.INTERNAL_SERVER_ERROR_500));
-
-    if (jettyVersion.equals("9.4") && useHttpConnector) {
-      assertThat(response.getContentAsString(), containsString("Response body is too large"));
-    }
   }
 
   @Test

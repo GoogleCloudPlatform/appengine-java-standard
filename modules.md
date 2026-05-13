@@ -29,7 +29,6 @@ The project is divided into several categories of modules:
 *   **Utilities**: Helper modules used by other parts of the project.
 
 The project supports multiple Jetty versions and servlet API specifications:
-*   **Jetty 9.4** with **Servlet 3.1** (`javax.*`)
 *   **Jetty 12.0** with **EE8** (`javax.*` Servlet 4.0) and **EE10** (`jakarta.*` Servlet 6.0)
 *   **Jetty 12.1** with **EE8** (`javax.*` Servlet 4.0) and **EE11** (`jakarta.*` Servlet 6.1)
 
@@ -95,12 +94,9 @@ Modules used for local application testing via `dev_appserver`.
 *   **Description**: Code shared between different versions of the SDK.
 *   **Dependencies**: `appengine-api-1.0-sdk`, `sessiondata`.
 
-### [`shared_sdk_jetty9`](shared_sdk_jetty9/), [`shared_sdk_jetty12`](shared_sdk_jetty12/), [`shared_sdk_jetty121`](shared_sdk_jetty121/)
-*   **Description**: Jetty-version-specific SDK code for Jetty 9, 12.0, and 12.1 respectively.
+### [shared_sdk_jetty12`](shared_sdk_jetty12/), [`shared_sdk_jetty121`](shared_sdk_jetty121/)
+*   **Description**: Jetty-version-specific SDK code for Jetty 12.0, and 12.1 respectively.
 *   **Dependencies**: `shared-sdk`.
-
-### [`local_runtime_shared_jetty9`](local_runtime_shared_jetty9/)
-*   **Description**: Provides components for the local runtime based on Jetty 9 / javax Servlet. This is a **shaded JAR**. This module depends on the javax.servlet API, not on internal Jetty APIs.
 
 *   **Dependencies**: `appengine-apis-dev`, `runtime-shared`.
 
@@ -118,9 +114,6 @@ Modules used for the deployed application runtime.
 *   **Description**: Code shared across different runtime implementations.
 *   **Dependencies**: `sessiondata`.
 
-### [`runtime-shared-jetty9`](runtime_shared_jetty9/)
-*   **Description**: Jetty 9 / EE6 specific runtime components, including JSP/EL APIs. This is a **shaded JAR**.
-*   **Dependencies**: `runtime-shared`.
 
 ### [`runtime-shared-jetty12`](runtime_shared_jetty12/)
 *   **Description**: Jetty 12.0 / EE8 specific runtime components (Servlet 4.0), including JSP/EL APIs. This is a **shaded JAR**.
@@ -147,7 +140,6 @@ Modules used for the deployed application runtime.
 
 These modules generate Jetty quickstart `web.xml` file configurations to speed up server startup. Each module corresponds to a specific Jetty and EE version combination.
 
-*   [`quickstartgenerator`](quickstartgenerator/): Jetty 9
 *   [`quickstartgenerator-jetty12`](quickstartgenerator_jetty12/): Jetty 12.0 / EE8
 *   [`quickstartgenerator-jetty12-ee10`](quickstartgenerator_jetty12_ee10/): Jetty 12.0 / EE10
 *   [`quickstartgenerator-jetty121-ee8`](quickstartgenerator_jetty121_ee8/): Jetty 12.1 / EE8

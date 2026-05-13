@@ -61,7 +61,6 @@ public abstract class DevAppServerTestBase {
     List<Object[]> allVersions =
         Arrays.asList(
             new Object[][] {
-              {"java17", "9.4", "EE6"},
               {"java17", "12.0", "EE8"},
               {"java17", "12.0", "EE10"},
               {"java17", "12.1", "EE11"},

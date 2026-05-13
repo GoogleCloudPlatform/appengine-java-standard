@@ -41,7 +41,6 @@ public final class JspTest extends JavaRuntimeViaHttpBase {
         new Object[][] {
           // Test is running also in google3 which does not support EE10 or EE11.
           // We also have e2e JSP tests with new guestbook app in applications/guestbook*.
-          {"java17", "9.4", "EE6", true},
           {"java17", "12.0", "EE8", true},
           //    {"java17", "12.0", "EE10", true},
           //    {"java17", "12.1", "EE11", true},
