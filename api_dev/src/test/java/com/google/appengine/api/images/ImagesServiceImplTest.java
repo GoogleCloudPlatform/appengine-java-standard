@@ -61,6 +61,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.function.Function;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -698,8 +699,10 @@ public class ImagesServiceImplTest {
 
     @Override
     void apply(
-        ImagesServicePb.ImagesCompositeRequest.Builder request, Map<Image, Integer> imageIndexMap) {
-      delegate.apply(request, imageIndexMap);
+        ImagesServicePb.ImagesCompositeRequest.Builder request,
+        Map<Image, Integer> imageIndexMap,
+        Function<Image, ImageData> imageDataConverter) {
+      delegate.apply(request, imageIndexMap, imageDataConverter);
       applications++;
     }
   }
