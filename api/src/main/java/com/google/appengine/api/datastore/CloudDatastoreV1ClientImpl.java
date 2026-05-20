@@ -255,7 +255,8 @@ final class CloudDatastoreV1ClientImpl implements CloudDatastoreV1Client {
       if (privateKeyFile != null) {
         logger.log(
             Level.INFO,
-            "Service account and private key file were provided. Using service account credential.");
+            "Service account and private key file were provided. Using service account"
+                + " credential.");
         return getServiceAccountCredentialBuilder(serviceAccount)
             .setServiceAccountPrivateKeyFromP12File(new File(privateKeyFile))
             .build();
@@ -291,22 +292,22 @@ final class CloudDatastoreV1ClientImpl implements CloudDatastoreV1Client {
   }
 
   private static void setProjectEndpoint(String projectId, DatastoreOptions.Builder options) {
-    if (DatastoreServiceGlobalConfig.getConfig().hostOverride() != null) {
-      options.projectEndpoint(
-          String.format(
-              "%s/%s/projects/%s",
-              DatastoreServiceGlobalConfig.getConfig().hostOverride(),
-              DatastoreFactory.VERSION.toLowerCase(),
-              projectId));
+    options.projectId(projectId);
+    String hostOverride = DatastoreServiceGlobalConfig.getConfig().hostOverride();
+    if (hostOverride != null) {
+      if (hostOverride.startsWith("http://")) {
+        options.localHost(hostOverride.substring("http://".length()));
+      } else if (hostOverride.startsWith("https://")) {
+        options.host(hostOverride.substring("https://".length()));
+      } else {
+        options.host(hostOverride);
+      }
       return;
     }
     if (DatastoreServiceGlobalConfig.getConfig().emulatorHost() != null) {
-      options.projectId(projectId);
       options.localHost(DatastoreServiceGlobalConfig.getConfig().emulatorHost());
       return;
     }
-    options.projectId(projectId);
-    return;
   }
 
   private static GoogleCredential.Builder getServiceAccountCredentialBuilder(String account)

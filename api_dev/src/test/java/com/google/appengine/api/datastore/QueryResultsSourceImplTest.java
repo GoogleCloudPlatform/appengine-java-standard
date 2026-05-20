@@ -21,49 +21,55 @@ import static com.google.appengine.api.datastore.FetchOptions.Builder.withChunkS
 import static com.google.appengine.api.datastore.FetchOptions.Builder.withDefaults;
 import static com.google.appengine.api.datastore.FetchOptions.Builder.withLimit;
 import static com.google.common.truth.Truth.assertThat;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.anyString;
-import static org.mockito.Mockito.reset;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import com.google.appengine.tools.development.testing.LocalDatastoreServiceTestConfig;
 import com.google.appengine.tools.development.testing.LocalServiceTestHelper;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.logging.Handler;
 import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.logging.LogRecord;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
-import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
 
 @RunWith(JUnit4.class)
 public class QueryResultsSourceImplTest {
-  @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
-
   private final LocalServiceTestHelper helper =
       new LocalServiceTestHelper(new LocalDatastoreServiceTestConfig());
 
-  @Mock Logger mockLogger;
+  private final AssertingHandler assertingHandler = new AssertingHandler();
 
   @Before
   public void setUp() throws Exception {
     helper.setUp();
     lastChunkSizeWarning.set(0);
+    BaseQueryResultsSource.logger.addHandler(assertingHandler);
   }
 
   @After
   public void tearDown() {
+    BaseQueryResultsSource.logger.removeHandler(assertingHandler);
     lastChunkSizeWarning.set(0);
     helper.tearDown();
+  }
+
+  private static class AssertingHandler extends Handler {
+    private final List<LogRecord> records = new ArrayList<>();
+
+    @Override
+    public void publish(LogRecord record) {
+      records.add(record);
+    }
+
+    @Override
+    public void flush() {}
+
+    @Override
+    public void close() {}
   }
 
   private void addData(int count) {
@@ -88,27 +94,21 @@ public class QueryResultsSourceImplTest {
   }
 
   private void doQueries(ResultIterableProvider provider) {
-    Logger original = BaseQueryResultsSource.logger;
-    BaseQueryResultsSource.logger = mockLogger;
-    try {
-      DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
-      Query query = new Query("foo");
-      // This won't trigger the warning because we're not pulling back enough.
-      for (@SuppressWarnings("unused")
-      Entity e : provider.asIterable(datastore.prepare(query), withLimit(1000))) {}
-      // This won't trigger the warning because we're setting an explicit chunk size.
-      for (@SuppressWarnings("unused")
-      Entity e : provider.asIterable(datastore.prepare(query), withChunkSize(21))) {}
-      // This will trigger the warning.
-      for (@SuppressWarnings("unused")
-      Entity e : provider.asIterable(datastore.prepare(query), withDefaults())) {}
-      // Do it again - we shouldn't log a second time because we only log every
-      // 5 minutes.
-      for (@SuppressWarnings("unused")
-      Entity e : provider.asIterable(datastore.prepare(query), withDefaults())) {}
-    } finally {
-      BaseQueryResultsSource.logger = original;
-    }
+    DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+    Query query = new Query("foo");
+    // This won't trigger the warning because we're not pulling back enough.
+    for (@SuppressWarnings("unused")
+    Entity e : provider.asIterable(datastore.prepare(query), withLimit(1000))) {}
+    // This won't trigger the warning because we're setting an explicit chunk size.
+    for (@SuppressWarnings("unused")
+    Entity e : provider.asIterable(datastore.prepare(query), withChunkSize(21))) {}
+    // This will trigger the warning.
+    for (@SuppressWarnings("unused")
+    Entity e : provider.asIterable(datastore.prepare(query), withDefaults())) {}
+    // Do it again - we shouldn't log a second time because we only log every
+    // 5 minutes.
+    for (@SuppressWarnings("unused")
+    Entity e : provider.asIterable(datastore.prepare(query), withDefaults())) {}
   }
 
   @Test
@@ -116,12 +116,13 @@ public class QueryResultsSourceImplTest {
     Consumer<ResultIterableProvider> test =
         provider -> {
           doQueries(provider);
-          verify(mockLogger).warning(anyString());
           assertThat(lastChunkSizeWarning.get()).isGreaterThan(0);
+          assertThat(assertingHandler.records).isNotEmpty();
+          assertThat(assertingHandler.records.get(0).getLevel()).isEqualTo(Level.WARNING);
         };
     addData(1001);
     test.accept(QueryResultsSourceImplTest::asIterable);
-    reset(mockLogger);
+    assertingHandler.records.clear();
     lastChunkSizeWarning.set(0);
     test.accept(QueryResultsSourceImplTest::asList);
   }
@@ -135,12 +136,12 @@ public class QueryResultsSourceImplTest {
           lastChunkSizeWarning.set(lastChunkSizeWarning.get() - (1000 * 60 * 10));
           // Run again, we'll get one more log warning
           doQueries(provider);
-          verify(mockLogger, times(2)).warning(anyString());
+          assertThat(assertingHandler.records).hasSize(2);
           assertThat(lastChunkSizeWarning.get()).isGreaterThan(0);
         };
     addData(1001);
     test.accept(QueryResultsSourceImplTest::asIterable);
-    reset(mockLogger);
+    assertingHandler.records.clear();
     lastChunkSizeWarning.set(0);
     test.accept(QueryResultsSourceImplTest::asList);
   }
@@ -156,11 +157,11 @@ public class QueryResultsSourceImplTest {
             System.clearProperty("appengine.datastore.disableChunkSizeWarning");
           }
           assertThat(lastChunkSizeWarning.get()).isEqualTo(0);
-          verifyNoMoreInteractions(mockLogger);
+          assertThat(assertingHandler.records).isEmpty();
         };
     addData(1001);
     test.accept(QueryResultsSourceImplTest::asIterable);
-    reset(mockLogger);
+    assertingHandler.records.clear();
     lastChunkSizeWarning.set(0);
     test.accept(QueryResultsSourceImplTest::asList);
   }
