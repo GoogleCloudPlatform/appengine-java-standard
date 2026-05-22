@@ -16,14 +16,14 @@
 
 package com.google.appengine.setup;
 
-import com.google.common.base.Stopwatch;
-import com.google.protobuf.ByteString;
 import com.google.apphosting.api.ApiProxy;
 import com.google.apphosting.api.ApiProxy.ApiConfig;
 import com.google.apphosting.api.ApiProxy.LogRecord;
 import com.google.apphosting.api.logservice.LogServicePb.FlushRequest;
 import com.google.apphosting.api.logservice.LogServicePb.UserAppLogGroup;
 import com.google.apphosting.api.logservice.LogServicePb.UserAppLogLine;
+import com.google.common.base.Stopwatch;
+import com.google.protobuf.ByteString;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -146,7 +146,7 @@ class AppLogsWriter {
      * asynchronous flush may be started.  If flushes are backed up,
      * this method may block.
      */
-    synchronized void addLogRecordAndMaybeFlush(LogRecord fullRecord) {
+    void addLogRecordAndMaybeFlush(LogRecord fullRecord) {
         for (LogRecord record : split(fullRecord)) {
             UserAppLogLine logLine = UserAppLogLine.newBuilder()
                 .setLevel(record.getLevel().ordinal())
@@ -154,20 +154,38 @@ class AppLogsWriter {
                 .setMessage(record.getMessage())
                 .build();
             int maxEncodingSize = 1000; // logLine.maxEncodingSize();
-            if (maxBytesToFlush > 0 &&
-                    (currentByteCount + maxEncodingSize) > maxBytesToFlush) {
-                logger.info(currentByteCount + " bytes of app logs pending, starting flush...");
+            
+            boolean shouldFlush = false;
+            long bytesToLog = 0;
+            synchronized (this) {
+                if (maxBytesToFlush > 0 &&
+                        (currentByteCount + maxEncodingSize) > maxBytesToFlush) {
+                    shouldFlush = true;
+                    bytesToLog = currentByteCount;
+                }
+            }
+            if (shouldFlush) {
+                logger.info(bytesToLog + " bytes of app logs pending, starting flush...");
                 waitForCurrentFlushAndStartNewFlush();
             }
-            if (buffer.size() == 0) {
-                stopwatch.start();
+
+            synchronized (this) {
+                if (buffer.size() == 0) {
+                    stopwatch.start();
+                }
+                buffer.add(logLine);
+                currentByteCount += maxEncodingSize;
             }
-            buffer.add(logLine);
-            currentByteCount += maxEncodingSize;
         }
 
-        if (maxSecondsBetweenFlush > 0 &&
-                stopwatch.elapsed(TimeUnit.SECONDS) >= maxSecondsBetweenFlush) {
+        boolean timeToFlush = false;
+        synchronized (this) {
+            if (maxSecondsBetweenFlush > 0 &&
+                    stopwatch.elapsed(TimeUnit.SECONDS) >= maxSecondsBetweenFlush) {
+                timeToFlush = true;
+            }
+        }
+        if (timeToFlush) {
             waitForCurrentFlushAndStartNewFlush();
         }
     }
@@ -178,22 +196,30 @@ class AppLogsWriter {
      *
      * @return The number of times this AppLogsWriter has initiated a flush.
      */
-    synchronized int waitForCurrentFlushAndStartNewFlush() {
+    int waitForCurrentFlushAndStartNewFlush() {
         waitForCurrentFlush();
-        if (buffer.size() > 0) {
-            currentFlush = doFlush();
+        synchronized (this) {
+            if (buffer.size() > 0) {
+                currentFlush = doFlush();
+            }
+            return flushCount;
         }
-        return flushCount;
     }
 
     /**
      * Initiates a synchronous flush.  This method will always block
      * until any pending flushes and its own flush completes.
      */
-    synchronized void flushAndWait() {
+    void flushAndWait() {
         waitForCurrentFlush();
-        if (buffer.size() > 0) {
-            currentFlush = doFlush();
+        boolean flushed = false;
+        synchronized (this) {
+            if (buffer.size() > 0) {
+                currentFlush = doFlush();
+                flushed = true;
+            }
+        }
+        if (flushed) {
             waitForCurrentFlush();
         }
     }
@@ -204,15 +230,20 @@ class AppLogsWriter {
      * the appserver to process logs out of order.
      */
     private void waitForCurrentFlush() {
-        if (currentFlush != null) {
+        Future<byte[]> flushToWait;
+        synchronized (this) {
+            flushToWait = currentFlush;
+        }
+        if (flushToWait != null) {
             logger.info("Previous flush has not yet completed, blocking.");
             try {
-                currentFlush.get(
+                flushToWait.get(
                         ApiProxyDelegate.ADDITIONAL_HTTP_TIMEOUT_BUFFER_MS + LOG_FLUSH_TIMEOUT_MS,
                         TimeUnit.MILLISECONDS);
             } catch (InterruptedException ex) {
-                logger.warning("Interruped while blocking on a log flush, setting interrupt bit and " +
-                        "continuing.  Some logs may be lost or occur out of order!");
+        logger.warning(
+            "Interruped while blocking on a log flush, setting interrupt bit and "
+                + "continuing.  Some logs may be lost or occur out of order!");
                 Thread.currentThread().interrupt();
             } catch (TimeoutException e) {
                 logger.log(Level.WARNING, "Timeout waiting for log flush to complete. "
@@ -222,7 +253,11 @@ class AppLogsWriter {
                         Level.WARNING,
                         "A log flush request failed.  Log messages may have been lost!", ex);
             }
-            currentFlush = null;
+            synchronized (this) {
+                if (currentFlush == flushToWait) {
+                    currentFlush = null;
+                }
+            }
         }
     }
 
@@ -239,7 +274,7 @@ class AppLogsWriter {
         request.setLogs(ByteString.copyFrom(group.build().toByteArray()));
         ApiConfig apiConfig = new ApiConfig();
         apiConfig.setDeadlineInSeconds(LOG_FLUSH_TIMEOUT_MS / 1000.0);
-        return ApiProxy.makeAsyncCall("logservice", "Flush", request.build().toByteArray(), apiConfig);
+    return ApiProxy.makeAsyncCall("logservice", "Flush", request.build().toByteArray(), apiConfig);
     }
 
     /**
