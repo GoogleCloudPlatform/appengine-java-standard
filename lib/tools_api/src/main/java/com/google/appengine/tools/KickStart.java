@@ -330,7 +330,7 @@ public class KickStart {
         AppEngineWebXml xml = new AppEngineWebXmlReader(appDir).readAppEngineWebXml();
         gaeRuntime = xml.getRuntime();
         if (gaeRuntime == null) {
-          gaeRuntime = "java8";
+          gaeRuntime = "java17";
         }
         configs.add(xml);
       } catch (AppEngineConfigException e) {

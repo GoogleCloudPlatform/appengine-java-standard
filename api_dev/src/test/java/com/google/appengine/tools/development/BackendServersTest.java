@@ -25,39 +25,38 @@ import junit.framework.TestCase;
 /** Test @code {@link BackendServersBase} */
 public class BackendServersTest extends TestCase {
 
-  public void testServerInstanceEntryHashCode() throws Exception{
+  public void testServerInstanceEntryHashCode() throws Exception {
     ServerInstanceEntry server1 = new ServerInstanceEntry("server1", 17);
     ServerInstanceEntry server1copy = new ServerInstanceEntry("server1", 17);
     ServerInstanceEntry server2 = new ServerInstanceEntry("server2", 17);
-    
+
     assertThat(server1.hashCode()).isNotEqualTo(server2.hashCode());
-    assertEquals(server1.hashCode(), server1copy.hashCode());    
+    assertEquals(server1.hashCode(), server1copy.hashCode());
   }
-  
-  public void testServerInstanceEntryEquals() throws Exception{
+
+  public void testServerInstanceEntryEquals() throws Exception {
     ServerInstanceEntry server1 = new ServerInstanceEntry("server1", 17);
     ServerInstanceEntry server1copy = new ServerInstanceEntry("server1", 17);
     ServerInstanceEntry server2 = new ServerInstanceEntry("server2", 17);
     ServerInstanceEntry server3 = new ServerInstanceEntry(null, 17);
     ServerInstanceEntry server3copy = new ServerInstanceEntry(null, 17);
-    
+
     assertEquals(server1, server1copy);
     assertFalse(server1.equals(server2));
     assertFalse(server2.equals(server3));
     assertEquals(server3, server3copy);
   }
-  
-  
-  public void testServerInstanceIsHashSetCompatible() throws Exception{
+
+  public void testServerInstanceIsHashSetCompatible() throws Exception {
     ServerInstanceEntry server1 = new ServerInstanceEntry("server1", 17);
-    ServerInstanceEntry server1copy = new ServerInstanceEntry("server1", 17);    
+    ServerInstanceEntry server1copy = new ServerInstanceEntry("server1", 17);
     ServerInstanceEntry server2 = new ServerInstanceEntry("server2", 17);
     ServerInstanceEntry server3 = new ServerInstanceEntry("server1", 18);
-    
+
     HashSet<ServerInstanceEntry> set = new HashSet<ServerInstanceEntry>();
     set.add(server1);
     assertThat(set).contains(server1copy);
     assertFalse(set.contains(server2));
     assertFalse(set.contains(server3));
-    }
+  }
 }

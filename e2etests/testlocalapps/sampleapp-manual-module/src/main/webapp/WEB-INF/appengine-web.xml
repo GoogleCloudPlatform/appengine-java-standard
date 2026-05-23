@@ -20,7 +20,7 @@
   <version>1</version>
   <module>stan</module>
   <instance-class>B8</instance-class>
-  <runtime>java8</runtime>
+  <runtime>java17</runtime>
   <manual-scaling>
     <instances>10</instances>
   </manual-scaling>

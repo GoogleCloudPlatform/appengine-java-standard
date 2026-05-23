@@ -27,6 +27,6 @@
 
   <threadsafe>true</threadsafe>
   <auto-id-policy>legacy</auto-id-policy>
-  <runtime>java8</runtime>
+  <runtime>java17</runtime>
 
 </appengine-web-app>

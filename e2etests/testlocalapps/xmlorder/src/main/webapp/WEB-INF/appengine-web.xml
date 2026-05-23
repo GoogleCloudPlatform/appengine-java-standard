@@ -24,7 +24,7 @@
   <static-files/>
 
   <threadsafe>true</threadsafe>
-  <runtime>java8</runtime>
+  <runtime>java17</runtime>
 
   <version>1</version>
   <application>sampleapp</application>

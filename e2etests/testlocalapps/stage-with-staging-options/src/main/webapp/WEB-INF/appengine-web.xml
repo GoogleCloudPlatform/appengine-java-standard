@@ -24,7 +24,7 @@
   <resource-files />
 
   <threadsafe>true</threadsafe>
-  <runtime>java8</runtime>
+  <runtime>java17</runtime>
 
   <staging>
     <jar-splitting-excludes>foo,bar</jar-splitting-excludes>

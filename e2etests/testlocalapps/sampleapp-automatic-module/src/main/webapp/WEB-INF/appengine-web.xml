@@ -19,7 +19,7 @@
   <application>sampleapp</application>
   <version>1</version>
   <module>stan</module>
-  <runtime>java8</runtime>
+  <runtime>java17</runtime>
   <instance-class>F8</instance-class>
   <automatic-scaling>
     <min-pending-latency>10.5s</min-pending-latency>

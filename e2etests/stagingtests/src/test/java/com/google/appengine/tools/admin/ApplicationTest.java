@@ -63,7 +63,6 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -478,39 +477,6 @@ public class ApplicationTest {
     assertFileContains(appYaml, "application: 'sampleapp'");
   }
 
-  @Test
-  public void testStagingForGcloudWithFilesAndConfigErasure() throws Exception {
-    Application testApp = Application.readApplication(TEST_FILES, null, null, null);
-    testApp.setDetailsWriter(
-        new PrintWriter(new BufferedWriter(new OutputStreamWriter(System.out, UTF_8))));
-
-    testApp.validateForStaging();
-
-    ApplicationProcessingOptions opts = new ApplicationProcessingOptions();
-    opts.setStagingOptions(StagingOptions.builder().setSplitJarFiles(Optional.of(true)).build());
-
-    File stagingDir = testApp.createStagingDirectory(opts, temporaryFolder.newFolder());
-    testStagedFiles(testApp);
-    // user staging copies yaml files from appengine-generated into the root
-    File copiedAppYaml = new File(stagingDir, "app.yaml");
-    File originalAppYaml = new File(stagingDir, "WEB-INF/appengine-generated/app.yaml");
-    assertThat(copiedAppYaml.canRead()).isTrue();
-
-    // the copied app.yaml is the original with a precautionary new line and an
-    // extra 'skip_files' line.
-    List<String> expectedCopiedAppYaml = Files.readLines(originalAppYaml, UTF_8);
-    expectedCopiedAppYaml.add("");
-    expectedCopiedAppYaml.add("skip_files: app.yaml");
-    assertThat(Files.readLines(copiedAppYaml, UTF_8)).isEqualTo(expectedCopiedAppYaml);
-
-    String yamlString = Files.asCharSource(copiedAppYaml, UTF_8).read();
-    assertThat(yamlString.startsWith("application:")).isFalse();
-    assertThat(yamlString).doesNotContain("\napplication:");
-    assertThat(yamlString.startsWith("version:")).isFalse();
-    assertThat(yamlString).doesNotContain("\nversion:");
-    assertFileContains(copiedAppYaml, "\nskip_files: app.yaml");
-  }
-
   private static void testStagedFiles(Application testApp) throws Exception {
     File stage = testApp.getStagingDir();
     File html = new File(stage, "__static__/random.html");
@@ -521,8 +487,8 @@ public class ApplicationTest {
     assertThat(new File(stage, "WEB-INF/appengine-web.xml").canRead()).isTrue();
     File jspJar = new File(stage, "WEB-INF/lib/_ah_compiled_jsps-0000.jar");
     assertThat(jspJar.exists()).isTrue();
-    // Test that the classes in the generated jar are for Java8.
-    assertThat(getJavaJarVersion(jspJar)).isEqualTo(8);
+    // Test that the classes in the generated jar are for Java17.
+    assertThat(getJavaJarVersion(jspJar)).isEqualTo(17);
     checkIfEntryIsInJarFile(jspJar, "org/apache/jsp/nested/testing_jsp.class");
     assertThat(new File(stage, "nested/dukebanner.html").canRead()).isTrue();
     assertThat(new File(stage, "WEB-INF/lib").isDirectory()).isTrue();
@@ -627,7 +593,7 @@ public class ApplicationTest {
   }
 
   @Test
-  public void testStagingJava8() throws Exception {
+  public void testStagingJava17Simple() throws Exception {
     Application testApp = Application.readApplication(TEST_FILES);
     testApp.setDetailsWriter(
         new PrintWriter(new BufferedWriter(new OutputStreamWriter(System.out, UTF_8))));
@@ -642,7 +608,8 @@ public class ApplicationTest {
     assertThat(new File(stage, "WEB-INF/web.xml").canRead()).isTrue();
     assertThat(new File(stage, "WEB-INF/appengine-web.xml").canRead()).isTrue();
     assertThat(new File(stage, "WEB-INF/appengine-generated/app.yaml").canRead()).isTrue();
-    assertFileContains(new File(stage, "WEB-INF/appengine-generated/app.yaml"), "runtime: java8\n");
+    assertFileContains(
+        new File(stage, "WEB-INF/appengine-generated/app.yaml"), "runtime: java17\n");
   }
 
   @Test
@@ -693,17 +660,18 @@ public class ApplicationTest {
   }
 
   @Test
-  public void testStagingJava8RuntimeJava8JarFile() throws Exception {
+  public void testStagingJava17RuntimeJava17JarFile() throws Exception {
     Application testApp = Application.readApplication(JAVA8_JAR_TEST_FILES);
     ApplicationProcessingOptions opts = new ApplicationProcessingOptions();
     opts.setAllowAnyRuntime(true);
-    opts.setRuntime("java8");
+    opts.setRuntime("java17");
     File stage = testApp.createStagingDirectory(opts);
     assertThat(new File(stage, "WEB-INF").isDirectory()).isTrue();
     assertThat(new File(stage, "WEB-INF/web.xml").canRead()).isTrue();
     assertThat(new File(stage, "WEB-INF/appengine-web.xml").canRead()).isTrue();
     assertThat(new File(stage, "WEB-INF/appengine-generated/app.yaml").canRead()).isTrue();
-    assertFileContains(new File(stage, "WEB-INF/appengine-generated/app.yaml"), "runtime: java8\n");
+    assertFileContains(
+        new File(stage, "WEB-INF/appengine-generated/app.yaml"), "runtime: java17\n");
   }
 
   @Test
@@ -1709,7 +1677,7 @@ public class ApplicationTest {
   }
 
   @Test
-  public void testJava8NoWebXmlNoApiJar() throws Exception {
+  public void testJava17NoWebXmlNoApiJar() throws Exception {
 
     Path temp = CopyDirVisitor.createTempDirectoryFrom(Paths.get(JAVA8_NO_WEBXML));
     Application testApp = Application.readApplication(temp.toFile().getAbsolutePath());
@@ -1722,7 +1690,7 @@ public class ApplicationTest {
     File stageDir = testApp.createStagingDirectory(opts, temporaryFolder.newFolder());
 
     File appYaml = new File(stageDir, "WEB-INF/appengine-generated/app.yaml");
-    assertFileContains(appYaml, "runtime: java8");
+    assertFileContains(appYaml, "runtime: java17");
   }
 
   /** returns the Java version of the first class in the jar, or -1 if error. */

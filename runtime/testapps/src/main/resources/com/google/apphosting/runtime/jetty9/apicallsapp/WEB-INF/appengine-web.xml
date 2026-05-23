@@ -19,5 +19,5 @@
   <application>ApiCalls</application>
   <version>1</version>
   <threadsafe>true</threadsafe>
-  <runtime>java8</runtime>
+  <runtime>java17</runtime>
 </appengine-web-app>

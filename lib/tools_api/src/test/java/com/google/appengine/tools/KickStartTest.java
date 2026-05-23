@@ -120,7 +120,7 @@ public class KickStartTest {
   public void testAsciiEncoding() throws Exception {
     ImmutableList<String> asciiProperties =
         ImmutableList.of(
-            "  <runtime>java8</runtime>",
+            "  <runtime>java17</runtime>",
             "  <system-properties>",
             "    <property name='appengine.file.encoding' value='US-ASCII' />",
             "  </system-properties>");
@@ -128,12 +128,12 @@ public class KickStartTest {
   }
 
   /**
-   * If you don't ask for any encoding, but you do specify the java8 runtime, then the encoding
+   * If you don't ask for any encoding, but you do specify the java17 runtime, then the encoding
    * defaults to UTF-8. This mimics what happens in prod.
    */
   @Test
-  public void testJava8RuntimeDefaultsToUt8Encoding() throws Exception {
-    checkEncoding(ImmutableList.of("<runtime>java8</runtime>"), "UTF-8");
+  public void testJava17RuntimeDefaultsToUt8Encoding() throws Exception {
+    checkEncoding(ImmutableList.of("<runtime>java17</runtime>"), "UTF-8");
   }
 
   private void checkEncoding(ImmutableList<String> propertyLines, String expectedEncoding)
