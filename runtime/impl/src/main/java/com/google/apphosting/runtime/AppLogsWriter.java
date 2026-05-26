@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import javax.annotation.concurrent.GuardedBy;
 
@@ -75,7 +76,7 @@ public class AppLogsWriter {
   static final String LOG_TRUNCATED_SUFFIX = "\n<truncated>";
   static final int LOG_TRUNCATED_SUFFIX_LENGTH = LOG_TRUNCATED_SUFFIX.length();
 
-  private final Object lock = new Object();
+  private final ReentrantLock lock = new ReentrantLock();
 
   private final int maxLogMessageLength;
   private final int logCutLength;
@@ -180,8 +181,11 @@ public class AppLogsWriter {
       appLogLines.add(logLineBuilder.build());
     }
 
-    synchronized (lock) {
+    lock.lock();
+    try {
       addLogLinesAndMaybeFlush(appLogLines);
+    } finally {
+      lock.unlock();
     }
   }
 
@@ -228,19 +232,43 @@ public class AppLogsWriter {
    * until any pending flushes and its own flush completes.
    */
   public void flushAndWait() {
-    Future<byte[]> flush = null;
-
-    synchronized (lock) {
-      waitForCurrentFlush();
-      if (genericResponse.getAppLogCount() > 0) {
-        flush = currentFlush = doFlush();
+    Future<byte[]> flushToWait = null;
+    lock.lock();
+    try {
+      if (currentFlush != null && !currentFlush.isDone() && !currentFlush.isCancelled()) {
+        flushToWait = currentFlush;
       }
+    } finally {
+      lock.unlock();
     }
 
-    // Wait for this flush outside the synchronized block to avoid unnecessarily blocking
-    // addLogRecordAndMaybeFlush() calls when flushes are not backed up.
-    if (flush != null) {
-      waitForFlush(flush);
+    if (flushToWait != null) {
+      waitForFlush(flushToWait);
+    }
+
+    Future<byte[]> newFlush = null;
+    lock.lock();
+    try {
+      if (currentFlush == flushToWait) {
+        currentFlush = null;
+      }
+      if (genericResponse.getAppLogCount() > 0) {
+        newFlush = currentFlush = doFlush();
+      }
+    } finally {
+      lock.unlock();
+    }
+
+    if (newFlush != null) {
+      waitForFlush(newFlush);
+      lock.lock();
+      try {
+        if (currentFlush == newFlush) {
+          currentFlush = null;
+        }
+      } finally {
+        lock.unlock();
+      }
     }
   }
 
@@ -249,13 +277,36 @@ public class AppLogsWriter {
    * should be called prior to {@link #doFlush()} so that it is impossible for
    * the appserver to process logs out of order.
    */
-  @GuardedBy("lock")
   private void waitForCurrentFlush() {
-    if (currentFlush != null && !currentFlush.isDone() && !currentFlush.isCancelled()) {
-      logger.atInfo().log("Previous flush has not yet completed, blocking.");
-      waitForFlush(currentFlush);
+    Future<byte[]> flushToWait = null;
+    lock.lock();
+    try {
+      if (currentFlush != null && !currentFlush.isDone() && !currentFlush.isCancelled()) {
+        logger.atInfo().log("Previous flush has not yet completed, blocking.");
+        flushToWait = currentFlush;
+      }
+    } finally {
+      lock.unlock();
     }
-    currentFlush = null;
+
+    if (flushToWait != null) {
+      waitForFlush(flushToWait);
+      lock.lock();
+      try {
+        if (currentFlush == flushToWait) {
+          currentFlush = null;
+        }
+      } finally {
+        lock.unlock();
+      }
+    } else {
+      lock.lock();
+      try {
+        currentFlush = null;
+      } finally {
+        lock.unlock();
+      }
+    }
   }
 
   private void waitForFlush(Future<byte[]> flush) {
@@ -351,8 +402,11 @@ public class AppLogsWriter {
    */
   @VisibleForTesting
   void setStopwatch(Stopwatch stopwatch) {
-    synchronized (lock) {
+    lock.lock();
+    try {
       this.stopwatch = stopwatch;
+    } finally {
+      lock.unlock();
     }
   }
 
