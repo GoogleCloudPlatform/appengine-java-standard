@@ -18,10 +18,6 @@
 //
 // This protocol buffer defines documents used by indexing
 // and searching services.
-//
-// This file should be kept in sync with:
-// google3/googledata/apphosting/megastore/qa/proto/document.proto
-// google3/googledata/apphosting/megastore/prod-appengine/proto/document.proto
 
 syntax = "proto2";
 
