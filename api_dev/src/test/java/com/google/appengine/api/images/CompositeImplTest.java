@@ -19,8 +19,6 @@ package com.google.appengine.api.images;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertThrows;
 
-import com.google.appengine.api.images.ImagesServicePb.ImageData;
-import com.google.protobuf.ByteString;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.Before;
@@ -60,10 +58,7 @@ public class CompositeImplTest {
     float opacity = 0.8f;
     Composite.Anchor anchor = Composite.Anchor.CENTER_LEFT;
     Composite composite = new CompositeImpl(image, xOffset, yOffset, opacity, anchor);
-    composite.apply(
-        request,
-        imageIndexMap,
-        img -> ImageData.newBuilder().setContent(ByteString.copyFrom(img.getImageData())).build());
+    composite.apply(request, imageIndexMap);
     assertThat(request.getOptionsCount()).isEqualTo(1);
     assertThat(request.getOptions(0).getXOffset()).isEqualTo(xOffset);
     assertThat(request.getOptions(0).getYOffset()).isEqualTo(yOffset);
@@ -86,15 +81,9 @@ public class CompositeImplTest {
     float otherOpacity = 0.1f;
     Composite.Anchor otherAnchor = Composite.Anchor.BOTTOM_RIGHT;
     Composite composite = new CompositeImpl(image, xOffset, yOffset, opacity, anchor);
-    composite.apply(
-        request,
-        imageIndexMap,
-        img -> ImageData.newBuilder().setContent(ByteString.copyFrom(img.getImageData())).build());
+    composite.apply(request, imageIndexMap);
     composite = new CompositeImpl(image, otherXOffset, otherYOffset, otherOpacity, otherAnchor);
-    composite.apply(
-        request,
-        imageIndexMap,
-        img -> ImageData.newBuilder().setContent(ByteString.copyFrom(img.getImageData())).build());
+    composite.apply(request, imageIndexMap);
     assertThat(request.getOptionsCount()).isEqualTo(2);
     assertThat(request.getOptions(0).getXOffset()).isEqualTo(xOffset);
     assertThat(request.getOptions(0).getYOffset()).isEqualTo(yOffset);
@@ -127,16 +116,10 @@ public class CompositeImplTest {
     float otherOpacity = 0.3f;
     Composite.Anchor otherAnchor = Composite.Anchor.BOTTOM_RIGHT;
     Composite composite = new CompositeImpl(image, xOffset, yOffset, opacity, anchor);
-    composite.apply(
-        request,
-        imageIndexMap,
-        img -> ImageData.newBuilder().setContent(ByteString.copyFrom(img.getImageData())).build());
+    composite.apply(request, imageIndexMap);
     composite =
         new CompositeImpl(otherImage, otherXOffset, otherYOffset, otherOpacity, otherAnchor);
-    composite.apply(
-        request,
-        imageIndexMap,
-        img -> ImageData.newBuilder().setContent(ByteString.copyFrom(img.getImageData())).build());
+    composite.apply(request, imageIndexMap);
     assertThat(request.getOptionsCount()).isEqualTo(2);
     assertThat(request.getOptions(0).getXOffset()).isEqualTo(xOffset);
     assertThat(request.getOptions(0).getYOffset()).isEqualTo(yOffset);
@@ -169,16 +152,10 @@ public class CompositeImplTest {
     float otherOpacity = 0.1111f;
     Composite.Anchor otherAnchor = Composite.Anchor.BOTTOM_RIGHT;
     Composite composite = new CompositeImpl(image, xOffset, yOffset, opacity, anchor);
-    composite.apply(
-        request,
-        imageIndexMap,
-        img -> ImageData.newBuilder().setContent(ByteString.copyFrom(img.getImageData())).build());
+    composite.apply(request, imageIndexMap);
     composite =
         new CompositeImpl(otherImage, otherXOffset, otherYOffset, otherOpacity, otherAnchor);
-    composite.apply(
-        request,
-        imageIndexMap,
-        img -> ImageData.newBuilder().setContent(ByteString.copyFrom(img.getImageData())).build());
+    composite.apply(request, imageIndexMap);
     assertThat(request.getOptionsCount()).isEqualTo(2);
     assertThat(request.getOptions(0).getXOffset()).isEqualTo(xOffset);
     assertThat(request.getOptions(0).getYOffset()).isEqualTo(yOffset);
@@ -223,41 +200,21 @@ public class CompositeImplTest {
     float opacity4 = 0.9f;
     Composite.Anchor anchor4 = Composite.Anchor.TOP_CENTER;
     new CompositeImpl(new ImageImpl(imageData), xOffset, yOffset, opacity, anchor)
-        .apply(
-            request,
-            imageIndexMap,
-            img ->
-                ImageData.newBuilder().setContent(ByteString.copyFrom(img.getImageData())).build());
+        .apply(request, imageIndexMap);
     new CompositeImpl(
             new ImageImpl(otherImageData), otherXOffset, otherYOffset, otherOpacity, otherAnchor)
-        .apply(
-            request,
-            imageIndexMap,
-            img ->
-                ImageData.newBuilder().setContent(ByteString.copyFrom(img.getImageData())).build());
+        .apply(request, imageIndexMap);
     new CompositeImpl(
             new ImageImpl(imageData),
             yetAnotherXOffset,
             yetAnotherYOffset,
             yetAnotherOpacity,
             yetAnotherAnchor)
-        .apply(
-            request,
-            imageIndexMap,
-            img ->
-                ImageData.newBuilder().setContent(ByteString.copyFrom(img.getImageData())).build());
+        .apply(request, imageIndexMap);
     new CompositeImpl(new ImageImpl(otherImageData), xOffset3, yOffset3, opacity3, anchor3)
-        .apply(
-            request,
-            imageIndexMap,
-            img ->
-                ImageData.newBuilder().setContent(ByteString.copyFrom(img.getImageData())).build());
+        .apply(request, imageIndexMap);
     new CompositeImpl(new ImageImpl(otherImageData), xOffset4, yOffset4, opacity4, anchor4)
-        .apply(
-            request,
-            imageIndexMap,
-            img ->
-                ImageData.newBuilder().setContent(ByteString.copyFrom(img.getImageData())).build());
+        .apply(request, imageIndexMap);
     assertThat(request.getOptionsCount()).isEqualTo(5);
     assertThat(request.getOptions(0).getXOffset()).isEqualTo(xOffset);
     assertThat(request.getOptions(0).getYOffset()).isEqualTo(yOffset);
