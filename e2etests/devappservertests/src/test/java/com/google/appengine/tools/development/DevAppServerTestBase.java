@@ -48,6 +48,7 @@ public abstract class DevAppServerTestBase {
   int jettyPort;
   private Process runtimeProc;
   private CountDownLatch serverStarted;
+  protected final List<String> serverLogs = java.util.Collections.synchronizedList(new ArrayList<>());
 
   static final int NUMBER_OF_RETRIES = 5;
 
@@ -177,6 +178,7 @@ public abstract class DevAppServerTestBase {
     runtimeArgs.add("-Dappengine.use.EE10=" + System.getProperty("appengine.use.EE10"));
     runtimeArgs.add("-Dappengine.use.EE11=" + System.getProperty("appengine.use.EE11"));
     runtimeArgs.add("-Dappengine.use.jetty121=" + System.getProperty("appengine.use.jetty121"));
+    runtimeArgs.addAll(getExtraJvmArgs());
     runtimeArgs.add("-cp");
     runtimeArgs.add(TOOLS_JAR);
     runtimeArgs.add("com.google.appengine.tools.development.DevAppServerMain");
@@ -185,8 +187,17 @@ public abstract class DevAppServerTestBase {
     runtimeArgs.add("--allow_remote_shutdown"); // Keep as used in Maven plugin
     runtimeArgs.add("--disable_update_check"); // Keep, as used in Maven plugin
 
+    runtimeArgs.addAll(getExtraAppArgs());
     runtimeArgs.add(appDir.toString());
     createRuntime(ImmutableList.copyOf(runtimeArgs), ImmutableMap.of(), jettyPort);
+  }
+
+  protected List<String> getExtraJvmArgs() {
+    return ImmutableList.of();
+  }
+
+  protected List<String> getExtraAppArgs() {
+    return ImmutableList.of();
   }
 
   void createRuntime(
@@ -221,8 +232,8 @@ public abstract class DevAppServerTestBase {
     pb.environment().putAll(extraEnvironmentEntries);
     Process process = pb.start();
 
-    OutputPump outPump = new OutputPump(process.getInputStream(), serverStarted);
-    OutputPump errPump = new OutputPump(process.getErrorStream(), serverStarted);
+    OutputPump outPump = new OutputPump(process.getInputStream(), serverStarted, serverLogs);
+    OutputPump errPump = new OutputPump(process.getErrorStream(), serverStarted, serverLogs);
     new Thread(outPump).start();
     new Thread(errPump).start();
     if (!serverStarted.await(120, TimeUnit.SECONDS)) {
@@ -284,12 +295,28 @@ public abstract class DevAppServerTestBase {
     assertThat(retCode).isEqualTo(expectedReturnCode);
   }
 
+  protected boolean awaitLogContains(String expected, int timeoutSeconds) throws InterruptedException {
+    for (int i = 0; i < timeoutSeconds * 10; i++) {
+      synchronized (serverLogs) {
+        for (String logLine : serverLogs) {
+          if (logLine.contains(expected)) {
+            return true;
+          }
+        }
+      }
+      Thread.sleep(100);
+    }
+    return false;
+  }
+
   private static class OutputPump implements Runnable {
     private final BufferedReader stream;
     private final CountDownLatch serverStarted;
+    private final List<String> serverLogs;
 
-    public OutputPump(InputStream instream, CountDownLatch serverStarted) {
+    public OutputPump(InputStream instream, CountDownLatch serverStarted, List<String> serverLogs) {
       this.serverStarted = serverStarted;
+      this.serverLogs = serverLogs;
       this.stream = new BufferedReader(new InputStreamReader(instream, UTF_8));
     }
 
@@ -299,6 +326,7 @@ public abstract class DevAppServerTestBase {
       try {
         while ((line = stream.readLine()) != null) {
           System.out.println(line);
+          serverLogs.add(line);
           if (line.contains("INFO: Dev App Server is now running")) {
             serverStarted.countDown();
           }
