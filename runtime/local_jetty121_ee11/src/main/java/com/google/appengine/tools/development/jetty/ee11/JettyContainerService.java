@@ -507,7 +507,7 @@ public class JettyContainerService extends AbstractContainerService
     scanner.setScanInterval(interval);
     scanner.setScanDirs(scanList);
     scanner.setReportExistingFilesOnStartup(false);
-    scanner.setScanDepth(3);
+    scanner.setScanDepth(Integer.MAX_VALUE); // Integer.MAX_VALUE means unlimited depth.
 
     scanner.addListener(
         new Scanner.BulkListener() {
