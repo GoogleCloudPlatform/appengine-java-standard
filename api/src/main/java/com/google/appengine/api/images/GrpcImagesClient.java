@@ -72,27 +72,40 @@ class GrpcImagesClient {
   }
 
   private String getTarget() {
-    String endpoint = environmentProvider.getenv("IMAGES_SERVICE_ENDPOINT");
+    String endpoint =
+        environmentProvider.getenv(ImagesServiceFactoryImpl.IMAGES_SERVICE_ENDPOINT_ENV);
     if (isNullOrEmpty(endpoint)) {
-      throw new IllegalStateException("IMAGES_SERVICE_ENDPOINT environment variable not set.");
+      throw new IllegalStateException(
+          ImagesServiceFactoryImpl.IMAGES_SERVICE_ENDPOINT_ENV + " environment variable not set.");
     }
     try {
       URI uri = new URI(endpoint);
       String host = uri.getHost();
       if (host == null) {
-        throw new IllegalStateException("Invalid URI in IMAGES_SERVICE_ENDPOINT: " + endpoint);
+        throw new IllegalStateException(
+            "Invalid URI in "
+                + ImagesServiceFactoryImpl.IMAGES_SERVICE_ENDPOINT_ENV
+                + ": "
+                + endpoint);
       }
       return host + ":443";
     } catch (URISyntaxException e) {
-      throw new IllegalStateException("Invalid URI in IMAGES_SERVICE_ENDPOINT: " + endpoint, e);
+      throw new IllegalStateException(
+          "Invalid URI in "
+              + ImagesServiceFactoryImpl.IMAGES_SERVICE_ENDPOINT_ENV
+              + ": "
+              + endpoint,
+          e);
     }
   }
 
   private static CallCredentials createOidcCredentials(
       EnvironmentProvider environmentProvider, GoogleCredentials googleCredentials) {
-    String endpoint = environmentProvider.getenv("IMAGES_SERVICE_ENDPOINT");
+    String endpoint =
+        environmentProvider.getenv(ImagesServiceFactoryImpl.IMAGES_SERVICE_ENDPOINT_ENV);
     if (isNullOrEmpty(endpoint)) {
-      throw new IllegalStateException("IMAGES_SERVICE_ENDPOINT environment variable not set.");
+      throw new IllegalStateException(
+          ImagesServiceFactoryImpl.IMAGES_SERVICE_ENDPOINT_ENV + " environment variable not set.");
     }
 
     if (!(googleCredentials instanceof IdTokenProvider idTokenProvider)) {
