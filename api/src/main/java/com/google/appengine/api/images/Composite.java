@@ -16,7 +16,9 @@
 
 package com.google.appengine.api.images;
 
+import com.google.appengine.api.images.ImagesServicePb.ImageData;
 import java.util.Map;
+import java.util.function.Function;
 
 /**
  * A {@code Composite} represents a composition of an image onto a canvas.
@@ -34,10 +36,13 @@ public abstract class Composite {
 
   /**
    * Adds this compositing operation to a Composite request.
+   *
    * @param request Request for this composite to be added to.
    * @param imageIndexMap Map of images and their indexes in the request.
+   * @param imageDataConverter Function to convert an Image to ImageData.
    */
-  abstract void apply(ImagesServicePb.ImagesCompositeRequest.Builder request,
-             Map<Image, Integer> imageIndexMap);
-
+  abstract void apply(
+      ImagesServicePb.ImagesCompositeRequest.Builder request,
+      Map<Image, Integer> imageIndexMap,
+      Function<Image, ImageData> imageDataConverter);
 }
