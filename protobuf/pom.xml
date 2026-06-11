@@ -36,18 +36,6 @@
       <groupId>com.google.protobuf</groupId>
       <artifactId>protobuf-java</artifactId>
     </dependency>
-    <dependency>
-      <groupId>io.grpc</groupId>
-      <artifactId>grpc-protobuf</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.grpc</groupId>
-      <artifactId>grpc-stub</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>javax.annotation</groupId>
-      <artifactId>javax.annotation-api</artifactId>
-    </dependency>
   </dependencies>
 
   <build>
@@ -56,21 +44,12 @@
         <groupId>com.github.os72</groupId>
         <artifactId>protoc-jar-maven-plugin</artifactId>
         <configuration>
-          <inputDirectories>
-            <dir>.</dir>
-          </inputDirectories>
-          <includeDirectories>
-            <dir>./api</dir>
-          </includeDirectories>
-          <outputTargets>
-            <outputTarget>
-              <type>java</type>
-            </outputTarget>
-            <outputTarget>
-              <type>grpc-java</type>
-              <pluginArtifact>io.grpc:protoc-gen-grpc-java:${grpc.version}</pluginArtifact>
-            </outputTarget>
-          </outputTargets>
+            <inputDirectories>
+                <dir>.</dir>
+            </inputDirectories>
+            <includeDirectories>
+                <dir>./api</dir>
+            </includeDirectories>
         </configuration>
       </plugin>
       <plugin>
