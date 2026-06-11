@@ -33,7 +33,11 @@ import java.util.Collection;
 final class ImagesServiceFactoryImpl implements IImagesServiceFactory {
 
   @VisibleForTesting
-  static final String USE_CUSTOM_IMAGES_GRPC_SERVICE_ENV = "USE_CUSTOM_IMAGES_GRPC_SERVICE";
+  static final String USE_CUSTOM_IMAGES_GRPC_SERVICE_ENV =
+      "APPENGINE_USE_CUSTOM_IMAGES_GRPC_SERVICE";
+
+  @VisibleForTesting
+  static final String IMAGES_SERVICE_ENDPOINT_ENV = "APPENGINE_IMAGES_SERVICE_ENDPOINT";
 
   private EnvironmentProvider environmentProvider = new SystemEnvironmentProvider();
 

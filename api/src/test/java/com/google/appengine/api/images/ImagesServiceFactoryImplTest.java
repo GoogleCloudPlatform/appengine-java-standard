@@ -41,7 +41,9 @@ public class ImagesServiceFactoryImplTest {
 
   @Test
   public void makeImageFromFilename_newBehavior_trueEnv_gsPrefix() {
-    when(mockEnvironmentProvider.getenv("USE_CUSTOM_IMAGES_GRPC_SERVICE")).thenReturn("true");
+    when(mockEnvironmentProvider.getenv(
+            ImagesServiceFactoryImpl.USE_CUSTOM_IMAGES_GRPC_SERVICE_ENV))
+        .thenReturn("true");
     String filename = "/gs/bucket/object";
 
     // Should NOT call BlobstoreServiceFactory (which would fail in this env)
@@ -53,7 +55,9 @@ public class ImagesServiceFactoryImplTest {
 
   @Test
   public void makeImageFromFilename_newBehavior_trueEnv_noGsPrefix_throwsException() {
-    when(mockEnvironmentProvider.getenv("USE_CUSTOM_IMAGES_GRPC_SERVICE")).thenReturn("true");
+    when(mockEnvironmentProvider.getenv(
+            ImagesServiceFactoryImpl.USE_CUSTOM_IMAGES_GRPC_SERVICE_ENV))
+        .thenReturn("true");
     String filename = "not/gs/path";
 
     IllegalArgumentException e =
