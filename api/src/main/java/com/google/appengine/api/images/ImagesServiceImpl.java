@@ -164,7 +164,8 @@ final class ImagesServiceImpl implements ImagesService {
 
   @VisibleForTesting
   boolean useGrpc() {
-    String envVar = environmentProvider.getenv("USE_CUSTOM_IMAGES_GRPC_SERVICE");
+    String envVar =
+        environmentProvider.getenv(ImagesServiceFactoryImpl.USE_CUSTOM_IMAGES_GRPC_SERVICE_ENV);
     return Boolean.parseBoolean(envVar);
   }
 
