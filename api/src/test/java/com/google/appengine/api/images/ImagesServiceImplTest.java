@@ -172,7 +172,9 @@ public class ImagesServiceImplTest {
         new ImagesServiceImpl(
             mockEnvironmentProvider, mockGrpcImagesClient, null, mockBlobstoreReference);
 
-    when(mockEnvironmentProvider.getenv("USE_CUSTOM_IMAGES_GRPC_SERVICE")).thenReturn("true");
+    when(mockEnvironmentProvider.getenv(
+            ImagesServiceFactoryImpl.USE_CUSTOM_IMAGES_GRPC_SERVICE_ENV))
+        .thenReturn("true");
   }
 
   @Test
@@ -354,7 +356,8 @@ public class ImagesServiceImplTest {
 
   public void setUpGrpc(boolean useGrpc) throws Exception {
     ImagesServiceImpl.setStorageForTesting(mockStorage);
-    when(mockEnvironmentProvider.getenv("USE_CUSTOM_IMAGES_GRPC_SERVICE"))
+    when(mockEnvironmentProvider.getenv(
+            ImagesServiceFactoryImpl.USE_CUSTOM_IMAGES_GRPC_SERVICE_ENV))
         .thenReturn(Boolean.toString(useGrpc));
 
     if (useGrpc) {
@@ -407,7 +410,9 @@ public class ImagesServiceImplTest {
 
   @Test
   public void useGrpc_envVarNotSet_returnsFalse() {
-    when(mockEnvironmentProvider.getenv("USE_CUSTOM_IMAGES_GRPC_SERVICE")).thenReturn(null);
+    when(mockEnvironmentProvider.getenv(
+            ImagesServiceFactoryImpl.USE_CUSTOM_IMAGES_GRPC_SERVICE_ENV))
+        .thenReturn(null);
     imagesService =
         new ImagesServiceImpl(
             mockEnvironmentProvider, null, null, mockBlobstoreReference, null, mockBlobInfoFactory);
@@ -416,7 +421,9 @@ public class ImagesServiceImplTest {
 
   @Test
   public void useGrpc_envVarInvalid_returnsFalse() {
-    when(mockEnvironmentProvider.getenv("USE_CUSTOM_IMAGES_GRPC_SERVICE")).thenReturn("yes");
+    when(mockEnvironmentProvider.getenv(
+            ImagesServiceFactoryImpl.USE_CUSTOM_IMAGES_GRPC_SERVICE_ENV))
+        .thenReturn("yes");
     imagesService =
         new ImagesServiceImpl(
             mockEnvironmentProvider, null, null, mockBlobstoreReference, null, mockBlobInfoFactory);

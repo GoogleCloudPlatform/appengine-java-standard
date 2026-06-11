@@ -37,7 +37,7 @@ public class GrpcImagesClientTest {
 
   @Test
   public void constructor_validEndpointAndCreds_success() {
-    when(mockEnvironmentProvider.getenv("IMAGES_SERVICE_ENDPOINT"))
+    when(mockEnvironmentProvider.getenv(ImagesServiceFactoryImpl.IMAGES_SERVICE_ENDPOINT_ENV))
         .thenReturn("https://my-service.run.app");
 
     GrpcImagesClient client = new GrpcImagesClient(mockEnvironmentProvider, mockCallCredentials);
@@ -46,37 +46,47 @@ public class GrpcImagesClientTest {
 
   @Test
   public void constructor_endpointNotSet_throwsException() {
-    when(mockEnvironmentProvider.getenv("IMAGES_SERVICE_ENDPOINT")).thenReturn(null);
+    when(mockEnvironmentProvider.getenv(ImagesServiceFactoryImpl.IMAGES_SERVICE_ENDPOINT_ENV))
+        .thenReturn(null);
     IllegalStateException e =
         assertThrows(
             IllegalStateException.class,
             () -> new GrpcImagesClient(mockEnvironmentProvider, mockCallCredentials));
-    assertThat(e).hasMessageThat().contains("IMAGES_SERVICE_ENDPOINT environment variable not set");
+    assertThat(e)
+        .hasMessageThat()
+        .contains(
+            ImagesServiceFactoryImpl.IMAGES_SERVICE_ENDPOINT_ENV + " environment variable not set");
   }
 
   @Test
   public void constructor_invalidEndpoint_throwsException() {
-    when(mockEnvironmentProvider.getenv("IMAGES_SERVICE_ENDPOINT")).thenReturn("://my-service");
+    when(mockEnvironmentProvider.getenv(ImagesServiceFactoryImpl.IMAGES_SERVICE_ENDPOINT_ENV))
+        .thenReturn("://my-service");
     IllegalStateException e =
         assertThrows(
             IllegalStateException.class,
             () -> new GrpcImagesClient(mockEnvironmentProvider, mockCallCredentials));
-    assertThat(e).hasMessageThat().contains("Invalid URI in IMAGES_SERVICE_ENDPOINT");
+    assertThat(e)
+        .hasMessageThat()
+        .contains("Invalid URI in " + ImagesServiceFactoryImpl.IMAGES_SERVICE_ENDPOINT_ENV);
   }
 
   @Test
   public void constructor_endpointMissingHost_throwsException() {
-    when(mockEnvironmentProvider.getenv("IMAGES_SERVICE_ENDPOINT")).thenReturn("https://");
+    when(mockEnvironmentProvider.getenv(ImagesServiceFactoryImpl.IMAGES_SERVICE_ENDPOINT_ENV))
+        .thenReturn("https://");
     IllegalStateException e =
         assertThrows(
             IllegalStateException.class,
             () -> new GrpcImagesClient(mockEnvironmentProvider, mockCallCredentials));
-    assertThat(e).hasMessageThat().contains("Invalid URI in IMAGES_SERVICE_ENDPOINT");
+    assertThat(e)
+        .hasMessageThat()
+        .contains("Invalid URI in " + ImagesServiceFactoryImpl.IMAGES_SERVICE_ENDPOINT_ENV);
   }
 
   @Test
   public void getBlockingStub_returnsStub() {
-    when(mockEnvironmentProvider.getenv("IMAGES_SERVICE_ENDPOINT"))
+    when(mockEnvironmentProvider.getenv(ImagesServiceFactoryImpl.IMAGES_SERVICE_ENDPOINT_ENV))
         .thenReturn("https://my-service.run.app");
     GrpcImagesClient client = new GrpcImagesClient(mockEnvironmentProvider, mockCallCredentials);
     assertThat(client.getBlockingStub()).isNotNull();
