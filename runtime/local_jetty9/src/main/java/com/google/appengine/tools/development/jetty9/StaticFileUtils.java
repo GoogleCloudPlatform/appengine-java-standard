@@ -26,27 +26,26 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.servlet.RequestDispatcher;
+import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.io.WriterOutputStream;
-import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.util.URIUtil;
 import org.eclipse.jetty.util.resource.Resource;
 
 /**
- * {@code StaticFileUtils} is a collection of utilities shared by
- * {@link LocalResourceFileServlet} and {@link StaticFileFilter}.
- *
+ * {@code StaticFileUtils} is a collection of utilities shared by {@link LocalResourceFileServlet}
+ * and {@link StaticFileFilter}.
  */
 public class StaticFileUtils {
   private static final String DEFAULT_CACHE_CONTROL_VALUE = "public, max-age=600";
 
-  private final ContextHandler.Context servletContext;
+  private final ServletContext servletContext;
 
-  public StaticFileUtils(ContextHandler.Context servletContext) {
+  public StaticFileUtils(ServletContext servletContext) {
     this.servletContext = servletContext;
   }
 
