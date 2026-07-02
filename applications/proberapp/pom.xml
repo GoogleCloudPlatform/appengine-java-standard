@@ -41,7 +41,7 @@
         <DB_USER>prober-user</DB_USER>
         <DB_PASSOWRD>prober_connectivity_test_database</DB_PASSOWRD>
         <gax.version>2.80.0</gax.version>
-        <appengine.target.version>${project.version}</appengine.target.version>
+        <appengine.target.version>5.0.3-beta.2-SNAPSHOT</appengine.target.version>
         <appengine.runtime.location>target/${project.artifactId}-${project.version}</appengine.runtime.location>
     </properties>
 
