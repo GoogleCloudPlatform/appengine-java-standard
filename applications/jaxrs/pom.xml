@@ -34,7 +34,7 @@
 
     <properties>
         <maven.deploy.skip>true</maven.deploy.skip>
-        <appengine.target.version>5.0.3-beta-SNAPSHOT</appengine.target.version>
+        <appengine.target.version>5.0.3-beta.2-SNAPSHOT</appengine.target.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.target>1.8</maven.compiler.target>
         <maven.compiler.source>1.8</maven.compiler.source>
