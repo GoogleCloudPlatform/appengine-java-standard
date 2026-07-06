@@ -20,7 +20,7 @@
   <parent>
     <groupId>com.google.appengine</groupId>
     <artifactId>parent</artifactId>
-    <version>5.0.5-SNAPSHOT</version>
+    <version>5.0.5-beta.1-SNAPSHOT</version>
   </parent>
   <packaging>jar</packaging>
   <name>AppEngine :: appengine-api-1.0-sdk</name>
@@ -76,6 +76,10 @@
                   <shadedPattern>com.google.appengine.repackaged.com.google.api.services.datastore</shadedPattern>
                 </relocation>
                 <relocation>
+                  <pattern>com.google.api.services.storage</pattern>
+                  <shadedPattern>com.google.appengine.repackaged.com.google.api.services.storage</shadedPattern>
+                </relocation>
+                <relocation>
                   <!-- The servlet uses v1 protos (for local development); the client uses v1beta3                       protos. -->
                   <pattern>com.google.datastore.v1</pattern>
                   <shadedPattern>com.google.appengine.repackaged.com.google.datastore.v1</shadedPattern>
@@ -103,6 +107,10 @@
                   <!-- TODO: Change the package to live in apphosting instead. -->
                   <pattern>com.google.appengine.api.search.proto.SearchServicePb</pattern>
                   <shadedPattern>com.google.appengine.repackaged.com.google.appengine.api.search.proto.SearchServicePb</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>com.google.auth</pattern>
+                  <shadedPattern>com.google.appengine.repackaged.com.google.auth</shadedPattern>
                 </relocation>
                 <relocation>
                   <pattern>com.google.borg.borgcron</pattern>
@@ -272,6 +280,34 @@
                   <pattern>io.grpc</pattern>
                   <shadedPattern>com.google.appengine.repackaged.io.grpc</shadedPattern>
                 </relocation>
+                <relocation>
+                  <pattern>com.google.cloud</pattern>
+                  <shadedPattern>com.google.appengine.repackaged.com.google.cloud</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>com.google.api.gax</pattern>
+                  <shadedPattern>com.google.appengine.repackaged.com.google.api.gax</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>com.google.api.core</pattern>
+                  <shadedPattern>com.google.appengine.repackaged.com.google.api.core</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>com.google.api.pathtemplate</pattern>
+                  <shadedPattern>com.google.appengine.repackaged.com.google.api.pathtemplate</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>com.google.api.resourcenames</pattern>
+                  <shadedPattern>com.google.appengine.repackaged.com.google.api.resourcenames</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>org.threeten.bp</pattern>
+                  <shadedPattern>com.google.appengine.repackaged.org.threeten.bp</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>io.opentelemetry</pattern>
+                  <shadedPattern>com.google.appengine.repackaged.io.opentelemetry</shadedPattern>
+                </relocation>
               </relocations>
               <filters>
                 <filter>
@@ -292,6 +328,7 @@
                     <include>com/google/appengine/api/blobstore/jakarta/*</include>
                     <include>com/google/appengine/api/capabilities/*</include>
                     <include>com/google/appengine/api/images/*</include>
+                    <include>com/google/appengine/api/images/proto/*</include>
                     <include>com/google/appengine/api/internal/*</include>
                     <include>com/google/appengine/api/log/*</include>
                     <include>com/google/appengine/api/mail/*</include>
@@ -470,6 +507,8 @@
                   <include>com.google.http-client:google-http-client-jackson:*</include>
                   <include>com.google.http-client:google-http-client-protobuf:*</include>
                   <include>com.google.http-client:google-http-client:*</include>
+                  <include>com.google.http-client:google-http-client-appengine:*</include>
+                  <include>com.google.apis:google-api-services-storage:*</include>
                   <include>com.google.oauth-client:google-oauth-client:*</include>
                   <include>com.google.protobuf:protobuf-java:*</include>
                   <include>commons-codec:commons-codec:*</include>
@@ -483,8 +522,31 @@
                   <include>io.opencensus:opencensus-contrib-http-util:*</include>
                   <!-- needed for remote_api for opencensus. -->
                   <include>io.grpc:grpc-api:*</include>
+                  <include>io.grpc:grpc-auth:*</include>
+                  <include>io.grpc:grpc-stub:*</include>
+                  <include>io.grpc:grpc-protobuf:*</include>
+                  <include>io.grpc:grpc-protobuf-lite:*</include>
+                  <include>io.grpc:grpc-core:*</include>
+                  <include>io.grpc:grpc-netty-shaded:*</include>
+                  <include>io.grpc:grpc-util:*</include>
+                  <include>io.grpc:grpc-context:*</include>
+                  <include>com.google.auth:google-auth-library-oauth2-http:*</include>
+                  <include>com.google.auth:google-auth-library-credentials:*</include>
+                  <include>com.google.cloud:google-cloud-storage:*</include>
+                  <include>com.google.cloud:google-cloud-core:*</include>
+                  <include>com.google.cloud:google-cloud-core-http:*</include>
+                  <include>com.google.api:gax:*</include>
+                  <include>com.google.api:gax-httpjson:*</include>
+                  <include>com.google.api:api-common:*</include>
+                  <include>org.threeten:threetenbp:*</include>
+                  <include>io.opentelemetry:opentelemetry-api:*</include>
+                  <include>io.opentelemetry:opentelemetry-context:*</include>
                </includes>
               </artifactSet>
+
+              <transformers>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+              </transformers>
             </configuration>
           </execution>
         </executions>

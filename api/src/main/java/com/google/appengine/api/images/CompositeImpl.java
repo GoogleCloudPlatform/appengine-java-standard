@@ -19,8 +19,10 @@ package com.google.appengine.api.images;
 import static java.util.Objects.requireNonNull;
 
 import com.google.appengine.api.images.ImagesServicePb.CompositeImageOptions;
+import com.google.appengine.api.images.ImagesServicePb.ImageData;
 import com.google.appengine.api.images.ImagesServicePb.ImagesCompositeRequest;
 import java.util.Map;
+import java.util.function.Function;
 
 /**
  * Implementation of Composite using alpha blending.
@@ -68,11 +70,14 @@ final class CompositeImpl extends Composite {
 
   /** {@inheritDoc} */
   @Override
-  void apply(ImagesCompositeRequest.Builder request, Map<Image, Integer> imageIndexMap) {
+  void apply(
+      ImagesCompositeRequest.Builder request,
+      Map<Image, Integer> imageIndexMap,
+      Function<Image, ImageData> imageDataConverter) {
     // TODO: What is the purpose of this map?
     if (!imageIndexMap.containsKey(image)) {
       imageIndexMap.put(image, request.build().getImageCount());
-      request.addImage(ImagesServiceImpl.convertImageData(image));
+      request.addImage(imageDataConverter.apply(image));
     }
     CompositeImageOptions.Builder options = CompositeImageOptions.newBuilder();
     int sourceId = requireNonNull(imageIndexMap.get(image));
