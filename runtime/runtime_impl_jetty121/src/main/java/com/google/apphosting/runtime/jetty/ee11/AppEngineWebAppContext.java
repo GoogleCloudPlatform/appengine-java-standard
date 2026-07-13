@@ -203,6 +203,19 @@ public class AppEngineWebAppContext extends WebAppContext {
     return false;
   }
 
+  /**
+   * Overrides {@code doStart} to ensure that any initialization errors (such as a missing servlet
+   * class defined in {@code web.xml}) are reported as fatal startup exceptions.
+   *
+   * <p>By default, Jetty may catch {@link ClassNotFoundException} or {@link UnavailableException}
+   * during {@link ServletHandler#initialize()} and mark the individual {@code ServletHolder} as
+   * unavailable without failing context startup. We inspect the context and all registered
+   * servlets; if any unavailable exception was caught during startup, we rethrow it immediately so
+   * application deployment terminates rather than serving HTTP 503 errors at runtime.
+   *
+   * @throws Exception if the context or any of its servlets fail to initialize.
+   * @see <a href="https://github.com/GoogleCloudPlatform/appengine-java-standard/issues/103">Issue #103</a>
+   */
   @Override
   public void doStart() throws Exception {
     super.doStart();
@@ -293,6 +306,14 @@ public class AppEngineWebAppContext extends WebAppContext {
     }
   }
 
+  /**
+   * Configures the {@link ServletHandler} to disallow starting with unavailable servlets or
+   * filters.
+   *
+   * <p>Setting {@code setStartWithUnavailable(false)} ensures that any servlet or filter
+   * initialization failure throws an exception up the startup lifecycle chain rather than silently
+   * marking the handler component as unavailable.
+   */
   @Override
   protected ServletHandler newServletHandler() {
     ServletHandler handler = new ServletHandler();
