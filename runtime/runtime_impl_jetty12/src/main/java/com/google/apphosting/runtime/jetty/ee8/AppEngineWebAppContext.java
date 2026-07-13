@@ -238,6 +238,24 @@ public class AppEngineWebAppContext extends WebAppContext {
   @Override
   public void doStart() throws Exception {
     super.doStart();
+    Throwable t = getUnavailableException();
+    if (t != null) {
+      if (t instanceof Exception) {
+        throw (Exception) t;
+      }
+      if (t instanceof Error) {
+        throw (Error) t;
+      }
+      throw new IllegalStateException("Context initialization failed", t);
+    }
+    ServletHandler servletHandler = getServletHandler();
+    if (servletHandler != null && servletHandler.getServlets() != null) {
+      for (var holder : servletHandler.getServlets()) {
+        if (holder.getUnavailableException() != null) {
+          throw holder.getUnavailableException();
+        }
+      }
+    }
     addEventListener(new TransactionCleanupListener(getClassLoader()));
   }
 
@@ -316,6 +334,7 @@ public class AppEngineWebAppContext extends WebAppContext {
   protected ServletHandler newServletHandler() {
     ServletHandler handler = new ServletHandler();
     handler.setAllowDuplicateMappings(true);
+    handler.setStartWithUnavailable(false);
     return handler;
   }
 

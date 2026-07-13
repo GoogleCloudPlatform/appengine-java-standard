@@ -19,6 +19,7 @@ package com.google.appengine.tools.development.jetty.ee11;
 import com.google.apphosting.api.ApiProxy;
 import com.google.apphosting.runtime.jetty.EE11AppEngineAuthentication;
 import java.io.File;
+import org.eclipse.jetty.ee11.servlet.ServletHandler;
 import org.eclipse.jetty.ee11.servlet.security.ConstraintSecurityHandler;
 import org.eclipse.jetty.ee11.webapp.WebAppContext;
 import org.eclipse.jetty.security.Constraint;
@@ -66,11 +67,43 @@ public class AppEngineWebAppContext extends WebAppContext {
 
     this.serverInfo = serverInfo;
 
+    setThrowUnavailableOnStartupException(true);
+
     // Configure the Jetty SecurityHandler to understand our method of
     // authentication (via the UserService).
     setSecurityHandler(EE11AppEngineAuthentication.newSecurityHandler());
 
     setMaxFormContentSize(MAX_RESPONSE_SIZE);
+  }
+
+  @Override
+  protected ServletHandler newServletHandler() {
+    ServletHandler handler = new ServletHandler();
+    handler.setStartWithUnavailable(false);
+    return handler;
+  }
+
+  @Override
+  protected void doStart() throws Exception {
+    super.doStart();
+    Throwable t = getUnavailableException();
+    if (t != null) {
+      if (t instanceof Exception) {
+        throw (Exception) t;
+      }
+      if (t instanceof Error) {
+        throw (Error) t;
+      }
+      throw new IllegalStateException("Context initialization failed", t);
+    }
+    ServletHandler servletHandler = getServletHandler();
+    if (servletHandler != null && servletHandler.getServlets() != null) {
+      for (var holder : servletHandler.getServlets()) {
+        if (holder.getUnavailableException() != null) {
+          throw holder.getUnavailableException();
+        }
+      }
+    }
   }
 
   @Override
