@@ -225,6 +225,11 @@ class Jetty121EE8Sdk extends AppengineSdk {
     List<File> lf = getJetty121Jars("ee8-apache-jsp");
     lf.addAll(getJetty121Jars("ee8-glassfish-jstl"));
     lf.add(getJetty121Jar("ee8-servlet-"));
+    lf.add(
+        new File(
+            sdkRoot,
+            "lib/shared/jetty12/appengine-local-runtime-shared.jar")); // contains DTD and XSD
+                                                                       // schemas
     return lf;
   }
 
