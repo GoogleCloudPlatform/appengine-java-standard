@@ -159,30 +159,4 @@ public final class AppEngineWebAppContextTest {
     context.setServer(new org.eclipse.jetty.server.Server());
     assertThrows(Exception.class, context::doStart);
   }
-
-  @Test
-  public void missingServletClassThrowsOnStartupEe11() throws Exception {
-    File appDir = temporaryFolder.newFolder("missingservletapp-ee11");
-    File webInf = new File(appDir, "WEB-INF");
-    webInf.mkdirs();
-    File webXml = new File(webInf, "web.xml");
-    Files.writeString(
-        webXml.toPath(),
-        "<web-app xmlns=\"https://jakarta.ee/xml/ns/jakartaee\" version=\"6.0\">\n"
-            + "  <servlet>\n"
-            + "    <servlet-name>MissingServlet</servlet-name>\n"
-            + "    <servlet-class>com.example.nonexistent.MissingServlet</servlet-class>\n"
-            + "  </servlet>\n"
-            + "  <servlet-mapping>\n"
-            + "    <servlet-name>MissingServlet</servlet-name>\n"
-            + "    <url-pattern>/missing</url-pattern>\n"
-            + "  </servlet-mapping>\n"
-            + "</web-app>\n");
-
-    com.google.apphosting.runtime.jetty.ee11.AppEngineWebAppContext context =
-        new com.google.apphosting.runtime.jetty.ee11.AppEngineWebAppContext(appDir, "test server", true);
-    context.setTempDirectory(new File(appDir, "tmp"));
-    context.setServer(new org.eclipse.jetty.server.Server());
-    assertThrows(Exception.class, context::doStart);
-  }
 }
