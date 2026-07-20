@@ -521,9 +521,8 @@
       </dependency>
       <dependency>
         <groupId>com.google.http-client</groupId>
-        <artifactId>google-http-client-jackson</artifactId>
-        <!-- This artifact is not included in latest releases of google-http-client repository -->
-        <version>1.29.2</version>
+        <artifactId>google-http-client-jackson2</artifactId>
+        <version>1.47.1</version>
       </dependency>
       <dependency>
         <groupId>com.google.oauth-client</groupId>

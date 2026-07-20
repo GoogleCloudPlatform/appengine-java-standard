@@ -186,7 +186,7 @@
         </dependency>
         <dependency>
             <groupId>com.google.http-client</groupId>
-            <artifactId>google-http-client-jackson</artifactId>
+            <artifactId>google-http-client-jackson2</artifactId>
         </dependency>
         <!-- Test Dependencies -->
         <dependency>
