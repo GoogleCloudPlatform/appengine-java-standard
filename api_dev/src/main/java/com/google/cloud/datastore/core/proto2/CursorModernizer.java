@@ -17,6 +17,7 @@
 
 package com.google.cloud.datastore.core.proto2;
 
+import static com.google.cloud.datastore.core.exception.InvalidConversionException.checkConversion;
 import static com.google.common.base.Preconditions.checkArgument;
 
 import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb;
@@ -24,7 +25,6 @@ import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.CompiledCur
 import com.google.apphosting.datastore_bytes.proto2api.DatastoreV3Pb.CompiledCursor.Position;
 import com.google.cloud.datastore.core.exception.InvalidConversionException;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.IndexPosition;
 import com.google.storage.onestore.v3_bytes.proto2api.OnestoreEntity.IndexPostfix;
 import org.jspecify.annotations.Nullable;
 
@@ -40,13 +40,7 @@ public class CursorModernizer {
   /** Returns true if there is no location specified by the cursor. */
   public static boolean isEmpty(CompiledCursor.Builder cursor) {
     checkModernized(cursor);
-    return !isEncoded(cursor) && !isPlannable(cursor);
-  }
-
-  /** Returns true if the given cursor contains an encoded position. */
-  public static boolean isEncoded(CompiledCursor.Builder cursor) {
-    checkModernized(cursor);
-    return cursor.hasAbsolutePosition();
+    return !isPlannable(cursor);
   }
 
   /** Returns true if the given cursor contains a plannable position. */
@@ -94,29 +88,20 @@ public class CursorModernizer {
     }
   }
 
+  @SuppressWarnings("deprecation") // absolute_position, start_key
   public static void modernizeCursor(
       CompiledCursor.Builder cursor,
       DatastoreV3Pb.Query.Order.@Nullable Direction firstSortDirection)
       throws InvalidConversionException {
+    checkConversion(!cursor.hasAbsolutePosition(), "Absolute positions are not supported.");
     // First, convert any contents of the position field.
     if (cursor.hasPosition()) {
       InvalidConversionException.checkConversion(
           !cursor.hasPostfixPosition(),
           "A cursor cannot specify both position and postfix position.");
-      InvalidConversionException.checkConversion(
-          !cursor.hasAbsolutePosition(),
-          "A cursor cannot specify both position and absolute position.");
       Position pos = cursor.getPosition();
-      if (pos.hasStartKey()) {
-        IndexPosition.Builder indexPos =
-            cursor.getAbsolutePositionBuilder().setKey(pos.getStartKey());
-        if (pos.hasStartInclusive()) {
-          indexPos.setBefore(pos.getStartInclusive());
-        }
-        if (pos.hasBeforeAscending()) {
-          indexPos.setBeforeAscending(pos.getBeforeAscending());
-        }
-      } else if (pos.hasKey() || pos.getIndexValueCount() > 0) {
+      checkConversion(!pos.hasStartKey(), "Start key is not supported.");
+      if (pos.hasKey() || pos.getIndexValueCount() > 0) {
         IndexPostfix.Builder postfixPos = cursor.getPostfixPositionBuilder();
         for (Position.IndexValue value : pos.getIndexValueList()) {
           IndexPostfix.IndexValue.Builder indexValue =
@@ -139,14 +124,8 @@ public class CursorModernizer {
     // Next, populate before_ascending or before.
     if (isEmpty(cursor)) {
       return;
-    } else if (cursor.hasAbsolutePosition()) {
-      IndexPosition.Builder indexPosition = cursor.getAbsolutePositionBuilder();
-      if (indexPosition.hasBeforeAscending()) {
-        setBefore(indexPosition, firstSortDirection);
-      } else {
-        setBeforeAscending(indexPosition, firstSortDirection);
-      }
-    } else if (cursor.hasPostfixPosition()) {
+    }
+    if (cursor.hasPostfixPosition()) {
       IndexPostfix.Builder indexPostfix = cursor.getPostfixPositionBuilder();
       if (indexPostfix.hasBeforeAscending()) {
         setBefore(indexPostfix, firstSortDirection);
@@ -164,35 +143,9 @@ public class CursorModernizer {
    */
   @VisibleForTesting
   static void setBefore(
-      IndexPosition.Builder position,
-      DatastoreV3Pb.Query.Order.@Nullable Direction firstSortDirection) {
-    position.setBefore(computeBefore(position.getBeforeAscending(), firstSortDirection));
-  }
-
-  /**
-   * Sets the appropriate value of before in the provided position.
-   *
-   * @param position Position in which to set before.
-   * @param firstSortDirection First sort order direction from the query.
-   */
-  @VisibleForTesting
-  static void setBefore(
       IndexPostfix.Builder position,
       DatastoreV3Pb.Query.Order.@Nullable Direction firstSortDirection) {
     position.setBefore(computeBefore(position.getBeforeAscending(), firstSortDirection));
-  }
-
-  /**
-   * Sets the appropriate value of before_ascending in the provided position.
-   *
-   * @param position Position in which to set before_ascending.
-   * @param firstSortDirection First sort order direction from the query.
-   */
-  @VisibleForTesting
-  static void setBeforeAscending(
-      IndexPosition.Builder position,
-      DatastoreV3Pb.Query.Order.@Nullable Direction firstSortDirection) {
-    position.setBeforeAscending(computeBeforeAscending(position.getBefore(), firstSortDirection));
   }
 
   /**

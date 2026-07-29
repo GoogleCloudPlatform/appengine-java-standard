@@ -575,11 +575,7 @@ message IndexPostfix {
   optional bool before_ascending = 4;
 }
 
-// An absolute position in a single index. Prefer IndexPostfix to describe
-// an index position.
-//
-// TODO: Add something to this message to indicate what kind of
-// cursor it is, so that it can't be used for an unintended query.
+// DEPRECATED: An absolute position in a single index.
 message IndexPosition {
   optional bytes key = 1;
 

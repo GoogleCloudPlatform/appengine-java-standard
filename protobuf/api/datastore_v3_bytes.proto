@@ -431,31 +431,27 @@ message CompiledQuery {
 
 // A message that represents a compiled query cursor.
 //
-// Cursors returned by the backend populate at most one of postfix_position
-// (for plannable positions) or absolute_position (for encoded positions).
-// The position group can encode either a plannable or encoded positions (as
-// described in detail below), but it is accepted for backwards compatibility
-// only and is cleared during normalization.
+// Cursors returned by the backend populate postfix_position, which represents
+// a "plannable" position.
+//
+// The Position group can also represent a plannable position. It is accepted
+// for backwards compatibility but cleared during normalization on input.
+//
+// Historically, a cursor could also represent an encoded/absolute position,
+// but this is no longer supported.
 message CompiledCursor {
   // The position for the given query.
   //
   // If no position is provided or the position is empty this is a valid cursor
   // that points to the first element of the given result set.
   //
-  // The position can be encoded in one of two ways. If IndexValues or key is
-  // specified then this is a "plannable" position that can be used regardless
-  // of how the query is planned. If start_key is specified then it is a
-  // "compiled" or "encoded" position which can only be used on the exact same
-  // scan that it was generated from. Both start_key and key/IndexValue cannot
-  // be specified in a single position.
-  //
-  // NOTE: All fields have been marked deprecated because the
+  // NOTE(eddavisson): All fields have been marked deprecated because the
   // deprecation annotations aren't well-supported on groups.
   optional group Position = 2 [deprecated = true] {
+    // DEPRECATED: Rejected by backend.
+    //
     // The encoded key to which this cursor position refers to. This is an
     // encoded index or primary key.
-    // TODO: rename to "encoded_key"
-    // TODO: consider removing after 1.4.5
     optional bytes start_key = 27 [deprecated = true];
 
     repeated group IndexValue = 29 [deprecated = true] {
@@ -497,8 +493,11 @@ message CompiledCursor {
   // If specified, this is a plannable cursor.
   optional storage_onestore_v3.IndexPostfix postfix_position = 1;
 
+  // DEPRECATED: Rejected by backend.
+  //
   // If specified, this is an encoded cursor.
-  optional storage_onestore_v3.IndexPosition absolute_position = 3;
+  optional storage_onestore_v3.IndexPosition absolute_position = 3
+      [deprecated = true];
 }
 
 // A query cursor.
