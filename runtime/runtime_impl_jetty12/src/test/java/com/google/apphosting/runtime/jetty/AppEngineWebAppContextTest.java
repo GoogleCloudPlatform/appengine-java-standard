@@ -19,6 +19,7 @@ package com.google.apphosting.runtime.jetty;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.google.appengine.tools.development.resource.ResourceExtractor;
@@ -27,6 +28,7 @@ import com.google.common.io.ByteStreams;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.jar.JarEntry;
@@ -132,5 +134,56 @@ public final class AppEngineWebAppContextTest {
       assertNotNull(files);
       assertEquals(files.length, 0);
     }
+  }
+
+  @Test
+  public void missingServletClassThrowsOnStartupEe8() throws Exception {
+    File appDir = temporaryFolder.newFolder("missingservletapp-ee8");
+    File webInf = new File(appDir, "WEB-INF");
+    webInf.mkdirs();
+    File webXml = new File(webInf, "web.xml");
+    Files.writeString(
+        webXml.toPath(),
+        "<web-app xmlns=\"http://xmlns.jcp.org/xml/ns/javaee\" version=\"4.0\">\n"
+            + "  <servlet>\n"
+            + "    <servlet-name>MissingServlet</servlet-name>\n"
+            + "    <servlet-class>com.example.nonexistent.MissingServlet</servlet-class>\n"
+            + "  </servlet>\n"
+            + "  <servlet-mapping>\n"
+            + "    <servlet-name>MissingServlet</servlet-name>\n"
+            + "    <url-pattern>/missing</url-pattern>\n"
+            + "  </servlet-mapping>\n"
+            + "</web-app>\n");
+
+    AppEngineWebAppContext context = new AppEngineWebAppContext(appDir, "test server");
+    context.setTempDirectory(new File(appDir, "tmp"));
+    context.setServer(new org.eclipse.jetty.server.Server());
+    assertThrows(Exception.class, context::doStart);
+  }
+
+  @Test
+  public void missingServletClassThrowsOnStartupEe10() throws Exception {
+    File appDir = temporaryFolder.newFolder("missingservletapp-ee10");
+    File webInf = new File(appDir, "WEB-INF");
+    webInf.mkdirs();
+    File webXml = new File(webInf, "web.xml");
+    Files.writeString(
+        webXml.toPath(),
+        "<web-app xmlns=\"https://jakarta.ee/xml/ns/jakartaee\" version=\"6.0\">\n"
+            + "  <servlet>\n"
+            + "    <servlet-name>MissingServlet</servlet-name>\n"
+            + "    <servlet-class>com.example.nonexistent.MissingServlet</servlet-class>\n"
+            + "  </servlet>\n"
+            + "  <servlet-mapping>\n"
+            + "    <servlet-name>MissingServlet</servlet-name>\n"
+            + "    <url-pattern>/missing</url-pattern>\n"
+            + "  </servlet-mapping>\n"
+            + "</web-app>\n");
+
+    com.google.apphosting.runtime.jetty.ee10.AppEngineWebAppContext context =
+        new com.google.apphosting.runtime.jetty.ee10.AppEngineWebAppContext(appDir, "test server", true);
+    context.setTempDirectory(new File(appDir, "tmp"));
+    context.setServer(new org.eclipse.jetty.server.Server());
+    assertThrows(Exception.class, context::doStart);
   }
 }

@@ -19,6 +19,7 @@ package com.google.appengine.tools.development.jetty.ee11;
 import com.google.apphosting.api.ApiProxy;
 import com.google.apphosting.runtime.jetty.EE11AppEngineAuthentication;
 import java.io.File;
+import org.eclipse.jetty.ee11.servlet.ServletHandler;
 import org.eclipse.jetty.ee11.servlet.security.ConstraintSecurityHandler;
 import org.eclipse.jetty.ee11.webapp.WebAppContext;
 import org.eclipse.jetty.security.Constraint;
@@ -66,11 +67,64 @@ public class AppEngineWebAppContext extends WebAppContext {
 
     this.serverInfo = serverInfo;
 
+    setThrowUnavailableOnStartupException(true);
+
     // Configure the Jetty SecurityHandler to understand our method of
     // authentication (via the UserService).
     setSecurityHandler(EE11AppEngineAuthentication.newSecurityHandler());
 
     setMaxFormContentSize(MAX_RESPONSE_SIZE);
+  }
+
+  /**
+   * Configures the {@link ServletHandler} to disallow starting with unavailable servlets or
+   * filters.
+   *
+   * <p>Setting {@code setStartWithUnavailable(false)} ensures that any servlet or filter
+   * initialization failure throws an exception up the startup lifecycle chain rather than silently
+   * marking the handler component as unavailable.
+   */
+  @Override
+  protected ServletHandler newServletHandler() {
+    ServletHandler handler = new ServletHandler();
+    handler.setStartWithUnavailable(false);
+    return handler;
+  }
+
+  /**
+   * Overrides {@code doStart} to ensure that any initialization errors (such as a missing servlet
+   * class defined in {@code web.xml}) are reported as fatal startup exceptions.
+   *
+   * <p>By default, Jetty may catch {@link ClassNotFoundException} or {@link UnavailableException}
+   * during {@link ServletHandler#initialize()} and mark the individual {@code ServletHolder} as
+   * unavailable without failing context startup. We inspect the context and all registered
+   * servlets; if any unavailable exception was caught during startup, we rethrow it immediately so
+   * application deployment terminates rather than serving HTTP 503 errors at runtime.
+   *
+   * @throws Exception if the context or any of its servlets fail to initialize.
+   * @see <a href="https://github.com/GoogleCloudPlatform/appengine-java-standard/issues/103">Issue #103</a>
+   */
+  @Override
+  protected void doStart() throws Exception {
+    super.doStart();
+    Throwable t = getUnavailableException();
+    if (t != null) {
+      if (t instanceof Exception) {
+        throw (Exception) t;
+      }
+      if (t instanceof Error) {
+        throw (Error) t;
+      }
+      throw new IllegalStateException("Context initialization failed", t);
+    }
+    ServletHandler servletHandler = getServletHandler();
+    if (servletHandler != null && servletHandler.getServlets() != null) {
+      for (var holder : servletHandler.getServlets()) {
+        if (holder.getUnavailableException() != null) {
+          throw holder.getUnavailableException();
+        }
+      }
+    }
   }
 
   @Override

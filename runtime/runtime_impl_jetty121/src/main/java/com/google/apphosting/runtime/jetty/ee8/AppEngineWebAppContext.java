@@ -32,7 +32,6 @@ import com.google.apphosting.utils.servlet.WarmupServlet;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.flogger.GoogleLogger;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -204,13 +203,13 @@ public class AppEngineWebAppContext extends WebAppContext {
     if (projectId == null) {
       return false;
     }
-    try (Scanner s = new Scanner(new File(IGNORE_CONTENT_LENGTH), UTF_8.name())) {
+    try (Scanner s = new Scanner(new File(IGNORE_CONTENT_LENGTH), UTF_8)) {
       while (s.hasNext()) {
         if (projectId.equals(s.next())) {
           return true;
         }
       }
-    } catch (FileNotFoundException ignore) {
+    } catch (IOException ignore) {
       return false;
     }
     return false;
@@ -238,9 +237,40 @@ public class AppEngineWebAppContext extends WebAppContext {
     return false;
   }
 
+  /**
+   * Overrides {@code doStart} to ensure that any initialization errors (such as a missing servlet
+   * class defined in {@code web.xml}) are reported as fatal startup exceptions.
+   *
+   * <p>By default, Jetty may catch {@link ClassNotFoundException} or {@link UnavailableException}
+   * during {@link ServletHandler#initialize()} and mark the individual {@code ServletHolder} as
+   * unavailable without failing context startup. We inspect the context and all registered
+   * servlets; if any unavailable exception was caught during startup, we rethrow it immediately so
+   * application deployment terminates rather than serving HTTP 503 errors at runtime.
+   *
+   * @throws Exception if the context or any of its servlets fail to initialize.
+   * @see <a href="https://github.com/GoogleCloudPlatform/appengine-java-standard/issues/103">Issue #103</a>
+   */
   @Override
   public void doStart() throws Exception {
     super.doStart();
+    Throwable t = getUnavailableException();
+    if (t != null) {
+      if (t instanceof Exception exception) {
+        throw exception;
+      }
+      if (t instanceof Error error) {
+        throw error;
+      }
+      throw new IllegalStateException("Context initialization failed", t);
+    }
+    ServletHandler servletHandler = getServletHandler();
+    if (servletHandler != null && servletHandler.getServlets() != null) {
+      for (var holder : servletHandler.getServlets()) {
+        if (holder.getUnavailableException() != null) {
+          throw holder.getUnavailableException();
+        }
+      }
+    }
     var unused = addEventListener(new TransactionCleanupListener(getClassLoader()));
   }
 
@@ -315,10 +345,19 @@ public class AppEngineWebAppContext extends WebAppContext {
     }
   }
 
+  /**
+   * Configures the {@link ServletHandler} to disallow starting with unavailable servlets or
+   * filters.
+   *
+   * <p>Setting {@code setStartWithUnavailable(false)} ensures that any servlet or filter
+   * initialization failure throws an exception up the startup lifecycle chain rather than silently
+   * marking the handler component as unavailable.
+   */
   @Override
   protected ServletHandler newServletHandler() {
     ServletHandler handler = new ServletHandler();
     handler.setAllowDuplicateMappings(true);
+    handler.setStartWithUnavailable(false);
     return handler;
   }
 
