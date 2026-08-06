@@ -146,7 +146,78 @@ class AppLogsWriter {
      * asynchronous flush may be started.  If flushes are backed up,
      * this method may block.
      */
-    synchronized void addLogRecordAndMaybeFlush(LogRecord fullRecord) {
+    void addLogRecordAndMaybeFlush(LogRecord fullRecord) {
+        if (Boolean.getBoolean("appengine.use.virtualthreads")) {
+            addLogRecordAndMaybeFlushVirtualThreads(fullRecord);
+        } else {
+            addLogRecordAndMaybeFlushLegacy(fullRecord);
+        }
+    }
+
+    private void addLogRecordAndMaybeFlushVirtualThreads(LogRecord fullRecord) {
+        for (LogRecord record : split(fullRecord)) {
+            UserAppLogLine logLine = UserAppLogLine.newBuilder()
+                .setLevel(record.getLevel().ordinal())
+                .setTimestampUsec(record.getTimestamp())
+                .setMessage(record.getMessage())
+                .build();
+            int maxEncodingSize = 1000; // logLine.maxEncodingSize();
+            Future<byte[]> pendingFlush = null;
+            synchronized (this) {
+                if (maxBytesToFlush > 0 &&
+                        (currentByteCount + maxEncodingSize) > maxBytesToFlush) {
+                    pendingFlush = getPendingFlushLocked();
+                    if (pendingFlush == null && buffer.size() > 0) {
+                        currentFlush = doFlush();
+                    }
+                }
+            }
+            if (pendingFlush != null) {
+                waitForFlush(pendingFlush);
+                synchronized (this) {
+                    if (currentFlush == null || currentFlush.isDone()) {
+                        if (buffer.size() > 0) {
+                            currentFlush = doFlush();
+                        } else if (currentFlush != null && currentFlush.isDone()) {
+                            currentFlush = null;
+                        }
+                    }
+                }
+            }
+            synchronized (this) {
+                if (buffer.size() == 0) {
+                    stopwatch.start();
+                }
+                buffer.add(logLine);
+                currentByteCount += maxEncodingSize;
+            }
+        }
+
+        Future<byte[]> pendingTimeFlush = null;
+        synchronized (this) {
+            if (maxSecondsBetweenFlush > 0 &&
+                    stopwatch.elapsed(TimeUnit.SECONDS) >= maxSecondsBetweenFlush) {
+                pendingTimeFlush = getPendingFlushLocked();
+                if (pendingTimeFlush == null && buffer.size() > 0) {
+                    currentFlush = doFlush();
+                }
+            }
+        }
+        if (pendingTimeFlush != null) {
+            waitForFlush(pendingTimeFlush);
+            synchronized (this) {
+                if (currentFlush == null || currentFlush.isDone()) {
+                    if (buffer.size() > 0) {
+                        currentFlush = doFlush();
+                    } else if (currentFlush != null && currentFlush.isDone()) {
+                        currentFlush = null;
+                    }
+                }
+            }
+        }
+    }
+
+    private synchronized void addLogRecordAndMaybeFlushLegacy(LogRecord fullRecord) {
         for (LogRecord record : split(fullRecord)) {
             UserAppLogLine logLine = UserAppLogLine.newBuilder()
                 .setLevel(record.getLevel().ordinal())
@@ -157,7 +228,7 @@ class AppLogsWriter {
             if (maxBytesToFlush > 0 &&
                     (currentByteCount + maxEncodingSize) > maxBytesToFlush) {
                 logger.info(currentByteCount + " bytes of app logs pending, starting flush...");
-                waitForCurrentFlushAndStartNewFlush();
+                waitForCurrentFlushAndStartNewFlushLegacy();
             }
             if (buffer.size() == 0) {
                 stopwatch.start();
@@ -168,7 +239,7 @@ class AppLogsWriter {
 
         if (maxSecondsBetweenFlush > 0 &&
                 stopwatch.elapsed(TimeUnit.SECONDS) >= maxSecondsBetweenFlush) {
-            waitForCurrentFlushAndStartNewFlush();
+            waitForCurrentFlushAndStartNewFlushLegacy();
         }
     }
 
@@ -179,7 +250,22 @@ class AppLogsWriter {
      * @return The number of times this AppLogsWriter has initiated a flush.
      */
     synchronized int waitForCurrentFlushAndStartNewFlush() {
-        waitForCurrentFlush();
+        if (Boolean.getBoolean("appengine.use.virtualthreads")) {
+            Future<byte[]> pending = getPendingFlushLocked();
+            if (pending != null) {
+                waitForFlush(pending);
+            }
+            if (buffer.size() > 0) {
+                currentFlush = doFlush();
+            }
+            return flushCount;
+        } else {
+            return waitForCurrentFlushAndStartNewFlushLegacy();
+        }
+    }
+
+    private synchronized int waitForCurrentFlushAndStartNewFlushLegacy() {
+        waitForCurrentFlushLegacy();
         if (buffer.size() > 0) {
             currentFlush = doFlush();
         }
@@ -187,43 +273,103 @@ class AppLogsWriter {
     }
 
     /**
-     * Initiates a synchronous flush.  This method will always block
-     * until any pending flushes and its own flush completes.
+     * Initiates a synchronous flush. This method will always block until any pending flushes and
+     * its own flush completes.
+     *
+     * <p>When {@code appengine.use.virtualthreads} is enabled, the actual I/O wait on {@link
+     * Future#get()} is performed outside of the {@code synchronized} monitor lock to allow virtual
+     * threads to unmount without pinning carrier threads. Otherwise, it follows legacy synchronized locking.
      */
-    synchronized void flushAndWait() {
-        waitForCurrentFlush();
+    void flushAndWait() {
+        if (Boolean.getBoolean("appengine.use.virtualthreads")) {
+            flushAndWaitVirtualThreads();
+        } else {
+            flushAndWaitLegacy();
+        }
+    }
+
+    private void flushAndWaitVirtualThreads() {
+        Future<byte[]> previousFlush;
+        synchronized (this) {
+            previousFlush = getPendingFlushLocked();
+        }
+        if (previousFlush != null) {
+            waitForFlush(previousFlush);
+        }
+
+        Future<byte[]> flush = null;
+        synchronized (this) {
+            if (currentFlush == null || currentFlush.isDone()) {
+                if (buffer.size() > 0) {
+                    flush = currentFlush = doFlush();
+                } else if (currentFlush != null && currentFlush.isDone()) {
+                    currentFlush = null;
+                }
+            } else {
+                flush = currentFlush;
+            }
+        }
+        if (flush != null) {
+            waitForFlush(flush);
+            synchronized (this) {
+                if (currentFlush != null && currentFlush.isDone()) {
+                    currentFlush = null;
+                }
+            }
+        }
+    }
+
+    private synchronized void flushAndWaitLegacy() {
+        waitForCurrentFlushLegacy();
         if (buffer.size() > 0) {
             currentFlush = doFlush();
-            waitForCurrentFlush();
+            waitForCurrentFlushLegacy();
+        }
+    }
+
+    private void waitForFlush(Future<byte[]> flush) {
+        try {
+            flush.get(
+                    ApiProxyDelegate.ADDITIONAL_HTTP_TIMEOUT_BUFFER_MS + LOG_FLUSH_TIMEOUT_MS,
+                    TimeUnit.MILLISECONDS);
+        } catch (InterruptedException ex) {
+            logger.warning("Interrupted while blocking on a log flush, setting interrupt bit and " +
+                    "continuing.  Some logs may be lost or occur out of order!");
+            Thread.currentThread().interrupt();
+        } catch (TimeoutException e) {
+            logger.log(Level.WARNING, "Timeout waiting for log flush to complete. "
+                    + "Log messages may have been lost/reordered!", e);
+        } catch (ExecutionException ex) {
+            logger.log(
+                    Level.WARNING,
+                    "A log flush request failed.  Log messages may have been lost!", ex);
+        }
+    }
+
+    private void waitForCurrentFlushLegacy() {
+        if (currentFlush != null) {
+            logger.info("Previous flush has not yet completed, blocking.");
+            waitForFlush(currentFlush);
+            currentFlush = null;
         }
     }
 
     /**
-     * This method blocks until any outstanding flush is completed. This method
-     * should be called prior to {@link #doFlush()} so that it is impossible for
-     * the appserver to process logs out of order.
+     * Returns the currently pending flush {@link Future} if it has not yet completed.
+     *
+     * <p>By retrieving the pending flush under {@code synchronized (this)} and returning it to the
+     * caller without nullifying it right away, we allow {@link #waitForFlush(Future)} (which invokes {@link
+     * Future#get()}) to be executed strictly outside the synchronized monitor block while ensuring
+     * other virtual threads see that a flush is still pending. Under Java 21 (pre-JEP 491),
+     * blocking inside a synchronized scope prevents virtual threads from unmounting and pins their
+     * carrier threads, leading to pool starvation across the web container.
      */
-    private void waitForCurrentFlush() {
-        if (currentFlush != null) {
-            logger.info("Previous flush has not yet completed, blocking.");
-            try {
-                currentFlush.get(
-                        ApiProxyDelegate.ADDITIONAL_HTTP_TIMEOUT_BUFFER_MS + LOG_FLUSH_TIMEOUT_MS,
-                        TimeUnit.MILLISECONDS);
-            } catch (InterruptedException ex) {
-                logger.warning("Interruped while blocking on a log flush, setting interrupt bit and " +
-                        "continuing.  Some logs may be lost or occur out of order!");
-                Thread.currentThread().interrupt();
-            } catch (TimeoutException e) {
-                logger.log(Level.WARNING, "Timeout waiting for log flush to complete. "
-                        + "Log messages may have been lost/reordered!", e);
-            } catch (ExecutionException ex) {
-                logger.log(
-                        Level.WARNING,
-                        "A log flush request failed.  Log messages may have been lost!", ex);
-            }
-            currentFlush = null;
+    private synchronized Future<byte[]> getPendingFlushLocked() {
+        if (currentFlush != null && !currentFlush.isDone() && !currentFlush.isCancelled()) {
+            return currentFlush;
         }
+        currentFlush = null;
+        return null;
     }
 
     private Future<byte[]> doFlush() {

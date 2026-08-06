@@ -22,6 +22,7 @@ import static com.google.apphosting.runtime.AppEngineConstants.HTTP_CONNECTOR_MO
 import static com.google.apphosting.runtime.AppEngineConstants.IGNORE_RESPONSE_SIZE_LIMIT;
 import static com.google.apphosting.runtime.AppEngineConstants.MAX_RESPONSE_SIZE;
 import static com.google.apphosting.runtime.AppEngineConstants.isLegacyMode;
+import static com.google.common.base.Strings.isNullOrEmpty;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.apphosting.api.ApiProxy;
@@ -275,6 +276,26 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
       }
       upResponse.setError(UPResponse.ERROR.UNEXPECTED_ERROR_VALUE);
       upResponse.setErrorMessage("Unexpected Error: " + error);
+    }
+  }
+
+  /**
+   * Calculates a safe maximum carrier thread count based on GAE sandbox memory boundaries to
+   * prevent OS scheduling thrashing on fractional/low-core instances.
+   */
+  static int getMaxSafeCarrierParallelism() {
+    return getMaxSafeCarrierParallelism(System.getenv("GAE_MEMORY_MB"));
+  }
+
+  static int getMaxSafeCarrierParallelism(String memoryMbStr) {
+    if (isNullOrEmpty(memoryMbStr)) {
+      return 4; // Conservative default cap for standard runtimes
+    }
+    try {
+      int memoryMb = Integer.parseInt(memoryMbStr);
+      return memoryMb <= 512 ? 1 : memoryMb <= 1024 ? 2 : 4;
+    } catch (NumberFormatException e) {
+      return 4; // Safety Fallback
     }
   }
 }

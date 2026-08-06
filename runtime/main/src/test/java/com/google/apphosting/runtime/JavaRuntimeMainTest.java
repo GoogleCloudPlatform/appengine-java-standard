@@ -22,6 +22,9 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.HashMap;
+import java.util.Map;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -37,11 +40,23 @@ public class JavaRuntimeMainTest {
   @Rule public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
   private JavaRuntimeMain main;
+  private Map<String, String> mockEnv;
 
   @Before
   public void setUp() {
     System.clearProperty("disable_api_call_logging_in_apiproxy");
+    System.clearProperty("jdk.virtualThreadScheduler.parallelism");
+    System.setProperty("appengine.use.virtualthreads", "true");
     main = new JavaRuntimeMain();
+    mockEnv = new HashMap<>();
+    main.envProvider = (name) -> mockEnv.get(name);
+  }
+
+  @After
+  public void tearDown() {
+    System.clearProperty("disable_api_call_logging_in_apiproxy");
+    System.clearProperty("jdk.virtualThreadScheduler.parallelism");
+    System.clearProperty("appengine.use.virtualthreads");
   }
 
   @Test
@@ -85,7 +100,7 @@ public class JavaRuntimeMainTest {
   public void testWithOptionalProperties() throws IOException {
     File webInf = temporaryFolder.newFolder("WEB-INF");
     File properties = new File(webInf, "appengine_optional.properties");
-    try (PrintWriter writer = new PrintWriter(properties, UTF_8.name())) {
+    try (PrintWriter writer = new PrintWriter(properties, UTF_8)) {
       writer.println("disable_api_call_logging_in_apiproxy=true");
 
     }
@@ -94,5 +109,55 @@ public class JavaRuntimeMainTest {
     main.processOptionalProperties(optionalProperties);
     assertThat(main.getApplicationPath(optionalProperties)).isEqualTo(appRoot);
     assertThat(System.getProperty("disable_api_call_logging_in_apiproxy")).isEqualTo("true");
+  }
+
+  @Test
+  public void testConfigureVirtualThreadParallelism_noEnv() {
+    main.configureVirtualThreadParallelism();
+    assertThat(System.getProperty("jdk.virtualThreadScheduler.parallelism")).isNull();
+  }
+
+  @Test
+  public void testConfigureVirtualThreadParallelism_f1() {
+    mockEnv.put("GAE_MEMORY_MB", "512");
+    main.configureVirtualThreadParallelism();
+    assertThat(System.getProperty("jdk.virtualThreadScheduler.parallelism")).isEqualTo("1");
+  }
+
+  @Test
+  public void testConfigureVirtualThreadParallelism_f2() {
+    mockEnv.put("GAE_MEMORY_MB", "1024");
+    main.configureVirtualThreadParallelism();
+    assertThat(System.getProperty("jdk.virtualThreadScheduler.parallelism")).isEqualTo("2");
+  }
+
+  @Test
+  public void testConfigureVirtualThreadParallelism_f4() {
+    mockEnv.put("GAE_MEMORY_MB", "2048");
+    main.configureVirtualThreadParallelism();
+    assertThat(System.getProperty("jdk.virtualThreadScheduler.parallelism")).isEqualTo("4");
+  }
+
+  @Test
+  public void testConfigureVirtualThreadParallelism_alreadySet() {
+    mockEnv.put("GAE_MEMORY_MB", "512");
+    System.setProperty("jdk.virtualThreadScheduler.parallelism", "10");
+    main.configureVirtualThreadParallelism();
+    assertThat(System.getProperty("jdk.virtualThreadScheduler.parallelism")).isEqualTo("10");
+  }
+
+  @Test
+  public void testConfigureVirtualThreadParallelism_flagDisabled() {
+    System.clearProperty("appengine.use.virtualthreads");
+    mockEnv.put("GAE_MEMORY_MB", "512");
+    main.configureVirtualThreadParallelism();
+    assertThat(System.getProperty("jdk.virtualThreadScheduler.parallelism")).isNull();
+  }
+
+  @Test
+  public void testConfigureVirtualThreadParallelism_invalidEnv() {
+    mockEnv.put("GAE_MEMORY_MB", "invalid");
+    main.configureVirtualThreadParallelism();
+    assertThat(System.getProperty("jdk.virtualThreadScheduler.parallelism")).isNull();
   }
 }

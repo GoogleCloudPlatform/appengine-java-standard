@@ -48,6 +48,8 @@ import java.io.FileNotFoundException;
 import java.io.InputStreamReader;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ForkJoinPool;
 import org.eclipse.jetty.http.CookieCompliance;
 import org.eclipse.jetty.http.HttpCompliance;
 import org.eclipse.jetty.http.MultiPartCompliance;
@@ -104,8 +106,14 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
     // Try to enable virtual threads if requested and on java21:
     if (Boolean.getBoolean("appengine.use.virtualthreads")
         && ("java21".equals(GAE_RUNTIME) || "java25".equals(GAE_RUNTIME))) {
-      threadPool.setVirtualThreadsExecutor(VirtualThreads.getDefaultVirtualThreadsExecutor());
-      logger.atInfo().log("Configuring Appengine web server virtual threads.");
+      int maxParallelism = getMaxSafeCarrierParallelism();
+      Executor virtualThreadsExecutor =
+          new ForkJoinPool(
+              maxParallelism, ForkJoinPool.defaultForkJoinWorkerThreadFactory, null, true);
+      threadPool.setVirtualThreadsExecutor(virtualThreadsExecutor);
+      logger.atInfo().log(
+          "Configuring Appengine web server virtual threads with capped carrier parallelism: %d",
+          maxParallelism);
     }
 
     server =
@@ -268,6 +276,26 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
       }
       upResponse.setError(UPResponse.ERROR.UNEXPECTED_ERROR_VALUE);
       upResponse.setErrorMessage("Unexpected Error: " + error);
+    }
+  }
+
+  /**
+   * Calculates a safe maximum carrier thread count based on GAE sandbox memory boundaries to
+   * prevent OS scheduling thrashing on fractional/low-core instances.
+   */
+  static int getMaxSafeCarrierParallelism() {
+    return getMaxSafeCarrierParallelism(System.getenv("GAE_MEMORY_MB"));
+  }
+
+  static int getMaxSafeCarrierParallelism(String memoryMbStr) {
+    if (memoryMbStr == null || memoryMbStr.isEmpty()) {
+      return 4; // Conservative default cap for standard runtimes
+    }
+    try {
+      int memoryMb = Integer.parseInt(memoryMbStr);
+      return memoryMb <= 512 ? 1 : memoryMb <= 1024 ? 2 : 4;
+    } catch (NumberFormatException e) {
+      return 4; // Safety Fallback
     }
   }
 }

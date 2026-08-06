@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.util.Properties;
+import java.util.function.UnaryOperator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -62,6 +63,9 @@ public class JavaRuntimeMain {
   private static final String ALLOW_NON_RESIDENT_SESSION_ACCESS =
       "gae.allow_non_resident_session_access";
 
+  /* @VisibleForTesting */
+  UnaryOperator<String> envProvider = System::getenv;
+
   public static void main(String[] args) {
     new JavaRuntimeMain().load(args);
   }
@@ -75,6 +79,8 @@ public class JavaRuntimeMain {
 
       // Process user defined properties as soon as possible, in the simple main Classpath.
       processOptionalProperties(args);
+
+      configureVirtualThreadParallelism();
 
       String appsRoot = getApplicationRoot(args);
       NullSandboxPlugin plugin = new NullSandboxPlugin();
@@ -91,6 +97,50 @@ public class JavaRuntimeMain {
     } catch (Throwable t) {
       logger.log(Level.SEVERE, "Unexpected failure creating RuntimeClassLoader", t);
       throw t;
+    }
+  }
+
+  /**
+   * Configures the global default virtual thread scheduler parallelism (carrier pool size) based on
+   * the GAE Standard sandbox resource limits.
+   *
+   * <p>This configuration is critical under sandboxed, resource-constrained container environments
+   * (exposing fractional or single core quotas such as 0.5 CPU or 1.0 CPU). In these environments,
+   * the JVM default scheduler parallelism (which defaults to the underlying physical host core
+   * count, often 64+) triggers heavy thread context thrashing and CPU starvation.
+   *
+   * <p>This method maps the memory limit (GAE_MEMORY_MB) to a safe maximum carrier thread cap:
+   *
+   * <ul>
+   *   <li>F1 Class (<= 512MB, 0.5 CPU) -> 1 carrier thread
+   *   <li>F2 Class (<= 1024MB, 1 CPU) -> 2 carrier threads
+   *   <li>Backend/F4+ Classes (> 1024MB, 2+ CPU) -> 4 carrier threads
+   * </ul>
+   *
+   * <p>This method is run early during the primary JVM bootstrap (JavaRuntimeMain.main) to
+   * guarantee the parallelism system property is set before the virtual thread scheduler is
+   * initialized, as late-bound properties are ignored. Explicit user-defined overrides (e.g., via
+   * JAVA_OPTS) are preserved. It only takes effect when {@code appengine.use.virtualthreads} is
+   * enabled.
+   */
+  /* @VisibleForTesting */
+  void configureVirtualThreadParallelism() {
+    String memoryMbStr = envProvider.apply("GAE_MEMORY_MB");
+    if (Boolean.getBoolean("appengine.use.virtualthreads")
+        && memoryMbStr != null
+        && System.getProperty("jdk.virtualThreadScheduler.parallelism") == null) {
+      try {
+        int memoryMb = Integer.parseInt(memoryMbStr);
+        int parallelism = memoryMb <= 512 ? 1 : memoryMb <= 1024 ? 2 : 4;
+        System.setProperty("jdk.virtualThreadScheduler.parallelism", String.valueOf(parallelism));
+        logger.info(
+            "Configured virtual thread parallelism to "
+                + parallelism
+                + " based on GAE_MEMORY_MB="
+                + memoryMb);
+      } catch (NumberFormatException e) {
+        logger.log(Level.WARNING, "Failed to parse GAE_MEMORY_MB: " + memoryMbStr, e);
+      }
     }
   }
 
