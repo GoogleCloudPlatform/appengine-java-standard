@@ -127,6 +127,7 @@ public class DevPullQueueTest extends TestCase {
     Iterator<String> reversedJobNames = Lists.reverse(jobNames).iterator();
     for (QueueStateInfo.TaskStateInfo taskInfo : info.getTaskInfo()) {
       assertEquals(reversedJobNames.next(), taskInfo.getTaskName());
+      assertEquals("PULL", taskInfo.getMethod());
     }
   }
 

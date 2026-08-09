@@ -72,6 +72,9 @@ public final class QueueStateInfo {
     }
 
     public String getMethod() {
+      if (addRequest.hasMode() && addRequest.getMode() == Mode.PULL) {
+        return "PULL";
+      }
       return addRequest.getMethod().name();
     }
 
