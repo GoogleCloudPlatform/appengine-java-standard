@@ -16,7 +16,9 @@
 
 package com.google.appengine.api.datastore;
 
+import com.google.apphosting.api.ApiProxy;
 import com.google.common.collect.Lists;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -177,6 +179,8 @@ class TransactionStackImpl implements TransactionStack {
     TransactionDataMap get();
 
     class StaticMember implements ThreadLocalTransactionStack {
+      private static final ThreadLocal<WeakReference<ApiProxy.Environment>> CURRENT_ENV =
+          new ThreadLocal<>();
       private static final ThreadLocal<TransactionDataMap> STACK =
           new ThreadLocal<TransactionDataMap>() {
             @Override
@@ -187,6 +191,13 @@ class TransactionStackImpl implements TransactionStack {
 
       @Override
       public TransactionDataMap get() {
+        ApiProxy.Environment env = ApiProxy.getCurrentEnvironment();
+        WeakReference<ApiProxy.Environment> weakEnv = CURRENT_ENV.get();
+        ApiProxy.Environment prevEnv = weakEnv != null ? weakEnv.get() : null;
+        if (env != prevEnv) {
+          STACK.get().clear();
+          CURRENT_ENV.set(env != null ? new WeakReference<>(env) : null);
+        }
         return STACK.get();
       }
     }

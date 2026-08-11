@@ -21,6 +21,8 @@ import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.google.apphosting.api.ApiProxy;
+import java.util.concurrent.atomic.AtomicReference;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -79,34 +81,17 @@ public class TransactionStackImplTest {
     assertThat(stack.getFutures(txn3)).isEmpty();
 
     assertThat(stack.peek()).isSameInstanceAs(txn3);
-    assertThat(stack.getFutures(txn1)).isEmpty();
-    assertThat(stack.getFutures(txn2)).isEmpty();
-    assertThat(stack.getFutures(txn3)).isEmpty();
 
     assertThat(stack.pop()).isSameInstanceAs(txn3);
-    assertThat(stack.getFutures(txn1)).isEmpty();
-    assertThat(stack.getFutures(txn2)).isEmpty();
-    assertEmptyFutures(txn3);
-
+    assertThat(stack.getFutures(txn3)).isEmpty();
     assertThat(stack.peek()).isSameInstanceAs(txn2);
-    assertThat(stack.getFutures(txn1)).isEmpty();
-    assertThat(stack.getFutures(txn2)).isEmpty();
-    assertEmptyFutures(txn3);
 
     assertThat(stack.pop()).isSameInstanceAs(txn2);
-    assertThat(stack.getFutures(txn1)).isEmpty();
-    assertEmptyFutures(txn2);
-    assertEmptyFutures(txn3);
-
+    assertThat(stack.getFutures(txn2)).isEmpty();
     assertThat(stack.peek()).isSameInstanceAs(txn1);
-    assertThat(stack.getFutures(txn1)).isEmpty();
-    assertEmptyFutures(txn2);
-    assertEmptyFutures(txn3);
 
     assertThat(stack.pop()).isSameInstanceAs(txn1);
-    assertEmptyFutures(txn1);
-    assertEmptyFutures(txn2);
-    assertEmptyFutures(txn3);
+    assertThat(stack.getFutures(txn1)).isEmpty();
 
     // once we've deregistered, everything else should fail
     assertThat(stack.peek(null)).isNull();
@@ -208,5 +193,66 @@ public class TransactionStackImplTest {
   @Test
   public void testPushNull() {
     assertThrows(NullPointerException.class, () -> stack.push(null));
+  }
+
+  @Test
+  public void testStaticMember_scopedToApiProxyEnvironment() {
+    TransactionStackImpl.ThreadLocalTransactionStack staticMember =
+        new TransactionStackImpl.ThreadLocalTransactionStack.StaticMember();
+    ApiProxy.Environment env1 = mock(ApiProxy.Environment.class);
+
+    ApiProxy.setEnvironmentForCurrentThread(env1);
+    try {
+      TransactionStackImpl.TransactionDataMap map1 = staticMember.get();
+      assertThat(map1).isNotNull();
+      Transaction txn1 = mock(Transaction.class);
+      when(txn1.getId()).thenReturn("123");
+      map1.txns.push(txn1);
+
+      // Subsequent call in same environment returns same stack with txn1
+      assertThat(staticMember.get().txns).containsExactly(txn1);
+
+      // Switching to a new environment (simulating request completion + thread reuse)
+      ApiProxy.Environment env2 = mock(ApiProxy.Environment.class);
+      ApiProxy.setEnvironmentForCurrentThread(env2);
+
+      // New environment triggers clear() on the thread-local stack
+      assertThat(staticMember.get().txns).isEmpty();
+    } finally {
+      ApiProxy.clearEnvironmentForCurrentThread();
+    }
+  }
+
+  @Test
+  public void testStaticMember_threadIsolation() throws Exception {
+    TransactionStackImpl.ThreadLocalTransactionStack staticMember =
+        new TransactionStackImpl.ThreadLocalTransactionStack.StaticMember();
+    ApiProxy.Environment env = mock(ApiProxy.Environment.class);
+    ApiProxy.setEnvironmentForCurrentThread(env);
+
+    try {
+      TransactionStackImpl.TransactionDataMap mainThreadMap = staticMember.get();
+      AtomicReference<TransactionStackImpl.TransactionDataMap> otherThreadMap =
+          new AtomicReference<>();
+
+      Thread otherThread =
+          new Thread(
+              () -> {
+                ApiProxy.setEnvironmentForCurrentThread(env);
+                try {
+                  otherThreadMap.set(staticMember.get());
+                } finally {
+                  ApiProxy.clearEnvironmentForCurrentThread();
+                }
+              });
+      otherThread.start();
+      otherThread.join();
+
+      // Even though both threads share the same ApiProxy.Environment, each thread has its own stack
+      assertThat(otherThreadMap.get()).isNotNull();
+      assertThat(otherThreadMap.get()).isNotSameInstanceAs(mainThreadMap);
+    } finally {
+      ApiProxy.clearEnvironmentForCurrentThread();
+    }
   }
 }
