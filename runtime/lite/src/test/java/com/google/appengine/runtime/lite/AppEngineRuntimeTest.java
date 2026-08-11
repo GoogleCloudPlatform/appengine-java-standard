@@ -74,10 +74,10 @@ import javax.servlet.ServletContextListener;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.eclipse.jetty.client.BytesRequestContent;
+import org.eclipse.jetty.client.ContentResponse;
 import org.eclipse.jetty.client.HttpClient;
-import org.eclipse.jetty.client.api.ContentResponse;
-import org.eclipse.jetty.client.api.Request;
-import org.eclipse.jetty.client.util.BytesContentProvider;
+import org.eclipse.jetty.client.Request;
 import org.eclipse.jetty.http.HttpMethod;
 import org.junit.After;
 import org.junit.Rule;
@@ -318,8 +318,11 @@ public final class AppEngineRuntimeTest {
   class ApiRequestHandler implements FakeHttpApiHost.ApiRequestHandler {
     @Override
     public RemoteApiPb.Response handle(RemoteApiPb.Request request) {
+      System.err.println("TEST API REQUEST: " + request.getServiceName() + "." + request.getMethod());
       apiRequests.addLast(request);
-      return apiResponses.removeFirst();
+      RemoteApiPb.Response resp = apiResponses.removeFirst();
+      System.err.println("TEST API RESPONSE: " + resp);
+      return resp;
     }
   }
 
@@ -535,11 +538,11 @@ public final class AppEngineRuntimeTest {
           httpClient
               .get()
               .newRequest(uri)
-              .header("Accept-Encoding", "gzip")
-              .header("Content-Length", Integer.toString(inputBytes.length))
-              .header("Content-type", "text/plain")
-              .header("Content-Encoding", "gzip")
-              .content(new BytesContentProvider(inputBytes));
+              .headers(h -> h.add("Accept-Encoding", "gzip")
+                             .add("Content-Length", Integer.toString(inputBytes.length))
+                             .add("Content-type", "text/plain")
+                             .add("Content-Encoding", "gzip"))
+              .body(new BytesRequestContent(inputBytes));
       if (testMethod == GzipTestMethod.GET) {
         req = req.method(HttpMethod.GET);
       } else {
@@ -570,7 +573,7 @@ public final class AppEngineRuntimeTest {
             .build();
     ContentResponse response;
     try (AppEngineRuntime.RunningRuntime runningRuntime = runtime.run()) {
-      response = httpClient.get().newRequest(uri).header("echo", headerVal).send();
+      response = httpClient.get().newRequest(uri).headers(h -> h.add("echo", headerVal)).send();
     }
 
     assertThat(response.getHeaders().get("echo")).isEqualTo(headerVal);
@@ -611,7 +614,7 @@ public final class AppEngineRuntimeTest {
               httpClient
                   .get()
                   .newRequest(uri)
-                  .header("x-appengine-user-ip", "1.2.3.4")
+                  .headers(h -> h.add("x-appengine-user-ip", "1.2.3.4"))
                   .send()
                   .getContent(),
               UTF_8);
@@ -625,15 +628,23 @@ public final class AppEngineRuntimeTest {
    * the app; this method simulates such a request.
    */
   private String sendBackgroundThreadRequest() throws Exception {
-    return new String(
-        httpClient
-            .get()
-            .newRequest(uri + "/_ah/background")
-            .header("x-appengine-user-ip", "0.1.0.3")
-            .header("X-AppEngine-BackgroundRequest", BACKGROUND_REQUEST_ID)
-            .send()
-            .getContent(),
-        UTF_8);
+    System.err.println("CLIENT: starting sendBackgroundThreadRequest");
+    HttpClient client = new HttpClient();
+    client.start();
+    ContentResponse resp;
+    System.err.println("CLIENT: sending request to " + uri + "/_ah/background");
+    try {
+      resp =
+          client
+              .newRequest(uri + "/_ah/background")
+              .headers(h -> h.add("x-appengine-user-ip", "0.1.0.3")
+                             .add("X-AppEngine-BackgroundRequest", BACKGROUND_REQUEST_ID))
+              .send();
+    } finally {
+      client.stop();
+    }
+    System.err.println("CLIENT: got response status " + resp.getStatus());
+    return new String(resp.getContent(), UTF_8);
   }
 
   /**
@@ -694,11 +705,11 @@ public final class AppEngineRuntimeTest {
                   }
                   return sendBackgroundThreadRequest();
                 });
-        mainRequestResponse.get();
-        backgroundRequestResponse.get();
       } finally {
         executor.shutdown();
       }
+      mainRequestResponse.get();
+      backgroundRequestResponse.get();
     }
 
     assertThat(mainRequestResponse.get()).contains("OK");
@@ -738,7 +749,7 @@ public final class AppEngineRuntimeTest {
           httpClient
               .get()
               .newRequest(uri + "/_ah/background")
-              .header("x-appengine-user-ip", "0.1.0.3");
+              .headers(h -> h.add("x-appengine-user-ip", "0.1.0.3"));
       // We intentionally don't send the background thread ID:
       // .header("X-AppEngine-BackgroundRequest", BACKGROUND_REQUEST_ID);
       response = new String(req.send().getContent(), UTF_8);
@@ -792,11 +803,11 @@ public final class AppEngineRuntimeTest {
         // The app will have requested a background thread. We service that request by calling it
         // back at the special /_ah/background endpoint:
         backgroundRequestResponse = executor.submit(this::sendBackgroundThreadRequest);
-        mainRequestResponse.get();
-        backgroundRequestResponse.get();
       } finally {
         executor.shutdown();
       }
+      mainRequestResponse.get();
+      backgroundRequestResponse.get();
     }
 
     assertThat(mainRequestResponse.get()).contains("Hello, World!");

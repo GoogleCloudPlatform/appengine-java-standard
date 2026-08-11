@@ -22,6 +22,7 @@ import com.google.common.base.Strings;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.time.Instant;
 import java.util.Map;
 import java.util.Optional;
 import javax.servlet.ServletContext;
@@ -158,7 +159,7 @@ public class FileSender {
           // Ignore bad date formats.
         }
         if (ifmsl != -1) {
-          if (resource.lastModified().toEpochMilli() <= ifmsl) {
+          if (resource.lastModified().getEpochSecond() <= ifmsl / 1000) {
             response.reset();
             response.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
             response.flushBuffer();
@@ -168,16 +169,19 @@ public class FileSender {
       }
 
       // Parse the if[un]modified dates and compare to resource
-      long date = -1;
-      try {
-        date = request.getDateHeader(HttpHeader.IF_UNMODIFIED_SINCE.asString());
-      } catch (IllegalArgumentException e) {
-        // Ignore bad date formats.
-      }
-      if (date != -1) {
-        if (resource.lastModified().toEpochMilli() > date) {
-          response.sendError(HttpServletResponse.SC_PRECONDITION_FAILED);
-          return true;
+      String ifus = request.getHeader(HttpHeader.IF_UNMODIFIED_SINCE.asString());
+      if (ifus != null) {
+        long date = -1;
+        try {
+          date = request.getDateHeader(HttpHeader.IF_UNMODIFIED_SINCE.asString());
+        } catch (IllegalArgumentException e) {
+          // Ignore bad date formats.
+        }
+        if (date != -1) {
+          if (resource.lastModified().isAfter(Instant.ofEpochSecond(date / 1000))) {
+            response.sendError(HttpServletResponse.SC_PRECONDITION_FAILED);
+            return true;
+          }
         }
       }
     }

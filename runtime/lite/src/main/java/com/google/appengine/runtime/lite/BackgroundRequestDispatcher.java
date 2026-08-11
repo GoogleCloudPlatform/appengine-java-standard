@@ -20,22 +20,23 @@ import static com.google.apphosting.runtime.AppEngineConstants.BACKGROUND_REQUES
 import static com.google.apphosting.runtime.AppEngineConstants.BACKGROUND_REQUEST_URL;
 import static com.google.apphosting.runtime.AppEngineConstants.X_APPENGINE_BACKGROUNDREQUEST;
 import static com.google.apphosting.runtime.AppEngineConstants.X_APPENGINE_USER_IP;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import com.google.appengine.api.ThreadManager;
 import com.google.apphosting.runtime.BackgroundRequestCoordinator;
 import com.google.common.flogger.GoogleLogger;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.nio.ByteBuffer;
 import java.time.Duration;
-import java.util.Optional;
+import java.util.Objects;
 import java.util.concurrent.Exchanger;
 import java.util.concurrent.TimeoutException;
 import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import org.eclipse.jetty.http.HttpHeader;
+import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Request;
-import org.eclipse.jetty.server.handler.AbstractHandler;
+import org.eclipse.jetty.server.Response;
+import org.eclipse.jetty.util.Callback;
 
 /**
  * Dispatches a incoming background thread request, connecting to the waiting runnable from the app
@@ -51,7 +52,7 @@ class BackgroundRequestDispatcher extends BackgroundRequestCoordinator {
    */
   private static final Duration WAIT_FOR_USER_RUNNABLE_DEADLINE = Duration.ofSeconds(60);
 
-  public AbstractHandler createHandler() {
+  public Handler createHandler() {
     return new BackgroundRequestHandler();
   }
 
@@ -96,52 +97,38 @@ class BackgroundRequestDispatcher extends BackgroundRequestCoordinator {
 
   /** Dispatch an incoming background request, connecting it to the waiting app code. */
   void dispatch(String requestId) throws InterruptedException, TimeoutException {
-    // First, create an ordinary request thread as a child of this background thread.
-    // The interface of waitForUserRunnable() requires us to provide the app code with a working
-    // thread *in the same exchange* where we get the runnable the user wants to run in the thread.
-    // This prevents us from actually directly feeding that runnable to the thread. To work around
-    // this conundrum, we create an EagerRunner, which lets us start running the thread without
-    // knowing yet what we want to run.
     EagerRunner eagerRunner = new EagerRunner();
     Thread thread = ThreadManager.createThreadForCurrentRequest(eagerRunner);
 
-    // Give this thread to the app code and get its desired runnable in response:
     Runnable runnable =
         waitForUserRunnable(requestId, thread, WAIT_FOR_USER_RUNNABLE_DEADLINE.toMillis());
 
-    // Finally, hand that runnable to the thread so it can actually start working.
-    // This will block until Thread.start() is called by the app code. This is by design: we must
-    // not exit this request handler until the thread has started *and* completed, otherwise the
-    // serving infrastructure will cancel our ability to make API calls. We're effectively "holding
-    // open the door" on the spawned thread's ability to make App Engine API calls.
     eagerRunner.supplyRunnable(runnable);
 
-    // Wait for the thread to end:
     thread.join();
   }
 
-  class BackgroundRequestHandler extends AbstractHandler {
+  class BackgroundRequestHandler extends Handler.Abstract {
     @Override
-    public void handle(
-        String target,
-        Request baseRequest,
-        HttpServletRequest request,
-        HttpServletResponse response)
-        throws IOException, ServletException {
-      if (!BACKGROUND_REQUEST_URL.equals(request.getRequestURI())) {
-        return;
+    public boolean handle(
+        Request request,
+        Response response,
+        Callback callback)
+        throws Exception {
+      String decodedPath = request.getHttpURI().getDecodedPath();
+      if (!decodedPath.equals(BACKGROUND_REQUEST_URL)) {
+        return false;
       }
 
-      if (!BACKGROUND_REQUEST_SOURCE_IP.equals(request.getHeader(X_APPENGINE_USER_IP))) {
-        return;
+      String userIp = request.getHeaders().get(X_APPENGINE_USER_IP);
+      if (!Objects.equals(userIp, BACKGROUND_REQUEST_SOURCE_IP)) {
+        return false;
       }
 
-      String backgroundRequestId =
-          Optional.ofNullable(request.getHeader(X_APPENGINE_BACKGROUNDREQUEST))
-              .orElseThrow(
-                  () ->
-                      new IllegalArgumentException(
-                          "Did not receive a background request identifier."));
+      String backgroundRequestId = request.getHeaders().get(X_APPENGINE_BACKGROUNDREQUEST);
+      if (backgroundRequestId == null) {
+        throw new IllegalArgumentException("Did not receive a background request identifier.");
+      }
 
       try {
         dispatch(backgroundRequestId);
@@ -151,11 +138,10 @@ class BackgroundRequestDispatcher extends BackgroundRequestCoordinator {
         }
         throw new ServletException("Failed to dispatch background request", ex);
       }
-      response.setContentType("text/plain");
-      PrintWriter out = response.getWriter();
-      out.print("OK");
-
-      baseRequest.setHandled(true);
+      response.setStatus(200);
+      response.getHeaders().put(HttpHeader.CONTENT_TYPE, "text/plain");
+      response.write(true, ByteBuffer.wrap("OK".getBytes(UTF_8)), callback);
+      return true;
     }
   }
 }

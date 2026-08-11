@@ -37,10 +37,8 @@ import com.google.apphosting.runtime.ApplicationEnvironment;
 import com.google.apphosting.runtime.SessionsConfig;
 import com.google.apphosting.runtime.anyrpc.APIHostClientInterface;
 import com.google.apphosting.runtime.http.HttpApiHostClientFactory;
-import com.google.apphosting.runtime.jetty9.AppEngineWebAppContext;
-import com.google.apphosting.runtime.jetty9.AppVersionHandlerFactory;
-import com.google.apphosting.runtime.jetty9.JettyServerConnectorWithReusePort;
-import com.google.apphosting.runtime.jetty9.WebAppContextFactory;
+import com.google.apphosting.runtime.jetty.AppVersionHandlerFactory;
+import com.google.apphosting.runtime.jetty.proxy.JettyServerConnectorWithReusePort;
 import com.google.auto.value.AutoBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.flogger.GoogleLogger;
@@ -55,12 +53,14 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
+import org.eclipse.jetty.compression.server.CompressionConfig;
+import org.eclipse.jetty.compression.server.CompressionHandler;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
-import org.eclipse.jetty.server.handler.gzip.GzipHandler;
+import org.eclipse.jetty.util.thread.QueuedThreadPool;
 
 /**
  * AppEngineRuntime is a simplified fork of {@link com.google.apphosting.runtime.JavaRuntime}.
@@ -185,26 +185,17 @@ public class AppEngineRuntime {
 
     this.appVersion = createAppVersion(servletWebappPath, appInfo, sessionsConfig, publicRoot);
 
-    WebAppContextFactory webAppContextFactory =
-        (AppVersion appVersion, String serverInfo) -> {
-          AppEngineWebAppContext context =
-              new AppEngineWebAppContext(
-                  appVersion.getRootDirectory(), serverInfo, /*extractWar=*/ false);
-          listeners.forEach(context::addEventListener);
-
-          return context;
-        };
-
     // Construct the Jetty server:
-    server = new Server();
+    QueuedThreadPool threadPool = new QueuedThreadPool(
+        /* maxThreads= */ 100,
+        /* minThreads= */ 10);
+    threadPool.setDaemon(true);
+    server = new Server(threadPool);
 
     // Create a factory which instantiates the app:
     AppVersionHandlerFactory handlerFactory =
-        new AppVersionHandlerFactory(
-            server,
-            "Google App Engine/" + RUNTIME_VERSION,
-            webAppContextFactory,
-            /*useJettyErrorPageHandler=*/ true);
+        new LiteAppVersionHandlerFactory(
+            server, "Google App Engine/" + RUNTIME_VERSION, listeners);
 
     RequestHandler requestHandler =
         new RequestHandler(
@@ -225,11 +216,18 @@ public class AppEngineRuntime {
     config.setResponseHeaderSize(JETTY_RESPONSE_HEADER_SIZE);
     config.setSendServerVersion(false);
 
-    GzipHandler gzip = new GzipHandler();
-    gzip.setIncludedMethods("GET", "POST");
-    gzip.setInflateBufferSize(8 * 1024);
-    server.setHandler(gzip);
-    gzip.setHandler(requestHandler);
+    CompressionHandler compressionHandler = new CompressionHandler();
+    server.setHandler(compressionHandler);
+
+    CompressionConfig compressionConfig = CompressionConfig.builder()
+        // Also compress POST responses.
+        .compressIncludeMethod("GET")
+        .compressIncludeMethod("POST")
+        .build();
+    // Map the request URI path spec '/*' with the compression configuration.
+    // You can map different path specs with different compression configurations.
+    compressionHandler.putConfiguration("/*", compressionConfig);
+    compressionHandler.setHandler(requestHandler);
 
     logger.atInfo().log("Starting Jetty http server for Java runtime proxy.");
   }

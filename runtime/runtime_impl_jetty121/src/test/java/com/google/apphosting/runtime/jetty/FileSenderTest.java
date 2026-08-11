@@ -19,7 +19,6 @@ package com.google.apphosting.runtime.jetty;
 import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -69,7 +68,6 @@ public class FileSenderTest {
   @Before
   public void setUp() {
     appYaml = new AppYaml();
-    mockWriter = mock(FileSender.IoOutputWriter.class);
     testInstance = new FileSender(appYaml, mockWriter);
   }
 
@@ -155,7 +153,7 @@ public class FileSenderTest {
     when(mockRequest.getHeader(HttpHeader.IF_UNMODIFIED_SINCE.asString()))
         .thenReturn("Thu, 1 Jan 1970 00:00:01 GMT");
     when(mockRequest.getDateHeader(HttpHeader.IF_UNMODIFIED_SINCE.asString())).thenReturn(1000L);
-    when(mockResource.lastModified()).thenReturn(Instant.ofEpochMilli(100L));
+    when(mockResource.lastModified()).thenReturn(Instant.ofEpochMilli(1000L));
 
     assertThat(testInstance.checkIfUnmodified(mockRequest, mockResponse, mockResource)).isFalse();
   }
@@ -166,7 +164,7 @@ public class FileSenderTest {
     when(mockRequest.getHeader(HttpHeader.IF_MODIFIED_SINCE.asString()))
         .thenReturn("Thu, 1 Jan 1970 00:00:01 GMT");
     when(mockRequest.getDateHeader(HttpHeader.IF_MODIFIED_SINCE.asString())).thenReturn(1000L);
-    when(mockResource.lastModified()).thenReturn(Instant.ofEpochSecond(100L));
+    when(mockResource.lastModified()).thenReturn(Instant.ofEpochMilli(500L));
     assertThat(testInstance.checkIfUnmodified(mockRequest, mockResponse, mockResource)).isTrue();
   }
 

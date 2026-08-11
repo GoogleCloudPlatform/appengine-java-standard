@@ -16,38 +16,40 @@
 
 package com.google.appengine.runtime.lite;
 
+import static com.google.apphosting.runtime.AppEngineConstants.ENVIRONMENT_ATTR;
 import static com.google.apphosting.runtime.AppEngineConstants.SKIP_ADMIN_CHECK_ATTR;
 import static com.google.apphosting.runtime.AppEngineConstants.X_GOOGLE_INTERNAL_SKIPADMINCHECK;
 
-import com.google.apphosting.runtime.AppVersion;
+import com.google.apphosting.api.ApiProxy;
 import com.google.apphosting.runtime.AppInfoFactory;
+import com.google.apphosting.runtime.AppVersion;
 import com.google.apphosting.runtime.MutableUpResponse;
 import com.google.apphosting.runtime.anyrpc.AnyRpcServerContext;
-import com.google.apphosting.runtime.jetty9.AppVersionHandlerFactory;
-import com.google.apphosting.runtime.jetty9.UPRequestTranslator;
+import com.google.apphosting.runtime.jetty.AppVersionHandlerFactory;
+import com.google.apphosting.runtime.jetty.proxy.UPRequestTranslator;
 import com.google.common.flogger.GoogleLogger;
 import com.google.protobuf.MessageLite;
-import java.io.IOException;
+
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.time.Duration;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
-import javax.servlet.AsyncEvent;
-import javax.servlet.AsyncListener;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
+
+import org.eclipse.jetty.http.HttpScheme;
+import org.eclipse.jetty.http.HttpURI;
+import org.eclipse.jetty.server.ConnectionMetaData;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Request;
-import org.eclipse.jetty.server.handler.AbstractHandler;
-import org.eclipse.jetty.server.session.Session;
+import org.eclipse.jetty.server.Response;
+import org.eclipse.jetty.util.Callback;
 
 /**
  * Handles inbound request by passing them to the app after setting up App Engine request context
  * and doing some light request mutation.
  */
-class RequestHandler extends AbstractHandler {
+class RequestHandler extends Handler.Wrapper {
 
   private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
 
@@ -68,7 +70,7 @@ class RequestHandler extends AbstractHandler {
 
   private final Handler backgroundRequestHandler;
 
-  private Handler handler = null;
+  private volatile Handler handler = null;
 
   RequestHandler(
       AppVersion appVersion,
@@ -76,6 +78,7 @@ class RequestHandler extends AbstractHandler {
       RequestManager requestManager,
       AppInfoFactory appInfoFactory,
       Handler backgroundRequestHandler) {
+    super(true);
     this.appVersion = appVersion;
     this.handlerFactory = handlerFactory;
     this.requestManager = requestManager;
@@ -85,122 +88,54 @@ class RequestHandler extends AbstractHandler {
     this.backgroundRequestHandler = backgroundRequestHandler;
   }
 
-  /**
-   * A utility add an async servlet listener which cleans up the request state on exit.
-   *
-   * <p>Async servlets are untested in the Lite runtime, and as of this writing we aren't aware of
-   * any apps using it. This class is, at present, a best effort attempt at supporting async, for
-   * cleanup only.
-   */
-  static class ResponseFinisherInstaller implements AutoCloseable {
-    Request request;
-    ResponseFinisher responseFinisher;
-
-    ResponseFinisherInstaller(Request request, ResponseFinisher responseFinisher) {
-      this.request = request;
-      this.responseFinisher = responseFinisher;
-    }
-
-    @Override
-    public void close() throws Exception {
-      if (request.getHttpChannelState().isAsyncStarted()) {
-        request.getAsyncContext().addListener(responseFinisher);
-      } else {
-        // The app did not attempt to enable async mode before returning; do the cleanup in this
-        // thread.
-        responseFinisher.doFinish();
-      }
-    }
-  }
-
-  class ResponseFinisher implements AsyncListener {
-    ApiProxyEnvironmentManager environmentManager;
-    RequestManager.RequestToken requestToken;
-    Request request;
-
-    ResponseFinisher(
-        ApiProxyEnvironmentManager environmentManager,
-        RequestManager.RequestToken requestToken,
-        Request request) {
-      this.environmentManager = environmentManager;
-      this.requestToken = requestToken;
-      this.request = request;
-    }
-
-    void doFinish() throws IOException {
-      try {
-        environmentManager.installEnvironmentAndCall(this::doFinishWithEnvironment);
-      } catch (Exception e) {
-        throw new IOException("Failed to finish processing request", e);
-      }
-    }
-
-    Void doFinishWithEnvironment() throws IOException {
-      // The App Engine session storage system needs the request token to be active in order to save
-      // sessions. Normally, Jetty will save sessions when it tears down the HTTP channel, but that
-      // is too late for us, because we're going to tear down the request token first. Thus, we save
-      // the HTTP session (if any) proactively *before* tearing down the request token.
-
-      Optional<HttpSession> httpSession =
-          Optional.ofNullable(request.getSession(/* create= */ false));
-      if (!httpSession.isPresent()) {
-        return null;
-      }
-
-      Session session = (Session) httpSession.get();
-      try {
-        session.getSessionHandler().getSessionCache().release(session.getId(), session);
-      } catch (Exception e) {
-        throw new IOException("Failed to save session", e);
-      }
-      // Make sure Jetty doesn't try to save this session again:
-      request.setSession(null);
-
-      requestManager.finishRequest(requestToken);
-
-      return null;
-    }
-
-    @Override
-    public void onComplete(AsyncEvent event) throws IOException {
-      doFinish();
-    }
-
-    @Override
-    public void onTimeout(AsyncEvent event) throws IOException {
-      doFinish();
-    }
-
-    @Override
-    public void onError(AsyncEvent event) throws IOException {
-      doFinish();
-    }
-
-    @Override
-    public void onStartAsync(AsyncEvent event) throws IOException {}
-  }
-
   @Override
-  public void handle(
-      String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response)
-      throws IOException, ServletException {
-    // Mutate the incoming request based special App Engine headers:
-    if (requestIsHttps(request)) {
-      baseRequest.setScheme("https");
-      baseRequest.setSecure(true);
+  public boolean handle(Request request, Response response, Callback callback) throws Exception {
+    boolean isHttps = requestIsHttps(request);
+    String userIp = request.getHeaders().get(X_APPENGINE_USER_IP);
+
+    HttpURI httpUri;
+    boolean isSecure;
+    if (isHttps) {
+      httpUri = HttpURI.build(request.getHttpURI()).scheme(HttpScheme.HTTPS);
+      isSecure = true;
+    } else {
+      httpUri = request.getHttpURI();
+      isSecure = request.isSecure();
     }
+
+    Request wrappedRequest = new Request.Wrapper(request) {
+      @Override
+      public HttpURI getHttpURI() {
+        return httpUri;
+      }
+
+      @Override
+      public boolean isSecure() {
+        return isSecure;
+      }
+
+      @Override
+      public ConnectionMetaData getConnectionMetaData() {
+        if (userIp == null) {
+          return super.getConnectionMetaData();
+        }
+        return new ConnectionMetaData.Wrapper(super.getConnectionMetaData()) {
+          @Override
+          public SocketAddress getRemoteSocketAddress() {
+            return InetSocketAddress.createUnresolved(userIp, 0);
+          }
+        };
+      }
+    };
 
     if (skipAdminCheck(request)) {
-      request.setAttribute(SKIP_ADMIN_CHECK_ATTR, true);
+      wrappedRequest.setAttribute(SKIP_ADMIN_CHECK_ATTR, true);
     }
-
-    Optional.ofNullable(request.getHeader(X_APPENGINE_USER_IP))
-        .ifPresent(ip -> baseRequest.setRemoteAddr(InetSocketAddress.createUnresolved(ip, 0)));
 
     // Read time remaining in request from headers and pass value to LiteRpcServerContext for
     // use in reporting remaining time until deadline for API calls:
     Duration timeRemaining =
-        Optional.ofNullable(request.getHeader(X_APPENGINE_TIMEOUT_MS))
+        Optional.ofNullable(request.getHeaders().get(X_APPENGINE_TIMEOUT_MS))
             .map(x -> Duration.ofMillis(Long.parseLong(x)))
             .orElse(Duration.ofNanos(Long.MAX_VALUE));
 
@@ -208,52 +143,39 @@ class RequestHandler extends AbstractHandler {
         requestManager.startRequest(
             appVersion,
             new LiteRpcServerContext(timeRemaining),
-            upRequestTranslator.translateRequest(request),
+            upRequestTranslator.translateRequest(wrappedRequest),
             // startRequest wants an upResponse and fills it in with things, but we throw it all
             // away:
             new MutableUpResponse(),
             Thread.currentThread().getThreadGroup());
 
-    backgroundRequestHandler.handle(target, baseRequest, request, response);
-    if (baseRequest.isHandled()) {
-      return;
-    }
+    ApiProxy.Environment currentEnvironment = ApiProxy.getCurrentEnvironment();
+    wrappedRequest.setAttribute(ENVIRONMENT_ATTR, currentEnvironment);
 
-    try (ResponseFinisherInstaller responseFinisherInstaller =
-        new ResponseFinisherInstaller(
-            baseRequest,
-            new ResponseFinisher(
-                ApiProxyEnvironmentManager.ofCurrentEnvironment(), requestToken, baseRequest))) {
-      try {
-        getHandler().handle(target, baseRequest, request, response);
-        // We log any exceptions in this "inner try" so they can use the request context before we
-        // tear it down:
-      } catch (ServletException ex) {
-        // Unwrap ServletException for nicer logging:
-        logError(Optional.ofNullable(ex.getRootCause()).orElse(ex));
-        throw ex;
-      } catch (Throwable ex) {
-        if (ex instanceof InterruptedException) {
-          Thread.currentThread().interrupt(); // Restore the interrupted status
-        }
-
-        // Log anything else as-is:
-        logError(ex);
-        throw ex;
-      }
-
-    } catch (IOException | ServletException ex) {
-      // These exceptions can be rethrown by this method directly.
-      throw ex;
+    try {
+      return dispatchRequest(wrappedRequest, response, callback);
     } catch (Throwable ex) {
-      // All other exceptions must be wrapped in ServletException to be thrown.
-
-      if (ex instanceof InterruptedException) {
-        Thread.currentThread().interrupt(); // Restore the interrupted status
-      }
-
-      throw new ServletException(ex);
+      logError(ex);
+      throw ex;
+    } finally {
+      requestManager.finishRequest(requestToken);
     }
+  }
+
+  private boolean dispatchRequest(Request wrappedRequest, Response response, Callback callback)
+      throws Exception {
+    if (backgroundRequestHandler.handle(wrappedRequest, response, callback)) {
+      return true;
+    }
+
+    Handler appHandler = getOrMaybeCreateHandler();
+    boolean[] handled = new boolean[1];
+    handled[0] = appHandler.handle(wrappedRequest, response, callback);
+    Throwable ex = (Throwable) wrappedRequest.getAttribute("javax.servlet.error.exception");
+    if (ex != null) {
+      logError(ex);
+    }
+    return handled[0];
   }
 
   private static void logError(Throwable ex) {
@@ -301,41 +223,42 @@ class RequestHandler extends AbstractHandler {
    *
    * <p>We round such cases up to "using https" to satisfy Jetty's transport-guarantee checks.
    */
-  static boolean requestIsHttps(HttpServletRequest request) {
-    if ("on".equals(request.getHeader(X_APPENGINE_HTTPS))) {
+  static boolean requestIsHttps(Request request) {
+    if (Objects.equals(request.getHeaders().get(X_APPENGINE_HTTPS), "on")) {
       return true;
     }
 
-    if ("https".equals(request.getHeader(X_FORWARDED_PROTO))) {
+    if (Objects.equals(request.getHeaders().get(X_FORWARDED_PROTO), "https")) {
       return true;
     }
 
-    if (request.getHeader(X_GOOGLE_INTERNAL_SKIPADMINCHECK) != null) {
-      return true;
-    }
-
-    return false;
-  }
-
-  static boolean skipAdminCheck(HttpServletRequest request) {
-    if (request.getHeader(X_GOOGLE_INTERNAL_SKIPADMINCHECK) != null) {
-      return true;
-    }
-
-    if (request.getHeader(X_APPENGINE_QUEUENAME) != null) {
+    if (request.getHeaders().get(X_GOOGLE_INTERNAL_SKIPADMINCHECK) != null) {
       return true;
     }
 
     return false;
   }
 
-  synchronized Handler getHandler() throws ServletException {
+  static boolean skipAdminCheck(Request request) {
+    if (request.getHeaders().get(X_GOOGLE_INTERNAL_SKIPADMINCHECK) != null) {
+      return true;
+    }
+
+    if (request.getHeaders().get(X_APPENGINE_QUEUENAME) != null) {
+      return true;
+    }
+
+    return false;
+  }
+
+  synchronized Handler getOrMaybeCreateHandler() throws Exception {
     // We defer creation of the main request handler because because some apps call App Engine APIs
     // as soon as the WebAppContext is constructed, and that only works from within the context of
     // an incoming request. So we don't actually instantiate the app's WebAppContext until a request
     // is inbound.
     if (handler == null) {
       handler = handlerFactory.createHandler(appVersion);
+      setHandler(handler);
     }
     return handler;
   }
