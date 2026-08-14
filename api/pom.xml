@@ -147,12 +147,43 @@
       <artifactId>guava-testlib</artifactId>
       <scope>test</scope>
     </dependency>
+
     <dependency>
       <groupId>jakarta.servlet</groupId>
       <artifactId>jakarta.servlet-api</artifactId>
     </dependency>
+    <dependency>
+      <groupId>io.grpc</groupId>
+      <artifactId>grpc-netty-shaded</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.grpc</groupId>
+      <artifactId>grpc-protobuf</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.grpc</groupId>
+      <artifactId>grpc-stub</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.grpc</groupId>
+      <artifactId>grpc-auth</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.google.auth</groupId>
+      <artifactId>google-auth-library-oauth2-http</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.grpc</groupId>
+      <artifactId>grpc-testing</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.google.cloud</groupId>
+      <artifactId>google-cloud-storage</artifactId>
+    </dependency>
   </dependencies>
   <build>
+
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -215,6 +246,7 @@
       </plugin>
     </plugins>
   </build>
+
   <profiles>
        <profile>
       <id>docFX</id>
@@ -266,12 +298,12 @@
                   <path>
                       <groupId>com.google.auto.service</groupId>
                       <artifactId>auto-service</artifactId>
-                      <version>1.1.1</version>
+                      <version>${auto-service.version}</version>
                   </path>
                   <path>
                       <groupId>com.google.auto.value</groupId>
                       <artifactId>auto-value</artifactId>
-                      <version>1.11.1</version>
+                      <version>${auto-value.version}</version>
                   </path>
               </annotationProcessorPaths>
              </configuration>
