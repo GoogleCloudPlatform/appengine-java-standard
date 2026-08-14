@@ -13,6 +13,10 @@
 // limitations under the License.
 package com.google.appengine.api.images;
 
+import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.base.Strings.isNullOrEmpty;
+import static java.util.concurrent.TimeUnit.SECONDS;
+
 import com.google.appengine.api.EnvironmentProvider;
 import com.google.appengine.api.SystemEnvironmentProvider;
 import com.google.appengine.api.images.proto.ImagesServiceGrpc;
@@ -20,14 +24,12 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.IdTokenCredentials;
 import com.google.auth.oauth2.IdTokenProvider;
 import com.google.common.annotations.VisibleForTesting;
-import static com.google.common.base.Strings.isNullOrEmpty;
 import io.grpc.CallCredentials;
 import io.grpc.ManagedChannel;
 import io.grpc.auth.MoreCallCredentials;
 import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder;
 import java.io.IOException;
 import java.net.URI;
-import static java.util.concurrent.TimeUnit.SECONDS;
 import java.net.URISyntaxException;
 
 /** Client for interacting with the gRPC based Images service. */
@@ -72,34 +74,41 @@ class GrpcImagesClient {
   }
 
   private String getTarget() {
-    String endpoint = environmentProvider.getenv("IMAGES_SERVICE_ENDPOINT");
-    if (isNullOrEmpty(endpoint)) {
-      throw new IllegalStateException("IMAGES_SERVICE_ENDPOINT environment variable not set.");
-    }
+    String endpoint =
+        environmentProvider.getenv(ImagesServiceFactoryImpl.IMAGES_SERVICE_ENDPOINT_ENV);
+    checkState(
+        !isNullOrEmpty(endpoint),
+        ImagesServiceFactoryImpl.IMAGES_SERVICE_ENDPOINT_ENV + " environment variable not set.");
     try {
       URI uri = new URI(endpoint);
       String host = uri.getHost();
-      if (host == null) {
-        throw new IllegalStateException("Invalid URI in IMAGES_SERVICE_ENDPOINT: " + endpoint);
-      }
+      checkState(
+          host != null,
+          "Invalid URI in %s: %s",
+          ImagesServiceFactoryImpl.IMAGES_SERVICE_ENDPOINT_ENV,
+          endpoint);
       return host + ":443";
     } catch (URISyntaxException e) {
-      throw new IllegalStateException("Invalid URI in IMAGES_SERVICE_ENDPOINT: " + endpoint, e);
+      throw new IllegalStateException(
+          "Invalid URI in "
+              + ImagesServiceFactoryImpl.IMAGES_SERVICE_ENDPOINT_ENV
+              + ": "
+              + endpoint,
+          e);
     }
   }
 
   private static CallCredentials createOidcCredentials(
       EnvironmentProvider environmentProvider, GoogleCredentials googleCredentials) {
-    String endpoint = environmentProvider.getenv("IMAGES_SERVICE_ENDPOINT");
-    if (isNullOrEmpty(endpoint)) {
-      throw new IllegalStateException("IMAGES_SERVICE_ENDPOINT environment variable not set.");
-    }
-
-    if (!(googleCredentials instanceof IdTokenProvider idTokenProvider)) {
-      throw new IllegalStateException(
-          "The Application Default Credentials do not support OIDC ID token generation.");
-    }
-
+    String endpoint =
+        environmentProvider.getenv(ImagesServiceFactoryImpl.IMAGES_SERVICE_ENDPOINT_ENV);
+    checkState(
+        !isNullOrEmpty(endpoint),
+        ImagesServiceFactoryImpl.IMAGES_SERVICE_ENDPOINT_ENV + " environment variable not set.");
+    checkState(
+        googleCredentials instanceof IdTokenProvider,
+        "The Application Default Credentials do not support OIDC ID token generation.");
+    IdTokenProvider idTokenProvider = (IdTokenProvider) googleCredentials;
     IdTokenCredentials idTokenCredentials =
         IdTokenCredentials.newBuilder()
             .setTargetAudience(endpoint)

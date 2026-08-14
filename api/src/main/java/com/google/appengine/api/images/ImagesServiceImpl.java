@@ -164,7 +164,8 @@ final class ImagesServiceImpl implements ImagesService {
 
   @VisibleForTesting
   boolean useGrpc() {
-    String envVar = environmentProvider.getenv("USE_CUSTOM_IMAGES_GRPC_SERVICE");
+    String envVar =
+        environmentProvider.getenv(ImagesServiceFactoryImpl.USE_CUSTOM_IMAGES_GRPC_SERVICE_ENV);
     return Boolean.parseBoolean(envVar);
   }
 
@@ -399,12 +400,13 @@ final class ImagesServiceImpl implements ImagesService {
   @Override
   public int[][] histogram(Image image) {
     if (useGrpc()) {
-      ImagesHistogramRequest.Builder request =
+      ImagesHistogramRequest request =
           ImagesHistogramRequest.newBuilder()
-              .setImage(loadImageData(image, BlobstoreServiceFactory.getBlobstoreService()));
+              .setImage(loadImageData(image, BlobstoreServiceFactory.getBlobstoreService()))
+              .build();
       ImagesHistogramResponse response;
       try {
-        response = getGrpcStub().histogram(request.build());
+        response = getGrpcStub().histogram(request);
       } catch (StatusRuntimeException e) {
         throw convertGrpcException(e);
       }
@@ -576,7 +578,9 @@ final class ImagesServiceImpl implements ImagesService {
     try {
       byte[] responseBytes = ApiProxy.makeSyncCall(PACKAGE, "DeleteUrlBase",
                                                    request.build().toByteArray());
-      ImagesDeleteUrlBaseResponse unused = ImagesDeleteUrlBaseResponse.parseFrom(responseBytes, ExtensionRegistry.getEmptyRegistry());
+      ImagesDeleteUrlBaseResponse unused =
+          ImagesDeleteUrlBaseResponse.parseFrom(
+              responseBytes, ExtensionRegistry.getEmptyRegistry());
     } catch (InvalidProtocolBufferException ex) {
       throw new ImagesServiceFailureException("Invalid protocol buffer:", ex);
     } catch (ApiProxy.ApplicationException ex) {
