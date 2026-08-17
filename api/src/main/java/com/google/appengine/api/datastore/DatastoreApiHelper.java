@@ -56,16 +56,6 @@ public final class DatastoreApiHelper {
 
   private DatastoreApiHelper() {}
 
-  /**
-   * Registers a callback to be executed immediately after the specified transaction commits.
-   * If the transaction is rolled back or fails to commit, the callback will not be invoked.
-   */
-  public static void addPostCommitCallback(Transaction txn, Runnable callback) {
-    if (txn instanceof TransactionImpl txnImpl && callback != null) {
-      txnImpl.addPostCommitCallback(callback);
-    }
-  }
-
   // Corresponds to _ToDatastoreError in datastore.py.
   // Keep in sync!
   public static RuntimeException translateError(ApiProxy.ApplicationException exception) {

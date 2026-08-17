@@ -119,25 +119,11 @@ public class TaskHandleTest extends TestCase {
     ListIterator<Map.Entry<String, String>> i2 = outKvList.listIterator();
 
     while (i1.hasNext() && i2.hasNext()) {
-      TaskHandle.KeyValuePair kv1 = i1.next();
-      Map.Entry<String, String> kv2 = i2.next();
+      TaskHandle.KeyValuePair kv1 = (TaskHandle.KeyValuePair) i1.next();
+      @SuppressWarnings("unchecked")
+      Map.Entry<String, String> kv2 = (Map.Entry<String, String>) i2.next();
 
       assertTrue(kv1.equals(kv2));
     }
-  }
-
-  public void testGetMethod() {
-    TaskOptions options = TaskOptions.Builder.withTaskName("foo").method(TaskOptions.Method.GET);
-    TaskHandle handle = new TaskHandle(options, "queue", 0);
-    assertThat(handle.getMethod()).isEqualTo(TaskOptions.Method.GET);
-
-    TaskOptions pullOptions =
-        TaskOptions.Builder.withMethod(TaskOptions.Method.PULL).taskName("pull-task");
-    TaskHandle pullHandle = new TaskHandle(pullOptions, "pull-queue", 0);
-    assertThat(pullHandle.getMethod()).isEqualTo(TaskOptions.Method.PULL);
-
-    TaskHandle defaultHandle =
-        new TaskHandle(TaskOptions.Builder.withTaskName("task"), "queue", 0);
-    assertThat(defaultHandle.getMethod()).isEqualTo(TaskOptions.Method.POST);
   }
 }

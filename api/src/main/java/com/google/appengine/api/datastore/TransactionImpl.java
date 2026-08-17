@@ -81,14 +81,6 @@ class TransactionImpl implements Transaction, CurrentTransactionProvider {
 
   TransactionState state = TransactionState.BEGUN;
 
-  private final List<Runnable> postCommitCallbacks = new java.util.concurrent.CopyOnWriteArrayList<>();
-
-  void addPostCommitCallback(Runnable callback) {
-    if (callback != null) {
-      postCommitCallbacks.add(callback);
-    }
-  }
-
   /** A {@link PostOpFuture} implementation that runs both post put and post delete callbacks. */
   private class PostCommitFuture extends PostOpFuture<Void> {
     private final List<Entity> putEntities;
@@ -108,13 +100,6 @@ class TransactionImpl implements Transaction, CurrentTransactionProvider {
       DeleteContext deleteContext =
           new DeleteContext(TransactionImpl.this, TransactionImpl.this, deletedKeys);
       callbacks.executePostDeleteCallbacks(deleteContext);
-      for (Runnable callback : postCommitCallbacks) {
-        try {
-          callback.run();
-        } catch (Throwable t) {
-          logger.log(Level.SEVERE, "Exception in post-commit callback: " + t.getMessage(), t);
-        }
-      }
     }
   }
 

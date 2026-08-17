@@ -22,10 +22,8 @@ import static com.google.common.util.concurrent.Futures.immediateFailedFuture;
 import static com.google.common.util.concurrent.Futures.immediateFuture;
 import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.notNull;
 import static org.mockito.Mockito.same;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.google.appengine.api.testing.LocalServiceTestHelperRule;
@@ -222,27 +220,5 @@ public class DatastoreApiHelperTest {
     ExecutionException e =
         assertThrows(ExecutionException.class, () -> makeTestCall(response).get());
     assertThat(e).hasCauseThat().isInstanceOf(InvalidProtocolBufferException.class);
-  }
-
-  @Test
-  public void testAddPostCommitCallback_nullSafe() {
-    DatastoreApiHelper.addPostCommitCallback(null, () -> {});
-    DatastoreApiHelper.addPostCommitCallback(null, null);
-  }
-
-  @Test
-  public void testAddPostCommitCallback_nonNullCallback() {
-    TransactionImpl txnImpl = mock(TransactionImpl.class);
-    Runnable callback = () -> {};
-    DatastoreApiHelper.addPostCommitCallback(txnImpl, callback);
-    verify(txnImpl).addPostCommitCallback(callback);
-  }
-
-  @Test
-  public void testAddPostCommitCallback_nonTransactionImplInstance() {
-    Transaction txn = mock(Transaction.class);
-    Runnable callback = () -> {};
-    // Non-TransactionImpl instance should be safely ignored
-    DatastoreApiHelper.addPostCommitCallback(txn, callback);
   }
 }
