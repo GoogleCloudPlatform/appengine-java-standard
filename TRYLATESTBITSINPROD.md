@@ -47,7 +47,7 @@ top of your web application and change the entrypoint to boot with these jars in
  ./mvnw clean install
 ```
 
-Let's assume the current build version is `5.0.5-SNAPSHOT`.
+Let's assume the current build version is `5.2.0-beta-SNAPSHOT`.
 
 See the output of the runtime deployment module which contains all the jars needed by the runtime:
 
@@ -67,7 +67,7 @@ Add the dependency for the GAE runtime jars in your application pom.xml file:
 
 ```
  <properties>
-        <appengine.runtime.version>5.0.5-SNAPSHOT</appengine.runtime.version>
+        <appengine.runtime.version>5.2.0-beta-SNAPSHOT</appengine.runtime.version>
         <appengine.runtime.location>target/${project.artifactId}-${project.version}</appengine.runtime.location>
  <properties>
  ...
@@ -185,13 +185,13 @@ fi
 if grep -q "<properties>" "$POM_FILE"; then
     # Inserts the properties before the closing </properties> tag
     sed -i '/<\/properties>/i \
-            <appengine.runtime.version>5.0.5-SNAPSHOT<\/appengine.runtime.version>\
+            <appengine.runtime.version>5.2.0-beta-SNAPSHOT<\/appengine.runtime.version>\
             <appengine.runtime.location>target/${project.artifactId}-${project.version}<\/appengine.runtime.location>' "$POM_FILE"
 else
     # If no properties tag exists, insert it before dependencies
     sed -i '/<dependencies>/i \
     <properties>\
-        <appengine.runtime.version>5.0.5-SNAPSHOT<\/appengine.runtime.version>\
+        <appengine.runtime.version>5.2.0-beta-SNAPSHOT<\/appengine.runtime.version>\
         <appengine.runtime.location>target/${project.artifactId}-${project.version}<\/appengine.runtime.location>\
     <\/properties>' "$POM_FILE"
 fi
@@ -266,14 +266,14 @@ If you are using the Gradle build system, you can apply the following changes to
 
 These instructions configure the `war` task to do two important things:
 1. **Move the jars to the top of the WAR directory:** The `into("")` (or `into('.')`) block combined with `eachFile { path = name }` extracts the jars and flattens the directory structure, placing them directly in the root of the generated WAR.
-2. **Rename the jars:** The `rename` block strips the version string (e.g., `-5.0.5-SNAPSHOT`) from the extracted jars so their names exactly match the `-Djava.class.path=runtime-main.jar` argument specified in the `appengine-web.xml` entrypoint.
+2. **Rename the jars:** The `rename` block strips the version string (e.g., `-5.2.0-beta-SNAPSHOT`) from the extracted jars so their names exactly match the `-Djava.class.path=runtime-main.jar` argument specified in the `appengine-web.xml` entrypoint.
 
 ### Kotlin
 ```
 import org.gradle.api.tasks.bundling.War
 
 // 1. Define the target runtime version
-val gaeRuntimeVersion = "5.0.5-SNAPSHOT" // Change this to your desired version
+val gaeRuntimeVersion = "5.2.0-beta-SNAPSHOT" // Change this to your desired version
 
 // 2. Create a custom configuration for the runtime zip
 val gaeRuntimeZip by configurations.creating
@@ -309,7 +309,7 @@ tasks.named<War>("war") {
 
 ```
 // 1. Define the target runtime version
-def gaeRuntimeVersion = "5.0.5-SNAPSHOT" // Change this to your desired version
+def gaeRuntimeVersion = "5.2.0-beta-SNAPSHOT" // Change this to your desired version
 
 // 2. Create a custom configuration for the runtime zip
 configurations {
@@ -336,7 +336,7 @@ war {
         }
 
         // Strip the version number from the jar files
-        // (e.g., 'runtime-main-5.0.5-SNAPSHOT.jar' becomes 'runtime-main.jar')
+        // (e.g., 'runtime-main-5.2.0-beta-SNAPSHOT.jar' becomes 'runtime-main.jar')
         rename { String fileName ->
             fileName.replace("-${gaeRuntimeVersion}", "")
         }
