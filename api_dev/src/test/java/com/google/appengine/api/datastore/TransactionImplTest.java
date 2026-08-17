@@ -39,6 +39,7 @@ import com.google.protobuf.Message;
 import java.util.LinkedHashSet;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -74,10 +75,14 @@ public class TransactionImplTest {
 
   /** A {@link Transaction} for which all transactional API calls return null. */
   protected Transaction newStubTxn() {
+    return newStubTxn(txnStack);
+  }
+
+  protected Transaction newStubTxn(TransactionStack stack) {
     ApiProxy.ApiConfig apiConfig = new ApiProxy.ApiConfig();
     return new TransactionImpl(
         APP,
-        txnStack,
+        stack,
         callbacks,
         true,
         new InternalTransactionV3(apiConfig, APP, newBeginTransactionFuture()) {
@@ -538,6 +543,49 @@ public class TransactionImplTest {
   public void testCommitBlocksOnFutures_Async_WrappedTransaction()
       throws ExecutionException, InterruptedException {
     testCommitBlocksOnFutures(true, true);
+  }
+
+  @Test
+  public void testPostCommitCallback_executedOnCommit() {
+    TransactionStack localStack = new TransactionStackImpl();
+    Transaction testTxn = newStubTxn(localStack);
+    localStack.push(testTxn);
+    AtomicBoolean called = new AtomicBoolean(false);
+    DatastoreApiHelper.addPostCommitCallback(testTxn, () -> called.set(true));
+    assertThat(called.get()).isFalse();
+
+    testTxn.commit();
+    assertThat(called.get()).isTrue();
+  }
+
+  @Test
+  public void testPostCommitCallback_notExecutedOnRollback() {
+    TransactionStack localStack = new TransactionStackImpl();
+    Transaction testTxn = newStubTxn(localStack);
+    localStack.push(testTxn);
+    AtomicBoolean called = new AtomicBoolean(false);
+    DatastoreApiHelper.addPostCommitCallback(testTxn, () -> called.set(true));
+
+    testTxn.rollback();
+    assertThat(called.get()).isFalse();
+  }
+
+  @Test
+  public void testPostCommitCallback_exceptionHandledGracefully() {
+    TransactionStack localStack = new TransactionStackImpl();
+    Transaction testTxn = newStubTxn(localStack);
+    localStack.push(testTxn);
+    AtomicBoolean secondCallbackCalled = new AtomicBoolean(false);
+    DatastoreApiHelper.addPostCommitCallback(
+        testTxn,
+        () -> {
+          throw new RuntimeException("Simulated error in callback");
+        });
+    DatastoreApiHelper.addPostCommitCallback(testTxn, () -> secondCallbackCalled.set(true));
+
+    testTxn.commit();
+    assertThat(secondCallbackCalled.get()).isTrue();
+    assertThat(getState(testTxn)).isEqualTo(TransactionState.COMMITTED);
   }
 
   private void testCommitBlocksOnExplosiveFuture(boolean async, int numFutures)

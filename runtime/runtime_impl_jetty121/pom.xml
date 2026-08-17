@@ -412,6 +412,7 @@
                                         <include>com/google/apphosting/utils/servlet/ParseBlobUploadFilter*</include>
                                         <include>com/google/apphosting/utils/servlet/SessionCleanupServlet*</include>
                                         <include>com/google/apphosting/utils/servlet/SnapshotServlet*</include>
+                                        <include>com/google/apphosting/utils/servlet/SweeperServlet*</include>
                                         <include>com/google/apphosting/utils/servlet/TransactionCleanupFilter*</include>
                                         <include>com/google/apphosting/utils/servlet/WarmupServlet*</include>
                                         <include>com/google/apphosting/utils/servlet/jakarta/DeferredTaskServlet*</include>
@@ -420,6 +421,7 @@
                                         <include>com/google/apphosting/utils/servlet/jakarta/ParseBlobUploadFilter*</include>
                                         <include>com/google/apphosting/utils/servlet/jakarta/SessionCleanupServlet*</include>
                                         <include>com/google/apphosting/utils/servlet/jakarta/SnapshotServlet*</include>
+                                        <include>com/google/apphosting/utils/servlet/jakarta/SweeperServlet*</include>
                                         <include>com/google/apphosting/utils/servlet/jakarta/TransactionCleanupFilter*</include>
                                         <include>com/google/apphosting/utils/servlet/jakarta/WarmupServlet*</include>
                                         <include>com/google/storage/onestore/PropertyType*</include>

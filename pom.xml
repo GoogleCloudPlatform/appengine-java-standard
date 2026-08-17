@@ -746,6 +746,11 @@
         <version>3.35.0</version>
       </dependency>
       <dependency>
+        <groupId>com.google.cloud</groupId>
+        <artifactId>google-cloud-tasks</artifactId>
+        <version>2.95.0</version>
+      </dependency>
+      <dependency>
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-lang3</artifactId>
         <version>3.20.0</version>
@@ -758,7 +763,7 @@
       <dependency>
         <groupId>com.google.auth</groupId>
         <artifactId>google-auth-library-oauth2-http</artifactId>
-        <version>1.25.0</version>
+        <version>1.50.0</version>
       </dependency>
       <dependency>
         <groupId>com.google.cloud</groupId>

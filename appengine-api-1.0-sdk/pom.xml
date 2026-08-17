@@ -31,12 +31,20 @@
       <groupId>io.grpc</groupId>
       <artifactId>grpc-api</artifactId>
       <version>1.81.0</version>
-       <optional>true</optional>
-   </dependency>
+      <optional>true</optional>
+    </dependency>
     <dependency>
       <groupId>com.google.appengine</groupId>
       <artifactId>appengine-apis</artifactId>
       <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>com.google.cloud</groupId>
+      <artifactId>google-cloud-tasks</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.google.auth</groupId>
+      <artifactId>google-auth-library-oauth2-http</artifactId>
     </dependency>
     <dependency>
       <groupId>joda-time</groupId>
@@ -96,12 +104,32 @@
                   <shadedPattern>com.google.appengine.repackaged.com.google.type</shadedPattern>
                 </relocation>
                 <relocation>
-                  <pattern>com.google.api.AnnotationsProto</pattern>
-                  <shadedPattern>com.google.appengine.repackaged.com.google.api.AnnotationsProto</shadedPattern>
+                  <pattern>com.google.cloud.tasks</pattern>
+                  <shadedPattern>com.google.appengine.repackaged.com.google.cloud.tasks</shadedPattern>
                 </relocation>
                 <relocation>
-                  <pattern>com.google.api.HttpProto</pattern>
-                  <shadedPattern>com.google.appengine.repackaged.com.google.api.HttpProto</shadedPattern>
+                  <pattern>com.google.cloud.location</pattern>
+                  <shadedPattern>com.google.appengine.repackaged.com.google.cloud.location</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>com.google.iam.v1</pattern>
+                  <shadedPattern>com.google.appengine.repackaged.com.google.iam.v1</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>com.google.longrunning</pattern>
+                  <shadedPattern>com.google.appengine.repackaged.com.google.longrunning</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>com.google.api</pattern>
+                  <shadedPattern>com.google.appengine.repackaged.com.google.api</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>com.google.logging</pattern>
+                  <shadedPattern>com.google.appengine.repackaged.com.google.logging</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>com.google.security</pattern>
+                  <shadedPattern>com.google.appengine.repackaged.com.google.security</shadedPattern>
                 </relocation>
                 <relocation>
                   <!-- TODO: Change the package to live in apphosting instead. -->
@@ -311,12 +339,20 @@
               </relocations>
               <filters>
                 <filter>
+                  <artifact>io.grpc:grpc-netty-shaded</artifact>
+                  <excludes>
+                    <exclude>META-INF/native/**</exclude>
+                  </excludes>
+                </filter>
+                <filter>
                   <artifact>com.google.api.grpc:proto-google-common-protos</artifact>
                   <includes>
-                    <include>com/google/api/AnnotationsProto.class</include>
-                    <include>com/google/api/HttpProto.class</include>
+                    <include>com/google/api/**</include>
+                    <include>com/google/cloud/location/**</include>
                     <include>com/google/rpc/**</include>
                     <include>com/google/type/**</include>
+                    <include>com/google/longrunning/**</include>
+                    <include>com/google/logging/**</include>
                   </includes>
                 </filter>
                 <filter>
@@ -377,6 +413,7 @@
                     <include>com/google/apphosting/utils/servlet/ParseBlobUploadFilter*</include>
                     <include>com/google/apphosting/utils/servlet/SessionCleanupServlet*</include>
                     <include>com/google/apphosting/utils/servlet/SnapshotServlet*</include>
+                    <include>com/google/apphosting/utils/servlet/SweeperServlet*</include>
                     <include>com/google/apphosting/utils/servlet/TransactionCleanupFilter*</include>
                     <include>com/google/apphosting/utils/servlet/WarmupServlet*</include>
                     <include>com/google/apphosting/utils/servlet/jakarta/DeferredTaskServlet*</include>
@@ -385,6 +422,7 @@
                     <include>com/google/apphosting/utils/servlet/jakarta/ParseBlobUploadFilter*</include>
                     <include>com/google/apphosting/utils/servlet/jakarta/SessionCleanupServlet*</include>
                     <include>com/google/apphosting/utils/servlet/jakarta/SnapshotServlet*</include>
+                    <include>com/google/apphosting/utils/servlet/jakarta/SweeperServlet*</include>
                     <include>com/google/apphosting/utils/servlet/jakarta/TransactionCleanupFilter*</include>
                     <include>com/google/apphosting/utils/servlet/jakarta/WarmupServlet*</include>
                     <include>com/google/storage/onestore/PropertyType*</include>
@@ -519,8 +557,14 @@
                   <include>org.codehaus.jackson:jackson-core-asl:*</include>
                   <include>io.opencensus:opencensus-api:*</include>
                   <include>io.opencensus:opencensus-contrib-http-util:*</include>
-                  <!-- needed for remote_api for opencensus. -->
+                  <!-- needed for remote_api for opencensus and cloud tasks gRPC client. -->
                   <include>io.grpc:grpc-api:*</include>
+                  <include>com.google.cloud:google-cloud-tasks:*</include>
+                  <include>com.google.api.grpc:proto-google-cloud-tasks-v2:*</include>
+                  <include>com.google.api.grpc:grpc-google-cloud-tasks-v2:*</include>
+                  <include>com.google.api.grpc:proto-google-iam-v1:*</include>
+                  <include>com.google.api:gax-grpc:*</include>
+                  <include>com.google.protobuf:protobuf-java-util:*</include>
                   <include>io.grpc:grpc-auth:*</include>
                   <include>io.grpc:grpc-stub:*</include>
                   <include>io.grpc:grpc-protobuf:*</include>
