@@ -187,8 +187,8 @@ public class AppEngineRuntime {
 
     // Construct the Jetty server:
     QueuedThreadPool threadPool = new QueuedThreadPool(
-        /* maxThreads= */ 100,
-        /* minThreads= */ 10);
+        /* maxThreads= */ 200,
+        /* minThreads= */ 50);
     threadPool.setDaemon(true);
     server = new Server(threadPool);
 
