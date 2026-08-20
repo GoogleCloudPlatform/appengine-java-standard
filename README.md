@@ -75,7 +75,7 @@ The packages `com.google.appengine.api.blobstore.ee10` and `com.google.appengine
         <dependency>
             <groupId>com.google.appengine</groupId>
             <artifactId>appengine-api-1.0-sdk</artifactId>
-            <version>5.0.4</version><!-- or later-->
+            <version>5.1.0</version> <!-- GAE latest -->
         </dependency>
         <dependency>
           <groupId>javax.servlet</groupId>
@@ -95,7 +95,7 @@ The packages `com.google.appengine.api.blobstore.ee10` and `com.google.appengine
         <dependency>
             <groupId>com.google.appengine</groupId>
             <artifactId>appengine-api-1.0-sdk</artifactId>
-            <version>5.0.4</version><!-- or later-->
+            <version>5.1.0</version> <!-- GAE latest -->
         </dependency>
         <dependency>
           <groupId>jakarta.servlet</groupId>
@@ -115,7 +115,7 @@ The packages `com.google.appengine.api.blobstore.ee10` and `com.google.appengine
         <dependency>
             <groupId>com.google.appengine</groupId>
             <artifactId>appengine-api-1.0-sdk</artifactId>
-            <version>5.0.4</version><!-- or later-->
+            <version>5.1.0</version> <!-- GAE latest -->
         </dependency>
         <dependency>
           <groupId>jakarta.servlet</groupId>
@@ -224,7 +224,7 @@ Source code for remote APIs for App Engine.
     <dependency>
        <groupId>com.google.appengine</groupId>
        <artifactId>appengine-remote-api</artifactId>
-       <version>5.0.4</version><!-- or later-->
+       <version>5.1.0</version> <!-- GAE latest -->
     </dependency>
 ```
 
@@ -247,7 +247,7 @@ We moved `com.google.appengine.api.memcache.stdimpl` and its old dependency
     <dependency>
        <groupId>com.google.appengine</groupId>
        <artifactId>appengine-api-legacy.jar/artifactId>
-       <version>5.0.4</version><!-- Or later-->
+       <version>5.1.0</version> <!-- GAE latest -->
     </dependency>
 ```
 
@@ -262,19 +262,19 @@ We moved `com.google.appengine.api.memcache.stdimpl` and its old dependency
     <dependency>
       <groupId>com.google.appengine</groupId>
       <artifactId>appengine-testing</artifactId>
-      <version>5.0.4</version><!-- or later-->
+      <version>5.1.0</version> <!-- GAE latest -->
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>com.google.appengine</groupId>
       <artifactId>appengine-api-stubs</artifactId>
-      <version>5.0.4</version><!-- or later-->
+      <version>5.1.0</version> <!-- GAE latest -->
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>com.google.appengine</groupId>
       <artifactId>appengine-tools-sdk</artifactId>
-      <version>5.0.4</version><!-- or later-->
+      <version>5.1.0</version> <!-- GAE latest -->
       <scope>test</scope>
     </dependency>
 ```
