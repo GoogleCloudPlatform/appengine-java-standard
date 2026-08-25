@@ -34,6 +34,10 @@ import com.google.apphosting.api.ApiProxy.UnknownException;
 import com.google.apphosting.api.ApiStats;
 import com.google.apphosting.api.CloudTrace;
 import com.google.apphosting.api.CloudTraceContext;
+import com.google.apphosting.api.proto2api.ApiBasePb.DoubleProto;
+import com.google.apphosting.api.proto2api.ApiBasePb.Integer32Proto;
+import com.google.apphosting.api.proto2api.ApiBasePb.StringProto;
+import com.google.apphosting.api.proto2api.ApiBasePb.VoidProto;
 import com.google.apphosting.base.AppVersionKey;
 import com.google.apphosting.base.protos.AppinfoPb.AppInfo;
 import com.google.apphosting.base.protos.Codes.Code;
@@ -50,10 +54,6 @@ import com.google.apphosting.base.protos.TraceEvents.StartSpanProto;
 import com.google.apphosting.base.protos.TraceEvents.TraceEventsProto;
 import com.google.apphosting.base.protos.TraceId;
 import com.google.apphosting.base.protos.TracePb.TraceContextProto;
-import com.google.apphosting.api.proto2api.ApiBasePb.DoubleProto;
-import com.google.apphosting.api.proto2api.ApiBasePb.Integer32Proto;
-import com.google.apphosting.api.proto2api.ApiBasePb.StringProto;
-import com.google.apphosting.api.proto2api.ApiBasePb.VoidProto;
 import com.google.apphosting.runtime.anyrpc.APIHostClientInterface;
 import com.google.apphosting.runtime.anyrpc.AnyRpcCallback;
 import com.google.apphosting.runtime.anyrpc.AnyRpcClientContext;
@@ -90,10 +90,7 @@ import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/**
- * Unit tests for the ApiProxyImpl implementation.
- *
- */
+/** Unit tests for the ApiProxyImpl implementation. */
 @RunWith(JUnit4.class)
 public class ApiProxyImplTest {
 
@@ -137,8 +134,7 @@ public class ApiProxyImplTest {
   public void setUp() throws IOException {
     rootDirectory = temporaryFolder.newFolder("appengine" + System.nanoTime());
     maxConcurrentApiCalls = 10;
-    oracle =
-        new ApiDeadlineOracle.Builder().initDeadlineMap().build();
+    oracle = new ApiDeadlineOracle.Builder().initDeadlineMap().build();
     sleepSemaphore = new Semaphore(0);
     APIHostClientInterface apiHost = createAPIHost();
     delegate =
@@ -201,12 +197,7 @@ public class ApiProxyImplTest {
           }
         };
 
-    AppInfo appInfo =
-        AppInfo.newBuilder()
-            .setAppId(APP_ID)
-            .setVersionId(VERSION_ID)
-            .build();
-
+    AppInfo appInfo = AppInfo.newBuilder().setAppId(APP_ID).setVersionId(VERSION_ID).build();
 
     ApplicationEnvironment appEnv =
         new ApplicationEnvironment(
@@ -398,8 +389,7 @@ public class ApiProxyImplTest {
 
   @Test
   public void testDefaultVersionHostname() {
-    upRequest =
-        upRequest.toBuilder().setDefaultVersionHostname("foo.bar.com").buildPartial();
+    upRequest = upRequest.toBuilder().setDefaultVersionHostname("foo.bar.com").buildPartial();
     environment = createEnvironment();
     assertThat(environment.getAttributes().get(ApiProxyImpl.DEFAULT_VERSION_HOSTNAME))
         .isEqualTo("foo.bar.com");
@@ -1059,6 +1049,29 @@ public class ApiProxyImplTest {
   }
 
   @Test
+  public void testCurrentNamespace_caseInsensitiveHeaders() {
+    // Test lowercase headers (e.g. sent by Envoy proxy or HTTP/2)
+    HttpRequest httpRequest =
+        upRequest.getRequest().toBuilder()
+            .addHeaders(
+                ParsedHttpHeader.newBuilder()
+                    .setKey("x-appengine-default-namespace")
+                    .setValue("request-ns-lower"))
+            .addHeaders(
+                ParsedHttpHeader.newBuilder()
+                    .setKey("x-appengine-current-namespace")
+                    .setValue("current-ns-lower"))
+            .buildPartial();
+    upRequest = upRequest.toBuilder().setRequest(httpRequest).buildPartial();
+    ApiProxy.Environment localEnvironment = createEnvironment();
+    Map<String, Object> attributes = localEnvironment.getAttributes();
+    String namespace = (String) attributes.get(CURRENT_NAMESPACE_KEY);
+    assertThat(namespace).isEqualTo("current-ns-lower");
+    namespace = (String) attributes.get(APPS_NAMESPACE_KEY);
+    assertThat(namespace).isEqualTo("request-ns-lower");
+  }
+
+  @Test
   public void testAsync_traceDisabled() throws ExecutionException, InterruptedException {
     StringProto request = StringProto.getDefaultInstance();
     ApiProxy.ApiConfig apiConfig = new ApiProxy.ApiConfig();
@@ -1438,11 +1451,7 @@ public class ApiProxyImplTest {
 
   @Test
   public void testDefaultLogsSetting() throws IOException {
-    AppInfo appInfo =
-        AppInfo.newBuilder()
-            .setAppId(APP_ID)
-            .setVersionId(VERSION_ID)
-            .build();
+    AppInfo appInfo = AppInfo.newBuilder().setAppId(APP_ID).setVersionId(VERSION_ID).build();
 
     appVersion = createAppVersion(appInfo, rootDirectory);
 
@@ -1465,11 +1474,7 @@ public class ApiProxyImplTest {
             ImmutableMap.of(),
             rootDirectory,
             ApplicationEnvironment.RuntimeConfiguration.DEFAULT_FOR_TEST);
-    AppInfo appInfo =
-        AppInfo.newBuilder()
-            .setAppId(APP_ID)
-            .setVersionId(VERSION_ID)
-            .build();
+    AppInfo appInfo = AppInfo.newBuilder().setAppId(APP_ID).setVersionId(VERSION_ID).build();
     appVersion =
         AppVersion.builder()
             .setAppVersionKey(AppVersionKey.of(APP_ID, VERSION_ID))
