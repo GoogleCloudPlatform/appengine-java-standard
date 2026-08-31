@@ -39,10 +39,7 @@ import java.util.Optional;
 import java.util.Set;
 import junit.framework.TestCase;
 
-/**
- * Tests for {@link AppYamlTranslator}.
- *
- */
+/** Tests for {@link AppYamlTranslator}. */
 public class AppYamlTranslatorTest extends TestCase {
   private AppEngineWebXml appEngineWebXml;
   private WebXml webXml;
@@ -1818,10 +1815,8 @@ public class AppYamlTranslatorTest extends TestCase {
         VpcAccessConnector.builderFor("barf").setEgressSetting("all-traffic").build());
     appEngineWebXml.setRuntime("java8");
     AppYamlTranslator translator = createTranslator();
-    assertThat(translator.getYaml()).contains(
-        "vpc_access_connector:\n"
-            + "  name: barf\n"
-            + "  egress_setting: all-traffic\n");
+    assertThat(translator.getYaml())
+        .contains("vpc_access_connector:\n" + "  name: barf\n" + "  egress_setting: all-traffic\n");
   }
 
   public void testAppEngineBundledServices() {
@@ -2081,8 +2076,10 @@ public class AppYamlTranslatorTest extends TestCase {
             + "  secure: optional\n"
             + "  http_headers:\n"
             // Yaml library emitting headers is OS dependent so eol is different on Windows.
-            + "    foo: 1" +  System.getProperty("line.separator")
-            + "    bar: barf" +  System.getProperty("line.separator")
+            + "    foo: 1"
+            + System.getProperty("line.separator")
+            + "    bar: barf"
+            + System.getProperty("line.separator")
             + "- url: /\n"
             + "  script: unused\n"
             + "  login: optional\n"
@@ -2096,7 +2093,6 @@ public class AppYamlTranslatorTest extends TestCase {
             + "  login: optional\n"
             + "  secure: optional\n";
     assertEquals(yaml, translator.getYaml());
-
   }
 
   public void testBackends() {

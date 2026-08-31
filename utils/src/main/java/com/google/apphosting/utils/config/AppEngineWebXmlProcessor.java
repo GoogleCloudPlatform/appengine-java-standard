@@ -50,7 +50,10 @@ import org.w3c.dom.NodeList;
  */
 class AppEngineWebXmlProcessor {
 
-  enum FileType { STATIC, RESOURCE }
+  enum FileType {
+    STATIC,
+    RESOURCE
+  }
 
   private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
   // Error handling to disallow having both module and service entries.
@@ -59,11 +62,10 @@ class AppEngineWebXmlProcessor {
   private boolean warmupNodeFound;
 
   /**
-   * Construct an {@link AppEngineWebXml} from the xml document
-   * identified by the provided {@link InputStream}.
+   * Construct an {@link AppEngineWebXml} from the xml document identified by the provided {@link
+   * InputStream}.
    *
    * @param is The InputStream containing the xml we want to parse and process.
-   *
    * @return Object representation of the xml document.
    * @throws AppEngineConfigException If the input stream cannot be parsed.
    */
@@ -105,8 +107,8 @@ class AppEngineWebXmlProcessor {
     count += appEngineWebXml.getAutomaticScaling().isEmpty() ? 0 : 1;
     if (count > 1) {
       throw new AppEngineConfigException(
-          "There may be only one of 'automatic-scaling', 'manual-scaling' or " +
-          "'basic-scaling' elements.");
+          "There may be only one of 'automatic-scaling', 'manual-scaling' or "
+              + "'basic-scaling' elements.");
     }
   }
 
@@ -125,8 +127,7 @@ class AppEngineWebXmlProcessor {
   }
 
   /**
-   * Given an InputStream, create a Node corresponding to the top level xml
-   * element.
+   * Given an InputStream, create a Node corresponding to the top level xml element.
    *
    * @throws AppEngineConfigException If the input stream cannot be parsed.
    */
@@ -781,6 +782,7 @@ class AppEngineWebXmlProcessor {
       }
     }
   }
+
   private void processClassLoaderConfig(Element node, AppEngineWebXml appEngineWebXml) {
     ClassLoaderConfig config = new ClassLoaderConfig();
     appEngineWebXml.setClassLoaderConfig(config);

@@ -51,14 +51,12 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Generates {@code app.yaml} files suitable for uploading as part of
- * a Google App Engine application.
- *
+ * Generates {@code app.yaml} files suitable for uploading as part of a Google App Engine
+ * application.
  */
 public class AppYamlTranslator {
 
-  private static final ConflictResolver RESOLVER =
-      new LongestPatternConflictResolver();
+  private static final ConflictResolver RESOLVER = new LongestPatternConflictResolver();
 
   private static final String DYNAMIC_PROPERTY = "dynamic";
   private static final String STATIC_PROPERTY = "static";
@@ -69,14 +67,15 @@ public class AppYamlTranslator {
   private static final String HTTP_HEADERS_PROPERTY = "http_headers";
   private static final String API_ENDPOINT_REGEX = "/_ah/spi/*";
 
-  private static final String[] PROPERTIES = new String[] {
-    DYNAMIC_PROPERTY,
-    STATIC_PROPERTY,
-    WELCOME_FILES,
-    TRANSPORT_GUARANTEE_PROPERTY,
-    REQUIRED_ROLE_PROPERTY,
-    EXPIRATION_PROPERTY,
-  };
+  private static final String[] PROPERTIES =
+      new String[] {
+        DYNAMIC_PROPERTY,
+        STATIC_PROPERTY,
+        WELCOME_FILES,
+        TRANSPORT_GUARANTEE_PROPERTY,
+        REQUIRED_ROLE_PROPERTY,
+        EXPIRATION_PROPERTY,
+      };
 
   // This should be kept in sync with MAX_URL_MAPS in <internal1>.
   private static final int MAX_HANDLERS = 100;
@@ -98,10 +97,10 @@ public class AppYamlTranslator {
       Set<String> staticFiles,
       ApiConfig apiConfig,
       String runtime) {
-        this(appEngineWebXml, webXml, backendsXml, staticFiles, apiConfig, runtime);
-      }
+    this(appEngineWebXml, webXml, backendsXml, staticFiles, apiConfig, runtime);
+  }
 
- public AppYamlTranslator(
+  public AppYamlTranslator(
       AppEngineWebXml appEngineWebXml,
       WebXml webXml,
       BackendsXml backendsXml,
@@ -206,54 +205,52 @@ public class AppYamlTranslator {
         builder.append("  cpu_utilization:\n");
         appendIfNotNull(builder, "    target_utilization: ", cpuUtil.getTargetUtilization());
         appendIfNotNull(
-            builder, "    aggregation_window_length_sec: ",
+            builder,
+            "    aggregation_window_length_sec: ",
             cpuUtil.getAggregationWindowLengthSec());
       }
 
       appendIfNotNull(
-          builder, "  target_network_sent_bytes_per_sec: ",
+          builder,
+          "  target_network_sent_bytes_per_sec: ",
           settings.getTargetNetworkSentBytesPerSec());
       appendIfNotNull(
-          builder, "  target_network_sent_packets_per_sec: ",
+          builder,
+          "  target_network_sent_packets_per_sec: ",
           settings.getTargetNetworkSentPacketsPerSec());
       appendIfNotNull(
-          builder, "  target_network_received_bytes_per_sec: ",
+          builder,
+          "  target_network_received_bytes_per_sec: ",
           settings.getTargetNetworkReceivedBytesPerSec());
       appendIfNotNull(
-          builder, "  target_network_received_packets_per_sec: ",
+          builder,
+          "  target_network_received_packets_per_sec: ",
           settings.getTargetNetworkReceivedPacketsPerSec());
       appendIfNotNull(
-          builder, "  target_disk_write_bytes_per_sec: ",
-          settings.getTargetDiskWriteBytesPerSec());
+          builder, "  target_disk_write_bytes_per_sec: ", settings.getTargetDiskWriteBytesPerSec());
       appendIfNotNull(
-          builder, "  target_disk_write_ops_per_sec: ",
-          settings.getTargetDiskWriteOpsPerSec());
+          builder, "  target_disk_write_ops_per_sec: ", settings.getTargetDiskWriteOpsPerSec());
       appendIfNotNull(
-          builder, "  target_disk_read_bytes_per_sec: ",
-          settings.getTargetDiskReadBytesPerSec());
+          builder, "  target_disk_read_bytes_per_sec: ", settings.getTargetDiskReadBytesPerSec());
       appendIfNotNull(
-          builder, "  target_disk_read_ops_per_sec: ",
-          settings.getTargetDiskReadOpsPerSec());
+          builder, "  target_disk_read_ops_per_sec: ", settings.getTargetDiskReadOpsPerSec());
       appendIfNotNull(
-          builder, "  target_request_count_per_sec: ",
-          settings.getTargetRequestCountPerSec());
+          builder, "  target_request_count_per_sec: ", settings.getTargetRequestCountPerSec());
       appendIfNotNull(
-          builder, "  target_concurrent_requests: ",
-          settings.getTargetConcurrentRequests());
+          builder, "  target_concurrent_requests: ", settings.getTargetConcurrentRequests());
 
       if (!settings.getCustomMetrics().isEmpty()) {
         if (!appEngineWebXml.isFlexible()) {
-          throw new AppEngineConfigException("custom-metrics is only available in the AppEngine "
-                                             + "Flexible environment.");
+          throw new AppEngineConfigException(
+              "custom-metrics is only available in the AppEngine " + "Flexible environment.");
         }
         builder.append("  custom_metrics:\n");
         for (CustomMetricUtilization metric : settings.getCustomMetrics()) {
           builder.append("    - metric_name: '").append(metric.getMetricName()).append("'\n");
           builder.append("      target_type: '").append(metric.getTargetType()).append("'\n");
           appendIfNotNull(builder, "      target_utilization: ", metric.getTargetUtilization());
-          appendIfNotNull(builder,
-              "      single_instance_assignment: ",
-              metric.getSingleInstanceAssignment());
+          appendIfNotNull(
+              builder, "      single_instance_assignment: ", metric.getSingleInstanceAssignment());
           if (metric.getFilter() != null) {
             builder.append("      filter: '").append(metric.getFilter()).append("'\n");
           }
@@ -289,7 +286,8 @@ public class AppYamlTranslator {
       }
     }
 
-    if (appEngineWebXml.getAppEngineApis() && !appEngineWebXml.getAppEngineBundledServices().isEmpty()) {
+    if (appEngineWebXml.getAppEngineApis()
+        && !appEngineWebXml.getAppEngineBundledServices().isEmpty()) {
       throw new AppEngineConfigException(
           "Cannot specify both <app-engine-apis> and <app-engine-bundled-services> in"
               + " appengine-web.xml.");
@@ -329,7 +327,10 @@ public class AppYamlTranslator {
       builder.append("vpc_access_connector:\n");
       builder.append("  name: ").append(connector.getName()).append("\n");
       if (connector.getEgressSetting().isPresent()) {
-        builder.append("  egress_setting: ").append(connector.getEgressSetting().get()).append("\n");
+        builder
+            .append("  egress_setting: ")
+            .append(connector.getEgressSetting().get())
+            .append("\n");
       }
     }
 
@@ -358,8 +359,8 @@ public class AppYamlTranslator {
         // TODO: Consider whether we should be adding the
         // public root to this path.
         if (!staticFiles.contains("__static__" + fileName)) {
-          throw new AppEngineConfigException("No static file found for error handler: "
-              + fileName + ", out of " + staticFiles);
+          throw new AppEngineConfigException(
+              "No static file found for error handler: " + fileName + ", out of " + staticFiles);
         }
         // error_handlers doesn't want a leading slash here.
         builder.append("- file: __static__").append(fileName).append("\n");
@@ -454,7 +455,8 @@ public class AppYamlTranslator {
     if (betaSettings != null && !betaSettings.isEmpty()) {
       builder.append("beta_settings:\n");
       for (Map.Entry<String, String> setting : betaSettings.entrySet()) {
-        builder.append("  ")
+        builder
+            .append("  ")
             .append(yamlQuote(setting.getKey()))
             .append(": ")
             .append(yamlQuote(setting.getValue()))
@@ -566,8 +568,8 @@ public class AppYamlTranslator {
   }
 
   /**
-   * Surrounds the provided string with single quotes, escaping any single
-   * quotes in the string by replacing them with ''.
+   * Surrounds the provided string with single quotes, escaping any single quotes in the string by
+   * replacing them with ''.
    */
   private String yamlQuote(String str) {
     return "'" + str.replace("'", "''") + "'";
@@ -619,7 +621,7 @@ public class AppYamlTranslator {
           }
         }
       }
-      return Collections.<String,Object>singletonMap(WELCOME_FILES, staticWelcomeFiles);
+      return Collections.<String, Object>singletonMap(WELCOME_FILES, staticWelcomeFiles);
     }
 
     @Override
@@ -654,17 +656,20 @@ public class AppYamlTranslator {
     public void translateGlob(StringBuilder builder, Glob glob) {
       String regex = glob.getRegularExpression().pattern();
       if (!root.isEmpty()) {
-        if (regex.startsWith(root)){
+        if (regex.startsWith(root)) {
           regex = regex.substring(root.length(), regex.length());
         }
       }
       @SuppressWarnings("unchecked")
-      List<String> welcomeFiles =
-          (List<String>) glob.getProperty(WELCOME_FILES, RESOLVER);
+      List<String> welcomeFiles = (List<String>) glob.getProperty(WELCOME_FILES, RESOLVER);
       if (welcomeFiles != null) {
         for (String welcomeFile : welcomeFiles) {
           builder.append("- url: (").append(regex).append(")\n");
-          builder.append("  static_files: __static__").append(root).append("\\1").append(welcomeFile)
+          builder
+              .append("  static_files: __static__")
+              .append(root)
+              .append("\\1")
+              .append(welcomeFile)
               .append("\n");
           builder.append("  upload: __NOT_USED__\n");
           builder.append("  require_matching_file: True\n");
@@ -751,37 +756,29 @@ public class AppYamlTranslator {
         // anyway.
         return null;
       } else {
-        return Collections.<String,Object>singletonMap(DYNAMIC_PROPERTY, true);
+        return Collections.<String, Object>singletonMap(DYNAMIC_PROPERTY, true);
       }
     }
 
     @Override
     protected void addPatterns(GlobIntersector intersector) {
       if (fallthrough) {
-        intersector.addGlob(GlobFactory.createGlob(
-            "/*",
-            DYNAMIC_PROPERTY, true));
+        intersector.addGlob(GlobFactory.createGlob("/*", DYNAMIC_PROPERTY, true));
       } else {
         for (String servletPattern : patterns) {
-          intersector.addGlob(GlobFactory.createGlob(
-              servletPattern,
-              DYNAMIC_PROPERTY, true));
+          intersector.addGlob(GlobFactory.createGlob(servletPattern, DYNAMIC_PROPERTY, true));
           extendMeaningOfTrailingStar(intersector, servletPattern, DYNAMIC_PROPERTY, true);
         }
         if (hasJsps) {
           // Just add a single rule for any JSPs so users can define more
           // than 100.  The extra load for serving 404's for mistyped
           // jsp requests is trivial.
-          intersector.addGlob(GlobFactory.createGlob(
-              "*.jsp",
-              DYNAMIC_PROPERTY, true));
+          intersector.addGlob(GlobFactory.createGlob("*.jsp", DYNAMIC_PROPERTY, true));
         } else if (appEngineWebXml.getUseVm() || appEngineWebXml.isFlexible()) {
           // The VM Runtime handles jsp files on the VM.
           intersector.addGlob(GlobFactory.createGlob("*.jsp", DYNAMIC_PROPERTY, true));
         }
-        intersector.addGlob(GlobFactory.createGlob(
-            "/_ah/*",
-            DYNAMIC_PROPERTY, true));
+        intersector.addGlob(GlobFactory.createGlob("/_ah/*", DYNAMIC_PROPERTY, true));
       }
     }
 
@@ -798,17 +795,13 @@ public class AppYamlTranslator {
     }
   }
 
-  /**
-   * An {@code AbstractHandlerGenerator} that returns no globs.
-   */
+  /** An {@code AbstractHandlerGenerator} that returns no globs. */
   class EmptyHandlerGenerator extends AbstractHandlerGenerator {
     @Override
-    protected void addPatterns(GlobIntersector intersector) {
-    }
+    protected void addPatterns(GlobIntersector intersector) {}
 
     @Override
-    protected void translateGlob(StringBuilder builder, Glob glob) {
-    }
+    protected void translateGlob(StringBuilder builder, Glob glob) {}
 
     @Override
     protected Map<String, Object> getWelcomeProperties() {
@@ -830,15 +823,15 @@ public class AppYamlTranslator {
       }
     }
 
-    abstract protected void addPatterns(GlobIntersector intersector);
-    abstract protected void translateGlob(StringBuilder builder, Glob glob);
+    protected abstract void addPatterns(GlobIntersector intersector);
+
+    protected abstract void translateGlob(StringBuilder builder, Glob glob);
 
     /**
-     * @returns a map of welcome properties to apply to the welcome
-     * file entries, or {@code null} if no welcome file entries are
-     * necessary.
+     * @returns a map of welcome properties to apply to the welcome file entries, or {@code null} if
+     *     no welcome file entries are necessary.
      */
-    abstract protected Map<String, Object> getWelcomeProperties();
+    protected abstract Map<String, Object> getWelcomeProperties();
 
     protected List<Glob> getGlobPatterns() {
       if (globs == null) {
@@ -875,16 +868,17 @@ public class AppYamlTranslator {
     protected void addSecurityConstraints(GlobIntersector intersector) {
       for (SecurityConstraint constraint : webXml.getSecurityConstraints()) {
         for (String pattern : constraint.getUrlPatterns()) {
-          intersector.addGlob(GlobFactory.createGlob(
+          intersector.addGlob(
+              GlobFactory.createGlob(
+                  pattern, TRANSPORT_GUARANTEE_PROPERTY, constraint.getTransportGuarantee()));
+          extendMeaningOfTrailingStar(
+              intersector,
               pattern,
               TRANSPORT_GUARANTEE_PROPERTY,
-              constraint.getTransportGuarantee()));
-          extendMeaningOfTrailingStar(intersector, pattern, TRANSPORT_GUARANTEE_PROPERTY,
               constraint.getTransportGuarantee());
-          intersector.addGlob(GlobFactory.createGlob(
-              pattern,
-              REQUIRED_ROLE_PROPERTY,
-              constraint.getRequiredRole()));
+          intersector.addGlob(
+              GlobFactory.createGlob(
+                  pattern, REQUIRED_ROLE_PROPERTY, constraint.getRequiredRole()));
           extendMeaningOfTrailingStar(
               intersector, pattern, REQUIRED_ROLE_PROPERTY, constraint.getRequiredRole());
         }
@@ -910,8 +904,8 @@ public class AppYamlTranslator {
       }
 
       SecurityConstraint.TransportGuarantee transportGuarantee =
-          (SecurityConstraint.TransportGuarantee) glob.getProperty(TRANSPORT_GUARANTEE_PROPERTY,
-                                                                   RESOLVER);
+          (SecurityConstraint.TransportGuarantee)
+              glob.getProperty(TRANSPORT_GUARANTEE_PROPERTY, RESOLVER);
       if (transportGuarantee == null) {
         transportGuarantee = SecurityConstraint.TransportGuarantee.NONE;
       }

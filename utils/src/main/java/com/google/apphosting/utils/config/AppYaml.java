@@ -39,15 +39,13 @@ import java.util.regex.PatternSyntaxException;
 /**
  * JavaBean representation of the Java app.yaml file.
  *
- * <p>The methods of this class are mapped to YAML keys via method name reflection, which
- * is why some of them contain underscores.
+ * <p>The methods of this class are mapped to YAML keys via method name reflection, which is why
+ * some of them contain underscores.
  */
 public class AppYaml {
   private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
 
-  /**
-   * Plugin service to modify app.yaml with runtime-specific defaults.
-   */
+  /** Plugin service to modify app.yaml with runtime-specific defaults. */
   public interface Plugin {
     AppYaml process(AppYaml yaml);
   }
@@ -55,12 +53,16 @@ public class AppYaml {
   /**
    * A {@code Handler} element from app.yaml. Maps to {@code servlet}, {@code servlet-mapping},
    * {@code filter}, and {@code filter-mapping} elements in web.xml
-   *
    */
   public static class Handler {
 
     /** Type of handler, deduced from the presence of various YAML elements. */
-    public enum Type {SERVLET, JSP, FILTER, NONE}
+    public enum Type {
+      SERVLET,
+      JSP,
+      FILTER,
+      NONE
+    }
 
     private String url;
     private String jsp;
@@ -73,8 +75,18 @@ public class AppYaml {
     private boolean loadOnStartup;
 
     /** Login requirement type specified in app.yaml */
-    public enum LoginType { admin, required, optional }
-    public enum Security { always, optional, never }
+    public enum LoginType {
+      admin,
+      required,
+      optional
+    }
+
+    public enum Security {
+      always,
+      optional,
+      never
+    }
+
     private boolean apiEndpoint = false;
 
     private boolean requireMatchingFile = false;
@@ -322,8 +334,8 @@ public class AppYaml {
     }
 
     /**
-     * Generates the {@code servlet} or {@code filter} element of web.xml
-     * corresponding to this handler.
+     * Generates the {@code servlet} or {@code filter} element of web.xml corresponding to this
+     * handler.
      */
     private void generateDefinitionXml(XmlWriter xml) {
       if (getServlet() != null || getJsp() != null) {
@@ -361,16 +373,14 @@ public class AppYaml {
       }
     }
 
-    private void securityConstraint(XmlWriter xml, String type, String name, String value)  {
+    private void securityConstraint(XmlWriter xml, String type, String name, String value) {
       type = type + "-constraint";
       xml.startElement(type);
       xml.simpleElement(name, value);
       xml.endElement(type);
     }
 
-    /**
-     * Generates a {@code filter} element of web.xml corresponding to this handler.
-     */
+    /** Generates a {@code filter} element of web.xml corresponding to this handler. */
     private void generateFilterDefinition(XmlWriter xml) {
       xml.startElement("filter");
       xml.simpleElement("filter-name", getName());
@@ -379,9 +389,7 @@ public class AppYaml {
       xml.endElement("filter");
     }
 
-    /**
-     *  Generates a {@code filter-mapping} element of web.xml corresponding to this handler.
-     */
+    /** Generates a {@code filter-mapping} element of web.xml corresponding to this handler. */
     private void generateFilterMapping(XmlWriter xml) {
       xml.startElement("filter-mapping");
       xml.simpleElement("filter-name", getName());
@@ -413,12 +421,11 @@ public class AppYaml {
     }
 
     /**
-     * Merges another handler into this handler, assuming that the other handler
-     * has the same name, type and target. This operation is intended to be
-     * used for generating a Servlet or Filter *definition* as opposed to a
-     * mapping, and therefore the urls of this handler and the other handler
-     * are not involved in the merge operation. The load_on_startup values
-     * of the two handlers will be OR'd and the init_params will be unioned.
+     * Merges another handler into this handler, assuming that the other handler has the same name,
+     * type and target. This operation is intended to be used for generating a Servlet or Filter
+     * *definition* as opposed to a mapping, and therefore the urls of this handler and the other
+     * handler are not involved in the merge operation. The load_on_startup values of the two
+     * handlers will be OR'd and the init_params will be unioned.
      */
     public void mergeDefinitions(Handler otherHandler) {
       Preconditions.checkArgument(
@@ -449,8 +456,12 @@ public class AppYaml {
             mergedInitParams.put(key, otherValue);
           } else if (!thisValue.equals(otherValue)) {
             throw new IllegalArgumentException(
-                "Cannot merge handlers with conflicting values for the init_param: " + key + " : "
-                + thisValue + " vs " + otherValue);
+                "Cannot merge handlers with conflicting values for the init_param: "
+                    + key
+                    + " : "
+                    + thisValue
+                    + " vs "
+                    + otherValue);
           }
         }
       }
@@ -459,9 +470,7 @@ public class AppYaml {
       }
     }
 
-    /**
-     * Generates a {@code servlet-mapping} element of web.xml corresponding to this handler.
-     */
+    /** Generates a {@code servlet-mapping} element of web.xml corresponding to this handler. */
     private void generateServletMapping(XmlWriter xml) {
       if (isApiEndpoint()) {
         xml.startElement("servlet-mapping", "id", xml.nextApiEndpointId());
@@ -481,8 +490,7 @@ public class AppYaml {
               xml.simpleElement("param-name", name);
               xml.simpleElement("param-value", value);
               xml.endElement("init-param");
-            }
-        );
+            });
       }
     }
 
@@ -651,9 +659,7 @@ public class AppYaml {
     }
   }
 
-  /**
-   * AutomaticScaling bean.
-   */
+  /** AutomaticScaling bean. */
   public static class AutomaticScaling {
     private String minPendingLatency;
     private String maxPendingLatency;
@@ -740,9 +746,7 @@ public class AppYaml {
     }
   }
 
-  /**
-   * ManualScaling bean.
-   */
+  /** ManualScaling bean. */
   public static class ManualScaling {
     private String instances;
 
@@ -755,9 +759,7 @@ public class AppYaml {
     }
   }
 
-  /**
-   * BasicScaling bean.
-   */
+  /** BasicScaling bean. */
   public static class BasicScaling {
     private String maxInstances;
     private String idleTimeout;
@@ -769,6 +771,7 @@ public class AppYaml {
     public void setMax_instances(String maxInstances) {
       this.maxInstances = maxInstances;
     }
+
     public String getIdle_timeout() {
       return idleTimeout;
     }
@@ -1216,8 +1219,8 @@ public class AppYaml {
   }
 
   /**
-   * Represents an api-config: top level app.yaml stanza
-   * This is a singleton specifying url: and servlet: for the api config server.
+   * Represents an api-config: top level app.yaml stanza This is a singleton specifying url: and
+   * servlet: for the api config server.
    */
   public static class ApiConfig {
     private String url;
@@ -1375,8 +1378,8 @@ public class AppYaml {
           xml,
           "target-throughput-utilization",
           automaticScaling.getTarget_throughput_utilization());
-      addOptionalElement(xml, "max-concurrent-requests",
-          automaticScaling.getMax_concurrent_requests());
+      addOptionalElement(
+          xml, "max-concurrent-requests", automaticScaling.getMax_concurrent_requests());
       xml.endElement("automatic-scaling");
     }
     if (manualScaling != null) {
@@ -1425,9 +1428,13 @@ public class AppYaml {
     xml.simpleElement("code-lock", getCode_lock());
     xml.simpleElement("sessions-enabled", getSessions_enabled());
     if (asyncSessionPersistence != null) {
-      xml.simpleElement("async-session-persistence", null,
-          "enabled", getAsync_session_persistence().getEnabled(),
-          "queue-name", getAsync_session_persistence().getQueue_name());
+      xml.simpleElement(
+          "async-session-persistence",
+          null,
+          "enabled",
+          getAsync_session_persistence().getEnabled(),
+          "queue-name",
+          getAsync_session_persistence().getQueue_name());
     }
     if (systemProperties != null) {
       xml.startElement("system-properties");
@@ -1450,8 +1457,7 @@ public class AppYaml {
     if (betaSettings != null) {
       xml.startElement("beta-settings");
       betaSettings.forEach(
-          (name, value) ->
-              xml.emptyElement("beta-setting", "name", name, "value", value));
+          (name, value) -> xml.emptyElement("beta-setting", "name", name, "value", value));
       xml.endElement("beta-settings");
     }
     boolean warmupService = false;
@@ -1484,9 +1490,8 @@ public class AppYaml {
     if (errorHandlers != null) {
       xml.startElement("static-error-handlers");
       for (ErrorHandler handler : errorHandlers) {
-        xml.emptyElement("handler",
-                         "file", handler.getFile(),
-                         "error-code", handler.getError_code());
+        xml.emptyElement(
+            "handler", "file", handler.getFile(), "error-code", handler.getError_code());
       }
       xml.endElement("static-error-handlers");
     }
@@ -1497,13 +1502,12 @@ public class AppYaml {
   }
 
   /**
-   * Generates the {@code servlet}, {@code servlet-mapping}, {@code filter}, and
-   * {@code filter-mapping} elements of web.xml corresponding to the {@link #handlers} list. There
-   * may be multiple {@link Handler handlers} corresponding to the same servlet or filter, because a
-   * single handler can only specify one URL pattern and the user may wish to map several URL
-   * patterns to the same servlet or filter. In this case we want to have multiple
-   * {@code servlet-mapping} or {@code filter-mapping} elements but only a single {@code servlet} or
-   * {@code filter} element.
+   * Generates the {@code servlet}, {@code servlet-mapping}, {@code filter}, and {@code
+   * filter-mapping} elements of web.xml corresponding to the {@link #handlers} list. There may be
+   * multiple {@link Handler handlers} corresponding to the same servlet or filter, because a single
+   * handler can only specify one URL pattern and the user may wish to map several URL patterns to
+   * the same servlet or filter. In this case we want to have multiple {@code servlet-mapping} or
+   * {@code filter-mapping} elements but only a single {@code servlet} or {@code filter} element.
    */
   private void generateHandlerXml(XmlWriter xmlWriter) {
     if (handlers == null) {
@@ -1544,12 +1548,16 @@ public class AppYaml {
 
   public void generateWebXml(Writer writer) {
     XmlWriter xml = new XmlWriter(writer);
-    xml.startElement("web-app", "version", "2.5",
-        "xmlns", "http://java.sun.com/xml/ns/javaee",
-        "xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance",
+    xml.startElement(
+        "web-app",
+        "version",
+        "2.5",
+        "xmlns",
+        "http://java.sun.com/xml/ns/javaee",
+        "xmlns:xsi",
+        "http://www.w3.org/2001/XMLSchema-instance",
         "xsi:schemaLocation",
-        "http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd"
-    );
+        "http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd");
     generateHandlerXml(xml);
     if (contextParams != null) {
       contextParams.forEach(
@@ -1558,8 +1566,7 @@ public class AppYaml {
             xml.simpleElement("param-name", name);
             xml.simpleElement("param-value", value);
             xml.endElement("context-param");
-          }
-      );
+          });
     }
     if (welcomeFiles != null) {
       xml.startElement("welcome-file-list");

@@ -37,15 +37,15 @@ import org.jspecify.annotations.Nullable;
 /**
  * Struct describing the config data that lives in WEB-INF/appengine-web.xml.
  *
- * Any additions to this class should also be made to the YAML
- * version in AppYaml.java.
- *
+ * <p>Any additions to this class should also be made to the YAML version in AppYaml.java.
  */
 public class AppEngineWebXml implements Cloneable {
-  /**
-   * Enumeration of supported scaling types.
-   */
-  public static enum ScalingType {AUTOMATIC, MANUAL, BASIC}
+  /** Enumeration of supported scaling types. */
+  public static enum ScalingType {
+    AUTOMATIC,
+    MANUAL,
+    BASIC
+  }
 
   // System properties defined by the application in appengine-web.xml
   private final Map<String, String> systemProperties;
@@ -157,14 +157,13 @@ public class AppEngineWebXml implements Cloneable {
 
   private final Set<String> appEngineBundledServices;
 
-  /**
-   * Represent user's choice w.r.t the usage of Google's customized connector-j.
-   */
+  /** Represent user's choice w.r.t the usage of Google's customized connector-j. */
   public static enum UseGoogleConnectorJ {
     NOT_STATED_BY_USER,
     TRUE,
     FALSE,
   }
+
   // Identify if the user has explicitly stated if the application wishes to use Google's
   // customized connector-j.
   private UseGoogleConnectorJ useGoogleConnectorJ = UseGoogleConnectorJ.NOT_STATED_BY_USER;
@@ -203,8 +202,8 @@ public class AppEngineWebXml implements Cloneable {
   }
 
   /**
-   * @return An unmodifiable map whose entries correspond to the
-   * system properties defined in appengine-web.xml.
+   * @return An unmodifiable map whose entries correspond to the system properties defined in
+   *     appengine-web.xml.
    */
   public Map<String, String> getSystemProperties() {
     return Collections.unmodifiableMap(systemProperties);
@@ -215,8 +214,8 @@ public class AppEngineWebXml implements Cloneable {
   }
 
   /**
-   * @return An unmodifiable map whose entires correspond to the
-   * vm settings defined in appengine-web.xml.
+   * @return An unmodifiable map whose entires correspond to the vm settings defined in
+   *     appengine-web.xml.
    */
   public Map<String, String> getBetaSettings() {
     return Collections.unmodifiableMap(betaSettings);
@@ -267,8 +266,8 @@ public class AppEngineWebXml implements Cloneable {
   }
 
   /**
-   * @return An unmodifiable map whose entires correspond to the
-   * environment variables defined in appengine-web.xml.
+   * @return An unmodifiable map whose entires correspond to the environment variables defined in
+   *     appengine-web.xml.
    */
   public Map<String, String> getEnvironmentVariables() {
     return Collections.unmodifiableMap(envVariables);
@@ -355,8 +354,7 @@ public class AppEngineWebXml implements Cloneable {
   }
 
   /**
-   * Sets instanceClass (aka class in the xml/yaml files). Normalizes empty and null
-   * inputs to null.
+   * Sets instanceClass (aka class in the xml/yaml files). Normalizes empty and null inputs to null.
    */
   public void setInstanceClass(String instanceClass) {
     this.instanceClass = toNullIfEmptyOrWhitespace(instanceClass);
@@ -468,8 +466,8 @@ public class AppEngineWebXml implements Cloneable {
 
   public void addUserPermission(String className, String name, String actions) {
     if (className.startsWith("java.")) {
-      throw new AppEngineConfigException("Cannot specify user-permissions for " +
-                                         "classes in java.* packages.");
+      throw new AppEngineConfigException(
+          "Cannot specify user-permissions for " + "classes in java.* packages.");
     }
 
     userPermissions.add(UserPermission.of(className, name, actions));
@@ -478,22 +476,20 @@ public class AppEngineWebXml implements Cloneable {
   public Permissions getUserPermissions() {
     Permissions permissions = new Permissions();
     for (UserPermission permission : userPermissions) {
-      permissions.add(new UnresolvedPermission(permission.getClassName(),
-                                               permission.getName(),
-                                               permission.getActions(),
-                                               null));
+      permissions.add(
+          new UnresolvedPermission(
+              permission.getClassName(), permission.getName(), permission.getActions(), null));
     }
     permissions.setReadOnly();
     return permissions;
   }
-
 
   public void setPublicRoot(String root) {
     if (root.indexOf('*') != -1) {
       throw new AppEngineConfigException("public-root cannot contain wildcards");
     }
     if (root.endsWith("/")) {
-        root = root.substring(0, root.length() - 1);
+      root = root.substring(0, root.length() - 1);
     }
     if (root.length() > 0 && !root.startsWith("/")) {
       root = "/" + root;
@@ -645,7 +641,6 @@ public class AppEngineWebXml implements Cloneable {
     return serviceAccount;
   }
 
-
   public String getUrlStreamHandlerType() {
     return urlStreamHandlerType;
   }
@@ -657,15 +652,19 @@ public class AppEngineWebXml implements Cloneable {
     if (!URL_HANDLER_URLFETCH.equals(urlStreamHandlerType)
         && !URL_HANDLER_NATIVE.equals(urlStreamHandlerType)) {
       throw new AppEngineConfigException(
-          "url-stream-handler must be " + URL_HANDLER_URLFETCH + " or " + URL_HANDLER_NATIVE +
-          " given " + urlStreamHandlerType);
+          "url-stream-handler must be "
+              + URL_HANDLER_URLFETCH
+              + " or "
+              + URL_HANDLER_NATIVE
+              + " given "
+              + urlStreamHandlerType);
     }
     this.urlStreamHandlerType = urlStreamHandlerType;
   }
 
   /**
-   * Returns true if {@code url} matches one of the servlets or servlet
-   * filters listed in this web.xml that has api-endpoint set to true.
+   * Returns true if {@code url} matches one of the servlets or servlet filters listed in this
+   * web.xml that has api-endpoint set to true.
    */
   public boolean isApiEndpoint(String id) {
     return apiEndpointIds.contains(id);
@@ -954,8 +953,7 @@ public class AppEngineWebXml implements Cloneable {
         } else {
           staticRoot = "**";
         }
-        staticIncludePattern = Pattern.compile(
-            makeRegexp(Collections.singletonList(staticRoot)));
+        staticIncludePattern = Pattern.compile(makeRegexp(Collections.singletonList(staticRoot)));
       } else {
         List<String> patterns = new ArrayList<String>();
         for (StaticFileInclude include : staticFileIncludes) {
@@ -973,16 +971,16 @@ public class AppEngineWebXml implements Cloneable {
   }
 
   /**
-   * Tests whether {@code path} is covered by the pattern {@code includes}
-   * while not being blocked by matching {@code excludes}.
+   * Tests whether {@code path} is covered by the pattern {@code includes} while not being blocked
+   * by matching {@code excludes}.
    *
    * @param path a URL to test
    * @param includes a non-{@code null} pattern for included URLs
-   * @param excludes a pattern for exclusion, or {@code null} to not exclude
-   *    anything from the {@code includes} set.
+   * @param excludes a pattern for exclusion, or {@code null} to not exclude anything from the
+   *     {@code includes} set.
    */
   public boolean includes(String path, Pattern includes, Pattern excludes) {
-    assert(includes != null);
+    assert (includes != null);
     if (!includes.matcher(path).matches()) {
       return false;
     }
@@ -1019,8 +1017,8 @@ public class AppEngineWebXml implements Cloneable {
   }
 
   /**
-   * Helper method to translate from appengine-web.xml "file globs" to
-   * proper regular expressions as used in app.yaml.
+   * Helper method to translate from appengine-web.xml "file globs" to proper regular expressions as
+   * used in app.yaml.
    *
    * @param fileGlob the glob to translate
    * @return the regular expression string matching the input {@code file} pattern.
@@ -1032,10 +1030,11 @@ public class AppEngineWebXml implements Cloneable {
     fileGlob = fileGlob.replaceAll("\\\\\\*", "[^/]*");
     return fileGlob;
   }
+
   /**
-   * Sets the application root directory, as a prefix for the regexps in
-   * {@link #includeResourcePattern(String)} and friends.  This is needed
-   * because we want to match complete filenames relative to root.
+   * Sets the application root directory, as a prefix for the regexps in {@link
+   * #includeResourcePattern(String)} and friends. This is needed because we want to match complete
+   * filenames relative to root.
    *
    * @param appRoot
    */
@@ -1060,14 +1059,13 @@ public class AppEngineWebXml implements Cloneable {
     return string;
   }
 
-  /**
-   * Represents a {@link java.security.Permission} that needs to be
-   * granted to user code.
-   */
+  /** Represents a {@link java.security.Permission} that needs to be granted to user code. */
   @AutoValue
   abstract static class UserPermission {
     abstract String getClassName();
+
     abstract String getName();
+
     @Nullable
     abstract String getActions();
 
@@ -1130,6 +1128,7 @@ public class AppEngineWebXml implements Cloneable {
   @AutoValue
   public abstract static class AdminConsolePage {
     public abstract String getName();
+
     public abstract String getUrl();
 
     public static AdminConsolePage of(String name, String url) {
@@ -1153,6 +1152,7 @@ public class AppEngineWebXml implements Cloneable {
     @AutoValue.Builder
     public abstract static class Builder {
       public abstract Builder setName(String name);
+
       public abstract Builder setEgressSetting(String egressSetting);
 
       public abstract VpcAccessConnector build();
@@ -1160,12 +1160,13 @@ public class AppEngineWebXml implements Cloneable {
   }
 
   /**
-   * Represents an {@code <error-handler>} element.  Currently this includes both
-   * a file name and an optional error code.
+   * Represents an {@code <error-handler>} element. Currently this includes both a file name and an
+   * optional error code.
    */
   @AutoValue
   public abstract static class ErrorHandler {
     public abstract String getFile();
+
     @Nullable
     public abstract String getErrorCode();
 
@@ -1175,12 +1176,13 @@ public class AppEngineWebXml implements Cloneable {
   }
 
   /**
-   * Represents an {@code <api-config>} element.  This is a singleton specifying
-   * url-pattern and servlet-class for the api config server.
+   * Represents an {@code <api-config>} element. This is a singleton specifying url-pattern and
+   * servlet-class for the api config server.
    */
   @AutoValue
   public abstract static class ApiConfig {
     public abstract String getServletClass();
+
     public abstract String getUrl();
 
     public static ApiConfig of(String servletClass, String url) {
@@ -1188,9 +1190,7 @@ public class AppEngineWebXml implements Cloneable {
     }
   }
 
-  /**
-   * Holder for automatic settings.
-   */
+  /** Holder for automatic settings. */
   public static class AutomaticScaling {
     /*
      * AutomaticScaling with no fields set.
@@ -1233,9 +1233,7 @@ public class AppEngineWebXml implements Cloneable {
       return minPendingLatency;
     }
 
-    /**
-     * Sets minPendingLatency. Normalizes empty and null inputs to null.
-     */
+    /** Sets minPendingLatency. Normalizes empty and null inputs to null. */
     public void setMinPendingLatency(String minPendingLatency) {
       this.minPendingLatency = toNullIfEmptyOrWhitespace(minPendingLatency);
     }
@@ -1244,33 +1242,27 @@ public class AppEngineWebXml implements Cloneable {
       return maxPendingLatency;
     }
 
-    /**
-     * Sets maxPendingLatency. Normalizes empty and null inputs to null.
-     */
+    /** Sets maxPendingLatency. Normalizes empty and null inputs to null. */
     public void setMaxPendingLatency(String maxPendingLatency) {
-      this.maxPendingLatency =  toNullIfEmptyOrWhitespace(maxPendingLatency);
+      this.maxPendingLatency = toNullIfEmptyOrWhitespace(maxPendingLatency);
     }
 
     public String getMinIdleInstances() {
       return minIdleInstances;
     }
 
-    /**
-     * Sets minIdleInstances. Normalizes empty and null inputs to null.
-     */
+    /** Sets minIdleInstances. Normalizes empty and null inputs to null. */
     public void setMinIdleInstances(String minIdleInstances) {
-      this.minIdleInstances =  toNullIfEmptyOrWhitespace(minIdleInstances);
+      this.minIdleInstances = toNullIfEmptyOrWhitespace(minIdleInstances);
     }
 
     public String getMaxIdleInstances() {
       return maxIdleInstances;
     }
 
-    /**
-     * Sets maxIdleInstances. Normalizes empty and null inputs to null.
-     */
+    /** Sets maxIdleInstances. Normalizes empty and null inputs to null. */
     public void setMaxIdleInstances(String maxIdleInstances) {
-      this.maxIdleInstances =  toNullIfEmptyOrWhitespace(maxIdleInstances);
+      this.maxIdleInstances = toNullIfEmptyOrWhitespace(maxIdleInstances);
     }
 
     public boolean isEmpty() {
@@ -1281,11 +1273,9 @@ public class AppEngineWebXml implements Cloneable {
       return maxConcurrentRequests;
     }
 
-    /**
-     * Sets maxConcurrentRequests. Normalizes empty and null inputs to null.
-     */
+    /** Sets maxConcurrentRequests. Normalizes empty and null inputs to null. */
     public void setMaxConcurrentRequests(String maxConcurrentRequests) {
-      this.maxConcurrentRequests =  toNullIfEmptyOrWhitespace(maxConcurrentRequests);
+      this.maxConcurrentRequests = toNullIfEmptyOrWhitespace(maxConcurrentRequests);
     }
 
     public Integer getMinNumInstances() {
@@ -1442,16 +1432,31 @@ public class AppEngineWebXml implements Cloneable {
 
     @Override
     public int hashCode() {
-      return Objects.hash(maxPendingLatency, minPendingLatency, maxIdleInstances,
-          minIdleInstances, maxConcurrentRequests, minNumInstances,
-          maxNumInstances, coolDownPeriodSec, cpuUtilization, customMetrics,
-          targetNetworkSentBytesPerSec, targetNetworkSentPacketsPerSec,
-          targetNetworkReceivedBytesPerSec, targetNetworkReceivedPacketsPerSec,
-          targetDiskWriteBytesPerSec, targetDiskWriteOpsPerSec,
-          targetDiskReadBytesPerSec, targetDiskReadOpsPerSec,
-          targetRequestCountPerSec, targetConcurrentRequests,
-          targetCpuUtilization, targetThroughputUtilization,
-          minInstances, maxInstances);
+      return Objects.hash(
+          maxPendingLatency,
+          minPendingLatency,
+          maxIdleInstances,
+          minIdleInstances,
+          maxConcurrentRequests,
+          minNumInstances,
+          maxNumInstances,
+          coolDownPeriodSec,
+          cpuUtilization,
+          customMetrics,
+          targetNetworkSentBytesPerSec,
+          targetNetworkSentPacketsPerSec,
+          targetNetworkReceivedBytesPerSec,
+          targetNetworkReceivedPacketsPerSec,
+          targetDiskWriteBytesPerSec,
+          targetDiskWriteOpsPerSec,
+          targetDiskReadBytesPerSec,
+          targetDiskReadOpsPerSec,
+          targetRequestCountPerSec,
+          targetConcurrentRequests,
+          targetCpuUtilization,
+          targetThroughputUtilization,
+          minInstances,
+          maxInstances);
     }
 
     @Override
@@ -1482,10 +1487,10 @@ public class AppEngineWebXml implements Cloneable {
           && Objects.equals(customMetrics, other.customMetrics)
           && Objects.equals(targetNetworkSentBytesPerSec, other.targetNetworkSentBytesPerSec)
           && Objects.equals(targetNetworkSentPacketsPerSec, other.targetNetworkSentPacketsPerSec)
-          && Objects.equals(targetNetworkReceivedBytesPerSec,
-              other.targetNetworkReceivedBytesPerSec)
-          && Objects.equals(targetNetworkReceivedPacketsPerSec,
-              other.targetNetworkReceivedPacketsPerSec)
+          && Objects.equals(
+              targetNetworkReceivedBytesPerSec, other.targetNetworkReceivedBytesPerSec)
+          && Objects.equals(
+              targetNetworkReceivedPacketsPerSec, other.targetNetworkReceivedPacketsPerSec)
           && Objects.equals(targetDiskWriteBytesPerSec, other.targetDiskWriteBytesPerSec)
           && Objects.equals(targetDiskWriteOpsPerSec, other.targetDiskWriteOpsPerSec)
           && Objects.equals(targetDiskReadBytesPerSec, other.targetDiskReadBytesPerSec)
@@ -1496,37 +1501,59 @@ public class AppEngineWebXml implements Cloneable {
 
     @Override
     public String toString() {
-      return "AutomaticScaling [minPendingLatency=" + minPendingLatency
-          + ", maxPendingLatency=" + maxPendingLatency
-          + ", minIdleInstances=" + minIdleInstances
-          + ", maxIdleInstances=" + maxIdleInstances
-          + ", minInstances=" + minInstances
-          + ", maxInstances=" + maxInstances
-          + ", maxConcurrentRequests=" + maxConcurrentRequests
-          + ", minNumInstances=" + minNumInstances
-          + ", maxNumInstances=" + maxNumInstances
-          + ", coolDownPeriodSec=" + coolDownPeriodSec
-          + ", cpuUtilization=" + cpuUtilization
-          + ", customMetrics=" + customMetrics
-          + ", targetNetworkSentBytesPerSec=" + targetNetworkSentBytesPerSec
-          + ", targetNetworkSentPacketsPerSec=" + targetNetworkSentPacketsPerSec
-          + ", targetNetworkReceivedBytesPerSec=" + targetNetworkReceivedBytesPerSec
-          + ", targetNetworkReceivedPacketsPerSec=" + targetNetworkReceivedPacketsPerSec
-          + ", targetDiskWriteBytesPerSec=" + targetDiskWriteBytesPerSec
-          + ", targetDiskWriteOpsPerSec=" + targetDiskWriteOpsPerSec
-          + ", targetDiskReadBytesPerSec=" + targetDiskReadBytesPerSec
-          + ", targetDiskReadOpsPerSec=" + targetDiskReadOpsPerSec
-          + ", targetRequestCountPerSec=" + targetRequestCountPerSec
-          + ", targetConcurrentRequests=" + targetConcurrentRequests
-          + ", targetCpuUtilization=" + targetCpuUtilization
-          + ", targetThroughputUtilization=" + targetThroughputUtilization
+      return "AutomaticScaling [minPendingLatency="
+          + minPendingLatency
+          + ", maxPendingLatency="
+          + maxPendingLatency
+          + ", minIdleInstances="
+          + minIdleInstances
+          + ", maxIdleInstances="
+          + maxIdleInstances
+          + ", minInstances="
+          + minInstances
+          + ", maxInstances="
+          + maxInstances
+          + ", maxConcurrentRequests="
+          + maxConcurrentRequests
+          + ", minNumInstances="
+          + minNumInstances
+          + ", maxNumInstances="
+          + maxNumInstances
+          + ", coolDownPeriodSec="
+          + coolDownPeriodSec
+          + ", cpuUtilization="
+          + cpuUtilization
+          + ", customMetrics="
+          + customMetrics
+          + ", targetNetworkSentBytesPerSec="
+          + targetNetworkSentBytesPerSec
+          + ", targetNetworkSentPacketsPerSec="
+          + targetNetworkSentPacketsPerSec
+          + ", targetNetworkReceivedBytesPerSec="
+          + targetNetworkReceivedBytesPerSec
+          + ", targetNetworkReceivedPacketsPerSec="
+          + targetNetworkReceivedPacketsPerSec
+          + ", targetDiskWriteBytesPerSec="
+          + targetDiskWriteBytesPerSec
+          + ", targetDiskWriteOpsPerSec="
+          + targetDiskWriteOpsPerSec
+          + ", targetDiskReadBytesPerSec="
+          + targetDiskReadBytesPerSec
+          + ", targetDiskReadOpsPerSec="
+          + targetDiskReadOpsPerSec
+          + ", targetRequestCountPerSec="
+          + targetRequestCountPerSec
+          + ", targetConcurrentRequests="
+          + targetConcurrentRequests
+          + ", targetCpuUtilization="
+          + targetCpuUtilization
+          + ", targetThroughputUtilization="
+          + targetThroughputUtilization
           + "]";
     }
   }
 
-  /**
-   * Holder for CPU utilization.
-   */
+  /** Holder for CPU utilization. */
   public static class CpuUtilization {
     private static final CpuUtilization EMPTY_SETTINGS = new CpuUtilization();
     // The target of CPU utilization.
@@ -1577,14 +1604,15 @@ public class AppEngineWebXml implements Cloneable {
 
     @Override
     public String toString() {
-      return "CpuUtilization [targetUtilization=" + targetUtilization
-          + ", aggregationWindowLengthSec=" + aggregationWindowLengthSec + "]";
+      return "CpuUtilization [targetUtilization="
+          + targetUtilization
+          + ", aggregationWindowLengthSec="
+          + aggregationWindowLengthSec
+          + "]";
     }
   }
 
-  /**
-   * Holder for custom autoscaling metrics.
-   */
+  /** Holder for custom autoscaling metrics. */
   public static class CustomMetricUtilization {
     /*
      * CustomMetricUtilization with no fields set.
@@ -1602,38 +1630,47 @@ public class AppEngineWebXml implements Cloneable {
     public void setMetricName(String metricName) {
       this.metricName = metricName;
     }
+
     public String getMetricName() {
       return metricName;
     }
+
     public void setTargetType(String targetType) {
       this.targetType = targetType;
     }
+
     public String getTargetType() {
       return targetType;
     }
+
     public void setTargetUtilization(Double targetUtilization) {
       this.targetUtilization = targetUtilization;
     }
+
     public Double getTargetUtilization() {
       return targetUtilization;
     }
+
     public void setSingleInstanceAssignment(Double singleInstanceAssignment) {
       this.singleInstanceAssignment = singleInstanceAssignment;
     }
+
     public Double getSingleInstanceAssignment() {
       return singleInstanceAssignment;
     }
+
     public void setFilter(String filter) {
       this.filter = filter;
     }
+
     public String getFilter() {
       return filter;
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(metricName, targetType, targetUtilization, singleInstanceAssignment,
-          filter);
+      return Objects.hash(
+          metricName, targetType, targetUtilization, singleInstanceAssignment, filter);
     }
 
     @Override
@@ -1657,17 +1694,21 @@ public class AppEngineWebXml implements Cloneable {
 
     @Override
     public String toString() {
-      return "CustomMetricUtilization [metricName=" + metricName
-          + ", targetType=" + targetType
-          + ", targetUtilization=" + targetUtilization
-          + ", singleInstanceAssignment=" + singleInstanceAssignment
-          + ", filter=" + filter + "]";
+      return "CustomMetricUtilization [metricName="
+          + metricName
+          + ", targetType="
+          + targetType
+          + ", targetUtilization="
+          + targetUtilization
+          + ", singleInstanceAssignment="
+          + singleInstanceAssignment
+          + ", filter="
+          + filter
+          + "]";
     }
   }
 
-  /**
-   * Holder for health check.
-   */
+  /** Holder for health check. */
   public static class HealthCheck {
     /*
      * HealthCheck with no fields set.
@@ -1688,9 +1729,8 @@ public class AppEngineWebXml implements Cloneable {
     public boolean getEnableHealthCheck() {
       return enableHealthCheck;
     }
-    /**
-     * Sets enableHealthCheck.
-     */
+
+    /** Sets enableHealthCheck. */
     public void setEnableHealthCheck(boolean enableHealthCheck) {
       this.enableHealthCheck = enableHealthCheck;
     }
@@ -1698,9 +1738,8 @@ public class AppEngineWebXml implements Cloneable {
     public Integer getCheckIntervalSec() {
       return checkIntervalSec;
     }
-    /**
-     * Sets checkIntervalSec.
-     */
+
+    /** Sets checkIntervalSec. */
     public void setCheckIntervalSec(Integer checkIntervalSec) {
       this.checkIntervalSec = checkIntervalSec;
     }
@@ -1708,9 +1747,8 @@ public class AppEngineWebXml implements Cloneable {
     public Integer getTimeoutSec() {
       return timeoutSec;
     }
-    /**
-     * Sets timeoutSec.
-     */
+
+    /** Sets timeoutSec. */
     public void setTimeoutSec(Integer timeoutSec) {
       this.timeoutSec = timeoutSec;
     }
@@ -1719,9 +1757,7 @@ public class AppEngineWebXml implements Cloneable {
       return unhealthyThreshold;
     }
 
-    /**
-     * Sets unhealthyThreshold.
-     */
+    /** Sets unhealthyThreshold. */
     public void setUnhealthyThreshold(Integer unhealthyThreshold) {
       this.unhealthyThreshold = unhealthyThreshold;
     }
@@ -1730,10 +1766,7 @@ public class AppEngineWebXml implements Cloneable {
       return healthyThreshold;
     }
 
-    /**
-     * Sets healthyThreshold.
-     */
-
+    /** Sets healthyThreshold. */
     public void setHealthyThreshold(Integer healthyThreshold) {
       this.healthyThreshold = healthyThreshold;
     }
@@ -1742,9 +1775,7 @@ public class AppEngineWebXml implements Cloneable {
       return restartThreshold;
     }
 
-    /**
-     * Sets restartThreshold.
-     */
+    /** Sets restartThreshold. */
     public void setRestartThreshold(Integer restartThreshold) {
       this.restartThreshold = restartThreshold;
     }
@@ -1753,9 +1784,7 @@ public class AppEngineWebXml implements Cloneable {
       return host;
     }
 
-    /**
-     * Sets host. Normalizes empty and null inputs to null.
-     */
+    /** Sets host. Normalizes empty and null inputs to null. */
     public void setHost(String host) {
       this.host = toNullIfEmptyOrWhitespace(host);
     }
@@ -1766,8 +1795,14 @@ public class AppEngineWebXml implements Cloneable {
 
     @Override
     public int hashCode() {
-      return Objects.hash(enableHealthCheck, checkIntervalSec, timeoutSec, unhealthyThreshold,
-                              healthyThreshold, restartThreshold, host);
+      return Objects.hash(
+          enableHealthCheck,
+          checkIntervalSec,
+          timeoutSec,
+          unhealthyThreshold,
+          healthyThreshold,
+          restartThreshold,
+          host);
     }
 
     @Override
@@ -1793,13 +1828,21 @@ public class AppEngineWebXml implements Cloneable {
 
     @Override
     public String toString() {
-      return "HealthCheck [enableHealthCheck=" + enableHealthCheck
-          + ", checkIntervalSec=" + checkIntervalSec
-          + ", timeoutSec=" + timeoutSec
-          + ", unhealthyThreshold=" + unhealthyThreshold
-          + ", healthyThreshold=" + healthyThreshold
-          + ", restartThreshold=" + restartThreshold
-          + ", host=" + host + "]";
+      return "HealthCheck [enableHealthCheck="
+          + enableHealthCheck
+          + ", checkIntervalSec="
+          + checkIntervalSec
+          + ", timeoutSec="
+          + timeoutSec
+          + ", unhealthyThreshold="
+          + unhealthyThreshold
+          + ", healthyThreshold="
+          + healthyThreshold
+          + ", restartThreshold="
+          + restartThreshold
+          + ", host="
+          + host
+          + "]";
     }
   }
 
@@ -1841,6 +1884,7 @@ public class AppEngineWebXml implements Cloneable {
     public Integer getTimeoutSec() {
       return timeoutSec;
     }
+
     /** Sets timeoutSec. */
     public void setTimeoutSec(Integer timeoutSec) {
       this.timeoutSec = timeoutSec;
@@ -1977,6 +2021,7 @@ public class AppEngineWebXml implements Cloneable {
     public Integer getTimeoutSec() {
       return timeoutSec;
     }
+
     /** Sets timeoutSec. */
     public void setTimeoutSec(Integer timeoutSec) {
       this.timeoutSec = timeoutSec;
@@ -2075,9 +2120,7 @@ public class AppEngineWebXml implements Cloneable {
     }
   }
 
-  /**
-   * Holder for Resources
-   */
+  /** Holder for Resources */
   public static class Resources {
     /*
      * Resources with no fields set.
@@ -2137,22 +2180,25 @@ public class AppEngineWebXml implements Cloneable {
         return false;
       }
       Resources other = (Resources) obj;
-      return Objects.equals(cpu, other.cpu) &&
-          Objects.equals(memory_gb, other.memory_gb) &&
-          Objects.equals(disk_size_gb, other.disk_size_gb);
+      return Objects.equals(cpu, other.cpu)
+          && Objects.equals(memory_gb, other.memory_gb)
+          && Objects.equals(disk_size_gb, other.disk_size_gb);
     }
 
     @Override
     public String toString() {
-      return "Resources [" + "cpu=" + cpu +
-          ", memory_gb=" + memory_gb +
-          ", disk_size_gb=" + disk_size_gb + "]";
+      return "Resources ["
+          + "cpu="
+          + cpu
+          + ", memory_gb="
+          + memory_gb
+          + ", disk_size_gb="
+          + disk_size_gb
+          + "]";
     }
   }
 
-  /**
-   * Holder for network.
-   */
+  /** Holder for network. */
   public static class Network {
     /*
      * Network with no fields set.
@@ -2238,15 +2284,21 @@ public class AppEngineWebXml implements Cloneable {
 
     @Override
     public String toString() {
-      return "Network [forwardedPorts=" + forwardedPorts + ", instanceTag=" + instanceTag
-          + ", name=" + name + ", subnetworkName=" + subnetworkName + ", sessionAffinity="
-          + sessionAffinity + "]";
+      return "Network [forwardedPorts="
+          + forwardedPorts
+          + ", instanceTag="
+          + instanceTag
+          + ", name="
+          + name
+          + ", subnetworkName="
+          + subnetworkName
+          + ", sessionAffinity="
+          + sessionAffinity
+          + "]";
     }
   }
 
-  /**
-   * Holder for manual settings.
-   */
+  /** Holder for manual settings. */
   public static class ManualScaling {
     /*
      * ManualScaling with no fields set.
@@ -2261,9 +2313,7 @@ public class AppEngineWebXml implements Cloneable {
       return instances;
     }
 
-    /**
-     * Sets instances. Normalizes empty and null inputs to null.
-     */
+    /** Sets instances. Normalizes empty and null inputs to null. */
     public void setInstances(String instances) {
       this.instances = toNullIfEmptyOrWhitespace(instances);
     }
@@ -2298,9 +2348,7 @@ public class AppEngineWebXml implements Cloneable {
     }
   }
 
-  /**
-   * Holder for basic settings.
-   */
+  /** Holder for basic settings. */
   public static class BasicScaling {
     /*
      * BasicScaling with no fields set.
@@ -2320,16 +2368,12 @@ public class AppEngineWebXml implements Cloneable {
       return idleTimeout;
     }
 
-    /**
-     * Sets maxInstances. Normalizes empty and null inputs to null.
-     */
+    /** Sets maxInstances. Normalizes empty and null inputs to null. */
     public void setMaxInstances(String maxInstances) {
       this.maxInstances = toNullIfEmptyOrWhitespace(maxInstances);
     }
 
-    /**
-     * Sets idleTimeout. Normalizes empty and null inputs to null.
-     */
+    /** Sets idleTimeout. Normalizes empty and null inputs to null. */
     public void setIdleTimeout(String idleTimeout) {
       this.idleTimeout = toNullIfEmptyOrWhitespace(idleTimeout);
     }
@@ -2361,8 +2405,12 @@ public class AppEngineWebXml implements Cloneable {
 
     @Override
     public String toString() {
-      return "BasicScaling [" + "maxInstances=" + maxInstances
-          + ", idleTimeout=" + idleTimeout + "]";
+      return "BasicScaling ["
+          + "maxInstances="
+          + maxInstances
+          + ", idleTimeout="
+          + idleTimeout
+          + "]";
     }
   }
 
@@ -2407,12 +2455,13 @@ public class AppEngineWebXml implements Cloneable {
 
   public static class PrioritySpecifierEntry {
     private String filename;
-    private Double priority;  // null means not present.  Default priority is 1.0.
+    private Double priority; // null means not present.  Default priority is 1.0.
 
     private void checkNotAlreadySet() {
       if (filename != null) {
-        throw new AppEngineConfigException("Found more that one file name matching tag. "
-            + "Only one of 'filename' attribute allowed.");
+        throw new AppEngineConfigException(
+            "Found more that one file name matching tag. "
+                + "Only one of 'filename' attribute allowed.");
       }
     }
 
