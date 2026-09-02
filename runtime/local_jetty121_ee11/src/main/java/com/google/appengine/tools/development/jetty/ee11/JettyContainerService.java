@@ -344,8 +344,8 @@ public class JettyContainerService extends AbstractContainerService
     configuration.setSendDateHeader(false);
     configuration.setSendServerVersion(false);
     configuration.setSendXPoweredBy(false);
-    // Try to enable virtual threads if requested on java21:
-    if (Boolean.getBoolean("appengine.use.virtualthreads")) {
+    // Try to enable virtual threads if requested on Java 21+:
+    if (Boolean.getBoolean("appengine.use.virtualthreads") && Runtime.version().feature() >= 21) {
       QueuedThreadPool threadPool = new QueuedThreadPool();
       threadPool.setVirtualThreadsExecutor(VirtualThreads.getDefaultVirtualThreadsExecutor());
       server = new Server(threadPool);

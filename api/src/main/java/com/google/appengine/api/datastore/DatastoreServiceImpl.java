@@ -18,6 +18,7 @@ package com.google.appengine.api.datastore;
 
 import static com.google.appengine.api.datastore.FutureHelper.quietGet;
 
+import com.google.apphosting.api.ApiProxy;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +31,8 @@ import java.util.Map;
 final class DatastoreServiceImpl implements DatastoreService {
 
   private final AsyncDatastoreServiceInternal async;
+  static final long BEGIN_TXN_RETRY_DELAY_MS = 100;
+  private static final int MAX_RETRIES = Integer.getInteger("appengine.datastore.retries", 1);
 
   public DatastoreServiceImpl(AsyncDatastoreServiceInternal async) {
     this.async = async;
@@ -137,12 +140,33 @@ final class DatastoreServiceImpl implements DatastoreService {
 
   @Override
   public Transaction beginTransaction() {
-    return quietGet(async.beginTransaction());
+    return beginTransaction(TransactionOptions.Builder.withDefaults());
   }
 
   @Override
   public Transaction beginTransaction(TransactionOptions options) {
-    return quietGet(async.beginTransaction(options));
+    int retries = 0;
+    long delay = BEGIN_TXN_RETRY_DELAY_MS;
+    while (true) {
+      try {
+        Transaction tx = quietGet(async.beginTransaction(options));
+        tx.getId(); // Force handle resolution
+        return tx;
+      } catch (DatastoreFailureException
+          | DatastoreTimeoutException
+          | ApiProxy.RPCFailedException e) {
+        if (++retries > MAX_RETRIES) {
+          throw e;
+        }
+        try {
+          Thread.sleep(delay);
+        } catch (InterruptedException ie) {
+          Thread.currentThread().interrupt();
+          throw e;
+        }
+        delay *= 2;
+      }
+    }
   }
 
   @Override
