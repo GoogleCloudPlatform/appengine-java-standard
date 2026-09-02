@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package com.google.apphosting.runtime.jetty9;
+package com.google.apphosting.runtime.jetty;
 
-import static com.google.apphosting.runtime.jetty9.JavaRuntimeViaHttpBase.allVersions;
+import static com.google.apphosting.runtime.jetty.JavaRuntimeViaHttpBase.allVersions;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;

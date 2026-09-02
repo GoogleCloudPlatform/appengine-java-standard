@@ -18,7 +18,7 @@ package com.google.apphosting.runtime.tests;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.google.apphosting.runtime.jetty9.JavaRuntimeViaHttpBase;
+import com.google.apphosting.runtime.jetty.JavaRuntimeViaHttpBase;
 import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.io.IOException;

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.apphosting.runtime.jetty9;
+package com.google.apphosting.runtime.jetty;
 
 import static com.google.common.truth.Truth.assertThat;
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
@@ -85,10 +85,10 @@ public class LegacyModeTest extends JavaRuntimeViaHttpBase {
     String response =
         executeHttpDirect(
             """
-                          GET /some/path HTTP/1.0
-                          Some: Header
+            GET /some/path HTTP/1.0
+            Some: Header
 
-                          """);
+            """);
     assertThat(response).contains("HTTP/1.1 200 OK");
     assertThat(response).contains("GET /some/path HTTP/1.0");
     assertThat(response).contains("Some: Header");
@@ -121,10 +121,10 @@ public class LegacyModeTest extends JavaRuntimeViaHttpBase {
     response =
         executeHttpDirect(
             """
-                          GET /s%u006Fme/p%u0061th HTTP/1.0
-                          Some: Header
+            GET /s%u006Fme/p%u0061th HTTP/1.0
+            Some: Header
 
-                          """);
+            """);
 
     // Microsoft encoding supported until jetty-10
     assertThat(response).contains("HTTP/1.1 200 OK");
@@ -134,10 +134,10 @@ public class LegacyModeTest extends JavaRuntimeViaHttpBase {
     response =
         executeHttpDirect(
             """
-                                 Get /some/path HTTP/1.0
-                                 Some: Header
+            Get /some/path HTTP/1.0
+            Some: Header
 
-                                 """);
+            """);
     assertThat(response).contains("HTTP/1.1 200 OK");
     assertThat(response).contains("Some: Header");
     assertThat(response.toLowerCase(Locale.ROOT)).contains("get /some/path http/1.0");
@@ -168,7 +168,7 @@ public class LegacyModeTest extends JavaRuntimeViaHttpBase {
         response.write(buffer, 0, len);
         len = in.read(buffer);
       }
-      return response.toString(ISO_8859_1.toString());
+      return response.toString(ISO_8859_1);
     }
   }
 }

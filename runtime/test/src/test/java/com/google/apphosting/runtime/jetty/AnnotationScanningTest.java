@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.apphosting.runtime.jetty9;
+package com.google.apphosting.runtime.jetty;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -25,7 +25,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 @RunWith(Parameterized.class)
-public final class FailureFilterTest extends JavaRuntimeViaHttpBase {
+public final class AnnotationScanningTest extends JavaRuntimeViaHttpBase {
 
   private File appRoot;
 
@@ -34,20 +34,15 @@ public final class FailureFilterTest extends JavaRuntimeViaHttpBase {
     return allVersions();
   }
 
-  public FailureFilterTest(
-      String runtimeVersion, String jettyVersion, String version, boolean useHttpConnector)
+  public AnnotationScanningTest(
+      String runtimeVersion, String jettyVersion, String jakartaVersion, boolean useHttpConnector)
       throws IOException, InterruptedException {
-    super(runtimeVersion, jettyVersion, version, useHttpConnector);
-    if (Boolean.getBoolean("test.running.internally")) { // Internal can only do EE6
-      System.setProperty("appengine.use.EE8", "false");
-      System.setProperty("appengine.use.EE10", "false");
-      System.setProperty("appengine.use.EE11", "false");
-    }
-    String appName = "failinitfilterwebapp";
-    if (version.equals("EE10") || version.equals("EE11")) {
-      appName = "failinitfilterwebappjakarta";
-    }
+    super(runtimeVersion, jettyVersion, jakartaVersion, useHttpConnector);
     File currentDirectory = new File("").getAbsoluteFile();
+    String appName = "annotationscanningwebapp";
+    if (isJakarta()) {
+      appName = "annotationscanningwebappjakarta";
+    }
     appRoot =
         new File(
             currentDirectory,
@@ -67,10 +62,9 @@ public final class FailureFilterTest extends JavaRuntimeViaHttpBase {
   }
 
   @Test
-  public void testFilterInitFailed() throws Exception {
+  public void testAnnotationScanning() throws Exception {
     try (RuntimeContext<DummyApiServer> runtime = runtimeContext()) {
-      assertThat(runtime.executeHttpGet("/", 500))
-          .contains("servlet.ServletException: Intentionally failing to initialize.");
+      runtime.executeHttpGet("/", 200);
     }
   }
 }

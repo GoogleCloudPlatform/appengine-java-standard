@@ -19,7 +19,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.google.appengine.tools.admin.AppCfg;
 import com.google.appengine.tools.development.HttpApiServer;
-import com.google.apphosting.runtime.jetty9.JavaRuntimeViaHttpBase;
+import com.google.apphosting.runtime.jetty.JavaRuntimeViaHttpBase;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;

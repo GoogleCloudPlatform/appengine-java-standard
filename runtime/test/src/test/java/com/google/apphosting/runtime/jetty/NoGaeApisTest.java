@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.apphosting.runtime.jetty9;
+package com.google.apphosting.runtime.jetty;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -25,7 +25,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 @RunWith(Parameterized.class)
-public final class AnnotationScanningTest extends JavaRuntimeViaHttpBase {
+public final class NoGaeApisTest extends JavaRuntimeViaHttpBase {
 
   private File appRoot;
 
@@ -33,16 +33,22 @@ public final class AnnotationScanningTest extends JavaRuntimeViaHttpBase {
   public static List<Object[]> version() {
     return allVersions();
   }
-
-  public AnnotationScanningTest(
-      String runtimeVersion, String jettyVersion, String jakartaVersion, boolean useHttpConnector)
+  public NoGaeApisTest(
+      String runtimeVersion, String jettyVersion, String version, boolean useHttpConnector)
       throws IOException, InterruptedException {
-    super(runtimeVersion, jettyVersion, jakartaVersion, useHttpConnector);
-    File currentDirectory = new File("").getAbsoluteFile();
-    String appName = "annotationscanningwebapp";
-    if (isJakarta()) {
-      appName = "annotationscanningwebappjakarta";
+    super(runtimeVersion, jettyVersion, version, useHttpConnector);
+    if (Boolean.getBoolean("test.running.internally")) { // Internal can only do EE6
+      System.setProperty("appengine.use.EE8", "false");
+      System.setProperty("appengine.use.EE10", "false");
+      System.setProperty("appengine.use.EE11", "false");
+      System.setProperty("GAE_RUNTIME", "java17");
+      System.setProperty("appengine.use.jetty121", "false");
     }
+    String appName = "nogaeapiswebapp";
+    if (version.equals("EE10") || version.equals("EE11")) {
+      appName = "nogaeapiswebappjakarta";
+    }
+    File currentDirectory = new File("").getAbsoluteFile();
     appRoot =
         new File(
             currentDirectory,
@@ -62,9 +68,21 @@ public final class AnnotationScanningTest extends JavaRuntimeViaHttpBase {
   }
 
   @Test
-  public void testAnnotationScanning() throws Exception {
+  public void testNoGaeApis() throws Exception {
     try (RuntimeContext<DummyApiServer> runtime = runtimeContext()) {
       runtime.executeHttpGet("/", 200);
+    }
+  }
+
+  @Test
+  public void testServletFailedInitialization() throws Exception {
+    try (RuntimeContext<DummyApiServer> runtime = runtimeContext()) {
+      // Initialization exceptions propagate up so they are logged properly.
+      assertThat(runtime.executeHttpGet("/failInit", 500))
+          .contains("servlet.ServletException: Intentionally failing to initialize.");
+
+      // A second request will attempt initialization again.
+      assertThat(runtime.executeHttpGet("/failInit", 404)).contains("404 Not Found");
     }
   }
 }

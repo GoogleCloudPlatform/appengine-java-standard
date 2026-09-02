@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.apphosting.runtime.jetty9;
+package com.google.apphosting.runtime.jetty;
 
 import static com.google.common.base.StandardSystemProperty.FILE_SEPARATOR;
 import static com.google.common.base.StandardSystemProperty.JAVA_HOME;
@@ -94,7 +94,7 @@ public abstract class JavaRuntimeViaHttpBase {
   @ClassRule public static TemporaryFolder temporaryFolder = new TemporaryFolder();
   private static final String RUNTIME_LOCATION_ROOT = "java/com/google/apphosting";
   private static final int MAX_RETRIES = 3;
-  static final int RESPONSE_200 = 200;
+  public static final int RESPONSE_200 = 200;
 
   @FunctionalInterface
   public interface ApiServerFactory<ApiServerT extends Closeable> {
@@ -257,7 +257,8 @@ public abstract class JavaRuntimeViaHttpBase {
     baseArgsBuilder.add(JAVA_HOME.value() + "/bin/java");
     Integer debugPort = Integer.getInteger("appengine.debug.port");
     if (debugPort != null) {
-      baseArgsBuilder.add("-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address:*:" + debugPort);
+      baseArgsBuilder.add(
+          "-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address:*:" + debugPort);
     }
     baseArgsBuilder
         .add(
@@ -340,7 +341,8 @@ public abstract class JavaRuntimeViaHttpBase {
             runtimeProcess, httpApiServer, httpClient, jettyPort, outPump, errPump);
       } catch (Throwable t) {
         // Log and clean up before retrying
-        logger.atWarning().withCause(t).log("Failed to start runtime, attempt %d of %d", i + 1, MAX_RETRIES);
+        logger.atWarning().withCause(t).log(
+            "Failed to start runtime, attempt %d of %d", i + 1, MAX_RETRIES);
         runtimeProcess.destroyForcibly();
         try {
           runtimeProcess.waitFor(5, SECONDS);
@@ -542,6 +544,7 @@ public abstract class JavaRuntimeViaHttpBase {
           url, expectedResponseBody, expectedReturnCode, /* numberOfRetries= */ 1);
     }
 
+    @CanIgnoreReturnValue
     public String executeHttpGet(String urlPath, int expectedReturnCode) throws Exception {
       HttpGet get = new HttpGet(jettyUrl(urlPath));
       HttpResponse response = httpClient.execute(get);
@@ -703,7 +706,15 @@ public abstract class JavaRuntimeViaHttpBase {
     if (appName.contains("/")) {
       appPrefix = appName + "/";
     } else {
-      appPrefix = Reflection.getPackageName(myClass).replace('.', '/') + "/" + appName + "/";
+      String jettyPrefix = "com/google/apphosting/runtime/jetty/" + appName + "/";
+      String jetty9Prefix = "com/google/apphosting/runtime/jetty9/" + appName + "/";
+      if (myClassLoader.getResource(jettyPrefix + "WEB-INF/appengine-web.xml") != null) {
+        appPrefix = jettyPrefix;
+      } else if (myClassLoader.getResource(jetty9Prefix + "WEB-INF/appengine-web.xml") != null) {
+        appPrefix = jetty9Prefix;
+      } else {
+        appPrefix = Reflection.getPackageName(myClass).replace('.', '/') + "/" + appName + "/";
+      }
     }
     String appEngineWebXmlResource = appPrefix + "WEB-INF/appengine-web.xml";
     URL appEngineWebXmlUrl = myClassLoader.getResource(appEngineWebXmlResource);
@@ -778,13 +789,13 @@ public abstract class JavaRuntimeViaHttpBase {
   public static class DummyApiServer implements Closeable {
     private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
 
-    static DummyApiServer create(
+    public static DummyApiServer create(
         int apiPort, ImmutableMap<String, Function<ByteString, ByteString>> handlerMap)
         throws IOException {
       return create(apiPort, handlerMap, request -> {});
     }
 
-    static DummyApiServer create(
+    public static DummyApiServer create(
         int apiPort,
         ImmutableMap<String, Function<ByteString, ByteString>> handlerMap,
         Consumer<RemoteApiPb.Request> requestObserver)

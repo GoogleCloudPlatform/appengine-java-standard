@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.apphosting.runtime.jetty9;
+package com.google.apphosting.runtime.jetty;
 
 import static com.google.common.base.StandardSystemProperty.JAVA_CLASS_PATH;
 import static com.google.common.base.StandardSystemProperty.JAVA_HOME;
@@ -93,7 +93,9 @@ public final class SpringBootTest extends JavaRuntimeViaHttpBase {
 
     File currentDirectory = new File("").getAbsoluteFile();
     File sdkRoot =
-        new File(currentDirectory.getParentFile().getParentFile(), "sdk_assembly/target/appengine-java-sdk");
+        new File(
+            currentDirectory.getParentFile().getParentFile(),
+            "sdk_assembly/target/appengine-java-sdk");
     ProcessBuilder pb =
         new ProcessBuilder(
             javaBin,
