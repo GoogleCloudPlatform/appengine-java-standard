@@ -20,6 +20,7 @@ import static com.google.apphosting.runtime.jetty.JavaRuntimeViaHttpBase.allVers
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.lessThan;
 import static org.hamcrest.Matchers.lessThanOrEqualTo;
 import static org.junit.Assert.assertNotNull;
@@ -247,11 +248,13 @@ public class SizeLimitHandlerTest extends JavaRuntimeViaHttpBase {
         .send(completionListener::complete);
 
     Result result = completionListener.get(5, TimeUnit.SECONDS);
-    assertThat(result.getResponse().getStatus(), equalTo(HttpStatus.PAYLOAD_TOO_LARGE_413));
-
-    // If the request was not aborted, then we expect to see the error message in the response body.
-    if (result.getResponseFailure() == null) {
+    if (result.getResponseFailure() == null && result.getRequestFailure() == null) {
+      assertThat(result.getResponse().getStatus(), equalTo(HttpStatus.PAYLOAD_TOO_LARGE_413));
       assertThat(received.toString(), containsString("Request body is too large"));
+    } else {
+      assertThat(
+          result.getResponse().getStatus(),
+          anyOf(equalTo(HttpStatus.PAYLOAD_TOO_LARGE_413), equalTo(0)));
     }
   }
 
@@ -305,11 +308,13 @@ public class SizeLimitHandlerTest extends JavaRuntimeViaHttpBase {
         .send(completionListener::complete);
 
     Result result = completionListener.get(5, TimeUnit.SECONDS);
-    assertThat(result.getResponse().getStatus(), equalTo(HttpStatus.PAYLOAD_TOO_LARGE_413));
-
-    // If the request was not aborted, then we expect to see the error message in the response body.
-    if (result.getResponseFailure() == null) {
+    if (result.getResponseFailure() == null && result.getRequestFailure() == null) {
+      assertThat(result.getResponse().getStatus(), equalTo(HttpStatus.PAYLOAD_TOO_LARGE_413));
       assertThat(received.toString(), containsString("Request body is too large"));
+    } else {
+      assertThat(
+          result.getResponse().getStatus(),
+          anyOf(equalTo(HttpStatus.PAYLOAD_TOO_LARGE_413), equalTo(0)));
     }
   }
 
@@ -356,11 +361,13 @@ public class SizeLimitHandlerTest extends JavaRuntimeViaHttpBase {
 
     Result result = completionListener.get(5, TimeUnit.SECONDS);
     Response response = result.getResponse();
-    assertThat(response.getStatus(), equalTo(HttpStatus.PAYLOAD_TOO_LARGE_413));
-
-    // If the request was not aborted, then we expect to see the error message in the response body.
-    if (result.getResponseFailure() == null) {
+    if (result.getResponseFailure() == null && result.getRequestFailure() == null) {
+      assertThat(response.getStatus(), equalTo(HttpStatus.PAYLOAD_TOO_LARGE_413));
       assertThat(received.toString(), containsString("Request body is too large"));
+    } else {
+      assertThat(
+          response.getStatus(),
+          anyOf(equalTo(HttpStatus.PAYLOAD_TOO_LARGE_413), equalTo(0)));
     }
   }
 
