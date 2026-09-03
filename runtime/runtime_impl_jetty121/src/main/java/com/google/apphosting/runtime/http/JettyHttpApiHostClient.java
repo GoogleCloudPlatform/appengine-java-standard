@@ -45,6 +45,7 @@ import org.eclipse.jetty.http.HttpFields;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.io.EofException;
+import org.eclipse.jetty.util.VirtualThreads;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.eclipse.jetty.util.thread.ScheduledExecutorScheduler;
 import org.eclipse.jetty.util.thread.Scheduler;
@@ -121,9 +122,16 @@ class JettyHttpApiHostClient extends HttpApiHostClient {
      * JVM and the Appserver from being overwhelmed and eliminating the INTERNAL_ERROR fallback loop.
      */
     int maxThreads = getMaxThreads(config);
-    QueuedThreadPool threadPool = new QueuedThreadPool(maxThreads, 10, 60000, null, myThreadGroup);
+    int minThreads = Math.max(1, Math.min(10, maxThreads));
+    QueuedThreadPool threadPool =
+        new QueuedThreadPool(maxThreads, minThreads, 60000, null, myThreadGroup);
     threadPool.setName("JettyHttpApiHostClient");
     threadPool.setDaemon(true);
+    if (Boolean.getBoolean("appengine.api.use.virtualthreads")
+        && Runtime.version().feature() >= 21) {
+      threadPool.setVirtualThreadsExecutor(VirtualThreads.getDefaultVirtualThreadsExecutor());
+      logger.atInfo().log("Using virtual threads for JettyHttpApiHostClient.");
+    }
     httpClient.setExecutor(threadPool);
     httpClient.setScheduler(scheduler);
     config.maxConnectionsPerDestination().ifPresent(httpClient::setMaxConnectionsPerDestination);

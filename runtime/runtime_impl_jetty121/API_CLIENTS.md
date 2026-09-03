@@ -48,12 +48,17 @@ and system properties:
 *   **`APPENGINE_API_MAX_THREADS`** (Environment Variable): Sets the
     maximum number of concurrent threads for executing API calls. If unset,
     this also defaults to 100. This is the most direct way to control API
-    call throughput and prevent backend overload.
+    call throughput and prevent backend overload. If set to lower values (e.g. 5 or 8),
+    `minThreads` automatically scales down (`min(10, maxThreads)`) to prevent startup failures.
     *   Default: `100`
 *   **`APPENGINE_API_CALLS_IDLE_TIMEOUT_MS`** (Environment Variable): Sets
     the idle timeout in milliseconds for connections in the connection pool.
     Connections that are idle for longer than this duration may be closed.
     *   Default: `58000` (58 seconds)
+*   **`appengine.api.use.virtualthreads`** (Java System Property): If set to `true` on
+    Java 21+, the client will use Java Virtual Threads to execute API requests, avoiding
+    platform thread stack memory overhead while honoring pool and connection limits.
+    *   Default: `false`
 
 ## JDK HTTP Client
 

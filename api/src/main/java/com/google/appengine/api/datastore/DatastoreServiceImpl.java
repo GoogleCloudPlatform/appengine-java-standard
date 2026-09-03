@@ -148,13 +148,21 @@ final class DatastoreServiceImpl implements DatastoreService {
     int retries = 0;
     long delay = BEGIN_TXN_RETRY_DELAY_MS;
     while (true) {
+      Transaction tx = null;
       try {
-        Transaction tx = quietGet(async.beginTransaction(options));
+        tx = quietGet(async.beginTransaction(options));
         tx.getId(); // Force handle resolution
         return tx;
       } catch (DatastoreFailureException
           | DatastoreTimeoutException
           | ApiProxy.RPCFailedException e) {
+        if (tx != null) {
+          try {
+            tx.rollbackAsync();
+          } catch (Exception ignored) {
+          }
+          async.getDefaultTxnProvider().remove(tx);
+        }
         if (++retries > MAX_RETRIES) {
           throw e;
         }
