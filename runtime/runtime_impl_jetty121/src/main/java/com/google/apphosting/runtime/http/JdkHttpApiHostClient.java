@@ -190,25 +190,41 @@ class JdkHttpApiHostClient extends HttpApiHostClient {
       try (OutputStream out = connection.getOutputStream()) {
         out.write(requestBytes);
       }
-      if (connection.getResponseCode() == HttpURLConnection.HTTP_OK) {
+      int responseCode = connection.getResponseCode();
+      if (responseCode == HttpURLConnection.HTTP_OK) {
         int length = connection.getContentLength();
         if (length > MAX_LENGTH) {
           connection.getInputStream().close();
           responseTooBig(callback);
-        } else {
+        } else if (length >= 0) {
           byte[] buffer = new byte[length];
           try (InputStream in = connection.getInputStream()) {
             ByteStreams.readFully(in, buffer); // EOFException (an IOException) if too few bytes
             receivedResponse(buffer, length, context, callback);
           }
+        } else {
+          // Chunked transfer encoding or unspecified content length
+          byte[] buffer;
+          try (InputStream in = connection.getInputStream()) {
+            buffer = ByteStreams.toByteArray(ByteStreams.limit(in, MAX_LENGTH + 1));
+          }
+          if (buffer.length > MAX_LENGTH) {
+            responseTooBig(callback);
+          } else {
+            receivedResponse(buffer, buffer.length, context, callback);
+          }
         }
+      } else {
+        String httpError = responseCode + " " + connection.getResponseMessage();
+        logger.atWarning().log("HTTP communication got error: %s", httpError);
+        communicationFailure(context, httpError, callback, null);
       }
     } catch (SocketTimeoutException e) {
       logger.atWarning().withCause(e).log("SocketTimeoutException");
       timeout(callback);
-    } catch (IOException e) {
-      logger.atWarning().withCause(e).log("IOException");
-      communicationFailure(context, e.toString(), callback, e);
+    } catch (Throwable t) {
+      logger.atWarning().withCause(t).log("HTTP communication failure");
+      communicationFailure(context, t.toString(), callback, t);
     } finally {
       if (concurrencySemaphore != null) {
         concurrencySemaphore.release();

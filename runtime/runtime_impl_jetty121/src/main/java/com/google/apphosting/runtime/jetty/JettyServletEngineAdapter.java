@@ -105,9 +105,7 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
         new QueuedThreadPool(MAX_THREAD_POOL_THREADS, MIN_THREAD_POOL_THREADS);
     // Try to enable virtual threads if requested and on Java 21+:
     if (Boolean.getBoolean("appengine.use.virtualthreads")
-        && (Runtime.version().feature() >= 21
-            || "java21".equals(GAE_RUNTIME)
-            || "java25".equals(GAE_RUNTIME))) {
+        && Runtime.version().feature() >= 21) {
       threadPool.setVirtualThreadsExecutor(VirtualThreads.getDefaultVirtualThreadsExecutor());
       logger.atInfo().log("Configuring Appengine web server virtual threads.");
     }
