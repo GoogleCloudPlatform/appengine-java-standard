@@ -113,7 +113,7 @@ final class TaskProcessor {
   static final String HEADER_CONTENT_TYPE = "Content-Type";
   static final String VALUE_APPLICATION_JSON = "application/json";
   static final String CLOUD_TASKS_LOCATIONS_URL_FORMAT =
-      "https://cloudtasks.googleapis.com/v2beta3/projects/%s/locations";
+      "https://cloudtasks.googleapis.com/v2/projects/%s/locations";
   static final String JSON_FIELD_LOCATIONS = "locations";
   static final String JSON_FIELD_LOCATION_ID = "locationId";
   static final String DEFAULT_LOCATION = "us-central1";
@@ -611,7 +611,7 @@ final class TaskProcessor {
     String effectiveQueue = isNullOrEmpty(queueName) ? DEFAULT_QUEUE_NAME : queueName;
     String parentQueue =
         "projects/" + projectId + "/locations/" + location + "/queues/" + effectiveQueue;
-    String urlStr = "https://cloudtasks.googleapis.com/v2beta3/" + parentQueue + "/tasks";
+    String urlStr = "https://cloudtasks.googleapis.com/v2/" + parentQueue + "/tasks";
 
     try {
       String token = getValidAccessToken();

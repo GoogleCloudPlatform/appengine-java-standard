@@ -219,7 +219,7 @@ final class CloudTasksClientWrapper {
   static final String METADATA_ZONE_URL =
       "http://metadata.google.internal/computeMetadata/v1/instance/zone";
   static final String CLOUD_TASKS_LOCATIONS_URL_FORMAT =
-      "https://cloudtasks.googleapis.com/v2beta3/projects/%s/locations";
+      "https://cloudtasks.googleapis.com/v2/projects/%s/locations";
   static final String JSON_FIELD_LOCATIONS = "locations";
   static final String JSON_FIELD_LOCATION_ID = "locationId";
   static final String DEFAULT_LOCATION = "us-central1";
@@ -639,7 +639,7 @@ final class CloudTasksClientWrapper {
       return CompletableFuture.completedFuture(ImmutableList.of());
     }
 
-    // Batch create via v2beta3 REST endpoint when multiple tasks are enqueued
+    // Batch create via v2 REST endpoint when multiple tasks are enqueued
     if (taskOptionsList.size() > 1) {
       return CompletableFuture.supplyAsync(
           () -> {
@@ -657,7 +657,7 @@ final class CloudTasksClientWrapper {
           });
     }
 
-    // Single task creation via v2beta3 REST endpoint
+    // Single task creation via v2 REST endpoint
     TaskOptions singleOpt = taskOptionsList.get(0);
     return CompletableFuture.supplyAsync(
         () -> {
@@ -932,7 +932,7 @@ final class CloudTasksClientWrapper {
   }
 
   /**
-   * Asynchronously deletes one or more tasks by string task name from Cloud Tasks. Uses v2beta3
+   * Asynchronously deletes one or more tasks by string task name from Cloud Tasks. Uses v2
    * BatchDeleteTasks REST for multiple tasks and official Client SDK for single tasks.
    *
    * @param queueName the short name of the target App Engine queue
@@ -946,7 +946,7 @@ final class CloudTasksClientWrapper {
     }
     String effectiveQueue = isNullOrEmpty(queueName) ? DEFAULT_QUEUE_NAME : queueName;
 
-    // Batch delete via v2beta3 REST endpoint when multiple tasks are deleted
+    // Batch delete via v2 REST endpoint when multiple tasks are deleted
     if (taskNames.size() > 1) {
       return CompletableFuture.supplyAsync(() -> batchDeleteTasksRest(effectiveQueue, taskNames));
     }
@@ -1036,6 +1036,7 @@ final class CloudTasksClientWrapper {
 
               try {
                 String token = getValidAccessToken();
+                // Queue statistics are fetched via Cloud Tasks v2beta3 (retained for QueueStats)
                 String restUrl =
                     "https://cloudtasks.googleapis.com/v2beta3/projects/"
                         + projectId
@@ -1285,7 +1286,7 @@ final class CloudTasksClientWrapper {
     String location = getLocation();
     String parentQueue =
         "projects/" + projectId + "/locations/" + location + "/queues/" + effectiveQueue;
-    String urlStr = "https://cloudtasks.googleapis.com/v2beta3/" + parentQueue + "/tasks";
+    String urlStr = "https://cloudtasks.googleapis.com/v2/" + parentQueue + "/tasks";
 
     JsonObject rootJson = new JsonObject();
     JsonObject taskObj = buildTaskJsonObject(parentQueue, options.getTaskName(), options);
@@ -1340,7 +1341,7 @@ final class CloudTasksClientWrapper {
     String parentQueue =
         "projects/" + projectId + "/locations/" + location + "/queues/" + effectiveQueue;
     String urlStr =
-        "https://cloudtasks.googleapis.com/v2beta3/" + parentQueue + "/tasks:batchCreate";
+        "https://cloudtasks.googleapis.com/v2/" + parentQueue + "/tasks:batchCreate";
 
     JsonObject rootJson = new JsonObject();
     JsonArray requestsArray = new JsonArray();
@@ -1422,7 +1423,7 @@ final class CloudTasksClientWrapper {
     String parentQueue =
         "projects/" + projectId + "/locations/" + location + "/queues/" + effectiveQueue;
     String urlStr =
-        "https://cloudtasks.googleapis.com/v2beta3/" + parentQueue + "/tasks:batchDelete";
+        "https://cloudtasks.googleapis.com/v2/" + parentQueue + "/tasks:batchDelete";
 
     try {
       JsonObject rootJson = new JsonObject();
