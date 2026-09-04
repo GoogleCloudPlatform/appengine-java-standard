@@ -18,6 +18,7 @@ package com.google.apphosting.utils.config;
 
 import com.google.auto.value.AutoValue;
 import com.google.common.base.CharMatcher;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.security.Permissions;
@@ -130,6 +131,8 @@ public class AppEngineWebXml implements Cloneable {
 
   private VpcAccessConnector vpcAccessConnector;
 
+  private VpcAccess vpcAccess;
+
   private String urlStreamHandlerType = null;
 
   // TODO: Set this to true at some future point.
@@ -214,7 +217,7 @@ public class AppEngineWebXml implements Cloneable {
   }
 
   /**
-   * @return An unmodifiable map whose entires correspond to the vm settings defined in
+   * @return An unmodifiable map whose entries correspond to the vm settings defined in
    *     appengine-web.xml.
    */
   public Map<String, String> getBetaSettings() {
@@ -266,7 +269,7 @@ public class AppEngineWebXml implements Cloneable {
   }
 
   /**
-   * @return An unmodifiable map whose entires correspond to the environment variables defined in
+   * @return An unmodifiable map whose entries correspond to the environment variables defined in
    *     appengine-web.xml.
    */
   public Map<String, String> getEnvironmentVariables() {
@@ -630,7 +633,26 @@ public class AppEngineWebXml implements Cloneable {
     if (this.vpcAccessConnector != null) {
       throw new AppEngineConfigException("vpc-access-connector may only be specified once.");
     }
+    if (this.vpcAccess != null) {
+      throw new AppEngineConfigException(
+          "Cannot specify both <vpc-access-connector> and <vpc-access> in appengine-web.xml.");
+    }
     this.vpcAccessConnector = vpcAccessConnector;
+  }
+
+  public VpcAccess getVpcAccess() {
+    return vpcAccess;
+  }
+
+  public void setVpcAccess(VpcAccess vpcAccess) {
+    if (this.vpcAccess != null) {
+      throw new AppEngineConfigException("vpc-access may only be specified once.");
+    }
+    if (this.vpcAccessConnector != null) {
+      throw new AppEngineConfigException(
+          "Cannot specify both <vpc-access-connector> and <vpc-access> in appengine-web.xml.");
+    }
+    this.vpcAccess = vpcAccess;
   }
 
   public void setServiceAccount(String serviceAccount) {
@@ -795,6 +817,8 @@ public class AppEngineWebXml implements Cloneable {
         + useGoogleConnectorJ
         + ", vpcAccessConnector="
         + vpcAccessConnector
+        + ", vpcAccess="
+        + vpcAccess
         + ", entrypoint="
         + entrypoint
         + ", runtimeChannel="
@@ -863,6 +887,7 @@ public class AppEngineWebXml implements Cloneable {
         && Objects.equals(apiEndpointIds, that.apiEndpointIds)
         && Objects.equals(classLoaderConfig, that.classLoaderConfig)
         && Objects.equals(vpcAccessConnector, that.vpcAccessConnector)
+        && Objects.equals(vpcAccess, that.vpcAccess)
         && Objects.equals(serviceAccount, that.serviceAccount)
         && Objects.equals(urlStreamHandlerType, that.urlStreamHandlerType)
         && Objects.equals(appEngineBundledServices, that.appEngineBundledServices)
@@ -911,6 +936,7 @@ public class AppEngineWebXml implements Cloneable {
         apiEndpointIds,
         classLoaderConfig,
         vpcAccessConnector,
+        vpcAccess,
         serviceAccount,
         urlStreamHandlerType,
         useGoogleConnectorJ,
@@ -1156,6 +1182,65 @@ public class AppEngineWebXml implements Cloneable {
       public abstract Builder setEgressSetting(String egressSetting);
 
       public abstract VpcAccessConnector build();
+    }
+  }
+
+  /** Represents a {@code <vpc-access>} element. */
+  @AutoValue
+  public abstract static class VpcAccess {
+    @AutoValue
+    public abstract static class VpcNetworkInterface {
+      public abstract Optional<String> getNetwork();
+
+      public abstract Optional<String> getSubnet();
+
+      public abstract ImmutableList<String> getTags();
+
+      public static Builder builder() {
+        return new AutoValue_AppEngineWebXml_VpcAccess_VpcNetworkInterface.Builder()
+            .setTags(ImmutableList.of());
+      }
+
+      @AutoValue.Builder
+      public abstract static class Builder {
+        public abstract Builder setNetwork(String network);
+
+        public abstract Builder setSubnet(String subnet);
+
+        public abstract Builder setTags(ImmutableList<String> tags);
+
+        abstract VpcNetworkInterface autoBuild();
+
+        public VpcNetworkInterface build() {
+          VpcNetworkInterface vpcInterface = autoBuild();
+          if (vpcInterface.getNetwork().isEmpty() && vpcInterface.getSubnet().isEmpty()) {
+            throw new AppEngineConfigException(
+                "VpcNetworkInterface must specify either a network or a subnet.");
+          }
+          return vpcInterface;
+        }
+      }
+    }
+
+    public abstract VpcNetworkInterface getNetworkInterface();
+
+    public abstract Optional<String> getVpcEgress();
+
+    public static Builder builderFor(VpcNetworkInterface networkInterface) {
+      if (networkInterface == null) {
+        throw new AppEngineConfigException("VpcAccess must specify a network interface.");
+      }
+      return new AutoValue_AppEngineWebXml_VpcAccess.Builder()
+          .setNetworkInterface(networkInterface);
+    }
+
+    @AutoValue.Builder
+    public abstract static class Builder {
+      public abstract Builder setNetworkInterface(VpcNetworkInterface networkInterface);
+
+      public abstract Builder setVpcEgress(String vpcEgress);
+
+      public abstract VpcAccess build();
     }
   }
 

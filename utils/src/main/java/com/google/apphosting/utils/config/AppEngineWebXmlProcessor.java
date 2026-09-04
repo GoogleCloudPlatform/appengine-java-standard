@@ -31,8 +31,12 @@ import com.google.apphosting.utils.config.AppEngineWebXml.Network;
 import com.google.apphosting.utils.config.AppEngineWebXml.PrioritySpecifierEntry;
 import com.google.apphosting.utils.config.AppEngineWebXml.ReadinessCheck;
 import com.google.apphosting.utils.config.AppEngineWebXml.Resources;
+import com.google.apphosting.utils.config.AppEngineWebXml.VpcAccess;
+import com.google.apphosting.utils.config.AppEngineWebXml.VpcAccess.VpcNetworkInterface;
 import com.google.apphosting.utils.config.AppEngineWebXml.VpcAccessConnector;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterators;
 import com.google.common.flogger.GoogleLogger;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -198,6 +202,7 @@ class AppEngineWebXmlProcessor {
               appEngineWebXml.getAppId());
       case "staging" -> processStagingNode(elt, appEngineWebXml);
       case "vpc-access-connector" -> processVpcAccessConnector(elt, appEngineWebXml);
+      case "vpc-access" -> processVpcAccess(elt, appEngineWebXml);
       case "service-account" -> processServiceAccountNode(elt, appEngineWebXml);
       case "app-engine-bundled-services" ->
           processAppEngineBundledServicesNode(elt, appEngineWebXml);
@@ -811,6 +816,32 @@ class AppEngineWebXmlProcessor {
       connectorBuilder.setEgressSetting(egressSetting);
     }
     appEngineWebXml.setVpcAccessConnector(connectorBuilder.build());
+  }
+
+  private void processVpcAccess(Element node, AppEngineWebXml appEngineWebXml) {
+    VpcNetworkInterface.Builder interfaceBuilder = VpcNetworkInterface.builder();
+    Element interfaceNode = XmlUtils.getOptionalChildElement(node, "network-interface");
+    if (interfaceNode != null) {
+      String network = getChildNodeText(interfaceNode, "network");
+      if (network != null) {
+        interfaceBuilder.setNetwork(network);
+      }
+      String subnet = getChildNodeText(interfaceNode, "subnet");
+      if (subnet != null) {
+        interfaceBuilder.setSubnet(subnet);
+      }
+      List<String> tags = new ArrayList<>();
+      for (Element tagNode : getNodeIterable(interfaceNode, "tag")) {
+        tags.add(XmlUtils.getText(tagNode));
+      }
+      interfaceBuilder.setTags(ImmutableList.copyOf(tags));
+    }
+    VpcAccess.Builder vpcAccessBuilder = VpcAccess.builderFor(interfaceBuilder.build());
+    String vpcEgress = getChildNodeText(node, "vpc-egress");
+    if (vpcEgress != null) {
+      vpcAccessBuilder.setVpcEgress(vpcEgress);
+    }
+    appEngineWebXml.setVpcAccess(vpcAccessBuilder.build());
   }
 
   private void processStagingNode(Element settingsNode, AppEngineWebXml appEngineWebXml) {

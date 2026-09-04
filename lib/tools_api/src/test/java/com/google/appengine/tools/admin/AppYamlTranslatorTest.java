@@ -16,6 +16,7 @@
 
 package com.google.appengine.tools.admin;
 
+import static com.google.common.base.StandardSystemProperty.LINE_SEPARATOR;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertThrows;
 
@@ -27,11 +28,14 @@ import com.google.apphosting.utils.config.AppEngineWebXml.AutomaticScaling;
 import com.google.apphosting.utils.config.AppEngineWebXml.CpuUtilization;
 import com.google.apphosting.utils.config.AppEngineWebXml.ErrorHandler;
 import com.google.apphosting.utils.config.AppEngineWebXml.HealthCheck;
+import com.google.apphosting.utils.config.AppEngineWebXml.VpcAccess;
+import com.google.apphosting.utils.config.AppEngineWebXml.VpcAccess.VpcNetworkInterface;
 import com.google.apphosting.utils.config.AppEngineWebXml.VpcAccessConnector;
 import com.google.apphosting.utils.config.BackendsXml;
 import com.google.apphosting.utils.config.StagingOptions;
 import com.google.apphosting.utils.config.WebXml;
 import com.google.apphosting.utils.config.WebXml.SecurityConstraint;
+import com.google.common.collect.ImmutableList;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Map;
@@ -1816,7 +1820,12 @@ public class AppYamlTranslatorTest extends TestCase {
     appEngineWebXml.setRuntime("java8");
     AppYamlTranslator translator = createTranslator();
     assertThat(translator.getYaml())
-        .contains("vpc_access_connector:\n" + "  name: barf\n" + "  egress_setting: all-traffic\n");
+        .contains(
+            """
+            vpc_access_connector:
+              name: barf
+              egress_setting: all-traffic
+            """);
   }
 
   public void testAppEngineBundledServices() {
@@ -1850,6 +1859,60 @@ public class AppYamlTranslatorTest extends TestCase {
         .contains(
             "Cannot specify both <app-engine-apis> and <app-engine-bundled-services> in"
                 + " appengine-web.xml.");
+  }
+
+  public void testVpcAccess() {
+    VpcNetworkInterface iface =
+        VpcNetworkInterface.builder()
+            .setNetwork("my-network")
+            .setSubnet("my-subnet")
+            .setTags(ImmutableList.of("tag1", "tag2"))
+            .build();
+    VpcAccess vpcAccess = VpcAccess.builderFor(iface).setVpcEgress("all-traffic").build();
+    appEngineWebXml.setVpcAccess(vpcAccess);
+    AppYamlTranslator translator = createTranslator();
+    assertThat(translator.getYaml())
+        .contains(
+            """
+            vpc_access:
+              network_interface:
+                network: my-network
+                subnet: my-subnet
+                tags:
+                  - tag1
+                  - tag2
+              vpc_egress: all-traffic
+            """);
+  }
+
+  public void testVpcAccessAndConnectorFail() {
+    AppEngineWebXml customXml =
+        new AppEngineWebXml() {
+          @Override
+          public VpcAccessConnector getVpcAccessConnector() {
+            return VpcAccessConnector.builderFor("projects/p/locations/l/connectors/c").build();
+          }
+
+          @Override
+          public VpcAccess getVpcAccess() {
+            VpcNetworkInterface networkInterface =
+                VpcNetworkInterface.builder()
+                    .setNetwork("my-network")
+                    .setSubnet("my-subnet")
+                    .build();
+            return VpcAccess.builderFor(networkInterface).setVpcEgress("all-traffic").build();
+          }
+        };
+    customXml.setAppId("app1");
+    customXml.setMajorVersionId("ver1");
+    AppYamlTranslator translator =
+        new AppYamlTranslator(customXml, webXml, backendsXml, staticFiles, apiConfig, null);
+    AppEngineConfigException e =
+        assertThrows(AppEngineConfigException.class, () -> translator.getYaml());
+    assertThat(e)
+        .hasMessageThat()
+        .contains(
+            "Cannot specify both <vpc-access-connector> and <vpc-access> in appengine-web.xml.");
   }
 
   public void testAdminConsolePages() {
@@ -2077,9 +2140,9 @@ public class AppYamlTranslatorTest extends TestCase {
             + "  http_headers:\n"
             // Yaml library emitting headers is OS dependent so eol is different on Windows.
             + "    foo: 1"
-            + System.getProperty("line.separator")
+            + LINE_SEPARATOR.value()
             + "    bar: barf"
-            + System.getProperty("line.separator")
+            + LINE_SEPARATOR.value()
             + "- url: /\n"
             + "  script: unused\n"
             + "  login: optional\n"

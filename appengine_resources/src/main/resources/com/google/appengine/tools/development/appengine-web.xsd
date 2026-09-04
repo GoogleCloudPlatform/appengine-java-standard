@@ -78,6 +78,19 @@
       <xs:element type="xs:string" name="egress-setting" maxOccurs="1" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
+  <xs:complexType name="vpc-network-interface-type">
+    <xs:sequence>
+      <xs:element type="xs:string" name="network" maxOccurs="1" minOccurs="0"/>
+      <xs:element type="xs:string" name="subnet" maxOccurs="1" minOccurs="0"/>
+      <xs:element type="xs:string" name="tag" maxOccurs="unbounded" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="vpc-access-type">
+    <xs:sequence>
+      <xs:element type="ns:vpc-network-interface-type" name="network-interface" maxOccurs="1" minOccurs="1" xmlns:ns="http://appengine.google.com/ns/1.0"/>
+      <xs:element type="xs:string" name="vpc-egress" maxOccurs="1" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
   <xs:complexType name="appengine-web-appType">
     <xs:all>
       <xs:element type="xs:string" name="application" minOccurs="0"/>
@@ -128,6 +141,7 @@
       <xs:element type="ns:api-configType" name="api-config" minOccurs="0" xmlns:ns="http://appengine.google.com/ns/1.0"/>
       <xs:element type="ns:staging-type" name="staging" minOccurs="0" xmlns:ns="http://appengine.google.com/ns/1.0"/>
       <xs:element type="ns:vpc-access-connector-type" name="vpc-access-connector" minOccurs="0" xmlns:ns="http://appengine.google.com/ns/1.0"/>
+      <xs:element type="ns:vpc-access-type" name="vpc-access" minOccurs="0" xmlns:ns="http://appengine.google.com/ns/1.0"/>
     </xs:all>
   </xs:complexType>
   <xs:complexType name="api-configType">

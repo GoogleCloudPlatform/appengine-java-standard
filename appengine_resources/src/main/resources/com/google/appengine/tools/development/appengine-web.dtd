@@ -25,7 +25,8 @@
                              static-error-handlers?, warmup-requests-enabled?,
                              threadsafe?, servers?, code-lock?, vm?,
                              class-loader-config?, url-stream-handler?,
-                             use-google-connector-j?, vm-health-check?)>
+                             use-google-connector-j?, vm-health-check?,
+                             vpc-access-connector?, vpc-access?)>
 <!ATTLIST appengine-web-app
           xmlns CDATA #REQUIRED>
 <!ELEMENT application (#PCDATA)>
@@ -161,4 +162,12 @@
           priority CDATA #OPTIONAL>
 <!ELEMENT url-stream-handler (#PCDATA)>
 <!ELEMENT use-google-connector-j (#PCDATA)>
-
+<!ELEMENT vpc-access-connector (name, egress-setting?)>
+<!ELEMENT name (#PCDATA)>
+<!ELEMENT egress-setting (#PCDATA)>
+<!ELEMENT vpc-access (network-interface, vpc-egress?)>
+<!ELEMENT network-interface (network?, subnet?, tag*)>
+<!ELEMENT network (#PCDATA)>
+<!ELEMENT subnet (#PCDATA)>
+<!ELEMENT tag (#PCDATA)>
+<!ELEMENT vpc-egress (#PCDATA)>

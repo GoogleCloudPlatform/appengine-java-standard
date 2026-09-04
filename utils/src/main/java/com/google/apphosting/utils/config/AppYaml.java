@@ -781,6 +781,59 @@ public class AppYaml {
     }
   }
 
+  /** VpcAccess bean to describe the {@code <vpc-access>} element. */
+  public static class VpcAccess {
+    /** Represents a {@code <network-interface>} element. */
+    public static class VpcNetworkInterface {
+      private String network;
+      private String subnet;
+      private List<String> tags;
+
+      public String getNetwork() {
+        return network;
+      }
+
+      public void setNetwork(String network) {
+        this.network = network;
+      }
+
+      public String getSubnet() {
+        return subnet;
+      }
+
+      public void setSubnet(String subnet) {
+        this.subnet = subnet;
+      }
+
+      public List<String> getTags() {
+        return tags;
+      }
+
+      public void setTags(List<String> tags) {
+        this.tags = tags;
+      }
+    }
+
+    private VpcNetworkInterface networkInterface;
+    private String vpcEgress;
+
+    public VpcNetworkInterface getNetwork_interface() {
+      return networkInterface;
+    }
+
+    public void setNetwork_interface(VpcNetworkInterface networkInterface) {
+      this.networkInterface = networkInterface;
+    }
+
+    public String getVpc_egress() {
+      return vpcEgress;
+    }
+
+    public void setVpc_egress(String vpcEgress) {
+      this.vpcEgress = vpcEgress;
+    }
+  }
+
   private String application;
 
   private String version;
@@ -821,6 +874,7 @@ public class AppYaml {
   private String runtimeChannel;
   private String env;
   private ImmutableSortedMap<String, String> vpcAccessConnector;
+  private VpcAccess vpcAccess;
   private String skipFiles;
   private String defaultExpiration;
   private String entrypoint;
@@ -847,6 +901,15 @@ public class AppYaml {
   }
 
   public void setVpc_access_connector(Map<String, String> vpcAccessConnectorMap) {
+    if (vpcAccessConnectorMap == null) {
+      this.vpcAccessConnector = null;
+      return;
+    }
+    if (this.vpcAccess != null) {
+      throw new AppEngineConfigException(
+          "Cannot specify both vpc_access_connector and vpc_access in app.yaml.");
+    }
+
     String vpcAccessConnector = vpcAccessConnectorMap.get("name");
     List<String> parts = Splitter.on('/').splitToList(vpcAccessConnector);
     if (parts.size() != 6) {
@@ -858,6 +921,33 @@ public class AppYaml {
       throw new AppEngineConfigException(String.format(VALIDATION_VPC, vpcAccessConnector));
     }
     this.vpcAccessConnector = ImmutableSortedMap.copyOf(vpcAccessConnectorMap);
+  }
+
+  public VpcAccess getVpc_access() {
+    return vpcAccess;
+  }
+
+  public void setVpc_access(VpcAccess vpcAccess) {
+    if (vpcAccess == null) {
+      this.vpcAccess = null;
+      return;
+    }
+    if (this.vpcAccessConnector != null) {
+      throw new AppEngineConfigException(
+          "Cannot specify both vpc_access_connector and vpc_access in app.yaml.");
+    }
+
+    if (vpcAccess.getNetwork_interface() != null) {
+      if (vpcAccess.getNetwork_interface().getNetwork() == null
+          && vpcAccess.getNetwork_interface().getSubnet() == null) {
+        throw new AppEngineConfigException(
+            "VpcNetworkInterface must specify either a network or a subnet.");
+      }
+    } else {
+      throw new AppEngineConfigException("VpcAccess must specify a network interface.");
+    }
+
+    this.vpcAccess = vpcAccess;
   }
 
   public String getDefault_expiration() {
@@ -1478,6 +1568,27 @@ public class AppYaml {
         xml.simpleElement("api", api);
       }
       xml.endElement("app-engine-bundled-services");
+    }
+    if (vpcAccess != null) {
+      xml.startElement("vpc-access");
+      xml.startElement("network-interface");
+      VpcAccess.VpcNetworkInterface networkInterface = vpcAccess.getNetwork_interface();
+      if (networkInterface.getNetwork() != null) {
+        xml.simpleElement("network", networkInterface.getNetwork());
+      }
+      if (networkInterface.getSubnet() != null) {
+        xml.simpleElement("subnet", networkInterface.getSubnet());
+      }
+      if (networkInterface.getTags() != null) {
+        for (String tag : networkInterface.getTags()) {
+          xml.simpleElement("tag", tag);
+        }
+      }
+      xml.endElement("network-interface");
+      if (vpcAccess.getVpc_egress() != null) {
+        xml.simpleElement("vpc-egress", vpcAccess.getVpc_egress());
+      }
+      xml.endElement("vpc-access");
     }
     xml.simpleElement("warmup-requests-enabled", Boolean.toString(warmupService));
     if (adminConsole != null && adminConsole.getPages() != null) {
