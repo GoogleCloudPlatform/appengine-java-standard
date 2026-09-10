@@ -34,10 +34,9 @@ public final class FailureFilterTest extends JavaRuntimeViaHttpBase {
     return allVersions();
   }
 
-  public FailureFilterTest(
-      String runtimeVersion, String jettyVersion, String version, boolean useHttpConnector)
+  public FailureFilterTest(String runtimeVersion, String jettyVersion, String version)
       throws IOException, InterruptedException {
-    super(runtimeVersion, jettyVersion, version, useHttpConnector);
+    super(runtimeVersion, jettyVersion, version);
     if (Boolean.getBoolean("test.running.internally")) { // Internal can only do EE6
       System.setProperty("appengine.use.EE8", "false");
       System.setProperty("appengine.use.EE10", "false");

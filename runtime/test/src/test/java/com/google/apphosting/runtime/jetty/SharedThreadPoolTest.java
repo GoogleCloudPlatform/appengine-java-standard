@@ -74,7 +74,7 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class SharedThreadPoolTest extends JavaRuntimeViaHttpBase {
   public SharedThreadPoolTest() {
-    super("java17", "9.4", "EE6", true);
+    super("java17", "9.4", "EE6");
   }
 
   private static File appRoot;

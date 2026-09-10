@@ -45,10 +45,9 @@ public final class GuestBookTest extends JavaRuntimeViaHttpBase {
     return allVersions();
   }
 
-  public GuestBookTest(
-      String runtimeVersion, String jettyVersion, String jakartaVersion, boolean useHttpConnector)
+  public GuestBookTest(String runtimeVersion, String jettyVersion, String jakartaVersion)
       throws IOException, InterruptedException {
-    super(runtimeVersion, jettyVersion, jakartaVersion, useHttpConnector);
+    super(runtimeVersion, jettyVersion, jakartaVersion);
     File currentDirectory = new File("").getAbsoluteFile();
     String appName = "guestbook";
     if (isJakarta()) {

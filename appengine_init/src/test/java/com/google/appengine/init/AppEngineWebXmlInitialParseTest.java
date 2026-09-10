@@ -28,7 +28,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.logging.Handler;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
@@ -52,6 +51,7 @@ public class AppEngineWebXmlInitialParseTest {
     System.clearProperty("appengine.use.EE10");
     System.clearProperty("appengine.use.EE11");
     System.clearProperty("appengine.use.jetty121");
+    System.clearProperty("appengine.ignore.cancelerror");
     System.clearProperty("GAE_RUNTIME");
     System.clearProperty("appengine.git.hash");
     System.clearProperty("appengine.build.timestamp");
@@ -65,6 +65,7 @@ public class AppEngineWebXmlInitialParseTest {
     System.clearProperty("appengine.use.EE10");
     System.clearProperty("appengine.use.EE11");
     System.clearProperty("appengine.use.jetty121");
+    System.clearProperty("appengine.ignore.cancelerror");
     System.clearProperty("GAE_RUNTIME");
     System.clearProperty("appengine.git.hash");
     System.clearProperty("appengine.build.timestamp");
@@ -442,28 +443,6 @@ public class AppEngineWebXmlInitialParseTest {
   }
 
   @Test
-  public void testHttpConnectorExperiment() throws IOException {
-    createTempAppEngineWebXml(
-        """
-        <appengine-web-app xmlns="http://appengine.google.com/ns/1.0">
-            <runtime>java17</runtime>
-        </appengine-web-app>
-        """);
-    AppEngineWebXmlInitialParse parser =
-        new AppEngineWebXmlInitialParse(tempFile.toFile().getAbsolutePath());
-    parser.setEnvProvider(
-        key -> {
-          if (Objects.equals(key, "EXPERIMENT_ENABLE_HTTP_CONNECTOR_FOR_JAVA")) {
-            return "true";
-          }
-          return null;
-        });
-    parser.handleRuntimeProperties();
-    assertTrue(Boolean.getBoolean("appengine.use.HttpConnector"));
-    assertTrue(Boolean.getBoolean("appengine.ignore.cancelerror"));
-  }
-
-  @Test
   public void testMultipleEEFlags() throws IOException {
     createTempAppEngineWebXml(
         """
@@ -597,7 +576,8 @@ public class AppEngineWebXmlInitialParseTest {
               </system-properties>
           </appengine-web-app>
           """);
-      new AppEngineWebXmlInitialParse(tempFile.toFile().getAbsolutePath()).handleRuntimeProperties();
+      new AppEngineWebXmlInitialParse(tempFile.toFile().getAbsolutePath())
+          .handleRuntimeProperties();
       boolean found = false;
       for (LogRecord record : handler.records) {
         if (record.getMessage().contains("appengine.use.EE8=true")) {
@@ -623,7 +603,8 @@ public class AppEngineWebXmlInitialParseTest {
               <runtime>java21</runtime>
           </appengine-web-app>
           """);
-      new AppEngineWebXmlInitialParse(tempFile.toFile().getAbsolutePath()).handleRuntimeProperties();
+      new AppEngineWebXmlInitialParse(tempFile.toFile().getAbsolutePath())
+          .handleRuntimeProperties();
       boolean found = false;
       for (LogRecord record : handler.records) {
         if (record.getMessage().contains("appengine.use.EE10=true")) {
@@ -649,7 +630,8 @@ public class AppEngineWebXmlInitialParseTest {
               <runtime>java25</runtime>
           </appengine-web-app>
           """);
-      new AppEngineWebXmlInitialParse(tempFile.toFile().getAbsolutePath()).handleRuntimeProperties();
+      new AppEngineWebXmlInitialParse(tempFile.toFile().getAbsolutePath())
+          .handleRuntimeProperties();
       boolean found = false;
       for (LogRecord record : handler.records) {
         if (record.getMessage().contains("appengine.use.EE11=true")) {
@@ -675,7 +657,8 @@ public class AppEngineWebXmlInitialParseTest {
               <runtime>java25</runtime>
           </appengine-web-app>
           """);
-      new AppEngineWebXmlInitialParse(tempFile.toFile().getAbsolutePath()).handleRuntimeProperties();
+      new AppEngineWebXmlInitialParse(tempFile.toFile().getAbsolutePath())
+          .handleRuntimeProperties();
       boolean found = false;
       for (LogRecord record : handler.records) {
         if (record.getMessage().contains("appengine.use.jetty121=true")) {
@@ -701,7 +684,8 @@ public class AppEngineWebXmlInitialParseTest {
               <runtime>java11</runtime>
           </appengine-web-app>
           """);
-      new AppEngineWebXmlInitialParse(tempFile.toFile().getAbsolutePath()).handleRuntimeProperties();
+      new AppEngineWebXmlInitialParse(tempFile.toFile().getAbsolutePath())
+          .handleRuntimeProperties();
       boolean found = false;
       for (LogRecord record : handler.records) {
         if (record.getMessage().contains(" no extra flag set")) {
@@ -727,7 +711,8 @@ public class AppEngineWebXmlInitialParseTest {
               <runtime>java21</runtime>
           </appengine-web-app>
           """);
-      new AppEngineWebXmlInitialParse(tempFile.toFile().getAbsolutePath()).handleRuntimeProperties();
+      new AppEngineWebXmlInitialParse(tempFile.toFile().getAbsolutePath())
+          .handleRuntimeProperties();
       boolean found = false;
       for (LogRecord record : handler.records) {
         if (record.getMessage().contains(" no extra flag set")) {
@@ -757,49 +742,19 @@ public class AppEngineWebXmlInitialParseTest {
           new AppEngineWebXmlInitialParse(tempFile.toFile().getAbsolutePath());
 
       parser.handleRuntimeProperties();
-      boolean found = false;
+      boolean foundJetty12 = false;
+      boolean foundHttpConnector = false;
       for (LogRecord record : handler.records) {
         if (record.getMessage().contains("with Jetty 12")) {
-          found = true;
-          break;
+          foundJetty12 = true;
         }
-      }
-      assertTrue("Log message should contain with Jetty 12", found);
-    } finally {
-      logger.removeHandler(handler);
-    }
-  }
-
-  @Test
-  public void testLogExperimentHttpConnector() throws IOException {
-    Logger logger = Logger.getLogger(AppEngineWebXmlInitialParse.class.getName());
-    TestHandler handler = new TestHandler();
-    logger.addHandler(handler);
-    try {
-      createTempAppEngineWebXml(
-          """
-          <appengine-web-app xmlns="http://appengine.google.com/ns/1.0">
-              <runtime>java17</runtime>
-          </appengine-web-app>
-          """);
-      AppEngineWebXmlInitialParse parser =
-          new AppEngineWebXmlInitialParse(tempFile.toFile().getAbsolutePath());
-      parser.setEnvProvider(
-          key -> {
-            if (Objects.equals(key, "EXPERIMENT_ENABLE_HTTP_CONNECTOR_FOR_JAVA")) {
-              return "true";
-            }
-            return null;
-          });
-      parser.handleRuntimeProperties();
-      boolean found = false;
-      for (LogRecord record : handler.records) {
         if (record.getMessage().contains("with HTTP Connector")) {
-          found = true;
-          break;
+          foundHttpConnector = true;
         }
       }
-      assertTrue("Log message should contain with HTTP Connector", found);
+      assertTrue("Log message should contain with Jetty 12", foundJetty12);
+      assertTrue("Log message should contain with HTTP Connector", foundHttpConnector);
+      assertTrue(Boolean.getBoolean("appengine.ignore.cancelerror"));
     } finally {
       logger.removeHandler(handler);
     }

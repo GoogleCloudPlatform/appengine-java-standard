@@ -104,42 +104,29 @@ public abstract class JavaRuntimeViaHttpBase {
   protected String runtimeVersion;
   protected String jettyVersion;
   protected String jakartaVersion;
-  protected boolean useHttpConnector;
   protected boolean legacyMode;
 
   /**
-   * Returns a list of parameters for parameterized tests.
-   * Parameters are:
-   * 1. runtimeVersion: "java17", "java21", or "java25"
-   * 2. jettyVersion: "9.4", "12.0", or "12.1"
-   * 3. jakartaVersion: "EE6", "EE8", "EE10", or "EE11"
-   * 4. useHttpConnector: true or false
+   * Returns a list of parameters for parameterized tests. Parameters are: 1. runtimeVersion:
+   * "java17", "java21", or "java25" 2. jettyVersion: "9.4", "12.0", or "12.1" 3. jakartaVersion:
+   * "EE6", "EE8", "EE10", or "EE11"
    */
   public static List<Object[]> allVersions() {
     List<Object[]> allVersions =
         Arrays.asList(
             new Object[][] {
-          {"java17", "12.0", "EE8", true},
-          {"java17", "12.0", "EE10", true},
-          {"java17", "12.1", "EE11", true},
-          {"java21", "12.0", "EE8", true},
-          {"java21", "12.0", "EE10", true},
-          {"java21", "12.1", "EE11", true},
-          {"java25", "12.1", "EE8", true},
-          {"java25", "12.1", "EE11", true},
-          // with RPC connector ancient mode, obsolete soon...
-          {"java17", "12.0", "EE8", false},
-          {"java17", "12.0", "EE10", false},
-          {"java17", "12.1", "EE11", false},
-          {"java21", "12.0", "EE8", false},
-          {"java21", "12.0", "EE10", false},
-          {"java21", "12.1", "EE11", false},
-          {"java25", "12.1", "EE8", false},
-          {"java25", "12.1", "EE11", false},
-          // Now test transparent upgrades for java17 and java21 of EE10 to EE11
-          // A warning should be logged, but the runtime should behave identically to EE11.
-          {"java17", "12.1", "EE10", true},
-          {"java21", "12.1", "EE10", true},
+              {"java17", "12.0", "EE8"},
+              {"java17", "12.0", "EE10"},
+              {"java17", "12.1", "EE11"},
+              {"java21", "12.0", "EE8"},
+              {"java21", "12.0", "EE10"},
+              {"java21", "12.1", "EE11"},
+              {"java25", "12.1", "EE8"},
+              {"java25", "12.1", "EE11"},
+              // Now test transparent upgrades for java17 and java21 of EE10 to EE11
+              // A warning should be logged, but the runtime should behave identically to EE11.
+              {"java17", "12.1", "EE10"},
+              {"java21", "12.1", "EE10"},
             });
     String version = JAVA_VERSION.value();
     String majorVersion;
@@ -195,13 +182,11 @@ public abstract class JavaRuntimeViaHttpBase {
     System.clearProperty("com.google.apphosting.runtime.jetty94.LEGACY_MODE");
   }
 
-  public JavaRuntimeViaHttpBase(
-      String runtimeVersion, String jettyVersion, String jakartaVersion, boolean useHttpConnector) {
+  public JavaRuntimeViaHttpBase(String runtimeVersion, String jettyVersion, String jakartaVersion) {
     this.jakartaVersion = jakartaVersion;
     this.runtimeVersion = runtimeVersion;
     this.jettyVersion = jettyVersion;
-    this.useHttpConnector = useHttpConnector;
-    System.setProperty("appengine.use.HttpConnector", Boolean.toString(useHttpConnector));
+    System.setProperty("appengine.use.HttpConnector", "true");
     legacyMode = Boolean.getBoolean("com.google.apphosting.runtime.jetty94.LEGACY_MODE");
 
     if (jettyVersion.equals("12.1")) {
@@ -269,7 +254,7 @@ public abstract class JavaRuntimeViaHttpBase {
             "-Dappengine.use.EE11=" + jakartaVersion.equals("EE11"),
             "-Dappengine.use.jetty121=" + jettyVersion.equals("12.1"),
             "-DGAE_RUNTIME=" + runtimeVersion,
-            "-Dappengine.use.HttpConnector=" + useHttpConnector,
+            "-Dappengine.use.HttpConnector=true",
             "-Dappengine.ignore.responseSizeLimit="
                 + Boolean.getBoolean("appengine.ignore.responseSizeLimit"),
             "-Djetty.server.dumpAfterStart=" + Boolean.getBoolean("jetty.server.dumpAfterStart"),

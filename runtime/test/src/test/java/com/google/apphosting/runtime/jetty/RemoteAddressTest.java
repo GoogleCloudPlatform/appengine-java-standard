@@ -49,9 +49,8 @@ public class RemoteAddressTest extends JavaRuntimeViaHttpBase {
   private RuntimeContext<?> runtime;
   private String url;
 
-  public RemoteAddressTest(
-      String runtimeVersion, String jettyVersion, String jakartaVersion, boolean useHttpConnector) {
-    super(runtimeVersion, jettyVersion, jakartaVersion, useHttpConnector);
+  public RemoteAddressTest(String runtimeVersion, String jettyVersion, String jakartaVersion) {
+    super(runtimeVersion, jettyVersion, jakartaVersion);
   }
 
   @Before

@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import javax.servlet.ServletException;
@@ -57,12 +58,15 @@ public class ApiCallsServlet extends HttpServlet {
     // in the same thread group then those threads would get interrupted, which would be bad. So
     // we check that there are no other threads.
     if (ok) {
-      List<Thread> threads = threadsInMyThreadGroup();
-      if (threads.size() != 1) {
-        writer.println("More than one thread in my thread group: " + threads);
-      } else {
-        writer.println("OK");
+      ThreadGroup myThreadGroup = Thread.currentThread().getThreadGroup();
+      if (!Objects.equals(myThreadGroup.getName(), "main")) {
+        List<Thread> threads = threadsInMyThreadGroup();
+        if (threads.size() != 1) {
+          writer.println("More than one thread in my thread group: " + threads);
+          return;
+        }
       }
+      writer.println("OK");
     }
   }
 

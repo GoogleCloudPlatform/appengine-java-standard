@@ -45,9 +45,8 @@ public class CookieComplianceTest extends JavaRuntimeViaHttpBase {
     return allVersions();
   }
 
-  public CookieComplianceTest(
-      String runtimeVersion, String jettyVersion, String version, boolean useHttpConnector) {
-    super(runtimeVersion, jettyVersion, version, useHttpConnector);
+  public CookieComplianceTest(String runtimeVersion, String jettyVersion, String version) {
+    super(runtimeVersion, jettyVersion, version);
   }
 
   @Rule public TemporaryFolder temp = new TemporaryFolder();

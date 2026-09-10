@@ -114,7 +114,7 @@ public final class SpringBootTest extends JavaRuntimeViaHttpBase {
   }
 
   public SpringBootTest() {
-    super("java17", "12.1", "EE11", false);
+    super("java17", "12.1", "EE11");
   }
 
   private RuntimeContext<DummyApiServer> runtimeContext() throws IOException, InterruptedException {

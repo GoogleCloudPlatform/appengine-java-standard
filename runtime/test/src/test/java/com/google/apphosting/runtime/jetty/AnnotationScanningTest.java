@@ -34,10 +34,9 @@ public final class AnnotationScanningTest extends JavaRuntimeViaHttpBase {
     return allVersions();
   }
 
-  public AnnotationScanningTest(
-      String runtimeVersion, String jettyVersion, String jakartaVersion, boolean useHttpConnector)
+  public AnnotationScanningTest(String runtimeVersion, String jettyVersion, String jakartaVersion)
       throws IOException, InterruptedException {
-    super(runtimeVersion, jettyVersion, jakartaVersion, useHttpConnector);
+    super(runtimeVersion, jettyVersion, jakartaVersion);
     File currentDirectory = new File("").getAbsoluteFile();
     String appName = "annotationscanningwebapp";
     if (isJakarta()) {

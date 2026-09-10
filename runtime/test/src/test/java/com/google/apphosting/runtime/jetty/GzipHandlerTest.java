@@ -63,9 +63,8 @@ public class GzipHandlerTest extends JavaRuntimeViaHttpBase {
     return allVersions();
   }
 
-  public GzipHandlerTest(
-      String runtimeVersion, String jettyVersion, String jakartaVersion, boolean useHttpConnector) {
-    super(runtimeVersion, jettyVersion, jakartaVersion, useHttpConnector);
+  public GzipHandlerTest(String runtimeVersion, String jettyVersion, String jakartaVersion) {
+    super(runtimeVersion, jettyVersion, jakartaVersion);
   }
 
   @Before
@@ -99,13 +98,13 @@ public class GzipHandlerTest extends JavaRuntimeViaHttpBase {
 
     // In Jetty 12, use InputStreamRequestContent
     Request.Content content = new InputStreamRequestContent(gzip(data));
-    
+
     // Clear factories so the client receives raw compressed bytes for manual verification
     httpClient.getContentDecoderFactories().clear();
 
     ByteArrayOutputStream receivedBytes = new ByteArrayOutputStream();
     String url = runtime.jettyUrl("/");
-    
+
     httpClient
         .newRequest(url)
         .body(content)
@@ -121,12 +120,13 @@ public class GzipHandlerTest extends JavaRuntimeViaHttpBase {
                 completionListener.completeExceptionally(e);
               }
             })
-        .headers(headers -> {
-            // Tell the server we are sending gzip
-            headers.put(HttpHeader.CONTENT_ENCODING, "gzip");
-            // Tell the server we want gzip back (Crucial for Jetty 12 tests)
-            headers.put(HttpHeader.ACCEPT_ENCODING, "gzip");
-        })
+        .headers(
+            headers -> {
+              // Tell the server we are sending gzip
+              headers.put(HttpHeader.CONTENT_ENCODING, "gzip");
+              // Tell the server we want gzip back (Crucial for Jetty 12 tests)
+              headers.put(HttpHeader.ACCEPT_ENCODING, "gzip");
+            })
         .send(completionListener::complete);
 
     // The request was successfully decoded by the GzipHandler.
@@ -143,7 +143,7 @@ public class GzipHandlerTest extends JavaRuntimeViaHttpBase {
         new GZIPInputStream(new ByteArrayInputStream(receivedBytes.toByteArray()))) {
       contentReceived = new String(in.readAllBytes(), StandardCharsets.UTF_8);
     }
-    
+
     boolean isWindows = OS_NAME.value().toLowerCase(Locale.ROOT).contains("windows");
     String nl = isWindows ? "\r\n" : "\n";
 

@@ -35,13 +35,12 @@ public final class WelcomeFileTest extends JavaRuntimeViaHttpBase {
   public static List<Object[]> version() {
     return Arrays.asList(
         new Object[][] {
-          {"java17", "9.4", "EE6", false},
+          {"java17", "9.4", "EE6"},
         });
   }
 
-  public WelcomeFileTest(
-      String runtimeVersion, String jettyVersion, String jakartaVersion, boolean useHttpConnector) {
-    super(runtimeVersion, jettyVersion, jakartaVersion, useHttpConnector);
+  public WelcomeFileTest(String runtimeVersion, String jettyVersion, String jakartaVersion) {
+    super(runtimeVersion, jettyVersion, jakartaVersion);
   }
 
   private static File appRoot;

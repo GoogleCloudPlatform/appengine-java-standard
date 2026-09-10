@@ -53,10 +53,9 @@ public class SizeLimitIgnoreTest extends JavaRuntimeViaHttpBase {
   private final HttpClient httpClient = new HttpClient();
   private RuntimeContext<?> runtime;
 
-  public SizeLimitIgnoreTest(
-      String runtimeVersion, String jettyVersion, String version, boolean useHttpConnector)
+  public SizeLimitIgnoreTest(String runtimeVersion, String jettyVersion, String version)
       throws Exception {
-    super(runtimeVersion, jettyVersion, version, useHttpConnector);
+    super(runtimeVersion, jettyVersion, version);
     System.setProperty("appengine.ignore.responseSizeLimit", "true");
   }
 

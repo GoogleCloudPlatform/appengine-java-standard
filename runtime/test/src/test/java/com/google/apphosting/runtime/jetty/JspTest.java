@@ -41,10 +41,10 @@ public final class JspTest extends JavaRuntimeViaHttpBase {
         new Object[][] {
           // Test is running also in google3 which does not support EE10 or EE11.
           // We also have e2e JSP tests with new guestbook app in applications/guestbook*.
-          {"java17", "12.0", "EE8", true},
+          {"java17", "12.0", "EE8"},
           //    {"java17", "12.0", "EE10", true},
           //    {"java17", "12.1", "EE11", true},
-          {"java21", "12.0", "EE8", true},
+          {"java21", "12.0", "EE8"},
           //    {"java21", "12.0", "EE10", true},
           //    {"java21", "12.1", "EE11", true},
           //  why it does not work yet???   {"java25", "12.1", "EE8", true},
@@ -52,9 +52,8 @@ public final class JspTest extends JavaRuntimeViaHttpBase {
         });
   }
 
-  public JspTest(
-      String runtimeVersion, String jettyVersion, String version, boolean useHttpConnector) {
-    super(runtimeVersion, jettyVersion, version, useHttpConnector);
+  public JspTest(String runtimeVersion, String jettyVersion, String version) {
+    super(runtimeVersion, jettyVersion, version);
     if (Boolean.getBoolean("test.running.internally")) { // Internal can only do EE6
       System.setProperty("appengine.use.EE8", "false");
       System.setProperty("appengine.use.EE10", "false");

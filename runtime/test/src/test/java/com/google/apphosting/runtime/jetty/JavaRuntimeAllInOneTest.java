@@ -47,8 +47,8 @@ public final class JavaRuntimeAllInOneTest extends JavaRuntimeViaHttpBase {
   }
 
   public JavaRuntimeAllInOneTest(
-      String runtimeVersion, String jettyVersion, String jakartaVersion, boolean useHttpConnector) {
-    super(runtimeVersion, jettyVersion, jakartaVersion, useHttpConnector);
+      String runtimeVersion, String jettyVersion, String jakartaVersion) {
+    super(runtimeVersion, jettyVersion, jakartaVersion);
     if (Boolean.getBoolean("test.running.internally")) { // Internal can only do EE6
       System.setProperty("appengine.use.EE8", "false");
       System.setProperty("appengine.use.EE10", "false");

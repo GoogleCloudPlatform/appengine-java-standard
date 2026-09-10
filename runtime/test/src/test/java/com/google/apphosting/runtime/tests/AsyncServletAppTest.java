@@ -39,9 +39,8 @@ public final class AsyncServletAppTest extends JavaRuntimeViaHttpBase {
     return allVersions();
   }
 
-  public AsyncServletAppTest(
-      String runtimeVersion, String jettyVersion, String version, boolean useHttpConnector) {
-    super(runtimeVersion, jettyVersion, version, useHttpConnector);
+  public AsyncServletAppTest(String runtimeVersion, String jettyVersion, String version) {
+    super(runtimeVersion, jettyVersion, version);
   }
 
   @Before
@@ -80,12 +79,7 @@ public final class AsyncServletAppTest extends JavaRuntimeViaHttpBase {
 
   @Test
   public void invokeServletUsingJettyHttpProxy() throws Exception {
-    if (jettyVersion.equals("12.0") && (useHttpConnector == false)) {
-      return; // TODO (Ludo) Async does not work on this mode.
-    }
     runtime.executeHttpGet(
-        "/asyncservlet?time=1000",
-        "isAsyncStarted : true\n" + "PASS: 1000 milliseconds.",
-        200);
+        "/asyncservlet?time=1000", "isAsyncStarted : true\n" + "PASS: 1000 milliseconds.", 200);
   }
 }

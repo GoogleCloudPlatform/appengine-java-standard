@@ -43,7 +43,7 @@ public class LegacyModeTest extends JavaRuntimeViaHttpBase {
   public static List<Object[]> version() {
     return Arrays.asList(
         new Object[][] {
-          {"java17", "9.4", "EE6", true},
+          {"java17", "9.4", "EE6"},
           //       {"java17", "12.0", "EE8"},
           //       {"java17", "12.0", "EE10"},
           //       {"java17", "12.1", "EE11"},
@@ -55,9 +55,8 @@ public class LegacyModeTest extends JavaRuntimeViaHttpBase {
         });
   }
 
-  public LegacyModeTest(
-      String runtimeVersion, String jettyVersion, String version, boolean useHttpConnector) {
-    super(runtimeVersion, jettyVersion, version, useHttpConnector);
+  public LegacyModeTest(String runtimeVersion, String jettyVersion, String version) {
+    super(runtimeVersion, jettyVersion, version);
     if (Boolean.getBoolean("test.running.internally")) { // Internal can only do EE6
       System.setProperty("appengine.use.EE8", "false");
       System.setProperty("appengine.use.EE10", "false");

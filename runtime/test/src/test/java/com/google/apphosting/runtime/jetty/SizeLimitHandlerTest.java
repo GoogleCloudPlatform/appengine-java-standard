@@ -71,10 +71,9 @@ public class SizeLimitHandlerTest extends JavaRuntimeViaHttpBase {
   private final HttpClient httpClient = new HttpClient();
   private RuntimeContext<?> runtime;
 
-  public SizeLimitHandlerTest(
-      String runtimeVersion, String jettyVersion, String version, boolean useHttpConnector)
+  public SizeLimitHandlerTest(String runtimeVersion, String jettyVersion, String version)
       throws Exception {
-    super(runtimeVersion, jettyVersion, version, useHttpConnector);
+    super(runtimeVersion, jettyVersion, version);
   }
 
   @Before
@@ -137,17 +136,9 @@ public class SizeLimitHandlerTest extends JavaRuntimeViaHttpBase {
 
     Result result = completionListener.get(5, TimeUnit.MINUTES);
 
-    if (useHttpConnector) {
-      assertNull(result.getRequestFailure());
-      assertNotNull(result.getResponseFailure());
-    } else {
-      assertThat(result.getResponse().getStatus(), equalTo(HttpStatus.INTERNAL_SERVER_ERROR_500));
-    }
+    assertNull(result.getRequestFailure());
+    assertNotNull(result.getResponseFailure());
     assertThat(received.length(), lessThanOrEqualTo(MAX_SIZE));
-
-    if (!useHttpConnector) {
-      assertThat(received.toString(), containsString("Response body is too large"));
-    }
   }
 
   @Test
@@ -189,26 +180,15 @@ public class SizeLimitHandlerTest extends JavaRuntimeViaHttpBase {
             (r, chunk, cb) -> {
               ByteBuffer b = chunk.getByteBuffer();
               receivedCount.addAndGet(b.remaining());
-              if (!useHttpConnector) {
-                received.append(b);
-              }
               cb.run();
             })
         .send(completionListener::complete);
 
     Result result = completionListener.get(5, TimeUnit.SECONDS);
 
-    if (useHttpConnector) {
-      assertNull(result.getRequestFailure());
-      assertNotNull(result.getResponseFailure());
-    } else {
-      assertThat(result.getResponse().getStatus(), equalTo(HttpStatus.INTERNAL_SERVER_ERROR_500));
-    }
+    assertNull(result.getRequestFailure());
+    assertNotNull(result.getResponseFailure());
     assertThat(received.length(), lessThanOrEqualTo(MAX_SIZE));
-
-    if (!useHttpConnector) {
-      assertThat(received.toString(), containsString("Response body is too large"));
-    }
   }
 
   @Test

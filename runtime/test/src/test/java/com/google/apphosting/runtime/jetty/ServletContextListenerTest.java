@@ -48,10 +48,9 @@ public class ServletContextListenerTest extends JavaRuntimeViaHttpBase {
   private final HttpClient httpClient = new HttpClient();
   private RuntimeContext<?> runtime;
 
-  public ServletContextListenerTest(
-      String runtimeVersion, String jettyVersion, String version, boolean useHttpConnector)
+  public ServletContextListenerTest(String runtimeVersion, String jettyVersion, String version)
       throws Exception {
-    super(runtimeVersion, jettyVersion, version, useHttpConnector);
+    super(runtimeVersion, jettyVersion, version);
   }
 
   private RuntimeContext<?> runtimeContext() throws Exception {

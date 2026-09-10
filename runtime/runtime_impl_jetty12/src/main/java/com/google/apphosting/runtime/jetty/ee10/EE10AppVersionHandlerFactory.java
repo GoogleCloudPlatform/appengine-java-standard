@@ -15,8 +15,6 @@
  */
 package com.google.apphosting.runtime.jetty.ee10;
 
-import static com.google.apphosting.runtime.AppEngineConstants.HTTP_CONNECTOR_MODE;
-
 import com.google.apphosting.api.ApiProxy;
 import com.google.apphosting.runtime.AppEngineConstants;
 import com.google.apphosting.runtime.AppVersion;
@@ -181,25 +179,23 @@ public class EE10AppVersionHandlerFactory implements AppVersionHandlerFactory {
       // Pass the AppVersion on to any of our servlets (e.g. ResourceFileServlet).
       context.setAttribute(AppEngineConstants.APP_VERSION_CONTEXT_ATTR, appVersion);
 
-      if (Boolean.getBoolean(HTTP_CONNECTOR_MODE)) {
-        context.addEventListener(
-            new ContextHandler.ContextScopeListener() {
-              @Override
-              public void enterScope(Context context, Request request) {
-                if (request != null) {
-                  ApiProxy.Environment environment =
-                      (ApiProxy.Environment)
-                          request.getAttribute(AppEngineConstants.ENVIRONMENT_ATTR);
-                  if (environment != null) ApiProxy.setEnvironmentForCurrentThread(environment);
-                }
+      context.addEventListener(
+          new ContextHandler.ContextScopeListener() {
+            @Override
+            public void enterScope(Context context, Request request) {
+              if (request != null) {
+                ApiProxy.Environment environment =
+                    (ApiProxy.Environment)
+                        request.getAttribute(AppEngineConstants.ENVIRONMENT_ATTR);
+                if (environment != null) ApiProxy.setEnvironmentForCurrentThread(environment);
               }
+            }
 
-              @Override
-              public void exitScope(Context context, Request request) {
-                ApiProxy.clearEnvironmentForCurrentThread();
-              }
-            });
-      }
+            @Override
+            public void exitScope(Context context, Request request) {
+              ApiProxy.clearEnvironmentForCurrentThread();
+            }
+          });
       return context;
     } catch (Exception ex) {
       throw new ServletException(ex);

@@ -42,10 +42,9 @@ public class OutOfMemoryTest extends JavaRuntimeViaHttpBase {
     return allVersions();
   }
 
-  public OutOfMemoryTest(
-      String runtimeVersion, String jettyVersion, String version, boolean useHttpConnector)
+  public OutOfMemoryTest(String runtimeVersion, String jettyVersion, String version)
       throws Exception {
-    super(runtimeVersion, jettyVersion, version, useHttpConnector);
+    super(runtimeVersion, jettyVersion, version);
     if (Boolean.getBoolean("test.running.internally")) { // Internal can only do EE6
       System.setProperty("appengine.use.EE8", "false");
       System.setProperty("appengine.use.EE10", "false");

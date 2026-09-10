@@ -73,8 +73,7 @@ public class ApiCallsTest extends JavaRuntimeViaHttpBase {
   private final HttpApi httpApi;
 
   public ApiCallsTest(HttpApi httpApi) {
-    // TODO: ludo - only passes when httConnector is set to false.
-    super("java17", "9.4", "EE6", false);
+    super("java17", "9.4", "EE6");
     this.httpApi = httpApi;
   }
 

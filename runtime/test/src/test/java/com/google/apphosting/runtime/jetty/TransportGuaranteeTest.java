@@ -49,10 +49,9 @@ public class TransportGuaranteeTest extends JavaRuntimeViaHttpBase {
   private HttpClient httpClient;
   private RuntimeContext<?> runtime;
 
-  public TransportGuaranteeTest(
-      String runtimeVersion, String jettyVersion, String version, boolean useHttpConnector)
+  public TransportGuaranteeTest(String runtimeVersion, String jettyVersion, String version)
       throws Exception {
-    super(runtimeVersion, jettyVersion, version, useHttpConnector);
+    super(runtimeVersion, jettyVersion, version);
   }
 
   private RuntimeContext<?> runtimeContext() throws Exception {
@@ -76,9 +75,7 @@ public class TransportGuaranteeTest extends JavaRuntimeViaHttpBase {
     httpClient.setSslContextFactory(ssl);
     httpClient.start();
     runtime = runtimeContext();
-    logger.atInfo().log(
-        "%s: env=%s, httpMode=%s",
-        this.getClass().getSimpleName(), jakartaVersion, useHttpConnector);
+    logger.atInfo().log("%s: env=%s", this.getClass().getSimpleName(), jakartaVersion);
   }
 
   @After
