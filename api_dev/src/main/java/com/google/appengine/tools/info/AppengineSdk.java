@@ -258,9 +258,9 @@ public abstract class AppengineSdk {
   }
 
   /**
-   * Modifies the SDK implementation. This method is invoked via reflection
-   * when setting the AppengineSdk to use an alternate SDK (such as MavenSdk) rather than the default
-   * (see com.google.appengine.tools.admin.staging.DependencyFetcher).
+   * Modifies the SDK implementation (Classic or Maven-based). This method is invoked via reflection
+   * when setting the AppengineSdk to use the MavenSdk rather than the default ClassicSdk (see
+   * com.google.appengine.tools.admin.staging.DependencyFetcher).
    */
   public static void setSdk(AppengineSdk sdk) {
     currentSdk = checkNotNull(sdk);

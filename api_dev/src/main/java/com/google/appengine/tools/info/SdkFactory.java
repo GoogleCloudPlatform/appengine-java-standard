@@ -34,6 +34,8 @@ final class SdkFactory {
     } else if (useEE11) {
       currentSdk = new Jetty121EE11Sdk();
     } else {
+      // We keep Jetty9 legacy SDK for internal testing only.
+      // For external usage, we default to Jetty12.1 EE8 SDK.
       currentSdk = new Jetty121EE8Sdk();
     }
     return currentSdk;
