@@ -33,7 +33,7 @@ import org.jspecify.annotations.Nullable;
  * appropriate to report to users in RPC application error codes and error detail messages.
  *
  * <p>That's pretty important, since many of the exceptions that the datastore handles internally -
- * {@code MegastoreException}, {@code RpcException}, and miscellaneous unchecked exceptions - have
+ * {@code SpannerException}, {@code RpcException}, and miscellaneous unchecked exceptions - have
  * internal details that we don't want to display to users. We need to be sure that we sanitize all
  * error messages that users could see.
  *
