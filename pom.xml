@@ -70,8 +70,8 @@
     <auto-value.version>1.11.1</auto-value.version>
     <grpc.version>1.81.0</grpc.version>
     <jetty.version>9.4.58.v20250814</jetty.version>
-    <jetty12.version>12.0.38</jetty12.version>
-    <jetty121.version>12.1.12</jetty121.version>
+    <jetty12.version>12.0.39</jetty12.version>
+    <jetty121.version>12.1.13</jetty121.version>
     <slf4j.version>2.0.18</slf4j.version>
     <protoc.version>4.35.1</protoc.version>
     <distributionManagement.snapshot.url>https://oss.sonatype.org/content/repositories/google-snapshots/</distributionManagement.snapshot.url>
