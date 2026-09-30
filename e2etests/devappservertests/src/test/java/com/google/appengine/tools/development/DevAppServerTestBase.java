@@ -78,16 +78,15 @@ public abstract class DevAppServerTestBase {
     if (version.startsWith("1.")) {
       majorVersion = version.substring(2, 3);
     } else {
+      int dot = version.indexOf(".");
+      if (dot != -1) {
+        version = version.substring(0, dot);
+      }
       int dash = version.indexOf("-");
       if (dash != -1) {
         majorVersion = version.substring(0, dash);
       } else {
-        int dot = version.indexOf(".");
-        if (dot != -1) {
-          majorVersion = version.substring(0, dot);
-        } else {
-          majorVersion = version;
-        }
+        majorVersion = version;
       }
     }
     // We only run the tests for the current JDK version.
