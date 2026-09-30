@@ -17,6 +17,7 @@
 package com.google.apphosting.runtime.http;
 
 import static java.lang.Math.max;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 import com.google.apphosting.base.protos.RuntimePb.APIResponse;
 import com.google.apphosting.runtime.anyrpc.AnyRpcCallback;
@@ -27,19 +28,29 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UncheckedIOException;
+import java.lang.reflect.Method;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * An alternative API client that uses the JDK's built-in HTTP client. This is likely to be much
  * less performant than {@link JettyHttpApiHostClient} but should allow us to determine whether
  * communications problems we are seeing are due to the Jetty client.
+ *
+ * <p>By default, this client uses a bounded thread pool to execute API calls, with the maximum
+ * number of threads determined by configuration. If the system property {@code
+ * appengine.api.use.virtualthreads} is set to {@code true}, it will instead use virtual threads via
+ * {@link Executors#newVirtualThreadPerTaskExecutor()}, with in-flight concurrency throttled by a
+ * semaphore to prevent backend overload.
  */
 class JdkHttpApiHostClient extends HttpApiHostClient {
   private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
@@ -50,24 +61,75 @@ class JdkHttpApiHostClient extends HttpApiHostClient {
 
   private final URL url;
   private final Executor executor;
+  private final Semaphore concurrencySemaphore;
 
-  private JdkHttpApiHostClient(Config config, URL url, Executor executor) {
+  private JdkHttpApiHostClient(
+      Config config, URL url, Executor executor, Semaphore concurrencySemaphore) {
     super(config);
     this.url = url;
     this.executor = executor;
+    this.concurrencySemaphore = concurrencySemaphore;
   }
 
+  /**
+   * Creates a {@link JdkHttpApiHostClient}.
+   *
+   * <p>If the system property {@code appengine.api.use.virtualthreads} is set to {@code true}, a
+   * virtual thread executor is used to run requests with concurrency throttled to {@code
+   * maxThreads}. Otherwise, a bounded {@link ThreadPoolExecutor} is created, with {@code
+   * maxThreads} derived from {@code config.maxConnectionsPerDestination()}.
+   *
+   * @param url The URL of the API host.
+   * @param config Configuration for the client, including connection limits.
+   * @return A new {@link JdkHttpApiHostClient}.
+   */
+  @SuppressWarnings("AllowVirtualThreads")
   static JdkHttpApiHostClient create(String url, Config config) {
     try {
-      ThreadFactory factory =
-          runnable -> {
-            Thread t = new Thread(rootThreadGroup(), runnable);
-            t.setName("JdkHttp-" + threadCount.incrementAndGet());
-            t.setDaemon(true);
-            return t;
-          };
-      Executor executor = Executors.newCachedThreadPool(factory);
-      return new JdkHttpApiHostClient(config, new URL(url), executor);
+      Executor executor = null;
+      Semaphore concurrencySemaphore = null;
+      int maxThreads = getMaxThreads(config);
+      if (Boolean.getBoolean("appengine.api.use.virtualthreads")) {
+        try {
+          Method newVirtualThreadPerTaskExecutor =
+              Executors.class.getMethod("newVirtualThreadPerTaskExecutor");
+          executor = (Executor) newVirtualThreadPerTaskExecutor.invoke(null);
+          concurrencySemaphore = new Semaphore(maxThreads);
+          logger.atInfo().log(
+              "Using virtual threads for JdkHttpApiHostClient with concurrency capped at %d.",
+              maxThreads);
+        } catch (ReflectiveOperationException e) {
+          logger.atInfo().log(
+              "appengine.api.use.virtualthreads is true, but virtual threads are not available on"
+                  + " this JDK. Falling back to thread pool for JdkHttpApiHostClient.");
+        }
+      }
+      if (executor == null) {
+        ThreadFactory factory =
+            runnable -> {
+              Thread t = new Thread(rootThreadGroup(), runnable);
+              t.setName("JdkHttp-" + threadCount.incrementAndGet());
+              t.setDaemon(true);
+              return t;
+            };
+        /*
+         * Thread Pool Configuration & Bug Analysis:
+         *
+         * Similar to the JettyHttpApiHostClient, we explicitly bound the thread pool.
+         * We cap the threads at `maxConnectionsPerDestination` (which defaults to 100)
+         * instead of a hardcoded 200 to prevent severe memory pressure (Thread Stack sizes)
+         * on smaller AppEngine instance classes like F1 (256MB) or F2 (512MB).
+         * An unbounded thread pool allows a failing RPC to rapidly spin up thousands
+         * of threads under retry, which overwhelms the JVM and the internal Datastore
+         * Appserver connection, forcing it to respond with masking INTERNAL_ERROR fallbacks.
+         */
+        ThreadPoolExecutor tpe =
+            new ThreadPoolExecutor(
+                maxThreads, maxThreads, 60L, SECONDS, new LinkedBlockingQueue<>(), factory);
+        tpe.allowCoreThreadTimeOut(true);
+        executor = tpe;
+      }
+      return new JdkHttpApiHostClient(config, new URL(url), executor, concurrencySemaphore);
     } catch (MalformedURLException e) {
       throw new UncheckedIOException(e);
     }
@@ -82,6 +144,13 @@ class JdkHttpApiHostClient extends HttpApiHostClient {
     return group;
   }
 
+  /**
+   * Asynchronously sends an API request to the API host using a thread pool.
+   *
+   * @param requestBytes The serialized API request.
+   * @param context The context for the request, including deadline information.
+   * @param callback Callback to be invoked with the API response or failure.
+   */
   @Override
   void send(
       byte[] requestBytes,
@@ -94,6 +163,16 @@ class JdkHttpApiHostClient extends HttpApiHostClient {
       byte[] requestBytes,
       HttpApiHostClient.Context context,
       AnyRpcCallback<APIResponse> callback) {
+    if (concurrencySemaphore != null) {
+      try {
+        concurrencySemaphore.acquire();
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+        communicationFailure(
+            context, "Interrupted waiting for API client concurrency semaphore", callback, e);
+        return;
+      }
+    }
     try {
       HttpURLConnection connection = (HttpURLConnection) url.openConnection();
       connection.setDoOutput(true);
@@ -111,33 +190,63 @@ class JdkHttpApiHostClient extends HttpApiHostClient {
       try (OutputStream out = connection.getOutputStream()) {
         out.write(requestBytes);
       }
-      if (connection.getResponseCode() == HttpURLConnection.HTTP_OK) {
+      int responseCode = connection.getResponseCode();
+      if (responseCode == HttpURLConnection.HTTP_OK) {
         int length = connection.getContentLength();
         if (length > MAX_LENGTH) {
           connection.getInputStream().close();
           responseTooBig(callback);
-        } else {
+        } else if (length >= 0) {
           byte[] buffer = new byte[length];
           try (InputStream in = connection.getInputStream()) {
             ByteStreams.readFully(in, buffer); // EOFException (an IOException) if too few bytes
             receivedResponse(buffer, length, context, callback);
           }
+        } else {
+          // Chunked transfer encoding or unspecified content length
+          byte[] buffer;
+          try (InputStream in = connection.getInputStream()) {
+            buffer = ByteStreams.toByteArray(ByteStreams.limit(in, MAX_LENGTH + 1));
+          }
+          if (buffer.length > MAX_LENGTH) {
+            responseTooBig(callback);
+          } else {
+            receivedResponse(buffer, buffer.length, context, callback);
+          }
         }
+      } else {
+        String httpError = responseCode + " " + connection.getResponseMessage();
+        logger.atWarning().log("HTTP communication got error: %s", httpError);
+        communicationFailure(context, httpError, callback, null);
       }
     } catch (SocketTimeoutException e) {
       logger.atWarning().withCause(e).log("SocketTimeoutException");
       timeout(callback);
-    } catch (IOException e) {
-      logger.atWarning().withCause(e).log("IOException");
-      communicationFailure(context, e.toString(), callback, e);
+    } catch (Throwable t) {
+      logger.atWarning().withCause(t).log("HTTP communication failure");
+      communicationFailure(context, t.toString(), callback, t);
+    } finally {
+      if (concurrencySemaphore != null) {
+        concurrencySemaphore.release();
+      }
     }
   }
 
+  /**
+   * This operation is not supported by JdkHttpApiHostClient.
+   *
+   * @throws UnsupportedOperationException always.
+   */
   @Override
   public void enable() {
     throw new UnsupportedOperationException();
   }
 
+  /**
+   * This operation is not supported by JdkHttpApiHostClient.
+   *
+   * @throws UnsupportedOperationException always.
+   */
   @Override
   public void disable() {
     throw new UnsupportedOperationException();

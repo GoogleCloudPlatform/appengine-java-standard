@@ -26,4 +26,7 @@ interface AsyncDatastoreServiceInternal extends AsyncDatastoreService {
 
   /** See {@link DatastoreService#allocateIdRange(KeyRange)}. */
   Future<DatastoreService.KeyRangeState> allocateIdRange(final KeyRange range);
+
+  /** Returns the default transaction stack provider. */
+  TransactionStack getDefaultTxnProvider();
 }

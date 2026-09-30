@@ -32,9 +32,8 @@ import com.google.apphosting.runtime.jetty.http.JettyHttpHandler;
 import com.google.apphosting.runtime.jetty.proxy.JettyHttpProxy;
 import com.google.common.flogger.GoogleLogger;
 import java.util.Objects;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ForkJoinPool;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.util.VirtualThreads;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
 
 /**
@@ -61,17 +60,11 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
   public void start(String serverInfo, ServletEngineAdapter.Config runtimeOptions) {
     QueuedThreadPool threadPool =
         new QueuedThreadPool(MAX_THREAD_POOL_THREADS, MIN_THREAD_POOL_THREADS);
-    // Try to enable virtual threads if requested and on java21:
+    // Try to enable virtual threads if requested and on Java 21+:
     if (Boolean.getBoolean("appengine.use.virtualthreads")
-        && ("java21".equals(GAE_RUNTIME) || "java25".equals(GAE_RUNTIME))) {
-      int maxParallelism = getMaxSafeCarrierParallelism();
-      Executor virtualThreadsExecutor =
-          new ForkJoinPool(
-              maxParallelism, ForkJoinPool.defaultForkJoinWorkerThreadFactory, null, true);
-      threadPool.setVirtualThreadsExecutor(virtualThreadsExecutor);
-      logger.atInfo().log(
-          "Configuring Appengine web server virtual threads with capped carrier parallelism: %d",
-          maxParallelism);
+        && Runtime.version().feature() >= 21) {
+      threadPool.setVirtualThreadsExecutor(VirtualThreads.getDefaultVirtualThreadsExecutor());
+      logger.atInfo().log("Configuring Appengine web server virtual threads.");
     }
 
     server =
@@ -146,25 +139,5 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
   public void serviceRequest(UPRequest upRequest, MutableUpResponse upResponse) throws Exception {
     throw new UnsupportedOperationException(
         "serviceRequest is not supported in HTTP connector mode");
-  }
-
-  /**
-   * Calculates a safe maximum carrier thread count based on GAE sandbox memory boundaries to
-   * prevent OS scheduling thrashing on fractional/low-core instances.
-   */
-  static int getMaxSafeCarrierParallelism() {
-    return getMaxSafeCarrierParallelism(System.getenv("GAE_MEMORY_MB"));
-  }
-
-  static int getMaxSafeCarrierParallelism(String memoryMbStr) {
-    if (memoryMbStr == null || memoryMbStr.isEmpty()) {
-      return 4; // Conservative default cap for standard runtimes
-    }
-    try {
-      int memoryMb = Integer.parseInt(memoryMbStr);
-      return memoryMb <= 512 ? 1 : memoryMb <= 1024 ? 2 : 4;
-    } catch (NumberFormatException e) {
-      return 4; // Safety Fallback
-    }
   }
 }

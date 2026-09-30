@@ -393,6 +393,11 @@ abstract class BaseAsyncDatastoreServiceImpl
     return new FutureHelper.FakeFuture<Transaction>(txn);
   }
 
+  @Override
+  public TransactionStack getDefaultTxnProvider() {
+    return defaultTxnProvider;
+  }
+
   private Transaction createTransaction(TransactionOptions options, boolean isExplicit) {
     return new TransactionImpl(
         datastoreServiceConfig.getAppIdNamespace().getAppId(),
