@@ -463,67 +463,7 @@ public class AppLogsWriterTest {
   }
 
   @Test
-  public void testFlushAndWait_doesNotHoldLockWhileWaitingOnFuture() throws Exception {
-    System.setProperty("appengine.use.virtualthreads", "true");
-    try {
-      SettableFuture<byte[]> slowFlush = SettableFuture.create();
-      when(delegate.makeAsyncCall(eq(environment), eq("logservice"), eq("Flush"), notNull(), notNull()))
-          .thenReturn(slowFlush);
-
-      AppLogsWriter writer = new AppLogsWriter(response, SMALL_FLUSH, DEFAULT_MAX_LOG_LINE, 0);
-      writer.addLogRecordAndMaybeFlush(new LogRecord(LogRecord.Level.info, 0, "log message"));
-
-      CountDownLatch firstFlushEntered = new CountDownLatch(1);
-      CountDownLatch secondFlushWaiting = new CountDownLatch(1);
-      CountDownLatch thirdThreadAcquiredLock = new CountDownLatch(1);
-
-      Thread firstFlushThread =
-          new Thread(
-              () -> {
-                ApiProxy.setEnvironmentForCurrentThread(environment);
-                firstFlushEntered.countDown();
-                writer.flushAndWait();
-              });
-      firstFlushThread.start();
-
-      firstFlushEntered.await();
-      Thread.sleep(100);
-
-      Thread secondFlushThread =
-          new Thread(
-              () -> {
-                ApiProxy.setEnvironmentForCurrentThread(environment);
-                secondFlushWaiting.countDown();
-                writer.flushAndWait();
-              });
-      secondFlushThread.start();
-
-      secondFlushWaiting.await();
-      Thread.sleep(100);
-
-      Thread thirdThread =
-          new Thread(
-              () -> {
-                ApiProxy.setEnvironmentForCurrentThread(environment);
-                writer.addLogRecordAndMaybeFlush(new LogRecord(LogRecord.Level.info, 0, "concurrent"));
-                thirdThreadAcquiredLock.countDown();
-              });
-      thirdThread.start();
-
-      assertThat(thirdThreadAcquiredLock.await(3, SECONDS)).isTrue();
-
-      slowFlush.set(new byte[0]);
-      firstFlushThread.join(3000);
-      secondFlushThread.join(3000);
-      thirdThread.join(3000);
-    } finally {
-      System.clearProperty("appengine.use.virtualthreads");
-    }
-  }
-
-  @Test
-  public void testFlushAndWait_holdsLockWhenVirtualThreadsDisabled() throws Exception {
-    System.clearProperty("appengine.use.virtualthreads");
+  public void testSecondFlushAndWaitBlocksAddUntilPriorFlushCompletes() throws Exception {
     SettableFuture<byte[]> slowFlush = SettableFuture.create();
     when(delegate.makeAsyncCall(eq(environment), eq("logservice"), eq("Flush"), notNull(), notNull()))
         .thenReturn(slowFlush);
@@ -578,69 +518,60 @@ public class AppLogsWriterTest {
   }
 
   @Test
-  public void testVirtualThreadsFlush_noRecursionOrPrematureNulling() throws Exception {
-    System.setProperty("appengine.use.virtualthreads", "true");
-    try {
-      SettableFuture<byte[]> slowFlush = SettableFuture.create();
-      when(delegate.makeAsyncCall(eq(environment), eq("logservice"), eq("Flush"), notNull(), notNull()))
-          .thenReturn(slowFlush);
+  public void testAddOverThresholdWaitsForPendingFlushInsteadOfStartingAnother() throws Exception {
+    SettableFuture<byte[]> slowFlush = SettableFuture.create();
+    when(delegate.makeAsyncCall(eq(environment), eq("logservice"), eq("Flush"), notNull(), notNull()))
+        .thenReturn(slowFlush);
 
-      AppLogsWriter writer = new AppLogsWriter(response, SMALL_FLUSH, DEFAULT_MAX_LOG_LINE, 0);
-      writer.addLogRecordAndMaybeFlush(new LogRecord(LogRecord.Level.info, 0, "log message"));
+    AppLogsWriter writer = new AppLogsWriter(response, SMALL_FLUSH, DEFAULT_MAX_LOG_LINE, 0);
+    writer.addLogRecordAndMaybeFlush(new LogRecord(LogRecord.Level.info, 0, "log message"));
 
-      CountDownLatch firstFlushEntered = new CountDownLatch(1);
-      CountDownLatch secondThreadCompleted = new CountDownLatch(1);
+    CountDownLatch firstFlushEntered = new CountDownLatch(1);
+    CountDownLatch secondThreadCompleted = new CountDownLatch(1);
 
-      Thread firstThread =
-          new Thread(
-              () -> {
-                ApiProxy.setEnvironmentForCurrentThread(environment);
-                firstFlushEntered.countDown();
-                writer.flushAndWait();
-              });
-      firstThread.start();
+    Thread firstThread =
+        new Thread(
+            () -> {
+              ApiProxy.setEnvironmentForCurrentThread(environment);
+              firstFlushEntered.countDown();
+              writer.flushAndWait();
+            });
+    firstThread.start();
 
-      firstFlushEntered.await();
-      Thread.sleep(100);
+    firstFlushEntered.await();
+    Thread.sleep(100);
 
-      // Now second thread adds a log record exceeding SMALL_FLUSH while firstThread is waiting on slowFlush.
-      // Because pendingFlush is preserved and not prematurely set to null, secondThread waits on slowFlush
-      // instead of starting a new doFlush() immediately or looping recursively.
-      String largeMessage = new String(new char[(int) SMALL_FLUSH + 10]).replace('\0', 'a');
-      Thread secondThread =
-          new Thread(
-              () -> {
-                ApiProxy.setEnvironmentForCurrentThread(environment);
-                writer.addLogRecordAndMaybeFlush(new LogRecord(LogRecord.Level.info, 0, largeMessage));
-                secondThreadCompleted.countDown();
-              });
-      secondThread.start();
+    // The second thread adds a log record exceeding SMALL_FLUSH while firstThread's flush is still
+    // pending. It must wait for that flush rather than start a second one.
+    String largeMessage = new String(new char[(int) SMALL_FLUSH + 10]).replace('\0', 'a');
+    Thread secondThread =
+        new Thread(
+            () -> {
+              ApiProxy.setEnvironmentForCurrentThread(environment);
+              writer.addLogRecordAndMaybeFlush(new LogRecord(LogRecord.Level.info, 0, largeMessage));
+              secondThreadCompleted.countDown();
+            });
+    secondThread.start();
 
-      // verify secondThread is waiting on slowFlush rather than completing immediately or looping
-      assertThat(secondThreadCompleted.await(500, MILLISECONDS)).isFalse();
-      verify(delegate)
-          .makeAsyncCall(eq(environment), eq("logservice"), eq("Flush"), notNull(), notNull());
+    // secondThread is waiting on slowFlush; only one flush has been issued.
+    assertThat(secondThreadCompleted.await(500, MILLISECONDS)).isFalse();
+    verify(delegate)
+        .makeAsyncCall(eq(environment), eq("logservice"), eq("Flush"), notNull(), notNull());
 
-      slowFlush.set(new byte[0]);
-      firstThread.join(3000);
-      secondThread.join(3000);
-      assertThat(secondThreadCompleted.await(3, SECONDS)).isTrue();
-    } finally {
-      System.clearProperty("appengine.use.virtualthreads");
-    }
+    slowFlush.set(new byte[0]);
+    firstThread.join(3000);
+    secondThread.join(3000);
+    assertThat(secondThreadCompleted.await(3, SECONDS)).isTrue();
   }
 
   /**
-   * Simulates the original customer issue (b/514813839) on low-core / F1 instances where the virtual
-   * thread carrier parallelism is 1 (`GAE_MEMORY_MB <= 512`). Under legacy synchronized locking
-   * (`appengine.use.virtualthreads: false`), a request calling `flushAndWait()` holds the monitor
-   * lock while blocking on `slowFlush.get()`. This pins the carrier worker and starves concurrent
-   * request threads trying to access the logging pipeline, causing container deadlocks and timeouts.
+   * A thread that calls {@code flushAndWait()} while a flush is still pending waits for that flush
+   * holding the lock, so another thread logging to the same writer blocks until the pending flush
+   * completes, and then proceeds.
    */
   @Test
-  public void testCustomerIssue_carrierPoolStarvationUnderLegacyLocking() throws Exception {
-    System.clearProperty("appengine.use.virtualthreads");
-    ExecutorService carrierPool = Executors.newFixedThreadPool(1);
+  public void testFlushAndWaitBlocksConcurrentAddWhilePriorFlushPending() throws Exception {
+    ExecutorService executor = Executors.newFixedThreadPool(1);
     try {
       SettableFuture<byte[]> slowFlush = SettableFuture.create();
       when(delegate.makeAsyncCall(eq(environment), eq("logservice"), eq("Flush"), notNull(), notNull()))
@@ -654,10 +585,9 @@ public class AppLogsWriterTest {
       CountDownLatch flushStarted = new CountDownLatch(1);
       CountDownLatch concurrentLogCompleted = new CountDownLatch(1);
 
-      // Task 1 simulates Request A calling flushAndWait() while a flush is in-flight.
-      // Under legacy mode, Request A blocks on slowFlush.get() INSIDE the synchronized(lock) monitor.
+      // Task 1 calls flushAndWait() while a flush is in flight and waits for it holding the lock.
       Future<?> task1 =
-          carrierPool.submit(
+          executor.submit(
               () -> {
                 ApiProxy.setEnvironmentForCurrentThread(environment);
                 flushStarted.countDown();
@@ -667,9 +597,7 @@ public class AppLogsWriterTest {
       flushStarted.await();
       Thread.sleep(100);
 
-      // Task 2 simulates Request B arriving concurrently from another thread trying to log.
-      // Because Task 1 holds the monitor lock while blocking inside slowFlush.get(), Task 2 cannot
-      // acquire the lock and is completely locked out / starved.
+      // Task 2 logs concurrently and blocks on the lock until the pending flush completes.
       Thread concurrentRequestThread =
           new Thread(
               () -> {
@@ -679,7 +607,6 @@ public class AppLogsWriterTest {
               });
       concurrentRequestThread.start();
 
-      // Verify that Request B is starved and cannot complete while slowFlush is pending.
       assertThat(concurrentLogCompleted.await(500, MILLISECONDS)).isFalse();
 
       slowFlush.set(new byte[0]);
@@ -687,68 +614,7 @@ public class AppLogsWriterTest {
       task1.get(3, SECONDS);
       assertThat(concurrentLogCompleted.await(3, SECONDS)).isTrue();
     } finally {
-      carrierPool.shutdownNow();
-    }
-  }
-
-  /**
-   * Proves that under Virtual Threads mode (`appengine.use.virtualthreads: true`) on the same
-   * resource-constrained 1-carrier pool, our monitor lock decoupling allows Request A to wait on
-   * `slowFlush.get()` strictly outside the synchronized block. This enables Request B to immediately
-   * acquire the monitor lock, buffer its log record, and proceed without carrier starvation.
-   */
-  @Test
-  public void testCustomerIssue_carrierPoolDecoupledProceedsWithoutStarvation() throws Exception {
-    System.setProperty("appengine.use.virtualthreads", "true");
-    ExecutorService carrierPool = Executors.newFixedThreadPool(1);
-    try {
-      SettableFuture<byte[]> slowFlush = SettableFuture.create();
-      when(delegate.makeAsyncCall(eq(environment), eq("logservice"), eq("Flush"), notNull(), notNull()))
-          .thenReturn(slowFlush);
-
-      AppLogsWriter writer = new AppLogsWriter(response, SMALL_FLUSH, DEFAULT_MAX_LOG_LINE, 0);
-      String largeMessage = new String(new char[(int) SMALL_FLUSH + 10]).replace('\0', 'a');
-      // Initiate the first flush on the main thread so slowFlush is pending as currentFlush.
-      writer.addLogRecordAndMaybeFlush(new LogRecord(LogRecord.Level.info, 0, largeMessage));
-
-      CountDownLatch flushStarted = new CountDownLatch(1);
-      CountDownLatch concurrentLogCompleted = new CountDownLatch(1);
-
-      // Task 1 simulates Request A calling flushAndWait() while a flush is in-flight.
-      // Under decoupled virtual threads mode, Request A retrieves slowFlush via getPendingFlushLocked()
-      // and waits on slowFlush.get() OUTSIDE the synchronized(lock) monitor.
-      Future<?> task1 =
-          carrierPool.submit(
-              () -> {
-                ApiProxy.setEnvironmentForCurrentThread(environment);
-                flushStarted.countDown();
-                writer.flushAndWait();
-              });
-
-      flushStarted.await();
-      Thread.sleep(100);
-
-      // Task 2 simulates Request B arriving concurrently trying to log.
-      // Because Request A released the monitor lock before blocking on slowFlush.get(), Request B can
-      // immediately acquire the monitor lock and complete!
-      Thread concurrentRequestThread =
-          new Thread(
-              () -> {
-                ApiProxy.setEnvironmentForCurrentThread(environment);
-                writer.addLogRecordAndMaybeFlush(new LogRecord(LogRecord.Level.info, 0, "request B log"));
-                concurrentLogCompleted.countDown();
-              });
-      concurrentRequestThread.start();
-
-      // Verify that Request B completes immediately WITHOUT carrier starvation or deadlock!
-      assertThat(concurrentLogCompleted.await(3, SECONDS)).isTrue();
-
-      slowFlush.set(new byte[0]);
-      concurrentRequestThread.join(3000);
-      task1.get(3, SECONDS);
-    } finally {
-      carrierPool.shutdownNow();
-      System.clearProperty("appengine.use.virtualthreads");
+      executor.shutdownNow();
     }
   }
 
