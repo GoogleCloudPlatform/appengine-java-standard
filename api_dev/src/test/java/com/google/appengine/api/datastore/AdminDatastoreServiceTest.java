@@ -21,6 +21,7 @@ import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.common.util.concurrent.Futures.immediateFuture;
 import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.notNull;
 import static org.mockito.Mockito.when;
@@ -89,7 +90,7 @@ public class AdminDatastoreServiceTest {
         new AsyncDatastoreServiceFactory() {
           @Override
           public AsyncDatastoreService getInstance(DatastoreServiceConfig config) {
-            when(delegate.getDatastoreServiceConfig()).thenReturn(config);
+            lenient().when(delegate.getDatastoreServiceConfig()).thenReturn(config);
             return delegate;
           }
 

@@ -16,6 +16,7 @@ package com.google.appengine.api.images;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 import java.util.concurrent.ExecutionException;
 
@@ -166,14 +167,16 @@ public class ImagesServiceImplTest {
         grpcCleanup.register(InProcessChannelBuilder.forName(serverName).directExecutor().build());
     blockingStub = ImagesServiceGrpc.newBlockingStub(channel);
     futureStub = ImagesServiceGrpc.newFutureStub(channel);
-    when(mockGrpcImagesClient.getBlockingStub()).thenReturn(blockingStub);
-    when(mockGrpcImagesClient.getFutureStub()).thenReturn(futureStub);
+    lenient().when(mockGrpcImagesClient.getBlockingStub()).thenReturn(blockingStub);
+    lenient().when(mockGrpcImagesClient.getFutureStub()).thenReturn(futureStub);
     imagesService =
         new ImagesServiceImpl(
             mockEnvironmentProvider, mockGrpcImagesClient, null, mockBlobstoreReference);
 
-    when(mockEnvironmentProvider.getenv(
-            ImagesServiceFactoryImpl.USE_CUSTOM_IMAGES_GRPC_SERVICE_ENV))
+    lenient()
+        .when(
+            mockEnvironmentProvider.getenv(
+                ImagesServiceFactoryImpl.USE_CUSTOM_IMAGES_GRPC_SERVICE_ENV))
         .thenReturn("true");
   }
 
@@ -356,8 +359,10 @@ public class ImagesServiceImplTest {
 
   public void setUpGrpc(boolean useGrpc) throws Exception {
     ImagesServiceImpl.setStorageForTesting(mockStorage);
-    when(mockEnvironmentProvider.getenv(
-            ImagesServiceFactoryImpl.USE_CUSTOM_IMAGES_GRPC_SERVICE_ENV))
+    lenient()
+        .when(
+            mockEnvironmentProvider.getenv(
+                ImagesServiceFactoryImpl.USE_CUSTOM_IMAGES_GRPC_SERVICE_ENV))
         .thenReturn(Boolean.toString(useGrpc));
 
     if (useGrpc) {
@@ -373,8 +378,8 @@ public class ImagesServiceImplTest {
               InProcessChannelBuilder.forName(serverName).directExecutor().build());
       blockingStub = ImagesServiceGrpc.newBlockingStub(channel);
       futureStub = ImagesServiceGrpc.newFutureStub(channel);
-      when(mockGrpcImagesClient.getBlockingStub()).thenReturn(blockingStub);
-      when(mockGrpcImagesClient.getFutureStub()).thenReturn(futureStub);
+      lenient().when(mockGrpcImagesClient.getBlockingStub()).thenReturn(blockingStub);
+      lenient().when(mockGrpcImagesClient.getFutureStub()).thenReturn(futureStub);
 
       imagesService =
           new ImagesServiceImpl(

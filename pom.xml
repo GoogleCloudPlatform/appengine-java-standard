@@ -803,6 +803,8 @@
                   <net.bytebuddy.experimental>true</net.bytebuddy.experimental>
               </systemPropertyVariables>
             <argLine>
+                  -Xshare:off
+                  --enable-native-access=ALL-UNNAMED
                   --add-opens java.base/java.lang=ALL-UNNAMED
                   --add-opens java.base/java.nio.charset=ALL-UNNAMED
                   --add-opens java.base/java.util.concurrent=ALL-UNNAMED

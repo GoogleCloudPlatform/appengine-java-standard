@@ -68,6 +68,12 @@
             <artifactId>javax.servlet-api</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-nop</artifactId>
+            <version>${slf4j.version}</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
     <profiles>
         <profile>
@@ -82,8 +88,10 @@
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
                             <argLine>
-                                -Duser.timezone=CST
+                                -Xshare:off
+                                -Duser.timezone=America/Chicago
                                 --add-opens java.base/java.lang=ALL-UNNAMED
+                                -javaagent:${org.mockito:mockito-core:jar}
                             </argLine>
                           <systemPropertyVariables>
                             <net.bytebuddy.experimental>true</net.bytebuddy.experimental>
@@ -105,7 +113,7 @@
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
                             <argLine>
-                                -Duser.timezone=CST
+                                -Duser.timezone=America/Chicago
                             </argLine>
                         </configuration>
                     </plugin>
