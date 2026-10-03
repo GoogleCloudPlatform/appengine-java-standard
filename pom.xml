@@ -74,6 +74,7 @@
     <jetty121.version>12.1.13</jetty121.version>
     <slf4j.version>2.0.18</slf4j.version>
     <protoc.version>4.35.1</protoc.version>
+    <surefire.unsafe.arg></surefire.unsafe.arg>
     <distributionManagement.snapshot.url>https://oss.sonatype.org/content/repositories/google-snapshots/</distributionManagement.snapshot.url>
     <distributionManagement.snapshot.id>sonatype-nexus-snapshots</distributionManagement.snapshot.id>
     <distributionManagement.release.url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</distributionManagement.release.url>
@@ -267,6 +268,15 @@
                   </plugin>
               </plugins>
           </build>
+      </profile>
+      <profile>
+          <id>surefire-jdk24plus</id>
+          <activation>
+              <jdk>[24,)</jdk>
+          </activation>
+          <properties>
+              <surefire.unsafe.arg>--sun-misc-unsafe-memory-access=allow</surefire.unsafe.arg>
+          </properties>
       </profile>
       <profile>
           <id>webtide-harbor-profile</id>
@@ -805,6 +815,7 @@
             <argLine>
                   -Xshare:off
                   --enable-native-access=ALL-UNNAMED
+                  ${surefire.unsafe.arg}
                   --add-opens java.base/java.lang=ALL-UNNAMED
                   --add-opens java.base/java.nio.charset=ALL-UNNAMED
                   --add-opens java.base/java.util.concurrent=ALL-UNNAMED

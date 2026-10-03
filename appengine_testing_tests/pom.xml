@@ -89,6 +89,8 @@
                         <configuration>
                             <argLine>
                                 -Xshare:off
+                                --enable-native-access=ALL-UNNAMED
+                                ${surefire.unsafe.arg}
                                 -Duser.timezone=America/Chicago
                                 --add-opens java.base/java.lang=ALL-UNNAMED
                                 -javaagent:${org.mockito:mockito-core:jar}

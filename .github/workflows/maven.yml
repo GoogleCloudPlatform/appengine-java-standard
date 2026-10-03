@@ -22,8 +22,12 @@ on:
     branches:
       - main
   push:
-    branches-ignore:
-      - 'dependabot/**'
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read

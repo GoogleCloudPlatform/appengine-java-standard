@@ -42,12 +42,11 @@ public final class TraceWriterMemoryTest {
     GcFinalization.awaitFullGc();
     createManyApiSpans(writer);
     GcFinalization.awaitFullGc();
-    long freeAfterSecond = runtime.freeMemory();
+    long usedAfterSecond = runtime.totalMemory() - runtime.freeMemory();
     createManyApiSpans(writer);
     GcFinalization.awaitFullGc();
-    long freeAfterThird = runtime.freeMemory();
-    // TODO: why is it 100X bigger in Copybara than Blaze?
-    assertThat(freeAfterThird - freeAfterSecond).isLessThan(400_000_000L);
+    long usedAfterThird = runtime.totalMemory() - runtime.freeMemory();
+    assertThat(usedAfterThird - usedAfterSecond).isLessThan(40_000_000L);
   }
 
   private TraceWriter createTraceWriter() {
