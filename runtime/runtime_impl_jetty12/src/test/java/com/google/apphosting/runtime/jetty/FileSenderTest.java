@@ -155,8 +155,6 @@ public class FileSenderTest {
     when(mockRequest.getHeader(HttpHeader.IF_MODIFIED_SINCE.asString()))
         .thenReturn("Thu, 1 Jan 1970 00:00:00 GMT");
     when(mockRequest.getDateHeader(HttpHeader.IF_MODIFIED_SINCE.asString())).thenReturn(0L);
-    when(mockRequest.getHeader(HttpHeader.IF_UNMODIFIED_SINCE.asString()))
-        .thenReturn("Thu, 1 Jan 1970 00:00:01 GMT");
     when(mockRequest.getDateHeader(HttpHeader.IF_UNMODIFIED_SINCE.asString())).thenReturn(1000L);
     when(mockResource.lastModified()).thenReturn(Instant.ofEpochMilli(100L));
 
@@ -179,8 +177,6 @@ public class FileSenderTest {
     when(mockRequest.getHeader(HttpHeader.IF_MODIFIED_SINCE.asString()))
         .thenReturn("Thu, 1 Jan 1970 00:00:00 GMT");
     when(mockRequest.getDateHeader(HttpHeader.IF_MODIFIED_SINCE.asString())).thenReturn(0L);
-    when(mockRequest.getHeader(HttpHeader.IF_UNMODIFIED_SINCE.asString()))
-        .thenReturn("Thu, 1 Jan 1970 00:00:00 GMT");
     when(mockRequest.getDateHeader(HttpHeader.IF_UNMODIFIED_SINCE.asString())).thenReturn(0L);
     when(mockResource.lastModified()).thenReturn(Instant.ofEpochSecond(100L));
 

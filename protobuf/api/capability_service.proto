@@ -28,7 +28,6 @@ package java.apphosting;
 
 import "capabilities.proto";
 
-option java_generic_services = true;  // auto-added
 option java_package = "com.google.appengine.api.capabilities";
 option java_outer_classname = "CapabilityServicePb";
 

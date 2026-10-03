@@ -33,7 +33,7 @@ import java.net.URLEncoder;
 import java.util.Map;
 
 /**
- * {@local LocalUserService} creates URLs that point to {@link
+ * {@link LocalUserService} creates URLs that point to {@link
  * LocalLoginServlet} and {@link LocalLogoutServlet} when used within
  * the Development AppServer environment.
  *

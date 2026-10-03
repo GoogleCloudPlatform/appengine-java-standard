@@ -29,7 +29,6 @@ syntax = "proto2";
 // See:  http://go/proto2-generic-services-default
 package java.apphosting;
 
-option java_generic_services = true;  // auto-added
 option java_package = "com.google.appengine.api.urlfetch";
 option java_outer_classname = "URLFetchServicePb";
 

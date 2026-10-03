@@ -163,15 +163,14 @@ public class BlobstoreServiceImplTest {
     DeleteBlobRequest requestProto =
         DeleteBlobRequest.newBuilder().addBlobKey("_foo1").addBlobKey("_foo2").build();
 
-    when(delegate.makeSyncCall(any(), any(), any(), any())).thenReturn(new byte[0]);
-
-    new BlobstoreServiceImpl().delete(new BlobKey("_foo1"), new BlobKey("_foo2"));
     when(delegate.makeSyncCall(
             same(ApiProxy.getCurrentEnvironment()),
             eq(BlobstoreServiceImpl.PACKAGE),
             eq("DeleteBlob"),
             eq(requestProto.toByteArray())))
         .thenReturn(new byte[0]);
+
+    new BlobstoreServiceImpl().delete(new BlobKey("_foo1"), new BlobKey("_foo2"));
 
     verify(delegate)
         .makeSyncCall(

@@ -60,6 +60,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.IndexReader;
@@ -90,6 +91,7 @@ public class LocalSearchService extends AbstractLocalRpcService {
   public static final String USE_DIRECTORY = "LocalSearchService.useDirectory";
 
   private static final GoogleLogger log = GoogleLogger.forEnclosingClass();
+  private static final AtomicBoolean loggedCreatedInfo = new AtomicBoolean(false);
 
   /** Hash function for adding query fingerprints to cursors. */
   private static final HashFunction CURSOR_HASH = Hashing.murmur3_32(1729);
@@ -145,7 +147,11 @@ public class LocalSearchService extends AbstractLocalRpcService {
 
   public LocalSearchService() {
     analyzer = new WordSeparatorAnalyzer();
-    log.atInfo().log("Local search service created");
+    if (loggedCreatedInfo.compareAndSet(false, true)) {
+      log.atInfo().log("Local search service created");
+    } else {
+      log.atFine().log("Local search service created");
+    }
   }
 
   // --- Local RPC service ---

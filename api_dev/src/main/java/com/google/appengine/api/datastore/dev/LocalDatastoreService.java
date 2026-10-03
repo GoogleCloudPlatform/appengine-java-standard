@@ -135,6 +135,7 @@ import java.util.WeakHashMap;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -157,6 +158,7 @@ public abstract class LocalDatastoreService {
   //  "iteration 2".
 
   private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
+  private static final AtomicBoolean loggedInitInfo = new AtomicBoolean(false);
 
   static final double DEFAULT_DEADLINE_SECONDS = 30.0;
   static final double MAX_DEADLINE_SECONDS = DEFAULT_DEADLINE_SECONDS;
@@ -522,9 +524,15 @@ public abstract class LocalDatastoreService {
 
     costAnalysis = new LocalDatastoreCostAnalysis(LocalCompositeIndexManager.getInstance());
 
-    logger.atInfo().log(
-        "Local Datastore initialized: Type: %s Storage: %s",
-        spannerBacked() ? "VNext" : "High Replication", noStorage ? "In-memory" : backingStore);
+    if (loggedInitInfo.compareAndSet(false, true)) {
+      logger.atInfo().log(
+          "Local Datastore initialized: Type: %s Storage: %s",
+          spannerBacked() ? "VNext" : "High Replication", noStorage ? "In-memory" : backingStore);
+    } else {
+      logger.atFine().log(
+          "Local Datastore initialized: Type: %s Storage: %s",
+          spannerBacked() ? "VNext" : "High Replication", noStorage ? "In-memory" : backingStore);
+    }
   }
 
   private static <T extends Enum<T>> T getEnumProperty(

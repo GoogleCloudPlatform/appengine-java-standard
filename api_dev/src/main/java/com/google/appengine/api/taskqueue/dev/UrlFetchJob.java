@@ -43,7 +43,8 @@ import org.quartz.TriggerKey;
 /**
  * Quartz {@link Job} implementation that hits a url. The url to hit, the http method to invoke,
  * headers, and any data that should be sent as part of the request are all determined by the {@link
- * TaskQueueAddRequest} contained in the job data. We delegate to {@link LocalURLFetchService} for
+ * TaskQueueAddRequest} contained in the job data. We delegate to {@link
+ * com.google.appengine.api.urlfetch.dev.LocalURLFetchService} for
  * the actual fetching.
  *
  * <p>{@link #initialize(LocalServerEnvironment, Clock)} must be called before the first invocation
