@@ -664,7 +664,7 @@ public class ApiProxyImplTest {
               switch (signal) {
                 case CANCEL:
                   synchronized (futures) {
-                    for (Future<?> future : futures) {
+                    for (Future<?> future : new ArrayList<>(futures)) {
                       future.cancel(true);
                     }
                   }

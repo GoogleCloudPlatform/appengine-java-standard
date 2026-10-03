@@ -92,6 +92,8 @@
                 <version>3.5.5</version>
                 <configuration>
                     <argLine>
+                        -Xshare:off
+                        --enable-native-access=ALL-UNNAMED
                         --add-opens java.base/java.lang=ALL-UNNAMED
                         --add-opens java.base/java.nio.charset=ALL-UNNAMED
                         --add-opens java.base/java.util=ALL-UNNAMED

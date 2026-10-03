@@ -51,7 +51,7 @@ public class LocalCapabilitiesServiceTestConfig implements LocalServiceTestConfi
    * Controls the state of a capability in testing mode.
    *
    * @param capability the {@link Capability} to change the status of
-   * @param status     the {@CapabilityStatus} to set for the given Capability
+   * @param status     the {@link CapabilityStatus} to set for the given Capability
    * @return {@code this} (for chaining)
    */
   public LocalCapabilitiesServiceTestConfig setCapabilityStatus(Capability capability,

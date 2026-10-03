@@ -28,6 +28,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -41,6 +43,9 @@ public class InterruptedApiCallTest extends HttpApiProxyImplTestBase {
    */
   @Test
   public void interruptedApiCall() throws InterruptedException {
+    Logger apiProxyLogger = Logger.getLogger(ApiProxyImpl.class.getName());
+    Level previousLevel = apiProxyLogger.getLevel();
+    apiProxyLogger.setLevel(Level.SEVERE);
     AtomicBoolean stop = new AtomicBoolean();
     Thread apiClientThread = null;
     try {
@@ -51,6 +56,7 @@ public class InterruptedApiCallTest extends HttpApiProxyImplTestBase {
         apiClientThread.interrupt(); // Ensure it wakes up from any blocking call
         apiClientThread.join();
       }
+      apiProxyLogger.setLevel(previousLevel);
     }
   }
 

@@ -200,9 +200,13 @@ public class ApiCallsTest extends JavaRuntimeViaHttpBase {
         RuntimeContext.Config.builder(apiServerFactory);
     config.setApplicationPath(appPath.toString());
     config.launcherFlagsBuilder().add("--clone_max_outstanding_api_rpcs=" + CONCURRENT_REQUESTS);
+    ImmutableMap.Builder<String, String> env =
+        ImmutableMap.<String, String>builder()
+            .put("GAE_JAVA_OPTS", "-Ddisable_api_call_logging_in_apiproxy=true");
     if (httpApi == HttpApi.JDK) {
-      config.setEnvironmentEntries(ImmutableMap.of("APPENGINE_API_CALLS_USING_JDK_CLIENT", "true"));
+      env.put("APPENGINE_API_CALLS_USING_JDK_CLIENT", "true");
     }
+    config.setEnvironmentEntries(env.buildOrThrow());
     return createRuntimeContext(config.build());
   }
 

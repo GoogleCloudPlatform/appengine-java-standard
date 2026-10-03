@@ -71,7 +71,7 @@ public interface ContainerService {
    * <p>
    * Note that this provides access to the original delegate which was established by
    * the {@link DevAppServer}. Though this delegate is usually available by calling
-   * {@Link ApiProxy#getDelegate()} the delegate can be changed by the application so
+   * {@link ApiProxy#getDelegate()} the delegate can be changed by the application so
    * we keep this reference to the original.
    *
    * @param apiProxyDelegate
