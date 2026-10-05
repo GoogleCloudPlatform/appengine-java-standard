@@ -16,48 +16,25 @@
 package com.google.apphosting.runtime.jetty;
 
 import static com.google.apphosting.runtime.AppEngineConstants.GAE_RUNTIME;
-import static com.google.apphosting.runtime.AppEngineConstants.HTTP_CONNECTOR_MODE;
 import static com.google.apphosting.runtime.AppEngineConstants.IGNORE_RESPONSE_SIZE_LIMIT;
-import static com.google.apphosting.runtime.AppEngineConstants.MAX_RESPONSE_SIZE;
-import static com.google.apphosting.runtime.AppEngineConstants.isLegacyMode;
-import static java.nio.charset.StandardCharsets.UTF_8;
 
-import com.google.apphosting.api.ApiProxy;
 import com.google.apphosting.base.AppVersionKey;
 import com.google.apphosting.base.protos.AppinfoPb;
 import com.google.apphosting.base.protos.EmptyMessage;
 import com.google.apphosting.base.protos.RuntimePb.UPRequest;
-import com.google.apphosting.base.protos.RuntimePb.UPResponse;
-import com.google.apphosting.runtime.AppEngineConstants;
 import com.google.apphosting.runtime.AppInfoFactory;
 import com.google.apphosting.runtime.AppVersion;
 import com.google.apphosting.runtime.LocalRpcContext;
 import com.google.apphosting.runtime.MutableUpResponse;
 import com.google.apphosting.runtime.ServletEngineAdapter;
 import com.google.apphosting.runtime.anyrpc.EvaluationRuntimeServerInterface;
-import com.google.apphosting.runtime.jetty.delegate.DelegateConnector;
-import com.google.apphosting.runtime.jetty.delegate.impl.DelegateRpcExchange;
 import com.google.apphosting.runtime.jetty.http.JettyHttpHandler;
 import com.google.apphosting.runtime.jetty.proxy.JettyHttpProxy;
-import com.google.apphosting.utils.config.AppEngineConfigException;
-import com.google.apphosting.utils.config.AppYaml;
 import com.google.common.flogger.GoogleLogger;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.InputStreamReader;
 import java.util.Objects;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ForkJoinPool;
-import org.eclipse.jetty.http.CookieCompliance;
-import org.eclipse.jetty.http.HttpCompliance;
-import org.eclipse.jetty.http.MultiPartCompliance;
-import org.eclipse.jetty.http.UriCompliance;
-import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.handler.SizeLimitHandler;
-import org.eclipse.jetty.util.VirtualThreads;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
 
 /**
@@ -65,11 +42,8 @@ import org.eclipse.jetty.util.thread.QueuedThreadPool;
  */
 public class JettyServletEngineAdapter implements ServletEngineAdapter {
   private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
-  private static final String DEFAULT_APP_YAML_PATH = "/WEB-INF/appengine-generated/app.yaml";
   private static final int MIN_THREAD_POOL_THREADS = 0;
   private static final int MAX_THREAD_POOL_THREADS = 100;
-
-  private AppVersionKey lastAppVersionKey;
 
   static {
     // Set legacy system property to dummy value because external libraries
@@ -79,28 +53,12 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
   }
 
   private Server server;
-  private DelegateConnector rpcConnector;
   private AppVersionHandler appVersionHandler;
 
   public JettyServletEngineAdapter() {}
 
-  private static AppYaml getAppYaml(ServletEngineAdapter.Config runtimeOptions) {
-    String applicationPath = runtimeOptions.fixedApplicationPath();
-    File appYamlFile = new File(applicationPath + DEFAULT_APP_YAML_PATH);
-    AppYaml appYaml = null;
-    try {
-      appYaml = AppYaml.parse(new InputStreamReader(new FileInputStream(appYamlFile), UTF_8));
-    } catch (FileNotFoundException | AppEngineConfigException e) {
-      logger.atWarning().log(
-          "Failed to load app.yaml file at location %s - %s",
-          appYamlFile.getPath(), e.getMessage());
-    }
-    return appYaml;
-  }
-
   @Override
   public void start(String serverInfo, ServletEngineAdapter.Config runtimeOptions) {
-    boolean isHttpConnectorMode = Boolean.getBoolean(HTTP_CONNECTOR_MODE);
     QueuedThreadPool threadPool =
         new QueuedThreadPool(MAX_THREAD_POOL_THREADS, MIN_THREAD_POOL_THREADS);
     // Try to enable virtual threads if requested and on java21:
@@ -124,52 +82,13 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
           }
         };
 
-    // Don't add the RPC Connector if in HttpConnector mode.
-    if (!isHttpConnectorMode) {
-      rpcConnector =
-          new DelegateConnector(server, "RPC") {
-            @Override
-            public void run(Runnable runnable) {
-              // Override this so that it does the initial run in the same thread.
-              // Currently, we block until completion in serviceRequest() so no point starting new
-              // thread.
-              runnable.run();
-            }
-          };
-
-      HttpConfiguration httpConfiguration = rpcConnector.getHttpConfiguration();
-      httpConfiguration.setSendDateHeader(false);
-      httpConfiguration.setSendServerVersion(false);
-      httpConfiguration.setSendXPoweredBy(false);
-
-      // If runtime is using EE8, then set URI compliance to LEGACY to behave like Jetty 9.4.
-      if (Objects.equals(AppVersionHandlerFactory.getEEVersion(), AppVersionHandlerFactory.EEVersion.EE8)) {
-        httpConfiguration.setUriCompliance(UriCompliance.LEGACY);
-      }
-
-      if (isLegacyMode()) {
-        httpConfiguration.setUriCompliance(UriCompliance.LEGACY);
-        httpConfiguration.setHttpCompliance(HttpCompliance.RFC7230_LEGACY);
-        httpConfiguration.setRequestCookieCompliance(CookieCompliance.RFC2965);
-        httpConfiguration.setResponseCookieCompliance(CookieCompliance.RFC2965);
-        httpConfiguration.setMultiPartCompliance(MultiPartCompliance.LEGACY);
-      }
-
-      server.addConnector(rpcConnector);
-    }
-
     AppVersionHandlerFactory appVersionHandlerFactory =
         AppVersionHandlerFactory.newInstance(server, serverInfo);
     appVersionHandler = new AppVersionHandler(appVersionHandlerFactory);
     server.setHandler(appVersionHandler);
 
-    // In HttpConnector mode we will combine both SizeLimitHandlers.
     boolean ignoreResponseSizeLimit = Boolean.getBoolean(IGNORE_RESPONSE_SIZE_LIMIT);
-    if (!ignoreResponseSizeLimit && !isHttpConnectorMode) {
-      server.insertHandler(new SizeLimitHandler(-1, MAX_RESPONSE_SIZE));
-    }
 
-    boolean startJettyHttpProxy = false;
     AppInfoFactory appInfoFactory;
     AppVersionKey appVersionKey;
     /* The init actions are not done in the constructor as they are not used when testing */
@@ -188,26 +107,15 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
     } catch (Exception e) {
       throw new IllegalStateException(e);
     }
-    if (isHttpConnectorMode) {
-      logger.atInfo().log("Using HTTP_CONNECTOR_MODE to bypass RPC");
-      server.insertHandler(
-          new JettyHttpHandler(
-              runtimeOptions, appVersionHandler.getAppVersion(), appVersionKey, appInfoFactory));
-      JettyHttpProxy.insertHandlers(server, ignoreResponseSizeLimit);
-      server.addConnector(JettyHttpProxy.newConnector(server, runtimeOptions));
-    } else {
-      server.setAttribute(
-          "com.google.apphosting.runtime.jetty.appYaml",
-          JettyServletEngineAdapter.getAppYaml(runtimeOptions));
-      // Delay start of JettyHttpProxy until after the main server and application is started.
-      startJettyHttpProxy = true;
-    }
+
+    server.insertHandler(
+        new JettyHttpHandler(
+            runtimeOptions, appVersionHandler.getAppVersion(), appVersionKey, appInfoFactory));
+    JettyHttpProxy.insertHandlers(server, ignoreResponseSizeLimit);
+    server.addConnector(JettyHttpProxy.newConnector(server, runtimeOptions));
 
     try {
       server.start();
-      if (startJettyHttpProxy) {
-        JettyHttpProxy.startServer(runtimeOptions);
-      }
     } catch (Exception ex) {
       // TODO: Should we have a wrapper exception for this
       // type of thing in ServletEngineAdapter?
@@ -236,47 +144,8 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
 
   @Override
   public void serviceRequest(UPRequest upRequest, MutableUpResponse upResponse) throws Exception {
-    if (upRequest.getHandler().getType() != AppinfoPb.Handler.HANDLERTYPE.CGI_BIN_VALUE) {
-      upResponse.setError(UPResponse.ERROR.UNKNOWN_HANDLER_VALUE);
-      upResponse.setErrorMessage("Unsupported handler type: " + upRequest.getHandler().getType());
-      return;
-    }
-    // Optimise this adaptor assuming one deployed appVersionKey, so use the last one if it matches
-    // and only check the handler is available if we see a new/different key.
-    AppVersionKey appVersionKey = AppVersionKey.fromUpRequest(upRequest);
-    AppVersionKey lastVersionKey = lastAppVersionKey;
-    if (lastVersionKey != null) {
-      // We already have created the handler on the previous request, so no need to do another
-      // getHandler().
-      // The two AppVersionKeys must be the same as we only support one app version.
-      if (!Objects.equals(appVersionKey, lastVersionKey)) {
-        upResponse.setError(UPResponse.ERROR.UNKNOWN_APP_VALUE);
-        upResponse.setErrorMessage("Unknown app: " + appVersionKey);
-        return;
-      }
-    } else {
-      if (!appVersionHandler.ensureHandler(appVersionKey)) {
-        upResponse.setError(UPResponse.ERROR.UNKNOWN_APP_VALUE);
-        upResponse.setErrorMessage("Unknown app: " + appVersionKey);
-        return;
-      }
-      lastAppVersionKey = appVersionKey;
-    }
-
-    DelegateRpcExchange rpcExchange = new DelegateRpcExchange(upRequest, upResponse);
-    rpcExchange.setAttribute(AppEngineConstants.APP_VERSION_KEY_REQUEST_ATTR, appVersionKey);
-    rpcExchange.setAttribute(AppEngineConstants.ENVIRONMENT_ATTR, ApiProxy.getCurrentEnvironment());
-    rpcConnector.service(rpcExchange);
-    try {
-      rpcExchange.awaitResponse();
-    } catch (Throwable t) {
-      Throwable error = t;
-      if (error instanceof ExecutionException) {
-        error = error.getCause();
-      }
-      upResponse.setError(UPResponse.ERROR.UNEXPECTED_ERROR_VALUE);
-      upResponse.setErrorMessage("Unexpected Error: " + error);
-    }
+    throw new UnsupportedOperationException(
+        "serviceRequest is not supported in HTTP connector mode");
   }
 
   /**

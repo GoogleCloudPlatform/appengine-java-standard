@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Objects;
 import java.util.Properties;
-import java.util.function.UnaryOperator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.xml.namespace.QName;
@@ -35,9 +34,6 @@ public final class AppEngineWebXmlInitialParse {
 
   private static final Logger logger =
       Logger.getLogger(AppEngineWebXmlInitialParse.class.getName());
-
-  /** Provider for environment variables, allowing for substitution in tests. */
-  private UnaryOperator<String> envProvider = System::getenv;
 
   private String runtimeId = "";
   private final String appEngineWebXmlFile;
@@ -129,12 +125,6 @@ public final class AppEngineWebXmlInitialParse {
    *     appengine.use.EE10=true} with {@code runtime="java25"}.
    */
   public void handleRuntimeProperties() {
-
-    // See if the Mendel experiment to enable HttpConnector is set automatically via env var:
-    if (Objects.equals(envProvider.apply("EXPERIMENT_ENABLE_HTTP_CONNECTOR_FOR_JAVA"), "true")) {
-      System.setProperty("appengine.ignore.cancelerror", "true");
-      System.setProperty("appengine.use.HttpConnector", "true");
-    }
     Properties appEngineWebXmlProperties = new Properties();
     try (final InputStream stream = new FileInputStream(appEngineWebXmlFile)) {
       final XMLEventReader reader = XMLInputFactory.newInstance().createXMLEventReader(stream);
@@ -236,14 +226,13 @@ public final class AppEngineWebXmlInitialParse {
     if (Objects.equals(runtimeId, "java25") && Boolean.getBoolean("appengine.use.EE10")) {
       throw new IllegalArgumentException("appengine.use.EE10 is not supported in Jetty121");
     }
+    System.setProperty("appengine.ignore.cancelerror", "true");
 
     // Log the runtime configuration so we can see it in the app logs.
     StringBuilder configLog =
         new StringBuilder("AppEngine runtime configuration: runtimeId=").append(runtimeId);
     configLog.append(", with Jetty 12");
-    if (Objects.equals(envProvider.apply("EXPERIMENT_ENABLE_HTTP_CONNECTOR_FOR_JAVA"), "true")) {
-      configLog.append(", with HTTP Connector");
-    }
+    configLog.append(", with HTTP Connector");
     int initialLength = configLog.length();
     if (Boolean.getBoolean("appengine.use.EE8")) {
       configLog.append(", appengine.use.EE8=true");
@@ -290,8 +279,6 @@ public final class AppEngineWebXmlInitialParse {
           config.put(prop, value);
           if (prop.equalsIgnoreCase("com.google.apphosting.runtime.jetty94.LEGACY_MODE")) {
             System.setProperty("com.google.apphosting.runtime.jetty94.LEGACY_MODE", value);
-          } else if (prop.equalsIgnoreCase("appengine.use.HttpConnector")) {
-            System.setProperty("appengine.use.HttpConnector", value);
           } else if (prop.equalsIgnoreCase("appengine.use.allheaders")) {
             System.setProperty("appengine.use.allheaders", value);
           } else if (prop.equalsIgnoreCase("appengine.ignore.responseSizeLimit")) {
@@ -310,9 +297,5 @@ public final class AppEngineWebXmlInitialParse {
           "appengine runtime jars built on {0} from commit {1}, version {2}",
           new Object[] {BUILD_TIMESTAMP, GIT_HASH, BUILD_VERSION});
     }
-  }
-
-  void setEnvProvider(UnaryOperator<String> envProvider) {
-    this.envProvider = envProvider;
   }
 }

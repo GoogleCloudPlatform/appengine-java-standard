@@ -1,0 +1,66 @@
+# Copyright 2026 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+version: 2
+updates:
+  - package-ecosystem: "maven"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 7
+    labels:
+      - "dependencies"
+    groups:
+      all-minor-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - "version-update:semver-major"
+      - dependency-name: "com.coveo:fmt-maven-plugin"
+      - dependency-name: "com.google.googlejavaformat:google-java-format"
+      - dependency-name: "javax.servlet:javax.servlet-api"
+      - dependency-name: "javax.servlet.jsp.jstl:javax.servlet.jsp.jstl-api"
+      - dependency-name: "jakarta.servlet:jakarta.servlet-api"
+      - dependency-name: "jakarta.servlet.jsp:*"
+      - dependency-name: "jakarta.servlet.jsp.jstl:*"
+      - dependency-name: "jakarta.el:*"
+      - dependency-name: "org.mortbay.jasper:apache-el"
+      - dependency-name: "org.mortbay.jasper:apache-jsp"
+      - dependency-name: "org.apache.lucene:lucene-core"
+      - dependency-name: "com.google.appengine:*"
+      - dependency-name: "com.google.appengine.*:*"
+      - dependency-name: "com.google.cloud.sql:mysql-socket-factory"
+      - dependency-name: "org.eclipse.jetty:*"
+      - dependency-name: "org.eclipse.jetty.*:*"
+      - dependency-name: "org.springframework.boot:spring-boot-starter-parent"
+      - dependency-name: "org.springframework.boot:spring-boot-starter-web"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 7
+    labels:
+      - "dependencies"
+    groups:
+      github-actions:
+        patterns:
+          - "*"

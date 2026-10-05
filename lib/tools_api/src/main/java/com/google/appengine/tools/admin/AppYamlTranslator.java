@@ -31,6 +31,8 @@ import com.google.apphosting.utils.config.AppEngineWebXml.LivenessCheck;
 import com.google.apphosting.utils.config.AppEngineWebXml.Network;
 import com.google.apphosting.utils.config.AppEngineWebXml.ReadinessCheck;
 import com.google.apphosting.utils.config.AppEngineWebXml.Resources;
+import com.google.apphosting.utils.config.AppEngineWebXml.VpcAccess;
+import com.google.apphosting.utils.config.AppEngineWebXml.VpcAccess.VpcNetworkInterface;
 import com.google.apphosting.utils.config.AppEngineWebXml.VpcAccessConnector;
 import com.google.apphosting.utils.config.BackendsXml;
 import com.google.apphosting.utils.config.WebXml;
@@ -322,6 +324,11 @@ public class AppYamlTranslator {
       builder.append("code_lock: True\n");
     }
 
+    if (appEngineWebXml.getVpcAccessConnector() != null && appEngineWebXml.getVpcAccess() != null) {
+      throw new AppEngineConfigException(
+          "Cannot specify both <vpc-access-connector> and <vpc-access> in appengine-web.xml.");
+    }
+
     if (appEngineWebXml.getVpcAccessConnector() != null) {
       VpcAccessConnector connector = appEngineWebXml.getVpcAccessConnector();
       builder.append("vpc_access_connector:\n");
@@ -331,6 +338,28 @@ public class AppYamlTranslator {
             .append("  egress_setting: ")
             .append(connector.getEgressSetting().get())
             .append("\n");
+      }
+    }
+
+    if (appEngineWebXml.getVpcAccess() != null) {
+      VpcAccess vpcAccess = appEngineWebXml.getVpcAccess();
+      builder.append("vpc_access:\n");
+      builder.append("  network_interface:\n");
+      VpcNetworkInterface networkInterface = vpcAccess.getNetworkInterface();
+      if (networkInterface.getNetwork().isPresent()) {
+        builder.append("    network: ").append(networkInterface.getNetwork().get()).append("\n");
+      }
+      if (networkInterface.getSubnet().isPresent()) {
+        builder.append("    subnet: ").append(networkInterface.getSubnet().get()).append("\n");
+      }
+      if (!networkInterface.getTags().isEmpty()) {
+        builder.append("    tags:\n");
+        for (String tag : networkInterface.getTags()) {
+          builder.append("      - ").append(tag).append("\n");
+        }
+      }
+      if (vpcAccess.getVpcEgress().isPresent()) {
+        builder.append("  vpc_egress: ").append(vpcAccess.getVpcEgress().get()).append("\n");
       }
     }
 
@@ -828,7 +857,7 @@ public class AppYamlTranslator {
     protected abstract void translateGlob(StringBuilder builder, Glob glob);
 
     /**
-     * @returns a map of welcome properties to apply to the welcome file entries, or {@code null} if
+     * @return a map of welcome properties to apply to the welcome file entries, or {@code null} if
      *     no welcome file entries are necessary.
      */
     protected abstract Map<String, Object> getWelcomeProperties();

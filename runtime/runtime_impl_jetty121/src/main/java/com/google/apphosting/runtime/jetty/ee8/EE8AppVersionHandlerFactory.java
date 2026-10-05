@@ -16,8 +16,6 @@
 
 package com.google.apphosting.runtime.jetty.ee8;
 
-import static com.google.apphosting.runtime.AppEngineConstants.HTTP_CONNECTOR_MODE;
-
 import com.google.apphosting.api.ApiProxy;
 import com.google.apphosting.runtime.AppEngineConstants;
 import com.google.apphosting.runtime.AppVersion;
@@ -202,29 +200,27 @@ public class EE8AppVersionHandlerFactory implements AppVersionHandlerFactory {
       // Pass the AppVersion on to any of our servlets (e.g. ResourceFileServlet).
       context.setAttribute(AppEngineConstants.APP_VERSION_CONTEXT_ATTR, appVersion);
 
-      if (Boolean.getBoolean(HTTP_CONNECTOR_MODE)) {
-        var unusedEventListener =
-            context.addEventListener(
-                new ContextHandler.ContextScopeListener() {
-                  @Override
-                  public void enterScope(
-                      ContextHandler.APIContext context, Request request, Object reason) {
-                    if (request != null) {
-                      ApiProxy.Environment environment =
-                          (ApiProxy.Environment)
-                              request.getAttribute(AppEngineConstants.ENVIRONMENT_ATTR);
-                      if (environment != null) {
-                        ApiProxy.setEnvironmentForCurrentThread(environment);
-                      }
+      var unusedEventListener =
+          context.addEventListener(
+              new ContextHandler.ContextScopeListener() {
+                @Override
+                public void enterScope(
+                    ContextHandler.APIContext context, Request request, Object reason) {
+                  if (request != null) {
+                    ApiProxy.Environment environment =
+                        (ApiProxy.Environment)
+                            request.getAttribute(AppEngineConstants.ENVIRONMENT_ATTR);
+                    if (environment != null) {
+                      ApiProxy.setEnvironmentForCurrentThread(environment);
                     }
                   }
+                }
 
-                  @Override
-                  public void exitScope(ContextHandler.APIContext context, Request request) {
-                    ApiProxy.clearEnvironmentForCurrentThread();
-                  }
-                });
-      }
+                @Override
+                public void exitScope(ContextHandler.APIContext context, Request request) {
+                  ApiProxy.clearEnvironmentForCurrentThread();
+                }
+              });
 
       return context.get();
     } catch (Exception ex) {

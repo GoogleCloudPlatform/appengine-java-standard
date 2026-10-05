@@ -235,6 +235,9 @@ public class IsolatedAppClassLoader extends URLClassLoader {
     if (sharedCodeLibs.contains(location)) {
       return true;
     }
+    if (name.startsWith("javax.servlet.") || name.startsWith("jakarta.servlet.")) {
+      return true;
+    }
     return classesToBeLoadedByTheRuntimeClassLoader.contains(name);
   }
 }

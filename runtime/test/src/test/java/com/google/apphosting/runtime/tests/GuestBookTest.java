@@ -19,7 +19,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.google.appengine.tools.admin.AppCfg;
 import com.google.appengine.tools.development.HttpApiServer;
-import com.google.apphosting.runtime.jetty9.JavaRuntimeViaHttpBase;
+import com.google.apphosting.runtime.jetty.JavaRuntimeViaHttpBase;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -45,10 +45,9 @@ public final class GuestBookTest extends JavaRuntimeViaHttpBase {
     return allVersions();
   }
 
-  public GuestBookTest(
-      String runtimeVersion, String jettyVersion, String jakartaVersion, boolean useHttpConnector)
+  public GuestBookTest(String runtimeVersion, String jettyVersion, String jakartaVersion)
       throws IOException, InterruptedException {
-    super(runtimeVersion, jettyVersion, jakartaVersion, useHttpConnector);
+    super(runtimeVersion, jettyVersion, jakartaVersion);
     File currentDirectory = new File("").getAbsoluteFile();
     String appName = "guestbook";
     if (isJakarta()) {

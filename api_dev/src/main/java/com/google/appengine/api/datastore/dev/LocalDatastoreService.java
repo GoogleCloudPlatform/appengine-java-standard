@@ -165,8 +165,6 @@ public abstract class LocalDatastoreService {
    * Default number of {@link Entity} objects to retrieve at a time. This is an optimization that
    * avoids making an RPC call for each {@link Entity}.
    */
-  // NOTE: Keep synchronized with `megastore_batch_size` default value at
-  // <internal11>
   static final int DEFAULT_BATCH_SIZE = 20;
 
   // This should be synchronized with the production datastore's --max_query_results flag value.

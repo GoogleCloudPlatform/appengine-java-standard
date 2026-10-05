@@ -1,5 +1,5 @@
 keep com.google.apphosting.utils.servlet.ah.**
 keep org.apache.jsp.ah.**
-rule org.apache.jsp.ah.** org.apache.jsp.ah.jetty9.@1
+rule org.apache.jsp.ah.** org.apache.jsp.ah.jetty.@1
 
 

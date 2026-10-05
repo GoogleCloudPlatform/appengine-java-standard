@@ -62,6 +62,12 @@ public class JettySdkTest {
   }
 
   @Test
+  public void testDefaultSdk() throws Exception {
+    AppengineSdk sdk = AppengineSdk.getSdk();
+    assertThat(sdk.getClass().getSimpleName()).isEqualTo("Jetty121EE8Sdk");
+  }
+
+  @Test
   public void testJettyEE8() throws Exception {
     System.setProperty("appengine.use.EE8", "true");
     System.setProperty("appengine.use.EE10", "false");

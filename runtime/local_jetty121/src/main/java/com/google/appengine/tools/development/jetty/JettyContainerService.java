@@ -425,7 +425,7 @@ public class JettyContainerService extends AbstractContainerService implements C
           log.atInfo().log("Full scan of the web app for changes is disabled.");
           return;
         }
-        log.atInfo().log("Full scan of the web app in place every " + interval + "s.");
+        log.atInfo().log("Full scan of the web app in place every %ds.", interval);
         fullWebAppScanner(interval);
         return;
       } catch (NumberFormatException ex) {
