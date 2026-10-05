@@ -1,6 +1,10 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["config:recommended", "group:allNonMajor", "schedule:weekly"],
+  "extends": [
+    "config:recommended",
+    "group:allNonMajor",
+    "schedule:weekly"
+  ],
   "packageRules": [
     {
       "matchPackageNames": [
@@ -30,6 +34,8 @@
       }
     }
   ],
-  "labels": ["dependencies"]
+  "labels": [
+    "dependencies"
+  ],
+  "enabled": false
 }
-

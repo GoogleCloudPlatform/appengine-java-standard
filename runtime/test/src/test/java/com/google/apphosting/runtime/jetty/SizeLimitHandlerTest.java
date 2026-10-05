@@ -346,8 +346,7 @@ public class SizeLimitHandlerTest extends JavaRuntimeViaHttpBase {
       assertThat(received.toString(), containsString("Request body is too large"));
     } else {
       assertThat(
-          response.getStatus(),
-          anyOf(equalTo(HttpStatus.PAYLOAD_TOO_LARGE_413), equalTo(0)));
+          response.getStatus(), anyOf(equalTo(HttpStatus.PAYLOAD_TOO_LARGE_413), equalTo(0)));
     }
   }
 
