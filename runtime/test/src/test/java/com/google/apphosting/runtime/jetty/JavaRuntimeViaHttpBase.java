@@ -483,16 +483,22 @@ public abstract class JavaRuntimeViaHttpBase {
 
     /** JVM flags needed for JDK above JDK8 */
     static ImmutableList<String> optionalFlags() {
-      return ImmutableList.of(
-          "-showversion",
-          "--add-opens",
-          "java.base/java.lang=ALL-UNNAMED",
-          "--add-opens",
-          "java.base/java.nio.charset=ALL-UNNAMED",
-          "--add-opens",
-          "java.base/java.util.concurrent=ALL-UNNAMED",
-          "--add-opens",
-          "java.logging/java.util.logging=ALL-UNNAMED");
+      ImmutableList.Builder<String> flags =
+          ImmutableList.<String>builder()
+              .add(
+                  "-showversion",
+                  "--add-opens",
+                  "java.base/java.lang=ALL-UNNAMED",
+                  "--add-opens",
+                  "java.base/java.nio.charset=ALL-UNNAMED",
+                  "--add-opens",
+                  "java.base/java.util.concurrent=ALL-UNNAMED",
+                  "--add-opens",
+                  "java.logging/java.util.logging=ALL-UNNAMED");
+      if (Runtime.version().feature() >= 24) {
+        flags.add("--sun-misc-unsafe-memory-access=allow");
+      }
+      return flags.build();
     }
 
     public static boolean isPortAvailable(String host, int port) {

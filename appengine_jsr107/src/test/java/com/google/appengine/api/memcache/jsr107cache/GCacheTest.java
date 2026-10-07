@@ -207,7 +207,7 @@ public class GCacheTest {
     properties.put(GCacheFactory.THROW_ON_PUT_FAILURE, Boolean.TRUE);
     properties.put(GCacheFactory.SET_POLICY, ADD_ONLY_IF_NOT_PRESENT);
     Cache cache = new GCache(properties);
-    when(service.putAll(map, null, REPLACE_ONLY_IF_PRESENT)).thenReturn(failureSet);
+    when(service.putAll(map, null, ADD_ONLY_IF_NOT_PRESENT)).thenReturn(failureSet);
     assertThrows(GCacheException.class, () -> cache.putAll(map));
   }
 

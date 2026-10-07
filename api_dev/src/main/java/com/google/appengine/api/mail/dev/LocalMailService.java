@@ -38,7 +38,7 @@ import java.util.logging.Level;
 
 /**
  * Stub implementation of the Google App Engine mail api.
- * This implementation logs messages using a {@link Logger} associated with
+ * This implementation logs messages using a {@link java.util.logging.Logger} associated with
  * this class and keeps messages that were sent in memory.  If you want to
  * access the list of sent messages you can get ahold of the registered
  * LocalMailService instance as follows:

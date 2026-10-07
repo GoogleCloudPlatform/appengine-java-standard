@@ -164,7 +164,7 @@ public class HttpApiProxyImplTestBase {
           try {
             Thread.sleep(delayMs);
           } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+            Thread.currentThread().interrupt();
           }
           break;
         case ECHO_METHOD:

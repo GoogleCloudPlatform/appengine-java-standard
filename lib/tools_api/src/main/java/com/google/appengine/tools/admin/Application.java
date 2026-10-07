@@ -1236,8 +1236,7 @@ public class Application implements GenericApplication {
     // Depending on the runtime, select the correct bytecode target for the jsp classes compilation.
     // If the runtime is unknown and forced (like java9), keep the default settings.
     // If the current JDK is older than the runtime, we fallback to the current JDK version.
-    optionList.addAll(Arrays.asList("-source", javaVersion));
-    optionList.addAll(Arrays.asList("-target", javaVersion));
+    optionList.addAll(Arrays.asList("--release", javaVersion, "-Xlint:-options"));
 
     Iterable<? extends JavaFileObject> compilationUnits =
         fileManager.getJavaFileObjectsFromFiles(files);

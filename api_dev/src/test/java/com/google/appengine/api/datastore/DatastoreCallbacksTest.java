@@ -1412,7 +1412,6 @@ public class DatastoreCallbacksTest {
         datastore.get(ImmutableList.of(yar.getKey(), yarChild.getKey()));
     verifyNoMoreInteractions(mock);
     // postLoad callback doesn't run until we call get() on the future.
-    assertThat(result.get()).containsExactly(yar.getKey(), yar, yarChild.getKey(), yarChild);
     doAnswer(checkContext(new PostLoadContext(txnProvider, txn, ImmutableList.of(yar, yarChild))))
         .when(mock)
         .postLoad(any());

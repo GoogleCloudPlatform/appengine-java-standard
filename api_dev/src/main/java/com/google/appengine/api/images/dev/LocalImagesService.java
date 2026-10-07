@@ -66,6 +66,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
 import javax.imageio.ImageTypeSpecifier;
@@ -86,6 +87,7 @@ import mediautil.image.jpeg.LLJTranException;
 public final class LocalImagesService extends AbstractLocalRpcService {
 
   private static final GoogleLogger log = GoogleLogger.forEnclosingClass();
+  private static final AtomicBoolean loggedMissingFormatsWarning = new AtomicBoolean(false);
   private String hostPrefix;
 
   /**
@@ -120,22 +122,24 @@ public final class LocalImagesService extends AbstractLocalRpcService {
       Thread.currentThread().setContextClassLoader(oldLoader);
     }
 
-    String[] inputFormats = {"png", "jpg", "gif", "bmp", "ico", "tif", "webp"};
-    String[] outputFormats = {"png", "jpg", "webp"};
-    for (String format : inputFormats) {
-      if (!ImageIO.getImageReadersByFormatName(format).hasNext()) {
-        log.atWarning().log(
-            "No image reader found for format \"%s\". An ImageIO plugin must be installed to use"
-                + " this format with the DevAppServer.",
-            format);
+    if (loggedMissingFormatsWarning.compareAndSet(false, true)) {
+      String[] inputFormats = {"png", "jpg", "gif", "bmp", "ico", "tif", "webp"};
+      String[] outputFormats = {"png", "jpg", "webp"};
+      for (String format : inputFormats) {
+        if (!ImageIO.getImageReadersByFormatName(format).hasNext()) {
+          log.atWarning().log(
+              "No image reader found for format \"%s\". An ImageIO plugin must be installed to use"
+                  + " this format with the DevAppServer.",
+              format);
+        }
       }
-    }
-    for (String format : outputFormats) {
-      if (!ImageIO.getImageWritersByFormatName(format).hasNext()) {
-        log.atWarning().log(
-            "No image writer found for format \"%s\". An ImageIO plugin must be installed to use"
-                + " this format with the DevAppServer.",
-            format);
+      for (String format : outputFormats) {
+        if (!ImageIO.getImageWritersByFormatName(format).hasNext()) {
+          log.atWarning().log(
+              "No image writer found for format \"%s\". An ImageIO plugin must be installed to use"
+                  + " this format with the DevAppServer.",
+              format);
+        }
       }
     }
 

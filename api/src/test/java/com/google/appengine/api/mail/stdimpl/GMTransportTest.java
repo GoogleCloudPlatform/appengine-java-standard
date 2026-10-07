@@ -76,7 +76,6 @@ public class GMTransportTest {
     ApiProxy.setEnvironmentForCurrentThread(environment);
 
     Properties props = new Properties();
-    props.put("mail.debug", "true");
     session = Session.getInstance(props);
   }
 
@@ -177,6 +176,7 @@ public class GMTransportTest {
     message.setReplyTo(new InternetAddress[] {replyTo});
     message.setSubject(subject);
     message.setContent(stream, "text/plain; charset=utf-16");
+    message.setHeader("Content-Transfer-Encoding", "8bit");
     MailMessage msgProto =
         MailMessage.newBuilder()
             .addTo(to.toString())
@@ -308,6 +308,7 @@ public class GMTransportTest {
     multi.addBodyPart(body);
     body = new MimeBodyPart();
     body.setContent(fileContents, "text/plain");
+    body.setHeader("Content-Transfer-Encoding", "7bit");
     body.setFileName(filename);
     multi.addBodyPart(body);
     message.setContent(multi);
@@ -355,19 +356,23 @@ public class GMTransportTest {
     multi.addBodyPart(body);
     body = new MimeBodyPart();
     body.setContent(fileContents, "text/plain");
+    body.setHeader("Content-Transfer-Encoding", "7bit");
     body.setFileName(filenameOuter);
     multi.addBodyPart(body);
     MimeMultipart nested = new MimeMultipart();
     body = new MimeBodyPart();
     body.setContent(fileContents, "text/plain");
+    body.setHeader("Content-Transfer-Encoding", "7bit");
     body.setFileName(filenameNested1);
     nested.addBodyPart(body);
     body = new MimeBodyPart();
     body.setContent(fileContents, "text/plain");
+    body.setHeader("Content-Transfer-Encoding", "7bit");
     body.setFileName(filenameNested2);
     nested.addBodyPart(body);
     body = new MimeBodyPart();
     body.setContent(nested);
+    body.setHeader("Content-Transfer-Encoding", "7bit");
     multi.addBodyPart(body);
     message.setContent(multi);
     MailMessage msgProto =
