@@ -58,18 +58,6 @@ public class AppAdminFactory {
   }
 
   /**
-   * Specifies the location of a javac executable, used when compiling JSPs. By default, the system
-   * property {@code java.home} is used to identify the currently-running JVM. If that pathname ends
-   * with "jre", then its parent is used instead as a hoped-for JDK root. If that directory contains
-   * a file named {@code bin/javac} (Unix) or {@code bin\\javac.exe} (Windows), that is returned.
-   *
-   * @param javac the Java compiler executable to be used.
-   */
-  public void setJavaCompiler(File javac) {
-    appOptions.setJavaCompiler(javac);
-  }
-
-  /**
    * Requests that *.jsp files should be compiled into Java byte code, or if false should be left
    * untouched.
    *

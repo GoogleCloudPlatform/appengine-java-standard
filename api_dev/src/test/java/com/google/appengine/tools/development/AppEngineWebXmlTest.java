@@ -16,7 +16,10 @@
 
 package com.google.appengine.tools.development;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import com.google.common.io.Resources;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import javax.xml.XMLConstants;
@@ -25,7 +28,6 @@ import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
 import junit.framework.TestCase;
-import org.apache.tools.ant.filters.StringInputStream;
 import org.xml.sax.SAXException;
 
 /**
@@ -82,7 +84,7 @@ public class AppEngineWebXmlTest extends TestCase {
 
   private void assertGoodXml(String xml) {
     try {
-      InputStream inputStream = new StringInputStream(xml);
+      InputStream inputStream = new ByteArrayInputStream(xml.getBytes(UTF_8));
       validator.validate(new StreamSource(inputStream));
     } catch (SAXException e) {
       fail(e.getMessage());
@@ -93,7 +95,7 @@ public class AppEngineWebXmlTest extends TestCase {
 
   private void assertBadXml(String xml) throws Exception {
     try {
-      InputStream inputStream = new StringInputStream(xml);
+      InputStream inputStream = new ByteArrayInputStream(xml.getBytes(UTF_8));
       validator.validate(new StreamSource(inputStream));
       fail("Expected failure.");
     } catch (SAXException e) {

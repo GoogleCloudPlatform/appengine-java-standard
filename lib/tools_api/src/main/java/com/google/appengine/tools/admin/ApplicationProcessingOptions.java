@@ -24,10 +24,8 @@ import java.io.File;
  */
 public class ApplicationProcessingOptions {
   private static final String JAVA_CMD_PROP = "appengine.java";
-  private static final String JAVAC_CMD_PROP = "appengine.javac";
 
     private File java;
-    private File javac;
     private boolean compileJsps = true;
     private boolean doBatch = true;
     private boolean useAsyncQuickstart = false;
@@ -94,71 +92,6 @@ public class ApplicationProcessingOptions {
      */
     void setJavaExecutable(File java) {
       this.java = java;
-    }
-
-    /**
-     * Returns an appropriate "javac" executable. If a prior call to
-     * {@link #setJavaCompiler(File)} was made, that value is returned (on
-     * windows, the algorithm is forgiving if ".exe" was omitted, and will add
-     * it). If not, the system property {@code java.home} is used to identify
-     * the currently-running JVM. If that pathname ends with "jre", then its
-     * parent is used instead as a hoped-for JDK root. If that directory
-     * contains a file named {@code bin/javac} (Unix) or {@code bin\\javac.exe}
-     * (Windows), that is returned.
-     *
-     * @return the Java compiler, as a {@link File}.
-     * @throws IllegalStateException if the javac cannot be found by the
-     *         heuristic above, but {@link #setJavaCompiler(File)} has not be
-     *         called, or if it has been called but the file does not exist.
-     */
-    public File getJavaCompiler() {
-      if (javac != null) {
-        return javac;
-      }
-
-      String javacProp = System.getProperty(JAVAC_CMD_PROP);
-      if (javacProp != null) {
-        javac = new File(javacProp);
-        if (!javac.exists()) {
-          if (Utility.isOsWindows() && !javacProp.endsWith(".exe")
-              && (new File(javacProp + ".exe")).exists()) {
-            javac = new File(javacProp + ".exe");
-          } else {
-            throw new IllegalStateException("cannot find javac executable \"" + javacProp + "\"");
-          }
-        }
-      } else {
-        String javaHome = System.getProperty("java.home");
-        String javacDir = javaHome;
-        String javacCmd =
-            javacDir + File.separator + "bin" + File.separator + "javac"
-                + (Utility.isOsWindows() ? ".exe" : "");
-        javac = new File(javacCmd);
-        if (!javac.exists()) {
-          javac = null;
-          javacDir = (new File(javaHome)).getParentFile().getPath();
-          String javacCmd2 =
-              javacDir + File.separator + "bin" + File.separator + "javac"
-                  + (Utility.isOsWindows() ? ".exe" : "");
-          javac = new File(javacCmd2);
-          if (!javac.exists()) {
-            javac = null;
-            throw new IllegalStateException("cannot find javac executable "
-                + "based on java.home, tried \"" + javacCmd + "\" and \"" + javacCmd2 + "\"");
-          }
-        }
-      }
-      return javac;
-    }
-
-    /**
-     * Explicitly requests a specific {@code javac} program be used for launched
-     * Java compilations, such as compiling JSP files into classes.
-     *
-     * @param javac the executable file to run.
-     */
-    void setJavaCompiler(File javac) {
-      this.javac = javac;
     }
 
     /** Returns whether we should attempt to compile JSPs */

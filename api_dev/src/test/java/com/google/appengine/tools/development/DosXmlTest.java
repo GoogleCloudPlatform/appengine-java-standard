@@ -17,8 +17,10 @@
 package com.google.appengine.tools.development;
 
 import static com.google.common.truth.Truth.assertThat;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.io.Resources;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import javax.xml.XMLConstants;
@@ -27,7 +29,6 @@ import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
 import junit.framework.TestCase;
-import org.apache.tools.ant.filters.StringInputStream;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
@@ -92,7 +93,7 @@ public class DosXmlTest extends TestCase {
 
   public void testGoodXml() {
     try {
-      InputStream inputStream = new StringInputStream(SIMPLE_XML);
+      InputStream inputStream = new ByteArrayInputStream(SIMPLE_XML.getBytes(UTF_8));
       validator.validate(new StreamSource(inputStream));
     } catch (SAXException e) {
       fail(e.getMessage());
@@ -103,7 +104,7 @@ public class DosXmlTest extends TestCase {
 
   public void testBadXmlEntry() {
     try {
-      InputStream inputStream = new StringInputStream(BAD_XML_ENTRY);
+      InputStream inputStream = new ByteArrayInputStream(BAD_XML_ENTRY.getBytes(UTF_8));
       validator.validate(new StreamSource(inputStream));
       fail("Validator should complain.");
     } catch (SAXParseException e) {
@@ -121,7 +122,7 @@ public class DosXmlTest extends TestCase {
 
   public void testMissingSubnetXmlEntry() {
     try {
-      InputStream inputStream = new StringInputStream(MISSING_SUBNET_XML_ENTRY);
+      InputStream inputStream = new ByteArrayInputStream(MISSING_SUBNET_XML_ENTRY.getBytes(UTF_8));
       validator.validate(new StreamSource(inputStream));
       fail("Validator should complain.");
     } catch (SAXParseException e) {

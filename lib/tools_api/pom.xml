@@ -32,11 +32,6 @@
 
   <dependencies>
     <dependency>
-      <groupId>org.apache.ant</groupId>
-      <artifactId>ant</artifactId>
-      <optional>true</optional>
-    </dependency>
-    <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
       <optional>true</optional>
@@ -264,12 +259,6 @@
                   </includes>
                 </filter>
                 <filter>
-                  <artifact>org.apache.ant:ant</artifact>
-                  <includes>
-                    <include>org/apache/tools/ant/**</include>
-                  </includes>
-                </filter>
-                <filter>
                   <artifact>org.apache.httpcomponents:httpclient</artifact>
                   <includes>
                     <include>org/apache/http/**</include>
@@ -300,7 +289,6 @@
                   <include>commons-codec:commons-codec:*</include>
                   <include>commons-logging:commons-logging:*</include>
                   <include>org.antlr:antlr-runtime:*</include>
-                  <include>org.apache.ant:ant</include>
                   <include>org.apache.httpcomponents:httpclient</include>
                   <include>org.apache.httpcomponents:httpcore:*</include>
                   <!-- Jetty here for mimetype only, can be 12.1.x -->

@@ -17,8 +17,10 @@
 package com.google.appengine.tools.development;
 
 import static com.google.common.truth.Truth.assertWithMessage;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.io.Resources;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import javax.xml.XMLConstants;
@@ -27,7 +29,6 @@ import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
 import junit.framework.TestCase;
-import org.apache.tools.ant.filters.StringInputStream;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
@@ -240,7 +241,7 @@ public class DispatchXsdTest extends TestCase {
 
   private void validate(String xml, String expectedSaxParserExceptionMessage) {
     try {
-      InputStream inputStream = new StringInputStream(xml);
+      InputStream inputStream = new ByteArrayInputStream(xml.getBytes(UTF_8));
       getValidator().validate(new StreamSource(inputStream));
       if (expectedSaxParserExceptionMessage != null) {
         fail("Validator should complain.");

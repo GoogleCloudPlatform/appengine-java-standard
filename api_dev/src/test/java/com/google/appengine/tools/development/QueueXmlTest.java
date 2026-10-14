@@ -17,8 +17,10 @@
 package com.google.appengine.tools.development;
 
 import static com.google.common.truth.Truth.assertThat;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.io.Resources;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import javax.xml.XMLConstants;
@@ -27,7 +29,6 @@ import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
 import junit.framework.TestCase;
-import org.apache.tools.ant.filters.StringInputStream;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
@@ -325,7 +326,7 @@ public class QueueXmlTest extends TestCase {
 
   public void testGoodXml() {
     try {
-      InputStream inputStream = new StringInputStream(SIMPLE_XML);
+      InputStream inputStream = new ByteArrayInputStream(SIMPLE_XML.getBytes(UTF_8));
       validator.validate(new StreamSource(inputStream));
     } catch (SAXException | IOException e) {
       fail(e.getMessage());
@@ -334,7 +335,8 @@ public class QueueXmlTest extends TestCase {
 
   public void testGoodXmlWithStorageLimit() {
     try {
-      InputStream inputStream = new StringInputStream(SIMPLE_XML_WITH_STORAGE_LIMIT);
+      InputStream inputStream =
+          new ByteArrayInputStream(SIMPLE_XML_WITH_STORAGE_LIMIT.getBytes(UTF_8));
       validator.validate(new StreamSource(inputStream));
     } catch (SAXException | IOException e) {
       fail(e.getMessage());
@@ -343,7 +345,7 @@ public class QueueXmlTest extends TestCase {
 
   public void testComplexXml() {
     try {
-      InputStream inputStream = new StringInputStream(COMPLEX_XML);
+      InputStream inputStream = new ByteArrayInputStream(COMPLEX_XML.getBytes(UTF_8));
       validator.validate(new StreamSource(inputStream));
     } catch (SAXException | IOException e) {
       fail(e.getMessage());
@@ -352,7 +354,7 @@ public class QueueXmlTest extends TestCase {
 
   public void testBadXmlEntry() {
     try {
-      InputStream inputStream = new StringInputStream(BAD_XML_ENTRY);
+      InputStream inputStream = new ByteArrayInputStream(BAD_XML_ENTRY.getBytes(UTF_8));
       validator.validate(new StreamSource(inputStream));
       fail("Validator should complain.");
     } catch (SAXParseException e) {
@@ -368,7 +370,7 @@ public class QueueXmlTest extends TestCase {
 
   public void testBadMode() {
     try {
-      InputStream inputStream = new StringInputStream(BAD_XML_MODE);
+      InputStream inputStream = new ByteArrayInputStream(BAD_XML_MODE.getBytes(UTF_8));
       validator.validate(new StreamSource(inputStream));
       fail("Validator should complain.");
     } catch (SAXParseException e) {
@@ -384,7 +386,7 @@ public class QueueXmlTest extends TestCase {
 
   public void testBadName() {
     try {
-      InputStream inputStream = new StringInputStream(BAD_XML_NAME);
+      InputStream inputStream = new ByteArrayInputStream(BAD_XML_NAME.getBytes(UTF_8));
       validator.validate(new StreamSource(inputStream));
       fail("Validator should complain.");
     } catch (SAXParseException e) {
@@ -400,7 +402,7 @@ public class QueueXmlTest extends TestCase {
 
   public void testBadRate() {
     try {
-      InputStream inputStream = new StringInputStream(BAD_XML_RATE);
+      InputStream inputStream = new ByteArrayInputStream(BAD_XML_RATE.getBytes(UTF_8));
       validator.validate(new StreamSource(inputStream));
       fail("Validator should complain.");
     } catch (SAXParseException e) {
@@ -416,7 +418,8 @@ public class QueueXmlTest extends TestCase {
 
   public void testBadMaxConcurrentRequests() {
     try {
-      InputStream inputStream = new StringInputStream(BAD_XML_MAX_CONCURRENT_REQUESTS);
+      InputStream inputStream =
+          new ByteArrayInputStream(BAD_XML_MAX_CONCURRENT_REQUESTS.getBytes(UTF_8));
       validator.validate(new StreamSource(inputStream));
       fail("Validator should complain.");
     } catch (SAXParseException e) {
@@ -430,7 +433,7 @@ public class QueueXmlTest extends TestCase {
 
   public void testBadStorageLimit() {
     try {
-      InputStream inputStream = new StringInputStream(BAD_XML_STORAGE_LIMIT);
+      InputStream inputStream = new ByteArrayInputStream(BAD_XML_STORAGE_LIMIT.getBytes(UTF_8));
       validator.validate(new StreamSource(inputStream));
       fail("Validator should complain.");
     } catch (SAXParseException e) {
@@ -446,7 +449,8 @@ public class QueueXmlTest extends TestCase {
 
   public void testMultipleStorageLimit() {
     try {
-      InputStream inputStream = new StringInputStream(BAD_XML_MULTIPLE_STORAGE_LIMIT);
+      InputStream inputStream =
+          new ByteArrayInputStream(BAD_XML_MULTIPLE_STORAGE_LIMIT.getBytes(UTF_8));
       validator.validate(new StreamSource(inputStream));
       fail("Validator should complain.");
     } catch (SAXParseException e) {
@@ -462,7 +466,7 @@ public class QueueXmlTest extends TestCase {
 
   public void testBadRetryParameters() {
     try {
-      InputStream inputStream = new StringInputStream(BAD_RETRY_PARAMETERS_XML);
+      InputStream inputStream = new ByteArrayInputStream(BAD_RETRY_PARAMETERS_XML.getBytes(UTF_8));
       validator.validate(new StreamSource(inputStream));
       fail("Validator should complain.");
     } catch (SAXParseException e) {
@@ -476,7 +480,8 @@ public class QueueXmlTest extends TestCase {
 
   public void testBadRetryParametersInAclXml() {
     try {
-      InputStream inputStream = new StringInputStream(BAD_RETRY_PARAMETERS_IN_ACL_XML);
+      InputStream inputStream =
+          new ByteArrayInputStream(BAD_RETRY_PARAMETERS_IN_ACL_XML.getBytes(UTF_8));
       validator.validate(new StreamSource(inputStream));
       fail("Validator should complain.");
     } catch (SAXParseException e) {
@@ -492,7 +497,8 @@ public class QueueXmlTest extends TestCase {
 
   public void testBadUserEmailInRetryParameters() {
     try {
-      InputStream inputStream = new StringInputStream(BAD_USER_EMAIL_IN_RETRY_PARAMETERS_XML);
+      InputStream inputStream =
+          new ByteArrayInputStream(BAD_USER_EMAIL_IN_RETRY_PARAMETERS_XML.getBytes(UTF_8));
       validator.validate(new StreamSource(inputStream));
       fail("Validator should complain.");
     } catch (SAXParseException e) {
@@ -508,13 +514,14 @@ public class QueueXmlTest extends TestCase {
   }
 
   public void testOkEmptyAcl() throws Exception {
-    InputStream inputStream = new StringInputStream(OK_EMPTY_ACL_XML);
+    InputStream inputStream = new ByteArrayInputStream(OK_EMPTY_ACL_XML.getBytes(UTF_8));
     validator.validate(new StreamSource(inputStream));
   }
 
   public void testMultipleRetryParameters() {
     try {
-      InputStream inputStream = new StringInputStream(MULTIPLE_RETRY_PARAMETERS_XML);
+      InputStream inputStream =
+          new ByteArrayInputStream(MULTIPLE_RETRY_PARAMETERS_XML.getBytes(UTF_8));
       validator.validate(new StreamSource(inputStream));
       fail("Validator should complain.");
     } catch (SAXParseException e) {

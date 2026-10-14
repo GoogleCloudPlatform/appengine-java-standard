@@ -11,8 +11,6 @@ The repository contains 3rd-party code under the following licenses:
 
     Apache License, Version 2.0
 
-        * Apache Ant Core (org.apache.ant:ant:1.10.15 - https://ant.apache.org/)
-        * Apache Ant Launcher (org.apache.ant:ant-launcher:1.10.15 - https://ant.apache.org/)
         * Apache Commons Codec (commons-codec:commons-codec:1.19.0 - https://commons.apache.org/proper/commons-codec/)
         * Apache Commons Collections (org.apache.commons:commons-collections4:4.4 - https://commons.apache.org/proper/commons-collections/)
         * Apache Commons Lang (org.apache.commons:commons-lang3:3.13.0 - https://commons.apache.org/proper/commons-lang/)

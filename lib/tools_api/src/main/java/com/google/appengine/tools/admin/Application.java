@@ -52,7 +52,6 @@ import com.google.apphosting.utils.config.XmlUtils;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
-import com.google.common.base.StandardSystemProperty;
 import com.google.common.collect.Sets;
 import com.google.common.io.FileWriteMode;
 import com.google.common.io.Files;
@@ -88,10 +87,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javax.tools.JavaCompiler;
-import javax.tools.JavaFileObject;
-import javax.tools.StandardJavaFileManager;
-import javax.tools.ToolProvider;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -1100,8 +1095,8 @@ public class Application implements GenericApplication {
       jspJavaFilesGeneratedTempDirectory = Files.createTempDir();
       String classpath = getJspClasspath(classes, getJspJavaFilesGeneratedTempDirectory());
 
-      // We do not want the -compile flag there, as we will compile all the generated files
-      // at once, in a second step.
+      // Compile the JSPs and generated Java servlet files in a single step using Jasper's
+      // built-in Eclipse JDT compiler (JDTCompiler), avoiding the need for a JDK.
       List<String> argsList =
           new ArrayList<>(
               Arrays.asList(
@@ -1113,6 +1108,7 @@ public class Application implements GenericApplication {
                   "org.apache.jsp",
                   "-l",
                   "-v",
+                  "-compile",
                   "-webinc",
                   generatedWebXml.getPath(),
                   "-d",
@@ -1146,10 +1142,7 @@ public class Application implements GenericApplication {
       } catch (ReflectiveOperationException e) {
         throw new RuntimeException("Failed to compile jsp files.", e);
       }
-      // Now that the Java servlet files from jsp have been generated, we compile them in a single
-      // invocation to speed up the deployment process.
-      compileJspJavaFiles(
-          classpath, webInf, getJspJavaFilesGeneratedTempDirectory(), opts, javaVersion);
+      packageCompiledJsps(webInf, getJspJavaFilesGeneratedTempDirectory(), opts);
 
       // Reread the web.xml as it has been modified by Jasper to add the mapping of the generated
       // servlets.
@@ -1201,53 +1194,22 @@ public class Application implements GenericApplication {
               + version);
       version = String.valueOf(currentJdkVersion);
     }
-    return version;
+    return version.equals("8") ? "1.8" : version;
   }
 
-  private void compileJspJavaFiles(
-      String classpath,
-      File webInf,
-      File jspClassDir,
-      ApplicationProcessingOptions opts,
-      String javaVersion)
+  private void packageCompiledJsps(File webInf, File jspClassDir, ApplicationProcessingOptions opts)
       throws IOException {
-
-    JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-    if (compiler == null) {
-      throw new RuntimeException(
-          "Cannot get the System Java Compiler. Please use a JDK, not a JRE.");
-    }
-    StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, null);
-
-    ArrayList<File> files = new ArrayList<File>();
+    boolean hasCompiledClasses = false;
     for (File f : new FileIterator(jspClassDir)) {
-      if (f.getPath().toLowerCase(Locale.ROOT).endsWith(".java")) {
-        files.add(f);
+      if (f.getPath().toLowerCase(Locale.ROOT).endsWith(".class")) {
+        hasCompiledClasses = true;
+        break;
       }
     }
-    if (files.isEmpty()) {
+    if (!hasCompiledClasses) {
       return;
     }
     StagingOptions staging = getStagingOptions(opts);
-    List<String> optionList = new ArrayList<String>();
-    optionList.addAll(Arrays.asList("-classpath", classpath.toString()));
-    optionList.addAll(Arrays.asList("-d", jspClassDir.getPath()));
-    optionList.addAll(Arrays.asList("-encoding", staging.compileEncoding().get()));
-    // Depending on the runtime, select the correct bytecode target for the jsp classes compilation.
-    // If the runtime is unknown and forced (like java9), keep the default settings.
-    // If the current JDK is older than the runtime, we fallback to the current JDK version.
-    optionList.addAll(Arrays.asList("--release", javaVersion, "-Xlint:-options"));
-
-    Iterable<? extends JavaFileObject> compilationUnits =
-        fileManager.getJavaFileObjectsFromFiles(files);
-    boolean success =
-        compiler.getTask(null, fileManager, null, optionList, null, compilationUnits).call();
-    fileManager.close();
-
-    if (!success) {
-      throw new JspCompilationException(
-          "Failed to compile the generated JSP java files.", JspCompilationException.Source.JSPC);
-    }
     if (staging.jarJsps().get()) {
       zipJasperGeneratedFiles(webInf, jspClassDir);
     } else {
