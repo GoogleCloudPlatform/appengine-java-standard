@@ -31,7 +31,9 @@ import com.google.protobuf.Message;
 import com.google.rpc.Code;
 import java.util.ConcurrentModificationException;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.Future;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Helper methods and constants shared by classes that implement the Java api on top of the
@@ -55,6 +57,64 @@ public final class DatastoreApiHelper {
       AppIdentityServiceFactory.getAppIdentityService();
 
   private DatastoreApiHelper() {}
+
+  /**
+   * Registers a callback to be executed immediately after the specified transaction commits. If the
+   * transaction is rolled back or fails to commit, the callback will not be invoked.
+   *
+   * <p>Transactions wrapped by frameworks (for example Objectify) are resolved to the native
+   * transaction active on the current thread with the same app and transaction ID.
+   *
+   * @return {@code true} if the callback was registered, {@code false} if the native transaction
+   *     could not be resolved
+   */
+  public static boolean addPostCommitCallback(Transaction txn, Runnable callback) {
+    if (callback == null) {
+      return false;
+    }
+    TransactionImpl txnImpl = resolveTransactionImpl(txn);
+    if (txnImpl == null) {
+      return false;
+    }
+    txnImpl.addPostCommitCallback(callback);
+    return true;
+  }
+
+  /**
+   * Returns the native transaction backing {@code txn}, or {@code txn} itself if it cannot be
+   * resolved.
+   */
+  public static Transaction unwrapTransaction(Transaction txn) {
+    TransactionImpl txnImpl = resolveTransactionImpl(txn);
+    return txnImpl != null ? txnImpl : txn;
+  }
+
+  private static @Nullable TransactionImpl resolveTransactionImpl(@Nullable Transaction txn) {
+    if (txn == null) {
+      return null;
+    }
+    if (txn instanceof TransactionImpl txnImpl) {
+      return txnImpl;
+    }
+    try {
+      String id = txn.getId();
+      String app = txn.getApp();
+      if (id == null) {
+        return null;
+      }
+      for (Transaction active :
+          DatastoreServiceFactory.getDatastoreService().getActiveTransactions()) {
+        if (active instanceof TransactionImpl activeImpl
+            && id.equals(activeImpl.getId())
+            && Objects.equals(app, activeImpl.getApp())) {
+          return activeImpl;
+        }
+      }
+    } catch (RuntimeException e) {
+      // Wrapped transaction could not be resolved; fall through.
+    }
+    return null;
+  }
 
   // Corresponds to _ToDatastoreError in datastore.py.
   // Keep in sync!
