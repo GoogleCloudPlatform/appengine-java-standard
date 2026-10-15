@@ -1,0 +1,116 @@
+/*
+ * Copyright 2021 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+.ah-queues-message {
+  color: red;
+  margin-bottom: 1em;
+}
+
+#ah-queues .ah-queues-message {
+  margin: 1em;
+}
+
+.ah-queues-times {
+  margin-top: 1em;
+}
+#ah-queues .ae-table,
+#ah-queues .ae-table td {
+  border: 0;
+  padding: 0;
+}
+#ah-queues ol {
+  list-style: none;
+}
+#ah-queues li {
+  padding: .2em 0;
+}
+.ah-queues-test {
+  text-align: right;
+}
+
+#hint {
+  background-color: #F6F9FF;
+  border: 1px solid #E5ECF9;
+  margin-bottom: 1em;
+  padding: 0.5em 1em;
+}
+
+#message {
+  text-align: center;
+  color: red;
+  font-weight: bold;
+  background-color: #e5ecf9;
+  position: relative;
+  bottom: 6px;
+}
+
+#pagetotal {
+  text-align: right;
+}
+
+#pagetotal .count {
+  font-weight: bold;
+}
+
+table.queues {
+  border: 1px solid #c5d7ef;
+  border-collapse: collapse;
+  width: 100%;
+  margin-bottom: 0;
+}
+
+table.queues th, table.queues td {
+  padding: .25em 1.5em .5em .5em;
+}
+
+table.queues th {
+  font-weight: bold;
+  text-align: left;
+  background: #e5ecf9;
+  white-space: nowrap;
+}
+
+table.queues th a, table.queues th a:visited {
+  color: black;
+  text-decoration: none;
+}
+
+table.queues td {
+  background-color: #fff;
+  text-align: left;
+  vertical-align: top;
+  cursor: pointer;
+}
+
+table.queues tr.even td {
+  background-color: #f9f9f9;
+}
+
+div.queues {
+  background-color: #c5d7ef;
+  margin-top: 0;
+}
+
+#queues-pager, #queues-control {
+  padding: .3em 1em .4em 1em;
+}
+
+#queues-pager {
+  text-align: right;
+}
+
+#queuename {
+}

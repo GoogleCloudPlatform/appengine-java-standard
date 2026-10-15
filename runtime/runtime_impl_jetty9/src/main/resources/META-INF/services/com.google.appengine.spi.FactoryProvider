@@ -1,0 +1,7 @@
+com.google.appengine.api.urlfetch.IURLFetchServiceFactoryProvider
+com.google.appengine.api.datastore.IDatastoreServiceFactoryProvider
+com.google.appengine.api.appidentity.IAppIdentityServiceFactoryProvider
+com.google.appengine.api.memcache.IMemcacheServiceFactoryProvider
+com.google.appengine.api.users.IUserServiceFactoryProvider
+com.google.appengine.api.taskqueue.IQueueFactoryProvider
+com.google.appengine.api.oauth.IOAuthServiceFactoryProvider

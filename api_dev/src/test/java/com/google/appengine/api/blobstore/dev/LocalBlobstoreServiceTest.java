@@ -34,14 +34,16 @@ import com.google.appengine.tools.development.testing.LocalBlobstoreServiceTestC
 import com.google.appengine.tools.development.testing.LocalDatastoreServiceTestConfig;
 import com.google.appengine.tools.development.testing.LocalServiceTestHelper;
 import com.google.apphosting.api.ApiProxy;
+import com.google.common.io.MoreFiles;
+import com.google.common.io.RecursiveDeleteOption;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Date;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
@@ -58,25 +60,19 @@ public class LocalBlobstoreServiceTest {
     return new Object[] {true, false};
   }
 
-  @Rule public final TemporaryFolder tempFolder = new TemporaryFolder();
-
-  private final boolean noStorage;
   private BlobstoreService blobstoreService;
   private BlobUploadSessionStorage blobUploadSessionStorage;
-  private LocalServiceTestHelper helper;
+  private final LocalServiceTestHelper helper;
 
   public LocalBlobstoreServiceTest(boolean noStorage) {
-    this.noStorage = noStorage;
+    helper =
+        new LocalServiceTestHelper(
+            new LocalBlobstoreServiceTestConfig().setNoStorage(noStorage),
+            new LocalDatastoreServiceTestConfig());
   }
 
   @Before
   public void setUp() throws Exception {
-    helper =
-        new LocalServiceTestHelper(
-            new LocalBlobstoreServiceTestConfig()
-                .setNoStorage(noStorage)
-                .setBackingStoreLocation(tempFolder.newFolder().getAbsolutePath()),
-            new LocalDatastoreServiceTestConfig());
     helper.setUp();
     blobstoreService = BlobstoreServiceFactory.getBlobstoreService();
     blobUploadSessionStorage = new BlobUploadSessionStorage();
@@ -87,6 +83,15 @@ public class LocalBlobstoreServiceTest {
     helper.tearDown();
     blobstoreService = null;
     blobUploadSessionStorage = null;
+    // This is a hack for the Maven environment. Some tests fail because they find the
+    // blobstore or datastore files left behind by previous tests. Probably we need a cleaner
+    // solution, maybe integrated with LocalServiceTestHelper.tearDown().
+    Path appengineGenerated = Paths.get("WEB-INF", "appengine-generated");
+    try {
+      MoreFiles.deleteRecursively(appengineGenerated, RecursiveDeleteOption.ALLOW_INSECURE);
+    } catch (IOException e) {
+      // OK, there is no WEB-INF/appengine-generated.
+    }
   }
 
   public void doFetchDataTest(long startIndex, long endIndex, String expectedData)

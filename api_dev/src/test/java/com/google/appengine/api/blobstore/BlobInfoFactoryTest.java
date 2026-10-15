@@ -22,6 +22,11 @@ import com.google.appengine.api.NamespaceManager;
 import com.google.appengine.api.blobstore.dev.BlobInfoStorage;
 import com.google.appengine.tools.development.testing.LocalDatastoreServiceTestConfig;
 import com.google.appengine.tools.development.testing.LocalServiceTestHelper;
+import com.google.common.io.MoreFiles;
+import com.google.common.io.RecursiveDeleteOption;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Date;
 import java.util.Iterator;
 import org.junit.After;
@@ -54,6 +59,15 @@ public class BlobInfoFactoryTest {
     helper.tearDown();
     blobInfoFactory = null;
     blobInfoStorage = null;
+    // This is a hack for the Maven environment. Some tests fail because they find the
+    // blobstore or datastore files left behind by previous tests. Probably we need a cleaner
+    // solution, maybe integrated with LocalServiceTestHelper.tearDown().
+    Path appengineGenerated = Paths.get("WEB-INF", "appengine-generated");
+    try {
+      MoreFiles.deleteRecursively(appengineGenerated, RecursiveDeleteOption.ALLOW_INSECURE);
+    } catch (IOException e) {
+      // OK, there is no WEB-INF/appengine-generated.
+    }
   }
 
   @Test
