@@ -69,7 +69,6 @@
     <auto-service.version>1.1.1</auto-service.version>
     <auto-value.version>1.11.1</auto-value.version>
     <grpc.version>1.84.0</grpc.version>
-    <jetty.version>9.4.58.v20250814</jetty.version>
     <jetty12.version>12.0.40</jetty12.version>
     <jetty121.version>12.1.14</jetty121.version>
     <slf4j.version>2.0.20</slf4j.version>
@@ -945,11 +944,6 @@
           <groupId>org.antlr</groupId>
           <artifactId>antlr3-maven-plugin</artifactId>
           <version>3.5.3</version>
-        </plugin>
-        <plugin>
-          <groupId>org.eclipse.jetty</groupId>
-          <artifactId>jetty-jspc-maven-plugin</artifactId>
-          <version>${jetty.version}</version>
         </plugin>
         <plugin>
            <groupId>org.codehaus.mojo</groupId>
