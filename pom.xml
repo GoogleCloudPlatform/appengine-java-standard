@@ -68,7 +68,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <auto-service.version>1.1.1</auto-service.version>
     <auto-value.version>1.11.1</auto-value.version>
-    <grpc.version>1.84.0</grpc.version>
+    <grpc.version>1.84.2</grpc.version>
     <jetty12.version>12.0.40</jetty12.version>
     <jetty121.version>12.1.14</jetty121.version>
     <slf4j.version>2.0.20</slf4j.version>
@@ -704,7 +704,7 @@
       <dependency>
         <groupId>commons-codec</groupId>
         <artifactId>commons-codec</artifactId>
-        <version>1.22.1</version>
+        <version>1.23.0</version>
       </dependency>
        <!-- test dependencies -->
       <dependency>
