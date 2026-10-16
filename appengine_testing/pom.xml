@@ -288,14 +288,6 @@
                   <pattern>com.google.apphosting.base.RuntimePb</pattern>
                   <shadedPattern>com.google.appengine.repackaged.com.google.apphosting.base.RuntimePb</shadedPattern>
                 </relocation>
-                <relocation>
-                  <pattern>io.opencensus</pattern>
-                  <shadedPattern>com.google.appengine.repackaged.io.opencensus</shadedPattern>
-                </relocation>
-                <relocation> <!-- from google-http-client then opencensus-->
-                  <pattern>io.grpc</pattern>
-                  <shadedPattern>com.google.appengine.repackaged.io.grpc</shadedPattern>
-                </relocation>
               </relocations>
               <filters>
                 <filter>

@@ -90,11 +90,6 @@
             <version>${gax.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.google.api</groupId>
-            <artifactId>gax-grpc</artifactId>
-            <version>${gax.version}</version>
-        </dependency>
-        <dependency>
             <groupId>com.google.api-client</groupId>
             <artifactId>google-api-client</artifactId>
         </dependency>

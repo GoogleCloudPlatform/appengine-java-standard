@@ -17,6 +17,7 @@
 package com.google.appengine.tools.remoteapi;
 
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.lang.reflect.Constructor;
@@ -29,14 +30,11 @@ import org.junit.Test;
 
 public class ShadingIT {
 
-  @Test
-  public void testTransactionBuilderRelocation() throws Exception {
+  private static File findShadedRemoteApiJar() {
     File targetDir = new File("target");
     if (!targetDir.exists()) {
-      System.err.println("Target directory not found, skipping shading test.");
-      return;
+      return null;
     }
-
     File[] files =
         targetDir.listFiles(
             (dir, name) ->
@@ -45,13 +43,19 @@ public class ShadingIT {
                     && !name.contains("original")
                     && !name.contains("sources")
                     && !name.contains("javadoc"));
-
     if (files == null || files.length == 0) {
+      return null;
+    }
+    return files[0];
+  }
+
+  @Test
+  public void testTransactionBuilderRelocation() throws Exception {
+    File shadedJar = findShadedRemoteApiJar();
+    if (shadedJar == null) {
       System.err.println("No shaded jar found in target, skipping shading test.");
       return;
     }
-
-    File shadedJar = files[0];
     System.out.println("Testing shaded jar: " + shadedJar.getAbsolutePath());
 
     // Construct a classpath that includes the shaded jar and all dependencies,
@@ -114,6 +118,83 @@ public class ShadingIT {
         }
         throw e;
       }
+    }
+  }
+
+  /**
+   * Regression test for b/261987450 (missing relocated {@code io.opencensus} classes) and
+   * b/267681564 (missing relocated {@code io.grpc.Context} class required by OpenCensus span
+   * context propagation) when running with only {@code appengine-remote-api.jar} and {@code
+   * appengine-api-1.0-sdk.jar} on the classpath.
+   */
+  @Test
+  public void testOpenCensusAndGrpcContextShading() throws Exception {
+    File shadedJar = findShadedRemoteApiJar();
+    if (shadedJar == null) {
+      System.err.println("No shaded jar found in target, skipping shading test.");
+      return;
+    }
+
+    // Include ONLY the shaded appengine-remote-api jar and appengine-api-1.0-sdk jar (excluding
+    // optional/unshaded Maven test classpath dependencies such as io.opencensus and io.grpc) to
+    // replicate a standalone user classpath.
+    List<URL> urls = new ArrayList<>();
+    urls.add(shadedJar.toURI().toURL());
+
+    String classpath = System.getProperty("java.class.path");
+    for (String path : classpath.split(File.pathSeparator)) {
+      if (path.contains("appengine-api-1.0-sdk") && path.endsWith(".jar")) {
+        urls.add(new File(path).toURI().toURL());
+      }
+    }
+    assertTrue(
+        "Expected appengine-api-1.0-sdk.jar on test classpath, found: " + urls, urls.size() >= 2);
+
+    ClassLoader parent = ClassLoader.getPlatformClassLoader();
+    try (URLClassLoader loader = new URLClassLoader(urls.toArray(new URL[0]), parent)) {
+      Class<?> openCensusUtilsClass =
+          loader.loadClass(
+              "com.google.appengine.repackaged.com.google.api.client.http.OpenCensusUtils");
+      URL codeSourceUrl = openCensusUtilsClass.getProtectionDomain().getCodeSource().getLocation();
+      assertTrue(
+          "Expected OpenCensusUtils to be loaded from shaded remoteapi jar, but was: "
+              + codeSourceUrl,
+          codeSourceUrl.toString().contains(shadedJar.getName()));
+
+      // 1. Verify OpenCensusUtils.getTracer() resolves repackaged io.opencensus (b/261987450).
+      Object tracer = openCensusUtilsClass.getMethod("getTracer").invoke(null);
+      assertNotNull(tracer);
+      assertTrue(
+          tracer
+              .getClass()
+              .getName()
+              .startsWith("com.google.appengine.repackaged.io.opencensus.trace."));
+
+      // 2. Verify building and executing an HttpRequest exercises OpenCensus span creation and
+      // io.grpc.Context span propagation without NoClassDefFoundError (b/261987450, b/267681564).
+      Class<?> mockTransportClass =
+          loader.loadClass(
+              "com.google.appengine.repackaged.com.google.api.client.testing.http.MockHttpTransport");
+      Class<?> genericUrlClass =
+          loader.loadClass("com.google.appengine.repackaged.com.google.api.client.http.GenericUrl");
+      Object transport = mockTransportClass.getDeclaredConstructor().newInstance();
+      Object requestFactory =
+          mockTransportClass.getMethod("createRequestFactory").invoke(transport);
+      Object url =
+          genericUrlClass.getDeclaredConstructor(String.class).newInstance("http://localhost:8080");
+      Object request =
+          requestFactory
+              .getClass()
+              .getMethod("buildGetRequest", genericUrlClass)
+              .invoke(requestFactory, url);
+      Object response = request.getClass().getMethod("execute").invoke(request);
+      assertNotNull(response);
+
+      // 3. Verify repackaged io.grpc.Context is directly resolvable (b/267681564).
+      Class<?> grpcContextClass =
+          loader.loadClass("com.google.appengine.repackaged.io.grpc.Context");
+      Object currentContext = grpcContextClass.getMethod("current").invoke(null);
+      assertNotNull(currentContext);
     }
   }
 }
