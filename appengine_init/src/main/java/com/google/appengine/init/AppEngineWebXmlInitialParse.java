@@ -15,11 +15,18 @@
  */
 package com.google.appengine.init;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URI;
+import java.net.URL;
 import java.util.Objects;
 import java.util.Properties;
+import java.util.function.UnaryOperator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.xml.namespace.QName;
@@ -35,12 +42,18 @@ public final class AppEngineWebXmlInitialParse {
   private static final Logger logger =
       Logger.getLogger(AppEngineWebXmlInitialParse.class.getName());
 
+  /** Provider for environment variables, allowing for substitution in tests. */
+  private UnaryOperator<String> envProvider = System::getenv;
+
   private String runtimeId = "";
   private final String appEngineWebXmlFile;
 
   private static final String PROPERTIES = "system-properties";
   private static final String PROPERTY = "property";
   private static final String RUNTIME = "runtime";
+  private static final String DEFAULT_METADATA_HOST = "metadata.google.internal";
+  private static final String GUEST_ATTRIBUTES_PATH =
+      "/computeMetadata/v1/instance/guest-attributes/goog-gae-java/";
 
   /** git commit number if the build is done via Maven */
   public static final String GIT_HASH;
@@ -228,6 +241,23 @@ public final class AppEngineWebXmlInitialParse {
     }
     System.setProperty("appengine.ignore.cancelerror", "true");
 
+    if (Objects.equals(envProvider.apply("GAE_REPORT_CLONE_ATTRIBUTES"), "true")) {
+      String eeVersion;
+      if (Boolean.getBoolean("appengine.use.EE11")) {
+        eeVersion = "11";
+      } else if (Boolean.getBoolean("appengine.use.EE10")) {
+        eeVersion = "10";
+      } else if (Boolean.getBoolean("appengine.use.EE8")) {
+        eeVersion = "8";
+      } else {
+        eeVersion = "6";
+      }
+      final String eeVersionValue = eeVersion;
+      // Do not block the startup of the App Engine runtime, report the EE version in a separate
+      // thread.
+      new Thread(() -> reportCloneAttribute("ee-version", eeVersionValue)).start();
+    }
+
     // Log the runtime configuration so we can see it in the app logs.
     StringBuilder configLog =
         new StringBuilder("AppEngine runtime configuration: runtimeId=").append(runtimeId);
@@ -250,6 +280,51 @@ public final class AppEngineWebXmlInitialParse {
       configLog.append(" no extra flag set");
     }
     logger.info(configLog.toString());
+  }
+
+  String getMetadataGuestAttributesUrl() {
+    String metadataHost = envProvider.apply("GCE_METADATA_HOST");
+    if (metadataHost == null || metadataHost.isEmpty()) {
+      metadataHost = DEFAULT_METADATA_HOST;
+    }
+    return "http://" + metadataHost + GUEST_ATTRIBUTES_PATH;
+  }
+
+  void reportCloneAttribute(String key, String value) {
+    String url = getMetadataGuestAttributesUrl() + key;
+    try {
+      URL endpoint = new URI(url).toURL();
+      HttpURLConnection conn = (HttpURLConnection) endpoint.openConnection();
+      conn.setRequestMethod("PUT");
+      conn.setRequestProperty("Metadata-Flavor", "Google");
+      conn.setConnectTimeout(2000); // 2 sec timeout for connection
+      conn.setReadTimeout(2000); // 2 sec timeout for read
+      conn.setDoOutput(true);
+      try (OutputStream os = conn.getOutputStream()) {
+        byte[] input = value.getBytes(UTF_8);
+        os.write(input, 0, input.length);
+      }
+      int responseCode = conn.getResponseCode();
+      if (responseCode < 200 || responseCode >= 300) {
+        logger.warning(
+            "Failed to report "
+                + key
+                + "="
+                + value
+                + " to metadata server. Response code: "
+                + responseCode);
+      }
+    } catch (Exception e) {
+      logger.warning(
+          "Exception reporting "
+              + key
+              + "="
+              + value
+              + " to metadata server: "
+              + e.getClass().getName()
+              + ": "
+              + e.getMessage());
+    }
   }
 
   /**
@@ -297,5 +372,9 @@ public final class AppEngineWebXmlInitialParse {
           "appengine runtime jars built on {0} from commit {1}, version {2}",
           new Object[] {BUILD_TIMESTAMP, GIT_HASH, BUILD_VERSION});
     }
+  }
+
+  void setEnvProvider(UnaryOperator<String> envProvider) {
+    this.envProvider = envProvider;
   }
 }

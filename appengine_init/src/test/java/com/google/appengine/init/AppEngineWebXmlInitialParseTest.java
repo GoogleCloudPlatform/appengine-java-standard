@@ -17,17 +17,25 @@
 package com.google.appengine.init;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
+import com.sun.net.httpserver.HttpServer;
 import java.io.IOException;
 import java.io.Writer;
+import java.net.Inet6Address;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Handler;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
@@ -773,5 +781,197 @@ public class AppEngineWebXmlInitialParseTest {
 
     @Override
     public void close() throws SecurityException {}
+  }
+
+  @Test
+  public void testReportCloneAttribute() throws Exception {
+    assertReportedEeVersion("java17", "8");
+    setUp();
+    assertReportedEeVersion("java21", "10");
+    setUp();
+    assertReportedEeVersion("java25", "11");
+    setUp();
+    assertReportedEeVersion("java11", "6");
+  }
+
+  private static String getServerHostPort(HttpServer server) {
+    InetAddress addr = server.getAddress().getAddress();
+    String host =
+        addr instanceof Inet6Address ? "[" + addr.getHostAddress() + "]" : addr.getHostAddress();
+    return host + ":" + server.getAddress().getPort();
+  }
+
+  private static final class RecordedMetadataRequest {
+    final String method;
+    final String metadataFlavor;
+    final String path;
+    final String body;
+
+    RecordedMetadataRequest(String method, String metadataFlavor, String path, String body) {
+      this.method = method;
+      this.metadataFlavor = metadataFlavor;
+      this.path = path;
+      this.body = body;
+    }
+  }
+
+  private void assertReportedEeVersion(String runtime, String expectedEeVersion) throws Exception {
+    BlockingQueue<RecordedMetadataRequest> requests = new LinkedBlockingQueue<>();
+    HttpServer server =
+        HttpServer.create(new InetSocketAddress(InetAddress.getLoopbackAddress(), 0), 0);
+    server.createContext(
+        "/",
+        exchange -> {
+          String body = new String(exchange.getRequestBody().readAllBytes(), UTF_8);
+          requests.add(
+              new RecordedMetadataRequest(
+                  exchange.getRequestMethod(),
+                  exchange.getRequestHeaders().getFirst("Metadata-Flavor"),
+                  exchange.getRequestURI().getPath(),
+                  body));
+          exchange.sendResponseHeaders(200, -1);
+          exchange.close();
+        });
+    server.start();
+    String metadataHost = getServerHostPort(server);
+
+    try {
+      createTempAppEngineWebXml(
+          "<appengine-web-app xmlns=\"http://appengine.google.com/ns/1.0\">\n"
+              + "    <runtime>"
+              + runtime
+              + "</runtime>\n"
+              + "</appengine-web-app>\n");
+
+      AppEngineWebXmlInitialParse parser =
+          new AppEngineWebXmlInitialParse(tempFile.toFile().getAbsolutePath());
+      parser.setEnvProvider(
+          key -> {
+            if (key.equals("GAE_REPORT_CLONE_ATTRIBUTES")) {
+              return "true";
+            }
+            if (key.equals("GCE_METADATA_HOST")) {
+              return metadataHost;
+            }
+            return null;
+          });
+      parser.handleRuntimeProperties();
+
+      // The request is done in a separate thread, so we need to wait a bit.
+      RecordedMetadataRequest request = requests.poll(5, SECONDS);
+      assertNotNull("Expected metadata request within 5 seconds", request);
+      assertEquals("PUT", request.method);
+      assertEquals("Google", request.metadataFlavor);
+      assertEquals(
+          "/computeMetadata/v1/instance/guest-attributes/goog-gae-java/ee-version", request.path);
+      assertEquals(expectedEeVersion, request.body);
+    } finally {
+      server.stop(0);
+    }
+  }
+
+  @Test
+  public void testGetMetadataGuestAttributesUrl() throws Exception {
+    createTempAppEngineWebXml(
+        """
+        <appengine-web-app xmlns="http://appengine.google.com/ns/1.0">
+            <runtime>java17</runtime>
+        </appengine-web-app>
+        """);
+    AppEngineWebXmlInitialParse parser =
+        new AppEngineWebXmlInitialParse(tempFile.toFile().getAbsolutePath());
+
+    parser.setEnvProvider(key -> null);
+    assertEquals(
+        "http://metadata.google.internal/computeMetadata/v1/instance/guest-attributes/goog-gae-java/",
+        parser.getMetadataGuestAttributesUrl());
+
+    parser.setEnvProvider(key -> key.equals("GCE_METADATA_HOST") ? "" : null);
+    assertEquals(
+        "http://metadata.google.internal/computeMetadata/v1/instance/guest-attributes/goog-gae-java/",
+        parser.getMetadataGuestAttributesUrl());
+
+    parser.setEnvProvider(key -> key.equals("GCE_METADATA_HOST") ? "127.0.0.1:8080" : null);
+    assertEquals(
+        "http://127.0.0.1:8080/computeMetadata/v1/instance/guest-attributes/goog-gae-java/",
+        parser.getMetadataGuestAttributesUrl());
+  }
+
+  @Test
+  public void testReportCloneAttributeNon200LogsWarning() throws Exception {
+    Logger logger = Logger.getLogger(AppEngineWebXmlInitialParse.class.getName());
+    TestHandler handler = new TestHandler();
+    logger.addHandler(handler);
+    HttpServer server =
+        HttpServer.create(new InetSocketAddress(InetAddress.getLoopbackAddress(), 0), 0);
+    server.createContext(
+        "/",
+        exchange -> {
+          byte[] unused = exchange.getRequestBody().readAllBytes();
+          exchange.sendResponseHeaders(500, -1);
+          exchange.close();
+        });
+    server.start();
+    String metadataHost = getServerHostPort(server);
+
+    try {
+      createTempAppEngineWebXml(
+          """
+          <appengine-web-app xmlns="http://appengine.google.com/ns/1.0">
+              <runtime>java17</runtime>
+          </appengine-web-app>
+          """);
+      AppEngineWebXmlInitialParse parser =
+          new AppEngineWebXmlInitialParse(tempFile.toFile().getAbsolutePath());
+      parser.setEnvProvider(key -> key.equals("GCE_METADATA_HOST") ? metadataHost : null);
+      parser.reportCloneAttribute("ee-version", "8");
+
+      boolean found = false;
+      for (LogRecord record : handler.records) {
+        if (record
+            .getMessage()
+            .contains("Failed to report ee-version=8 to metadata server. Response code: 500")) {
+          found = true;
+          break;
+        }
+      }
+      assertTrue("Expected warning log for non-200 response code", found);
+    } finally {
+      server.stop(0);
+      logger.removeHandler(handler);
+    }
+  }
+
+  @Test
+  public void testReportCloneAttributeInvalidUrlLogsWarning() throws Exception {
+    Logger logger = Logger.getLogger(AppEngineWebXmlInitialParse.class.getName());
+    TestHandler handler = new TestHandler();
+    logger.addHandler(handler);
+
+    try {
+      createTempAppEngineWebXml(
+          """
+          <appengine-web-app xmlns="http://appengine.google.com/ns/1.0">
+              <runtime>java17</runtime>
+          </appengine-web-app>
+          """);
+      AppEngineWebXmlInitialParse parser =
+          new AppEngineWebXmlInitialParse(tempFile.toFile().getAbsolutePath());
+      parser.setEnvProvider(key -> key.equals("GCE_METADATA_HOST") ? "not a valid uri" : null);
+      parser.reportCloneAttribute("ee-version", "8");
+
+      boolean found = false;
+      for (LogRecord record : handler.records) {
+        if (record
+            .getMessage()
+            .contains("Exception reporting ee-version=8 to metadata server:")) {
+          found = true;
+          break;
+        }
+      }
+      assertTrue("Expected warning log for exception", found);
+    } finally {
+      logger.removeHandler(handler);
+    }
   }
 }
