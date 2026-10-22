@@ -26,8 +26,9 @@ import com.google.appengine.api.datastore.Entity;
 import com.google.appengine.api.datastore.EntityNotFoundException;
 import com.google.appengine.api.datastore.FetchOptions;
 import com.google.appengine.api.datastore.Key;
-import com.google.appengine.api.datastore.PreparedQuery;
+import com.google.appengine.api.datastore.KeyFactory;
 import com.google.appengine.api.datastore.Query;
+import com.google.appengine.api.datastore.Query.CompositeFilterOperator;
 import com.google.appengine.api.datastore.Query.FilterOperator;
 import com.google.appengine.api.datastore.Query.FilterPredicate;
 import com.google.appengine.api.datastore.Text;
@@ -47,10 +48,11 @@ import com.google.protobuf.Timestamp;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Base64;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
@@ -69,6 +71,13 @@ final class TaskProcessor {
 
   // Datastore Entity Kind & Properties
   static final String ENTITY_KIND_PENDING_TASK = "_AE_PendingCloudTask";
+  /**
+   * Prefix of {@code _AE_PendingCloudTaskBatch} key names: sorts after every hexadecimal character
+   * (so bare-UUID keys from the previous version sort first) and is followed by the creation epoch
+   * millis zero-padded to 19 digits, which keeps lexicographic order equal to numeric order for
+   * any positive long.
+   */
+  static final String TIMESTAMPED_BATCH_KEY_PREFIX = "z";
   static final String PROPERTY_QUEUE_NAME = "queue_name";
   static final String PROPERTY_CLOUD_TASK_NAME = "cloud_task_name";
   static final String PROPERTY_CLOUD_TASK_PAYLOAD = "cloud_task_payload";
@@ -94,6 +103,13 @@ final class TaskProcessor {
   static final long REALTIME_DISPATCH_GRACE_PERIOD_MILLIS = 60_000L;
   static final long MAX_RETRY_COUNT = 5L;
   static final int SWEEP_BATCH_LIMIT = 500;
+  /**
+   * Upper bound on {@code PENDING} entities with a pre-timestamp batch key (bare UUID, or none)
+   * read per sweep. Such keys are not creation-ordered, so grace-period eligibility must be
+   * checked in memory; this bound keeps one sweep's Datastore work finite while that transitional
+   * backlog drains.
+   */
+  static final int SWEEP_SCAN_LIMIT = 10 * SWEEP_BATCH_LIMIT;
   static final Duration LOCK_DURATION = Duration.ofMinutes(1);
   static final double DATASTORE_DEADLINE_SECONDS = 10.0;
 
@@ -184,11 +200,8 @@ final class TaskProcessor {
 
   /**
    * Sweeps Datastore for orphaned or un-dispatched {@code _AE_PendingCloudTask} entities and
-   * processes them.
-   *
-   * <p>Only {@code PENDING} and {@code PROCESSING} entities are queried so that terminal {@code
-   * FAILED} entities (kept for inspection) can never fill the {@link #SWEEP_BATCH_LIMIT} window
-   * and starve dispatchable tasks.
+   * processes them. See {@link #findSweepCandidates} for the selection rules; only built-in
+   * single-property indexes are used, so no user-defined composite index is required.
    *
    * @return the number of swept tasks processed
    */
@@ -199,45 +212,7 @@ final class TaskProcessor {
       DatastoreService ds =
           DatastoreServiceFactory.getDatastoreService(
               DatastoreServiceConfig.Builder.withDeadline(DATASTORE_DEADLINE_SECONDS));
-      Query q =
-          new Query(ENTITY_KIND_PENDING_TASK)
-              .setFilter(
-                  new FilterPredicate(
-                      PROPERTY_STATUS,
-                      FilterOperator.IN,
-                      Arrays.asList(STATUS_PENDING, STATUS_PROCESSING)))
-              .addSort(PROPERTY_CREATED, Query.SortDirection.ASCENDING);
-      PreparedQuery pq = ds.prepare(q);
-
-      long now = Instant.now().toEpochMilli();
-      List<Key> keysToProcess = new ArrayList<>();
-      for (Entity entity : pq.asIterable(FetchOptions.Builder.withLimit(SWEEP_BATCH_LIMIT))) {
-        String status = (String) entity.getProperty(PROPERTY_STATUS);
-        if (Objects.equals(status, STATUS_PENDING)) {
-          Object createdObj = entity.getProperty(PROPERTY_CREATED);
-          Instant created = (createdObj instanceof Date d) ? d.toInstant() : null;
-          if (created != null
-              && (now - created.toEpochMilli()) < REALTIME_DISPATCH_GRACE_PERIOD_MILLIS) {
-            continue; // Give real-time post-commit 60s to dispatch
-          }
-        } else if (Objects.equals(status, STATUS_PROCESSING)) {
-          Object lockObj = entity.getProperty(PROPERTY_LOCK_EXPIRES);
-          Instant lockExpires = (lockObj instanceof Date d) ? d.toInstant() : null;
-          if (lockExpires != null && now < lockExpires.toEpochMilli()) {
-            continue; // Still actively processing and lock valid
-          } else if (lockExpires == null) {
-            Object createdObj = entity.getProperty(PROPERTY_CREATED);
-            Instant created = (createdObj instanceof Date d) ? d.toInstant() : null;
-            if (created != null && (now - created.toEpochMilli()) < LOCK_DURATION.toMillis()) {
-              continue; // Assume lock valid if just started within lock window
-            }
-          }
-        } else {
-          continue;
-        }
-        keysToProcess.add(entity.getKey());
-      }
-
+      List<Key> keysToProcess = findSweepCandidates(ds, Instant.now());
       if (!keysToProcess.isEmpty()) {
         logger.info("CLOUDTASK: Sweeper found " + keysToProcess.size() + " tasks to process.");
         processPendingTaskKeys(keysToProcess, true);
@@ -246,6 +221,201 @@ final class TaskProcessor {
     } finally {
       NamespaceManager.set(previousNamespace);
     }
+  }
+
+  /**
+   * Returns up to {@link #SWEEP_BATCH_LIMIT} keys of overdue tasks: {@code PROCESSING} tasks whose
+   * lock has expired (oldest lock first), then {@code PENDING} tasks past the grace period (oldest
+   * first). Every query is served by a built-in single-property index, so no composite index is
+   * required:
+   *
+   * <ul>
+   *   <li>{@code 0 < lock_expires <= now}: {@code lock_expires} is non-null only while a task is
+   *       {@code PROCESSING}, so this is exactly the set of crashed dispatches.
+   *   <li>{@code status == PROCESSING AND lock_expires == null}: equality-only merge join; keeps
+   *       the pre-existing fallback for entities locked without an expiry (treated as expired once
+   *       older than {@link #LOCK_DURATION}).
+   *   <li>{@code status == PENDING AND z0 <= __key__ < z(cutoff + 1)}: {@code __key__} filters are
+   *       planned natively alongside one equality filter. Because timestamped batch keys embed the
+   *       creation millis, this range is exactly the tasks created on or before the grace cutoff.
+   *   <li>{@code status == PENDING AND __key__ < z0}: tasks keyed by an older SDK (bare UUID, or no
+   *       batch key). Those keys are not creation-ordered, so up to {@link #SWEEP_SCAN_LIMIT} are
+   *       read and merged with the timestamped candidates by {@code created}; ordering is exact
+   *       within that window.
+   * </ul>
+   */
+  static List<Key> findSweepCandidates(DatastoreService ds, Instant now) {
+    List<Key> keysToProcess = new ArrayList<>();
+    Date nowDate = Date.from(now);
+
+    Query expiredLocks =
+        new Query(ENTITY_KIND_PENDING_TASK)
+            .setFilter(
+                CompositeFilterOperator.and(
+                    // > EPOCH excludes lock_expires == null (null sorts below every date), i.e.
+                    // every PENDING/FAILED task; otherwise they would fill the batch first.
+                    new FilterPredicate(
+                        PROPERTY_LOCK_EXPIRES,
+                        FilterOperator.GREATER_THAN,
+                        Date.from(Instant.EPOCH)),
+                    new FilterPredicate(
+                        PROPERTY_LOCK_EXPIRES, FilterOperator.LESS_THAN_OR_EQUAL, nowDate)))
+            .addSort(PROPERTY_LOCK_EXPIRES, Query.SortDirection.ASCENDING);
+    for (Entity entity : ds.prepare(expiredLocks).asIterable(fetchUpTo(SWEEP_BATCH_LIMIT))) {
+      if (isActionableForSweep(entity, now)) {
+        keysToProcess.add(entity.getKey());
+      } else {
+        clearStaleLock(ds, entity.getKey());
+      }
+    }
+    int remaining = SWEEP_BATCH_LIMIT - keysToProcess.size();
+    if (remaining <= 0) {
+      return keysToProcess;
+    }
+
+    Query unlockedProcessing =
+        new Query(ENTITY_KIND_PENDING_TASK)
+            .setFilter(
+                CompositeFilterOperator.and(
+                    new FilterPredicate(PROPERTY_STATUS, FilterOperator.EQUAL, STATUS_PROCESSING),
+                    new FilterPredicate(PROPERTY_LOCK_EXPIRES, FilterOperator.EQUAL, null)));
+    for (Entity entity : ds.prepare(unlockedProcessing).asIterable(fetchUpTo(remaining))) {
+      if (isActionableForSweep(entity, now)) {
+        keysToProcess.add(entity.getKey());
+      }
+    }
+    remaining = SWEEP_BATCH_LIMIT - keysToProcess.size();
+    if (remaining <= 0) {
+      return keysToProcess;
+    }
+
+    // Keep only key and creation time per candidate; entities carry the task payload (up to 100KB)
+    // and must not be retained across the scan.
+    List<SweepCandidate> pendingCandidates = new ArrayList<>();
+    Key minTimestampedKey = timestampedBoundaryKey(Instant.EPOCH);
+    Key cutoffTimestampedKey =
+        timestampedBoundaryKey(now.minusMillis(REALTIME_DISPATCH_GRACE_PERIOD_MILLIS).plusMillis(1));
+    Query timestampedPending =
+        new Query(ENTITY_KIND_PENDING_TASK)
+            .setFilter(
+                CompositeFilterOperator.and(
+                    new FilterPredicate(PROPERTY_STATUS, FilterOperator.EQUAL, STATUS_PENDING),
+                    new FilterPredicate(
+                        Entity.KEY_RESERVED_PROPERTY,
+                        FilterOperator.GREATER_THAN_OR_EQUAL,
+                        minTimestampedKey),
+                    new FilterPredicate(
+                        Entity.KEY_RESERVED_PROPERTY,
+                        FilterOperator.LESS_THAN,
+                        cutoffTimestampedKey)));
+    for (Entity entity : ds.prepare(timestampedPending).asIterable(fetchUpTo(remaining))) {
+      pendingCandidates.add(SweepCandidate.of(entity)); // key range implies created <= cutoff
+    }
+
+    Query legacyPending =
+        new Query(ENTITY_KIND_PENDING_TASK)
+            .setFilter(
+                CompositeFilterOperator.and(
+                    new FilterPredicate(PROPERTY_STATUS, FilterOperator.EQUAL, STATUS_PENDING),
+                    new FilterPredicate(
+                        Entity.KEY_RESERVED_PROPERTY, FilterOperator.LESS_THAN, minTimestampedKey)));
+    for (Entity entity : ds.prepare(legacyPending).asIterable(fetchUpTo(SWEEP_SCAN_LIMIT))) {
+      if (isActionableForSweep(entity, now)) {
+        pendingCandidates.add(SweepCandidate.of(entity));
+      }
+    }
+
+    pendingCandidates.sort(
+        Comparator.comparing(SweepCandidate::created).thenComparing(SweepCandidate::key));
+    for (int i = 0; i < Math.min(remaining, pendingCandidates.size()); i++) {
+      keysToProcess.add(pendingCandidates.get(i).key());
+    }
+    return keysToProcess;
+  }
+
+  /** Key and creation time of a {@code PENDING} task, without the entity's payload. */
+  private record SweepCandidate(Key key, Instant created) {
+    static SweepCandidate of(Entity entity) {
+      Object createdObj = entity.getProperty(PROPERTY_CREATED);
+      Instant created = (createdObj instanceof Date d) ? d.toInstant() : Instant.MIN;
+      return new SweepCandidate(entity.getKey(), created);
+    }
+  }
+
+  private static FetchOptions fetchUpTo(int limit) {
+    return FetchOptions.Builder.withLimit(limit).chunkSize(Math.min(limit, SWEEP_BATCH_LIMIT));
+  }
+
+  /**
+   * Clears {@code lock_expires} on an entity that is not {@code PROCESSING} yet carries an expired
+   * lock. No code path writes such an entity, but if one existed it would be returned by every
+   * expired-lock scan ahead of real crashed dispatches and, with enough of them, crowd those out
+   * permanently. The entity is re-read in a transaction so a lock acquired concurrently by a
+   * dispatcher is never overwritten.
+   */
+  private static void clearStaleLock(DatastoreService ds, Key key) {
+    Transaction txn = ds.beginTransaction();
+    try {
+      Entity current = ds.get(txn, key);
+      if (Objects.equals(current.getProperty(PROPERTY_STATUS), STATUS_PROCESSING)
+          || current.getProperty(PROPERTY_LOCK_EXPIRES) == null) {
+        txn.rollback();
+        return;
+      }
+      current.setProperty(PROPERTY_LOCK_EXPIRES, null);
+      ds.put(txn, current);
+      txn.commit();
+      logger.warning("CLOUDTASK: Cleared stale lock_expires on non-PROCESSING task " + key);
+    } catch (EntityNotFoundException enfe) {
+      // Deleted concurrently; nothing to heal.
+    } catch (RuntimeException e) {
+      logger.log(Level.WARNING, "Failed to clear stale lock on " + key + ": " + e.getMessage());
+    } finally {
+      if (txn.isActive()) {
+        try {
+          txn.rollback();
+        } catch (RuntimeException ignored) {
+          // Ignore rollback failure
+        }
+      }
+    }
+  }
+
+  /**
+   * Returns a key that sorts at the start of all {@code _AE_PendingCloudTask} keys whose batch was
+   * created at {@code at}: every real batch key has a {@code -<UUID>} suffix after the timestamp
+   * and therefore compares greater.
+   */
+  private static Key timestampedBoundaryKey(Instant at) {
+    Key batchKey =
+        KeyFactory.createKey(
+            CloudTasksClientWrapper.ENTITY_KIND_PENDING_TASK_BATCH,
+            String.format(
+                Locale.ROOT, "%s%019d", TIMESTAMPED_BATCH_KEY_PREFIX, at.toEpochMilli()));
+    return KeyFactory.createKey(batchKey, ENTITY_KIND_PENDING_TASK, 1L);
+  }
+
+  /**
+   * Returns whether a {@code PENDING} or {@code PROCESSING} entity is overdue and should be
+   * dispatched by the sweeper.
+   */
+  private static boolean isActionableForSweep(Entity entity, Instant now) {
+    String status = (String) entity.getProperty(PROPERTY_STATUS);
+    Object createdObj = entity.getProperty(PROPERTY_CREATED);
+    Instant created = (createdObj instanceof Date d) ? d.toInstant() : null;
+    if (Objects.equals(status, STATUS_PENDING)) {
+      return created == null
+          || !now.isBefore(created.plusMillis(REALTIME_DISPATCH_GRACE_PERIOD_MILLIS));
+    }
+    if (Objects.equals(status, STATUS_PROCESSING)) {
+      Object lockObj = entity.getProperty(PROPERTY_LOCK_EXPIRES);
+      Instant lockExpires = (lockObj instanceof Date d) ? d.toInstant() : null;
+      if (lockExpires != null) {
+        return !now.isBefore(lockExpires);
+      }
+      return created == null || !now.isBefore(created.plus(LOCK_DURATION));
+    }
+    return false;
   }
 
   private static void processSingleTask(DatastoreService ds, Key key, boolean handledBySweeper) {

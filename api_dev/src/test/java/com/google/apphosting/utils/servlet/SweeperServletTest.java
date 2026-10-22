@@ -52,7 +52,7 @@ public class SweeperServletTest {
   private static final String STATUS_PENDING = "PENDING";
 
   private final LocalServiceTestHelper helper =
-      new LocalServiceTestHelper(new LocalDatastoreServiceTestConfig());
+      new LocalServiceTestHelper(new LocalDatastoreServiceTestConfig().setNoIndexAutoGen(true));
 
   private SweeperServlet servlet;
   private HttpServletRequest request;

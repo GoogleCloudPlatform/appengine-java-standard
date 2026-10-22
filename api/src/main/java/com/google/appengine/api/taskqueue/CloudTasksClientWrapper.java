@@ -928,13 +928,22 @@ final class CloudTasksClientWrapper {
     List<Entity> transactionalEntities = new ArrayList<>();
 
     // All pending entities of this add call share one per-batch parent key so that the batch
-    // consumes a single Datastore entity group instead of one entity group per task.
+    // consumes a single Datastore entity group instead of one entity group per task. The key name
+    // embeds the creation millis so TaskProcessor.sweep() can select overdue tasks by __key__
+    // range (see TaskProcessor.TIMESTAMPED_BATCH_KEY_PREFIX).
+    Instant now = Instant.now(); // NOMUTANTS -- timestamp
+    String batchId =
+        String.format(
+            Locale.ROOT,
+            "%s%019d-%s",
+            TaskProcessor.TIMESTAMPED_BATCH_KEY_PREFIX,
+            now.toEpochMilli(),
+            UUID.randomUUID());
     Key batchParentKey;
     String previousNamespace = NamespaceManager.get();
     NamespaceManager.set("");
     try {
-      batchParentKey =
-          KeyFactory.createKey(ENTITY_KIND_PENDING_TASK_BATCH, UUID.randomUUID().toString());
+      batchParentKey = KeyFactory.createKey(ENTITY_KIND_PENDING_TASK_BATCH, batchId);
     } finally {
       NamespaceManager.set(previousNamespace);
     }
@@ -954,7 +963,7 @@ final class CloudTasksClientWrapper {
       } else {
         pendingTask.setProperty(PROPERTY_CLOUD_TASK_PAYLOAD, jsonPayload);
       }
-      pendingTask.setProperty(PROPERTY_CREATED, Date.from(Instant.now())); // NOMUTANTS -- timestamp
+      pendingTask.setProperty(PROPERTY_CREATED, Date.from(now));
       pendingTask.setProperty(PROPERTY_STATUS, STATUS_PENDING);
       pendingTask.setProperty(PROPERTY_LOCK_EXPIRES, null); // NOMUTANTS -- initial schema default
       pendingTask.setProperty(PROPERTY_RETRY_COUNT, 0L); // NOMUTANTS -- initial schema default

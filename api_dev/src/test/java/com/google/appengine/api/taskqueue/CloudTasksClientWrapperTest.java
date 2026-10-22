@@ -30,6 +30,7 @@ import com.google.appengine.api.datastore.Entity;
 import com.google.appengine.api.datastore.EntityNotFoundException;
 import com.google.appengine.api.datastore.FetchOptions;
 import com.google.appengine.api.datastore.Key;
+import com.google.appengine.api.datastore.KeyFactory;
 import com.google.appengine.api.datastore.Query;
 import com.google.appengine.api.datastore.Text;
 import com.google.appengine.api.datastore.Transaction;
@@ -77,8 +78,10 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
@@ -102,7 +105,7 @@ public class CloudTasksClientWrapperTest {
   private static final String TEST_TOKEN = "fake-oauth-token";
 
   private final LocalServiceTestHelper helper =
-      new LocalServiceTestHelper(new LocalDatastoreServiceTestConfig());
+      new LocalServiceTestHelper(new LocalDatastoreServiceTestConfig().setNoIndexAutoGen(true));
 
   private HttpServer server;
   private String baseUrl;
@@ -1664,6 +1667,471 @@ public class CloudTasksClientWrapperTest {
         .isEqualTo("projects/test-proj/locations/us-central1/queues/default/tasks/live-task");
   }
 
+  private static Entity newPendingTaskEntity(
+      String batchId, String taskName, String status, Instant created, Date lockExpires) {
+    Key parent =
+        KeyFactory.createKey(CloudTasksClientWrapper.ENTITY_KIND_PENDING_TASK_BATCH, batchId);
+    Entity e = new Entity(TaskProcessor.ENTITY_KIND_PENDING_TASK, parent);
+    e.setProperty(TaskProcessor.PROPERTY_QUEUE_NAME, "default");
+    e.setProperty(TaskProcessor.PROPERTY_CLOUD_TASK_NAME, taskName);
+    e.setProperty(
+        TaskProcessor.PROPERTY_CLOUD_TASK_PAYLOAD,
+        "{\"name\":\"projects/test-proj/locations/us-central1/queues/default/tasks/"
+            + taskName
+            + "\",\"appEngineHttpRequest\":{\"httpMethod\":\"POST\",\"relativeUri\":\"/w\"}}");
+    e.setProperty(TaskProcessor.PROPERTY_CREATED, Date.from(created));
+    e.setProperty(TaskProcessor.PROPERTY_STATUS, status);
+    e.setProperty(TaskProcessor.PROPERTY_LOCK_EXPIRES, lockExpires);
+    e.setProperty(TaskProcessor.PROPERTY_RETRY_COUNT, 0L);
+    return e;
+  }
+
+  private static String batchIdAt(Instant created) {
+    return String.format(Locale.ROOT, "z%019d-%s", created.toEpochMilli(), UUID.randomUUID());
+  }
+
+  private static String taskNameOf(Key key, DatastoreService ds) throws EntityNotFoundException {
+    return (String) ds.get(key).getProperty(TaskProcessor.PROPERTY_CLOUD_TASK_NAME);
+  }
+
+  private List<String> dispatchedTaskNames() {
+    List<String> names = new ArrayList<>();
+    for (CreateTaskRequest req : createTaskRequests) {
+      String full = req.getTask().getName();
+      names.add(full.substring(full.lastIndexOf('/') + 1));
+    }
+    return names;
+  }
+
+  @Test
+  public void testSweep_sweepsOldestBatchFirstWithoutCompositeIndex() throws Exception {
+    DatastoreService ds = DatastoreServiceFactory.getDatastoreService();
+    // Insert in reverse chronological order so insertion order cannot mask key ordering.
+    Instant base = Instant.now().minusSeconds(3600);
+    List<Entity> backlog = new ArrayList<>();
+    int total = TaskProcessor.SWEEP_BATCH_LIMIT + 50;
+    for (int i = total - 1; i >= 0; i--) {
+      Instant created = base.plusMillis(i);
+      backlog.add(
+          newPendingTaskEntity(
+              batchIdAt(created), "pending-" + i, TaskProcessor.STATUS_PENDING, created, null));
+    }
+    ds.put(backlog);
+
+    // Selection is strictly oldest-first and capped at SWEEP_BATCH_LIMIT.
+    List<Key> selected = TaskProcessor.findSweepCandidates(ds, Instant.now());
+    assertThat(selected).hasSize(TaskProcessor.SWEEP_BATCH_LIMIT);
+    for (int i = 0; i < selected.size(); i++) {
+      assertThat(taskNameOf(selected.get(i), ds)).isEqualTo("pending-" + i);
+    }
+
+    // End to end: exactly the oldest SWEEP_BATCH_LIMIT tasks are dispatched (concurrently).
+    assertThat(TaskProcessor.sweep()).isEqualTo(TaskProcessor.SWEEP_BATCH_LIMIT);
+    List<String> dispatched = dispatchedTaskNames();
+    assertThat(dispatched).hasSize(TaskProcessor.SWEEP_BATCH_LIMIT);
+    assertThat(dispatched).contains("pending-0");
+    assertThat(dispatched).contains("pending-" + (TaskProcessor.SWEEP_BATCH_LIMIT - 1));
+    assertThat(dispatched).doesNotContain("pending-" + TaskProcessor.SWEEP_BATCH_LIMIT);
+    assertThat(dispatched).doesNotContain("pending-" + (total - 1));
+    assertThat(ds.getIndexes()).isEmpty();
+  }
+
+  @Test
+  public void testSweep_legacyAndTimestampedPendingMergedByCreated() throws Exception {
+    DatastoreService ds = DatastoreServiceFactory.getDatastoreService();
+    Instant old = Instant.now().minusSeconds(600);
+    // Legacy bare-UUID key ("f..." is the largest legacy prefix) created AFTER the timestamped
+    // task: __key__ order would put legacy first, but created order must win.
+    ds.put(
+        newPendingTaskEntity(
+            "ffffffff-ffff-4fff-8fff-ffffffffffff",
+            "legacy-newer",
+            TaskProcessor.STATUS_PENDING,
+            old,
+            null));
+    ds.put(
+        newPendingTaskEntity(
+            batchIdAt(old.minusSeconds(60)),
+            "timestamped-older",
+            TaskProcessor.STATUS_PENDING,
+            old.minusSeconds(60),
+            null));
+    // Legacy key created before both.
+    ds.put(
+        newPendingTaskEntity(
+            "00000000-0000-4000-8000-000000000000",
+            "legacy-oldest",
+            TaskProcessor.STATUS_PENDING,
+            old.minusSeconds(120),
+            null));
+
+    List<Key> selected = TaskProcessor.findSweepCandidates(ds, Instant.now());
+    List<String> names = new ArrayList<>();
+    for (Key k : selected) {
+      names.add(taskNameOf(k, ds));
+    }
+    assertThat(names).containsExactly("legacy-oldest", "timestamped-older", "legacy-newer")
+        .inOrder();
+    assertThat(ds.getIndexes()).isEmpty();
+  }
+
+  @Test
+  public void testSweep_expiredProcessingTaskNotStarvedByPendingBacklog() throws Exception {
+    DatastoreService ds = DatastoreServiceFactory.getDatastoreService();
+    Instant base = Instant.now().minusSeconds(3600);
+    List<Entity> backlog = new ArrayList<>();
+    for (int i = 0; i < TaskProcessor.SWEEP_BATCH_LIMIT; i++) {
+      Instant created = base.plusMillis(i);
+      backlog.add(
+          newPendingTaskEntity(
+              batchIdAt(created), "pending-" + i, TaskProcessor.STATUS_PENDING, created, null));
+    }
+    ds.put(backlog);
+    // A crashed dispatch: PROCESSING with an expired lock, created after every PENDING task so it
+    // would sort last if PENDING and PROCESSING shared one SWEEP_BATCH_LIMIT window.
+    Instant crashedAt = base.plusSeconds(10);
+    ds.put(
+        newPendingTaskEntity(
+            batchIdAt(crashedAt),
+            "crashed",
+            TaskProcessor.STATUS_PROCESSING,
+            crashedAt,
+            Date.from(Instant.now().minusSeconds(120))));
+    // An actively locked PROCESSING task must be left alone.
+    ds.put(
+        newPendingTaskEntity(
+            batchIdAt(crashedAt),
+            "in-flight",
+            TaskProcessor.STATUS_PROCESSING,
+            crashedAt,
+            Date.from(Instant.now().plusSeconds(30))));
+
+    List<Key> selected = TaskProcessor.findSweepCandidates(ds, Instant.now());
+    assertThat(selected).hasSize(TaskProcessor.SWEEP_BATCH_LIMIT);
+    assertThat(taskNameOf(selected.get(0), ds)).isEqualTo("crashed");
+    assertThat(taskNameOf(selected.get(1), ds)).isEqualTo("pending-0");
+
+    assertThat(TaskProcessor.sweep()).isEqualTo(TaskProcessor.SWEEP_BATCH_LIMIT);
+    List<String> dispatched = dispatchedTaskNames();
+    assertThat(dispatched).contains("crashed");
+    assertThat(dispatched).contains("pending-0");
+    assertThat(dispatched).doesNotContain("in-flight");
+    assertThat(dispatched).doesNotContain("pending-" + (TaskProcessor.SWEEP_BATCH_LIMIT - 1));
+  }
+
+  @Test
+  public void testSweep_crashedProcessingTaskNotMaskedByOlderActivelyLockedTasks() throws Exception {
+    DatastoreService ds = DatastoreServiceFactory.getDatastoreService();
+    Instant base = Instant.now().minusSeconds(3600);
+    Date activeLock = Date.from(Instant.now().plusSeconds(45));
+    // More than SWEEP_SCAN_LIMIT older tasks are mid-dispatch with valid locks. Expired locks are
+    // found by a lock_expires range query, so no number of actively locked tasks can mask them.
+    int activeCount = TaskProcessor.SWEEP_SCAN_LIMIT + 1;
+    List<Entity> batch = new ArrayList<>();
+    for (int i = 0; i < activeCount; i++) {
+      Instant created = base.plusMillis(i);
+      batch.add(
+          newPendingTaskEntity(
+              batchIdAt(created),
+              "active-" + i,
+              TaskProcessor.STATUS_PROCESSING,
+              created,
+              activeLock));
+      if (batch.size() == 500) {
+        ds.put(batch);
+        batch.clear();
+      }
+    }
+    if (!batch.isEmpty()) {
+      ds.put(batch);
+    }
+    Instant crashedAt = base.plusSeconds(10);
+    ds.put(
+        newPendingTaskEntity(
+            batchIdAt(crashedAt),
+            "crashed",
+            TaskProcessor.STATUS_PROCESSING,
+            crashedAt,
+            Date.from(Instant.now().minusSeconds(120))));
+
+    List<Key> selected = TaskProcessor.findSweepCandidates(ds, Instant.now());
+    assertThat(selected).hasSize(1);
+    assertThat(taskNameOf(selected.get(0), ds)).isEqualTo("crashed");
+    assertThat(ds.getIndexes()).isEmpty();
+
+    assertThat(TaskProcessor.sweep()).isEqualTo(1);
+    assertThat(dispatchedTaskNames()).containsExactly("crashed");
+  }
+
+  @Test
+  public void testSweep_expiredLocksSelectedOldestLockFirstAndCappedAtBatchLimit() throws Exception {
+    DatastoreService ds = DatastoreServiceFactory.getDatastoreService();
+    Instant base = Instant.now().minusSeconds(3600);
+    int crashedCount = TaskProcessor.SWEEP_BATCH_LIMIT + 10;
+    List<Entity> batch = new ArrayList<>();
+    // Newer keys get older lock expiries so lock order and key order disagree.
+    for (int i = 0; i < crashedCount; i++) {
+      Instant created = base.plusMillis(i);
+      Date lockExpires = Date.from(Instant.now().minusSeconds(1000 - i));
+      batch.add(
+          newPendingTaskEntity(
+              batchIdAt(created),
+              "crashed-" + i,
+              TaskProcessor.STATUS_PROCESSING,
+              created,
+              lockExpires));
+      if (batch.size() == 500) {
+        ds.put(batch);
+        batch.clear();
+      }
+    }
+    ds.put(batch);
+    // A PENDING task past the grace period must not be selected while the budget is full.
+    ds.put(
+        newPendingTaskEntity(
+            batchIdAt(base), "pending-old", TaskProcessor.STATUS_PENDING, base, null));
+
+    List<Key> selected = TaskProcessor.findSweepCandidates(ds, Instant.now());
+    assertThat(selected).hasSize(TaskProcessor.SWEEP_BATCH_LIMIT);
+    // Oldest lock first: crashed-0 has the earliest lock_expires.
+    assertThat(taskNameOf(selected.get(0), ds)).isEqualTo("crashed-0");
+    assertThat(taskNameOf(selected.get(selected.size() - 1), ds))
+        .isEqualTo("crashed-" + (TaskProcessor.SWEEP_BATCH_LIMIT - 1));
+  }
+
+  @Test
+  public void testSweep_actionableTaskNotMaskedByYoungLegacyKeyedTasks() throws Exception {
+    DatastoreService ds = DatastoreServiceFactory.getDatastoreService();
+    // Rolling deployment: older instances keep writing bare-UUID batch keys, which sort before
+    // every "z"-prefixed key. More than SWEEP_SCAN_LIMIT of them are inside the grace period.
+    // Timestamped PENDING tasks are read by a __key__ range that starts above all legacy keys,
+    // so no amount of legacy traffic can mask them.
+    Instant young = Instant.now().minusSeconds(5);
+    List<Entity> batch = new ArrayList<>();
+    for (int i = 0; i < TaskProcessor.SWEEP_SCAN_LIMIT + 1; i++) {
+      batch.add(
+          newPendingTaskEntity(
+              UUID.randomUUID().toString(),
+              "legacy-young-" + i,
+              TaskProcessor.STATUS_PENDING,
+              young,
+              null));
+      if (batch.size() == 500) {
+        ds.put(batch);
+        batch.clear();
+      }
+    }
+    ds.put(batch);
+    Instant old = Instant.now().minusSeconds(600);
+    ds.put(
+        newPendingTaskEntity(
+            batchIdAt(old), "timestamped-old", TaskProcessor.STATUS_PENDING, old, null));
+
+    List<Key> selected = TaskProcessor.findSweepCandidates(ds, Instant.now());
+    assertThat(selected).hasSize(1);
+    assertThat(taskNameOf(selected.get(0), ds)).isEqualTo("timestamped-old");
+  }
+
+  @Test
+  public void testSweep_timestampedKeyRangeExcludesInGraceTasksAndIncludesCutoff()
+      throws Exception {
+    DatastoreService ds = DatastoreServiceFactory.getDatastoreService();
+    Instant nowInstant = Instant.now();
+    long now = nowInstant.toEpochMilli();
+    long cutoff = now - TaskProcessor.REALTIME_DISPATCH_GRACE_PERIOD_MILLIS;
+    // Exactly at the cutoff: eligible. One millisecond after: not eligible.
+    ds.put(
+        newPendingTaskEntity(
+            batchIdAt(Instant.ofEpochMilli(cutoff)),
+            "at-cutoff",
+            TaskProcessor.STATUS_PENDING,
+            Instant.ofEpochMilli(cutoff),
+            null));
+    ds.put(
+        newPendingTaskEntity(
+            batchIdAt(Instant.ofEpochMilli(cutoff + 1)),
+            "after-cutoff",
+            TaskProcessor.STATUS_PENDING,
+            Instant.ofEpochMilli(cutoff + 1),
+            null));
+    // Same batch millis as the cutoff but FAILED: must be ignored.
+    ds.put(
+        newPendingTaskEntity(
+            batchIdAt(Instant.ofEpochMilli(cutoff)),
+            "failed",
+            TaskProcessor.STATUS_FAILED,
+            Instant.ofEpochMilli(cutoff),
+            null));
+    // Corrupt data: a terminal FAILED entity that still carries an expired lock. The lock range
+    // query returns it, but it must not be dispatched.
+    ds.put(
+        newPendingTaskEntity(
+            batchIdAt(Instant.ofEpochMilli(cutoff)),
+            "failed-stale-lock",
+            TaskProcessor.STATUS_FAILED,
+            Instant.ofEpochMilli(cutoff),
+            Date.from(Instant.ofEpochMilli(now - 120_000))));
+
+    List<Key> selected = TaskProcessor.findSweepCandidates(ds, nowInstant);
+    assertThat(selected).hasSize(1);
+    assertThat(taskNameOf(selected.get(0), ds)).isEqualTo("at-cutoff");
+  }
+
+  @Test
+  public void testSweep_staleLocksOnTerminalTasksAreClearedAndCannotCrowdOutCrashedTasks()
+      throws Exception {
+    DatastoreService ds = DatastoreServiceFactory.getDatastoreService();
+    Instant old = Instant.now().minusSeconds(3600);
+    // SWEEP_BATCH_LIMIT FAILED entities that (corruptly) still carry locks that expired long ago,
+    // so they sort ahead of every real expired lock.
+    List<Entity> poison = new ArrayList<>();
+    List<Key> poisonKeys = new ArrayList<>();
+    for (int i = 0; i < TaskProcessor.SWEEP_BATCH_LIMIT; i++) {
+      Entity e =
+          newPendingTaskEntity(
+              batchIdAt(old.plusMillis(i)),
+              "poison-" + i,
+              TaskProcessor.STATUS_FAILED,
+              old,
+              Date.from(Instant.now().minusSeconds(7200 - i)));
+      poison.add(e);
+    }
+    poisonKeys.addAll(ds.put(poison));
+    Instant crashedAt = old.plusSeconds(10);
+    ds.put(
+        newPendingTaskEntity(
+            batchIdAt(crashedAt),
+            "crashed",
+            TaskProcessor.STATUS_PROCESSING,
+            crashedAt,
+            Date.from(Instant.now().minusSeconds(120))));
+
+    // First sweep: the poison entities fill the expired-lock scan, but get healed.
+    List<Key> first = TaskProcessor.findSweepCandidates(ds, Instant.now());
+    for (Key k : first) {
+      assertThat(taskNameOf(k, ds)).doesNotContainMatch("^poison-");
+    }
+    for (Key k : poisonKeys) {
+      Entity healed = ds.get(k);
+      assertThat(healed.getProperty(TaskProcessor.PROPERTY_LOCK_EXPIRES)).isNull();
+      assertThat(healed.getProperty(TaskProcessor.PROPERTY_STATUS))
+          .isEqualTo(TaskProcessor.STATUS_FAILED);
+    }
+
+    // Second sweep: nothing stands in front of the crashed task any more.
+    List<Key> second = TaskProcessor.findSweepCandidates(ds, Instant.now());
+    assertThat(second).hasSize(1);
+    assertThat(taskNameOf(second.get(0), ds)).isEqualTo("crashed");
+    assertThat(ds.getIndexes()).isEmpty();
+  }
+
+  @Test
+  public void testSweep_processingWithoutLockExpiresSweptAfterLockDuration() throws Exception {
+    DatastoreService ds = DatastoreServiceFactory.getDatastoreService();
+    Instant old = Instant.now().minus(TaskProcessor.LOCK_DURATION).minusSeconds(1);
+    Instant recent = Instant.now().minusSeconds(5);
+    ds.put(
+        newPendingTaskEntity(
+            batchIdAt(old), "unlocked-old", TaskProcessor.STATUS_PROCESSING, old, null));
+    ds.put(
+        newPendingTaskEntity(
+            batchIdAt(recent), "unlocked-recent", TaskProcessor.STATUS_PROCESSING, recent, null));
+
+    List<Key> selected = TaskProcessor.findSweepCandidates(ds, Instant.now());
+    assertThat(selected).hasSize(1);
+    assertThat(taskNameOf(selected.get(0), ds)).isEqualTo("unlocked-old");
+    assertThat(ds.getIndexes()).isEmpty();
+  }
+
+  @Test
+  public void testSweep_processingTasksFillBudgetBeforePendingIsConsidered() throws Exception {
+    DatastoreService ds = DatastoreServiceFactory.getDatastoreService();
+    Instant old = Instant.now().minusSeconds(3600);
+    Date expiredLock = Date.from(Instant.now().minusSeconds(120));
+    List<Entity> batch = new ArrayList<>();
+    // SWEEP_BATCH_LIMIT - 1 expired locks, then two lock-less PROCESSING tasks older than
+    // LOCK_DURATION: together they exceed the budget, so PENDING must not be queried at all.
+    for (int i = 0; i < TaskProcessor.SWEEP_BATCH_LIMIT - 1; i++) {
+      Instant created = old.plusMillis(i);
+      batch.add(
+          newPendingTaskEntity(
+              batchIdAt(created),
+              "expired-" + i,
+              TaskProcessor.STATUS_PROCESSING,
+              created,
+              expiredLock));
+    }
+    ds.put(batch);
+    ds.put(
+        newPendingTaskEntity(
+            batchIdAt(old), "unlocked-a", TaskProcessor.STATUS_PROCESSING, old, null));
+    ds.put(
+        newPendingTaskEntity(
+            batchIdAt(old), "unlocked-b", TaskProcessor.STATUS_PROCESSING, old, null));
+    ds.put(
+        newPendingTaskEntity(
+            batchIdAt(old), "pending-old", TaskProcessor.STATUS_PENDING, old, null));
+
+    List<Key> selected = TaskProcessor.findSweepCandidates(ds, Instant.now());
+    assertThat(selected).hasSize(TaskProcessor.SWEEP_BATCH_LIMIT);
+    List<String> names = new ArrayList<>();
+    for (Key k : selected) {
+      names.add(taskNameOf(k, ds));
+    }
+    assertThat(names).doesNotContain("pending-old");
+    assertThat(names).contains("expired-0");
+    assertThat(names).contains("expired-" + (TaskProcessor.SWEEP_BATCH_LIMIT - 2));
+    long unlockedSelected = names.stream().filter(n -> n.startsWith("unlocked-")).count();
+    assertThat(unlockedSelected).isEqualTo(1);
+  }
+
+  @Test
+  public void testSweep_inGraceTimestampedPendingTaskSkippedUntilGracePeriodElapses()
+      throws Exception {
+    DatastoreService ds = DatastoreServiceFactory.getDatastoreService();
+    Instant old = Instant.now().minusSeconds(600);
+    Instant young = Instant.now().minusSeconds(5);
+    // A preview-SDK root entity (no parent key) must not NPE and must still be selected.
+    Entity root = new Entity(TaskProcessor.ENTITY_KIND_PENDING_TASK);
+    root.setProperty(TaskProcessor.PROPERTY_QUEUE_NAME, "default");
+    root.setProperty(TaskProcessor.PROPERTY_CLOUD_TASK_NAME, "root-old");
+    root.setProperty(TaskProcessor.PROPERTY_CREATED, Date.from(old));
+    root.setProperty(TaskProcessor.PROPERTY_STATUS, TaskProcessor.STATUS_PENDING);
+    ds.put(root);
+    ds.put(
+        newPendingTaskEntity(
+            batchIdAt(old), "timestamped-old", TaskProcessor.STATUS_PENDING, old, null));
+    ds.put(
+        newPendingTaskEntity(
+            batchIdAt(young), "timestamped-young", TaskProcessor.STATUS_PENDING, young, null));
+    // Keyed after the young PENDING task; must still be found because expired locks are queried
+    // independently of the PENDING key range.
+    Instant crashedAt = young.plusSeconds(1);
+    ds.put(
+        newPendingTaskEntity(
+            batchIdAt(crashedAt),
+            "crashed",
+            TaskProcessor.STATUS_PROCESSING,
+            crashedAt,
+            Date.from(Instant.now().minusSeconds(120))));
+
+    List<Key> selected = TaskProcessor.findSweepCandidates(ds, Instant.now());
+    List<String> names = new ArrayList<>();
+    for (Key k : selected) {
+      names.add(taskNameOf(k, ds));
+    }
+    assertThat(names).containsExactly("crashed", "root-old", "timestamped-old").inOrder();
+
+    // A later sweep, once the young task has aged past the grace period, picks it up.
+    selected =
+        TaskProcessor.findSweepCandidates(ds, Instant.now().plusMillis(TaskProcessor.REALTIME_DISPATCH_GRACE_PERIOD_MILLIS));
+    names.clear();
+    for (Key k : selected) {
+      names.add(taskNameOf(k, ds));
+    }
+    assertThat(names).contains("timestamped-young");
+  }
+
   @Test
   public void testTransactionalAdd_batchSharesSingleEntityGroup() throws Exception {
     createTaskHandler =
@@ -1687,8 +2155,14 @@ public class CloudTasksClientWrapperTest {
     Key parent = pending.get(0).getKey().getParent();
     assertThat(parent).isNotNull();
     assertThat(parent.getKind()).isEqualTo(CloudTasksClientWrapper.ENTITY_KIND_PENDING_TASK_BATCH);
+    assertThat(parent.getName()).matches("z\\d{19}-[0-9a-f-]{36}");
+    // The sweeper's __key__ range assumes the batch key embeds the entities' creation time.
+    long keyMillis = Long.parseLong(parent.getName().substring(1, 20));
     for (Entity e : pending) {
       assertThat(e.getKey().getParent()).isEqualTo(parent);
+      Object created = e.getProperty(TaskProcessor.PROPERTY_CREATED);
+      assertThat(created).isInstanceOf(Date.class);
+      assertThat(((Date) created).toInstant().toEpochMilli()).isEqualTo(keyMillis);
     }
   }
 
