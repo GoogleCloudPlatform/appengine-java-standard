@@ -29,6 +29,12 @@
       "enabled": false
     },
     {
+      "matchPackageNames": [
+        "com.squareup.okio:okio"
+      ],
+      "allowedVersions": "<2.0.0"
+    },
+    {
       "major": {
         "enabled": false
       }

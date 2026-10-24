@@ -337,6 +337,27 @@
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>require-okio-1</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <requireProperty>
+                                    <property>okio.version</property>
+                                    <regex>1\.\d+(\.\d+)*</regex>
+                                    <regexMessage>okio.version must stay 1.x: the runtime jar bundles grpc-okhttp with the pure Java okio 1.x, while okio 2+ is written in Kotlin and needs kotlin-stdlib, which this jar does not bundle.</regexMessage>
+                                </requireProperty>
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
                 <executions>
                     <execution>
