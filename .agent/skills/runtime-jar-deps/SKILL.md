@@ -3,6 +3,22 @@ name: runtime-jar-deps
 description: Use when changing App Engine API classes that are bundled into the runtime jars (com.google.appengine.api.* such as taskqueue, datastore, memcache, urlfetch, users, appidentity, oauth; com.google.apphosting.utils.servlet.*), when adding a library dependency to those API classes, or when editing the shade configuration of runtime/runtime_impl_jetty12 or runtime/runtime_impl_jetty121. Verifies that every class the runtime can reach is actually bundled, so the runtime does not fail with NoClassDefFoundError.
 ---
 
+<!--
+ Copyright 2026 Google LLC
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     https://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+-->
+
 # Runtime jar dependency closure
 
 The runtime jars `runtime-impl-jetty12.jar` and `runtime-impl-jetty121.jar` are built by the
