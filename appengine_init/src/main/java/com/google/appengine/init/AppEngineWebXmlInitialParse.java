@@ -140,7 +140,12 @@ public final class AppEngineWebXmlInitialParse {
   public void handleRuntimeProperties() {
     Properties appEngineWebXmlProperties = new Properties();
     try (final InputStream stream = new FileInputStream(appEngineWebXmlFile)) {
-      final XMLEventReader reader = XMLInputFactory.newInstance().createXMLEventReader(stream);
+      XMLInputFactory factory = XMLInputFactory.newInstance();
+      // appengine-web.xml has no DTD; refuse DTDs and external entities so that parsing cannot read
+      // local files or make network requests.
+      factory.setProperty(XMLInputFactory.SUPPORT_DTD, false);
+      factory.setProperty(XMLInputFactory.IS_SUPPORTING_EXTERNAL_ENTITIES, false);
+      final XMLEventReader reader = factory.createXMLEventReader(stream);
       while (reader.hasNext()) {
         final XMLEvent event = reader.nextEvent();
         if (event.isStartElement()
