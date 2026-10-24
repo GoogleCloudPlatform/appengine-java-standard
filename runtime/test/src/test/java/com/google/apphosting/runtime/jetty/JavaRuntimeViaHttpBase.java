@@ -581,6 +581,17 @@ public abstract class JavaRuntimeViaHttpBase {
       errPump.awaitOutputLineMatching(pattern, timeoutSeconds);
     }
 
+    /** Returns the stdout and stderr lines captured so far that contain the given pattern. */
+    public ImmutableList<String> outputLinesContaining(Pattern pattern) {
+      return ImmutableList.<String>builder()
+          .addAll(outPump.getLastLines(Integer.MAX_VALUE))
+          .addAll(errPump.getLastLines(Integer.MAX_VALUE))
+          .build()
+          .stream()
+          .filter(line -> pattern.matcher(line).find())
+          .collect(toImmutableList());
+    }
+
     static Process launchRuntime(
         ImmutableList<String> args, ImmutableMap<String, String> environmentEntries)
         throws IOException {

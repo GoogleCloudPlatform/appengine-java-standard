@@ -335,6 +335,12 @@
                             </relocation>
                           </relocations>
                           <filters>
+                              <filter>
+                                  <artifact>io.grpc:grpc-netty-shaded</artifact>
+                                  <excludes>
+                                      <exclude>META-INF/native/**</exclude>
+                                  </excludes>
+                              </filter>
                              <filter>
                                   <artifact>*:*</artifact>
                                   <excludes>
@@ -488,11 +494,45 @@
                                     <include>org.ow2.asm:asm-commons</include>
                                     <include>org.ow2.asm:asm</include>
                                     <include>org.ow2.asm:asm-tree</include>
+                                    <!-- Cloud Tasks client, used by the Task Queue API (e.g. async session persistence)
+                                         when APPENGINE_USE_CLOUDTASK_PUSH_QUEUE is enabled. -->
+                                    <include>com.google.cloud:google-cloud-tasks</include>
+                                    <include>com.google.api.grpc:proto-google-cloud-tasks-v2</include>
+                                    <include>com.google.api.grpc:grpc-google-cloud-tasks-v2</include>
+                                    <include>com.google.api.grpc:proto-google-cloud-tasks-v2beta3</include>
+                                    <include>com.google.api.grpc:grpc-google-cloud-tasks-v2beta3</include>
+                                    <include>com.google.api.grpc:proto-google-iam-v1</include>
+                                    <include>com.google.api:api-common</include>
+                                    <include>com.google.api:gax</include>
+                                    <include>com.google.api:gax-grpc</include>
+                                    <include>com.google.api:gax-httpjson</include>
+                                    <include>com.google.auth:google-auth-library-credentials</include>
+                                    <include>com.google.auth:google-auth-library-oauth2-http</include>
+                                    <include>com.google.http-client:google-http-client</include>
+                                    <include>com.google.http-client:google-http-client-gson</include>
+                                    <include>com.google.protobuf:protobuf-java-util</include>
+                                    <include>io.grpc:grpc-api</include>
+                                    <include>io.grpc:grpc-auth</include>
+                                    <include>io.grpc:grpc-context</include>
+                                    <include>io.grpc:grpc-core</include>
+                                    <include>io.grpc:grpc-netty-shaded</include>
+                                    <include>io.grpc:grpc-protobuf</include>
+                                    <include>io.grpc:grpc-protobuf-lite</include>
+                                    <include>io.grpc:grpc-stub</include>
+                                    <include>io.grpc:grpc-util</include>
+                                    <include>io.opencensus:opencensus-api</include>
+                                    <include>io.opencensus:opencensus-contrib-http-util</include>
+                                    <include>io.opentelemetry:opentelemetry-api</include>
+                                    <include>io.opentelemetry:opentelemetry-context</include>
+                                    <include>org.threeten:threetenbp</include>
                                 </includes>
                                 <!--excludes>
                                     <exclude>jakarta.servlet:jakarta.servlet-api</exclude>
                                 </excludes-->
                             </artifactSet>
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                            </transformers>
                         </configuration>
                     </execution>
                 </executions>
