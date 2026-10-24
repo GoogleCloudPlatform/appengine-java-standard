@@ -25,12 +25,26 @@ import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import org.junit.Test;
 
 public class ShadingIT {
 
+  /**
+   * Returns the shaded jar produced by this build. Failsafe passes its path in the {@code
+   * remoteapi.shaded.jar} system property; otherwise (e.g. when run from an IDE) the most recently
+   * built jar in {@code target/} is used, since jars of other versions may also be there.
+   */
   private static File findShadedRemoteApiJar() {
+    String shadedJarProperty = System.getProperty("remoteapi.shaded.jar");
+    if (shadedJarProperty != null) {
+      File shadedJar = new File(shadedJarProperty);
+      assertTrue("Expected shaded jar " + shadedJar + " to exist", shadedJar.isFile());
+      return shadedJar;
+    }
     File targetDir = new File("target");
     if (!targetDir.exists()) {
       return null;
@@ -46,7 +60,7 @@ public class ShadingIT {
     if (files == null || files.length == 0) {
       return null;
     }
-    return files[0];
+    return Collections.max(Arrays.asList(files), Comparator.comparingLong(File::lastModified));
   }
 
   @Test
