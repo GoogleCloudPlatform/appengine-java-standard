@@ -59,6 +59,24 @@
             <optional>true</optional>
         </dependency>
         <dependency>
+            <!-- Lighter gRPC transport than grpc-netty-shaded for the bundled Cloud Tasks client. -->
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-okhttp</artifactId>
+            <optional>true</optional>
+            <exclusions>
+                <exclusion>
+                    <!-- okio 3.x is written in Kotlin and pulls in kotlin-stdlib. -->
+                    <groupId>com.squareup.okio</groupId>
+                    <artifactId>okio</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>com.squareup.okio</groupId>
+            <artifactId>okio</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
             <groupId>com.google.appengine</groupId>
             <artifactId>runtime-util</artifactId>
             <optional>true</optional>
@@ -358,12 +376,6 @@
                             </relocation>
                           </relocations>
                           <filters>
-                              <filter>
-                                  <artifact>io.grpc:grpc-netty-shaded</artifact>
-                                  <excludes>
-                                      <exclude>META-INF/native/**</exclude>
-                                  </excludes>
-                              </filter>
                              <filter>
                                   <artifact>*:*</artifact>
                                   <excludes>
@@ -543,7 +555,8 @@
                                     <include>io.grpc:grpc-auth</include>
                                     <include>io.grpc:grpc-context</include>
                                     <include>io.grpc:grpc-core</include>
-                                    <include>io.grpc:grpc-netty-shaded</include>
+                                    <include>io.grpc:grpc-okhttp</include>
+                                    <include>com.squareup.okio:okio</include>
                                     <include>io.grpc:grpc-protobuf</include>
                                     <include>io.grpc:grpc-protobuf-lite</include>
                                     <include>io.grpc:grpc-stub</include>
