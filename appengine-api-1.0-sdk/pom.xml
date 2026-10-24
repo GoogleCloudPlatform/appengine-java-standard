@@ -27,6 +27,13 @@
   <url>https://github.com/GoogleCloudPlatform/appengine-java-standard/</url>
   <description>API for Google App Engine standard environment with some of the dependencies shaded (repackaged)</description>
   <dependencies>
+    <!-- io.grpc.Context, needed by the shaded OpenCensus used by remote_api (issue #381). Declared
+         explicitly so it doesn't depend on the Cloud Tasks client pulling it in transitively. -->
+    <dependency>
+      <groupId>io.grpc</groupId>
+      <artifactId>grpc-api</artifactId>
+      <optional>true</optional>
+    </dependency>
     <dependency>
       <groupId>com.google.appengine</groupId>
       <artifactId>appengine-apis</artifactId>
