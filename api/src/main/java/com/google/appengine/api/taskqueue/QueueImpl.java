@@ -84,6 +84,10 @@ class QueueImpl implements Queue {
 
   static final double DEFAULT_LEASE_TASKS_DEADLINE_SECONDS = 10.0;
   static final double DEFAULT_FETCH_STATISTICS_DEADLINE_SECONDS = 10.0;
+  static final String ENV_APPENGINE_USE_CLOUDTASK_PUSH_QUEUE =
+      "APPENGINE_USE_CLOUDTASK_PUSH_QUEUE";
+
+  private static volatile @Nullable Boolean cloudTaskEnabledOverride;
 
   QueueImpl(String queueName, QueueApiHelper apiHelper) {
     QueueApiHelper.validateQueueName(queueName);
@@ -985,7 +989,7 @@ class QueueImpl implements Queue {
       throw new IllegalArgumentException("Deadline must be > 0, got " + deadlineInSeconds);
     }
 
-    if (CloudTasksClientWrapper.isEnabled()) {
+    if (isCloudTaskBackendEnabled()) {
       return CloudTasksClientWrapper.fetchStatisticsAsync(queueName);
     }
 
@@ -1000,7 +1004,20 @@ class QueueImpl implements Queue {
     return apiHelper.makeAsyncCall(methodName, request, responseTemplate, new ApiConfig());
   }
 
-  private boolean isCloudTaskBackendEnabled() {
-    return CloudTasksClientWrapper.isEnabled();
+  static void setCloudTaskEnabledForTesting(@Nullable Boolean enabled) {
+    cloudTaskEnabledOverride = enabled;
+  }
+
+  /**
+   * Checks whether Cloud Tasks push queue routing is enabled without loading {@link
+   * CloudTasksClientWrapper} (or its gRPC and Google Auth dependencies) when the feature flag is
+   * disabled.
+   */
+  static boolean isCloudTaskBackendEnabled() {
+    Boolean override = cloudTaskEnabledOverride;
+    if (override != null) {
+      return override;
+    }
+    return Boolean.parseBoolean(System.getenv(ENV_APPENGINE_USE_CLOUDTASK_PUSH_QUEUE));
   }
 }

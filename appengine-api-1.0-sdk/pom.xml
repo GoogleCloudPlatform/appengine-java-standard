@@ -52,9 +52,39 @@
       <artifactId>joda-time</artifactId>
       <optional>true</optional>
     </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.google.truth</groupId>
+      <artifactId>truth</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
   <build>
     <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-failsafe-plugin</artifactId>
+        <version>3.6.0</version>
+        <configuration>
+          <argLine>${surefire.unsafe.arg}</argLine>
+          <systemPropertyVariables>
+            <!-- The shaded jar of this build, so tests don't pick a stale jar left in target/. -->
+            <sdk.shaded.jar>${project.build.directory}/${project.build.finalName}.jar</sdk.shaded.jar>
+          </systemPropertyVariables>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>integration-test</goal>
+              <goal>verify</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
       <plugin>
         <artifactId>maven-shade-plugin</artifactId>
         <executions>
@@ -334,6 +364,10 @@
                   <shadedPattern>com.google.appengine.repackaged.org.threeten.bp</shadedPattern>
                 </relocation>
                 <relocation>
+                  <pattern>io.perfmark</pattern>
+                  <shadedPattern>com.google.appengine.repackaged.io.perfmark</shadedPattern>
+                </relocation>
+                <relocation>
                   <pattern>io.opentelemetry</pattern>
                   <shadedPattern>com.google.appengine.repackaged.io.opentelemetry</shadedPattern>
                 </relocation>
@@ -576,6 +610,7 @@
                   <include>io.grpc:grpc-netty-shaded:*</include>
                   <include>io.grpc:grpc-util:*</include>
                   <include>io.grpc:grpc-context:*</include>
+                  <include>io.perfmark:perfmark-api:*</include>
                   <include>com.google.auth:google-auth-library-oauth2-http:*</include>
                   <include>com.google.auth:google-auth-library-credentials:*</include>
                   <include>com.google.cloud:google-cloud-storage:*</include>

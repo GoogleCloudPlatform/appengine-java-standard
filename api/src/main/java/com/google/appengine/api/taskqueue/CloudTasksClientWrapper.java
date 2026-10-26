@@ -125,7 +125,6 @@ final class CloudTasksClientWrapper {
   private static final Logger logger = Logger.getLogger(CloudTasksClientWrapper.class.getName());
 
   // Environment Variables & System Properties
-  static final String ENV_APPENGINE_USE_CLOUDTASK_PUSH_QUEUE = "APPENGINE_USE_CLOUDTASK_PUSH_QUEUE";
   static final String ENV_GAE_SERVICE = "GAE_SERVICE";
   static final String ENV_GOOGLE_CLOUD_PROJECT = "GOOGLE_CLOUD_PROJECT";
   static final String ENV_GAE_APPLICATION = "GAE_APPLICATION";
@@ -274,7 +273,6 @@ final class CloudTasksClientWrapper {
   private static final ReentrantLock CLIENT_INIT_LOCK = new ReentrantLock();
   private static final ReentrantLock TOKEN_LOCK = new ReentrantLock();
 
-  private static volatile Boolean enabledOverride;
   private static volatile CloudTasksClient sharedClient;
   private static volatile com.google.cloud.tasks.v2beta3.CloudTasksClient sharedV2Beta3Client;
   private static volatile String metadataBaseUrl = DEFAULT_METADATA_BASE_URL;
@@ -290,8 +288,8 @@ final class CloudTasksClientWrapper {
 
   private CloudTasksClientWrapper() {}
 
-  static void setEnabledForTesting(Boolean enabled) {
-    enabledOverride = enabled;
+  static void setEnabledForTesting(@Nullable Boolean enabled) {
+    QueueImpl.setCloudTaskEnabledForTesting(enabled);
   }
 
   static void setSharedClientForTesting(CloudTasksClient client) {
@@ -733,10 +731,7 @@ final class CloudTasksClientWrapper {
    * @return {@code true} if Cloud Tasks push queue routing is enabled; {@code false} otherwise.
    */
   static boolean isEnabled() {
-    if (enabledOverride != null) {
-      return enabledOverride;
-    }
-    return Boolean.parseBoolean(System.getenv(ENV_APPENGINE_USE_CLOUDTASK_PUSH_QUEUE));
+    return QueueImpl.isCloudTaskBackendEnabled();
   }
 
   private static String getDefaultServiceName() {
