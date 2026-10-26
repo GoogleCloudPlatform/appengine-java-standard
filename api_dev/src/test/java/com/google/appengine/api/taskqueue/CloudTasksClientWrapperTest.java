@@ -68,9 +68,12 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -2202,6 +2205,148 @@ public class CloudTasksClientWrapperTest {
     RuntimeException translated = CloudTasksClientWrapper.toTransactionalTaskException(dsError);
     assertThat(translated).isInstanceOf(TransactionalTaskException.class);
     assertThat(translated).hasCauseThat().isSameInstanceAs(dsError);
+  }
+
+  /**
+   * Regression test for b/577037411: verifies that when {@code APPENGINE_USE_CLOUDTASK_PUSH_QUEUE}
+   * is disabled, {@link QueueImpl} links, initializes, and checks {@code
+   * isCloudTaskBackendEnabled()} without loading {@link CloudTasksClientWrapper} or any {@code
+   * com.google.auth.*} / {@code com.google.cloud.tasks.*} classes.
+   */
+  @Test
+  public void testQueueImpl_whenCloudTasksDisabled_doesNotLoadCloudTasksClientWrapperOrAuth()
+      throws Exception {
+    List<String> blockedLoadAttempts = new ArrayList<>();
+    URL taskqueueJarUrl = QueueImpl.class.getProtectionDomain().getCodeSource().getLocation();
+    ClassLoader parentLoader = QueueImpl.class.getClassLoader();
+    try (URLClassLoader isolatedLoader =
+        new URLClassLoader(new URL[] {taskqueueJarUrl}, parentLoader) {
+          @Override
+          protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
+            synchronized (getClassLoadingLock(name)) {
+              Class<?> loaded = findLoadedClass(name);
+              if (loaded != null) {
+                return loaded;
+              }
+              if (name.equals("com.google.appengine.api.taskqueue.CloudTasksClientWrapper")
+                  || name.startsWith("com.google.auth.")
+                  || name.startsWith("com.google.cloud.tasks.")
+                  || name.startsWith("com.google.api.gax.")) {
+                blockedLoadAttempts.add(name);
+                throw new ClassNotFoundException("Simulated missing class: " + name);
+              }
+              if (name.startsWith("com.google.appengine.api.taskqueue.")) {
+                Class<?> found = findClass(name);
+                if (resolve) {
+                  resolveClass(found);
+                }
+                return found;
+              }
+              return super.loadClass(name, resolve);
+            }
+          }
+        }) {
+      // 1. Load, link, and initialize QueueImpl in the isolated classloader.
+      Class<?> isolatedQueueImplClass =
+          Class.forName("com.google.appengine.api.taskqueue.QueueImpl", true, isolatedLoader);
+      var isEnabledMethod = isolatedQueueImplClass.getDeclaredMethod("isCloudTaskBackendEnabled");
+      isEnabledMethod.setAccessible(true);
+      var setEnabledMethod =
+          isolatedQueueImplClass.getDeclaredMethod("setCloudTaskEnabledForTesting", Boolean.class);
+      setEnabledMethod.setAccessible(true);
+
+      // 2. Verify default (when APPENGINE_USE_CLOUDTASK_PUSH_QUEUE is not set to "true" in the
+      // environment) and explicit false override never load CloudTasksClientWrapper, even when
+      // executing Queue.purge() (whose bytecode contains invokestatic CloudTasksClientWrapper).
+      if (!Boolean.parseBoolean(
+          System.getenv(QueueImpl.ENV_APPENGINE_USE_CLOUDTASK_PUSH_QUEUE))) {
+        assertThat((Boolean) isEnabledMethod.invoke(null)).isFalse();
+      }
+      // ApiProxy.getDelegate() returns a raw ApiProxy.Delegate.
+      @SuppressWarnings("unchecked")
+      ApiProxy.Delegate<Environment> originalDelegate = ApiProxy.getDelegate();
+      List<String> apiProxyCalls = new ArrayList<>();
+      try {
+        ApiProxy.setDelegate(
+            new ApiProxy.Delegate<Environment>() {
+              @Override
+              public byte[] makeSyncCall(
+                  Environment environment, String packageName, String methodName, byte[] request) {
+                apiProxyCalls.add(packageName + "." + methodName);
+                if (Objects.equals(packageName, "taskqueue")
+                    && Objects.equals(methodName, "PurgeQueue")) {
+                  return new byte[0];
+                }
+                return originalDelegate.makeSyncCall(environment, packageName, methodName, request);
+              }
+
+              @Override
+              public Future<byte[]> makeAsyncCall(
+                  Environment environment,
+                  String packageName,
+                  String methodName,
+                  byte[] request,
+                  ApiProxy.ApiConfig apiConfig) {
+                return originalDelegate.makeAsyncCall(
+                    environment, packageName, methodName, request, apiConfig);
+              }
+
+              @Override
+              public void log(Environment environment, ApiProxy.LogRecord record) {
+                originalDelegate.log(environment, record);
+              }
+
+              @Override
+              public void flushLogs(Environment environment) {
+                originalDelegate.flushLogs(environment);
+              }
+
+              @Override
+              public List<Thread> getRequestThreads(Environment environment) {
+                return originalDelegate.getRequestThreads(environment);
+              }
+            });
+
+        setEnabledMethod.invoke(null, false);
+        assertThat((Boolean) isEnabledMethod.invoke(null)).isFalse();
+        assertThat(blockedLoadAttempts).isEmpty();
+
+        // 3. Instantiate QueueImpl in the isolated classloader, execute purge() while disabled
+        // (proving JVM lazy symbolic resolution skips CloudTasksClientWrapper), and then verify
+        // that enabling Cloud Tasks attempts to load CloudTasksClientWrapper.
+        Class<?> isolatedHelperClass =
+            Class.forName("com.google.appengine.api.taskqueue.QueueApiHelper", true, isolatedLoader);
+        var helperCtor = isolatedHelperClass.getDeclaredConstructor();
+        helperCtor.setAccessible(true);
+        Object isolatedHelper = helperCtor.newInstance();
+        var ctor =
+            isolatedQueueImplClass.getDeclaredConstructor(String.class, isolatedHelperClass);
+        ctor.setAccessible(true);
+        Object isolatedQueue = ctor.newInstance("default", isolatedHelper);
+        Class<?> isolatedQueueInterface =
+            Class.forName("com.google.appengine.api.taskqueue.Queue", true, isolatedLoader);
+        assertThat(isolatedQueueInterface.getMethod("getQueueName").invoke(isolatedQueue))
+            .isEqualTo("default");
+
+        var purgeMethod = isolatedQueueInterface.getMethod("purge");
+        purgeMethod.invoke(isolatedQueue);
+        assertThat(apiProxyCalls).containsExactly("taskqueue.PurgeQueue");
+        assertThat(blockedLoadAttempts).isEmpty();
+
+        setEnabledMethod.invoke(null, true);
+        var error =
+            assertThrows(
+                InvocationTargetException.class,
+                () -> purgeMethod.invoke(isolatedQueue));
+        assertThat(error).hasCauseThat().isInstanceOf(NoClassDefFoundError.class);
+        assertThat(error).hasCauseThat().hasMessageThat().contains("CloudTasksClientWrapper");
+        assertThat(blockedLoadAttempts)
+            .containsExactly("com.google.appengine.api.taskqueue.CloudTasksClientWrapper");
+      } finally {
+        ApiProxy.setDelegate(originalDelegate);
+        setEnabledMethod.invoke(null, (Object) null);
+      }
+    }
   }
 
   /** Minimal framework-style wrapper around a native {@link Transaction}. */
