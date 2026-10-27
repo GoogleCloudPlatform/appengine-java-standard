@@ -170,6 +170,13 @@
              </relocations>
               <filters>
                 <filter>
+                  <artifact>com.google.api-client:google-api-client</artifact>
+                  <excludes>
+                    <exclude>com/google/api/client/googleapis/google.jks</exclude>
+                    <exclude>com/google/api/client/googleapis/google.p12</exclude>
+                  </excludes>
+                </filter>
+                <filter>
                   <artifact>org.codehaus.jackson:jackson-core-asl</artifact>
                   <excludes>
                     <exclude>META-INF/services/com.fasterxml.jackson.core.JsonFactory</exclude>

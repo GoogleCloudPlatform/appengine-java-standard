@@ -374,6 +374,13 @@
               </relocations>
               <filters>
                 <filter>
+                  <artifact>com.google.api-client:google-api-client</artifact>
+                  <excludes>
+                    <exclude>com/google/api/client/googleapis/google.jks</exclude>
+                    <exclude>com/google/api/client/googleapis/google.p12</exclude>
+                  </excludes>
+                </filter>
+                <filter>
                   <artifact>io.grpc:grpc-netty-shaded</artifact>
                   <excludes>
                     <exclude>META-INF/native/**</exclude>

@@ -20,6 +20,11 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.google.appengine.api.urlfetch.URLFetchServicePb.URLFetchRequest;
 import com.google.appengine.api.urlfetch.URLFetchServicePb.URLFetchRequest.RequestMethod;
+import java.io.InputStream;
+import java.security.KeyStore;
+import java.security.cert.Certificate;
+import java.security.cert.X509Certificate;
+import java.util.Collections;
 import java.util.logging.Handler;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
@@ -169,6 +174,27 @@ public class LocalURLFetchServiceTest {
         System.setProperty("http.nonProxyHosts", currentNonProxyHosts);
       } else {
         System.clearProperty("http.nonProxyHosts");
+      }
+    }
+  }
+
+  @Test
+  public void cacerts_loadedAsJksKeyStore_excludesDistrustedRootCertificates() throws Exception {
+    try (InputStream is =
+        LocalURLFetchService.class.getResourceAsStream(
+            "/com/google/appengine/api/urlfetch/dev/cacerts")) {
+      assertThat(is).isNotNull();
+      KeyStore ks = KeyStore.getInstance("JKS");
+      ks.load(is, null);
+      assertThat(ks.size()).isGreaterThan(0);
+      for (String alias : Collections.list(ks.aliases())) {
+        Certificate cert = ks.getCertificate(alias);
+        if (cert instanceof X509Certificate x509Cert) {
+          String subject = x509Cert.getSubjectX500Principal().getName();
+          assertThat(subject).doesNotContain("CN=emSign ECC Root CA - G3");
+          assertThat(subject).doesNotContain("CN=emSign Root TLS CA - G3");
+          assertThat(subject).doesNotContain("CN=AAA Certificate Services");
+        }
       }
     }
   }

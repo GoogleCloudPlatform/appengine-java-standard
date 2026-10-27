@@ -17,6 +17,7 @@
 package com.google.appengine.tools.remoteapi;
 
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
@@ -209,6 +210,20 @@ public class ShadingIT {
           loader.loadClass("com.google.appengine.repackaged.io.grpc.Context");
       Object currentContext = grpcContextClass.getMethod("current").invoke(null);
       assertNotNull(currentContext);
+
+      // 4. Verify legacy bundled google-api-client keystores (google.jks / google.p12) are excluded
+      // from the shaded jars (b/578046410) and GoogleNetHttpTransport uses the JDK truststore.
+      assertNull(
+          loader.getResource(
+              "com/google/appengine/repackaged/com/google/api/client/googleapis/google.jks"));
+      assertNull(
+          loader.getResource(
+              "com/google/appengine/repackaged/com/google/api/client/googleapis/google.p12"));
+      Class<?> transportClass =
+          loader.loadClass(
+              "com.google.appengine.repackaged.com.google.api.client.googleapis.javanet.GoogleNetHttpTransport");
+      Object trustedTransport = transportClass.getMethod("newTrustedTransport").invoke(null);
+      assertNotNull(trustedTransport);
     }
   }
 }
