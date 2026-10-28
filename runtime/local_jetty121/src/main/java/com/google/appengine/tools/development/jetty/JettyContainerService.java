@@ -183,9 +183,9 @@ public class JettyContainerService extends AbstractContainerService implements C
     // location (WEB-INF/web.xml).
     // Only set the descriptor if the web.xml file actually exists.
     // Jetty 12 throws an IllegalArgumentException if the descriptor path is invalid.
-      if (webXmlLocation != null && webXmlLocation.exists()) {
-          context.setDescriptor(webXmlLocation.getAbsolutePath());
-      }
+    if (webXmlLocation != null && webXmlLocation.exists()) {
+      context.setDescriptor(webXmlLocation.getAbsolutePath());
+    }
 
     // Override the web.xml that Jetty automatically prepends to other
     // web.xml files.  This is where the DefaultServlet is registered,
@@ -339,8 +339,8 @@ public class JettyContainerService extends AbstractContainerService implements C
     configuration.setSendDateHeader(false);
     configuration.setSendServerVersion(false);
     configuration.setSendXPoweredBy(false);
-    // Try to enable virtual threads if requested on java21:
-    if (Boolean.getBoolean("appengine.use.virtualthreads")) {
+    // Try to enable virtual threads if requested on Java 21+:
+    if (Boolean.getBoolean("appengine.use.virtualthreads") && Runtime.version().feature() >= 21) {
       QueuedThreadPool threadPool = new QueuedThreadPool();
       threadPool.setVirtualThreadsExecutor(VirtualThreads.getDefaultVirtualThreadsExecutor());
       server = new Server(threadPool);

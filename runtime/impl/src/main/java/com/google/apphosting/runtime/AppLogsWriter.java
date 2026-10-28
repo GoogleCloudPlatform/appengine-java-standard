@@ -30,9 +30,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import javax.annotation.concurrent.GuardedBy;
-import org.jspecify.annotations.Nullable;
 
 /**
  * {@code AppsLogWriter} is responsible for batching application logs for a single request and
@@ -76,7 +76,9 @@ public class AppLogsWriter {
   static final String LOG_TRUNCATED_SUFFIX = "\n<truncated>";
   static final int LOG_TRUNCATED_SUFFIX_LENGTH = LOG_TRUNCATED_SUFFIX.length();
 
-  private final Object lock = new Object();
+  // A ReentrantLock rather than synchronized, so that a virtual thread blocked on a flush while
+  // holding the lock does not pin its carrier thread on Java 21.
+  private final ReentrantLock lock = new ReentrantLock();
 
   private final int maxLogMessageLength;
   private final int logCutLength;
@@ -181,88 +183,28 @@ public class AppLogsWriter {
       appLogLines.add(logLineBuilder.build());
     }
 
-    if (Boolean.getBoolean("appengine.use.virtualthreads")) {
-      addLogLinesAndMaybeFlushVirtualThreads(appLogLines);
-    } else {
-      synchronized (lock) {
-        addLogLinesAndMaybeFlushLegacy(appLogLines);
-      }
-    }
-  }
-
-  private void addLogLinesAndMaybeFlushVirtualThreads(Iterable<AppLogLine> appLogLines) {
-    for (AppLogLine logLine : appLogLines) {
-      int serializedSize = logLine.getSerializedSize();
-
-      Future<byte[]> pendingFlush = null;
-      synchronized (lock) {
-        if (maxBytesToFlush > 0 && (currentByteCount + serializedSize) > maxBytesToFlush) {
-          pendingFlush = getPendingFlushLocked();
-          if (pendingFlush == null && genericResponse.getAppLogCount() > 0) {
-            currentFlush = doFlush();
-          }
-        }
-      }
-      if (pendingFlush != null) {
-        waitForFlush(pendingFlush);
-        synchronized (lock) {
-          if (currentFlush == null || currentFlush.isDone()) {
-            if (genericResponse.getAppLogCount() > 0) {
-              currentFlush = doFlush();
-            } else if (currentFlush != null && currentFlush.isDone()) {
-              currentFlush = null;
-            }
-          }
-        }
-      }
-
-      synchronized (lock) {
-        if (!stopwatch.isRunning()) {
-          // We only want to flush once a log message has been around for
-          // longer than maxSecondsBetweenFlush. So, we only start the timer
-          // when we add the first message so we don't include time when
-          // the queue is empty.
-          stopwatch.start();
-        }
-        genericResponse.addAppLog(logLine);
-        currentByteCount += serializedSize;
-      }
-    }
-
-    Future<byte[]> pendingTimeFlush = null;
-    synchronized (lock) {
-      if (maxSecondsBetweenFlush > 0
-          && stopwatch.elapsed().compareTo(Duration.ofSeconds(maxSecondsBetweenFlush)) >= 0) {
-        pendingTimeFlush = getPendingFlushLocked();
-        if (pendingTimeFlush == null && genericResponse.getAppLogCount() > 0) {
-          currentFlush = doFlush();
-        }
-      }
-    }
-    if (pendingTimeFlush != null) {
-      waitForFlush(pendingTimeFlush);
-      synchronized (lock) {
-        if (currentFlush == null || currentFlush.isDone()) {
-          if (genericResponse.getAppLogCount() > 0) {
-            currentFlush = doFlush();
-          } else if (currentFlush != null && currentFlush.isDone()) {
-            currentFlush = null;
-          }
-        }
-      }
+    lock.lock();
+    try {
+      addLogLinesAndMaybeFlush(appLogLines);
+    } finally {
+      lock.unlock();
     }
   }
 
   @GuardedBy("lock")
-  private void addLogLinesAndMaybeFlushLegacy(Iterable<AppLogLine> appLogLines) {
+  private void addLogLinesAndMaybeFlush(Iterable<AppLogLine> appLogLines) {
     for (AppLogLine logLine : appLogLines) {
       int serializedSize = logLine.getSerializedSize();
 
       if (maxBytesToFlush > 0 && (currentByteCount + serializedSize) > maxBytesToFlush) {
         logger.atInfo().log("%d bytes of app logs pending, starting flush...", currentByteCount);
-        waitForCurrentFlushAndStartNewFlushLegacy();
+        waitForCurrentFlushAndStartNewFlush();
       }
       if (!stopwatch.isRunning()) {
+        // We only want to flush once a log message has been around for
+        // longer than maxSecondsBetweenFlush. So, we only start the timer
+        // when we add the first message so we don't include time when
+        // the queue is empty.
         stopwatch.start();
       }
       genericResponse.addAppLog(logLine);
@@ -271,109 +213,54 @@ public class AppLogsWriter {
 
     if (maxSecondsBetweenFlush > 0
         && stopwatch.elapsed().compareTo(Duration.ofSeconds(maxSecondsBetweenFlush)) >= 0) {
-      waitForCurrentFlushAndStartNewFlushLegacy();
+      waitForCurrentFlushAndStartNewFlush();
     }
   }
 
+  /** Starts an asynchronous flush. This method may block if flushes are backed up. */
   @GuardedBy("lock")
-  private void waitForCurrentFlushAndStartNewFlushLegacy() {
-    waitForCurrentFlushLegacy();
+  private void waitForCurrentFlushAndStartNewFlush() {
+    waitForCurrentFlush();
     if (genericResponse.getAppLogCount() > 0) {
       currentFlush = doFlush();
     }
   }
 
+  /**
+   * Initiates a synchronous flush. This method will always block until any pending flushes and its
+   * own flush completes.
+   */
+  public void flushAndWait() {
+    Future<byte[]> flush = null;
+
+    lock.lock();
+    try {
+      waitForCurrentFlush();
+      if (genericResponse.getAppLogCount() > 0) {
+        flush = currentFlush = doFlush();
+      }
+    } finally {
+      lock.unlock();
+    }
+
+    // Wait for this flush outside the lock to avoid unnecessarily blocking
+    // addLogRecordAndMaybeFlush() calls when flushes are not backed up.
+    if (flush != null) {
+      waitForFlush(flush);
+    }
+  }
+
+  /**
+   * This method blocks until any outstanding flush is completed. This method should be called prior
+   * to {@link #doFlush()} so that it is impossible for the appserver to process logs out of order.
+   */
   @GuardedBy("lock")
-  private void waitForCurrentFlushLegacy() {
+  private void waitForCurrentFlush() {
     if (currentFlush != null && !currentFlush.isDone() && !currentFlush.isCancelled()) {
       logger.atInfo().log("Previous flush has not yet completed, blocking.");
       waitForFlush(currentFlush);
     }
     currentFlush = null;
-  }
-
-  /**
-   * Returns the currently pending flush {@link Future} if it has not yet completed.
-   *
-   * <p>By retrieving the pending flush under {@code lock} and returning it to the caller without
-   * nullifying it right away, we allow {@link #waitForFlush(Future)} (which invokes {@link
-   * Future#get()}) to be executed strictly outside the {@code synchronized (lock)} monitor block
-   * while ensuring other virtual threads see that a flush is still pending. Under Java 21 (pre-JEP
-   * 491), blocking inside a synchronized scope prevents virtual threads from unmounting and pins
-   * their carrier threads in {@link java.util.concurrent.ForkJoinPool#commonPool()}, leading to
-   * thread pool starvation across the web container.
-   */
-  @GuardedBy("lock")
-  private @Nullable Future<byte[]> getPendingFlushLocked() {
-    if (currentFlush != null && !currentFlush.isDone() && !currentFlush.isCancelled()) {
-      return currentFlush;
-    }
-    currentFlush = null;
-    return null;
-  }
-
-  /**
-   * Initiates a synchronous flush. This method will always block until any pending flushes and its
-   * own flush completes.
-   *
-   * <p>When {@code appengine.use.virtualthreads} is enabled, the actual I/O wait on {@link
-   * Future#get()} is performed outside of {@code synchronized (lock)} to allow virtual threads to
-   * unmount without pinning carrier threads. Otherwise, it follows legacy synchronized locking.
-   */
-  public void flushAndWait() {
-    if (Boolean.getBoolean("appengine.use.virtualthreads")) {
-      flushAndWaitVirtualThreads();
-    } else {
-      flushAndWaitLegacy();
-    }
-  }
-
-  private void flushAndWaitVirtualThreads() {
-    Future<byte[]> previousFlush;
-    synchronized (lock) {
-      previousFlush = getPendingFlushLocked();
-    }
-    if (previousFlush != null) {
-      waitForFlush(previousFlush);
-    }
-
-    Future<byte[]> flush = null;
-    synchronized (lock) {
-      if (currentFlush == null || currentFlush.isDone()) {
-        if (genericResponse.getAppLogCount() > 0) {
-          flush = currentFlush = doFlush();
-        } else if (currentFlush != null && currentFlush.isDone()) {
-          currentFlush = null;
-        }
-      } else {
-        flush = currentFlush;
-      }
-    }
-
-    // Wait for this flush outside the synchronized block to allow virtual threads to unmount without pinning.
-    if (flush != null) {
-      waitForFlush(flush);
-      synchronized (lock) {
-        if (currentFlush != null && currentFlush.isDone()) {
-          currentFlush = null;
-        }
-      }
-    }
-  }
-
-  private void flushAndWaitLegacy() {
-    Future<byte[]> flush = null;
-
-    synchronized (lock) {
-      waitForCurrentFlushLegacy();
-      if (genericResponse.getAppLogCount() > 0) {
-        flush = currentFlush = doFlush();
-      }
-    }
-
-    if (flush != null) {
-      waitForFlush(flush);
-    }
   }
 
   private void waitForFlush(Future<byte[]> flush) {
@@ -469,8 +356,11 @@ public class AppLogsWriter {
    */
   @VisibleForTesting
   void setStopwatch(Stopwatch stopwatch) {
-    synchronized (lock) {
+    lock.lock();
+    try {
       this.stopwatch = stopwatch;
+    } finally {
+      lock.unlock();
     }
   }
 
