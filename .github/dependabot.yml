@@ -51,6 +51,11 @@ updates:
       - dependency-name: "org.eclipse.jetty.*:*"
       - dependency-name: "org.springframework.boot:spring-boot-starter-parent"
       - dependency-name: "org.springframework.boot:spring-boot-starter-web"
+      # The runtime jars use the pure Java okio 1.x with grpc-okhttp; okio 2+ is written in Kotlin
+      # and needs kotlin-stdlib. okio.version is also checked by the runtime_impl poms.
+      - dependency-name: "com.squareup.okio:okio"
+        versions:
+          - ">= 2.0.0"
 
   - package-ecosystem: "github-actions"
     directory: "/"
