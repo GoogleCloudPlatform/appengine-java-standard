@@ -129,12 +129,32 @@ if [[ "${DRY_RUN}" == "true" ]]; then
   echo "DRY_RUN is true, only calling release:prepare."
   ./mvnw release:prepare ${MVN_COMMON_OPTIONS}
 else
-  echo "Calling release:prepare and release:perform."
+  echo "Cleaning up stale releases from OSS Exit Gate staging repo..."
+  packages=$(gcloud artifacts packages list \
+      --project="oss-exit-gate-prod" \
+      --location="us" \
+      --repository="appengine-java--mavencentral" \
+      --format="value(name)" 2>/dev/null || true)
+  echo "${packages}" | xargs -r -I {} sh -c '
+      package_name=$(basename "{}")
+      echo "Deleting package: $package_name..."
+      gcloud artifacts packages delete "{}" \
+          --project="oss-exit-gate-prod" \
+          --location="us" \
+          --repository="appengine-java--mavencentral" \
+          --quiet
+  '
+
+  echo "Calling release:prepare and release:perform via OSS Exit Gate staging..."
   # Force usage of the aoss profile to point to google artifacts repository to be MOSS compliant.
   MVN_EXIT_CODE=0
-  ./mvnw release:prepare release:perform -B -q --settings=../settings.xml -Paoss -DskipTests -Darguments=-DskipTests -Dgpg.homedir=${GNUPGHOME} -Dgpg.passphrase=${GPG_PASSPHRASE} -l /tmp/mvn_log.txt || MVN_EXIT_CODE=$?
+  ./mvnw release:prepare release:perform -B -q --settings=../settings.xml -Paoss,oss-exit-gate -DskipTests -Darguments="-Psonatype-release,oss-exit-gate -DskipTests" -Dgpg.homedir=${GNUPGHOME} -Dgpg.passphrase=${GPG_PASSPHRASE} -l /tmp/mvn_log.txt || MVN_EXIT_CODE=$?
   grep -v "Using Usertoken auth" /tmp/mvn_log.txt
   if [[ ${MVN_EXIT_CODE} -ne 0 ]]; then exit ${MVN_EXIT_CODE}; fi
+
+  echo '{"publish_all": true}' > /tmp/oss-exit-gate-manifest.json
+  gcloud storage cp /tmp/oss-exit-gate-manifest.json \
+      "gs://oss-exit-gate-prod-projects-bucket/appengine-java/mavencentral/manifests/manifest-${RELEASE_NUMBER}-$(date +%s).json"
 
   git remote set-url origin https://gae-java-bot:${GAE_JAVA_BOT_GITHUB_TOKEN}@github.com/GoogleCloudPlatform/appengine-java-standard
   echo "Doing git tag and push."
