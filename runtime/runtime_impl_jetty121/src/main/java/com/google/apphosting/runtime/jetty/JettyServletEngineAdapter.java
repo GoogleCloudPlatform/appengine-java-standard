@@ -15,9 +15,7 @@
  */
 package com.google.apphosting.runtime.jetty;
 
-import static com.google.apphosting.runtime.AppEngineConstants.GAE_RUNTIME;
 import static com.google.apphosting.runtime.AppEngineConstants.IGNORE_RESPONSE_SIZE_LIMIT;
-import static com.google.common.base.Strings.isNullOrEmpty;
 
 import com.google.apphosting.base.AppVersionKey;
 import com.google.apphosting.base.protos.AppinfoPb;
@@ -61,9 +59,8 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
   public void start(String serverInfo, ServletEngineAdapter.Config runtimeOptions) {
     QueuedThreadPool threadPool =
         new QueuedThreadPool(MAX_THREAD_POOL_THREADS, MIN_THREAD_POOL_THREADS);
-    // Try to enable virtual threads if requested and on java21:
-    if (Boolean.getBoolean("appengine.use.virtualthreads")
-        && ("java21".equals(GAE_RUNTIME) || "java25".equals(GAE_RUNTIME))) {
+    // Try to enable virtual threads if requested and on Java 21+:
+    if (Boolean.getBoolean("appengine.use.virtualthreads") && Runtime.version().feature() >= 21) {
       threadPool.setVirtualThreadsExecutor(VirtualThreads.getDefaultVirtualThreadsExecutor());
       logger.atInfo().log("Configuring Appengine web server virtual threads.");
     }
@@ -143,25 +140,5 @@ public class JettyServletEngineAdapter implements ServletEngineAdapter {
   public void serviceRequest(UPRequest upRequest, MutableUpResponse upResponse) throws Exception {
     throw new UnsupportedOperationException(
         "serviceRequest is not supported in HTTP connector mode");
-  }
-
-  /**
-   * Calculates a safe maximum carrier thread count based on GAE sandbox memory boundaries to
-   * prevent OS scheduling thrashing on fractional/low-core instances.
-   */
-  static int getMaxSafeCarrierParallelism() {
-    return getMaxSafeCarrierParallelism(System.getenv("GAE_MEMORY_MB"));
-  }
-
-  static int getMaxSafeCarrierParallelism(String memoryMbStr) {
-    if (isNullOrEmpty(memoryMbStr)) {
-      return 4; // Conservative default cap for standard runtimes
-    }
-    try {
-      int memoryMb = Integer.parseInt(memoryMbStr);
-      return memoryMb <= 512 ? 1 : memoryMb <= 1024 ? 2 : 4;
-    } catch (NumberFormatException e) {
-      return 4; // Safety Fallback
-    }
   }
 }
