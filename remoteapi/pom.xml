@@ -93,7 +93,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-failsafe-plugin</artifactId>
-        <version>3.6.1</version>
+        <version>3.6.0</version>
         <configuration>
           <systemPropertyVariables>
             <!-- The shaded jar of this build, so tests don't pick a stale jar left in target/. -->
