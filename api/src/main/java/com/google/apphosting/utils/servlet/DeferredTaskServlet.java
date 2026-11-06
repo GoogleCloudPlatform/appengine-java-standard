@@ -20,6 +20,7 @@ import com.google.appengine.api.taskqueue.DeferredTask;
 import com.google.appengine.api.taskqueue.DeferredTaskContext;
 import com.google.apphosting.api.ApiProxy;
 import java.io.IOException;
+import java.io.ObjectInputFilter;
 import java.io.ObjectInputStream;
 import java.io.ObjectStreamClass;
 import java.lang.reflect.Modifier;
@@ -67,6 +68,38 @@ public class DeferredTaskServlet extends HttpServlet {
   static final String DEFERRED_DO_NOT_RETRY_KEY =
       DeferredTaskContext.class.getName() + ".doNotRetry";
   static final String DEFERRED_MARK_RETRY_KEY = DeferredTaskContext.class.getName() + ".markRetry";
+
+  /**
+   * System property that replaces {@link #DEFAULT_SERIAL_FILTER}, using the pattern syntax of
+   * {@link ObjectInputFilter.Config#createFilter}. An empty value disables the default filter. A
+   * JVM-wide {@code jdk.serialFilter} is always applied as well.
+   */
+  static final String SERIAL_FILTER_PROPERTY = "appengine.deferredtask.serialFilter";
+
+  /**
+   * Classes rejected when deserializing a task payload: well-known deserialization gadgets that no
+   * {@link DeferredTask} needs. Everything else is left to the JVM-wide filter, if any.
+   */
+  static final String DEFAULT_SERIAL_FILTER =
+      String.join(
+          ";",
+          "!org.apache.commons.collections.functors.*",
+          "!org.apache.commons.collections4.functors.*",
+          "!org.apache.commons.beanutils.BeanComparator",
+          "!org.codehaus.groovy.runtime.*",
+          "!org.springframework.beans.factory.*",
+          "!org.apache.xalan.xsltc.trax.*",
+          "!com.sun.org.apache.xalan.internal.xsltc.trax.*",
+          "!com.sun.rowset.*",
+          "!javax.management.*",
+          "!java.rmi.*",
+          "!sun.rmi.*",
+          "!javax.script.*",
+          "!org.mozilla.javascript.*",
+          "!bsh.*",
+          "!clojure.*",
+          "!org.python.*",
+          "!com.mchange.v2.c3p0.*");
 
   /** Thrown by readRequest when an error occurred during deserialization. */
   protected static class DeferredTaskException extends Exception {
@@ -227,11 +260,31 @@ public class DeferredTaskServlet extends HttpServlet {
               }
             }
           };
+      ObjectInputFilter filter = serialFilter();
+      if (filter != null) {
+        objectStream.setObjectInputFilter(filter);
+      }
      // Replacing DeferredTask to Runnable as we have DeferredTask in the 2 classloaders
      // (runtime and application), but we cannot cast one with another one.
      return (Runnable) objectStream.readObject();
     } catch (ClassNotFoundException | IOException | ClassCastException e) {
       throw new DeferredTaskException(e);
     }
+  }
+
+  /**
+   * Returns the filter for task payloads: {@link #SERIAL_FILTER_PROPERTY} (or {@link
+   * #DEFAULT_SERIAL_FILTER}) merged with the JVM-wide filter, so that a class rejected by either is
+   * rejected. Returns {@code null} when neither is set.
+   */
+  static ObjectInputFilter serialFilter() {
+    ObjectInputFilter filter =
+        ObjectInputFilter.Config.createFilter(
+            System.getProperty(SERIAL_FILTER_PROPERTY, DEFAULT_SERIAL_FILTER));
+    ObjectInputFilter jvmWideFilter = ObjectInputFilter.Config.getSerialFilter();
+    if (filter == null) {
+      return jvmWideFilter;
+    }
+    return jvmWideFilter == null ? filter : ObjectInputFilter.merge(filter, jvmWideFilter);
   }
 }
