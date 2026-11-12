@@ -167,6 +167,11 @@ public class JettySdkTest {
     assertUrlsExist(sdk.getImplLibs());
   }
 
+  /**
+   * Verifies that the ContainerIncludeJarPattern configured on DevAppEngineWebAppContext
+   * successfully matches the shared container jars (e.g. jakarta.servlet-api and JSTL) in the SDK.
+   * This ensures that TLDs and web fragments in shared libraries are scanned and available to webapps.
+   */
   @Test
   public void testContainerIncludeJarPatternMatchesSharedJars() {
     System.setProperty("appengine.use.EE8", "false");
@@ -198,6 +203,11 @@ public class JettySdkTest {
         .isTrue();
   }
 
+  /**
+   * Verifies that no jar file exposed in shared or JSP libraries contains the Tomcat JULI Log
+   * ServiceLoader provider (META-INF/services/org.apache.juli.logging.Log).
+   * The presence of this SPI provider can hijack Apache Commons Logging and cause deadlocks.
+   */
   @Test
   public void testNoJuliLoggingSpiInSharedOrJspLibs() throws Exception {
     for (String ee : new String[] {"EE8", "EE11"}) {
@@ -227,6 +237,11 @@ public class JettySdkTest {
     }
   }
 
+  /**
+   * Verifies that all classes required for JSP compilation and execution (e.g. Jasper servlet,
+   * JspPage, RecordELResolver, and TldScanner) are resolvable from the combined user JSP libs
+   * and shared libs classpath on both EE8 and EE11.
+   */
   @Test
   public void testJspClasspathContainsRequiredClasses() throws Exception {
     // EE8 JSP classpath check
@@ -257,6 +272,11 @@ public class JettySdkTest {
     }
   }
 
+  /**
+   * Verifies that optional, clustering, or experimental Jetty modules (such as CDI, ALPN,
+   * WebSocket, Hazelcast, Infinispan, and Ethereum) are excluded from the shared and JSP classpaths
+   * to prevent accidental classloader contamination or conflicts.
+   */
   @Test
   public void testForbiddenModulesNotExposed() {
     List<String> forbidden =
