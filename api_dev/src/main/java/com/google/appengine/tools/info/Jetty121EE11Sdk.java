@@ -23,7 +23,9 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Implementation of the SDK abstraction by the existing GAE SDK distribution, which is composed of
@@ -87,7 +89,7 @@ class Jetty121EE11Sdk extends Jetty121EE8Sdk {
         new File(getSdkRoot(), "lib/tools/quickstart/quickstartgenerator-jetty121-ee11.jar");
 
     File jettyDir = new File(getSdkRoot(), JETTY121_HOME_LIB_PATH);
-    for (File f : jettyDir.listFiles()) {
+    for (File f : listFiles(jettyDir)) {
       if (!f.isDirectory()
           && !(f.getName().contains("cdi-")
               || f.getName().contains("-alpn-")
@@ -110,32 +112,71 @@ class Jetty121EE11Sdk extends Jetty121EE8Sdk {
     }
     // Add the API jar, in case it is needed (b/120480580).
     list.add(getSdkRoot() + "/lib/impl/appengine-api.jar");
-    list.add(new File(jettyDir, "jakarta.servlet-api-6.1.0.jar").getAbsolutePath()); // ee11 apis
 
-    // Note: Do not put the Apache JSP files in the classpath. If needed, they should be part of
-    // the application itself under WEB-INF/lib.
-    for (String subdir : new String[] {"ee11-annotations"}) {
-      for (File f : new File(jettyDir, subdir).listFiles()) {
-        list.add(f.getAbsolutePath());
-      }
+    File servletApi = new File(jettyDir, "jakarta.servlet-api-6.1.0.jar");
+    if (!servletApi.exists()) {
+      servletApi = new File(jettyDir, "ee11/support/jakarta.servlet.jakarta.servlet-api-6.1.0.jar");
     }
-    for (String subdir : new String[] {"annotations"}) {
-      for (File f : new File(jettyDir, subdir).listFiles()) {
-        list.add(f.getAbsolutePath());
-      }
+    if (!servletApi.exists()) {
+      servletApi = getJetty121Jar("jakarta.servlet-api-6.1");
     }
-    for (String subdir : new String[] {"ee11-jaspi"}) {
-      for (File f : new File(jettyDir, subdir).listFiles()) {
-        list.add(f.getAbsolutePath());
+    list.add(servletApi.getAbsolutePath()); // ee11 apis
+
+    File ee11Dir = new File(jettyDir, "ee11");
+    if (ee11Dir.isDirectory()) {
+      // Jetty 12.1.15+ layout: EE11 jars are in lib/ee11 and lib/ee11/support
+      for (File f : listFiles(ee11Dir)) {
+        if (!f.isDirectory()
+            && !(f.getName().contains("apache-jsp")
+                || f.getName().contains("-cdi-")
+                || f.getName().contains("-alpn-")
+                || f.getName().contains("-demo-")
+                || f.getName().contains("-websocket-")
+                || f.getName().contains("-gcloud-")
+                || f.getName().contains("-infinispan-")
+                || f.getName().contains("-hazelcast-")
+                || f.getName().contains("-ethereum-"))) {
+          list.add(f.getAbsolutePath());
+        }
+      }
+      File ee11SupportDir = new File(ee11Dir, "support");
+      if (ee11SupportDir.isDirectory()) {
+        for (File f : listFiles(ee11SupportDir)) {
+          if (!f.isDirectory()
+              && (f.getName().contains("jakarta.annotation")
+                  || f.getName().contains("jakarta.authentication"))) {
+            list.add(f.getAbsolutePath());
+          }
+        }
+      }
+      File supportDir = new File(jettyDir, "support");
+      if (supportDir.isDirectory()) {
+        for (File f : listFiles(supportDir)) {
+          if (!f.isDirectory() && (f.getName().contains("asm-") || f.getName().contains("slf4j-api"))) {
+            list.add(f.getAbsolutePath());
+          }
+        }
+      }
+    } else {
+      // Note: Do not put the Apache JSP files in the classpath. If needed, they should be part of
+      // the application itself under WEB-INF/lib.
+      for (String subdir : new String[] {"ee11-annotations", "annotations", "ee11-jaspi"}) {
+        File sub = new File(jettyDir, subdir);
+        if (sub.isDirectory()) {
+          for (File f : listFiles(sub)) {
+            list.add(f.getAbsolutePath());
+          }
+        }
+      }
+      File logDir = new File(jettyDir, "logging");
+      if (logDir.isDirectory()) {
+        for (File f : listFiles(logDir)) {
+          list.add(f.getAbsolutePath());
+        }
       }
     }
 
     list.add(quickstart.getAbsolutePath());
-    // Add Jars for logging.
-    for (File f : new File(jettyDir, "logging").listFiles()) {
-      list.add(f.getAbsolutePath());
-    }
-
     return Joiner.on(System.getProperty("path.separator")).join(list);
   }
 
@@ -145,7 +186,8 @@ class Jetty121EE11Sdk extends Jetty121EE8Sdk {
   }
 
   private List<File> getImplLibFiles() {
-    List<File> lf = getJetty121Jars("");
+    Set<File> lf = new LinkedHashSet<>();
+    lf.addAll(getJetty121Jars(""));
     lf.addAll(getJetty121JspJars());
     lf.addAll(getJetty121Jars("logging"));
     // We also want the devserver to be able to handle annotated servlet, via ASM:
@@ -153,6 +195,10 @@ class Jetty121EE11Sdk extends Jetty121EE8Sdk {
     lf.addAll(getJetty121Jars("ee11-annotations"));
     lf.addAll(getJetty121Jars("ee11-apache-jsp"));
     lf.addAll(getJetty121Jars("ee11-glassfish-jstl"));
+    // Jetty 12.1.15+ layout support:
+    lf.addAll(getJetty121Jars("ee11"));
+    lf.addAll(getJetty121Jars("ee11/support"));
+    lf.addAll(getJetty121Jars("support"));
 
     lf.addAll(getLibs(sdkRoot, "impl"));
     lf.add(new File(sdkRoot, "lib/impl/jetty121/appengine-local-runtime-jetty121-ee11.jar"));
@@ -160,11 +206,20 @@ class Jetty121EE11Sdk extends Jetty121EE8Sdk {
     // local dev console JSPs. Thus, we include the Apache JSTL jar from ee10-glassfish-jstl.
     // See https://github.com/eclipse-ee4j/wasp/issues/77 for more details, but we are facing it.
     File jettyHomeLib = new File(sdkRoot, JETTY121_HOME_LIB_PATH);
-    lf.add(
+    File apacheJstl =
         new File(
             jettyHomeLib,
-            "ee10-glassfish-jstl/org.glassfish.web.jakarta.servlet.jsp.jstl-3.0.1.jar"));
-    return Collections.unmodifiableList(lf);
+            "ee10-glassfish-jstl/org.glassfish.web.jakarta.servlet.jsp.jstl-3.0.1.jar");
+    if (!apacheJstl.exists()) {
+      apacheJstl =
+          new File(
+              jettyHomeLib,
+              "ee10/support/org.glassfish.web.jakarta.servlet.jsp.jstl-3.0.1.jar");
+    }
+    if (apacheJstl.exists()) {
+      lf.add(apacheJstl);
+    }
+    return Collections.unmodifiableList(new ArrayList<>(lf));
   }
 
   /**
@@ -177,31 +232,16 @@ class Jetty121EE11Sdk extends Jetty121EE8Sdk {
   }
 
   @Override
-  protected File getJetty121Jar(String fileNamePattern) {
-    File path = new File(sdkRoot, JETTY121_HOME_LIB_PATH + File.separator);
-
-    if (!path.exists()) {
-      throw new IllegalArgumentException("Unable to find " + path.getAbsolutePath());
-    }
-    for (File f : listFiles(path)) {
-      if (f.getName().endsWith(".jar")) {
-        // All but CDI jar. All the tests are still passing without CDI that should not be exposed
-        // in our runtime (private Jetty dependency we do not want to expose to the customer).
-        if (f.getName().contains(fileNamePattern)) {
-          return f;
-        }
-      }
-    }
-    throw new IllegalArgumentException(
-        "Unable to find " + fileNamePattern + " at " + path.getAbsolutePath());
-  }
-
-  @Override
   protected List<File> getJetty121Jars(String subDir) {
-    File path = new File(sdkRoot, JETTY121_HOME_LIB_PATH + File.separator + subDir);
+    File path = subDir.isEmpty()
+        ? new File(sdkRoot, JETTY121_HOME_LIB_PATH)
+        : new File(sdkRoot, JETTY121_HOME_LIB_PATH + File.separator + subDir);
 
     if (!path.exists()) {
-      throw new IllegalArgumentException("Unable to find " + path.getAbsolutePath());
+      if (subDir.isEmpty()) {
+        throw new IllegalArgumentException("Unable to find " + path.getAbsolutePath());
+      }
+      return Collections.emptyList();
     }
     List<File> jars = new ArrayList<>();
     for (File f : listFiles(path)) {
@@ -227,6 +267,7 @@ class Jetty121EE11Sdk extends Jetty121EE8Sdk {
             || f.getName().contains("ee9") // we want ee11 only. jakarta apis should be in shared
             || f.getName().contains("ee10") // we want ee11 only. jakarta apis should be in shared
             || f.getName().contains("jetty-jakarta-servlet-api") // no old jakarta APIs
+            || (subDir.equals("ee11") && f.getName().contains("apache-jsp")) // apache-jsp comes from nolog in ee11-apache-jsp
         )) {
           jars.add(f);
         }
@@ -237,25 +278,55 @@ class Jetty121EE11Sdk extends Jetty121EE8Sdk {
 
   @Override
   List<File> getJetty121JspJars() {
-
-    List<File> lf = getJetty121Jars("ee11-apache-jsp");
-    lf.addAll(getJetty121Jars("ee11-glassfish-jstl"));
+    Set<File> lf = new LinkedHashSet<>();
+    File ee11Dir = new File(sdkRoot, JETTY121_HOME_LIB_PATH + File.separator + "ee11");
+    if (ee11Dir.isDirectory()) {
+      for (File f : listFiles(ee11Dir)) {
+        if (f.getName().endsWith(".jar") && f.getName().contains("glassfish-jstl")) {
+          lf.add(f);
+        }
+      }
+      File supportDir = new File(ee11Dir, "support");
+      if (supportDir.isDirectory()) {
+        for (File f : listFiles(supportDir)) {
+          if (f.getName().endsWith(".jar")
+              && (f.getName().contains("apache-el")
+                  || f.getName().contains("apache-jsp")
+                  || f.getName().contains("jstl")
+                  || f.getName().contains("jsp-api")
+                  || f.getName().contains("jakarta.el")
+                  || f.getName().contains("wasp"))) {
+            lf.add(f);
+          }
+        }
+      }
+      lf.addAll(getJetty121Jars("ee11-apache-jsp"));
+    } else {
+      lf.addAll(getJetty121Jars("ee11-apache-jsp"));
+      lf.addAll(getJetty121Jars("ee11-glassfish-jstl"));
+    }
     lf.add(getJetty121Jar("ee11-servlet-"));
     lf.add(
         new File(
             sdkRoot,
             "lib/shared/jetty12/appengine-local-runtime-shared.jar")); // contains DTD and XSD
                                                                        // schemas
-    return lf;
+    return new ArrayList<>(lf);
   }
 
   List<File> getJetty121SharedLibFiles() {
-    List<File> sharedLibs;
-    sharedLibs = new ArrayList<>();
+    List<File> sharedLibs = new ArrayList<>();
     sharedLibs.add(new File(sdkRoot, "lib/shared/jetty12/appengine-local-runtime-shared.jar"));
     File jettyHomeLib = new File(sdkRoot, JETTY121_HOME_LIB_PATH);
 
-    sharedLibs.add(new File(jettyHomeLib, "jakarta.servlet-api-6.1.0.jar")); // contains schemas.
+    File servletApi = new File(jettyHomeLib, "jakarta.servlet-api-6.1.0.jar");
+    if (!servletApi.exists()) {
+      servletApi = new File(jettyHomeLib, "ee11/support/jakarta.servlet.jakarta.servlet-api-6.1.0.jar");
+    }
+    if (!servletApi.exists()) {
+      servletApi = getJetty121Jar("jakarta.servlet-api-6.1");
+    }
+    sharedLibs.add(servletApi); // contains schemas.
     // We want to match this file: "jetty-util-9.3.8.v20160314.jar"
     // but without hardcoding the Jetty version which is changing from time to time.
     class JettyVersionFilter implements FileFilter {
