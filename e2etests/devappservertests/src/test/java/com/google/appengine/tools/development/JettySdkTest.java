@@ -17,12 +17,20 @@ package com.google.appengine.tools.development;
 
 import static com.google.appengine.tools.development.DevAppServerTestBase.getSdkRoot;
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.appengine.tools.info.AppengineSdk;
+import com.google.common.collect.ImmutableList;
 import java.io.File;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.URLClassLoader;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.jar.JarFile;
+import java.util.regex.Pattern;
+import java.util.zip.ZipEntry;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -157,5 +165,132 @@ public class JettySdkTest {
     assertUrlsExist(sdk.getUserJspLibs());
     System.out.println("getImplLibs");
     assertUrlsExist(sdk.getImplLibs());
+  }
+
+  @Test
+  public void testContainerIncludeJarPatternMatchesSharedJars() {
+    System.setProperty("appengine.use.EE8", "false");
+    System.setProperty("appengine.use.EE11", "true");
+    System.setProperty("appengine.use.jetty121", "true");
+    AppengineSdk.resetSdk();
+    AppengineSdk sdk = AppengineSdk.getSdk();
+    List<File> sharedLibs = ImmutableList.copyOf(sdk.getSharedLibFiles());
+    Pattern pattern =
+        Pattern.compile(".*jakarta.servlet-api-[^/]*\\.jar$|.*jakarta.servlet.jsp.jstl-.*\\.jar$");
+
+    boolean matchedServletApi =
+        sharedLibs.stream()
+            .map(File::toURI)
+            .map(URI::toString)
+            .anyMatch(uri -> pattern.matcher(uri).matches());
+    assertWithMessage(
+            "Pattern %s must match a servlet-api jar in sharedLibs: %s", pattern, sharedLibs)
+        .that(matchedServletApi)
+        .isTrue();
+
+    boolean matchedJstlApi =
+        sharedLibs.stream()
+            .map(File::toURI)
+            .map(URI::toString)
+            .anyMatch(uri -> pattern.matcher(uri).matches());
+    assertWithMessage("Pattern %s must match a JSTL jar in sharedLibs: %s", pattern, sharedLibs)
+        .that(matchedJstlApi)
+        .isTrue();
+  }
+
+  @Test
+  public void testNoJuliLoggingSpiInSharedOrJspLibs() throws Exception {
+    for (String ee : new String[] {"EE8", "EE11"}) {
+      System.setProperty("appengine.use.EE8", String.valueOf("EE8".equals(ee)));
+      System.setProperty("appengine.use.EE11", String.valueOf("EE11".equals(ee)));
+      System.setProperty("appengine.use.jetty121", "true");
+      AppengineSdk.resetSdk();
+      AppengineSdk sdk = AppengineSdk.getSdk();
+      for (File jar : sdk.getSharedLibFiles()) {
+        try (JarFile jarFile = new JarFile(jar)) {
+          ZipEntry entry = jarFile.getEntry("META-INF/services/org.apache.juli.logging.Log");
+          assertWithMessage(
+                  "Jar %s in %s shared libs must not contain JULI Log SPI", jar.getName(), ee)
+              .that(entry)
+              .isNull();
+        }
+      }
+      for (File jar : sdk.getUserJspLibFiles()) {
+        try (JarFile jarFile = new JarFile(jar)) {
+          ZipEntry entry = jarFile.getEntry("META-INF/services/org.apache.juli.logging.Log");
+          assertWithMessage(
+                  "Jar %s in %s user JSP libs must not contain JULI Log SPI", jar.getName(), ee)
+              .that(entry)
+              .isNull();
+        }
+      }
+    }
+  }
+
+  @Test
+  public void testJspClasspathContainsRequiredClasses() throws Exception {
+    // EE8 JSP classpath check
+    System.setProperty("appengine.use.EE8", "true");
+    System.setProperty("appengine.use.EE11", "false");
+    System.setProperty("appengine.use.jetty121", "true");
+    AppengineSdk.resetSdk();
+    AppengineSdk ee8Sdk = AppengineSdk.getSdk();
+    List<URL> ee8Urls = new ArrayList<>(ee8Sdk.getUserJspLibs());
+    ee8Urls.addAll(ee8Sdk.getSharedLibs());
+    try (URLClassLoader cl = new URLClassLoader(ee8Urls.toArray(new URL[0]), null)) {
+      assertThat(cl.loadClass("javax.servlet.jsp.JspPage")).isNotNull();
+      assertThat(cl.loadClass("org.apache.jasper.servlet.JspServlet")).isNotNull();
+    }
+
+    // EE11 JSP classpath check
+    System.setProperty("appengine.use.EE8", "false");
+    System.setProperty("appengine.use.EE11", "true");
+    System.setProperty("appengine.use.jetty121", "true");
+    AppengineSdk.resetSdk();
+    AppengineSdk ee11Sdk = AppengineSdk.getSdk();
+    List<URL> ee11Urls = new ArrayList<>(ee11Sdk.getUserJspLibs());
+    ee11Urls.addAll(ee11Sdk.getSharedLibs());
+    try (URLClassLoader cl = new URLClassLoader(ee11Urls.toArray(new URL[0]), null)) {
+      assertThat(cl.loadClass("jakarta.servlet.jsp.JspPage")).isNotNull();
+      assertThat(cl.loadClass("jakarta.el.RecordELResolver")).isNotNull();
+      assertThat(cl.loadClass("org.glassfish.wasp.runtime.TldScanner")).isNotNull();
+    }
+  }
+
+  @Test
+  public void testForbiddenModulesNotExposed() {
+    List<String> forbidden =
+        List.of(
+            "-cdi-",
+            "-alpn-",
+            "-demo-",
+            "-websocket-",
+            "-gcloud-",
+            "-infinispan-",
+            "-hazelcast-",
+            "-ethereum-");
+
+    for (String ee : new String[] {"EE8", "EE11"}) {
+      System.setProperty("appengine.use.EE8", String.valueOf("EE8".equals(ee)));
+      System.setProperty("appengine.use.EE11", String.valueOf("EE11".equals(ee)));
+      System.setProperty("appengine.use.jetty121", "true");
+      AppengineSdk.resetSdk();
+      AppengineSdk sdk = AppengineSdk.getSdk();
+
+      for (File jar : sdk.getSharedLibFiles()) {
+        for (String f : forbidden) {
+          assertWithMessage("Shared jar %s must not contain %s", jar.getName(), f)
+              .that(jar.getName().contains(f))
+              .isFalse();
+        }
+      }
+      for (File jar : sdk.getUserJspLibFiles()) {
+        for (String f : forbidden) {
+          assertWithMessage("JSP jar %s must not contain %s", jar.getName(), f)
+              .that(jar.getName().contains(f))
+              .isFalse();
+        }
+      }
+    }
   }
 }

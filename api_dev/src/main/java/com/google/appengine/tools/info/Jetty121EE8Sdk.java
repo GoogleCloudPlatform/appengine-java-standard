@@ -270,6 +270,7 @@ class Jetty121EE8Sdk extends AppengineSdk {
             || f.getName().contains("-gcloud-")
             || f.getName().contains("-infinispan-")
             || f.getName().contains("-hazelcast-")
+            || f.getName().contains("-ethereum-")
             || f.getName().contains("jakarta.enterprise")
             || f.getName().contains("jakarta.inject")
             || f.getName().contains("jakarta.interceptor")
