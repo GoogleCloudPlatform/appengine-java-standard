@@ -69,8 +69,8 @@
     <auto-service.version>1.1.1</auto-service.version>
     <auto-value.version>1.11.1</auto-value.version>
     <grpc.version>1.85.1</grpc.version>
-    <jetty12.version>12.0.40</jetty12.version>
-    <jetty121.version>12.1.14</jetty121.version>
+    <jetty12.version>12.0.41</jetty12.version>
+    <jetty121.version>12.1.15</jetty121.version>
     <slf4j.version>2.0.20</slf4j.version>
     <protoc.version>4.36.2</protoc.version>
     <surefire.unsafe.arg></surefire.unsafe.arg>
@@ -552,12 +552,12 @@
       <dependency>
         <groupId>com.google.guava</groupId>
         <artifactId>guava</artifactId>
-        <version>33.7.2-jre</version>
+        <version>33.8.0-jre</version>
       </dependency>
       <dependency>
         <groupId>com.google.errorprone</groupId>
         <artifactId>error_prone_annotations</artifactId>
-        <version>2.51.0</version>
+        <version>2.52.0</version>
       </dependency>
       <dependency>
         <groupId>com.google.http-client</groupId>
@@ -654,7 +654,7 @@
       <dependency>
         <groupId>org.jsoup</groupId>
         <artifactId>jsoup</artifactId>
-        <version>1.23.2</version>
+        <version>1.24.1</version>
       </dependency>
       <dependency>
         <groupId>org.apache.lucene</groupId>
@@ -694,7 +694,7 @@
       <dependency>
         <groupId>joda-time</groupId>
         <artifactId>joda-time</artifactId>
-        <version>2.15.0</version>
+        <version>2.15.1</version>
       </dependency>
       <dependency>
         <groupId>org.json</groupId>
@@ -710,7 +710,7 @@
       <dependency>
         <groupId>com.google.guava</groupId>
         <artifactId>guava-testlib</artifactId>
-        <version>33.7.2-jre</version>
+        <version>33.8.0-jre</version>
         <scope>test</scope>
       </dependency>
       <dependency>
