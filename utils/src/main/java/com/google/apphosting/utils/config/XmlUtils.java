@@ -33,6 +33,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.SchemaFactory;
+import javax.xml.validation.Validator;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -59,9 +60,25 @@ public class XmlUtils {
     return parseXml(inputStream, null);
   }
 
+  /**
+   * Returns a factory that does not resolve external entities, external DTDs or XIncludes, so that
+   * a configuration file cannot read local files or make network requests while it is parsed. A
+   * {@code DOCTYPE} is still accepted, because older {@code web.xml} files declare one.
+   */
+  static DocumentBuilderFactory newDocumentBuilderFactory() throws ParserConfigurationException {
+    DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+    dbFactory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+    dbFactory.setFeature("http://xml.org/sax/features/external-general-entities", false);
+    dbFactory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+    dbFactory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
+    dbFactory.setXIncludeAware(false);
+    dbFactory.setExpandEntityReferences(false);
+    return dbFactory;
+  }
+
   public static Document parseXml(InputStream inputStream, String filename) {
     try {
-      DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+      DocumentBuilderFactory dbFactory = newDocumentBuilderFactory();
       DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
       Document doc = dBuilder.parse(inputStream);
       doc.getDocumentElement().normalize();
@@ -126,11 +143,11 @@ public class XmlUtils {
     try {
       SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
       try {
-        factory
-            .newSchema(schema)
-            .newValidator()
-            .validate(new StreamSource(new ByteArrayInputStream(
-                content.getBytes(UTF_8))));
+        Validator validator = factory.newSchema(schema).newValidator();
+        // The document being validated must not pull in external DTDs or entities.
+        validator.setProperty(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+        validator.setProperty(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
+        validator.validate(new StreamSource(new ByteArrayInputStream(content.getBytes(UTF_8))));
       } catch (SAXException ex) {
         throw new AppEngineConfigException(
             "XML error validating " + content + " against " + schema.getPath(), ex);
