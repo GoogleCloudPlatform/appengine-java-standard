@@ -24,7 +24,7 @@ import com.google.appengine.tools.development.AbstractContainerService;
 import com.google.appengine.tools.development.ApiProxyLocal;
 import com.google.appengine.tools.development.AppContext;
 import com.google.appengine.tools.development.DevAppServer;
-import com.google.appengine.tools.development.DevAppServerModulesFilter;
+import com.google.appengine.tools.development.jakarta.DevAppServerModulesFilter;
 import com.google.appengine.tools.development.IsolatedAppClassLoader;
 import com.google.appengine.tools.development.LocalEnvironment;
 import com.google.appengine.tools.development.jakarta.LocalHttpRequestEnvironment;

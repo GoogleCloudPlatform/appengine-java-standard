@@ -67,7 +67,7 @@ public class DevAppEngineWebAppContext extends AppEngineWebAppContext {
     setAttribute(JASPER_SERVLET_CLASSPATH, buildClasspath());
     setAttribute(
         "org.eclipse.jetty.server.webapp.ContainerIncludeJarPattern",
-        ".*/jakarta.servlet-api-[^/]*\\.jar$|.*jakarta.servlet.jsp.jstl-.*\\.jar$");
+        ".*jakarta.servlet-api-[^/]*\\.jar$|.*jakarta.servlet.jsp.jstl-.*\\.jar$");
 
     // Make ApiProxyLocal available via the servlet context.  This allows
     // servlets that are part of the dev appserver (like those that render the
