@@ -187,10 +187,10 @@ public class JettyContainerService extends AbstractContainerService
     // which is fine, it just means Jetty will look for it in the default
     // location (WEB-INF/web.xml).
     // Jetty 12 throws an IllegalArgumentException if the descriptor path is invalid.
-      if (webXmlLocation != null && webXmlLocation.exists()) {
-          context.setDescriptor(webXmlLocation.getAbsolutePath());
-      }
-      
+    if (webXmlLocation != null && webXmlLocation.exists()) {
+      context.setDescriptor(webXmlLocation.getAbsolutePath());
+    }
+
     // Override the web.xml that Jetty automatically prepends to other
     // web.xml files.  This is where the DefaultServlet is registered,
     // which serves static files.  We override it to disable some
@@ -268,41 +268,41 @@ public class JettyContainerService extends AbstractContainerService
     return appRoot;
   }
 
-    private void enterScope(ServletContextRequest request) {
+  private void enterScope(ServletContextRequest request) {
 
-        // We should have a request that use its associated environment, if there is no request
-        // we cannot select a local environment as picking the wrong one could result in
-        // waiting on the LocalEnvironment API call semaphore forever.
-        if (request == null) {
-            return;
-        }
+    // We should have a request that use its associated environment, if there is no request
+    // we cannot select a local environment as picking the wrong one could result in
+    // waiting on the LocalEnvironment API call semaphore forever.
+    if (request == null) {
+      return;
+    }
 
-        LocalEnvironment env =
-            (LocalEnvironment) request.getAttribute(LocalEnvironment.class.getName());
-        if (env == null) {
-            env =
-                new LocalHttpRequestEnvironment(
-                    appEngineWebXml.getAppId(),
-                    WebModule.getModuleName(appEngineWebXml),
-                    appEngineWebXml.getMajorVersionId(),
-                    instance,
-                    getPort(),
-                    request.getServletApiRequest(),
-                    SOFT_DEADLINE_DELAY_MS,
-                    modulesFilterHelper);
-            env.getAttributes()
-                .put(LocalEnvironment.API_CALL_SEMAPHORE, new Semaphore(MAX_SIMULTANEOUS_API_CALLS));
+    LocalEnvironment env =
+        (LocalEnvironment) request.getAttribute(LocalEnvironment.class.getName());
+    if (env == null) {
+      env =
+          new LocalHttpRequestEnvironment(
+              appEngineWebXml.getAppId(),
+              WebModule.getModuleName(appEngineWebXml),
+              appEngineWebXml.getMajorVersionId(),
+              instance,
+              getPort(),
+              request.getServletApiRequest(),
+              SOFT_DEADLINE_DELAY_MS,
+              modulesFilterHelper);
+      env.getAttributes()
+          .put(LocalEnvironment.API_CALL_SEMAPHORE, new Semaphore(MAX_SIMULTANEOUS_API_CALLS));
       env.getAttributes().put(DEFAULT_VERSION_HOSTNAME, "localhost:" + devAppServer.getPort());
 
-            request.setAttribute(LocalEnvironment.class.getName(), env);
-            environments.add(env);
-            addCompletionListener(request);
-        }
-
-        ApiProxy.setEnvironmentForCurrentThread(env);
-        DevAppServerModulesFilter.injectBackendServiceCurrentApiInfo(
-            backendName, backendInstance, portMappingProvider.getPortMapping());
+      request.setAttribute(LocalEnvironment.class.getName(), env);
+      environments.add(env);
+      addCompletionListener(request);
     }
+
+    ApiProxy.setEnvironmentForCurrentThread(env);
+    DevAppServerModulesFilter.injectBackendServiceCurrentApiInfo(
+        backendName, backendInstance, portMappingProvider.getPortMapping());
+  }
 
   /** Check if the application contains a JSP file. */
   private static boolean applicationContainsJSP(File dir, Pattern jspPattern) {
@@ -344,8 +344,8 @@ public class JettyContainerService extends AbstractContainerService
     configuration.setSendDateHeader(false);
     configuration.setSendServerVersion(false);
     configuration.setSendXPoweredBy(false);
-    // Try to enable virtual threads if requested on java21:
-    if (Boolean.getBoolean("appengine.use.virtualthreads")) {
+    // Try to enable virtual threads if requested on Java 21+:
+    if (Boolean.getBoolean("appengine.use.virtualthreads") && Runtime.version().feature() >= 21) {
       QueuedThreadPool threadPool = new QueuedThreadPool();
       threadPool.setVirtualThreadsExecutor(VirtualThreads.getDefaultVirtualThreadsExecutor());
       server = new Server(threadPool);
