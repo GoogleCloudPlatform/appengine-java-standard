@@ -46,6 +46,13 @@ years ago and still working without changes.
 
 Google App Engine engineers will review the proposed changes, and will decide if ultimately it can be pushed to production. If the change cannot be pushed for whatever reasons, the change will be rollbacked.
 
+## Repository Layout Constraints
+
+This repository is synchronized with Google's internal source tree (`google3`) by Copybara.
+Internal source code uses directories without leading dots, and Copybara rules will map
+these to `.claude/`, `.agent/`, and `.gemini/` on GitHub (and back). In the interim before
+that rule is active, agent skills are located in [agent_skills/](agent_skills/README.md).
+
 ## Community Guidelines
 
 This project follows
