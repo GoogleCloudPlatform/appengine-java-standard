@@ -160,7 +160,43 @@ else
   grep -v "Using Usertoken auth" /tmp/mvn_log.txt
   if [[ ${MVN_EXIT_CODE} -ne 0 ]]; then exit ${MVN_EXIT_CODE}; fi
 
-  echo '{"publish_all": true}' > /tmp/oss-exit-gate-manifest.json
+  python3 - "${RELEASE_NUMBER}" <<'PY'
+import collections, json, os, subprocess, sys
+version = os.environ.get("RELEASE_NUMBER") or (sys.argv[1] if len(sys.argv) > 1 else "")
+if not version:
+  raise SystemExit("ERROR: missing release version for manifest generation")
+repo = "appengine-java--mavencentral"
+pkgs_out = subprocess.check_output([
+    "gcloud", "artifacts", "packages", "list",
+    "--project=oss-exit-gate-prod", "--location=us",
+    f"--repository={repo}", "--format=value(name)",
+], text=True).splitlines()
+groups = collections.defaultdict(list)
+for pkg_path in sorted(pkgs_out):
+  pkg_id = pkg_path.strip().split("/")[-1]
+  if ":" not in pkg_id:
+    continue
+  rc = subprocess.run([
+      "gcloud", "artifacts", "versions", "describe", version,
+      f"--package={pkg_id}", "--project=oss-exit-gate-prod",
+      "--location=us", f"--repository={repo}",
+  ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode
+  if rc == 0:
+    ns, name = pkg_id.split(":", 1)
+    groups[ns].append({"name": name, "version": version})
+if not groups:
+  raise SystemExit(f"ERROR: No staged Maven packages found in {repo} for version {version}")
+manifest = {
+    "publish_all": False,
+    "publishing_groups": [
+        {"namespace": ns, "packages": pkgs}
+        for ns, pkgs in sorted(groups.items())
+    ],
+}
+with open("/tmp/oss-exit-gate-manifest.json", "w", encoding="utf-8") as fh:
+  json.dump(manifest, fh, indent=2)
+  fh.write("\n")
+PY
   gcloud storage cp /tmp/oss-exit-gate-manifest.json \
       "gs://oss-exit-gate-prod-projects-bucket/appengine-java/mavencentral/manifests/manifest-${RELEASE_NUMBER}-$(date +%s).json"
 
