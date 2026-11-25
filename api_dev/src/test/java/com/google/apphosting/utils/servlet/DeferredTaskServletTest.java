@@ -19,6 +19,8 @@ package com.google.apphosting.utils.servlet;
 import static com.google.appengine.api.taskqueue.TaskOptions.Builder.withPayload;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
@@ -258,6 +260,48 @@ public class DeferredTaskServletTest {
     getState().resp.setStatus(HttpURLConnection.HTTP_UNSUPPORTED_TYPE);
     getState().servlet.service(getState().req, getState().resp);
     assertEquals(0, getState().runCount);
+  }
+
+  @Test
+  public void testSerialFilterRejectsBlockedClass() throws Exception {
+    // A known deserialization-gadget type (present in the JDK) that the default filter blocks.
+    java.io.ByteArrayOutputStream bos = new java.io.ByteArrayOutputStream();
+    try (java.io.ObjectOutputStream oos = new java.io.ObjectOutputStream(bos)) {
+      oos.writeObject(new javax.management.BadAttributeValueExpException(null));
+    }
+    initPostAndQueueMocks();
+    initMocksWithOptions(
+        withPayload(bos.toByteArray(), DeferredTaskContext.RUNNABLE_TASK_CONTENT_TYPE));
+    DeferredTaskServlet.DeferredTaskException thrown =
+        assertThrows(
+            DeferredTaskServlet.DeferredTaskException.class,
+            () -> getState().servlet.readRequest(getState().req, getState().resp));
+    assertTrue(
+        "expected the payload to be rejected by the serialization filter, got: " + thrown.getCause(),
+        thrown.getCause() instanceof java.io.InvalidClassException);
+  }
+
+  @Test
+  public void testSerialFilterEnvelope() {
+    // The default filter blocks the gadget packages and leaves ordinary classes to the JVM-wide
+    // filter (allowed here, since none is configured in this test).
+    java.io.ObjectInputFilter filter = DeferredTaskServlet.serialFilter();
+    assertEquals(
+        java.io.ObjectInputFilter.Status.REJECTED,
+        filter.checkInput(filterInfo(javax.management.BadAttributeValueExpException.class)));
+    assertNotEquals(
+        java.io.ObjectInputFilter.Status.REJECTED,
+        filter.checkInput(filterInfo(TestDeferredTask.class)));
+  }
+
+  private static java.io.ObjectInputFilter.FilterInfo filterInfo(Class<?> clazz) {
+    return new java.io.ObjectInputFilter.FilterInfo() {
+      @Override public Class<?> serialClass() { return clazz; }
+      @Override public long arrayLength() { return -1; }
+      @Override public long depth() { return 1; }
+      @Override public long references() { return 1; }
+      @Override public long streamBytes() { return 0; }
+    };
   }
 
   @Test
