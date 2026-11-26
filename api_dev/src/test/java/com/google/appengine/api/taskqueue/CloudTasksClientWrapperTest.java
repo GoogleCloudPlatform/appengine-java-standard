@@ -75,6 +75,7 @@ import java.net.InetSocketAddress;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -355,7 +356,11 @@ public class CloudTasksClientWrapperTest {
   }
 
   @After
-  public void tearDown() {
+  public void tearDown() throws InterruptedException {
+    // Fire-and-forget dispatches (e.g. the queue.add() fast path) run on the shared static
+    // IO_EXECUTOR. Let them finish while the stub clients are still installed; otherwise they can
+    // lazily build a real CloudTasksClient and leak into the next test.
+    awaitIoExecutorIdle(Duration.ofSeconds(10));
     CloudTasksClientWrapper.setEnabledForTesting(null);
     CloudTasksClientWrapper.setSharedClientForTesting(null);
     CloudTasksClientWrapper.setSharedV2Beta3ClientForTesting(null);
@@ -369,6 +374,18 @@ public class CloudTasksClientWrapperTest {
       server.stop(0);
     }
     helper.tearDown();
+  }
+
+  private static void awaitIoExecutorIdle(Duration timeout) throws InterruptedException {
+    if (!(CloudTasksClientWrapper.IO_EXECUTOR instanceof ThreadPoolExecutor)) {
+      return;
+    }
+    ThreadPoolExecutor pool = (ThreadPoolExecutor) CloudTasksClientWrapper.IO_EXECUTOR;
+    long deadline = System.nanoTime() + timeout.toNanos();
+    while ((pool.getActiveCount() > 0 || !pool.getQueue().isEmpty())
+        && System.nanoTime() < deadline) {
+      Thread.sleep(10);
+    }
   }
 
   @Test

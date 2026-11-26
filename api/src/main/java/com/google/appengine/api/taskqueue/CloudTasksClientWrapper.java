@@ -292,13 +292,26 @@ final class CloudTasksClientWrapper {
     QueueImpl.setCloudTaskEnabledForTesting(enabled);
   }
 
+  // The testing setters take CLIENT_INIT_LOCK so that a lazy getClient()/getV2Beta3Client() call
+  // already inside a slow create() (e.g. from an async task left over from a previous test) cannot
+  // overwrite the injected client after it has been set.
   static void setSharedClientForTesting(CloudTasksClient client) {
-    sharedClient = client;
+    CLIENT_INIT_LOCK.lock();
+    try {
+      sharedClient = client;
+    } finally {
+      CLIENT_INIT_LOCK.unlock();
+    }
   }
 
   static void setSharedV2Beta3ClientForTesting(
       com.google.cloud.tasks.v2beta3.CloudTasksClient client) {
-    sharedV2Beta3Client = client;
+    CLIENT_INIT_LOCK.lock();
+    try {
+      sharedV2Beta3Client = client;
+    } finally {
+      CLIENT_INIT_LOCK.unlock();
+    }
   }
 
   static void setMetadataBaseUrlForTesting(String baseUrl) {
