@@ -524,6 +524,7 @@
                                     <include>io.opencensus:opencensus-contrib-http-util</include>
                                     <include>io.opentelemetry:opentelemetry-api</include>
                                     <include>io.opentelemetry:opentelemetry-context</include>
+                                    <include>io.opentelemetry:opentelemetry-common</include>
                                     <include>org.threeten:threetenbp</include>
                                 </includes>
                                 <!--excludes>
