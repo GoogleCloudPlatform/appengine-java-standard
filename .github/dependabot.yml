@@ -47,8 +47,15 @@ updates:
       - dependency-name: "com.google.appengine:*"
       - dependency-name: "com.google.appengine.*:*"
       - dependency-name: "com.google.cloud.sql:mysql-socket-factory"
+      # Jetty: allow patch updates only.
       - dependency-name: "org.eclipse.jetty:*"
+        update-types:
+          - "version-update:semver-major"
+          - "version-update:semver-minor"
       - dependency-name: "org.eclipse.jetty.*:*"
+        update-types:
+          - "version-update:semver-major"
+          - "version-update:semver-minor"
       - dependency-name: "org.springframework.boot:spring-boot-starter-parent"
       - dependency-name: "org.springframework.boot:spring-boot-starter-web"
 
