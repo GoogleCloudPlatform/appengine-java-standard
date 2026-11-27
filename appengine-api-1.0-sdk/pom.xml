@@ -629,6 +629,7 @@
                   <include>org.threeten:threetenbp:*</include>
                   <include>io.opentelemetry:opentelemetry-api:*</include>
                   <include>io.opentelemetry:opentelemetry-context:*</include>
+                  <include>io.opentelemetry:opentelemetry-common:*</include>
                </includes>
               </artifactSet>
 
