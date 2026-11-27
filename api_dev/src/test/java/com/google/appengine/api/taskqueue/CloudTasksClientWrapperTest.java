@@ -75,6 +75,7 @@ import java.net.InetSocketAddress;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -94,6 +95,8 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -103,6 +106,8 @@ import org.junit.runners.JUnit4;
 /** Unit tests for {@link CloudTasksClientWrapper} and {@link TaskProcessor} v2 gRPC paths. */
 @RunWith(JUnit4.class)
 public class CloudTasksClientWrapperTest {
+  private static final Logger logger =
+      Logger.getLogger(CloudTasksClientWrapperTest.class.getName());
   private static final String TEST_PROJECT = "test-proj";
   private static final String TEST_LOCATION = "us-central1";
   private static final String TEST_TOKEN = "fake-oauth-token";
@@ -356,19 +361,51 @@ public class CloudTasksClientWrapperTest {
 
   @After
   public void tearDown() {
-    CloudTasksClientWrapper.setEnabledForTesting(null);
-    CloudTasksClientWrapper.setSharedClientForTesting(null);
-    CloudTasksClientWrapper.setSharedV2Beta3ClientForTesting(null);
-    CloudTasksClientWrapper.setProjectIdForTesting(null);
-    CloudTasksClientWrapper.setLocationForTesting(null);
-    CloudTasksClientWrapper.setAccessTokenForTesting(null, 0);
-    CloudTasksClientWrapper.setMetadataBaseUrlForTesting(null);
-    CloudTasksClientWrapper.setCredentialsTokenForTesting(null);
+    // Fire-and-forget dispatches (e.g. the queue.add() fast path) run on the shared static
+    // IO_EXECUTOR. Let them finish while the stub clients are still installed; otherwise they can
+    // lazily build a real CloudTasksClient and leak into the next test.
+    try {
+      awaitIoExecutorIdle(Duration.ofSeconds(10));
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      logger.log(Level.WARNING, "Interrupted while waiting for IO_EXECUTOR to go idle", e);
+    } finally {
+      CloudTasksClientWrapper.setEnabledForTesting(null);
+      CloudTasksClientWrapper.setSharedClientForTesting(null);
+      CloudTasksClientWrapper.setSharedV2Beta3ClientForTesting(null);
+      CloudTasksClientWrapper.setProjectIdForTesting(null);
+      CloudTasksClientWrapper.setLocationForTesting(null);
+      CloudTasksClientWrapper.setAccessTokenForTesting(null, 0);
+      CloudTasksClientWrapper.setMetadataBaseUrlForTesting(null);
+      CloudTasksClientWrapper.setCredentialsTokenForTesting(null);
 
-    if (server != null) {
-      server.stop(0);
+      if (server != null) {
+        server.stop(0);
+      }
+      helper.tearDown();
     }
-    helper.tearDown();
+  }
+
+  private static void awaitIoExecutorIdle(Duration timeout) throws InterruptedException {
+    if (!(CloudTasksClientWrapper.IO_EXECUTOR instanceof ThreadPoolExecutor)) {
+      return;
+    }
+    ThreadPoolExecutor pool = (ThreadPoolExecutor) CloudTasksClientWrapper.IO_EXECUTOR;
+    long deadline = System.nanoTime() + timeout.toNanos();
+    while (pool.getActiveCount() > 0 || !pool.getQueue().isEmpty()) {
+      if (System.nanoTime() >= deadline) {
+        logger.warning(
+            "IO_EXECUTOR still busy after "
+                + timeout
+                + " (active="
+                + pool.getActiveCount()
+                + ", queued="
+                + pool.getQueue().size()
+                + "); resetting CloudTasksClientWrapper state anyway");
+        return;
+      }
+      Thread.sleep(10);
+    }
   }
 
   @Test

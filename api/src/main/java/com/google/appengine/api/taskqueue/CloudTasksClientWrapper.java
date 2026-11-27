@@ -292,13 +292,38 @@ final class CloudTasksClientWrapper {
     QueueImpl.setCloudTaskEnabledForTesting(enabled);
   }
 
-  static void setSharedClientForTesting(CloudTasksClient client) {
-    sharedClient = client;
+  // The testing setters take CLIENT_INIT_LOCK so that a lazy getClient()/getV2Beta3Client() call
+  // already inside a slow create() (e.g. from an async task left over from a previous test) cannot
+  // overwrite the injected client after it has been set. A displaced client is shut down outside
+  // the lock with shutdownNow(), which releases its channel and threads and cancels any calls still
+  // in flight on it (close() would let them run to their deadline).
+  static void setSharedClientForTesting(@Nullable CloudTasksClient client) {
+    CloudTasksClient previous;
+    CLIENT_INIT_LOCK.lock();
+    try {
+      previous = sharedClient;
+      sharedClient = client;
+    } finally {
+      CLIENT_INIT_LOCK.unlock();
+    }
+    if (previous != null && previous != client) {
+      previous.shutdownNow();
+    }
   }
 
   static void setSharedV2Beta3ClientForTesting(
-      com.google.cloud.tasks.v2beta3.CloudTasksClient client) {
-    sharedV2Beta3Client = client;
+      com.google.cloud.tasks.v2beta3.@Nullable CloudTasksClient client) {
+    com.google.cloud.tasks.v2beta3.CloudTasksClient previous;
+    CLIENT_INIT_LOCK.lock();
+    try {
+      previous = sharedV2Beta3Client;
+      sharedV2Beta3Client = client;
+    } finally {
+      CLIENT_INIT_LOCK.unlock();
+    }
+    if (previous != null && previous != client) {
+      previous.shutdownNow();
+    }
   }
 
   static void setMetadataBaseUrlForTesting(String baseUrl) {
@@ -628,101 +653,110 @@ final class CloudTasksClientWrapper {
 
   static CloudTasksClient getClient() {
     // NOMUTANTS -- production gRPC client initialization requires live credentials
-    if (sharedClient == null) {
+    // Read the volatile field once so a concurrent reset cannot make this return null.
+    CloudTasksClient client = sharedClient;
+    if (client == null) {
       CLIENT_INIT_LOCK.lock();
       try {
-        if (sharedClient == null) {
-          try {
-            sharedClient = CloudTasksClient.create();
-          } catch (Exception directEx) {
-            logger.log(
-                Level.FINE,
-                "CloudTasksClient.create() failed, attempting custom credentials",
-                directEx);
-            try {
-              CredentialsProvider credentialsProvider =
-                  () -> {
-                    try {
-                      String token = getValidAccessToken();
-                      // AccessToken's constructor only accepts java.util.Date (not Instant),
-                      // and ErrorProne's JavaUtilDate check requires Date.from(Instant).
-                      return GoogleCredentials.create(
-                          new AccessToken(token, Date.from(Instant.ofEpochMilli(cachedTokenExpiry))));
-                    } catch (Exception e) {
-                      throw new IOException("Failed to refresh access token", e);
-                    }
-                  };
-              CloudTasksSettings settings =
-                  CloudTasksSettings.newBuilder()
-                      .setCredentialsProvider(credentialsProvider)
-                      .build();
-              sharedClient = CloudTasksClient.create(settings);
-            } catch (Exception fallbackEx) {
-              logger.log(Level.SEVERE, "Failed to initialize CloudTasksClient", fallbackEx);
-              throw new IllegalStateException(
-                  "Failed to initialize CloudTasksClient: direct="
-                      + directEx.getMessage()
-                      + ", fallback="
-                      + fallbackEx.getMessage(),
-                  fallbackEx);
-            }
-          }
+        client = sharedClient;
+        if (client == null) {
+          client = createCloudTasksClient();
+          sharedClient = client;
         }
       } finally {
         CLIENT_INIT_LOCK.unlock();
       }
     }
-    return sharedClient;
+    return client;
+  }
+
+  private static CloudTasksClient createCloudTasksClient() {
+    try {
+      return CloudTasksClient.create();
+    } catch (Exception directEx) {
+      logger.log(
+          Level.FINE, "CloudTasksClient.create() failed, attempting custom credentials", directEx);
+      try {
+        CredentialsProvider credentialsProvider =
+            () -> {
+              try {
+                String token = getValidAccessToken();
+                // AccessToken's constructor only accepts java.util.Date (not Instant),
+                // and ErrorProne's JavaUtilDate check requires Date.from(Instant).
+                return GoogleCredentials.create(
+                    new AccessToken(token, Date.from(Instant.ofEpochMilli(cachedTokenExpiry))));
+              } catch (Exception e) {
+                throw new IOException("Failed to refresh access token", e);
+              }
+            };
+        CloudTasksSettings settings =
+            CloudTasksSettings.newBuilder().setCredentialsProvider(credentialsProvider).build();
+        return CloudTasksClient.create(settings);
+      } catch (Exception fallbackEx) {
+        logger.log(Level.SEVERE, "Failed to initialize CloudTasksClient", fallbackEx);
+        throw new IllegalStateException(
+            "Failed to initialize CloudTasksClient: direct="
+                + directEx.getMessage()
+                + ", fallback="
+                + fallbackEx.getMessage(),
+            fallbackEx);
+      }
+    }
   }
 
   static com.google.cloud.tasks.v2beta3.CloudTasksClient getV2Beta3Client() {
     // NOMUTANTS -- production gRPC client initialization requires live credentials
-    if (sharedV2Beta3Client == null) {
+    // Read the volatile field once so a concurrent reset cannot make this return null.
+    com.google.cloud.tasks.v2beta3.CloudTasksClient client = sharedV2Beta3Client;
+    if (client == null) {
       CLIENT_INIT_LOCK.lock();
       try {
-        if (sharedV2Beta3Client == null) {
-          try {
-            sharedV2Beta3Client = com.google.cloud.tasks.v2beta3.CloudTasksClient.create();
-          } catch (Exception directEx) {
-            logger.log(
-                Level.FINE,
-                "v2beta3 CloudTasksClient.create() failed, attempting custom credentials",
-                directEx);
-            try {
-              CredentialsProvider credentialsProvider =
-                  () -> {
-                    try {
-                      String token = getValidAccessToken();
-                      return GoogleCredentials.create(
-                          new AccessToken(
-                              token, Date.from(Instant.ofEpochMilli(cachedTokenExpiry))));
-                    } catch (Exception e) {
-                      throw new IOException("Failed to refresh access token", e);
-                    }
-                  };
-              com.google.cloud.tasks.v2beta3.CloudTasksSettings settings =
-                  com.google.cloud.tasks.v2beta3.CloudTasksSettings.newBuilder()
-                      .setCredentialsProvider(credentialsProvider)
-                      .build();
-              sharedV2Beta3Client =
-                  com.google.cloud.tasks.v2beta3.CloudTasksClient.create(settings);
-            } catch (Exception fallbackEx) {
-              logger.log(
-                  Level.SEVERE, "Failed to initialize v2beta3 CloudTasksClient", fallbackEx);
-              throw new IllegalStateException(
-                  "Failed to initialize v2beta3 CloudTasksClient: direct="
-                      + directEx.getMessage()
-                      + ", fallback="
-                      + fallbackEx.getMessage(),
-                  fallbackEx);
-            }
-          }
+        client = sharedV2Beta3Client;
+        if (client == null) {
+          client = createV2Beta3Client();
+          sharedV2Beta3Client = client;
         }
       } finally {
         CLIENT_INIT_LOCK.unlock();
       }
     }
-    return sharedV2Beta3Client;
+    return client;
+  }
+
+  private static com.google.cloud.tasks.v2beta3.CloudTasksClient createV2Beta3Client() {
+    try {
+      return com.google.cloud.tasks.v2beta3.CloudTasksClient.create();
+    } catch (Exception directEx) {
+      logger.log(
+          Level.FINE,
+          "v2beta3 CloudTasksClient.create() failed, attempting custom credentials",
+          directEx);
+      try {
+        CredentialsProvider credentialsProvider =
+            () -> {
+              try {
+                String token = getValidAccessToken();
+                return GoogleCredentials.create(
+                    new AccessToken(token, Date.from(Instant.ofEpochMilli(cachedTokenExpiry))));
+              } catch (Exception e) {
+                throw new IOException("Failed to refresh access token", e);
+              }
+            };
+        com.google.cloud.tasks.v2beta3.CloudTasksSettings settings =
+            com.google.cloud.tasks.v2beta3.CloudTasksSettings.newBuilder()
+                .setCredentialsProvider(credentialsProvider)
+                .build();
+        return com.google.cloud.tasks.v2beta3.CloudTasksClient.create(settings);
+      } catch (Exception fallbackEx) {
+        logger.log(Level.SEVERE, "Failed to initialize v2beta3 CloudTasksClient", fallbackEx);
+        throw new IllegalStateException(
+            "Failed to initialize v2beta3 CloudTasksClient: direct="
+                + directEx.getMessage()
+                + ", fallback="
+                + fallbackEx.getMessage(),
+            fallbackEx);
+      }
+    }
   }
 
   /**
