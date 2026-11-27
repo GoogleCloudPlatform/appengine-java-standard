@@ -294,9 +294,9 @@ final class CloudTasksClientWrapper {
 
   // The testing setters take CLIENT_INIT_LOCK so that a lazy getClient()/getV2Beta3Client() call
   // already inside a slow create() (e.g. from an async task left over from a previous test) cannot
-  // overwrite the injected client after it has been set. A displaced client is closed outside the
-  // lock so it does not leak its channel and threads, and stray callers still holding it fail
-  // locally instead of reaching the real service.
+  // overwrite the injected client after it has been set. A displaced client is shut down outside
+  // the lock with shutdownNow(), which releases its channel and threads and cancels any calls still
+  // in flight on it (close() would let them run to their deadline).
   static void setSharedClientForTesting(@Nullable CloudTasksClient client) {
     CloudTasksClient previous;
     CLIENT_INIT_LOCK.lock();
@@ -307,7 +307,7 @@ final class CloudTasksClientWrapper {
       CLIENT_INIT_LOCK.unlock();
     }
     if (previous != null && previous != client) {
-      previous.close();
+      previous.shutdownNow();
     }
   }
 
@@ -322,7 +322,7 @@ final class CloudTasksClientWrapper {
       CLIENT_INIT_LOCK.unlock();
     }
     if (previous != null && previous != client) {
-      previous.close();
+      previous.shutdownNow();
     }
   }
 
