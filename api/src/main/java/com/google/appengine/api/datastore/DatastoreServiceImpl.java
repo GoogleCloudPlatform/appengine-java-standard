@@ -18,18 +18,24 @@ package com.google.appengine.api.datastore;
 
 import static com.google.appengine.api.datastore.FutureHelper.quietGet;
 
+import com.google.apphosting.api.ApiProxy;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Future;
 
 /**
  * An implementation of {@link DatastoreService} that farms out all calls to a provided {@link
  * AsyncDatastoreService}.
- *
  */
 final class DatastoreServiceImpl implements DatastoreService {
 
   private final AsyncDatastoreServiceInternal async;
+  static final long BEGIN_TXN_RETRY_DELAY_MS = 100;
+
+  private static int getMaxRetries() {
+    return Math.max(0, Integer.getInteger("appengine.datastore.retries", 1));
+  }
 
   public DatastoreServiceImpl(AsyncDatastoreServiceInternal async) {
     this.async = async;
@@ -137,12 +143,42 @@ final class DatastoreServiceImpl implements DatastoreService {
 
   @Override
   public Transaction beginTransaction() {
-    return quietGet(async.beginTransaction());
+    return beginTransaction(TransactionOptions.Builder.withDefaults());
   }
 
   @Override
   public Transaction beginTransaction(TransactionOptions options) {
-    return quietGet(async.beginTransaction(options));
+    int retries = 0;
+    int maxRetries = getMaxRetries();
+    long delay = BEGIN_TXN_RETRY_DELAY_MS;
+    while (true) {
+      Transaction tx = null;
+      try {
+        tx = quietGet(async.beginTransaction(options));
+        tx.getId(); // Force handle resolution
+        return tx;
+      } catch (DatastoreFailureException
+          | DatastoreTimeoutException
+          | ApiProxy.RPCFailedException e) {
+        if (tx != null) {
+          try {
+            Future<Void> unused = tx.rollbackAsync();
+          } catch (RuntimeException ignored) {
+            // Best-effort rollback; original exception is retried or rethrown.
+          }
+        }
+        if (++retries > maxRetries) {
+          throw e;
+        }
+        try {
+          Thread.sleep(delay);
+        } catch (InterruptedException ie) {
+          Thread.currentThread().interrupt();
+          throw e;
+        }
+        delay *= 2;
+      }
+    }
   }
 
   @Override

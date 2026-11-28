@@ -76,6 +76,12 @@ abstract class HttpApiHostClient implements APIHostClientInterface {
   abstract static class Config {
     abstract double extraTimeoutSeconds();
 
+    /**
+     * The maximum number of concurrent connections to the API host.
+     *
+     * <p>This value is used to configure both the Jetty/JDK HTTP client's connection pool limit
+     * and, when applicable, the maximum number of threads in the client's thread pool.
+     */
     abstract OptionalInt maxConnectionsPerDestination();
 
     /** For testing that we handle missing Content-Length correctly. */
@@ -123,8 +129,36 @@ abstract class HttpApiHostClient implements APIHostClientInterface {
     return config;
   }
 
+  static int getMaxThreads(Config config) {
+    int maxThreads = config.maxConnectionsPerDestination().orElse(100);
+    if (maxThreads <= 0) {
+      maxThreads = 100;
+    }
+    String maxThreadsEnv = System.getenv("APPENGINE_API_MAX_THREADS");
+    if (maxThreadsEnv != null) {
+      try {
+        int envMaxThreads = Integer.parseInt(maxThreadsEnv);
+        if (envMaxThreads > 0) {
+          logger.atInfo().log(
+              "Overriding API max threads to %d from environment variable.", envMaxThreads);
+          return envMaxThreads;
+        } else {
+          logger.atWarning().log(
+              "APPENGINE_API_MAX_THREADS must be positive: %d, using default %d",
+              envMaxThreads, maxThreads);
+        }
+      } catch (NumberFormatException e) {
+        logger.atWarning().withCause(e).log(
+            "Invalid value for APPENGINE_API_MAX_THREADS: %s, using default %d",
+            maxThreadsEnv, maxThreads);
+      }
+    }
+    return maxThreads;
+  }
+
   static HttpApiHostClient create(String url, Config config) {
-    if (System.getenv("APPENGINE_API_CALLS_USING_JDK_CLIENT") != null) {
+    if (System.getenv("APPENGINE_API_CALLS_USING_JDK_CLIENT") != null
+        || Boolean.getBoolean("com.google.appengine.api.calls.using.jdk.client")) {
       logger.atInfo().log("Using JDK HTTP client for API calls");
       return JdkHttpApiHostClient.create(url, config);
     } else {
