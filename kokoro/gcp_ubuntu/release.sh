@@ -129,12 +129,76 @@ if [[ "${DRY_RUN}" == "true" ]]; then
   echo "DRY_RUN is true, only calling release:prepare."
   ./mvnw release:prepare ${MVN_COMMON_OPTIONS}
 else
-  echo "Calling release:prepare and release:perform."
+  echo "Cleaning up previous OSS Exit Gate staging attempt for version ${RELEASE_NUMBER} (if any)..."
+  if [[ -n "${RELEASE_NUMBER}" ]]; then
+    while IFS= read -r pkg; do
+      pkg_name="${pkg##*/}"
+      [[ -n "${pkg_name}" ]] || continue
+      if gcloud artifacts versions describe "${RELEASE_NUMBER}" \
+        --package="${pkg_name}" \
+        --project="oss-exit-gate-prod" \
+        --location="us" \
+        --repository="appengine-java--mavencentral" >/dev/null 2>&1; then
+        gcloud artifacts versions delete "${RELEASE_NUMBER}" \
+          --package="${pkg_name}" \
+          --project="oss-exit-gate-prod" \
+          --location="us" \
+          --repository="appengine-java--mavencentral" \
+          --quiet
+      fi
+    done < <(gcloud artifacts packages list \
+      --project="oss-exit-gate-prod" \
+      --location="us" \
+      --repository="appengine-java--mavencentral" \
+      --format="value(name)" 2>/dev/null || true)
+  fi
+
+  echo "Calling release:prepare and release:perform via OSS Exit Gate staging..."
   # Force usage of the aoss profile to point to google artifacts repository to be MOSS compliant.
   MVN_EXIT_CODE=0
-  ./mvnw release:prepare release:perform -B -q --settings=../settings.xml -Paoss -DskipTests -Darguments=-DskipTests -Dgpg.homedir=${GNUPGHOME} -Dgpg.passphrase=${GPG_PASSPHRASE} -l /tmp/mvn_log.txt || MVN_EXIT_CODE=$?
+  ./mvnw release:prepare release:perform -B -q --settings=../settings.xml -Paoss,oss-exit-gate -DskipTests -Darguments="-Psonatype-release,oss-exit-gate -DskipTests" -Dgpg.homedir=${GNUPGHOME} -Dgpg.passphrase=${GPG_PASSPHRASE} -l /tmp/mvn_log.txt || MVN_EXIT_CODE=$?
   grep -v "Using Usertoken auth" /tmp/mvn_log.txt
   if [[ ${MVN_EXIT_CODE} -ne 0 ]]; then exit ${MVN_EXIT_CODE}; fi
+
+  python3 - "${RELEASE_NUMBER}" <<'PY'
+import collections, json, os, subprocess, sys
+version = os.environ.get("RELEASE_NUMBER") or (sys.argv[1] if len(sys.argv) > 1 else "")
+if not version:
+  raise SystemExit("ERROR: missing release version for manifest generation")
+repo = "appengine-java--mavencentral"
+pkgs_out = subprocess.check_output([
+    "gcloud", "artifacts", "packages", "list",
+    "--project=oss-exit-gate-prod", "--location=us",
+    f"--repository={repo}", "--format=value(name)",
+], text=True).splitlines()
+groups = collections.defaultdict(list)
+for pkg_path in sorted(pkgs_out):
+  pkg_id = pkg_path.strip().split("/")[-1]
+  if ":" not in pkg_id:
+    continue
+  rc = subprocess.run([
+      "gcloud", "artifacts", "versions", "describe", version,
+      f"--package={pkg_id}", "--project=oss-exit-gate-prod",
+      "--location=us", f"--repository={repo}",
+  ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode
+  if rc == 0:
+    ns, name = pkg_id.split(":", 1)
+    groups[ns].append({"name": name, "version": version})
+if not groups:
+  raise SystemExit(f"ERROR: No staged Maven packages found in {repo} for version {version}")
+manifest = {
+    "publish_all": False,
+    "publishing_groups": [
+        {"namespace": ns, "packages": pkgs}
+        for ns, pkgs in sorted(groups.items())
+    ],
+}
+with open("/tmp/oss-exit-gate-manifest.json", "w", encoding="utf-8") as fh:
+  json.dump(manifest, fh, indent=2)
+  fh.write("\n")
+PY
+  gcloud storage cp /tmp/oss-exit-gate-manifest.json \
+      "gs://oss-exit-gate-prod-projects-bucket/appengine-java/mavencentral/manifests/manifest-${RELEASE_NUMBER}-$(date +%s).json"
 
   git remote set-url origin https://gae-java-bot:${GAE_JAVA_BOT_GITHUB_TOKEN}@github.com/GoogleCloudPlatform/appengine-java-standard
   echo "Doing git tag and push."
